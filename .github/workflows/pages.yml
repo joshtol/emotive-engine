@@ -74,7 +74,7 @@ jobs:
                 --pink: #DD4A9A;
                 --blue: #4090CE;
                 --teal: #84CFC5;
-                --bg-dark: #0d0d0d;
+                --bg-dark: #0a0a0a;
                 --bg-card: rgba(30, 30, 35, 0.8);
                 --text: #F2F1F1;
                 --text-muted: #888;
@@ -90,107 +90,158 @@ jobs:
                 overflow-x: hidden;
               }
 
-              /* Animated gradient background */
-              .bg-gradient {
+              /* ============================================
+                 MASCOT CONTAINER - Matches MascotRenderer.tsx
+                 ============================================ */
+
+              /* 2D mode: fullscreen fixed container */
+              #mascot-container-2d {
                 position: fixed;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background:
-                  radial-gradient(ellipse at 20% 20%, rgba(221, 74, 154, 0.15) 0%, transparent 50%),
-                  radial-gradient(ellipse at 80% 80%, rgba(64, 144, 206, 0.1) 0%, transparent 50%),
-                  radial-gradient(ellipse at 50% 50%, rgba(132, 207, 197, 0.05) 0%, transparent 70%);
-                animation: gradientShift 20s ease-in-out infinite;
-                z-index: -1;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                pointer-events: none;
+                z-index: 100;
+                opacity: 1;
+                transition: opacity 0.5s ease-out;
               }
 
-              @keyframes gradientShift {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.7; }
-              }
-
-              .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 40px 24px;
-              }
-
-              /* Hero Section */
-              .hero {
-                text-align: center;
-                padding: 40px 20px 60px;
-                position: relative;
-              }
-
-              /* 3D Mascot - clean floating crystal, no borders */
-              .hero-mascot-container {
-                width: 280px;
-                height: 280px;
-                margin: 0 auto 24px;
-                position: relative;
-              }
-
-              /* Override example-styles.css canvas styling */
-              .hero-mascot-container canvas {
-                width: 280px !important;
-                height: 280px !important;
-                display: block;
+              #mascot-container-2d canvas {
+                width: 100%;
+                height: 100%;
+                filter: drop-shadow(0 10px 40px rgba(102, 126, 234, 0.4));
                 background: transparent !important;
                 border: none !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
               }
 
-              /* Sinusoidal floating animation */
-              @keyframes sinusoidalFloat {
-                0% { transform: translateX(-20px) translateY(0px); }
-                25% { transform: translateX(0px) translateY(-10px); }
-                50% { transform: translateX(20px) translateY(0px); }
-                75% { transform: translateX(0px) translateY(10px); }
-                100% { transform: translateX(-20px) translateY(0px); }
+              /* 3D mode: sized container positioned like home page */
+              #mascot-container-3d {
+                position: fixed;
+                top: 50%;
+                left: calc(max(20px, (50vw - 500px) / 2 - 375px));
+                transform: translateY(-50%);
+                width: 750px;
+                height: 1050px;
+                pointer-events: none;
+                z-index: 100;
               }
 
-              .hero-mascot-container.animated {
-                animation: sinusoidalFloat 8s ease-in-out infinite;
+              /* Mobile 3D positioning */
+              @media (max-width: 768px) {
+                #mascot-container-3d {
+                  top: 18%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  width: 440px;
+                  height: 605px;
+                }
               }
 
-              /* Fallback logo if 3D fails */
+              /* Mode toggle button - matches MascotRenderer.tsx */
+              #mode-toggle {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1000;
+                padding: 8px 16px;
+                border-radius: 20px;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(0,0,0,0.6);
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+                backdrop-filter: blur(10px);
+                transition: all 0.2s ease;
+              }
+
+              #mode-toggle:hover {
+                background: rgba(102,126,234,0.6);
+              }
+
+              /* Loading indicator */
+              #mascot-loading {
+                position: fixed;
+                top: 50%;
+                left: calc(max(20px, (50vw - 500px) / 2 - 100px));
+                transform: translate(-50%, -50%);
+                color: #667eea;
+                font-size: 14px;
+                opacity: 0.6;
+                z-index: 101;
+              }
+
+              @media (max-width: 768px) {
+                #mascot-loading {
+                  top: 30%;
+                  left: 50%;
+                }
+              }
+
+              /* Fallback logo if both fail */
               .hero-logo-fallback {
-                width: 140px;
-                height: 140px;
-                margin: 0 auto 24px;
+                position: fixed;
+                top: 50%;
+                left: calc(max(20px, (50vw - 500px) / 2 - 60px));
+                transform: translateY(-50%);
+                width: 120px;
+                height: 120px;
                 display: none;
                 filter: drop-shadow(0 0 40px rgba(132, 207, 197, 0.5));
-                animation: sinusoidalFloat 8s ease-in-out infinite;
+                z-index: 100;
               }
 
               .hero-logo-fallback.visible {
                 display: block;
               }
 
-              .hero-mascot-container.hidden {
-                display: none;
+              @media (max-width: 768px) {
+                .hero-logo-fallback {
+                  top: 25%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                }
+              }
+
+              /* ============================================
+                 PAGE CONTENT
+                 ============================================ */
+
+              .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 40px 24px;
+                position: relative;
+                z-index: 1;
+              }
+
+              /* Hero Section */
+              .hero {
+                text-align: center;
+                padding: clamp(8rem, 20vh, 12rem) 20px 60px;
+                position: relative;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
               }
 
               .hero h1 {
-                font-size: 3.5rem;
-                font-weight: 700;
-                background: linear-gradient(135deg, var(--pink) 0%, var(--blue) 50%, var(--teal) 100%);
-                background-size: 200% 200%;
+                font-size: clamp(2.5rem, 7vw, 4rem);
+                font-weight: 900;
+                background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 30%, #a5b4fc 60%, #667eea 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
-                animation: gradientText 8s ease infinite;
                 margin-bottom: 16px;
-                letter-spacing: -1px;
-              }
-
-              @keyframes gradientText {
-                0%, 100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
+                letter-spacing: -0.04em;
+                line-height: 1.05;
               }
 
               .hero-tagline {
-                font-size: 1.25rem;
-                color: var(--text-muted);
+                font-size: clamp(1rem, 2.5vw, 1.25rem);
+                color: rgba(255, 255, 255, 0.7);
                 max-width: 600px;
                 margin: 0 auto 32px;
                 line-height: 1.6;
@@ -491,15 +542,18 @@ jobs:
             </style>
           </head>
           <body>
-            <div class="bg-gradient"></div>
+            <!-- Mascot containers - outside page content flow -->
+            <div id="mascot-container-2d" style="display: none;">
+              <canvas id="mascot-2d-canvas"></canvas>
+            </div>
+            <div id="mascot-container-3d"></div>
+            <div id="mascot-loading">Loading mascot...</div>
+            <img src="assets/emotive-engine-icon-W.svg" alt="Emotive Engine" class="hero-logo-fallback" id="hero-fallback">
+            <button id="mode-toggle" style="display: none;">Switch to 2D</button>
 
             <div class="container">
               <!-- Hero -->
               <header class="hero">
-                <!-- 3D Crystal Mascot - container only, engine creates canvas -->
-                <div id="hero-mascot" class="hero-mascot-container"></div>
-                <!-- Fallback if 3D fails to load -->
-                <img src="assets/emotive-engine-icon-W.svg" alt="Emotive Engine" class="hero-logo-fallback" id="hero-fallback">
                 <h1>Emotive Engine</h1>
                 <p class="hero-tagline">
                   A powerful emotional AI mascot engine with 2D canvas and 3D WebGL rendering.
@@ -856,65 +910,308 @@ jobs:
               </footer>
             </div>
 
-            <!-- Load 3D mascot -->
+            <!-- Mascot Renderer - matches MascotRenderer.tsx exactly -->
             <script type="module">
-              // Initialize 3D crystal mascot
-              async function initHeroMascot() {
-                const container = document.getElementById('hero-mascot');
-                const fallback = document.getElementById('hero-fallback');
+              // State
+              const STORAGE_KEY = 'emotive-mascot-mode';
+              let currentMode = null; // '3d' or '2d'
+              let mascot = null;
+              let hasWebGL = false;
 
+              // DOM elements
+              const container2D = document.getElementById('mascot-container-2d');
+              const container3D = document.getElementById('mascot-container-3d');
+              const canvas2D = document.getElementById('mascot-2d-canvas');
+              const loading = document.getElementById('mascot-loading');
+              const fallback = document.getElementById('hero-fallback');
+              const modeToggle = document.getElementById('mode-toggle');
+
+              // Check WebGL support
+              function checkWebGLSupport() {
                 try {
-                  // Import the 3D mascot module
-                  const module = await import('./dist/emotive-mascot-3d.js');
-                  const EmotiveMascot3D = module.default || module.EmotiveMascot3D;
+                  const canvas = document.createElement('canvas');
+                  return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+                } catch {
+                  return false;
+                }
+              }
 
-                  if (!EmotiveMascot3D) {
-                    throw new Error('EmotiveMascot3D not found in module');
-                  }
+              // Get stored mode preference
+              function getStoredMode() {
+                try {
+                  const stored = localStorage.getItem(STORAGE_KEY);
+                  if (stored === '3d' || stored === '2d') return stored;
+                } catch {}
+                return null;
+              }
 
-                  // Initialize with crystal geometry (uses rough.obj model)
-                  const mascot = new EmotiveMascot3D({
-                    coreGeometry: 'crystal',
-                    enableParticles: false,
-                    enableControls: false,
-                    autoRotate: true,
-                    autoRotateSpeed: 0.4,
-                    enableBlinking: false,
-                    enableBreathing: true,
-                    cameraDistance: 1.3,
-                    fov: 30,
-                    assetBasePath: './assets'
-                  });
+              // Store mode preference
+              function storeMode(mode) {
+                try { localStorage.setItem(STORAGE_KEY, mode); } catch {}
+              }
 
-                  mascot.init(container);
-                  mascot.start();
+              // Destroy current mascot
+              function destroyMascot() {
+                if (mascot) {
+                  try {
+                    mascot.stop?.();
+                    mascot.destroy?.();
+                  } catch {}
+                  mascot = null;
+                }
+              }
 
-                  // Add sinusoidal animation class after successful init
-                  container.classList.add('animated');
+              // Wait for global variable
+              function waitForGlobal(name, timeout = 10000) {
+                return new Promise((resolve, reject) => {
+                  const start = Date.now();
+                  const check = () => {
+                    const global = window[name];
+                    if (global) resolve(global);
+                    else if (Date.now() - start > timeout) reject(new Error('Timeout waiting for ' + name));
+                    else setTimeout(check, 50);
+                  };
+                  check();
+                });
+              }
 
-                  // Cycle through calm emotions
-                  const emotions = ['calm', 'joy', 'love', 'focused'];
-                  let emotionIndex = 0;
-                  setInterval(() => {
-                    emotionIndex = (emotionIndex + 1) % emotions.length;
-                    mascot.setEmotion(emotions[emotionIndex]);
-                  }, 8000);
+              // Load 3D mascot - matches MascotRenderer.tsx load3DMascot
+              async function load3DMascot() {
+                container2D.style.display = 'none';
+                container3D.style.display = 'block';
 
-                  console.log('✨ Hero crystal mascot initialized');
+                if (!document.querySelector('script[src*="emotive-mascot-3d"]')) {
+                  const script = document.createElement('script');
+                  script.src = './dist/emotive-mascot-3d.js?v=' + Date.now();
+                  script.async = true;
+                  document.head.appendChild(script);
+                }
 
+                const EmotiveMascot3DModule = await waitForGlobal('EmotiveMascot3D');
+                const EmotiveMascot3D = EmotiveMascot3DModule?.default || EmotiveMascot3DModule;
+
+                if (!EmotiveMascot3D || typeof EmotiveMascot3D !== 'function') {
+                  throw new Error('EmotiveMascot3D class not found');
+                }
+
+                const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+                const cpuCores = navigator.hardwareConcurrency || 4;
+                const isLowEnd = cpuCores <= 4 || isMobile;
+
+                mascot = new EmotiveMascot3D({
+                  coreGeometry: 'crystal',
+                  enableParticles: true,
+                  enablePostProcessing: true,
+                  enableControls: false,
+                  autoRotate: true,
+                  autoRotateSpeed: 0.3,
+                  defaultEmotion: 'neutral',
+                  maxParticles: isLowEnd ? 100 : 200,
+                  targetFPS: isLowEnd ? 30 : 60,
+                  cameraDistance: 2.5,
+                  fov: 35,
+                  minZoom: 1.5,
+                  maxZoom: 4.0,
+                  enableBlinking: true,
+                  enableBreathing: true,
+                  enableShadows: false,
+                  assetBasePath: './assets'
+                });
+
+                mascot.init(container3D);
+                mascot.start();
+                console.log('✨ 3D mascot initialized');
+              }
+
+              // Load 2D mascot - matches MascotRenderer.tsx load2DMascot
+              async function load2DMascot() {
+                container3D.style.display = 'none';
+                container2D.style.display = 'block';
+
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const dpr = window.devicePixelRatio || 1;
+
+                canvas2D.setAttribute('width', Math.round(vw * dpr).toString());
+                canvas2D.setAttribute('height', Math.round(vh * dpr).toString());
+
+                if (!document.querySelector('script[src*="emotive-mascot.umd"]')) {
+                  const script = document.createElement('script');
+                  script.src = './dist/emotive-mascot.umd.js?v=' + Date.now();
+                  script.async = true;
+                  document.head.appendChild(script);
+                }
+
+                let EmotiveMascotModule;
+                try {
+                  EmotiveMascotModule = await waitForGlobal('EmotiveMascotLean', 5000);
+                } catch {
+                  EmotiveMascotModule = await waitForGlobal('EmotiveMascot', 5000);
+                }
+
+                const EmotiveMascot = EmotiveMascotModule?.default || EmotiveMascotModule;
+
+                if (!EmotiveMascot || typeof EmotiveMascot !== 'function') {
+                  throw new Error('EmotiveMascot class not found');
+                }
+
+                const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+                const cpuCores = navigator.hardwareConcurrency || 4;
+                const isLowEnd = cpuCores <= 4 || isMobile;
+
+                mascot = new EmotiveMascot({
+                  canvasId: 'mascot-2d-canvas',
+                  targetFPS: isLowEnd ? 30 : 60,
+                  enableAudio: false,
+                  maxParticles: isLowEnd ? 30 : 80,
+                  defaultEmotion: 'neutral',
+                  enableGazeTracking: false,
+                  enableIdleBehaviors: true,
+                });
+
+                await mascot.init(canvas2D);
+                mascot.setParticleSystemCanvasDimensions?.(vw, vh);
+                mascot.setBackdrop?.({
+                  enabled: true,
+                  radius: 3.5,
+                  intensity: 0.85,
+                  blendMode: 'normal',
+                  falloff: 'smooth',
+                  edgeSoftness: 0.95,
+                  coreTransparency: 0.3,
+                  responsive: true,
+                });
+                mascot.setScale?.({ core: 0.8, particles: 1.4 });
+                mascot.setPosition?.(isMobile ? 0 : -vw * 0.38, 0, 0);
+                mascot.start();
+                console.log('✨ 2D mascot initialized');
+              }
+
+              // Toggle mode
+              async function toggleMode() {
+                const newMode = currentMode === '3d' ? '2d' : '3d';
+                if (newMode === '3d' && !hasWebGL) return;
+
+                destroyMascot();
+                currentMode = newMode;
+                storeMode(newMode);
+                modeToggle.textContent = newMode === '3d' ? 'Switch to 2D' : 'Switch to 3D';
+
+                loading.style.display = 'block';
+                try {
+                  if (newMode === '3d') await load3DMascot();
+                  else await load2DMascot();
+                  loading.style.display = 'none';
                 } catch (error) {
-                  console.error('3D mascot failed to load:', error);
-                  // Show fallback logo
-                  container.classList.add('hidden');
+                  console.error('Mode switch failed:', error);
+                  loading.style.display = 'none';
                   fallback.classList.add('visible');
                 }
               }
 
-              // Initialize when DOM is ready
+              // Scroll handler for mascot position - matches page.tsx
+              function setupScrollHandler() {
+                let ticking = false;
+                let rafId = null;
+
+                const updatePosition = () => {
+                  if (!mascot) { ticking = false; return; }
+
+                  try {
+                    const scrollY = window.scrollY;
+                    const vh = window.innerHeight;
+                    const vw = window.innerWidth;
+                    const isMobile = vw < 768;
+
+                    if (typeof mascot.setPosition === 'function') {
+                      const heroTextStart = Math.max(0, (vw - 1000) / 2);
+                      const gapCenter = heroTextStart / 2;
+
+                      if (currentMode === '2d') {
+                        const baseXOffset = isMobile ? 0 : gapCenter - vw / 2;
+                        const yOffset = isMobile
+                          ? -vh * 0.25 + scrollY * 0.5
+                          : (scrollY - vh * 0.1) * 0.5;
+                        const wavelength = 600;
+                        const amplitude = isMobile ? Math.min(80, vw * 0.15) : Math.min(100, vw * 0.08);
+                        const xOffset = baseXOffset + (amplitude * Math.sin(scrollY / wavelength));
+                        mascot.setPosition(xOffset, yOffset, 0);
+                      } else {
+                        const yOffset = isMobile
+                          ? scrollY * 0.4
+                          : (scrollY - vh * 0.1) * 0.4;
+                        const wavelength = 600;
+                        const amplitude = isMobile ? Math.min(60, vw * 0.1) : Math.min(80, vw * 0.06);
+                        const xOffset = amplitude * Math.sin(scrollY / wavelength);
+                        mascot.setPosition(xOffset, yOffset, 0);
+                      }
+                    }
+
+                    // Hide mascot after hero
+                    const heroHeight = isMobile ? vh * 0.5 : vh * 0.9;
+                    const container = currentMode === '3d' ? container3D : container2D;
+                    if (scrollY < heroHeight) {
+                      container.style.opacity = '1';
+                      container.style.visibility = 'visible';
+                    } else {
+                      container.style.opacity = '0';
+                      container.style.visibility = 'hidden';
+                    }
+                  } catch (e) {
+                    console.error('Scroll update error:', e);
+                  }
+                  ticking = false;
+                };
+
+                window.addEventListener('scroll', () => {
+                  if (!ticking) {
+                    ticking = true;
+                    if (rafId !== null) cancelAnimationFrame(rafId);
+                    rafId = requestAnimationFrame(updatePosition);
+                  }
+                }, { passive: true });
+
+                updatePosition();
+              }
+
+              // Initialize
+              async function init() {
+                hasWebGL = checkWebGLSupport();
+                const storedMode = getStoredMode();
+
+                // Determine initial mode
+                if (storedMode) {
+                  currentMode = (storedMode === '3d' && !hasWebGL) ? '2d' : storedMode;
+                } else {
+                  currentMode = hasWebGL ? '3d' : '2d';
+                }
+
+                modeToggle.textContent = currentMode === '3d' ? 'Switch to 2D' : 'Switch to 3D';
+
+                try {
+                  if (currentMode === '3d') await load3DMascot();
+                  else await load2DMascot();
+
+                  loading.style.display = 'none';
+                  if (hasWebGL) modeToggle.style.display = 'block';
+                  setupScrollHandler();
+                } catch (error) {
+                  console.error('Mascot initialization failed:', error);
+                  loading.style.display = 'none';
+                  container2D.style.display = 'none';
+                  container3D.style.display = 'none';
+                  fallback.classList.add('visible');
+                }
+              }
+
+              // Event listeners
+              modeToggle.addEventListener('click', toggleMode);
+
+              // Start
               if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initHeroMascot);
+                document.addEventListener('DOMContentLoaded', init);
               } else {
-                initHeroMascot();
+                init();
               }
             </script>
 
