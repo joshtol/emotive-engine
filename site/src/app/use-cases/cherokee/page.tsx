@@ -1133,10 +1133,11 @@ export default function CherokeePage() {
         color: 'white',
         position: 'relative',
         zIndex: 1,
-        overflow: 'hidden',
+        // Allow vertical scroll on Android with physical buttons - overflow:hidden clips content
+        overflowY: 'visible',
+        overflowX: 'hidden',
         width: '100%',
         maxWidth: '100%',
-        overflowX: 'hidden',
       }}>
         {/* Hero Section with Parallax */}
         <section style={{
