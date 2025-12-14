@@ -30,7 +30,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Emotive Engine - Rhythm Game',
+  title: 'Emotive Engine - Emotion-Driven Animation',
   description: 'Interactive rhythm-based animation engine with musical time synchronization',
   icons: {
     icon: [
