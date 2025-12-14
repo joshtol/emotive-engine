@@ -203,7 +203,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .uc-hero {
-  min-height: 75vh;
+  /* Use dvh for Android phones with physical buttons */
+  min-height: 75dvh;
   display: flex;
   align-items: center;
   justify-content: center;

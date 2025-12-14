@@ -534,17 +534,23 @@ input[type="range"]::-moz-range-thumb {
         height: 100vh;
     }
 
+    /* Animation frame: ALWAYS visible at top, never pushed up */
     .center-content {
-        order: -1;
-        position: sticky;
+        position: fixed;
         top: 0;
+        left: 0;
+        right: 0;
         z-index: 100;
-        flex: 0 0 auto;
         height: 40vh;
         min-height: 250px;
         width: 100%;
         padding: 10px;
         background: inherit;
+    }
+
+    /* Spacer to push menus below the fixed animation frame */
+    .left-menu {
+        margin-top: max(40vh, 250px); /* Match .center-content height */
     }
 
     .left-menu,
@@ -579,9 +585,15 @@ input[type="range"]::-moz-range-thumb {
         padding: 12px;
     }
 
+    /* Smaller animation frame on small phones */
     .center-content {
-        min-height: 30vh;
-        max-height: 40vh;
+        height: 35vh;
+        min-height: 200px;
+    }
+
+    /* Adjust spacer for smaller animation frame */
+    .left-menu {
+        margin-top: max(35vh, 200px);
     }
 }
 

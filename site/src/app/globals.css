@@ -309,7 +309,8 @@ body {
     'main'
     'footer';
   min-width: 0;
-  min-height: 100vh;
+  /* Use dvh for Android phones with physical buttons - falls back to vh */
+  min-height: 100dvh;
 }
 .emotive-header {
   grid-area: header;
@@ -2354,8 +2355,8 @@ h2.section-header {
 /* Parallax mascot area covers full document height */
 .parallax-container .full-vp-mascot-area {
   position: fixed;
-  height: 100vh;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
 }
 
 /* Full document mascot area for parallax pages */
@@ -2364,7 +2365,7 @@ h2.section-header {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: 1;
   pointer-events: none;
 }
@@ -2480,11 +2481,11 @@ h2.section-header {
 .hero-section {
   padding: 6rem 2rem;
   text-align: center;
-  background: linear-gradient(135deg, 
-    rgba(0, 0, 0, 0.9) 0%, 
+  background: linear-gradient(135deg,
+    rgba(0, 0, 0, 0.9) 0%,
     rgba(26, 26, 26, 0.8) 50%,
     rgba(0, 0, 0, 0.95) 100%);
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3214,19 +3215,19 @@ h2.section-header {
 /* Tablet and mobile responsive adjustments */
 @media (max-width: 1024px) {
   .emotive-container {
-    min-height: 100vh !important;
-    grid-template-rows: 6vh 1fr 4vh !important;
+    min-height: 100dvh !important;
+    grid-template-rows: 6dvh 1fr 4dvh !important;
   }
   
   .emotive-header {
-    height: 6vh !important;
+    height: 6dvh !important;
   }
-  
+
   .emotive-footer {
-    height: 4vh !important;
+    height: 4dvh !important;
     z-index: 1 !important;
   }
-  
+
   /* Ensure footer is visible on tablets */
   .legal-footer {
     display: flex !important;
@@ -3237,8 +3238,8 @@ h2.section-header {
 /* Portrait orientation layout */
 @media (orientation: portrait) {
   .emotive-container {
-    min-height: 100vh !important;
-    grid-template-rows: 5vh 1fr 4vh !important;
+    min-height: 100dvh !important;
+    grid-template-rows: 5dvh 1fr 4dvh !important;
   }
   
   .emotive-main {
@@ -3334,46 +3335,46 @@ h2.section-header {
   
   /* Reduce header height and content size in portrait */
   .emotive-container {
-    min-height: 100vh !important;
-    grid-template-rows: 5vh 1fr 4vh !important;
+    min-height: 100dvh !important;
+    grid-template-rows: 5dvh 1fr 4dvh !important;
   }
-  
+
   .emotive-header {
-    height: 5vh !important;
+    height: 5dvh !important;
     z-index: 100000 !important;
     position: relative !important;
   }
-  
+
   .emotive-footer {
-    height: 4vh !important;
+    height: 4dvh !important;
     z-index: 1 !important;
     display: flex !important;
     visibility: visible !important;
   }
-  
+
   /* Ensure footer is visible in portrait mode */
   .legal-footer {
     display: flex !important;
     visibility: visible !important;
     height: 100% !important;
   }
-  
+
   .emotive-logo-svg {
-    height: 3.5vh !important;
+    height: 3.5dvh !important;
     width: auto !important;
     filter: none !important;
   }
   
   .header-system-controls .sci-fi-btn {
-    height: 3.5vh !important;
-    width: 3.5vh !important;
+    height: 3.5dvh !important;
+    width: 3.5dvh !important;
   }
-  
-  
+
+
   .header-system-controls .sci-fi-btn img,
   .user-status img {
-    height: 3vh !important;
-    width: 3vh !important;
+    height: 3dvh !important;
+    width: 3dvh !important;
   }
   
   /* Position messages above mascot in portrait */

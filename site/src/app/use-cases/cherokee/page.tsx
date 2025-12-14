@@ -416,7 +416,7 @@ export default function CherokeePage() {
         } else if (isPastHero) {
           zIndex = -1  // Behind content when past hero (shining through glass cards)
         } else {
-          zIndex = 50  // In front of content but below header (100000) during hero section
+          zIndex = 100001  // Above header to fix Android stacking context bug
         }
 
         // Update z-index ONLY when it changes (threshold-based, not continuous)
@@ -1126,7 +1126,9 @@ export default function CherokeePage() {
       />
 
       <main style={{
-        minHeight: '100vh',
+        // Use dvh (dynamic viewport height) for Android phones with physical buttons
+        // Falls back to vh on browsers that don't support dvh
+        minHeight: '100dvh',
         background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
         color: 'white',
         position: 'relative',
@@ -1138,7 +1140,8 @@ export default function CherokeePage() {
       }}>
         {/* Hero Section with Parallax */}
         <section style={{
-          minHeight: '75vh',
+          // Use dvh for Android phones with physical buttons
+          minHeight: '75dvh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

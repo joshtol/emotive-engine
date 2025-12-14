@@ -326,11 +326,12 @@ export default function MascotRenderer({
 
   // 3D container dimensions - positioned like 2D mascot
   // Both mobile and desktop: 10% larger containers
-  // IMPORTANT: Use z-index below header (100000) to prevent overlap issues on mobile
+  // HACKY FIX: Use z-index ABOVE header (100000) to fix Android stacking context bug
+  // The mascot is centered horizontally so it won't cover the hamburger menu
   const container3DStyle: React.CSSProperties = isMobile
     ? {
         // Mobile: centered horizontally, center of container at 18% from top
-        // Keep original transform approach - z-index fix handles header overlap
+        // Keep original transform approach
         position: 'fixed',
         top: '18%',
         left: '50%',
@@ -338,7 +339,7 @@ export default function MascotRenderer({
         width: '440px',   // 400 * 1.1
         height: '605px',  // 550 * 1.1
         pointerEvents: enableControls ? 'auto' : 'none',
-        zIndex: 50, // Below header (100000) to prevent subduction
+        zIndex: 100001, // ABOVE header (100000) to fix Android stacking context bug
       }
     : {
         // Desktop: center crystal in the gap, 50% from top (vertically centered)
@@ -350,7 +351,7 @@ export default function MascotRenderer({
         width: '750px',   // 500 * 1.5
         height: '1050px', // 700 * 1.5
         pointerEvents: enableControls ? 'auto' : 'none',
-        zIndex: 50, // Below header (100000) to prevent overlap issues
+        zIndex: 100001, // ABOVE header to fix stacking context issues
       }
 
   return (
@@ -367,7 +368,7 @@ export default function MascotRenderer({
             width: '100vw',
             height: '100vh',
             pointerEvents: 'none',
-            zIndex: 50, // Below header (100000) to prevent overlap issues
+            zIndex: 100001, // ABOVE header (100000) to fix Android stacking context bug
             opacity: 1,
             transition: 'opacity 0.5s ease-out',
             ...containerStyle,
