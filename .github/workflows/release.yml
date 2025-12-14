@@ -9,6 +9,8 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -52,9 +54,9 @@ jobs:
           body_path: /tmp/release-notes.md
           files: |
             dist/emotive-mascot.umd.js
-            dist/emotive-mascot.minimal.js
-            dist/emotive-mascot.audio.js
-            dist/emotive-engine.d.ts
+            dist/emotive-mascot.lean.umd.js
+            dist/emotive-mascot-3d.umd.js
+            types/index.d.ts
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') || contains(steps.version.outputs.VERSION, 'rc') }}
         env:
