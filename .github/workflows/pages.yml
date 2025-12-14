@@ -982,7 +982,7 @@ jobs:
 
                 if (!document.querySelector('script[src*="emotive-mascot-3d"]')) {
                   const script = document.createElement('script');
-                  script.src = './dist/emotive-mascot-3d.js?v=' + Date.now();
+                  script.src = './dist/emotive-mascot-3d.umd.js?v=' + Date.now();
                   script.async = true;
                   document.head.appendChild(script);
                 }
