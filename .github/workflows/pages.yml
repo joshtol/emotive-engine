@@ -546,13 +546,8 @@ jobs:
                   <!-- Featured: 3D Demo -->
                   <a href="examples/3d/3d-demo.html" class="card featured">
                     <div class="card-preview">
-                      <!-- TODO: Add animated GIF showing geometry morphing between crystal/moon/sun with emotion changes -->
-                      <!-- File: assets/previews/3d-demo.gif (800x400px, show all 3 geometries morphing) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F310;</span>
-                        <span>Preview: Animated GIF showing crystal morphing to moon to sun with particle effects and emotion transitions</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/3d-demo.gif" alt="3D Demo" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F310;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -562,11 +557,10 @@ jobs:
                         </span>
                       </div>
                       <h3>3D Interactive Showcase</h3>
-                      <p>The complete 3D experience. Switch between crystal, moon, and sun geometries. Explore all emotions, gestures, and visual effects including bloom, particles, and subsurface scattering.</p>
+                      <p>The complete 3D experience. Switch between crystal, moon, and sun geometries with emotions and effects.</p>
                       <div class="card-tags">
                         <span class="tag">all geometries</span>
                         <span class="tag">emotions</span>
-                        <span class="tag">particles</span>
                         <span class="tag">bloom</span>
                       </div>
                     </div>
@@ -575,13 +569,8 @@ jobs:
                   <!-- Crystal -->
                   <a href="examples/3d/crystal-demo.html" class="card medium">
                     <div class="card-preview">
-                      <!-- TODO: Add screenshot/GIF of crystal with soul glow pulsing -->
-                      <!-- File: assets/previews/crystal.gif (400x300px, subtle soul pulse animation) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F48E;</span>
-                        <span>Preview: Crystal with inner soul glow pulsing</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/crystal.gif" alt="Crystal Soul" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F48E;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -602,13 +591,8 @@ jobs:
                   <!-- Moon -->
                   <a href="examples/3d/moon-demo.html" class="card medium">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF of moon cycling through phases -->
-                      <!-- File: assets/previews/moon.gif (400x300px, phase cycle animation) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F319;</span>
-                        <span>Preview: Moon cycling through all 8 phases</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/moon.gif" alt="Moon Phases" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F319;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -629,13 +613,8 @@ jobs:
                   <!-- Sun -->
                   <a href="examples/3d/sun-demo.html" class="card small">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF of solar eclipse with corona rays -->
-                      <!-- File: assets/previews/sun.gif (400x300px, eclipse animation with corona) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x2600;</span>
-                        <span>Preview: Solar eclipse with corona rays</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/sun.gif" alt="Solar Eclipse" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x2600;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -656,13 +635,8 @@ jobs:
                   <!-- Blood Moon -->
                   <a href="examples/3d/blood-moon-demo.html" class="card small">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF of lunar eclipse with red shadow sweep -->
-                      <!-- File: assets/previews/blood-moon.gif (400x300px, eclipse shadow animation) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F311;</span>
-                        <span>Preview: Lunar eclipse with blood red Rayleigh scattering</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/blood-moon.gif" alt="Blood Moon" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F311;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -691,16 +665,11 @@ jobs:
                 </div>
 
                 <div class="bento-grid">
-                  <!-- Hello World - Featured for beginners -->
+                  <!-- Hello World -->
                   <a href="examples/2d/2d-hello-world.html" class="card medium">
                     <div class="card-preview">
-                      <!-- TODO: Add simple GIF of mascot breathing/pulsing -->
-                      <!-- File: assets/previews/hello-world.gif (400x300px, simple breathing animation) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F44B;</span>
-                        <span>Preview: Simple mascot with gentle breathing animation</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/hello-world.gif" alt="Hello World" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F44B;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -721,13 +690,8 @@ jobs:
                   <!-- Basic Usage -->
                   <a href="examples/2d/basic-usage.html" class="card medium">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF showing emotion changes and shape morphing -->
-                      <!-- File: assets/previews/basic-usage.gif (400x300px, emotion + shape demo) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F3AE;</span>
-                        <span>Preview: Mascot changing emotions and morphing shapes</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/basic-usage.gif" alt="Basic Usage" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F3AE;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -749,13 +713,8 @@ jobs:
                   <!-- Breathing App -->
                   <a href="examples/2d/breathing-app.html" class="card small">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF of breathing exercise visualization -->
-                      <!-- File: assets/previews/breathing.gif (400x300px, inhale/exhale animation) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F32C;</span>
-                        <span>Preview: Guided breathing with expand/contract animation</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/breathing.gif" alt="Breathing App" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F32C;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -776,13 +735,8 @@ jobs:
                   <!-- Event Handling -->
                   <a href="examples/2d/event-handling.html" class="card small">
                     <div class="card-preview">
-                      <!-- TODO: Add screenshot of event log UI -->
-                      <!-- File: assets/previews/events.png (400x300px, event log interface) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F4E1;</span>
-                        <span>Preview: Real-time event log monitoring UI</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/events.gif" alt="Event Handling" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F4E1;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -803,13 +757,8 @@ jobs:
                   <!-- Rhythm Sync -->
                   <a href="examples/2d/rhythm-sync-demo.html" class="card small">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF of beat-synced animation -->
-                      <!-- File: assets/previews/rhythm.gif (400x300px, pulsing to beat) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F3B5;</span>
-                        <span>Preview: Mascot pulsing in sync with beat</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/rhythm.gif" alt="Rhythm Sync" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F3B5;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -840,13 +789,8 @@ jobs:
                 <div class="bento-grid">
                   <a href="examples/llm-integration/claude-haiku.html" class="card medium">
                     <div class="card-preview">
-                      <!-- TODO: Add GIF of chat interaction with emotion changes -->
-                      <!-- File: assets/previews/claude-chat.gif (400x300px, typing message, mascot reacts) -->
-                      <div class="preview-placeholder">
-                        <span class="icon">&#x1F4AC;</span>
-                        <span>Preview: Chat interaction with mascot responding emotionally to messages</span>
-                      </div>
-                      <div class="play-indicator"></div>
+                      <img src="assets/previews/claude-chat.gif" alt="Claude Chat" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F4AC;</span></div>
                     </div>
                     <div class="card-content">
                       <div class="card-meta">
@@ -856,7 +800,7 @@ jobs:
                         </span>
                       </div>
                       <h3>Claude Chat</h3>
-                      <p>Emotional AI assistant that responds with appropriate emotions, shapes, and gestures based on conversation sentiment.</p>
+                      <p>Emotional AI assistant responding with emotions based on conversation sentiment.</p>
                       <div class="card-tags">
                         <span class="tag">Claude</span>
                         <span class="tag">sentiment</span>
@@ -872,7 +816,7 @@ jobs:
                 <div class="footer-links">
                   <a href="https://github.com/joshtol/emotive-engine">GitHub</a>
                   <a href="https://github.com/joshtol/emotive-engine#readme">Documentation</a>
-                  <a href="https://www.npmjs.com/package/emotive-engine">npm</a>
+                  <a href="https://www.npmjs.com/package/@joshtol/emotive-engine">npm</a>
                 </div>
                 <p class="footer-copy">Emotive Engine - Emotional AI Mascot Library</p>
               </footer>
