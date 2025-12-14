@@ -442,7 +442,7 @@ export function setupTidalLock(mascot, idleDelay = 2000) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function isCrystalGeometry(geometry) {
-    return ['crystal', 'heart', 'rough'].includes(geometry);
+    return ['crystal', 'heart', 'rough', 'star'].includes(geometry);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
