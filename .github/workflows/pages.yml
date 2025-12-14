@@ -206,28 +206,6 @@ jobs:
                 100% { stop-color: #4090CE; }
               }
 
-              /* Shimmer overlay effect */
-              .hero-logo-container::after {
-                content: '';
-                position: absolute;
-                inset: -20%;
-                background: linear-gradient(
-                  105deg,
-                  transparent 40%,
-                  rgba(255, 255, 255, 0.08) 45%,
-                  rgba(255, 255, 255, 0.15) 50%,
-                  rgba(255, 255, 255, 0.08) 55%,
-                  transparent 60%
-                );
-                animation: shimmer 4s ease-in-out infinite;
-                pointer-events: none;
-              }
-
-              @keyframes shimmer {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-              }
-
               .hero-tagline {
                 font-size: clamp(1rem, 2.5vw, 1.25rem);
                 color: rgba(255, 255, 255, 0.65);
@@ -584,11 +562,41 @@ jobs:
 
               @media (max-width: 600px) {
                 .card.featured, .card.medium, .card.small { grid-column: span 12; }
-                .hero h1 { font-size: 2rem; }
-                .hero-tagline { font-size: 1rem; }
                 .bento-grid { gap: 12px; }
                 .card-preview { height: 160px; }
                 .card.featured .card-preview { height: 200px; }
+
+                /* Compact hero on mobile - show first example on landing */
+                .hero {
+                  min-height: auto;
+                  padding: 60px 16px 40px;
+                }
+                .hero::before { display: none; } /* Hide stars on mobile */
+                .hero::after {
+                  width: 300px;
+                  height: 300px;
+                  filter: blur(40px);
+                }
+                .hero-logo-container {
+                  animation: logoEnter 1s ease-out; /* Remove float on mobile */
+                }
+                .hero-logotype {
+                  width: min(320px, 85vw);
+                  filter: drop-shadow(0 0 20px rgba(221, 74, 154, 0.25));
+                }
+                .hero-tagline {
+                  font-size: 0.95rem;
+                  margin: 16px auto 24px;
+                  max-width: 300px;
+                }
+                .hero-badges {
+                  gap: 8px;
+                }
+                .badge {
+                  padding: 8px 14px;
+                  font-size: 0.75rem;
+                }
+                .scroll-indicator { display: none; }
               }
             </style>
           </head>
