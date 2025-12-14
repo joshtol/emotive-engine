@@ -1111,7 +1111,15 @@ export default function CherokeePage() {
   }, [selectedPhraseIndex])
 
   return (
-    <>
+    <div style={{
+      // Fix for Android phones with physical buttons - ensure content isn't clipped
+      minHeight: '100dvh',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      // Critical: allow content to scroll and grow beyond viewport
+      overflow: 'visible',
+    }}>
       <EmotiveHeader />
 
       {/* 3D/2D Mascot Renderer with mode toggle and scroll-driven positioning */}
@@ -3096,6 +3104,6 @@ export default function CherokeePage() {
         onClose={() => setIsScheduleModalOpen(false)}
         calLink="emotive-engine/30min"
       />
-    </>
+    </div>
   )
 }
