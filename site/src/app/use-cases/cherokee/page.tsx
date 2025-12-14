@@ -1111,15 +1111,7 @@ export default function CherokeePage() {
   }, [selectedPhraseIndex])
 
   return (
-    <div style={{
-      // Fix for Android phones with physical buttons - ensure content isn't clipped
-      minHeight: '100dvh',
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      // Critical: allow content to scroll and grow beyond viewport
-      overflow: 'visible',
-    }}>
+    <>
       <EmotiveHeader />
 
       {/* 3D/2D Mascot Renderer with mode toggle and scroll-driven positioning */}
@@ -1134,23 +1126,19 @@ export default function CherokeePage() {
       />
 
       <main style={{
-        // Use dvh (dynamic viewport height) for Android phones with physical buttons
-        // Falls back to vh on browsers that don't support dvh
-        minHeight: '100dvh',
+        minHeight: '100vh',
         background: 'linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(5,5,5,0.85) 100%)',
         color: 'white',
         position: 'relative',
         zIndex: 1,
-        // Allow vertical scroll on Android with physical buttons - overflow:hidden clips content
-        overflowY: 'visible',
-        overflowX: 'hidden',
+        overflow: 'hidden',
         width: '100%',
         maxWidth: '100%',
+        overflowX: 'hidden',
       }}>
         {/* Hero Section with Parallax */}
         <section style={{
-          // Use dvh for Android phones with physical buttons
-          minHeight: '75dvh',
+          minHeight: '75vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1186,8 +1174,8 @@ export default function CherokeePage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            // Account for safe-area-inset-top on notched devices
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + clamp(8rem, 20vh, 12rem))',
+            // Use clamp for responsive padding - safe-area handled at header level
+            paddingTop: 'clamp(6rem, 15vh, 10rem)',
             position: 'relative',
             zIndex: 2
           }}>
@@ -3104,6 +3092,6 @@ export default function CherokeePage() {
         onClose={() => setIsScheduleModalOpen(false)}
         calLink="emotive-engine/30min"
       />
-    </div>
+    </>
   )
 }
