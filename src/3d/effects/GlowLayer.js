@@ -122,10 +122,10 @@ export class GlowLayer {
 
                     // Soft glow color with intensity
                     // Use HDR values (>1.0) for bloom pickup
-                    vec3 color = glowColor * intensity * 3.5;
+                    vec3 color = glowColor * intensity * 2.0;
 
                     // Alpha for blending
-                    float alpha = intensity * 0.9;
+                    float alpha = intensity * 0.6;
 
                     gl_FragColor = vec4(color, alpha);
                 }
