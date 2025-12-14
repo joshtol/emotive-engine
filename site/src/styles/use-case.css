@@ -207,7 +207,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  /* Account for safe-area-inset on notched devices */
+  padding: calc(env(safe-area-inset-top, 0px) + 4rem) 2rem 4rem 2rem;
   position: relative;
 }
 
@@ -337,6 +338,7 @@
 
   .uc-hero {
     min-height: auto;
-    padding: 2rem 1rem;
+    /* Account for safe-area-inset on notched devices */
+    padding: calc(env(safe-area-inset-top, 0px) + 2rem) 1rem 2rem 1rem;
   }
 }

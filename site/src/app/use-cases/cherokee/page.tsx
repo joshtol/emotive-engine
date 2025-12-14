@@ -416,7 +416,7 @@ export default function CherokeePage() {
         } else if (isPastHero) {
           zIndex = -1  // Behind content when past hero (shining through glass cards)
         } else {
-          zIndex = 100  // In front during hero section
+          zIndex = 50  // In front of content but below header (100000) during hero section
         }
 
         // Update z-index ONLY when it changes (threshold-based, not continuous)
@@ -1174,7 +1174,8 @@ export default function CherokeePage() {
             maxWidth: '1000px',
             width: '100%',
             textAlign: 'center',
-            paddingTop: 'clamp(8rem, 20vh, 12rem)',
+            // Account for safe-area-inset-top on notched devices
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + clamp(8rem, 20vh, 12rem))',
             position: 'relative',
             zIndex: 2
           }}>

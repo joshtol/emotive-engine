@@ -26,6 +26,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: 'cover', // Extend to edges on notched devices
 }
 
 export const metadata: Metadata = {

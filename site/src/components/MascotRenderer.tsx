@@ -326,17 +326,19 @@ export default function MascotRenderer({
 
   // 3D container dimensions - positioned like 2D mascot
   // Both mobile and desktop: 10% larger containers
+  // IMPORTANT: Use z-index below header (100000) to prevent overlap issues on mobile
   const container3DStyle: React.CSSProperties = isMobile
     ? {
-        // Mobile: centered horizontally, 18% from top (center of container)
+        // Mobile: centered horizontally, center of container at 18% from top
+        // Keep original transform approach - z-index fix handles header overlap
         position: 'fixed',
         top: '18%',
         left: '50%',
-        transform: 'translate(-50%, -50%)',
+        transform: 'translate(-50%, -50%)', // Center of container at top: 18%
         width: '440px',   // 400 * 1.1
         height: '605px',  // 550 * 1.1
         pointerEvents: enableControls ? 'auto' : 'none',
-        zIndex: 100,
+        zIndex: 50, // Below header (100000) to prevent subduction
       }
     : {
         // Desktop: center crystal in the gap, 50% from top (vertically centered)
@@ -348,7 +350,7 @@ export default function MascotRenderer({
         width: '750px',   // 500 * 1.5
         height: '1050px', // 700 * 1.5
         pointerEvents: enableControls ? 'auto' : 'none',
-        zIndex: 100,
+        zIndex: 50, // Below header (100000) to prevent overlap issues
       }
 
   return (
@@ -365,7 +367,7 @@ export default function MascotRenderer({
             width: '100vw',
             height: '100vh',
             pointerEvents: 'none',
-            zIndex: 100,
+            zIndex: 50, // Below header (100000) to prevent overlap issues
             opacity: 1,
             transition: 'opacity 0.5s ease-out',
             ...containerStyle,

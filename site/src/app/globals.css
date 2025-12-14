@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth Scrolling */
+/* Smooth Scrolling & Safe Area Support */
 html {
   scroll-behavior: smooth;
+  /* Support for notched devices (iPhone X+, etc.) */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* Respect user's motion preferences */
@@ -316,7 +318,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(0.5vh + 0.2vw) calc(1vw + 0.5vh);
+  /* Account for safe-area-inset-top on notched devices */
+  padding: calc(env(safe-area-inset-top, 0px) + 0.5vh + 0.2vw) calc(1vw + 0.5vh);
+  padding-left: calc(env(safe-area-inset-left, 0px) + 1vw + 0.5vh);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 1vw + 0.5vh);
   background: rgba(26, 26, 26, 0.98);
   background-image: var(--gradient-overlay);
   backdrop-filter: blur(12px);
