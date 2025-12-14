@@ -120,59 +120,46 @@ jobs:
                 position: relative;
               }
 
-              /* 3D Mascot Container with sinusoidal animation */
+              /* 3D Mascot - clean floating crystal, no borders */
               .hero-mascot-container {
-                width: 200px;
-                height: 200px;
-                margin: 0 auto 32px;
+                width: 280px;
+                height: 280px;
+                margin: 0 auto 24px;
                 position: relative;
-                overflow: visible;
               }
 
+              /* Override example-styles.css canvas styling */
               .hero-mascot-container canvas {
-                width: 200px !important;
-                height: 200px !important;
+                width: 280px !important;
+                height: 280px !important;
                 display: block;
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
               }
 
-              /* Sinusoidal track animation */
+              /* Sinusoidal floating animation */
               @keyframes sinusoidalFloat {
-                0% { transform: translateX(-30px) translateY(0px); }
-                25% { transform: translateX(0px) translateY(-15px); }
-                50% { transform: translateX(30px) translateY(0px); }
-                75% { transform: translateX(0px) translateY(15px); }
-                100% { transform: translateX(-30px) translateY(0px); }
+                0% { transform: translateX(-20px) translateY(0px); }
+                25% { transform: translateX(0px) translateY(-10px); }
+                50% { transform: translateX(20px) translateY(0px); }
+                75% { transform: translateX(0px) translateY(10px); }
+                100% { transform: translateX(-20px) translateY(0px); }
               }
 
               .hero-mascot-container.animated {
-                animation: sinusoidalFloat 6s ease-in-out infinite;
-              }
-
-              /* Glow effect behind mascot */
-              .hero-mascot-container::before {
-                content: '';
-                position: absolute;
-                inset: -20px;
-                background: radial-gradient(circle, rgba(221, 74, 154, 0.3) 0%, rgba(64, 144, 206, 0.15) 40%, transparent 70%);
-                border-radius: 50%;
-                filter: blur(20px);
-                z-index: -1;
-                animation: glowPulse 4s ease-in-out infinite;
-              }
-
-              @keyframes glowPulse {
-                0%, 100% { opacity: 0.6; transform: scale(1); }
-                50% { opacity: 1; transform: scale(1.1); }
+                animation: sinusoidalFloat 8s ease-in-out infinite;
               }
 
               /* Fallback logo if 3D fails */
               .hero-logo-fallback {
-                width: 120px;
-                height: 120px;
-                margin: 0 auto 32px;
+                width: 140px;
+                height: 140px;
+                margin: 0 auto 24px;
                 display: none;
-                filter: drop-shadow(0 0 30px rgba(221, 74, 154, 0.4));
-                animation: sinusoidalFloat 6s ease-in-out infinite;
+                filter: drop-shadow(0 0 40px rgba(132, 207, 197, 0.5));
+                animation: sinusoidalFloat 8s ease-in-out infinite;
               }
 
               .hero-logo-fallback.visible {
@@ -509,10 +496,8 @@ jobs:
             <div class="container">
               <!-- Hero -->
               <header class="hero">
-                <!-- 3D Crystal Mascot on sinusoidal track -->
-                <div id="hero-mascot" class="hero-mascot-container">
-                  <canvas id="hero-canvas"></canvas>
-                </div>
+                <!-- 3D Crystal Mascot - container only, engine creates canvas -->
+                <div id="hero-mascot" class="hero-mascot-container"></div>
                 <!-- Fallback if 3D fails to load -->
                 <img src="assets/emotive-engine-icon-W.svg" alt="Emotive Engine" class="hero-logo-fallback" id="hero-fallback">
                 <h1>Emotive Engine</h1>
