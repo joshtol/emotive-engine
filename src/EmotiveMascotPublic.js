@@ -13,6 +13,7 @@ import { GestureController } from './public/GestureController.js';
 import { TimelineRecorder } from './public/TimelineRecorder.js';
 import { ElementAttachmentManager } from './public/ElementAttachmentManager.js';
 import { VisualEffectsManager } from './public/VisualEffectsManager.js';
+import { IntentParser } from './core/intent/IntentParser.js';
 
 /**
  * Public API wrapper for Emotive Engine
@@ -48,6 +49,14 @@ class EmotiveMascotPublic {
         this._playbackStartTime = 0;
         this._isPlaying = false;
         this._initialized = false;
+
+        // Initialize intent parser for feel() method
+        this._intentParser = new IntentParser();
+        this._feelRateLimiter = {
+            calls: [],
+            maxCallsPerSecond: 10,
+            windowMs: 1000
+        };
 
         // Initialize managers
         this._audioManager = new AudioManager(() => this._getReal());
@@ -410,6 +419,145 @@ class EmotiveMascotPublic {
      */
     updateUndertone(undertone) {
         return this._gestureController.updateUndertone(undertone);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LLM INTEGRATION - Natural Language Intent
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Express intent using natural language
+     *
+     * This is the primary method for LLM integration. It accepts plain text
+     * descriptions of emotional states, gestures, and shapes, and translates
+     * them into engine commands.
+     *
+     * @param {string} intent - Natural language intent description
+     * @returns {Object} Result with parsed intent and any errors
+     * @throws {Error} If rate limit exceeded or engine not initialized
+     *
+     * @example
+     * // Simple emotion
+     * mascot.feel('happy')
+     *
+     * // Emotion with gesture
+     * mascot.feel('curious, leaning in')
+     *
+     * // Complex intent with undertone
+     * mascot.feel('excited but nervous, bouncing')
+     *
+     * // With shape morph
+     * mascot.feel('loving, heart shape')
+     *
+     * // With intensity modifier
+     * mascot.feel('very angry, shaking')
+     *
+     * // Agreement/disagreement gestures
+     * mascot.feel('yes')  // nods
+     * mascot.feel('no')   // shakes head
+     */
+    feel(intent) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+
+        // Rate limiting
+        const now = Date.now();
+        const limiter = this._feelRateLimiter;
+
+        // Remove calls outside the window
+        limiter.calls = limiter.calls.filter(t => now - t < limiter.windowMs);
+
+        // Check rate limit
+        if (limiter.calls.length >= limiter.maxCallsPerSecond) {
+            console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
+            return {
+                success: false,
+                error: 'Rate limit exceeded',
+                parsed: null
+            };
+        }
+
+        // Record this call
+        limiter.calls.push(now);
+
+        // Parse the intent
+        const parsed = this._intentParser.parse(intent);
+
+        // Validate
+        const validation = this._intentParser.validate(parsed);
+        if (!validation.valid) {
+            console.warn('[feel] Invalid intent:', validation.errors);
+            return {
+                success: false,
+                error: validation.errors.join('; '),
+                parsed
+            };
+        }
+
+        // Execute the parsed intent
+        try {
+            // Set emotion if present
+            if (parsed.emotion) {
+                const emotionOptions = {};
+                if (parsed.undertone && parsed.undertone !== 'clear') {
+                    emotionOptions.undertone = parsed.undertone;
+                }
+                // Use intensity to influence transition duration
+                const duration = Math.round(500 + (1 - parsed.intensity) * 1000);
+                this.setEmotion(parsed.emotion, emotionOptions, duration);
+            }
+
+            // Execute gestures
+            for (const gesture of parsed.gestures) {
+                this.express(gesture);
+            }
+
+            // Morph to shape if present
+            if (parsed.shape) {
+                this.morphTo(parsed.shape);
+            }
+
+            return {
+                success: true,
+                error: null,
+                parsed
+            };
+        } catch (error) {
+            console.error('[feel] Execution error:', error);
+            return {
+                success: false,
+                error: error.message,
+                parsed
+            };
+        }
+    }
+
+    /**
+     * Get available vocabulary for the feel() method
+     *
+     * Useful for LLMs to understand what they can express.
+     *
+     * @returns {Object} Available emotions, gestures, shapes, and undertones
+     */
+    static getFeelVocabulary() {
+        return {
+            emotions: IntentParser.getAvailableEmotions(),
+            undertones: IntentParser.getAvailableUndertones(),
+            gestures: IntentParser.getAvailableGestures(),
+            shapes: IntentParser.getAvailableShapes()
+        };
+    }
+
+    /**
+     * Parse an intent string without executing it
+     *
+     * Useful for previewing what an intent will do.
+     *
+     * @param {string} intent - Natural language intent
+     * @returns {Object} Parsed intent result
+     */
+    parseIntent(intent) {
+        return this._intentParser.parse(intent);
     }
 
     /**
