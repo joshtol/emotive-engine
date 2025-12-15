@@ -353,11 +353,8 @@ export default function CheckoutSimulation({ onStepChange, openAIChat, mascot }:
       gesture: 'sparkle'
     })
 
-    setManagedTimeout(() => {
-      if (mascotRef.current && mascotRef.current.express) {
-        mascotRef.current.express('glow', { intensity: 0.8, duration: 2000 })
-      }
-    }, 500)
+    // Removed second glow effect - the sparkle from handleLLMResponse is sufficient
+    // Having both sparkle + glow was too bright
 
     // Sun stays until user scans again (morphTo crystal in handleScanProduct)
   }

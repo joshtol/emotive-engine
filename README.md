@@ -50,7 +50,7 @@ Real-time character animation engine with **Canvas 2D** and **WebGL 3D** renderi
 **Shared across both modes:**
 - 15 emotional states with smooth transitions
 - 40+ expressive gestures
-- LLM integration ready
+- **Natural language `feel()` API** for LLM integration
 - TypeScript definitions
 - Unified API
 
@@ -188,6 +188,42 @@ mascot.express('bounce');
 
 ---
 
+## LLM Integration with feel()
+
+The `feel()` method lets LLMs control the mascot using natural language:
+
+```javascript
+// Simple emotion
+mascot.feel('happy')
+
+// Emotion with gesture
+mascot.feel('curious, leaning in')
+
+// With undertone modifier
+mascot.feel('happy but nervous')
+
+// With shape morph
+mascot.feel('loving, heart shape, sparkle')
+
+// With intensity
+mascot.feel('very angry, shaking')
+```
+
+The engine parses ~1400 synonyms to understand natural expressions. For full documentation, see [LLM Integration Guide](./docs/LLM_INTEGRATION.md).
+
+### LLM System Prompt Example
+
+```
+After each response, output: FEEL: <emotion>, <gesture>
+
+Examples:
+- Greeting: FEEL: happy, wave
+- Thinking: FEEL: focused, leaning in
+- Celebrating: FEEL: euphoric, star shape, sparkle
+```
+
+---
+
 ## Emotions
 
 15 built-in emotional states with unique visual characteristics:
@@ -316,6 +352,10 @@ mascot.init(container);
 mascot.start();
 mascot.stop();
 mascot.destroy();
+
+// Natural language control (LLM-friendly)
+mascot.feel('happy, bouncing');
+mascot.feel('curious, leaning in');
 
 // Emotions
 mascot.setEmotion(name);
