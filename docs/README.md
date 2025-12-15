@@ -26,6 +26,14 @@ Welcome to the Emotive Engine documentation! This guide will help you understand
   - Return value specifications
   - Usage examples and best practices
 
+### Integration Guides
+
+- **[LLM Integration Guide](./LLM_INTEGRATION.md)** ⭐ NEW
+  - Connect Claude, GPT, Gemini, or any LLM to control the mascot
+  - Natural language `feel()` API
+  - System prompt templates
+  - Vocabulary reference (~1400 synonyms)
+
 ### Guides
 
 - [Testing Guide](./guides/testing.md) *(coming soon)*
