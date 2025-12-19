@@ -42,6 +42,7 @@ import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
 import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
+import { IntentParser } from '../core/intent/IntentParser.js';
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -142,6 +143,14 @@ export class EmotiveMascot3D {
         // State tracking
         this.emotion = 'neutral';
         this.undertone = null;
+
+        // Intent parser for feel() API
+        this._intentParser = new IntentParser();
+        this._feelRateLimiter = {
+            calls: [],
+            windowMs: 1000,
+            maxCallsPerSecond: 10
+        };
     }
 
     /**
@@ -601,6 +610,99 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Express emotions, gestures, and shapes using natural language
+     *
+     * This is the primary API for LLM integration. Instead of calling
+     * setEmotion(), express(), and morphTo() separately, you can describe
+     * what you want in plain text.
+     *
+     * @param {string} intent - Natural language description of desired state
+     * @returns {Object} Result with success status, any errors, and parsed intent
+     *
+     * @example
+     * mascot.feel('happy, bouncing')
+     * mascot.feel('curious, leaning in')
+     * mascot.feel('calm crystal breathing')
+     * mascot.feel('yes')  // nods
+     * mascot.feel('no')   // shakes head
+     */
+    feel(intent) {
+        // Guard against calls after destroy
+        if (!this.eventManager || !this.eventManager._listeners) {
+            return { success: false, error: 'Engine destroyed', parsed: null };
+        }
+
+        // Rate limiting
+        const now = Date.now();
+        const limiter = this._feelRateLimiter;
+
+        // Remove calls outside the window
+        limiter.calls = limiter.calls.filter(t => now - t < limiter.windowMs);
+
+        // Check rate limit
+        if (limiter.calls.length >= limiter.maxCallsPerSecond) {
+            console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
+            return {
+                success: false,
+                error: 'Rate limit exceeded',
+                parsed: null
+            };
+        }
+
+        // Record this call
+        limiter.calls.push(now);
+
+        // Parse the intent
+        const parsed = this._intentParser.parse(intent);
+
+        // Validate
+        const validation = this._intentParser.validate(parsed);
+        if (!validation.valid) {
+            console.warn('[feel] Invalid intent:', validation.errors);
+            return {
+                success: false,
+                error: validation.errors.join('; '),
+                parsed
+            };
+        }
+
+        // Execute the parsed intent
+        try {
+            // Set emotion if present
+            if (parsed.emotion) {
+                const emotionOptions = {};
+                if (parsed.undertone && parsed.undertone !== 'clear') {
+                    emotionOptions.undertone = parsed.undertone;
+                }
+                this.setEmotion(parsed.emotion, emotionOptions);
+            }
+
+            // Execute gestures
+            for (const gesture of parsed.gestures) {
+                this.express(gesture);
+            }
+
+            // Morph to shape if present
+            if (parsed.shape) {
+                this.morphTo(parsed.shape);
+            }
+
+            return {
+                success: true,
+                error: null,
+                parsed
+            };
+        } catch (error) {
+            console.error('[feel] Execution error:', error);
+            return {
+                success: false,
+                error: error.message,
+                parsed
+            };
+        }
+    }
+
+    /**
      * Check if a geometry morph is currently in progress
      * Useful for UI feedback or preventing certain actions during transitions
      * @returns {boolean} True if morphing
@@ -837,6 +939,45 @@ export class EmotiveMascot3D {
      */
     get breathingEnabled() {
         return this.core3D ? this.core3D.breathingEnabled !== false : true;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IMPERATIVE BREATHING PHASE API (for meditation)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Animate mascot scale for a breathing phase over a specified duration.
+     * Used by meditation controller for precise breathing exercise timing.
+     *
+     * Scale targets:
+     * - 'inhale': grows to 1.3x normal size
+     * - 'exhale': shrinks to 0.85x normal size
+     * - 'hold': maintains current scale
+     *
+     * @param {string} phase - 'inhale' | 'exhale' | 'hold'
+     * @param {number} durationSec - Duration in seconds for the animation
+     *
+     * @example
+     * // 4-7-8 breathing pattern
+     * mascot.breathePhase('inhale', 4);  // Grow over 4 seconds
+     * // ... after 4 seconds
+     * mascot.breathePhase('hold', 7);    // Hold for 7 seconds
+     * // ... after 7 seconds
+     * mascot.breathePhase('exhale', 8);  // Shrink over 8 seconds
+     */
+    breathePhase(phase, durationSec) {
+        if (this.core3D) {
+            this.core3D.breathePhase(phase, durationSec);
+        }
+    }
+
+    /**
+     * Stop any active breathing phase animation and reset to neutral scale
+     */
+    stopBreathingPhase() {
+        if (this.core3D) {
+            this.core3D.stopBreathingPhase();
+        }
     }
 
     /**

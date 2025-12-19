@@ -204,6 +204,15 @@ export class Core3DManager {
         this.breathingAnimator = new BreathingAnimator();
         this.breathingEnabled = options.enableBreathing !== false; // Enabled by default
 
+        // Imperative breathing phase animation (for meditation)
+        // Allows explicit control: breathePhase('inhale', 4) to animate scale over 4 seconds
+        this._breathPhase = null;        // 'inhale' | 'hold' | 'exhale' | null
+        this._breathPhaseStartTime = 0;
+        this._breathPhaseDuration = 0;
+        this._breathPhaseStartScale = 1.0;
+        this._breathPhaseTargetScale = 1.0;
+        this._breathPhaseScale = 1.0;     // Current animated scale (1.0 = normal)
+
         // Gesture blender
         this.gestureBlender = new GestureBlender();
 
@@ -1247,6 +1256,99 @@ export class Core3DManager {
         }
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IMPERATIVE BREATHING PHASE API (for meditation)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Animate mascot scale for a breathing phase over a specified duration.
+     * Used by meditation controller for precise breathing exercise timing.
+     *
+     * Scale targets:
+     * - 'inhale': 1.0 → 1.3 (grow larger as lungs fill)
+     * - 'exhale': current → 0.85 (shrink as lungs empty)
+     * - 'hold': maintain current scale (no animation)
+     *
+     * @param {string} phase - 'inhale' | 'exhale' | 'hold'
+     * @param {number} durationSec - Duration in seconds for the animation
+     */
+    breathePhase(phase, durationSec) {
+        // Clamp duration to reasonable values (0.5s to 30s)
+        const duration = Math.max(0.5, Math.min(30, durationSec));
+
+        // Store current scale as starting point
+        this._breathPhaseStartScale = this._breathPhaseScale;
+        this._breathPhaseStartTime = performance.now();
+        this._breathPhaseDuration = duration * 1000; // Convert to ms
+        this._breathPhase = phase;
+
+        // Set target scale based on phase
+        switch (phase) {
+        case 'inhale':
+            this._breathPhaseTargetScale = 1.3; // Max inhale size
+            break;
+        case 'exhale':
+            this._breathPhaseTargetScale = 0.85; // Min exhale size
+            break;
+        case 'hold':
+        default:
+            // Hold at current scale - no animation needed
+            this._breathPhaseTargetScale = this._breathPhaseStartScale;
+            break;
+        }
+
+        console.log(`[Core3D] breathePhase: ${phase} for ${duration}s (${this._breathPhaseStartScale.toFixed(2)} → ${this._breathPhaseTargetScale.toFixed(2)})`);
+    }
+
+    /**
+     * Stop any active breathing phase animation and reset to neutral scale
+     */
+    stopBreathingPhase() {
+        this._breathPhase = null;
+        this._breathPhaseScale = 1.0;
+        this._breathPhaseStartScale = 1.0;
+        this._breathPhaseTargetScale = 1.0;
+        console.log('[Core3D] breathePhase stopped, scale reset to 1.0');
+    }
+
+    /**
+     * Update imperative breathing phase animation
+     * Called from render loop
+     * @private
+     * @param {number} _deltaTime - Time since last frame in ms (unused, we use elapsed time)
+     * @returns {number} Current breathing phase scale multiplier (1.0 if inactive)
+     */
+    _updateBreathingPhase(_deltaTime) {
+        // If no active phase, return neutral scale
+        if (!this._breathPhase) {
+            return this._breathPhaseScale;
+        }
+
+        const now = performance.now();
+        const elapsed = now - this._breathPhaseStartTime;
+        const duration = this._breathPhaseDuration;
+
+        // Calculate progress (0 to 1)
+        const progress = Math.min(1.0, elapsed / duration);
+
+        // Use sine easing for natural breathing rhythm
+        // sin(0 to π/2) maps 0→1 smoothly, reaches target exactly at end
+        // This feels more like natural breathing than cubic easing
+        const eased = Math.sin(progress * Math.PI / 2);
+
+        // Interpolate between start and target scale
+        this._breathPhaseScale = this._breathPhaseStartScale +
+            (this._breathPhaseTargetScale - this._breathPhaseStartScale) * eased;
+
+        // Clear phase when complete
+        if (progress >= 1.0) {
+            this._breathPhaseScale = this._breathPhaseTargetScale;
+            this._breathPhase = null;
+        }
+
+        return this._breathPhaseScale;
+    }
+
     /**
      * Morph to different shape with smooth transition
      * Supports interruption - calling this while a morph is in progress will
@@ -1507,8 +1609,9 @@ export class Core3DManager {
                 // Reset camera to front view INSTANTLY (immune to auto-rotate position)
                 // This ensures moon always faces camera directly with calibrated orientation
                 // Use instant reset (0ms) to avoid camera still moving during morph
+                // preserveTarget=true keeps the Y offset set by the host app (emotive-holo)
                 if (this.renderer?.setCameraPreset) {
-                    this.renderer.setCameraPreset('front', 0);
+                    this.renderer.setCameraPreset('front', 0, true);
                 }
 
                 // Apply calibrated rotation to show "Man in the Moon" Earth-facing view
@@ -1592,8 +1695,15 @@ export class Core3DManager {
         // Update breathing animation
         this.breathingAnimator.update(deltaTime, this.emotion, getUndertoneModifier(this.undertone));
 
-        // Get breathing scale multiplier (return 1.0 if disabled)
-        const breathScale = this.breathingEnabled ? this.breathingAnimator.getBreathingScale() : 1.0;
+        // Update imperative breathing phase (for meditation)
+        const imperativeBreathScale = this._updateBreathingPhase(deltaTime);
+
+        // Get breathing scale multiplier
+        // If imperative breathing is active (scale != 1.0), use it exclusively
+        // Otherwise fall back to ambient breathing if enabled
+        const breathScale = (imperativeBreathScale !== 1.0)
+            ? imperativeBreathScale
+            : (this.breathingEnabled ? this.breathingAnimator.getBreathingScale() : 1.0);
 
         // Get morph scale multiplier (for shrink/grow effect)
         const morphScale = morphState.scaleMultiplier;

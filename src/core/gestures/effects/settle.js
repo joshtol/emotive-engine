@@ -132,16 +132,20 @@ export default {
      */
     '3d': {
         evaluate(progress, _motion) {
-            // Gradual return to origin
-            const returnFactor = 1 - progress;
+            // Settle gesture: stay calm and stable at origin
+            // Use eased progress for smooth transition
+            const eased = 1 - Math.pow(1 - progress, 2); // Ease out quad
 
-            // Assume starting from some offset, returning to neutral
-            const posX = returnFactor * 0.1;
-            const posY = returnFactor * 0.1;
+            // Very subtle micro-movements that diminish over time - like coming to rest
+            const microMovement = (1 - eased) * 0.01;
+            const posX = Math.sin(progress * Math.PI * 2) * microMovement;
+            const posY = Math.cos(progress * Math.PI * 3) * microMovement * 0.5;
 
-            // Subtle scale/glow reduction as settling
-            const scale = 1.0 - progress * 0.05;
-            const glowIntensity = 1.0 - progress * 0.2;
+            // Subtle scale reduction as settling - breathes down gently
+            const scale = 1.0 - eased * 0.03;
+
+            // Glow dims slightly as we settle into calm
+            const glowIntensity = 1.0 - eased * 0.15;
 
             return {
                 position: [posX, posY, 0],
