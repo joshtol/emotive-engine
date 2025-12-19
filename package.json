@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@joshtol/emotive-engine",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Open-source animation engine for AI-controlled emotional visualizations with musical time synchronization",
   "main": "dist/emotive-mascot.umd.js",
   "module": "dist/mascot.js",
@@ -17,6 +17,7 @@
       "import": "./dist/emotive-mascot-3d.js",
       "require": "./dist/emotive-mascot-3d.umd.js"
     },
+    "./assets/*": "./assets/*",
     "./package.json": "./package.json"
   },
   "private": false,
@@ -28,6 +29,8 @@
     "dist",
     "src",
     "types",
+    "assets/models",
+    "assets/textures",
     "assets/emotive-engine-icon.svg",
     "assets/emotive-engine-full-BW.svg",
     "README.md",
