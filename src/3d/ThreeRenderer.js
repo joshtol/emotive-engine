@@ -262,10 +262,11 @@ export class ThreeRenderer {
         // Guard against calls after destroy (React Strict Mode can unmount during async load)
         if (this._destroyed) return;
 
-        // Try to load HDRI first
+        // Try to load optional HDRI (.hdr format) for enhanced reflections
+        // HDRI is optional - apps can place studio_1k.hdr in /hdri/ for better crystal reflections
         try {
-            const { EXRLoader } = await import('three/examples/jsm/loaders/EXRLoader.js');
-            const { RGBELoader } = await import('three/examples/jsm/loaders/RGBELoader.js');
+            // HDRLoader replaces deprecated RGBELoader in Three.js r169+
+            const { HDRLoader } = await import('three/examples/jsm/loaders/HDRLoader.js');
 
             // Check if destroyed during import (React Strict Mode)
             if (this._destroyed) return;
@@ -273,13 +274,17 @@ export class ThreeRenderer {
             const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
             pmremGenerator.compileEquirectangularShader();
 
-            // Try EXR first
             try {
-                const exrLoader = new EXRLoader();
+                const hdrLoader = new HDRLoader();
                 const assetBasePath = this.options.assetBasePath || '/assets';
                 // HDRI is in public root, not in assets folder
                 const hdriBasePath = assetBasePath.replace('/assets', '');
-                const texture = await exrLoader.loadAsync(`${hdriBasePath}/hdri/studio_01.exr`);
+                const texture = await hdrLoader.loadAsync(`${hdriBasePath}/hdri/studio_1k.hdr`);
+
+                // Validate texture was loaded correctly (404 can return malformed texture)
+                if (!texture || !texture.image) {
+                    throw new Error('HDR texture loaded but image data is missing');
+                }
 
                 // Check if destroyed during load (React Strict Mode)
                 if (this._destroyed) {
@@ -290,14 +295,16 @@ export class ThreeRenderer {
 
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
-                texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (10-22MB GPU memory leak fix)
+                texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (GPU memory leak fix)
                 pmremGenerator.dispose();
+                console.log('[Emotive] HDRI environment map loaded');
                 return;
-            } catch (exrError) {
-                console.warn('Could not load EXR, trying fallback:', exrError.message);
+            } catch (hdrError) {
+                // HDRI is optional - silently fall back to procedural envmap
+                pmremGenerator.dispose();
             }
         } catch (error) {
-            console.warn('HDRI loaders not available, using procedural envmap:', error.message);
+            // HDRLoader not available - use procedural envmap
         }
 
         // Check if destroyed before fallback (React Strict Mode)
@@ -1030,8 +1037,9 @@ export class ThreeRenderer {
      * Set camera to a preset view with smooth transition
      * @param {string} preset - Preset name ('front', 'side', 'top', 'angle')
      * @param {number} duration - Transition duration in ms (default 1000)
+     * @param {boolean} preserveTarget - If true, keep the current controls.target (default false)
      */
-    setCameraPreset(preset, duration = 1000) {
+    setCameraPreset(preset, duration = 1000, preserveTarget = false) {
         if (!this.controls) return;
 
         const d = this.cameraDistance;
@@ -1044,30 +1052,41 @@ export class ThreeRenderer {
             bottom: { x: 0, y: -d, z: 0 }  // Bottom view (directly below)
         };
 
-        const target = presets[preset];
-        if (!target) {
+        const targetPos = presets[preset];
+        if (!targetPos) {
             console.warn(`Unknown camera preset: ${preset}`);
             return;
         }
+
+        // Save current target if we need to preserve it
+        const savedTarget = preserveTarget ? this.controls.target.clone() : null;
 
         // If instant (duration = 0), set position directly
         if (duration === 0) {
             // Fully reset OrbitControls to initial state
             this.controls.reset();
             // Then set to target position
-            this.camera.position.set(target.x, target.y, target.z);
-            this.camera.lookAt(0, 0, 0);
-            this.controls.target.set(0, 0, 0);
+            this.camera.position.set(targetPos.x, targetPos.y, targetPos.z);
+            // Preserve or reset the controls target
+            if (savedTarget) {
+                this.controls.target.copy(savedTarget);
+                this.camera.lookAt(savedTarget);
+            } else {
+                this.controls.target.set(0, 0, 0);
+                this.camera.lookAt(0, 0, 0);
+            }
             this.controls.update();
             return;
         }
 
         // Reset OrbitControls target to center (origin) for animated presets
-        this.controls.target.set(0, 0, 0);
+        if (!preserveTarget) {
+            this.controls.target.set(0, 0, 0);
+        }
 
         // Smoothly animate camera to target position
         const startPos = this.camera.position.clone();
-        const endPos = new THREE.Vector3(target.x, target.y, target.z);
+        const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
         const startTime = performance.now();
 
         const animate = currentTime => {
