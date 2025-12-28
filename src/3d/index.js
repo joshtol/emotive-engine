@@ -252,17 +252,21 @@ export class EmotiveMascot3D {
         this.container.appendChild(this.canvas2D);
 
         // Create WebGL canvas for 3D core (Layer 2 - front)
+        // CRITICAL: Canvas is NOT appended to DOM here - it will be appended after first render
+        // This prevents any garbage data from being visible during GPU initialization
         this.webglCanvas = document.createElement('canvas');
         this.webglCanvas.id = `${this.config.canvasId}-3d`;
         this.webglCanvas.width = this.canvas2D.width;
         this.webglCanvas.height = this.canvas2D.height;
-        this.webglCanvas.style.position = 'absolute';
-        this.webglCanvas.style.top = '0';
-        this.webglCanvas.style.left = '0';
-        this.webglCanvas.style.width = '100%';
-        this.webglCanvas.style.height = '100%';
-        this.webglCanvas.style.background = 'transparent';
-        this.webglCanvas.style.zIndex = '2';
+        this.webglCanvas.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 2;
+        `;
         // Only enable pointer events if controls are enabled (for orbit camera)
         // Otherwise, let events pass through to allow page scrolling
         if (this.config.enableControls) {
@@ -274,7 +278,8 @@ export class EmotiveMascot3D {
             this.webglCanvas.style.pointerEvents = 'none';
             this.webglCanvas.style.touchAction = 'auto';
         }
-        this.container.appendChild(this.webglCanvas);
+        // NOTE: Canvas is NOT appended here - see animate() for deferred append after first render
+        this._canvasAppended = false;
     }
 
     /**
@@ -336,6 +341,14 @@ export class EmotiveMascot3D {
         // Render 3D core - check again as state may have changed
         if (this.core3D && !this._destroyed) {
             this.core3D.render(deltaTime);
+
+            // CRITICAL: Append canvas to DOM after first frame renders
+            // Canvas is created but NOT added to DOM during setup to prevent garbage data flash
+            // Only after the first successful render do we add it to the document
+            if (!this._canvasAppended && this.webglCanvas && this.container) {
+                this.container.appendChild(this.webglCanvas);
+                this._canvasAppended = true;
+            }
         }
 
         // Render 2D particles (or clear canvas if disabled)

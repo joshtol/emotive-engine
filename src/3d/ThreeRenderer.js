@@ -52,6 +52,11 @@ export class ThreeRenderer {
         // Set clear color with full alpha transparency for CSS backgrounds
         this.renderer.setClearColor(0x000000, 0);
 
+        // CRITICAL: Clear the canvas immediately after renderer creation
+        // This ensures no garbage data is visible before the first frame renders
+        // Uninitialized GPU framebuffers can contain random colors (often magenta/red)
+        this.renderer.clear();
+
         // CRITICAL: Disable autoClear for transparency to work in newer Three.js versions
         this.renderer.autoClear = false;
 
@@ -262,6 +267,9 @@ export class ThreeRenderer {
         // Guard against calls after destroy (React Strict Mode can unmount during async load)
         if (this._destroyed) return;
 
+        // Mark environment loading as in-progress to prevent rendering magenta flash
+        this._envMapLoading = true;
+
         // Try to load optional HDRI (.hdr format) for enhanced reflections
         // HDRI is optional - apps can place studio_1k.hdr in /hdri/ for better crystal reflections
         try {
@@ -276,14 +284,28 @@ export class ThreeRenderer {
 
             try {
                 const hdrLoader = new HDRLoader();
-                const assetBasePath = this.options.assetBasePath || '/assets';
-                // HDRI is in public root, not in assets folder
-                const hdriBasePath = assetBasePath.replace('/assets', '');
-                const texture = await hdrLoader.loadAsync(`${hdriBasePath}/hdri/studio_1k.hdr`);
 
-                // Validate texture was loaded correctly (404 can return malformed texture)
+                // Try multiple paths to support different server configurations:
+                // - /hdri/... for Next.js (serves site/public at root)
+                // - /site/public/hdri/... for Live Server (serves project root)
+                const hdrPaths = [
+                    '/hdri/studio_1k.hdr',
+                    '/site/public/hdri/studio_1k.hdr'
+                ];
+
+                let texture = null;
+                for (const hdrPath of hdrPaths) {
+                    try {
+                        texture = await hdrLoader.loadAsync(hdrPath);
+                        if (texture && texture.image) break;
+                    } catch (e) {
+                        // Try next path
+                    }
+                }
+
+                // Validate texture was loaded correctly
                 if (!texture || !texture.image) {
-                    throw new Error('HDR texture loaded but image data is missing');
+                    throw new Error('HDR texture not found at any path');
                 }
 
                 // Check if destroyed during load (React Strict Mode)
@@ -297,6 +319,7 @@ export class ThreeRenderer {
                 this.envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (GPU memory leak fix)
                 pmremGenerator.dispose();
+                this._envMapLoading = false; // HDRI loaded successfully
                 console.log('[Emotive] HDRI environment map loaded');
                 return;
             } catch (hdrError) {
@@ -346,6 +369,8 @@ export class ThreeRenderer {
         this._envScene = envScene;
         this._envCubeCamera = cubeCamera;
 
+        // Mark environment loading as complete (using fallback)
+        this._envMapLoading = false;
     }
 
     /**
@@ -370,6 +395,17 @@ export class ThreeRenderer {
                 depthBuffer: true
             });
         this.composer = new EffectComposer(this.renderer, renderTarget);
+
+        // CRITICAL: Clear ALL composer render targets to prevent garbage data flash
+        // The composer creates internal read/write buffers that contain uninitialized GPU memory
+        // This can show as random colors (often magenta/red) on first frame before RenderPass clears
+        this.renderer.setRenderTarget(renderTarget);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(this.composer.readBuffer);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(this.composer.writeBuffer);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(null);
 
         // Render pass - base scene render
         const renderPass = new RenderPass(this.scene, this.camera);
@@ -397,6 +433,10 @@ export class ThreeRenderer {
         this.bloomPass.renderToScreen = true; // CRITICAL: Last pass must render to screen
         this.composer.addPass(this.bloomPass);
 
+        // CRITICAL: Clear bloom buffers immediately after creation to prevent garbage data flash
+        // Uninitialized GPU memory can contain random colors (often red/magenta on some drivers)
+        this.bloomPass.clearBloomBuffers(this.renderer);
+
         // === SEPARATE PARTICLE BLOOM PIPELINE ===
         // Particles get their own render target with NON-BLACK clear color
         // This prevents dark halos from blur sampling black transparent pixels
@@ -410,6 +450,11 @@ export class ThreeRenderer {
                 stencilBuffer: false,
                 depthBuffer: true
             });
+
+        // Clear particle render target
+        this.renderer.setRenderTarget(this.particleRenderTarget);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(null);
 
         // Particle bloom pass (same settings but separate pipeline)
         this.particleBloomPass = new UnrealBloomPassAlpha(
@@ -426,6 +471,9 @@ export class ThreeRenderer {
         // Skip the base copy step - we only want to add bloom on top of existing scene
         this.particleBloomPass.skipBaseCopy = true;
 
+        // Clear particle bloom buffers too
+        this.particleBloomPass.clearBloomBuffers(this.renderer);
+
         // === SOUL REFRACTION RENDER TARGET ===
         // Soul mesh is rendered to this texture first, then sampled by crystal shader
         // with refraction distortion to create proper lensing effect
@@ -439,6 +487,11 @@ export class ThreeRenderer {
                 stencilBuffer: false,
                 depthBuffer: true
             });
+
+        // Clear soul render target
+        this.renderer.setRenderTarget(this.soulRenderTarget);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(null);
 
         // Composite shader to blend particle bloom onto main scene
         this.particleCompositeShader = {
@@ -1160,6 +1213,28 @@ export class ThreeRenderer {
         // Guard against rendering before scene is ready
         if (!this.scene || !this.camera || !this.renderer) {
             console.log(`[ThreeRenderer] render() BLOCKED - scene=${!!this.scene}, camera=${!!this.camera}, renderer=${!!this.renderer}`);
+            return;
+        }
+
+        // Guard against rendering before coreMesh exists (prevents magenta flash from empty scene + bloom)
+        if (!this.coreMesh) {
+            return;
+        }
+
+        // Guard against rendering while environment map is loading (prevents magenta flash from missing HDR)
+        // Three.js shows magenta when textures are pending/failed
+        if (this._envMapLoading) {
+            return;
+        }
+
+        // CRITICAL: Skip the very first frame to allow GPU buffers to be properly initialized
+        // This prevents garbage data (often magenta) from flashing before the first real render
+        if (!this._firstFrameRendered) {
+            this._firstFrameRendered = true;
+            // Clear screen to transparent on first frame instead of rendering garbage
+            this.renderer.setRenderTarget(null);
+            this.renderer.setClearColor(0x000000, 0);
+            this.renderer.clear();
             return;
         }
 
