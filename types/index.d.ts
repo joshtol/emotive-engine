@@ -207,22 +207,28 @@ declare namespace EmotiveEngine {
     // Main Emotive Mascot
     export interface EmotiveMascotConfig {
         canvas?: HTMLCanvasElement;
+        canvasId?: string | HTMLCanvasElement;
         width?: number;
         height?: number;
         autoStart?: boolean;
         fps?: number;
+        targetFPS?: number;
         adaptive?: boolean;
         theme?: Theme;
         enableAudio?: boolean;
         enableParticles?: boolean;
+        enableGazeTracking?: boolean;
+        defaultEmotion?: string;
     }
 
     export interface Theme {
-        primary: string;
-        secondary: string;
-        accent: string;
+        primary?: string;
+        secondary?: string;
+        accent?: string;
         background?: string;
         particles?: string[];
+        core?: string;
+        glow?: string;
     }
 
     export interface EmotionalState {
@@ -231,22 +237,212 @@ declare namespace EmotiveEngine {
         dominance?: number;
     }
 
+    export interface FeelResult {
+        success: boolean;
+        error: string | null;
+        parsed: ParsedIntent | null;
+    }
+
+    export interface ParsedIntent {
+        emotion: string | null;
+        gestures: string[];
+        shape: string | null;
+        undertone: string | null;
+        intensity: number;
+    }
+
+    export interface FeelVocabulary {
+        emotions: string[];
+        undertones: string[];
+        gestures: string[];
+        shapes: string[];
+    }
+
+    export interface BackdropOptions {
+        enabled?: boolean;
+        radius?: number;
+        shape?: 'circle' | 'ellipse' | 'fullscreen';
+        color?: string;
+        intensity?: number;
+        blendMode?: 'normal' | 'multiply' | 'overlay' | 'screen';
+        falloff?: 'linear' | 'smooth' | 'exponential' | 'custom';
+        falloffCurve?: Array<{ stop: number; alpha: number }>;
+        edgeSoftness?: number;
+        coreTransparency?: number;
+        blur?: number;
+        responsive?: boolean;
+        pulse?: boolean;
+        offset?: { x: number; y: number };
+        type?: 'radial-gradient' | 'vignette' | 'glow';
+    }
+
+    export interface AttachOptions {
+        offsetX?: number;
+        offsetY?: number;
+        animate?: boolean;
+        duration?: number;
+        scale?: number;
+        containParticles?: boolean;
+    }
+
+    export interface PerformanceMetrics {
+        fps: number;
+        frameTime: number;
+        particleCount?: number;
+    }
+
+    export interface AudioAnalysis {
+        beats?: any;
+        tempo?: number;
+        energy?: number;
+    }
+
+    export interface GazeState {
+        x: number;
+        y: number;
+        enabled: boolean;
+    }
+
+    export interface Capabilities {
+        audio: boolean;
+        recording: boolean;
+        timeline: boolean;
+        export: boolean;
+        shapes: boolean;
+        gestures: boolean;
+        emotions: boolean;
+        particles: boolean;
+        gazeTracking: boolean;
+    }
+
+    export interface TimelineEvent {
+        type: 'emotion' | 'gesture' | 'shape';
+        name: string;
+        time: number;
+        undertone?: string;
+        config?: any;
+    }
+
+    export interface ScaleOptions {
+        global?: number;
+        core?: number;
+        particles?: number;
+    }
+
     export class EmotiveMascot {
         constructor(config?: EmotiveMascotConfig);
-        init(container: HTMLElement): void;
+
+        // Lifecycle
+        init(canvas: HTMLCanvasElement | string): Promise<void>;
         start(): void;
         stop(): void;
         pause(): void;
         resume(): void;
         destroy(): void;
-        setEmotion(emotion: string | EmotionalState): void;
-        setTheme(theme: Theme): void;
+
+        // LLM Integration - Natural Language API
+        feel(intent: string): FeelResult;
+        static getFeelVocabulary(): FeelVocabulary;
+        parseIntent(intent: string): ParsedIntent;
+
+        // Emotion & Expression
+        setEmotion(emotion: string, undertoneOrDurationOrOptions?: string | number | { undertone?: string; duration?: number }, timestamp?: number): void;
+        express(gestureName: string, timestamp?: number): void;
+        triggerGesture(gestureName: string, timestamp?: number): void;
+        chain(chainName: string): void;
+        updateUndertone(undertone: string | null): void;
+
+        // Shape Morphing
+        morphTo(shape: string, config?: any): void;
+        setShape(shape: string, configOrTimestamp?: any | number): void;
+
+        // Audio
+        loadAudio(source: string | Blob): Promise<void>;
+        connectAudio(audioElement: HTMLAudioElement): void;
+        disconnectAudio(audioElement?: HTMLAudioElement): void;
+        getAudioAnalysis(): AudioAnalysis;
+        getSpectrumData(): number[];
+        startRhythmSync(bpm?: number): void;
+        stopRhythmSync(): void;
+        setSoundEnabled(enabled: boolean): void;
         setBPM(bpm: number): void;
-        addBehavior(behavior: Behavior): void;
-        removeBehavior(name: string): void;
-        on(event: string, handler: Function): void;
-        off(event: string, handler?: Function): void;
-        getState(): any;
+
+        // Gaze Tracking
+        enableGazeTracking(): void;
+        disableGazeTracking(): void;
+        setGazeTarget(x: number, y: number): void;
+        getGazeState(): GazeState | null;
+
+        // Positioning
+        setPosition(x: number, y: number, z?: number): void;
+        animateToPosition(x: number, y: number, z?: number, duration?: number, easing?: string): void;
+        attachToElement(elementOrSelector: string | HTMLElement, options?: AttachOptions): EmotiveMascot;
+        detachFromElement(): void;
+        isAttachedToElement(): boolean;
+        setContainment(bounds: { width: number; height: number } | null, scale?: number): void;
+
+        // Visual Customization
+        setScale(scaleOrOptions: number | ScaleOptions): EmotiveMascot;
+        getScale(): number;
+        setOpacity(opacity: number): EmotiveMascot;
+        getOpacity(): number;
+        fadeIn(duration?: number): EmotiveMascot;
+        fadeOut(duration?: number): EmotiveMascot;
+        setColor(color: string): EmotiveMascot;
+        setGlowColor(color: string): EmotiveMascot;
+        setTheme(theme: Theme): EmotiveMascot;
+        setBackdrop(options: BackdropOptions): EmotiveMascot;
+        getBackdrop(): BackdropOptions | null;
+
+        // Particles
+        clearParticles(): void;
+        setMaxParticles(maxParticles: number): EmotiveMascot;
+        getParticleCount(): number;
+        setParticleSystemCanvasDimensions(width: number, height: number): EmotiveMascot;
+
+        // Performance
+        setQuality(level: 'low' | 'medium' | 'high'): void;
+        setSpeed(speed: number): EmotiveMascot;
+        getSpeed(): number;
+        setFPS(fps: number): EmotiveMascot;
+        getFPS(): number;
+        isPaused(): boolean;
+        getPerformanceMetrics(): PerformanceMetrics;
+        batch(callback: (mascot: EmotiveMascot) => void): EmotiveMascot;
+
+        // Timeline Recording
+        startRecording(): void;
+        stopRecording(): TimelineEvent[];
+        playTimeline(timeline: TimelineEvent[]): void;
+        stopPlayback(): void;
+        getTimeline(): TimelineEvent[];
+        loadTimeline(timeline: TimelineEvent[]): void;
+        exportTimeline(): string;
+        importTimeline(json: string): void;
+        getCurrentTime(): number;
+        seek(time: number): void;
+
+        // Export
+        getFrameData(format?: string): string;
+        getFrameBlob(format?: string): Promise<Blob>;
+        getAnimationData(): any;
+
+        // Query
+        getAvailableGestures(): string[];
+        getAvailableEmotions(): string[];
+        getAvailableShapes(): string[];
+        getVersion(): string;
+        getCapabilities(): Capabilities;
+
+        // Events
+        on(event: string, handler: Function): EmotiveMascot;
+        off(event: string, handler?: Function): EmotiveMascot;
+
+        // Component access (safe proxies)
+        readonly renderer: any;
+        readonly shapeMorpher: any;
+        readonly gazeTracker: any;
+        readonly canvas: HTMLCanvasElement;
     }
 
     // Particle System
