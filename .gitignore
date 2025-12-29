@@ -94,3 +94,9 @@ best.code-workspace
 # Work-in-progress features (not ready for release)
 examples/3d/black-hole-demo.html
 src/3d/geometries/BlackHole.js
+
+# GitHub Pages build output
+_pages/
+
+# Large binary assets (HDR environment maps)
+*.hdr
