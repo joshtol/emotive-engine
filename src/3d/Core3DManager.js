@@ -39,6 +39,10 @@ import { updateMoonGlow, MOON_CALIBRATION_ROTATION, MOON_FACING_CONFIG } from '.
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 import { resetGeometryState } from './GeometryStateManager.js';
 import * as GeometryCache from './utils/GeometryCache.js';
+import { AnimationManager } from './managers/AnimationManager.js';
+import { EffectManager } from './managers/EffectManager.js';
+import { BehaviorController } from './managers/BehaviorController.js';
+import { BreathingPhaseManager } from './managers/BreathingPhaseManager.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -200,6 +204,24 @@ export class Core3DManager {
         // Animation controller
         this.animator = new ProceduralAnimator();
 
+        // Gesture blender
+        this.gestureBlender = new GestureBlender();
+
+        // Animation manager (orchestrates gesture playback and blending)
+        this.animationManager = new AnimationManager(this.animator, this.gestureBlender);
+
+        // Effect manager (manages SolarEclipse, LunarEclipse, CrystalSoul effects)
+        this.effectManager = new EffectManager(this.renderer, this.assetBasePath);
+
+        // Behavior controller (manages rotation, righting, and facing behaviors)
+        this.behaviorController = new BehaviorController({
+            rotationDisabled: options.autoRotate === false,
+            wobbleEnabled: true
+        });
+
+        // Breathing phase manager (imperative meditation-style breathing control)
+        this.breathingPhaseManager = new BreathingPhaseManager();
+
         // Breathing animator
         this.breathingAnimator = new BreathingAnimator();
         this.breathingEnabled = options.enableBreathing !== false; // Enabled by default
@@ -212,9 +234,6 @@ export class Core3DManager {
         this._breathPhaseStartScale = 1.0;
         this._breathPhaseTargetScale = 1.0;
         this._breathPhaseScale = 1.0;     // Current animated scale (1.0 = normal)
-
-        // Gesture blender
-        this.gestureBlender = new GestureBlender();
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
@@ -357,9 +376,7 @@ export class Core3DManager {
             this.lunarEclipse = new LunarEclipse(this.customMaterial);
         }
 
-        // Virtual particle object pool for gesture animations (prevent closure memory leaks)
-        this.virtualParticlePool = this.createVirtualParticlePool(5); // Pool of 5 reusable particles
-        this.nextPoolIndex = 0;
+        // Note: Virtual particle pool is now managed by AnimationManager
 
         // Apply default glass mode for initial geometry (if specified)
         // Crystal and diamond geometries have defaultGlassMode: true
@@ -372,50 +389,8 @@ export class Core3DManager {
         this.setEmotion(this.emotion);
     }
 
-    /**
-     * Create reusable virtual particle object pool
-     * @param {number} size - Pool size
-     * @returns {Array} Array of reusable particle objects
-     */
-    createVirtualParticlePool(size) {
-        const pool = [];
-        for (let i = 0; i < size; i++) {
-            pool.push({
-                x: 0,
-                y: 0,
-                vx: 0,
-                vy: 0,
-                size: 1,
-                baseSize: 1,
-                opacity: 1,
-                scaleFactor: 1,
-                gestureData: null
-            });
-        }
-        return pool;
-    }
-
-    /**
-     * Get next virtual particle from pool (round-robin)
-     * @returns {Object} Reusable virtual particle object
-     */
-    getVirtualParticleFromPool() {
-        const particle = this.virtualParticlePool[this.nextPoolIndex];
-        this.nextPoolIndex = (this.nextPoolIndex + 1) % this.virtualParticlePool.length;
-
-        // Reset particle to default state
-        particle.x = 0;
-        particle.y = 0;
-        particle.vx = 0;
-        particle.vy = 0;
-        particle.size = 1;
-        particle.baseSize = 1;
-        particle.opacity = 1;
-        particle.scaleFactor = 1;
-        particle.gestureData = null;
-
-        return particle;
-    }
+    // Note: createVirtualParticlePool and getVirtualParticleFromPool
+    // have been moved to AnimationManager
 
     /**
      * Set emotional state
@@ -671,115 +646,29 @@ export class Core3DManager {
 
     /**
      * Play gesture animation using 2D gesture data translated to 3D
+     * Delegates to AnimationManager for gesture orchestration
      */
     playGesture(gestureName) {
-        // Get the 2D gesture definition
-        const gesture2D = getGesture(gestureName);
-
-        if (!gesture2D) {
-            console.warn(`Unknown gesture: ${gestureName}`);
-            return;
-        }
-
-        // Get reusable virtual particle from pool (prevent closure memory leaks)
-        const virtualParticle = this.getVirtualParticleFromPool();
-
-        // Get gesture config for duration
-        const config = gesture2D.config || {};
-        const duration = config.musicalDuration?.musical
-            ? (config.musicalDuration.beats || 2) * 500  // Assume 120 BPM (500ms per beat)
-            : (config.duration || 800);
-
-        // Start time-based animation
-        const startTime = this.animator.time;
-
-        const gestureState = {
-            virtualParticle,
-            gesture: gesture2D,
-            duration,
-            startTime,
-            startPosition: [...this.position],
-            startRotation: [...this.rotation],
-            startScale: this.scale
-        };
-
-        // Enforce animation array size limit (prevent unbounded growth memory leak)
-        const MAX_ACTIVE_ANIMATIONS = 10;
-        if (this.animator.animations.length >= MAX_ACTIVE_ANIMATIONS) {
-            // Remove oldest animation (FIFO cleanup)
-            const removed = this.animator.animations.shift();
-            console.warn(`⚠️ Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`);
-        }
-
-        // Add to animator's active animations
-        // Create persistent gesture data object for this gesture instance
-        const gestureData = { initialized: false };
-
-        this.animator.animations.push({
-            gestureName, // Store gesture name for particle system
-            duration,
-            startTime,
-            config, // Store config for particle system
-            evaluate: t => {
-                // Reset virtual particle to center each frame
-                virtualParticle.x = 0;
-                virtualParticle.y = 0;
-                virtualParticle.vx = 0;
-                virtualParticle.vy = 0;
-                virtualParticle.size = 1;
-                virtualParticle.opacity = 1;
-
-                // All gestures now have native 3D implementations
-                // Apply gesture to virtual particle if needed
-                if (gesture2D.apply) {
-                    gesture2D.apply(virtualParticle, gestureData, config, t, 1.0, 0, 0);
+        this.animationManager.playGesture(gestureName, {
+            onUpdate: (props, _progress) => {
+                if (props.position) this.position = props.position;
+                if (props.rotation) {
+                    // Convert gesture Euler rotation to quaternion
+                    this.tempEuler.set(props.rotation[0], props.rotation[1], props.rotation[2], 'XYZ');
+                    this.gestureQuaternion.setFromEuler(this.tempEuler);
                 }
-
-                // Call gesture's 3D evaluate function with particle data
-                const motion = {
-                    ...config,
-                    particle: virtualParticle,
-                    config,
-                    strength: config.strength || 1.0
-                };
-
-                // Safety check: if gesture doesn't have 3D implementation, return neutral transform
-                if (!gesture2D['3d'] || !gesture2D['3d'].evaluate) {
-                    return {
-                        position: [0, 0, 0],
-                        rotation: [0, 0, 0],
-                        scale: 1.0
-                    };
+                if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
+                // Apply glow intensity as multiplier on base intensity (not absolute override)
+                if (props.glowIntensity !== undefined) {
+                    this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
                 }
-
-                // Call with gesture2D as context so 'this.config' works
-                return gesture2D['3d'].evaluate.call(gesture2D, t, motion);
             },
-            callbacks: {
-                onUpdate: (props, _progress) => {
-                    if (props.position) this.position = props.position;
-                    if (props.rotation) {
-                        // Convert gesture Euler rotation to quaternion
-                        this.tempEuler.set(props.rotation[0], props.rotation[1], props.rotation[2], 'XYZ');
-                        this.gestureQuaternion.setFromEuler(this.tempEuler);
-                    }
-                    if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
-                    // Apply glow intensity as multiplier on base intensity (not absolute override)
-                    if (props.glowIntensity !== undefined) {
-                        this.glowIntensity = this.baseGlowIntensity * props.glowIntensity;
-                    }
-                },
-                onComplete: () => {
-                    // Clean up gesture
-                    if (gesture2D.cleanup) {
-                        gesture2D.cleanup(virtualParticle);
-                    }
-                    // Reset to base state
-                    this.position = [0, 0, 0];
-                    // NOTE: Don't reset rotation - it's computed from quaternions in render()
-                    // gestureQuaternion will be reset to identity in render() when no gestures active
-                    this.scale = this.baseScale;
-                }
+            onComplete: () => {
+                // Reset to base state
+                this.position = [0, 0, 0];
+                // NOTE: Don't reset rotation - it's computed from quaternions in render()
+                // gestureQuaternion will be reset to identity in render() when no gestures active
+                this.scale = this.baseScale;
             }
         });
     }
@@ -1770,9 +1659,7 @@ export class Core3DManager {
         // ═══════════════════════════════════════════════════════════════════════════
         // GESTURE BLENDING SYSTEM - Blend multiple simultaneous gestures
         // ═══════════════════════════════════════════════════════════════════════════
-        const blended = this.gestureBlender.blend(
-            this.animator.animations,
-            this.animator.time,
+        const blended = this.animationManager.blend(
             this.baseQuaternion,
             this.baseScale,
             this.baseGlowIntensity
@@ -1786,7 +1673,7 @@ export class Core3DManager {
 
         // Apply blended results with rhythm modulation
         // Position: add groove offset when no active gestures
-        const hasActiveGestures = this.animator.animations.length > 0;
+        const hasActiveGestures = this.animationManager.hasActiveAnimations();
         if (rhythmMod && !hasActiveGestures) {
             // Apply ambient groove when idle
             this.position = [
@@ -1872,8 +1759,8 @@ export class Core3DManager {
                 deltaTime,
                 this.emotion,
                 this.undertone,
-                this.animator.animations, // Active gestures
-                this.animator.time,       // Current animation time
+                this.animationManager.getActiveAnimations(), // Active gestures
+                this.animationManager.getTime(),             // Current animation time
                 { x: this.position[0], y: this.position[1], z: this.position[2] }, // Core position
                 { width: this.canvas.width, height: this.canvas.height }, // Canvas size
                 // Rotation state for orbital physics
@@ -1974,7 +1861,7 @@ export class Core3DManager {
             glowColor: this.glowColor,
             glowColorHex: this.glowColorHex,  // For bloom luminance normalization
             glowIntensity: effectiveGlowIntensity,
-            hasActiveGesture: this.animator.animations.length > 0,  // Faster lerp during gestures
+            hasActiveGesture: this.animationManager.hasActiveAnimations(),  // Faster lerp during gestures
             calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
             solarEclipse: this.solarEclipse,  // Pass eclipse manager for synchronized updates
             deltaTime,  // Pass deltaTime for eclipse animation
@@ -2243,6 +2130,24 @@ export class Core3DManager {
             this.lunarEclipse = null;
         }
 
+        // Clean up effect manager
+        if (this.effectManager) {
+            this.effectManager.dispose();
+            this.effectManager = null;
+        }
+
+        // Clean up behavior controller
+        if (this.behaviorController) {
+            this.behaviorController.dispose();
+            this.behaviorController = null;
+        }
+
+        // Clean up breathing phase manager
+        if (this.breathingPhaseManager) {
+            this.breathingPhaseManager.dispose();
+            this.breathingPhaseManager = null;
+        }
+
         // Dispose custom material textures if they exist
         if (this.customMaterial) {
             this.renderer.disposeMaterial(this.customMaterial);
@@ -2257,16 +2162,14 @@ export class Core3DManager {
         }
 
         // Stop animations before destroying renderer
-        this.animator.stopAll();
+        this.animationManager.stopAll();
 
         // Destroy renderer LAST (after all scene children are cleaned up)
         this.renderer.destroy();
 
-        // Clean up virtual particle pool
-        if (this.virtualParticlePool) {
-            this.virtualParticlePool.length = 0;
-            this.virtualParticlePool = null;
-        }
+        // Clean up animation manager (includes virtual particle pool)
+        this.animationManager.dispose();
+        this.animationManager = null;
 
         // Clean up animator sub-components
         this.animator.destroy?.();
