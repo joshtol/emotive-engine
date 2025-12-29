@@ -33,8 +33,6 @@ import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { CrystalSoul } from './effects/CrystalSoul.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
-import { SolarEclipse } from './effects/SolarEclipse.js';
-import { LunarEclipse } from './effects/LunarEclipse.js';
 import { updateMoonGlow, MOON_CALIBRATION_ROTATION, MOON_FACING_CONFIG } from './geometries/Moon.js';
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 import { resetGeometryState } from './GeometryStateManager.js';
@@ -226,14 +224,8 @@ export class Core3DManager {
         this.breathingAnimator = new BreathingAnimator();
         this.breathingEnabled = options.enableBreathing !== false; // Enabled by default
 
-        // Imperative breathing phase animation (for meditation)
-        // Allows explicit control: breathePhase('inhale', 4) to animate scale over 4 seconds
-        this._breathPhase = null;        // 'inhale' | 'hold' | 'exhale' | null
-        this._breathPhaseStartTime = 0;
-        this._breathPhaseDuration = 0;
-        this._breathPhaseStartScale = 1.0;
-        this._breathPhaseTargetScale = 1.0;
-        this._breathPhaseScale = 1.0;     // Current animated scale (1.0 = normal)
+        // Note: Imperative breathing phase animation state is now managed by BreathingPhaseManager
+        // See: breathePhase(), stopBreathingPhase(), _updateBreathingPhase()
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
@@ -365,16 +357,13 @@ export class Core3DManager {
             particleRenderer.geometry.setDrawRange(0, 0);
         }
 
-        // Initialize solar eclipse system for sun geometry
-        if (this.geometryType === 'sun') {
-            const sunRadius = this.geometry.parameters?.radius || 0.5; // Sun geometry radius is 0.5
-            this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.coreMesh);
-        }
-
-        // Initialize lunar eclipse system for moon geometry
-        if (this.geometryType === 'moon' && this.customMaterial) {
-            this.lunarEclipse = new LunarEclipse(this.customMaterial);
-        }
+        // Initialize geometry-specific effects via EffectManager
+        const sunRadius = this.geometry.parameters?.radius || 0.5;
+        this.effectManager.initializeForGeometry(this.geometryType, {
+            coreMesh: this.coreMesh,
+            customMaterial: this.customMaterial,
+            sunRadius
+        });
 
         // Note: Virtual particle pool is now managed by AnimationManager
 
@@ -678,13 +667,13 @@ export class Core3DManager {
      * @param {string} eclipseType - Eclipse type: 'off', 'annular', or 'total'
      */
     setSunShadow(eclipseType = 'off') {
-        if (this.geometryType !== 'sun' || !this.solarEclipse) {
+        if (this.geometryType !== 'sun' || !this.effectManager.hasSolarEclipse()) {
             console.warn('⚠️ Eclipse only available for sun geometry');
             return;
         }
 
-        // Set eclipse type on the solar eclipse manager
-        this.solarEclipse.setEclipseType(eclipseType);
+        // Set eclipse type via EffectManager
+        this.effectManager.setSolarEclipse(eclipseType);
     }
 
     /**
@@ -697,8 +686,8 @@ export class Core3DManager {
         const eclipseType = options.type || 'total';
 
         // If already on sun, just trigger eclipse
-        if (this.geometryType === 'sun' && this.solarEclipse) {
-            this.solarEclipse.setEclipseType(eclipseType);
+        if (this.geometryType === 'sun' && this.effectManager.hasSolarEclipse()) {
+            this.effectManager.setSolarEclipse(eclipseType);
             return;
         }
 
@@ -708,8 +697,8 @@ export class Core3DManager {
         // Wait for morph to complete (shrink + grow phases)
         // Default morph duration is 500ms, so wait a bit longer
         setTimeout(() => {
-            if (this.solarEclipse) {
-                this.solarEclipse.setEclipseType(eclipseType);
+            if (this.effectManager.hasSolarEclipse()) {
+                this.effectManager.setSolarEclipse(eclipseType);
             }
         }, 600);
     }
@@ -724,8 +713,8 @@ export class Core3DManager {
         const eclipseType = options.type || 'total';
 
         // If already on moon, just trigger eclipse
-        if (this.geometryType === 'moon' && this.lunarEclipse) {
-            this.lunarEclipse.setEclipseType(eclipseType);
+        if (this.geometryType === 'moon' && this.effectManager.hasLunarEclipse()) {
+            this.effectManager.setLunarEclipse(eclipseType);
             return;
         }
 
@@ -734,8 +723,8 @@ export class Core3DManager {
 
         // Wait for morph to complete (shrink + grow phases)
         setTimeout(() => {
-            if (this.lunarEclipse) {
-                this.lunarEclipse.setEclipseType(eclipseType);
+            if (this.effectManager.hasLunarEclipse()) {
+                this.effectManager.setLunarEclipse(eclipseType);
             }
         }, 600);
     }
@@ -744,12 +733,7 @@ export class Core3DManager {
      * Stop any active eclipse animation
      */
     stopEclipse() {
-        if (this.solarEclipse) {
-            this.solarEclipse.setEclipseType('off');
-        }
-        if (this.lunarEclipse) {
-            this.lunarEclipse.setEclipseType('off');
-        }
+        this.effectManager.stopAllEclipses();
     }
 
     /**
@@ -757,13 +741,13 @@ export class Core3DManager {
      * @param {string} eclipseType - 'off', 'penumbral', 'partial', 'total'
      */
     setMoonEclipse(eclipseType = 'off') {
-        if (this.geometryType !== 'moon' || !this.lunarEclipse) {
+        if (this.geometryType !== 'moon' || !this.effectManager.hasLunarEclipse()) {
             console.warn('⚠️ Lunar eclipse only available for moon geometry');
             return;
         }
 
-        // Set eclipse type on the lunar eclipse manager
-        this.lunarEclipse.setEclipseType(eclipseType);
+        // Set eclipse type via EffectManager
+        this.effectManager.setLunarEclipse(eclipseType);
     }
 
     /**
@@ -1162,41 +1146,17 @@ export class Core3DManager {
      * @param {number} durationSec - Duration in seconds for the animation
      */
     breathePhase(phase, durationSec) {
-        // Clamp duration to reasonable values (0.5s to 30s)
-        const duration = Math.max(0.5, Math.min(30, durationSec));
-
-        // Store current scale as starting point
-        this._breathPhaseStartScale = this._breathPhaseScale;
-        this._breathPhaseStartTime = performance.now();
-        this._breathPhaseDuration = duration * 1000; // Convert to ms
-        this._breathPhase = phase;
-
-        // Set target scale based on phase
-        switch (phase) {
-        case 'inhale':
-            this._breathPhaseTargetScale = 1.3; // Max inhale size
-            break;
-        case 'exhale':
-            this._breathPhaseTargetScale = 0.85; // Min exhale size
-            break;
-        case 'hold':
-        default:
-            // Hold at current scale - no animation needed
-            this._breathPhaseTargetScale = this._breathPhaseStartScale;
-            break;
-        }
-
-        console.log(`[Core3D] breathePhase: ${phase} for ${duration}s (${this._breathPhaseStartScale.toFixed(2)} → ${this._breathPhaseTargetScale.toFixed(2)})`);
+        // Delegate to BreathingPhaseManager
+        this.breathingPhaseManager.startPhase(phase, durationSec);
+        const state = this.breathingPhaseManager.getState();
+        console.log(`[Core3D] breathePhase: ${phase} for ${durationSec}s (${state.startScale.toFixed(2)} → ${state.targetScale.toFixed(2)})`);
     }
 
     /**
      * Stop any active breathing phase animation and reset to neutral scale
      */
     stopBreathingPhase() {
-        this._breathPhase = null;
-        this._breathPhaseScale = 1.0;
-        this._breathPhaseStartScale = 1.0;
-        this._breathPhaseTargetScale = 1.0;
+        this.breathingPhaseManager.stop();
         console.log('[Core3D] breathePhase stopped, scale reset to 1.0');
     }
 
@@ -1204,38 +1164,12 @@ export class Core3DManager {
      * Update imperative breathing phase animation
      * Called from render loop
      * @private
-     * @param {number} _deltaTime - Time since last frame in ms (unused, we use elapsed time)
+     * @param {number} deltaTime - Time since last frame in ms
      * @returns {number} Current breathing phase scale multiplier (1.0 if inactive)
      */
-    _updateBreathingPhase(_deltaTime) {
-        // If no active phase, return neutral scale
-        if (!this._breathPhase) {
-            return this._breathPhaseScale;
-        }
-
-        const now = performance.now();
-        const elapsed = now - this._breathPhaseStartTime;
-        const duration = this._breathPhaseDuration;
-
-        // Calculate progress (0 to 1)
-        const progress = Math.min(1.0, elapsed / duration);
-
-        // Use sine easing for natural breathing rhythm
-        // sin(0 to π/2) maps 0→1 smoothly, reaches target exactly at end
-        // This feels more like natural breathing than cubic easing
-        const eased = Math.sin(progress * Math.PI / 2);
-
-        // Interpolate between start and target scale
-        this._breathPhaseScale = this._breathPhaseStartScale +
-            (this._breathPhaseTargetScale - this._breathPhaseStartScale) * eased;
-
-        // Clear phase when complete
-        if (progress >= 1.0) {
-            this._breathPhaseScale = this._breathPhaseTargetScale;
-            this._breathPhase = null;
-        }
-
-        return this._breathPhaseScale;
+    _updateBreathingPhase(deltaTime) {
+        // Delegate to BreathingPhaseManager
+        return this.breathingPhaseManager.update(deltaTime);
     }
 
     /**
@@ -1442,36 +1376,16 @@ export class Core3DManager {
             // Reset Euler angles to upright [pitch=0, yaw=0, roll=0]
             this.rotation = [0, 0, 0];
 
-            // Dispose or create solar eclipse for sun geometry
-            if (this._targetGeometryType === 'sun') {
-                // Create solar eclipse if morphing to sun
-                if (!this.solarEclipse) {
-                    const sunRadius = this.geometry.parameters?.radius || 0.5; // Sun geometry radius is 0.5
-                    this.solarEclipse = new SolarEclipse(this.renderer.scene, sunRadius, this.renderer.coreMesh);
-                }
-            } else {
-                // Dispose solar eclipse if morphing away from sun
-                if (this.solarEclipse) {
-                    this.solarEclipse.dispose();
-                    this.solarEclipse = null;
-                }
-            }
+            // Initialize effects for target geometry via EffectManager
+            // This automatically disposes effects not needed for the target geometry
+            const sunRadius = this.geometry.parameters?.radius || 0.5;
+            this.effectManager.initializeForGeometry(this._targetGeometryType, {
+                coreMesh: this.renderer.coreMesh,
+                customMaterial: this.customMaterial,
+                sunRadius
+            });
 
-            // Dispose or create lunar eclipse for moon geometry
-            if (this._targetGeometryType === 'moon') {
-                // Create lunar eclipse if morphing to moon and custom material exists
-                if (!this.lunarEclipse && this.customMaterial) {
-                    this.lunarEclipse = new LunarEclipse(this.customMaterial);
-                }
-            } else {
-                // Dispose lunar eclipse if morphing away from moon
-                if (this.lunarEclipse) {
-                    this.lunarEclipse.dispose();
-                    this.lunarEclipse = null;
-                }
-            }
-
-            // Create or dispose crystal inner core
+            // Create or dispose crystal inner core (still uses createCrystalInnerCore for now)
             if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart' || this._targetGeometryType === 'star') {
                 // Create inner core if morphing to crystal/rough/heart/star
                 if (this.customMaterialType === 'crystal') {
@@ -1863,15 +1777,13 @@ export class Core3DManager {
             glowIntensity: effectiveGlowIntensity,
             hasActiveGesture: this.animationManager.hasActiveAnimations(),  // Faster lerp during gestures
             calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
-            solarEclipse: this.solarEclipse,  // Pass eclipse manager for synchronized updates
+            solarEclipse: this.effectManager.getSolarEclipse(),  // Pass eclipse manager for synchronized updates
             deltaTime,  // Pass deltaTime for eclipse animation
             morphProgress: morphState.isTransitioning ? morphState.visualProgress : null  // For corona fade-in
         });
 
         // Update lunar eclipse animation (Blood Moon)
-        if (this.lunarEclipse) {
-            this.lunarEclipse.update(deltaTime);
-        }
+        this.effectManager.updateLunarEclipse(deltaTime);
     }
 
     /**
@@ -2117,20 +2029,8 @@ export class Core3DManager {
             this.particleOrchestrator = null;
         }
 
-        // Clean up solar eclipse system (remove from scene before disposing)
-        if (this.solarEclipse) {
-            // Eclipse cleanup will remove all meshes from scene internally
-            this.solarEclipse.dispose();
-            this.solarEclipse = null;
-        }
-
-        // Clean up lunar eclipse system
-        if (this.lunarEclipse) {
-            this.lunarEclipse.dispose();
-            this.lunarEclipse = null;
-        }
-
-        // Clean up effect manager
+        // Clean up effect manager (handles eclipse and crystal soul disposal)
+        // Note: EffectManager.dispose() removes eclipse meshes from scene internally
         if (this.effectManager) {
             this.effectManager.dispose();
             this.effectManager = null;
