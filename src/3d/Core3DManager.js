@@ -358,7 +358,7 @@ export class Core3DManager {
         }
 
         // Initialize geometry-specific effects via EffectManager
-        const sunRadius = this.geometry.parameters?.radius || 0.5;
+        const sunRadius = this.geometry?.parameters?.radius || 0.5;
         this.effectManager.initializeForGeometry(this.geometryType, {
             coreMesh: this.coreMesh,
             customMaterial: this.customMaterial,
