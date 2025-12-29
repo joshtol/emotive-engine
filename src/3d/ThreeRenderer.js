@@ -20,6 +20,7 @@ import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
 import { GlowLayer } from './effects/GlowLayer.js';
+import { CameraPresetManager } from './managers/CameraPresetManager.js';
 
 export class ThreeRenderer {
     constructor(canvas, options = {}) {
@@ -196,6 +197,9 @@ export class ThreeRenderer {
         // Listen for pointer events at capture phase for earliest possible handling
         this.renderer.domElement.addEventListener('pointermove', immediateUpdate, { passive: true });
         this.renderer.domElement.addEventListener('pointerdown', immediateUpdate, { passive: true });
+
+        // Initialize camera preset manager for smooth view transitions
+        this.cameraPresetManager = new CameraPresetManager(this.camera, this.controls, this.cameraDistance);
     }
 
     /**
@@ -1698,6 +1702,12 @@ export class ThreeRenderer {
         if (this.glowLayer) {
             this.glowLayer.dispose();
             this.glowLayer = null;
+        }
+
+        // Dispose camera preset manager
+        if (this.cameraPresetManager) {
+            this.cameraPresetManager.dispose();
+            this.cameraPresetManager = null;
         }
 
         // Dispose controls (removes DOM event listeners)

@@ -330,7 +330,7 @@ After each phase, verify:
 | 2.3 RenderingPipeline | Not Started | ~300 | 1 |
 | 3.1 ShaderUniformManager | Not Started | ~150 | 1 |
 | 3.2 ParticleEffectCoordinator | Not Started | ~100 | 1 |
-| 3.3 CameraPresetManager | Not Started | ~80 | 1 |
+| 3.3 CameraPresetManager | 🔄 In Progress | ~80 | 1 |
 | 3.4 MaterialVariantManager | Not Started | ~100 | 1 |
 | 4.1 Particle3DTranslator | Not Started | ~400 | 5 |
 | 4.2 SolarEclipse | Not Started | ~400 | 2 |
