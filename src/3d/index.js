@@ -1758,3 +1758,6 @@ export {
 
 // Export rhythm 3D adapter for advanced rhythm sync customization
 export { rhythm3DAdapter, Rhythm3DAdapter } from './animation/Rhythm3DAdapter.js';
+
+// Export CrystalSoul for geometry preloading
+export { CrystalSoul } from './effects/CrystalSoul.js';
