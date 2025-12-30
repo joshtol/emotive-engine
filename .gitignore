@@ -99,4 +99,6 @@ src/3d/geometries/BlackHole.js
 _pages/
 
 # Large binary assets (HDR environment maps)
+# Exception: Allow studio_1k.hdr for crystal reflections on GitHub Pages
 *.hdr
+!public/hdri/studio_1k.hdr
