@@ -82,7 +82,8 @@ export class Core3DManager {
         this._readyPromise = null;  // Promise that resolves when ready
 
         // Asset base path for textures and models (configurable for GitHub Pages, etc.)
-        this.assetBasePath = options.assetBasePath || '/assets';
+        // Empty string triggers auto-detection in ThreeRenderer
+        this.assetBasePath = options.assetBasePath !== undefined ? options.assetBasePath : '';
 
         // Load geometry type first (needed to determine if moon = tidally locked)
         this.geometryType = options.geometry || 'sphere';
