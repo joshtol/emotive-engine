@@ -290,9 +290,15 @@ export class ThreeRenderer {
                 const hdrLoader = new HDRLoader();
 
                 // Try multiple paths to support different server configurations:
+                // - Relative paths for GitHub Pages (served from /repo-name/ subdirectory)
                 // - /hdri/... for Next.js (serves site/public at root)
                 // - /site/public/hdri/... for Live Server (serves project root)
                 const hdrPaths = [
+                    // Relative paths work for GitHub Pages (examples are in /examples/3d/)
+                    '../../hdri/studio_1k.hdr',
+                    '../hdri/studio_1k.hdr',
+                    './hdri/studio_1k.hdr',
+                    // Absolute paths for other server configurations
                     '/hdri/studio_1k.hdr',
                     '/site/public/hdri/studio_1k.hdr'
                 ];
