@@ -28,6 +28,10 @@ export class ThreeRenderer {
         this.options = options;
         this._destroyed = false;
 
+        // Asset base path for loading HDRI and other resources
+        // Can be configured for GitHub Pages, CDN, or other hosting scenarios
+        this.assetBasePath = options.assetBasePath || '';
+
         // Create Three.js scene
         this.scene = new THREE.Scene();
         this.scene.background = null; // Transparent background for particle overlay
@@ -289,33 +293,57 @@ export class ThreeRenderer {
             try {
                 const hdrLoader = new HDRLoader();
 
-                // Try multiple paths to support different server configurations:
-                // - Relative paths for GitHub Pages (served from /repo-name/ subdirectory)
-                // - /hdri/... for Next.js (serves site/public at root)
-                // - /site/public/hdri/... for Live Server (serves project root)
-                const hdrPaths = [
-                    // Relative paths work for GitHub Pages (examples are in /examples/3d/)
-                    '../../hdri/studio_1k.hdr',
-                    '../hdri/studio_1k.hdr',
-                    './hdri/studio_1k.hdr',
-                    // Absolute paths for other server configurations
-                    '/hdri/studio_1k.hdr',
-                    '/site/public/hdri/studio_1k.hdr'
-                ];
+                // Build HDRI path dynamically based on assetBasePath
+                // assetBasePath can be set to handle GitHub Pages, CDN, or custom hosting
+                const hdrFileName = 'studio_1k.hdr';
+                let hdrPath;
+
+                if (this.assetBasePath) {
+                    // Use configured asset base path (e.g., '/emotive-engine' for GitHub Pages)
+                    const base = this.assetBasePath.replace(/\/$/, ''); // Remove trailing slash
+                    hdrPath = `${base}/hdri/${hdrFileName}`;
+                } else {
+                    // Auto-detect base path from current script/page location
+                    // This handles GitHub Pages and other subdirectory deployments
+                    const scripts = document.querySelectorAll('script[src*="emotive"]');
+                    let detectedBase = '';
+
+                    for (const script of scripts) {
+                        const src = script.getAttribute('src');
+                        if (src) {
+                            // Extract base path from script src (e.g., '/emotive-engine/dist/...' -> '/emotive-engine')
+                            const match = src.match(/^(.*?\/emotive-engine)/i) ||
+                                          src.match(/^(.*?)\/dist\//i) ||
+                                          src.match(/^(.*?)\/site\//i);
+                            if (match) {
+                                detectedBase = match[1];
+                                break;
+                            }
+                        }
+                    }
+
+                    // If no script detected, try to infer from page URL
+                    if (!detectedBase) {
+                        const pathParts = window.location.pathname.split('/');
+                        // Check for repo name in path (e.g., /emotive-engine/examples/...)
+                        if (pathParts.length > 2 && pathParts[1]) {
+                            detectedBase = '/' + pathParts[1];
+                        }
+                    }
+
+                    hdrPath = detectedBase ? `${detectedBase}/hdri/${hdrFileName}` : `/hdri/${hdrFileName}`;
+                }
 
                 let texture = null;
-                for (const hdrPath of hdrPaths) {
-                    try {
-                        texture = await hdrLoader.loadAsync(hdrPath);
-                        if (texture && texture.image) break;
-                    } catch (e) {
-                        // Try next path
-                    }
+                try {
+                    texture = await hdrLoader.loadAsync(hdrPath);
+                } catch (e) {
+                    // HDRI loading failed - will fall back to procedural
                 }
 
                 // Validate texture was loaded correctly
                 if (!texture || !texture.image) {
-                    throw new Error('HDR texture not found at any path');
+                    throw new Error(`HDR texture not found at ${hdrPath}`);
                 }
 
                 // Check if destroyed during load (React Strict Mode)
