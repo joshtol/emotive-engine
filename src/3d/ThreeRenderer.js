@@ -327,7 +327,7 @@ export class ThreeRenderer {
                         const pathParts = window.location.pathname.split('/');
                         // Check for repo name in path (e.g., /emotive-engine/examples/...)
                         if (pathParts.length > 2 && pathParts[1]) {
-                            detectedBase = '/' + pathParts[1];
+                            detectedBase = `/${pathParts[1]}`;
                         }
                     }
 
