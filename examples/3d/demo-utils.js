@@ -21,6 +21,9 @@ import { createLayerCard, setupDragAndDrop } from './layer-utils.js';
  * Get the base path for assets based on deployment environment
  * - Local development (localhost): '/assets'
  * - GitHub Pages (github.io): '/emotive-engine/assets'
+ *
+ * Note: HDRI files are at a different path (../hdri relative to assets).
+ * ThreeRenderer handles this by detecting assetBasePath and computing the correct HDRI path.
  * @returns {string} Asset base path
  */
 export function getAssetBasePath() {

@@ -294,41 +294,29 @@ export class ThreeRenderer {
                 const hdrLoader = new HDRLoader();
 
                 // Build HDRI path dynamically based on assetBasePath
-                // assetBasePath can be set to handle GitHub Pages, CDN, or custom hosting
+                // HDRI files are at /hdri/ (sibling to /assets/), not inside /assets/
+                // assetBasePath typically points to /assets or /emotive-engine/assets
                 const hdrFileName = 'studio_1k.hdr';
                 let hdrPath;
 
                 if (this.assetBasePath) {
-                    // Use configured asset base path (e.g., '/emotive-engine' for GitHub Pages)
-                    const base = this.assetBasePath.replace(/\/$/, ''); // Remove trailing slash
-                    hdrPath = `${base}/hdri/${hdrFileName}`;
+                    // Remove trailing slash and /assets suffix to get base path
+                    // e.g., '/emotive-engine/assets' -> '/emotive-engine'
+                    // e.g., '/assets' -> ''
+                    let base = this.assetBasePath.replace(/\/$/, '');
+                    if (base.endsWith('/assets')) {
+                        base = base.slice(0, -7); // Remove '/assets'
+                    }
+                    hdrPath = base ? `${base}/hdri/${hdrFileName}` : `/hdri/${hdrFileName}`;
                 } else {
-                    // Auto-detect base path from current script/page location
+                    // Auto-detect base path from current page URL
                     // This handles GitHub Pages and other subdirectory deployments
-                    const scripts = document.querySelectorAll('script[src*="emotive"]');
+                    const pathParts = window.location.pathname.split('/');
                     let detectedBase = '';
 
-                    for (const script of scripts) {
-                        const src = script.getAttribute('src');
-                        if (src) {
-                            // Extract base path from script src (e.g., '/emotive-engine/dist/...' -> '/emotive-engine')
-                            const match = src.match(/^(.*?\/emotive-engine)/i) ||
-                                          src.match(/^(.*?)\/dist\//i) ||
-                                          src.match(/^(.*?)\/site\//i);
-                            if (match) {
-                                detectedBase = match[1];
-                                break;
-                            }
-                        }
-                    }
-
-                    // If no script detected, try to infer from page URL
-                    if (!detectedBase) {
-                        const pathParts = window.location.pathname.split('/');
-                        // Check for repo name in path (e.g., /emotive-engine/examples/...)
-                        if (pathParts.length > 2 && pathParts[1]) {
-                            detectedBase = `/${pathParts[1]}`;
-                        }
+                    // Check for repo name in path (e.g., /emotive-engine/examples/...)
+                    if (pathParts.length > 2 && pathParts[1]) {
+                        detectedBase = `/${pathParts[1]}`;
                     }
 
                     hdrPath = detectedBase ? `${detectedBase}/hdri/${hdrFileName}` : `/hdri/${hdrFileName}`;
