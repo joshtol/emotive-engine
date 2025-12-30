@@ -19,9 +19,8 @@ import { GestureBlender } from './animation/GestureBlender.js';
 import { BlinkAnimator } from './animation/BlinkAnimator.js';
 import { rhythm3DAdapter } from './animation/Rhythm3DAdapter.js';
 import { GeometryMorpher } from './utils/GeometryMorpher.js';
-import RotationBehavior from './behaviors/RotationBehavior.js';
-import RightingBehavior from './behaviors/RightingBehavior.js';
-import FacingBehavior from './behaviors/FacingBehavior.js';
+// Note: Behavior classes (RotationBehavior, RightingBehavior, FacingBehavior)
+// are now managed by BehaviorController
 import { updateSunMaterial, SUN_ROTATION_CONFIG } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
 import { getGesture } from '../core/gestures/index.js';
@@ -212,9 +211,12 @@ export class Core3DManager {
         this.effectManager = new EffectManager(this.renderer, this.assetBasePath);
 
         // Behavior controller (manages rotation, righting, and facing behaviors)
+        // Note: rhythmEngine is passed later via setRhythmEngine() if needed
         this.behaviorController = new BehaviorController({
             rotationDisabled: options.autoRotate === false,
-            wobbleEnabled: true
+            wobbleEnabled: true,
+            rhythmEngine: options.rhythmEngine || null,
+            camera: this.renderer.camera
         });
 
         // Breathing phase manager (imperative meditation-style breathing control)
@@ -241,35 +243,28 @@ export class Core3DManager {
             this.blinkingManuallyDisabled = true;
         }
 
-        // Rotation behavior system
-        this.rotationBehavior = null; // Will be initialized in setEmotion
+        // Rotation state flags (BehaviorController manages the actual behaviors)
         this.rotationDisabled = options.autoRotate === false; // Disable rotation if autoRotate is false
         this.wobbleEnabled = true; // Wobble/shake effects enabled by default
 
-        // Righting behavior (self-stabilization like inflatable punching clowns)
-        // Tuned for smooth return to upright without oscillation
-        this.rightingBehavior = new RightingBehavior({
-            strength: 5.0,              // Strong righting without overdoing it (was 50.0)
-            damping: 0.85,              // Critically damped for smooth return (was 0.99)
-            centerOfMass: [0, -0.3, 0], // Bottom-heavy
-            axes: { pitch: true, roll: true, yaw: false }
-        });
-
-        // Facing behavior (tidal lock - keeps one face toward camera)
-        // Initialized for moon geometry, null for others
-        this.facingBehavior = null;
+        // Initialize behavior controller for moon geometry if needed
         if (isMoon && MOON_FACING_CONFIG.enabled) {
             const degToRad = Math.PI / 180;
-            this.facingBehavior = new FacingBehavior({
-                strength: MOON_FACING_CONFIG.strength,
-                lockedFace: MOON_FACING_CONFIG.lockedFace,
-                lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
-                calibrationRotation: [
-                    MOON_CALIBRATION_ROTATION.x * degToRad,
-                    MOON_CALIBRATION_ROTATION.y * degToRad,
-                    MOON_CALIBRATION_ROTATION.z * degToRad
-                ]
-            }, this.renderer.camera);
+            this.behaviorController.configureForEmotion({
+                geometryType: 'moon',
+                emotionData: null, // Will be set in setEmotion
+                facingConfig: {
+                    enabled: true,
+                    strength: MOON_FACING_CONFIG.strength,
+                    lockedFace: MOON_FACING_CONFIG.lockedFace,
+                    lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
+                    calibrationRotation: [
+                        MOON_CALIBRATION_ROTATION.x * degToRad,
+                        MOON_CALIBRATION_ROTATION.y * degToRad,
+                        MOON_CALIBRATION_ROTATION.z * degToRad
+                    ]
+                }
+            });
         }
 
         // Current state
@@ -430,50 +425,35 @@ export class Core3DManager {
             // Note: Bloom is updated every frame in render() for smooth transitions
         }
 
-        // Initialize or update rotation behavior from 3d config
-        // EXCEPTION: Moon is tidally locked - no rotation behavior
-        // EXCEPTION: Black hole disk rotates in shader - no mesh rotation
-        // EXCEPTION: If rotation was manually disabled, respect that
+        // Configure behavior controller for this emotion and geometry
         // Get geometry-specific rotation config if available
         const geometryRotation = this.geometryType === 'sun' ? SUN_ROTATION_CONFIG : null;
 
-        if (this.rotationDisabled) {
-            this.rotationBehavior = null; // Keep rotation disabled
-        } else if (this.geometryType === 'moon') {
-            this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
-        } else if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
-            if (this.rotationBehavior) {
-                // Update existing behavior
-                this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
-            } else {
-                // Create new rotation behavior with geometry-specific base rotation
-                this.rotationBehavior = new RotationBehavior(
-                    emotionData['3d'].rotation,
-                    this.rhythmEngine,
-                    geometryRotation
-                );
-                // Apply wobble enabled state
-                this.rotationBehavior.setWobbleEnabled(this.wobbleEnabled);
-            }
-        } else {
-            // Fall back to default gentle rotation if no 3d config
-            // BUT: Don't create if rotation is disabled
-            if (!this.rotationBehavior && !this.rotationDisabled) {
-                this.rotationBehavior = new RotationBehavior(
-                    { type: 'gentle', speed: 1.0, axes: [0, 0.01, 0] },
-                    this.rhythmEngine,
-                    geometryRotation
-                );
-                // Apply wobble enabled state
-                this.rotationBehavior.setWobbleEnabled(this.wobbleEnabled);
-            }
+        // Build facing config for moon if needed
+        let facingConfig = null;
+        if (this.geometryType === 'moon' && MOON_FACING_CONFIG.enabled) {
+            const degToRad = Math.PI / 180;
+            facingConfig = {
+                enabled: true,
+                strength: MOON_FACING_CONFIG.strength,
+                lockedFace: MOON_FACING_CONFIG.lockedFace,
+                lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
+                calibrationRotation: [
+                    MOON_CALIBRATION_ROTATION.x * degToRad,
+                    MOON_CALIBRATION_ROTATION.y * degToRad,
+                    MOON_CALIBRATION_ROTATION.z * degToRad
+                ]
+            };
         }
 
-        // Reset orientation when changing emotions to prevent stuck angles
-        // (e.g., anger's shake can push to max tilt, needs reset when switching to calm emotion)
-        if (this.rightingBehavior) {
-            this.rightingBehavior.reset();
-        }
+        // Configure behaviors via controller
+        this.behaviorController.configureForEmotion({
+            geometryType: this.geometryType,
+            emotionData,
+            facingConfig,
+            geometryRotation
+        });
+
         // Reset Euler angles to upright [pitch=0, yaw=current, roll=0]
         // Preserve yaw to maintain current spin direction, but reset pitch/roll
         this.baseEuler[0] = 0; // Reset pitch
@@ -484,17 +464,7 @@ export class Core3DManager {
         const undertoneModifier = getUndertoneModifier(undertone);
 
         if (undertoneModifier && undertoneModifier['3d']) {
-            const ut3d = undertoneModifier['3d'];
-
-            // Apply rotation multipliers to RotationBehavior
-            if (ut3d.rotation && this.rotationBehavior) {
-                this.rotationBehavior.applyUndertoneMultipliers(ut3d.rotation);
-            }
-
-            // Apply righting multipliers to RightingBehavior
-            if (ut3d.righting && this.rightingBehavior) {
-                this.rightingBehavior.applyUndertoneMultipliers(ut3d.righting);
-            }
+            this.behaviorController.applyUndertone(undertoneModifier['3d']);
         }
 
         // Stop all previous emotion animations to prevent stacking
@@ -999,17 +969,10 @@ export class Core3DManager {
      */
     setWobbleEnabled(enabled) {
         this.wobbleEnabled = enabled;
-        if (this.rotationBehavior) {
-            this.rotationBehavior.setWobbleEnabled(enabled);
-        }
+        this.behaviorController.setWobbleEnabled(enabled);
 
-        // When disabling wobble, reset to upright position
-        // (same logic as emotion change - prevents model from being stuck at an angle)
+        // When disabling wobble, reset pitch/roll to upright, preserve yaw for rotation continuity
         if (!enabled) {
-            if (this.rightingBehavior) {
-                this.rightingBehavior.reset();
-            }
-            // Reset pitch/roll to upright, preserve yaw for rotation continuity
             this.baseEuler[0] = 0; // Reset pitch
             this.baseEuler[2] = 0; // Reset roll
         }
@@ -1367,12 +1330,6 @@ export class Core3DManager {
             // Update blink animator with new geometry's blink config
             this.blinkAnimator.setGeometry(this._targetGeometryConfig);
 
-            // Reset righting behavior and orientation during morph transition
-            // This fixes issue where anger/unstable rotations get stuck at bad angles
-            // Reset angular velocity
-            if (this.rightingBehavior) {
-                this.rightingBehavior.reset();
-            }
             // Reset Euler angles to upright [pitch=0, yaw=0, roll=0]
             this.rotation = [0, 0, 0];
 
@@ -1401,10 +1358,36 @@ export class Core3DManager {
                 }
             }
 
-            // Update rotation behavior for special geometries (moon is tidally locked)
+            // Update behavior controller for target geometry
+            // Build facing config for moon if needed
+            let facingConfig = null;
+            if (this._targetGeometryType === 'moon' && MOON_FACING_CONFIG.enabled) {
+                const degToRad = Math.PI / 180;
+                facingConfig = {
+                    enabled: true,
+                    strength: MOON_FACING_CONFIG.strength,
+                    lockedFace: MOON_FACING_CONFIG.lockedFace,
+                    lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
+                    calibrationRotation: [
+                        MOON_CALIBRATION_ROTATION.x * degToRad,
+                        MOON_CALIBRATION_ROTATION.y * degToRad,
+                        MOON_CALIBRATION_ROTATION.z * degToRad
+                    ]
+                };
+            }
+
+            // Configure behaviors for target geometry via controller
+            // Note: emotionData is already declared above in this scope
+            this.behaviorController.configureForMorph({
+                targetGeometryType: this._targetGeometryType,
+                emotionData,
+                facingConfig,
+                geometryRotation: null // No geometry-specific rotation during morph
+            });
+
+            // Handle moon-specific camera and controls
             if (this._targetGeometryType === 'moon') {
-                this.rotationBehavior = null; // Disable rotation for moon (tidally locked)
-                // Also disable OrbitControls camera rotation for moon (tidally locked)
+                // Disable OrbitControls camera rotation for moon (tidally locked)
                 if (this.renderer?.controls) {
                     this.renderer.controls.autoRotate = false;
                 }
@@ -1422,27 +1405,7 @@ export class Core3DManager {
                 this.calibrationRotation[0] = MOON_CALIBRATION_ROTATION.x * degToRad;
                 this.calibrationRotation[1] = MOON_CALIBRATION_ROTATION.y * degToRad;
                 this.calibrationRotation[2] = MOON_CALIBRATION_ROTATION.z * degToRad;
-
-                // Create facing behavior for tidal lock
-                if (!this.facingBehavior && MOON_FACING_CONFIG.enabled) {
-                    this.facingBehavior = new FacingBehavior({
-                        strength: MOON_FACING_CONFIG.strength,
-                        lockedFace: MOON_FACING_CONFIG.lockedFace,
-                        lerpSpeed: MOON_FACING_CONFIG.lerpSpeed,
-                        calibrationRotation: [
-                            MOON_CALIBRATION_ROTATION.x * degToRad,
-                            MOON_CALIBRATION_ROTATION.y * degToRad,
-                            MOON_CALIBRATION_ROTATION.z * degToRad
-                        ]
-                    }, this.renderer.camera);
-                }
             } else {
-                // Dispose facing behavior when morphing away from moon
-                if (this.facingBehavior) {
-                    this.facingBehavior.dispose();
-                    this.facingBehavior = null;
-                }
-
                 // Re-enable auto-rotate when morphing away from moon (if it was originally enabled)
                 if (this.renderer?.controls && this.options.autoRotate !== false) {
                     this.renderer.controls.autoRotate = true;
@@ -1459,26 +1422,6 @@ export class Core3DManager {
                     this.calibrationRotation[0] = 0;
                     this.calibrationRotation[1] = 0;
                     this.calibrationRotation[2] = 0;
-                }
-
-                if (this.rotationDisabled) {
-                    this.rotationBehavior = null; // Keep rotation disabled if user disabled it
-                } else {
-                    // Re-apply emotion rotation behavior for new geometry
-                    const emotionData = getEmotion(this.emotion);
-                    if (emotionData && emotionData['3d'] && emotionData['3d'].rotation) {
-                        if (this.rotationBehavior) {
-                            this.rotationBehavior.updateConfig(emotionData['3d'].rotation);
-                        } else {
-                            // Create new rotation behavior
-                            this.rotationBehavior = new RotationBehavior(
-                                emotionData['3d'].rotation,
-                                this.rhythmEngine
-                            );
-                            // Apply wobble enabled state
-                            this.rotationBehavior.setWobbleEnabled(this.wobbleEnabled);
-                        }
-                    }
                 }
             }
         }
@@ -1514,42 +1457,9 @@ export class Core3DManager {
         // Update blink animation
         const blinkState = this.blinkAnimator.update(deltaTime);
 
-        // Always update persistent base rotation (ambient spin continues during gestures)
-        if (this.rotationBehavior) {
-            this.rotationBehavior.update(deltaTime, this.baseEuler);
-        } else if (this.geometryType !== 'moon' && !this.rotationDisabled) {
-            // Fallback: simple Y rotation if no behavior defined
-            // EXCEPT for moon (tidally locked - no rotation)
-            // EXCEPT when user has manually disabled rotation
-            this.baseEuler[1] += deltaTime * 0.0003;
-        }
-        // Moon gets no rotation update - stays tidally locked
-
-        // DEBUG: Log rotation state for moon
-        // if (this.geometryType === 'moon') {
-        //         geometryType: this.geometryType,
-        //         rotationBehavior: !!this.rotationBehavior,
-        //         rotationDisabled: this.rotationDisabled,
-        //         baseEuler: this.baseEuler
-        //     });
-        // }
-
-        // Apply righting behavior (self-stabilization) after rotation
-        // This pulls tilted models back to upright while preserving yaw spin
-        if (this.rightingBehavior) {
-            this.rightingBehavior.update(deltaTime, this.baseEuler);
-        }
-
-        // Apply facing behavior (tidal lock) after righting
-        // This overrides rotation to keep object stationary (no rotation)
-        // Tidal lock is achieved by keeping baseEuler at [0,0,0] and using calibrationRotation
-        if (this.facingBehavior) {
-            // Simply reset baseEuler to zero - moon doesn't rotate at all
-            this.baseEuler[0] = 0; // No pitch
-            this.baseEuler[1] = 0; // No yaw
-            this.baseEuler[2] = 0; // No roll
-            // calibrationRotation is already applied in renderer to show correct face
-        }
+        // Update all behaviors (rotation, righting, facing) via controller
+        // This handles: ambient spin, self-stabilization, and tidal lock for moon
+        this.behaviorController.update(deltaTime, this.baseEuler);
 
         // HARD LIMIT: Clamp pitch and roll to prevent lateral/dolphin tipping
         // No emotion should ever tip more than ~20 degrees from upright
@@ -1681,7 +1591,7 @@ export class Core3DManager {
                 {
                     euler: this.baseEuler,
                     quaternion: this.baseQuaternion,
-                    angularVelocity: this.rotationBehavior ? this.rotationBehavior.axes : [0, 0, 0]
+                    angularVelocity: this.behaviorController.getAngularVelocity()
                 },
                 this.baseScale, // Pass base scale only (shader handles perspective)
                 coreRadius3D    // Pass actual 3D core radius for particle orbit distance
@@ -2078,15 +1988,9 @@ export class Core3DManager {
         this.geometryMorpher.destroy?.();
         this.blinkAnimator.destroy?.();
 
-        // Clean up behavior objects
-        if (this.rotationBehavior) {
-            this.rotationBehavior.destroy?.();
-            this.rotationBehavior = null;
-        }
-        if (this.rightingBehavior) {
-            this.rightingBehavior.destroy?.();
-            this.rightingBehavior = null;
-        }
+        // Clean up behavior controller (disposes all behavior objects)
+        this.behaviorController.dispose();
+        this.behaviorController = null;
 
         // Clean up temp THREE.js objects
         this.tempEuler = null;

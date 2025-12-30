@@ -325,7 +325,7 @@ After each phase, verify:
 | 1.1 AnimationManager | ✅ Complete | ~200 | 1 |
 | 1.2 EffectManager | ✅ Complete (Eclipse) | ~150 | 1 |
 | 1.3 MorphingStateMachine | Not Started | ~200 | 1 |
-| 2.1 BehaviorController | 🔄 Created (parallel) | ~0 | 1 |
+| 2.1 BehaviorController | ✅ Complete | ~100 | 1 |
 | 2.2 BreathingPhaseManager | ✅ Complete | ~35 | 1 |
 | 2.3 RenderingPipeline | Not Started | ~300 | 1 |
 | 3.1 ShaderUniformManager | Not Started | ~150 | 1 |
