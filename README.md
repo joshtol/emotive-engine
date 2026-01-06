@@ -380,6 +380,14 @@ mascot.disableAutoRotate();
 
 // Camera
 mascot.setCameraPreset('front');  // front, side, top, angle
+
+// Ambient Groove (rhythm-synced idle animation)
+mascot.setGroove('groove1');              // Subtle, elegant (default)
+mascot.setGroove('groove2');              // Energetic, bouncy
+mascot.setGroove('groove3');              // Smooth, flowing
+mascot.setGroove('groove2', { bars: 2 }); // Morph over 2 bars
+mascot.enableGroove();
+mascot.disableGroove();
 ```
 
 ---

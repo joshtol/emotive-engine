@@ -9,6 +9,28 @@ and this project uses
 
 ## [Unreleased]
 
+### 🎵 Groove Preset System
+
+#### Frame-Rate Independent Timing
+- **FIXED** Groove animation desync on frame drops by removing `grooveTime` accumulator
+- **CHANGED** Groove now computed from absolute `beatProgress`/`barProgress` (performance.now() based)
+- **ADDED** deltaTime clamping (50ms max) to prevent smoothing overshoot during frame drops
+- **INCREASED** `grooveSmoothingSpeed` to 12.0 for tighter beat sync
+
+#### Groove Presets
+- **ADDED** `groove1`: Subtle, elegant - gentle bounce and sway (default)
+- **ADDED** `groove2`: Energetic, bouncy - pronounced vertical motion, playful
+- **ADDED** `groove3`: Smooth, flowing - emphasis on rotation and sway, languid
+- **ADDED** Seamless morphing between groove presets during transitions
+
+#### API
+- **ADDED** `mascot.setGroove(name)` - Immediate switch to groove preset
+- **ADDED** `mascot.setGroove(name, { bars: N })` - Morph over N bars
+- **ADDED** `mascot.setGroove(name, { duration: N })` - Morph over N seconds
+- **ADDED** `mascot.getGroovePresets()` - Returns available preset names
+- **ADDED** `mascot.getCurrentGroove()` - Returns active preset name
+- **EXPORTED** `GROOVE_PRESETS` constant for preset inspection
+
 ## [3.2.0] - 2025-12-12 - 3D Engine & Audio Sync
 
 ### 🎮 3D Mascot Renderer

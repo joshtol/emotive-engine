@@ -783,6 +783,50 @@ All 11 geometries have unique blink behaviors:
 | **capsule** | capsule-squeeze | 145ms | Capsule squish |
 | **tetrahedron** | vertex-flash | 110ms | Vertex flash |
 
+### Rhythm3DAdapter & Groove System
+
+The **Rhythm3DAdapter** bridges the RhythmEngine with 3D animation for audio-reactive groove animations.
+
+#### Core Concepts
+
+1. **Frame-Rate Independence**: Groove uses absolute `beatProgress`/`barProgress` from RhythmEngine (performance.now() based), NOT accumulated frame deltas.
+
+2. **Groove Presets**: Three distinct groove personalities:
+   - `groove1`: Subtle, elegant - gentle bounce and sway (default)
+   - `groove2`: Energetic, bouncy - pronounced vertical motion
+   - `groove3`: Smooth, flowing - emphasis on rotation and sway
+
+3. **Seamless Morphing**: Transition between presets over specified bars or duration.
+
+#### Groove Preset Parameters
+
+| Preset | Bounce | Sway | Pulse | Rotation | Character |
+|--------|--------|------|-------|----------|-----------|
+| **groove1** | 0.015 | 0.012 | 0.02 | 0.015 | Subtle, elegant |
+| **groove2** | 0.035 | 0.02 | 0.045 | 0.025 | Energetic, bouncy |
+| **groove3** | 0.01 | 0.03 | 0.015 | 0.04 | Smooth, flowing |
+
+#### Public API
+
+```javascript
+// Set groove preset (immediate)
+mascot.setGroove('groove2');
+
+// Morph to preset over 2 bars
+mascot.setGroove('groove3', { bars: 2 });
+
+// Morph over specific duration
+mascot.setGroove('groove1', { duration: 3 });
+
+// Query presets
+mascot.getGroovePresets();  // ['groove1', 'groove2', 'groove3']
+mascot.getCurrentGroove();  // 'groove1'
+
+// Enable/disable
+mascot.enableGroove();
+mascot.disableGroove();
+```
+
 ### 3D File Structure
 
 ```
@@ -795,6 +839,7 @@ src/3d/
 │   ├── BreathingAnimator.js   # Breathing effect
 │   ├── GestureBlender.js      # Multi-gesture composition
 │   ├── BlinkAnimator.js       # Blinking system ⭐
+│   ├── Rhythm3DAdapter.js     # Groove & rhythm sync ⭐
 │   └── GeometryMorpher.js     # Shape transitions
 ├── behaviors/
 │   ├── RotationBehavior.js    # Emotion-aware rotation
