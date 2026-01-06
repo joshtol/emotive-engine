@@ -1093,6 +1093,46 @@ export class Core3DManager {
         }
     }
 
+    /**
+     * Set the active groove preset
+     * Groove presets define the character of the ambient groove animation:
+     * - 'groove1': Subtle, elegant - gentle bounce and sway (default)
+     * - 'groove2': Energetic, bouncy - pronounced vertical motion
+     * - 'groove3': Smooth, flowing - emphasis on rotation and sway
+     *
+     * @param {string} grooveName - Groove preset name ('groove1', 'groove2', 'groove3')
+     * @param {Object} [options] - Transition options
+     * @param {number} [options.bars] - Transition duration in bars (e.g., 2 = morph over 2 bars)
+     * @param {number} [options.duration] - Transition duration in seconds (alternative to bars)
+     */
+    setGroove(grooveName, options = {}) {
+        if (this.rhythm3DAdapter) {
+            this.rhythm3DAdapter.setGroove(grooveName, options);
+        }
+    }
+
+    /**
+     * Get available groove preset names
+     * @returns {string[]} Array of groove preset names
+     */
+    getGroovePresets() {
+        if (this.rhythm3DAdapter) {
+            return this.rhythm3DAdapter.getGroovePresets();
+        }
+        return ['groove1', 'groove2', 'groove3'];
+    }
+
+    /**
+     * Get current groove preset name
+     * @returns {string} Current groove preset name
+     */
+    getCurrentGroove() {
+        if (this.rhythm3DAdapter) {
+            return this.rhythm3DAdapter.getCurrentGroove();
+        }
+        return 'groove1';
+    }
+
     // ═══════════════════════════════════════════════════════════════════════════
     // IMPERATIVE BREATHING PHASE API (for meditation)
     // ═══════════════════════════════════════════════════════════════════════════

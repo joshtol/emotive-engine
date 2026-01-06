@@ -1081,7 +1081,7 @@ export class EmotiveMascot3D {
     }
 
     /**
-     * Set groove configuration for idle animations
+     * Set groove configuration for idle animations (advanced tuning)
      * @param {Object} config - Groove settings
      * @param {number} config.grooveBounceAmount - Vertical bounce amplitude (default: 0.02)
      * @param {number} config.grooveSwayAmount - Horizontal sway amplitude (default: 0.015)
@@ -1092,6 +1092,57 @@ export class EmotiveMascot3D {
         if (this.core3D) {
             this.core3D.setGrooveConfig(config);
         }
+    }
+
+    /**
+     * Set the active groove preset for ambient animation
+     *
+     * Groove presets define the character of the ambient groove:
+     * - 'groove1': Subtle, elegant - gentle bounce and sway (default)
+     * - 'groove2': Energetic, bouncy - pronounced vertical motion, playful
+     * - 'groove3': Smooth, flowing - emphasis on rotation and sway, languid
+     *
+     * @example
+     * // Immediate switch to energetic groove
+     * mascot.setGroove('groove2');
+     *
+     * // Morph to flowing groove over 2 bars
+     * mascot.setGroove('groove3', { bars: 2 });
+     *
+     * // Transition over specific duration
+     * mascot.setGroove('groove1', { duration: 3 }); // 3 seconds
+     *
+     * @param {string} grooveName - Groove preset name ('groove1', 'groove2', 'groove3')
+     * @param {Object} [options] - Transition options
+     * @param {number} [options.bars] - Transition duration in bars (e.g., 2 = morph over 2 bars)
+     * @param {number} [options.duration] - Transition duration in seconds (alternative to bars)
+     */
+    setGroove(grooveName, options = {}) {
+        if (this.core3D) {
+            this.core3D.setGroove(grooveName, options);
+        }
+    }
+
+    /**
+     * Get available groove preset names
+     * @returns {string[]} Array of groove preset names
+     */
+    getGroovePresets() {
+        if (this.core3D) {
+            return this.core3D.getGroovePresets();
+        }
+        return ['groove1', 'groove2', 'groove3'];
+    }
+
+    /**
+     * Get current groove preset name
+     * @returns {string} Current groove preset name
+     */
+    getCurrentGroove() {
+        if (this.core3D) {
+            return this.core3D.getCurrentGroove();
+        }
+        return 'groove1';
     }
 
     /**
@@ -1757,7 +1808,7 @@ export {
 } from './presets/SSSPresets.js';
 
 // Export rhythm 3D adapter for advanced rhythm sync customization
-export { rhythm3DAdapter, Rhythm3DAdapter } from './animation/Rhythm3DAdapter.js';
+export { rhythm3DAdapter, Rhythm3DAdapter, GROOVE_PRESETS } from './animation/Rhythm3DAdapter.js';
 
 // Export CrystalSoul for geometry preloading
 export { CrystalSoul } from './effects/CrystalSoul.js';

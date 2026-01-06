@@ -23,6 +23,12 @@
  * • Ambient groove idle animations (subtle bounce/sway when no gestures)
  * • BPM-aware duration conversion for gestures
  * • Pattern-specific modulation overrides
+ * • Multiple groove presets with seamless transitions
+ *
+ * GROOVE PRESETS:
+ * • groove1 (subtle): Minimal, elegant - gentle bounce and sway
+ * • groove2 (energetic): Bouncy, lively - pronounced vertical motion
+ * • groove3 (flowing): Smooth, languid - emphasis on rotation and sway
  *
  * ARCHITECTURE:
  * ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -34,9 +40,72 @@
  * │   intensity          multipliers                                                 │
  * │                                                                                   │
  * └──────────────────────────────────────────────────────────────────────────────────┘
+ *
+ * TIMING MODEL (Frame-Rate Independent):
+ * ┌──────────────────────────────────────────────────────────────────────────────────┐
+ * │  • RhythmEngine provides absolute beatProgress/barProgress from performance.now()│
+ * │  • Groove computed from absolute beat phase (NOT accumulated frame deltas)       │
+ * │  • Smoothing applied only to OUTPUT values, not timing                          │
+ * │  • deltaTime clamped to prevent overshoot during frame drops                    │
+ * └──────────────────────────────────────────────────────────────────────────────────┘
  */
 
 import rhythmEngine from '../../core/audio/rhythm.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// GROOVE PRESETS
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Groove preset definitions
+ * Each preset defines the character of the ambient groove animation
+ */
+const GROOVE_PRESETS = {
+    // Subtle, minimal groove - elegant and understated
+    groove1: {
+        name: 'groove1',
+        description: 'Subtle, elegant - gentle bounce and sway',
+        bounceAmount: 0.015,      // Vertical bounce amplitude
+        swayAmount: 0.012,        // Horizontal sway amplitude
+        pulseAmount: 0.02,        // Scale pulse amplitude
+        rotationAmount: 0.015,    // Rotation sway amplitude
+        bounceFreq: 1,            // Bounce cycles per beat
+        swayFreq: 0.5,            // Sway cycles per bar (half-bar period)
+        phaseOffset: 0,           // Phase offset in radians
+        easing: 'sine'            // Easing curve type
+    },
+
+    // Energetic, bouncy groove - lively and playful
+    groove2: {
+        name: 'groove2',
+        description: 'Energetic, bouncy - pronounced vertical motion',
+        bounceAmount: 0.035,      // More pronounced bounce
+        swayAmount: 0.02,         // Moderate sway
+        pulseAmount: 0.045,       // Strong scale pulse
+        rotationAmount: 0.025,    // Moderate rotation
+        bounceFreq: 1,            // Standard beat-synced bounce
+        swayFreq: 1,              // Faster sway (full bar period)
+        phaseOffset: 0,
+        easing: 'bounce'          // Snappier easing
+    },
+
+    // Smooth, flowing groove - languid and expressive
+    groove3: {
+        name: 'groove3',
+        description: 'Smooth, flowing - emphasis on rotation and sway',
+        bounceAmount: 0.01,       // Subtle bounce
+        swayAmount: 0.03,         // Pronounced sway
+        pulseAmount: 0.015,       // Gentle pulse
+        rotationAmount: 0.04,     // Strong rotation emphasis
+        bounceFreq: 0.5,          // Slower bounce (half-beat)
+        swayFreq: 0.25,           // Very slow sway (quarter-bar)
+        phaseOffset: Math.PI / 4, // Phase offset for flowing feel
+        easing: 'sine'            // Smooth sine easing
+    }
+};
+
+// Default groove preset
+const DEFAULT_GROOVE = 'groove1';
 
 export class Rhythm3DAdapter {
     /**
@@ -59,9 +128,10 @@ export class Rhythm3DAdapter {
 
         // Ambient groove state
         this.grooveEnabled = true;
-        this.grooveTime = 0;
-        this._lastBeatProgress = 0;
-        this._staleFrameCount = 0;
+        this.currentGroove = DEFAULT_GROOVE;
+        this.targetGroove = DEFAULT_GROOVE;
+        this.grooveTransition = 0;        // 0 = at current, 1 = at target
+        this.grooveTransitionSpeed = 2.0; // Transition speed (per second)
 
         // Modulation output (computed each frame) - these are the SMOOTHED values
         this.modulation = {
@@ -93,16 +163,13 @@ export class Rhythm3DAdapter {
             beatSyncStrength: 0.3,     // How much beat affects animations (0-1)
             accentMultiplier: 1.5,     // Boost on accented beats
 
-            // Ambient groove settings
-            grooveBounceAmount: 0.02,  // Vertical bounce amplitude
-            grooveSwayAmount: 0.015,   // Horizontal sway amplitude
-            groovePulseAmount: 0.03,   // Scale pulse amplitude
-            grooveRotationAmount: 0.02, // Rotation sway amplitude
-
             // Smoothing settings
             smoothingSpeed: 8.0,       // How fast values ease toward target (higher = faster)
-            grooveSmoothingSpeed: 6.0  // Separate smoothing for groove (slightly slower for fluidity)
+            grooveSmoothingSpeed: 12.0 // Groove smoothing (higher for tighter beat sync)
         };
+
+        // Maximum deltaTime to prevent smoothing overshoot during frame drops
+        this._maxDeltaTime = 0.05; // 50ms cap (~20 FPS minimum)
     }
 
     /**
@@ -111,7 +178,7 @@ export class Rhythm3DAdapter {
      * @param {number} current - Current value
      * @param {number} target - Target value
      * @param {number} speed - Interpolation speed
-     * @param {number} deltaTime - Time delta in seconds
+     * @param {number} deltaTime - Time delta in seconds (clamped)
      * @returns {number} Interpolated value
      */
     _lerp(current, target, speed, deltaTime) {
@@ -125,12 +192,42 @@ export class Rhythm3DAdapter {
      * @param {number[]} current - Current values
      * @param {number[]} target - Target values
      * @param {number} speed - Interpolation speed
-     * @param {number} deltaTime - Time delta in seconds
+     * @param {number} deltaTime - Time delta in seconds (clamped)
      * @returns {number[]} Interpolated values
      */
     _lerpArray(current, target, speed, deltaTime) {
         const t = 1 - Math.exp(-speed * deltaTime);
         return current.map((v, i) => v + (target[i] - v) * t);
+    }
+
+    /**
+     * Get groove preset by name
+     * @private
+     * @param {string} name - Preset name
+     * @returns {Object} Groove preset configuration
+     */
+    _getGroovePreset(name) {
+        return GROOVE_PRESETS[name] || GROOVE_PRESETS[DEFAULT_GROOVE];
+    }
+
+    /**
+     * Interpolate between two groove presets
+     * @private
+     * @param {Object} from - Source preset
+     * @param {Object} to - Target preset
+     * @param {number} t - Interpolation factor (0-1)
+     * @returns {Object} Interpolated preset values
+     */
+    _interpolatePresets(from, to, t) {
+        return {
+            bounceAmount: from.bounceAmount + (to.bounceAmount - from.bounceAmount) * t,
+            swayAmount: from.swayAmount + (to.swayAmount - from.swayAmount) * t,
+            pulseAmount: from.pulseAmount + (to.pulseAmount - from.pulseAmount) * t,
+            rotationAmount: from.rotationAmount + (to.rotationAmount - from.rotationAmount) * t,
+            bounceFreq: from.bounceFreq + (to.bounceFreq - from.bounceFreq) * t,
+            swayFreq: from.swayFreq + (to.swayFreq - from.swayFreq) * t,
+            phaseOffset: from.phaseOffset + (to.phaseOffset - from.phaseOffset) * t
+        };
     }
 
     /**
@@ -190,13 +287,75 @@ export class Rhythm3DAdapter {
     }
 
     /**
+     * Set the active groove preset
+     * @param {string} grooveName - Groove preset name ('groove1', 'groove2', 'groove3')
+     * @param {Object} [options] - Transition options
+     * @param {number} [options.bars] - Transition duration in bars (default: immediate)
+     * @param {number} [options.duration] - Transition duration in seconds (alternative to bars)
+     */
+    setGroove(grooveName, options = {}) {
+        if (!GROOVE_PRESETS[grooveName]) {
+            console.warn(`[Rhythm3DAdapter] Unknown groove preset: ${grooveName}`);
+            return;
+        }
+
+        // If same groove, no-op
+        if (this.currentGroove === grooveName && this.grooveTransition >= 1) {
+            return;
+        }
+
+        // Set up transition
+        this.targetGroove = grooveName;
+
+        if (options.bars || options.duration) {
+            // Gradual transition
+            this.grooveTransition = 0;
+
+            if (options.bars) {
+                // Calculate transition speed based on bars at current BPM
+                const barDuration = (60 / this.bpm) * 4; // seconds per bar (4/4)
+                const transitionDuration = options.bars * barDuration;
+                this.grooveTransitionSpeed = 1 / transitionDuration;
+            } else if (options.duration) {
+                this.grooveTransitionSpeed = 1 / options.duration;
+            }
+        } else {
+            // Immediate transition (but still smoothed via grooveSmoothingSpeed)
+            this.currentGroove = grooveName;
+            this.grooveTransition = 1;
+        }
+    }
+
+    /**
+     * Get available groove preset names
+     * @returns {string[]} Array of groove preset names
+     */
+    getGroovePresets() {
+        return Object.keys(GROOVE_PRESETS);
+    }
+
+    /**
+     * Get current groove preset name
+     * @returns {string} Current groove preset name
+     */
+    getCurrentGroove() {
+        return this.grooveTransition >= 1 ? this.targetGroove : this.currentGroove;
+    }
+
+    /**
      * Update rhythm state and compute modulation values
      * Should be called each frame before gesture blending
+     *
+     * IMPORTANT: This method is frame-rate independent.
+     * - beatProgress/barProgress come from RhythmEngine (performance.now() based)
+     * - Groove computed from absolute beat phase, NOT accumulated frame time
+     * - deltaTime clamped to prevent smoothing overshoot
+     *
      * @param {number} deltaTime - Time since last frame in ms
      */
     update(deltaTime) {
-        // Convert to seconds for smoothing calculations
-        const dt = deltaTime / 1000;
+        // Convert to seconds and clamp to prevent smoothing overshoot during frame drops
+        const dt = Math.min(deltaTime / 1000, this._maxDeltaTime);
 
         // Auto-initialize on first update if not done yet
         if (!this.adapter) {
@@ -218,36 +377,25 @@ export class Rhythm3DAdapter {
         // Mark as enabled if rhythm is playing (auto-enable when rhythm starts)
         this.enabled = true;
 
-        // Update cached rhythm values
+        // Get rhythm values directly from RhythmEngine (performance.now() based)
+        // This is frame-rate independent - beatProgress is computed from elapsed time
         const timeInfo = this.adapter.getTimeInfo();
 
-        // Detect stale rhythm data (beatProgress not updating)
-        if (Math.abs(timeInfo.beatProgress - this._lastBeatProgress) < 0.001) {
-            this._staleFrameCount++;
-        } else {
-            this._staleFrameCount = 0;
-            this._lastBeatProgress = timeInfo.beatProgress;
-        }
-
-        // If rhythm data is stale for too long, use time-based fallback
-        const isStale = this._staleFrameCount > 10;
-
-        if (isStale) {
-            // Fallback: compute beat progress from elapsed time and BPM
-            const beatsPerSecond = (timeInfo.bpm || this.bpm || 120) / 60;
-            this.grooveTime += dt;
-            this.beatProgress = (this.grooveTime * beatsPerSecond) % 1;
-            this.barProgress = ((this.grooveTime * beatsPerSecond) / 4) % 1;
-        } else {
-            this.beatProgress = timeInfo.beatProgress;
-            this.barProgress = timeInfo.barProgress;
-            // Keep grooveTime synced when not stale
-            this.grooveTime += dt;
-        }
-
+        // Use absolute beat/bar progress from RhythmEngine (already frame-rate independent)
+        this.beatProgress = timeInfo.beatProgress;
+        this.barProgress = timeInfo.barProgress;
         this.intensity = timeInfo.intensity;
         this.bpm = timeInfo.bpm || this.bpm;
         this.pattern = timeInfo.pattern;
+
+        // Update groove transition (for morphing between presets)
+        if (this.grooveTransition < 1) {
+            this.grooveTransition = Math.min(1, this.grooveTransition + this.grooveTransitionSpeed * dt);
+            if (this.grooveTransition >= 1) {
+                // Transition complete - swap current to target
+                this.currentGroove = this.targetGroove;
+            }
+        }
 
         // Compute target modulation values (raw, unsmoothed)
         this.computeModulation();
@@ -295,31 +443,50 @@ export class Rhythm3DAdapter {
 
     /**
      * Compute ambient groove animation (subtle idle motion synced to rhythm)
-     * Writes to _target values which are then smoothed
+     * Uses absolute beat/bar progress for frame-rate independence
+     * Supports morphing between groove presets
+     *
      * @private
      */
     computeGroove() {
-        const { grooveBounceAmount, grooveSwayAmount, groovePulseAmount, grooveRotationAmount } = this.config;
+        // Get current and target presets
+        const fromPreset = this._getGroovePreset(this.currentGroove);
+        const toPreset = this._getGroovePreset(this.targetGroove);
 
-        // Use smooth sine waves for all groove motions
-        // beatProgress: 0-1 over one beat
-        // barProgress: 0-1 over one bar (4 beats typically)
+        // Interpolate preset values for smooth transitions
+        const preset = this.grooveTransition >= 1
+            ? toPreset
+            : this._interpolatePresets(fromPreset, toPreset, this.grooveTransition);
 
-        // Vertical bounce: synced to beat, gentle up-down motion
-        const bouncePhase = this.beatProgress * Math.PI * 2;
-        const bounce = Math.sin(bouncePhase) * grooveBounceAmount;
+        const {
+            bounceAmount,
+            swayAmount,
+            pulseAmount,
+            rotationAmount,
+            bounceFreq,
+            swayFreq,
+            phaseOffset
+        } = preset;
 
-        // Horizontal sway: slower, synced to half-bar for natural feel
-        const swayPhase = this.barProgress * Math.PI * 2;
-        const sway = Math.sin(swayPhase) * grooveSwayAmount;
+        // Compute groove motions from ABSOLUTE beat/bar progress
+        // This is frame-rate independent because beatProgress/barProgress come from
+        // RhythmEngine which uses performance.now(), not accumulated frame deltas
 
-        // Scale pulse: subtle breathing synced to beat
-        const pulse = 1.0 + Math.sin(bouncePhase) * groovePulseAmount;
+        // Vertical bounce: synced to beat with configurable frequency
+        const bouncePhase = (this.beatProgress * bounceFreq * Math.PI * 2) + phaseOffset;
+        const bounce = Math.sin(bouncePhase) * bounceAmount;
 
-        // Rotation sway: gentle roll synced to bar
-        const rotationSway = Math.sin(swayPhase) * grooveRotationAmount;
+        // Horizontal sway: synced to bar with configurable frequency
+        const swayPhase = (this.barProgress * swayFreq * Math.PI * 2) + phaseOffset;
+        const sway = Math.sin(swayPhase) * swayAmount;
 
-        // Write to target values (these get smoothed)
+        // Scale pulse: synced to beat
+        const pulse = 1.0 + Math.sin(bouncePhase) * pulseAmount;
+
+        // Rotation sway: synced to bar for smooth rotation
+        const rotationSway = Math.sin(swayPhase) * rotationAmount;
+
+        // Write to target values (these get smoothed in applySmoothing)
         this._target.grooveOffset = [sway, bounce, 0];
         this._target.grooveScale = pulse;
         this._target.grooveRotation = [0, 0, rotationSway];
@@ -327,6 +494,7 @@ export class Rhythm3DAdapter {
 
     /**
      * Apply exponential smoothing from current values toward targets
+     * Smoothing is applied to OUTPUT values only, not to timing
      * @private
      */
     applySmoothing(dt) {
@@ -359,7 +527,8 @@ export class Rhythm3DAdapter {
             smoothingSpeed * 0.5, dt  // Slower decay for accent
         );
 
-        // Smooth groove values (slightly slower for fluid motion)
+        // Smooth groove values
+        // Higher smoothing speed keeps groove tightly synced to beat
         this.modulation.grooveOffset = this._lerpArray(
             this.modulation.grooveOffset,
             this._target.grooveOffset,
@@ -497,7 +666,7 @@ export class Rhythm3DAdapter {
     }
 
     /**
-     * Set groove configuration
+     * Set groove configuration (for custom tuning)
      * @param {Object} config - Groove settings
      */
     setGrooveConfig(config) {
@@ -548,5 +717,5 @@ export class Rhythm3DAdapter {
 
 // Export singleton for easy access
 const rhythm3DAdapter = new Rhythm3DAdapter();
-export { rhythm3DAdapter };
+export { rhythm3DAdapter, GROOVE_PRESETS };
 export default rhythm3DAdapter;
