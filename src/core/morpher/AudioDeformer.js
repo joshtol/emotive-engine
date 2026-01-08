@@ -181,21 +181,41 @@ export class AudioDeformer {
             if (this.morpher.spectralFluxHistory.length > 30) {
                 this.morpher.spectralFluxHistory.shift();
             }
-            
+
+            // Store bass flux history for BPM detection (separate from vocal flux)
+            if (!this.morpher.bassFluxHistory) {
+                this.morpher.bassFluxHistory = [];
+                this.morpher.bassOnsetThreshold = 0.05;
+            }
+            this.morpher.bassFluxHistory.push(bassFlux);
+            if (this.morpher.bassFluxHistory.length > 30) {
+                this.morpher.bassFluxHistory.shift();
+            }
+
             // Calculate adaptive threshold (median + margin)
             if (this.morpher.spectralFluxHistory.length >= 10) {
                 const sorted = [...this.morpher.spectralFluxHistory].sort((a, b) => a - b);
                 const median = sorted[Math.floor(sorted.length / 2)];
                 const mean = sorted.reduce((a, b) => a + b, 0) / sorted.length;
-                
+
                 // Threshold is slightly above the median to catch significant onsets
                 this.morpher.onsetThreshold = median + (mean - median) * 0.5;
             }
-            
-            // Detect onset (transient/attack) - focus on stronger transients for BPM
-            // Use higher threshold for BPM detection vs vocal detection
+
+            // Calculate adaptive bass threshold for BPM detection
+            if (this.morpher.bassFluxHistory.length >= 10) {
+                const sorted = [...this.morpher.bassFluxHistory].sort((a, b) => a - b);
+                const median = sorted[Math.floor(sorted.length / 2)];
+                const mean = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+                this.morpher.bassOnsetThreshold = median + (mean - median) * 0.5;
+            }
+
+            // Detect onset (transient/attack) - for visual effects (vocal range)
             const isVocalOnset = spectralFlux > this.morpher.onsetThreshold * 1.2 && spectralFlux > 0.02;
-            const isBeatOnset = spectralFlux > this.morpher.onsetThreshold * 2.0 && spectralFlux > 0.05; // Stronger threshold for beats
+
+            // BPM DETECTION: Use BASS onsets (kick drums) instead of vocal flux
+            // Bass is more reliable for tempo - kick drums mark the beat, not hi-hats
+            const isBassOnset = bassFlux > this.morpher.bassOnsetThreshold * 1.5 && bassFlux > 0.08;
             
             // Smooth the detection with a short hold time
             if (isVocalOnset) {
@@ -203,29 +223,36 @@ export class AudioDeformer {
                 this.morpher.vocalGlowBoost = 0.3; // Add 30% glow boost on vocal onset
             }
             
-            // BPM DETECTION: Only track stronger onsets that are likely beats
-            if (isBeatOnset) {
+            // BPM DETECTION: Use BASS onsets (kick drums) for reliable tempo detection
+            // This avoids hi-hats, snares, and other off-beat instruments contaminating BPM
+            if (isBassOnset) {
                 const now = performance.now();
-                
+
                 // Store onset strength for time signature detection
                 const onsetStrength = {
                     time: now,
-                    strength: spectralFlux / (this.morpher.onsetThreshold || 1), // Normalized strength
-                    bassWeight: bassFlux // Keep bass weight for downbeat detection
+                    strength: bassFlux / (this.morpher.bassOnsetThreshold || 1), // Normalized bass strength
+                    bassWeight: bassFlux
                 };
                 this.morpher.onsetStrengths.push(onsetStrength);
                 // Keep last 40 onsets (about 16-20 beats)
                 if (this.morpher.onsetStrengths.length > 40) {
                     this.morpher.onsetStrengths.shift();
                 }
-                
-                // Delegate onset tracking to music detector
-                this.morpher.musicDetector.addOnset(now, spectralFlux);
-                
+
+                // Delegate onset tracking to music detector - use bassFlux for BPM
+                this.morpher.musicDetector.addOnset(now, bassFlux);
+
             }
             
+            // Feed full frequency data to BPM detector (contest-based detection)
+            const now = performance.now();
+            if (this.morpher.musicDetector.processFrequencyFrame) {
+                this.morpher.musicDetector.processFrequencyFrame(this.morpher.frequencyData, now);
+            }
+
             // Update BPM detection through music detector
-            this.morpher.musicDetector.update(performance.now());
+            this.morpher.musicDetector.update(now);
             this.morpher.detectedBPM = this.morpher.musicDetector.detectedBPM;
             this.morpher.bpmConfidence = this.morpher.musicDetector.bpmConfidence;
             

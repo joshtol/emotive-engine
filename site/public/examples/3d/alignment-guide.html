@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<!--
+  HOLOGRAM ALIGNMENT GUIDE - Composition & Positioning Tool
+
+  Ghosted overlay guides for positioning hologram elements:
+  - Emitter base positioning
+  - Mascot/character placement
+  - Visual hierarchy and balance
+
+  Based on artistic composition principles:
+  - Rule of Thirds
+  - Golden Ratio (Phi)
+  - Hologram-specific vertical hierarchy
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hologram Alignment Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main container */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Controls panel */
+        .controls {
+            width: 280px;
+            background: rgba(20, 20, 30, 0.95);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+        }
+
+        .controls h1 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #6ee7ff;
+        }
+
+        .controls p.subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 12px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .toggle-row:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .toggle-label .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 22px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 11px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: rgba(110, 231, 255, 0.4);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(18px);
+            background: #6ee7ff;
+        }
+
+        .slider-row {
+            padding: 8px 0;
+        }
+
+        .slider-row label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .slider-row input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #6ee7ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: rgba(110, 231, 255, 0.1);
+            border: 1px solid rgba(110, 231, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .info-box strong {
+            color: #6ee7ff;
+        }
+
+        /* Canvas area */
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at 50% 100%, rgba(30, 40, 60, 0.5) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0a12 0%, #101020 100%);
+        }
+
+        /* Guide canvas container */
+        .guide-container {
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+            aspect-ratio: 9/16;
+            max-height: 90vh;
+            background: rgba(20, 25, 35, 0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* SVG overlay for guides */
+        .guide-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Draggable elements */
+        .draggable {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: filter 0.2s;
+        }
+
+        .draggable:hover {
+            filter: brightness(1.2);
+        }
+
+        .draggable.dragging {
+            z-index: 1000;
+        }
+
+        /* Mascot placeholder */
+        .mascot-placeholder {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed rgba(110, 231, 255, 0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, rgba(110, 231, 255, 0.1) 0%, transparent 70%);
+            box-shadow:
+                0 0 30px rgba(110, 231, 255, 0.2),
+                inset 0 0 20px rgba(110, 231, 255, 0.1);
+        }
+
+        .mascot-placeholder span {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(110, 231, 255, 0.8);
+        }
+
+        /* Emitter base placeholder */
+        .emitter-placeholder {
+            width: 180px;
+            height: 40px;
+            background: linear-gradient(180deg,
+                rgba(100, 120, 150, 0.3) 0%,
+                rgba(60, 70, 90, 0.5) 50%,
+                rgba(40, 50, 70, 0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px 8px 20px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .emitter-placeholder::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            border-bottom: 60px solid rgba(110, 231, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .emitter-placeholder span {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Position readout */
+        .position-readout {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            color: rgba(255,255,255,0.8);
+            z-index: 50;
+        }
+
+        /* Guide styles */
+        .guide-line {
+            stroke-linecap: round;
+        }
+
+        .guide-line.thirds {
+            stroke: rgba(255, 200, 100, 0.4);
+            stroke-width: 1;
+        }
+
+        .guide-line.golden {
+            stroke: rgba(255, 100, 200, 0.4);
+            stroke-width: 1;
+        }
+
+        .guide-line.center {
+            stroke: rgba(100, 200, 255, 0.4);
+            stroke-width: 1;
+        }
+
+        .guide-line.hologram {
+            stroke: rgba(100, 255, 150, 0.4);
+            stroke-width: 1.5;
+            stroke-dasharray: 8, 4;
+        }
+
+        .guide-line.diagonal {
+            stroke: rgba(200, 150, 255, 0.3);
+            stroke-width: 1;
+            stroke-dasharray: 4, 4;
+        }
+
+        .guide-circle {
+            fill: none;
+            stroke-width: 1;
+        }
+
+        .guide-circle.golden-spiral {
+            stroke: rgba(255, 100, 200, 0.3);
+        }
+
+        .guide-point {
+            fill: rgba(255, 200, 100, 0.6);
+        }
+
+        .guide-point.golden {
+            fill: rgba(255, 100, 200, 0.6);
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            z-index: 50;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-line {
+            width: 20px;
+            height: 2px;
+        }
+
+        /* Snap indicators */
+        .snap-indicator {
+            position: absolute;
+            background: rgba(110, 231, 255, 0.8);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .snap-indicator.horizontal {
+            height: 1px;
+            left: 0;
+            right: 0;
+        }
+
+        .snap-indicator.vertical {
+            width: 1px;
+            top: 0;
+            bottom: 0;
+        }
+
+        .snap-indicator.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Controls Panel -->
+        <div class="controls">
+            <h1>Alignment Guide</h1>
+            <p class="subtitle">Position your hologram elements using artistic composition principles</p>
+
+            <div class="section">
+                <h2>Composition Guides</h2>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">
+                        <span class="color-dot" style="background: rgba(255, 200, 100, 0.8);"></span>
+                        Rule of Thirds
+                    </span>
+                    <div class="toggle-switch active" data-guide="thirds"></div>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">
+                        <span class="color-dot" style="background: rgba(255, 100, 200, 0.8);"></span>
+                        Golden Ratio
+                    </span>
+                    <div class="toggle-switch" data-guide="golden"></div>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">
+                        <span class="color-dot" style="background: rgba(100, 200, 255, 0.8);"></span>
+                        Center Cross
+                    </span>
+                    <div class="toggle-switch active" data-guide="center"></div>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">
+                        <span class="color-dot" style="background: rgba(100, 255, 150, 0.8);"></span>
+                        Hologram Zones
+                    </span>
+                    <div class="toggle-switch active" data-guide="hologram"></div>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">
+                        <span class="color-dot" style="background: rgba(200, 150, 255, 0.8);"></span>
+                        Diagonals
+                    </span>
+                    <div class="toggle-switch" data-guide="diagonal"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Guide Opacity</h2>
+                <div class="slider-row">
+                    <label>Opacity: <span id="opacity-value">40%</span></label>
+                    <input type="range" id="opacity-slider" min="10" max="80" value="40">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Snap Settings</h2>
+                <div class="toggle-row">
+                    <span class="toggle-label">Snap to Guides</span>
+                    <div class="toggle-switch active" id="snap-toggle"></div>
+                </div>
+                <div class="slider-row">
+                    <label>Snap Distance: <span id="snap-value">15px</span></label>
+                    <input type="range" id="snap-slider" min="5" max="30" value="15">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Elements</h2>
+                <div class="toggle-row">
+                    <span class="toggle-label">Mascot Placeholder</span>
+                    <div class="toggle-switch active" id="mascot-toggle"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Emitter Base</span>
+                    <div class="toggle-switch active" id="emitter-toggle"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="info-box">
+                    <strong>Composition Tips:</strong><br><br>
+                    <strong>Rule of Thirds:</strong> Place the mascot's "eye level" on the upper third line for natural viewing.<br><br>
+                    <strong>Golden Ratio:</strong> The sweet spot (0.618) creates natural visual harmony.<br><br>
+                    <strong>Hologram Zones:</strong> Keep mascot in upper 60%, emitter base in lower 15% for floating illusion.<br><br>
+                    <strong>Vertical Balance:</strong> Leave "breathing room" above the mascot - empty space enhances the floating effect.
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <div class="guide-container" id="guide-container">
+                <!-- SVG Guides -->
+                <svg class="guide-svg" id="guide-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <!-- Rule of Thirds -->
+                    <g id="thirds-guide">
+                        <line class="guide-line thirds" x1="33.33" y1="0" x2="33.33" y2="100"/>
+                        <line class="guide-line thirds" x1="66.67" y1="0" x2="66.67" y2="100"/>
+                        <line class="guide-line thirds" x1="0" y1="33.33" x2="100" y2="33.33"/>
+                        <line class="guide-line thirds" x1="0" y1="66.67" x2="100" y2="66.67"/>
+                        <!-- Power points -->
+                        <circle class="guide-point" cx="33.33" cy="33.33" r="1.5"/>
+                        <circle class="guide-point" cx="66.67" cy="33.33" r="1.5"/>
+                        <circle class="guide-point" cx="33.33" cy="66.67" r="1.5"/>
+                        <circle class="guide-point" cx="66.67" cy="66.67" r="1.5"/>
+                    </g>
+
+                    <!-- Golden Ratio (Phi = 0.618) -->
+                    <g id="golden-guide" style="display: none;">
+                        <line class="guide-line golden" x1="38.2" y1="0" x2="38.2" y2="100"/>
+                        <line class="guide-line golden" x1="61.8" y1="0" x2="61.8" y2="100"/>
+                        <line class="guide-line golden" x1="0" y1="38.2" x2="100" y2="38.2"/>
+                        <line class="guide-line golden" x1="0" y1="61.8" x2="100" y2="61.8"/>
+                        <!-- Golden points -->
+                        <circle class="guide-point golden" cx="38.2" cy="38.2" r="1.5"/>
+                        <circle class="guide-point golden" cx="61.8" cy="38.2" r="1.5"/>
+                        <circle class="guide-point golden" cx="38.2" cy="61.8" r="1.5"/>
+                        <circle class="guide-point golden" cx="61.8" cy="61.8" r="1.5"/>
+                    </g>
+
+                    <!-- Center Cross -->
+                    <g id="center-guide">
+                        <line class="guide-line center" x1="50" y1="0" x2="50" y2="100"/>
+                        <line class="guide-line center" x1="0" y1="50" x2="100" y2="50"/>
+                    </g>
+
+                    <!-- Hologram-specific zones -->
+                    <g id="hologram-guide">
+                        <!-- Eye level zone (upper third area) -->
+                        <line class="guide-line hologram" x1="0" y1="30" x2="100" y2="30"/>
+                        <text x="2" y="29" fill="rgba(100, 255, 150, 0.6)" font-size="2.5">Eye Level</text>
+
+                        <!-- Mascot center zone -->
+                        <line class="guide-line hologram" x1="0" y1="42" x2="100" y2="42"/>
+                        <text x="2" y="41" fill="rgba(100, 255, 150, 0.6)" font-size="2.5">Mascot Center</text>
+
+                        <!-- Projection cone base -->
+                        <line class="guide-line hologram" x1="0" y1="75" x2="100" y2="75"/>
+                        <text x="2" y="74" fill="rgba(100, 255, 150, 0.6)" font-size="2.5">Projection Base</text>
+
+                        <!-- Emitter zone -->
+                        <line class="guide-line hologram" x1="0" y1="88" x2="100" y2="88"/>
+                        <text x="2" y="87" fill="rgba(100, 255, 150, 0.6)" font-size="2.5">Emitter Zone</text>
+
+                        <!-- Projection cone (subtle) -->
+                        <line class="guide-line hologram" style="stroke: rgba(100, 255, 150, 0.15);" x1="50" y1="88" x2="20" y2="30"/>
+                        <line class="guide-line hologram" style="stroke: rgba(100, 255, 150, 0.15);" x1="50" y1="88" x2="80" y2="30"/>
+                    </g>
+
+                    <!-- Diagonal guides -->
+                    <g id="diagonal-guide" style="display: none;">
+                        <line class="guide-line diagonal" x1="0" y1="0" x2="100" y2="100"/>
+                        <line class="guide-line diagonal" x1="100" y1="0" x2="0" y2="100"/>
+                        <!-- Baroque diagonals -->
+                        <line class="guide-line diagonal" x1="0" y1="50" x2="50" y2="0"/>
+                        <line class="guide-line diagonal" x1="50" y1="100" x2="100" y2="50"/>
+                        <line class="guide-line diagonal" x1="0" y1="50" x2="50" y2="100"/>
+                        <line class="guide-line diagonal" x1="50" y1="0" x2="100" y2="50"/>
+                    </g>
+                </svg>
+
+                <!-- Draggable Elements -->
+                <div class="draggable mascot-placeholder" id="mascot-element" style="left: calc(50% - 60px); top: 30%;">
+                    <span>Mascot</span>
+                </div>
+
+                <div class="draggable emitter-placeholder" id="emitter-element" style="left: calc(50% - 90px); top: 85%;">
+                    <span>Emitter Base</span>
+                </div>
+
+                <!-- Snap indicators -->
+                <div class="snap-indicator horizontal" id="snap-h"></div>
+                <div class="snap-indicator vertical" id="snap-v"></div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend" id="legend">
+                <div class="legend-item" data-for="thirds">
+                    <div class="legend-line" style="background: rgba(255, 200, 100, 0.8);"></div>
+                    <span>Rule of Thirds</span>
+                </div>
+                <div class="legend-item" data-for="golden" style="display: none;">
+                    <div class="legend-line" style="background: rgba(255, 100, 200, 0.8);"></div>
+                    <span>Golden Ratio</span>
+                </div>
+                <div class="legend-item" data-for="center">
+                    <div class="legend-line" style="background: rgba(100, 200, 255, 0.8);"></div>
+                    <span>Center</span>
+                </div>
+                <div class="legend-item" data-for="hologram">
+                    <div class="legend-line" style="background: rgba(100, 255, 150, 0.8); border-style: dashed;"></div>
+                    <span>Hologram Zones</span>
+                </div>
+                <div class="legend-item" data-for="diagonal" style="display: none;">
+                    <div class="legend-line" style="background: rgba(200, 150, 255, 0.8);"></div>
+                    <span>Diagonals</span>
+                </div>
+            </div>
+
+            <!-- Position readout -->
+            <div class="position-readout" id="position-readout">
+                Mascot: 50%, 30% | Emitter: 50%, 85%
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const state = {
+            guides: {
+                thirds: true,
+                golden: false,
+                center: true,
+                hologram: true,
+                diagonal: false
+            },
+            opacity: 0.4,
+            snapEnabled: true,
+            snapDistance: 15,
+            showMascot: true,
+            showEmitter: true
+        };
+
+        // DOM refs
+        const container = document.getElementById('guide-container');
+        const mascotEl = document.getElementById('mascot-element');
+        const emitterEl = document.getElementById('emitter-element');
+        const snapH = document.getElementById('snap-h');
+        const snapV = document.getElementById('snap-v');
+        const positionReadout = document.getElementById('position-readout');
+
+        // Calculate snap lines based on active guides
+        function getSnapLines() {
+            const lines = { horizontal: [], vertical: [] };
+
+            if (state.guides.thirds) {
+                lines.vertical.push(33.33, 66.67);
+                lines.horizontal.push(33.33, 66.67);
+            }
+
+            if (state.guides.golden) {
+                lines.vertical.push(38.2, 61.8);
+                lines.horizontal.push(38.2, 61.8);
+            }
+
+            if (state.guides.center) {
+                lines.vertical.push(50);
+                lines.horizontal.push(50);
+            }
+
+            if (state.guides.hologram) {
+                lines.horizontal.push(30, 42, 75, 88);
+            }
+
+            return lines;
+        }
+
+        // Dragging logic
+        let dragTarget = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function startDrag(e) {
+            const target = e.target.closest('.draggable');
+            if (!target) return;
+
+            dragTarget = target;
+            dragTarget.classList.add('dragging');
+
+            const rect = dragTarget.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+
+            e.preventDefault();
+        }
+
+        function doDrag(e) {
+            if (!dragTarget) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Calculate position as percentage
+            let x = ((clientX - containerRect.left - dragOffset.x + dragTarget.offsetWidth / 2) / containerRect.width) * 100;
+            let y = ((clientY - containerRect.top - dragOffset.y + dragTarget.offsetHeight / 2) / containerRect.height) * 100;
+
+            // Clamp to bounds
+            x = Math.max(5, Math.min(95, x));
+            y = Math.max(5, Math.min(95, y));
+
+            // Snap logic
+            let snappedX = false;
+            let snappedY = false;
+
+            if (state.snapEnabled) {
+                const snapLines = getSnapLines();
+                const snapThreshold = (state.snapDistance / containerRect.width) * 100;
+
+                for (const line of snapLines.vertical) {
+                    if (Math.abs(x - line) < snapThreshold) {
+                        x = line;
+                        snappedX = true;
+                        break;
+                    }
+                }
+
+                for (const line of snapLines.horizontal) {
+                    if (Math.abs(y - line) < snapThreshold) {
+                        y = line;
+                        snappedY = true;
+                        break;
+                    }
+                }
+            }
+
+            // Show snap indicators
+            if (snappedX) {
+                snapV.style.left = x + '%';
+                snapV.classList.add('active');
+            } else {
+                snapV.classList.remove('active');
+            }
+
+            if (snappedY) {
+                snapH.style.top = y + '%';
+                snapH.classList.add('active');
+            } else {
+                snapH.classList.remove('active');
+            }
+
+            // Apply position
+            dragTarget.style.left = `calc(${x}% - ${dragTarget.offsetWidth / 2}px)`;
+            dragTarget.style.top = `calc(${y}% - ${dragTarget.offsetHeight / 2}px)`;
+
+            updatePositionReadout();
+            e.preventDefault();
+        }
+
+        function endDrag() {
+            if (dragTarget) {
+                dragTarget.classList.remove('dragging');
+                dragTarget = null;
+            }
+            snapH.classList.remove('active');
+            snapV.classList.remove('active');
+        }
+
+        function updatePositionReadout() {
+            const containerRect = container.getBoundingClientRect();
+
+            const mascotRect = mascotEl.getBoundingClientRect();
+            const mascotX = ((mascotRect.left + mascotRect.width / 2 - containerRect.left) / containerRect.width * 100).toFixed(1);
+            const mascotY = ((mascotRect.top + mascotRect.height / 2 - containerRect.top) / containerRect.height * 100).toFixed(1);
+
+            const emitterRect = emitterEl.getBoundingClientRect();
+            const emitterX = ((emitterRect.left + emitterRect.width / 2 - containerRect.left) / containerRect.width * 100).toFixed(1);
+            const emitterY = ((emitterRect.top + emitterRect.height / 2 - containerRect.top) / containerRect.height * 100).toFixed(1);
+
+            positionReadout.textContent = `Mascot: ${mascotX}%, ${mascotY}% | Emitter: ${emitterX}%, ${emitterY}%`;
+        }
+
+        // Event listeners for dragging
+        container.addEventListener('mousedown', startDrag);
+        container.addEventListener('touchstart', startDrag, { passive: false });
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('touchmove', doDrag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        // Guide toggles
+        document.querySelectorAll('[data-guide]').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const guide = toggle.dataset.guide;
+                state.guides[guide] = !state.guides[guide];
+                toggle.classList.toggle('active');
+
+                const guideEl = document.getElementById(`${guide}-guide`);
+                if (guideEl) {
+                    guideEl.style.display = state.guides[guide] ? '' : 'none';
+                }
+
+                const legendItem = document.querySelector(`.legend-item[data-for="${guide}"]`);
+                if (legendItem) {
+                    legendItem.style.display = state.guides[guide] ? '' : 'none';
+                }
+            });
+        });
+
+        // Opacity slider
+        document.getElementById('opacity-slider').addEventListener('input', (e) => {
+            state.opacity = e.target.value / 100;
+            document.getElementById('opacity-value').textContent = e.target.value + '%';
+
+            document.querySelectorAll('.guide-line, .guide-point, .guide-circle').forEach(el => {
+                const currentOpacity = el.style.opacity || 1;
+                el.style.opacity = state.opacity;
+            });
+        });
+
+        // Snap toggle
+        document.getElementById('snap-toggle').addEventListener('click', function() {
+            state.snapEnabled = !state.snapEnabled;
+            this.classList.toggle('active');
+        });
+
+        // Snap distance slider
+        document.getElementById('snap-slider').addEventListener('input', (e) => {
+            state.snapDistance = parseInt(e.target.value);
+            document.getElementById('snap-value').textContent = e.target.value + 'px';
+        });
+
+        // Element toggles
+        document.getElementById('mascot-toggle').addEventListener('click', function() {
+            state.showMascot = !state.showMascot;
+            this.classList.toggle('active');
+            mascotEl.style.display = state.showMascot ? '' : 'none';
+        });
+
+        document.getElementById('emitter-toggle').addEventListener('click', function() {
+            state.showEmitter = !state.showEmitter;
+            this.classList.toggle('active');
+            emitterEl.style.display = state.showEmitter ? '' : 'none';
+        });
+
+        // Initial position readout
+        updatePositionReadout();
+    </script>
+</body>
+</html>

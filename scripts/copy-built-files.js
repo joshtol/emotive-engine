@@ -41,10 +41,19 @@ const PUBLIC_FILES_TO_COPY = [
         src: 'emotive-mascot.lean.umd.js.map',
         dest: 'emotive-mascot.lean.umd.js.map'
     },
-    // 3D Engine
+    // 3D Engine (ES Module for demos using import)
+    {
+        src: 'emotive-mascot-3d.js',
+        dest: 'emotive-engine-3d.js'  // 3D WebGL engine (ES Module)
+    },
+    {
+        src: 'emotive-mascot-3d.js.map',
+        dest: 'emotive-mascot-3d.js.map'
+    },
+    // 3D Engine (UMD fallback)
     {
         src: 'emotive-mascot-3d.umd.js',
-        dest: 'emotive-engine-3d.js'  // 3D WebGL engine
+        dest: 'emotive-engine-3d.umd.js'  // 3D WebGL engine (UMD)
     },
     {
         src: 'emotive-mascot-3d.umd.js.map',

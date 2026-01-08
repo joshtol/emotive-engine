@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<!--
+  GROOVE SYSTEM TEST - Emotive Engine 3D Demo
+
+  Test BPM detection and groove presets with real-time audio analysis.
+  Features automatic beat tracking, tap tempo, and seamless groove transitions.
+
+  What you'll learn:
+  - Real-time BPM detection from audio
+  - Groove preset system with smooth transitions
+  - Audio reactive animation sync
+
+  Complexity: Advanced
+  Features: Audio analysis, BPM detection, groove presets
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groove System Test - Emotive Engine 3D</title>
+    <meta name="description" content="Test BPM detection and groove presets with real-time audio analysis">
+
+    <!-- Shared 3D example styles -->
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+
+    <style>
+        /* Theme: Purple/violet for groove */
+        :root {
+            --accent: #7c3aed;
+            --accent-rgb: 124, 58, 237;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+        }
+
+        /* BPM Display */
+        .bpm-display {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        .bpm-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bpm-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Monaco', 'Consolas', monospace;
+            color: var(--accent);
+            transition: color 0.3s;
+        }
+
+        .bpm-value.locked {
+            color: #fbbf24; /* Gold for final lock */
+        }
+
+        .bpm-value.stage1 {
+            color: #f97316; /* Orange for Stage 1 */
+        }
+
+        .bpm-value.stage2 {
+            color: #facc15; /* Yellow for Stage 2 */
+        }
+
+        .bpm-value.stage3 {
+            color: #22c55e; /* Green for Stage 3 */
+        }
+
+        .bpm-label {
+            font-size: 0.75rem;
+            color: #808080;
+            text-transform: uppercase;
+        }
+
+        .confidence-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #10b981);
+            border-radius: 2px;
+            transition: width 0.2s;
+            width: 0%;
+        }
+
+        .lock-status {
+            font-size: 0.65rem;
+            color: #808080;
+            margin-top: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .lock-status.locked {
+            color: #fbbf24; /* Gold for final lock */
+        }
+
+        .lock-status.stage1 {
+            color: #f97316; /* Orange */
+        }
+
+        .lock-status.stage2 {
+            color: #facc15; /* Yellow */
+        }
+
+        .lock-status.stage3 {
+            color: #22c55e; /* Green */
+        }
+
+        .beat-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(124, 58, 237, 0.3);
+            transition: all 0.1s;
+        }
+
+        .beat-indicator.on {
+            background: var(--accent);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.8);
+        }
+
+        /* Audio Controls */
+        .audio-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .track-select {
+            flex: 1;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.875rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Global drop overlay - covers entire viewport */
+        .global-drop-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(124, 58, 237, 0.15);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .global-drop-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .global-drop-content {
+            background: rgba(20, 20, 30, 0.95);
+            border: 3px dashed var(--accent);
+            border-radius: 24px;
+            padding: 3rem 4rem;
+            text-align: center;
+            transform: scale(0.95);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .global-drop-overlay.active .global-drop-content {
+            transform: scale(1);
+            box-shadow: 0 0 60px rgba(124, 58, 237, 0.4);
+        }
+
+        .global-drop-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 0.6s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .global-drop-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .global-drop-hint {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+
+        /* Audio source - mutually exclusive rows */
+        .audio-source-row,
+        .custom-file-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: stretch;
+            margin-bottom: 0.5rem;
+        }
+
+        .audio-source-row .track-select {
+            flex: 1;
+        }
+
+        .audio-source-row button {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        /* Custom file row - replaces track selector when file loaded */
+        .custom-file-row {
+            display: none;
+        }
+
+        .custom-file-row.visible {
+            display: flex;
+        }
+
+        .custom-file-row.visible + .audio-source-row,
+        .audio-source-row.hidden {
+            display: none;
+        }
+
+        .custom-file-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-button);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        .custom-file-display:hover {
+            background: var(--bg-button-hover);
+            border-color: rgba(var(--accent-rgb), 0.3);
+        }
+
+        .custom-file-display .file-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .custom-file-display .file-meta {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .clear-btn {
+            width: 32px;
+            min-width: 32px;
+            padding: 0;
+            font-size: 1.1rem;
+            line-height: 1;
+            color: var(--text-muted);
+        }
+
+        .clear-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        /* Groove Presets */
+        .groove-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .groove-btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            color: white;
+        }
+
+        .groove-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .groove-btn.active {
+            border-color: var(--accent);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .groove-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .groove-btn[data-groove="groove1"] .groove-icon {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .groove-btn[data-groove="groove2"] .groove-icon {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .groove-btn[data-groove="groove3"] .groove-icon {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+        }
+
+        .groove-info h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .groove-info p {
+            font-size: 0.75rem;
+            color: #808080;
+        }
+
+        /* Transition Controls */
+        .transition-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.75rem;
+        }
+
+        .transition-row label {
+            font-size: 0.75rem;
+            color: #a0a0a0;
+            white-space: nowrap;
+        }
+
+        .transition-row select {
+            flex: 1;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.875rem;
+        }
+
+        /* Status Log */
+        .log {
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #606060;
+            margin-right: 0.5rem;
+        }
+
+        .log-groove { color: #7c3aed; }
+        .log-bpm { color: #f59e0b; }
+        .log-info { color: #10b981; }
+        .log-error { color: #ef4444; }
+
+        /* Footer info */
+        .footer-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #606060;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .current-groove {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 1000px) {
+            .groove-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .groove-btn {
+                flex: 1 1 calc(50% - 0.5rem);
+                min-width: 140px;
+            }
+
+            .groove-info p {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-menu">
+        <!-- Audio Panel -->
+        <div class="section">
+            <h2>Audio Source</h2>
+            <div class="section-content">
+                <!-- Track selector (hidden when custom file loaded) -->
+                <div class="audio-source-row" id="trackSourceRow">
+                    <select class="track-select" id="trackSelect">
+                        <optgroup label="Music">
+                            <option value="female">Electric Glow (Female)</option>
+                            <option value="male">Electric Glow (Male)</option>
+                        </optgroup>
+                        <optgroup label="Calibration - Pure">
+                            <option value="click-60">Click 60 BPM</option>
+                            <option value="click-90">Click 90 BPM</option>
+                            <option value="click-120">Click 120 BPM</option>
+                            <option value="click-150">Click 150 BPM</option>
+                        </optgroup>
+                        <optgroup label="Calibration - Subdivision">
+                            <option value="click-120-kicksnare">120 BPM Kick+Snare</option>
+                            <option value="click-120-hihat">120 BPM Kick+HiHat</option>
+                        </optgroup>
+                    </select>
+                    <button id="browseBtn">Browse</button>
+                    <input type="file" id="audioFile" accept="audio/*">
+                </div>
+
+                <!-- Custom file display (shown when custom file loaded, replaces track selector) -->
+                <div class="custom-file-row" id="customFileRow">
+                    <span class="custom-file-display" id="customFileDisplay">
+                        <span class="file-name" id="fileName"></span>
+                        <span class="file-meta"><span id="fileSize"></span> · <span id="fileDuration"></span></span>
+                    </span>
+                    <button class="clear-btn" id="clearFileBtn" title="Remove custom file">×</button>
+                </div>
+                <div class="button-grid">
+                    <button id="playBtn">Play</button>
+                    <button id="stopBtn" disabled>Stop</button>
+                    <button id="tapTempoBtn">Tap Tempo</button>
+                    <button id="copyLogBtn" title="Copy BPM debug log to clipboard">Copy Log</button>
+                </div>
+                <div class="bpm-display">
+                    <div class="bpm-main">
+                        <div>
+                            <div class="bpm-value" id="bpmValue">120</div>
+                            <div class="bpm-label">BPM</div>
+                        </div>
+                        <div class="beat-indicator" id="beatIndicator"></div>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill"></div>
+                    </div>
+                    <div class="lock-status" id="lockStatus">
+                        <span>Detecting...</span>
+                        <span id="agentCount">0 agents</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Groove Panel -->
+        <div class="section">
+            <h2>Groove Presets</h2>
+            <div class="section-content">
+                <div class="groove-buttons">
+                    <button class="groove-btn active" data-groove="groove1">
+                        <div class="groove-icon">~</div>
+                        <div class="groove-info">
+                            <h3>Groove 1 - Subtle</h3>
+                            <p>Elegant, gentle bounce and sway</p>
+                        </div>
+                    </button>
+                    <button class="groove-btn" data-groove="groove2">
+                        <div class="groove-icon">^</div>
+                        <div class="groove-info">
+                            <h3>Groove 2 - Energetic</h3>
+                            <p>Bouncy, pronounced vertical motion</p>
+                        </div>
+                    </button>
+                    <button class="groove-btn" data-groove="groove3">
+                        <div class="groove-icon">S</div>
+                        <div class="groove-info">
+                            <h3>Groove 3 - Flowing</h3>
+                            <p>Smooth, emphasis on rotation</p>
+                        </div>
+                    </button>
+                </div>
+                <div class="transition-row">
+                    <label>Transition:</label>
+                    <select id="transitionMode">
+                        <option value="instant">Instant</option>
+                        <option value="1">1 bar</option>
+                        <option value="2" selected>2 bars</option>
+                        <option value="4">4 bars</option>
+                        <option value="8">8 bars</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="center-content">
+        <div id="mascot-container"></div>
+        <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
+    </div>
+
+    <div class="right-menu">
+        <div class="section visual-controls">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Panel -->
+        <div class="section">
+            <h2>Status Log</h2>
+            <div class="section-content">
+                <div class="log" id="log"></div>
+                <div class="footer-info">
+                    <span>Current: <span class="current-groove" id="currentGroove">groove1</span></span>
+                    <span id="frameInfo">-- fps</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Keyboard shortcuts:</strong><br>
+                Space = play/stop<br>
+                T = tap tempo<br>
+                1/2/3 = groove presets
+            </div>
+        </div>
+    </div>
+
+    <!-- Global drop overlay -->
+    <div class="global-drop-overlay" id="globalDropOverlay">
+        <div class="global-drop-content">
+            <div class="global-drop-icon">🎵</div>
+            <div class="global-drop-text">Drop audio file</div>
+            <div class="global-drop-hint">MP3, WAV, OGG, FLAC supported</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '/emotive-engine-3d.js';
+        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+
+        // Demo tracks
+        const DEMO_TRACKS = {
+            // Music tracks
+            female: '/assets/tracks/music/electric-glow-f.wav',
+            male: '/assets/tracks/music/electric-glow-m.wav',
+            // Calibration - pure clicks
+            'click-60': '/assets/tracks/test/click-60.wav',
+            'click-90': '/assets/tracks/test/click-90.wav',
+            'click-120': '/assets/tracks/test/click-120.wav',
+            'click-150': '/assets/tracks/test/click-150.wav',
+            // Calibration - subdivision tests
+            'click-120-kicksnare': '/assets/tracks/test/click-120-kicksnare.wav',
+            'click-120-hihat': '/assets/tracks/test/click-120-hihat.wav'
+        };
+
+        // State
+        let mascot = null;
+        let audioElement = null;
+        let audioContext = null;
+        let isPlaying = false;
+        let tapTimes = [];
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let currentTrack = 'female';
+        let currentFile = null;  // For custom file import
+
+        // DOM Elements
+        const container = document.getElementById('mascot-container');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const tapTempoBtn = document.getElementById('tapTempoBtn');
+        const trackSelect = document.getElementById('trackSelect');
+        const audioFileInput = document.getElementById('audioFile');
+        const browseBtn = document.getElementById('browseBtn');
+        const trackSourceRow = document.getElementById('trackSourceRow');
+        const customFileRow = document.getElementById('customFileRow');
+        const customFileDisplay = document.getElementById('customFileDisplay');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileDuration = document.getElementById('fileDuration');
+        const clearFileBtn = document.getElementById('clearFileBtn');
+        const copyLogBtn = document.getElementById('copyLogBtn');
+        const globalDropOverlay = document.getElementById('globalDropOverlay');
+        const bpmValue = document.getElementById('bpmValue');
+        const beatIndicator = document.getElementById('beatIndicator');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const lockStatus = document.getElementById('lockStatus');
+        const agentCount = document.getElementById('agentCount');
+        const transitionMode = document.getElementById('transitionMode');
+        const logEl = document.getElementById('log');
+        const currentGrooveEl = document.getElementById('currentGroove');
+        const frameInfoEl = document.getElementById('frameInfo');
+        const grooveButtons = document.querySelectorAll('.groove-btn');
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // LOGGING
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${message}</span>`;
+            logEl.insertBefore(entry, logEl.firstChild);
+
+            // Keep log manageable
+            while (logEl.children.length > 50) {
+                logEl.removeChild(logEl.lastChild);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MASCOT INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        async function initMascot() {
+            log('Initializing 3D mascot...', 'info');
+
+            mascot = new EmotiveMascot3D({
+                coreGeometry: 'crystal',
+                enableParticles: true,
+                enablePostProcessing: true,
+                enableBlinking: true,
+                enableBreathing: true,
+                autoRotate: true,
+                autoRotateSpeed: 0.3,
+                enableControls: true,
+                cameraDistance: 1.2,
+                fov: 30,
+                minZoom: 0.9,
+                maxZoom: 2.0,
+                assetBasePath: '/assets'
+            });
+
+            await mascot.init(container);
+            mascot.start();
+
+            // Set initial emotion
+            mascot.setEmotion('calm');
+
+            // Enable groove
+            mascot.enableGroove();
+
+            log('Mascot ready, groove enabled', 'groove');
+            log(`Available presets: ${mascot.getGroovePresets().join(', ')}`, 'info');
+
+            // Start FPS counter
+            requestAnimationFrame(updateFPS);
+
+            // Preload the default track
+            await loadTrack('female');
+        }
+
+        function updateFPS() {
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFrameTime >= 1000) {
+                frameInfoEl.textContent = `${frameCount} fps`;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+            requestAnimationFrame(updateFPS);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AUDIO HANDLING
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        async function loadTrack(trackId) {
+            const url = DEMO_TRACKS[trackId];
+            if (!url) return;
+
+            log(`Loading: ${trackId} track...`, 'info');
+            currentTrack = trackId;
+
+            try {
+                // Clean up previous audio element
+                if (audioElement) {
+                    audioElement.pause();
+                    if (audioElement.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(audioElement.src);
+                    }
+                    mascot.disconnectAudio();
+                }
+
+                // Create audio element with CORS for Web Audio API access
+                audioElement = new Audio();
+                audioElement.crossOrigin = 'anonymous';
+                audioElement.src = url;
+
+                // Wait for metadata to load
+                await new Promise((resolve, reject) => {
+                    audioElement.onloadedmetadata = resolve;
+                    audioElement.onerror = (e) => reject(new Error(`Failed to load ${url}`));
+                });
+
+                log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
+
+            } catch (err) {
+                log(`Error loading track: ${err.message}`, 'error');
+                console.error(err);
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function showFileLoaded(file, duration = null) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileDuration.textContent = duration ? formatDuration(duration) : '--:--';
+            // Switch from track selector to custom file display
+            trackSourceRow.classList.add('hidden');
+            customFileRow.classList.add('visible');
+        }
+
+        function hideFileLoaded() {
+            // Switch back to track selector
+            customFileRow.classList.remove('visible');
+            trackSourceRow.classList.remove('hidden');
+        }
+
+        async function loadAudioFile(file) {
+            log(`Loading: ${file.name}`, 'info');
+
+            try {
+                const url = URL.createObjectURL(file);
+
+                // Clean up previous audio element
+                if (audioElement) {
+                    audioElement.pause();
+                    if (audioElement.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(audioElement.src);
+                    }
+                    mascot.disconnectAudio();
+                }
+
+                // Create audio element with CORS for Web Audio API access
+                audioElement = new Audio();
+                audioElement.crossOrigin = 'anonymous';
+                audioElement.src = url;
+
+                // Wait for metadata to load
+                await new Promise((resolve, reject) => {
+                    audioElement.onloadedmetadata = resolve;
+                    audioElement.onerror = reject;
+                });
+
+                log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
+                currentTrack = 'custom';
+                currentFile = file;
+
+                // Show file info with duration
+                showFileLoaded(file, audioElement.duration);
+
+            } catch (err) {
+                log(`Error loading audio: ${err.message}`, 'error');
+                hideFileLoaded();
+            }
+        }
+
+        async function playAudio() {
+            if (!audioElement) {
+                log('No audio loaded', 'error');
+                return;
+            }
+
+            try {
+                // Resume AudioContext if suspended (browser autoplay policy)
+                if (audioContext && audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                // Connect audio to mascot (this creates the AudioContext internally)
+                await mascot.connectAudio(audioElement);
+                log('Audio connected for BPM detection', 'bpm');
+
+                // Play the audio
+                await audioElement.play();
+                isPlaying = true;
+                playBtn.disabled = true;
+                stopBtn.disabled = false;
+
+                log('Playing audio...', 'bpm');
+
+                // Monitor BPM
+                startBPMMonitor();
+
+                audioElement.onended = () => {
+                    isPlaying = false;
+                    playBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    log('Playback ended', 'info');
+                };
+
+            } catch (err) {
+                log(`Playback error: ${err.message}`, 'error');
+                console.error(err);
+            }
+        }
+
+        function stopAudio() {
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+            }
+            isPlaying = false;
+            playBtn.disabled = false;
+            stopBtn.disabled = true;
+            mascot.stopRhythm();
+            log('Stopped', 'info');
+        }
+
+        let lastLockedState = false;
+
+        function startBPMMonitor() {
+            const updateBPM = () => {
+                if (!isPlaying) {
+                    // Reset UI when stopped
+                    confidenceFill.style.width = '0%';
+                    lockStatus.classList.remove('locked');
+                    lockStatus.querySelector('span').textContent = 'Detecting...';
+                    bpmValue.classList.remove('locked');
+                    return;
+                }
+
+                // Get full BPM status from agent detector
+                const status = mascot.getBPMStatus ? mascot.getBPMStatus() : { bpm: mascot.getRhythmBPM(), confidence: 0, locked: false, agentCount: 0 };
+
+                // Update BPM display
+                bpmValue.textContent = Math.round(status.bpm);
+
+                // Update confidence bar
+                const confidencePercent = Math.round(status.confidence * 100);
+                confidenceFill.style.width = `${confidencePercent}%`;
+
+                // Update lock status based on stage
+                // Remove all stage classes first
+                bpmValue.classList.remove('locked', 'stage1', 'stage2', 'stage3');
+                lockStatus.classList.remove('locked', 'stage1', 'stage2', 'stage3');
+
+                const lockStage = status.lockStage || 0;
+                const correctionType = status.correctionType || 'none';
+                const isFinalized = status.finalized || false;  // Only true after memory cleanup
+
+                if (lockStage === 0) {
+                    // Stage 0: Detecting
+                    lockStatus.querySelector('span').textContent = `Detecting... ${confidencePercent}%`;
+                } else if (lockStage === 1) {
+                    // Stage 1: Initial Lock (orange)
+                    bpmValue.classList.add('stage1');
+                    lockStatus.classList.add('stage1');
+                    lockStatus.querySelector('span').textContent = `Locking [Stage 1]: ${status.bpm} BPM`;
+                } else if (lockStage === 2) {
+                    // Stage 2: Refinement (yellow)
+                    bpmValue.classList.add('stage2');
+                    lockStatus.classList.add('stage2');
+                    const corrStr = correctionType !== 'none' ? ` (${correctionType})` : '';
+                    lockStatus.querySelector('span').textContent = `Locking [Stage 2]: ${status.bpm} BPM${corrStr}`;
+                } else if (lockStage === 3 && !isFinalized) {
+                    // Stage 3: Final lock phase (green)
+                    bpmValue.classList.add('stage3');
+                    lockStatus.classList.add('stage3');
+                    const corrStr = correctionType !== 'none' ? ` (${correctionType})` : '';
+                    lockStatus.querySelector('span').textContent = `Locking [Stage 3]: ${status.bpm} BPM${corrStr}`;
+                } else if (isFinalized) {
+                    // Finalized: Locked (gold with lock icon)
+                    bpmValue.classList.add('locked');
+                    lockStatus.classList.add('locked');
+                    const corrStr = correctionType !== 'none' ? ` (${correctionType})` : '';
+                    lockStatus.querySelector('span').textContent = `🔒 Locked: ${status.bpm} BPM${corrStr}`;
+
+                    // Log when first locked
+                    if (!lastLockedState) {
+                        log(`BPM LOCKED: ${status.bpm} (${confidencePercent}% confidence)`, 'bpm');
+                    }
+                }
+                lastLockedState = isFinalized;
+
+                // Update agent count
+                agentCount.textContent = `${status.agentCount} agents`;
+
+                // Flash beat indicator on beat
+                if (mascot.core3D && mascot.core3D.rhythm3DAdapter) {
+                    const adapter = mascot.core3D.rhythm3DAdapter;
+                    if (adapter.isOnBeatNow && adapter.isOnBeatNow(0.1)) {
+                        beatIndicator.classList.add('on');
+                        setTimeout(() => beatIndicator.classList.remove('on'), 100);
+                    }
+                }
+
+                requestAnimationFrame(updateBPM);
+            };
+            requestAnimationFrame(updateBPM);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TAP TEMPO
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        function handleTapTempo() {
+            const now = performance.now();
+            tapTimes.push(now);
+
+            // Keep last 8 taps
+            if (tapTimes.length > 8) {
+                tapTimes.shift();
+            }
+
+            // Need at least 2 taps
+            if (tapTimes.length < 2) {
+                log('Tap again...', 'info');
+                return;
+            }
+
+            // Calculate average interval
+            let totalInterval = 0;
+            for (let i = 1; i < tapTimes.length; i++) {
+                totalInterval += tapTimes[i] - tapTimes[i - 1];
+            }
+            const avgInterval = totalInterval / (tapTimes.length - 1);
+            const bpm = Math.round(60000 / avgInterval);
+
+            // Clamp to reasonable range
+            const clampedBPM = Math.max(60, Math.min(200, bpm));
+
+            bpmValue.textContent = clampedBPM;
+            mascot.setRhythmBPM(clampedBPM);
+
+            // Start rhythm if not playing audio
+            if (!isPlaying) {
+                mascot.startRhythm(clampedBPM);
+            }
+
+            log(`Tap tempo: ${clampedBPM} BPM`, 'bpm');
+
+            // Reset tap times after 2 seconds of inactivity
+            setTimeout(() => {
+                if (performance.now() - tapTimes[tapTimes.length - 1] > 2000) {
+                    tapTimes = [];
+                }
+            }, 2100);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GROOVE CONTROLS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        function setGroove(grooveName) {
+            const mode = transitionMode.value;
+
+            // Update UI
+            grooveButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.groove === grooveName);
+            });
+            currentGrooveEl.textContent = grooveName;
+
+            // Apply groove
+            if (mode === 'instant') {
+                mascot.setGroove(grooveName);
+                log(`Set groove: ${grooveName} (instant)`, 'groove');
+            } else {
+                const bars = parseInt(mode);
+                mascot.setGroove(grooveName, { bars });
+                log(`Set groove: ${grooveName} (${bars} bar transition)`, 'groove');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // EVENT LISTENERS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Track select change
+        trackSelect.addEventListener('change', async (e) => {
+            const value = e.target.value;
+            hideFileLoaded();
+            currentFile = null;
+            if (isPlaying) stopAudio();
+            await loadTrack(value);
+        });
+
+        // Browse button opens file picker
+        browseBtn.addEventListener('click', () => {
+            audioFileInput.click();
+        });
+
+        // File input change
+        audioFileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                if (isPlaying) stopAudio();
+                await loadAudioFile(e.target.files[0]);
+            }
+        });
+
+        // Click on custom file display opens file picker (to change file)
+        customFileDisplay.addEventListener('click', () => {
+            audioFileInput.click();
+        });
+
+        // Clear file button (×) - revert to preset track
+        clearFileBtn.addEventListener('click', () => {
+            if (isPlaying) stopAudio();
+            if (audioElement && audioElement.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audioElement.src);
+            }
+            audioElement = null;
+            currentFile = null;
+            hideFileLoaded();
+            audioFileInput.value = '';
+            // Load default track
+            loadTrack('female');
+            trackSelect.value = 'female';
+            log('Custom file removed', 'info');
+        });
+
+        // Copy BPM debug log to clipboard - captures actual [BPM] console output
+        copyLogBtn.addEventListener('click', async () => {
+            const trackName = trackSelect.options[trackSelect.selectedIndex]?.text || currentTrack;
+
+            // Get the actual debug log from the detector
+            let logText = mascot?.getBPMDebugLog?.() || 'No debug log available.';
+
+            // Add track info header
+            logText = `Track: ${trackName}\n\n` + logText;
+
+            try {
+                await navigator.clipboard.writeText(logText);
+                copyLogBtn.textContent = 'Copied!';
+                setTimeout(() => { copyLogBtn.textContent = 'Copy Log'; }, 1500);
+                log('BPM debug log copied to clipboard', 'info');
+            } catch (err) {
+                log('Failed to copy: ' + err.message, 'error');
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GLOBAL DRAG & DROP
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        let dragCounter = 0;  // Track nested drag events
+
+        document.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dragCounter++;
+            if (e.dataTransfer.types.includes('Files')) {
+                globalDropOverlay.classList.add('active');
+            }
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dragCounter--;
+            if (dragCounter === 0) {
+                globalDropOverlay.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        document.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dragCounter = 0;
+            globalDropOverlay.classList.remove('active');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                // Check if it's an audio file
+                if (file.type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name)) {
+                    if (isPlaying) stopAudio();
+                    await loadAudioFile(file);
+                } else {
+                    log('Please drop an audio file', 'error');
+                }
+            }
+        });
+
+        playBtn.addEventListener('click', playAudio);
+        stopBtn.addEventListener('click', stopAudio);
+        tapTempoBtn.addEventListener('click', handleTapTempo);
+
+        grooveButtons.forEach(btn => {
+            btn.addEventListener('click', () => setGroove(btn.dataset.groove));
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+            switch (e.key) {
+                case ' ':
+                    e.preventDefault();
+                    if (isPlaying) stopAudio();
+                    else playAudio();
+                    break;
+                case 't':
+                case 'T':
+                    handleTapTempo();
+                    break;
+                case '1':
+                    setGroove('groove1');
+                    break;
+                case '2':
+                    setGroove('groove2');
+                    break;
+                case '3':
+                    setGroove('groove3');
+                    break;
+            }
+        });
+
+        // Setup shared toggles from demo-utils.js
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        initMascot().catch(err => {
+            log(`Init error: ${err.message}`, 'error');
+            console.error(err);
+        });
+
+        log('Groove Test initialized', 'info');
+    </script>
+</body>
+</html>

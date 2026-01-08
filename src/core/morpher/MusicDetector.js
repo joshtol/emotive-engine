@@ -405,13 +405,24 @@ export class MusicDetector {
     }
 
     /**
+     * Process full frequency frame for BPM detection
+     * @param {Array} frequencyData - Array of frequency band energies (0-1)
+     * @param {number} time - Current time in ms
+     */
+    processFrequencyFrame(frequencyData, time = performance.now()) {
+        if (this.useAgentDetection && this.agentDetector.processFrame) {
+            this.agentDetector.processFrame(frequencyData, time);
+        }
+    }
+
+    /**
      * Add onset event for analysis
      * @param {number} time - Onset time
      * @param {number} strength - Onset strength
      * @param {number} bassWeight - Optional bass weight for downbeat detection
      */
     addOnset(time, strength, bassWeight = 0) {
-        // Feed to agent detector for fast convergence
+        // Feed to agent detector for fast convergence (legacy support)
         if (this.useAgentDetection) {
             this.agentDetector.processPeak(strength, time);
         }

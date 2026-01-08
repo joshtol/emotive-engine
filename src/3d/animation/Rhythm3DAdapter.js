@@ -133,6 +133,10 @@ export class Rhythm3DAdapter {
         this.grooveTransition = 0;        // 0 = at current, 1 = at target
         this.grooveTransitionSpeed = 2.0; // Transition speed (per second)
 
+        // Groove confidence: scales animation amplitude based on BPM detection confidence
+        // Ranges from 0.15 (tentative) to 1.0 (fully locked), provided by BPM detector
+        this.grooveConfidence = 1.0;      // Default to full when not using BPM detection
+
         // Modulation output (computed each frame) - these are the SMOOTHED values
         this.modulation = {
             scaleMultiplier: 1.0,      // Applied to gesture scale output
@@ -445,6 +449,7 @@ export class Rhythm3DAdapter {
      * Compute ambient groove animation (subtle idle motion synced to rhythm)
      * Uses absolute beat/bar progress for frame-rate independence
      * Supports morphing between groove presets
+     * Animation amplitudes are scaled by grooveConfidence (0.15-1.0)
      *
      * @private
      */
@@ -458,15 +463,15 @@ export class Rhythm3DAdapter {
             ? toPreset
             : this._interpolatePresets(fromPreset, toPreset, this.grooveTransition);
 
-        const {
-            bounceAmount,
-            swayAmount,
-            pulseAmount,
-            rotationAmount,
-            bounceFreq,
-            swayFreq,
-            phaseOffset
-        } = preset;
+        // Scale amplitudes by grooveConfidence
+        // At 0.15 (tentative): animations are very subtle, searching feel
+        // At 1.0 (locked): full groove amplitude
+        const conf = this.grooveConfidence;
+        const bounceAmount = preset.bounceAmount * conf;
+        const swayAmount = preset.swayAmount * conf;
+        const pulseAmount = preset.pulseAmount * conf;
+        const rotationAmount = preset.rotationAmount * conf;
+        const { bounceFreq, swayFreq, phaseOffset } = preset;
 
         // Compute groove motions from ABSOLUTE beat/bar progress
         // This is frame-rate independent because beatProgress/barProgress come from
@@ -663,6 +668,15 @@ export class Rhythm3DAdapter {
             this._target.grooveScale = 1.0;
             this._target.grooveRotation = [0, 0, 0];
         }
+    }
+
+    /**
+     * Set groove confidence from BPM detector
+     * This scales animation amplitudes: 0.15 = tentative, 1.0 = full groove
+     * @param {number} confidence - Groove confidence value (0.15 to 1.0)
+     */
+    setGrooveConfidence(confidence) {
+        this.grooveConfidence = Math.max(0, Math.min(1, confidence));
     }
 
     /**
