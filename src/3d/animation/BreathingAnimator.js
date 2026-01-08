@@ -29,6 +29,10 @@ export class BreathingAnimator {
         this.breathRateMult = 1.0;      // Undertone rate multiplier
         this.breathDepthMult = 1.0;     // Undertone depth multiplier
 
+        // Rhythm coordination
+        this.rhythmAdapter = null;      // Optional Rhythm3DAdapter reference
+        this.grooveBlendFactor = 0.4;   // Reduce breathing to 40% during groove
+
         // Emotion-specific breathing patterns (matches 2D BreathingAnimator)
         this.emotionBreathPatterns = {
             happy: { rate: 1.1, depth: 1.2 },
@@ -93,11 +97,27 @@ export class BreathingAnimator {
     }
 
     /**
+     * Set rhythm adapter for groove coordination
+     * When groove is active, breathing depth is reduced to prevent visual interference
+     * @param {Object|null} rhythmAdapter - Rhythm3DAdapter instance or null to disable
+     */
+    setRhythmAdapter(rhythmAdapter) {
+        this.rhythmAdapter = rhythmAdapter;
+    }
+
+    /**
      * Get current breathing scale multiplier
+     * When groove is active, breathing is reduced to complement rather than compete
      * @returns {number} Scale factor for breathing (1.0 ± breathDepth)
      */
     getBreathingScale() {
-        return 1.0 + Math.sin(this.breathingPhase) * this.breathDepth;
+        // Check if groove is active
+        const isGrooving = this.rhythmAdapter?.isPlaying?.() ?? false;
+
+        // When grooving, reduce breathing depth to avoid fighting with groove pulse
+        const grooveReduction = isGrooving ? this.grooveBlendFactor : 1.0;
+
+        return 1.0 + Math.sin(this.breathingPhase) * this.breathDepth * grooveReduction;
     }
 
     /**
@@ -153,6 +173,7 @@ export class BreathingAnimator {
      */
     destroy() {
         this.emotionBreathPatterns = null;
+        this.rhythmAdapter = null;
     }
 }
 

@@ -181,7 +181,7 @@ The groove system provides ambient rhythm-synced animations when the mascot is l
 
 ### Low Priority
 
-- [ ] **6. Beat-Sync Preset Transitions**
+- [x] **6. Beat-Sync Preset Transitions** *(Completed)*
 
   **Problem:** When switching groove presets, the transition happens immediately. More musical to wait for a bar boundary.
 
@@ -211,7 +211,7 @@ The groove system provides ambient rhythm-synced animations when the mascot is l
 
 ---
 
-- [ ] **7. Emotion-Aware Groove Selection**
+- [x] **7. Emotion-Aware Groove Selection** *(Completed)*
 
   **Problem:** Groove character is independent of emotional state. A "happy" mascot grooves the same as a "sad" one.
 
@@ -245,7 +245,7 @@ The groove system provides ambient rhythm-synced animations when the mascot is l
 
 ---
 
-- [ ] **8. Coordinate Breathing with Groove**
+- [x] **8. Coordinate Breathing with Groove** *(Completed)*
 
   **Problem:** BreathingAnimator runs independently of groove. They can interfere or create odd rhythms.
 

@@ -176,6 +176,10 @@ export class Rhythm3DAdapter {
 
         // Maximum deltaTime to prevent smoothing overshoot during frame drops
         this._maxDeltaTime = 0.05; // 50ms cap (~20 FPS minimum)
+
+        // Pending groove change (for quantized transitions)
+        this._pendingGroove = null;
+        this._pendingGrooveOptions = null;
     }
 
     /**
@@ -325,6 +329,7 @@ export class Rhythm3DAdapter {
      * @param {Object} [options] - Transition options
      * @param {number} [options.bars] - Transition duration in bars (default: immediate)
      * @param {number} [options.duration] - Transition duration in seconds (alternative to bars)
+     * @param {boolean} [options.quantize] - Wait for next bar boundary before transitioning
      */
     setGroove(grooveName, options = {}) {
         if (!GROOVE_PRESETS[grooveName]) {
@@ -334,6 +339,14 @@ export class Rhythm3DAdapter {
 
         // If same groove, no-op
         if (this.currentGroove === grooveName && this.grooveTransition >= 1) {
+            return;
+        }
+
+        // If quantize is requested, queue the change for next bar boundary
+        if (options.quantize) {
+            this._pendingGroove = grooveName;
+            // Store options without quantize flag to avoid infinite loop
+            this._pendingGrooveOptions = { ...options, quantize: false };
             return;
         }
 
@@ -420,6 +433,14 @@ export class Rhythm3DAdapter {
         this.intensity = timeInfo.intensity;
         this.bpm = timeInfo.bpm || this.bpm;
         this.pattern = timeInfo.pattern;
+
+        // Check for pending groove change at bar boundary (quantized transitions)
+        // Trigger when barProgress is near 0 (start of new bar)
+        if (this._pendingGroove && this.barProgress < 0.05) {
+            this.setGroove(this._pendingGroove, this._pendingGrooveOptions || {});
+            this._pendingGroove = null;
+            this._pendingGrooveOptions = null;
+        }
 
         // Update groove transition (for morphing between presets)
         if (this.grooveTransition < 1) {

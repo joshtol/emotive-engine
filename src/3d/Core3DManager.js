@@ -298,6 +298,8 @@ export class Core3DManager {
         this.rhythmEnabled = options.enableRhythm !== false; // Enabled by default
         if (this.rhythmEnabled) {
             this.rhythm3DAdapter.initialize();
+            // Wire up breathing animator to rhythm adapter for coordination
+            this.breathingAnimator.setRhythmAdapter(this.rhythm3DAdapter);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -494,6 +496,14 @@ export class Core3DManager {
 
         // Update blink animator with new emotion
         this.blinkAnimator.setEmotion(emotion);
+
+        // Update groove preset based on emotion (if rhythm is playing)
+        // Energetic emotions → bounce groove, calm emotions → subtle groove, flowing → zen groove
+        if (this.rhythmEnabled && this.rhythm3DAdapter?.isPlaying?.()) {
+            const emotionGroove = this._getEmotionGroove(emotion);
+            // Use quantize + bars for smooth, musical transition
+            this.rhythm3DAdapter.setGroove(emotionGroove, { quantize: true, bars: 2 });
+        }
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0, this.geometryType);
@@ -2061,6 +2071,50 @@ export class Core3DManager {
 
         // Dispose geometry cache
         GeometryCache.dispose();
+    }
+
+    /**
+     * Map emotion to appropriate groove preset
+     * Energetic emotions use bounce groove, calm emotions use subtle groove,
+     * flowing/zen emotions use the flowing zen groove
+     * @private
+     * @param {string} emotion - Emotion name
+     * @returns {string} Groove preset name
+     */
+    _getEmotionGroove(emotion) {
+        const emotionGrooveMap = {
+            // Energetic emotions → groove2 (bouncy, energetic)
+            happy: 'groove2',
+            excited: 'groove2',
+            amused: 'groove2',
+            silly: 'groove2',
+            surprised: 'groove2',
+
+            // Calm/subtle emotions → groove1 (subtle, elegant)
+            calm: 'groove1',
+            neutral: 'groove1',
+            sad: 'groove1',
+            content: 'groove1',
+            focused: 'groove1',
+            bored: 'groove1',
+            tired: 'groove1',
+            sleepy: 'groove1',
+
+            // Flowing/zen emotions → groove3 (flowing, zen)
+            zen: 'groove3',
+            love: 'groove3',
+            grateful: 'groove3',
+            inspired: 'groove3',
+            hopeful: 'groove3',
+            proud: 'groove3',
+
+            // Intense emotions → groove2 with strong beats
+            angry: 'groove2',
+            anxious: 'groove2',
+            determined: 'groove2'
+        };
+
+        return emotionGrooveMap[emotion] || 'groove1';
     }
 
     /**

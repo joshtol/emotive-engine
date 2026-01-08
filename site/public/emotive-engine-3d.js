@@ -59362,6 +59362,10 @@ class BreathingAnimator {
         this.breathRateMult = 1.0;      // Undertone rate multiplier
         this.breathDepthMult = 1.0;     // Undertone depth multiplier
 
+        // Rhythm coordination
+        this.rhythmAdapter = null;      // Optional Rhythm3DAdapter reference
+        this.grooveBlendFactor = 0.4;   // Reduce breathing to 40% during groove
+
         // Emotion-specific breathing patterns (matches 2D BreathingAnimator)
         this.emotionBreathPatterns = {
             happy: { rate: 1.1, depth: 1.2 },
@@ -59426,11 +59430,27 @@ class BreathingAnimator {
     }
 
     /**
+     * Set rhythm adapter for groove coordination
+     * When groove is active, breathing depth is reduced to prevent visual interference
+     * @param {Object|null} rhythmAdapter - Rhythm3DAdapter instance or null to disable
+     */
+    setRhythmAdapter(rhythmAdapter) {
+        this.rhythmAdapter = rhythmAdapter;
+    }
+
+    /**
      * Get current breathing scale multiplier
+     * When groove is active, breathing is reduced to complement rather than compete
      * @returns {number} Scale factor for breathing (1.0 ± breathDepth)
      */
     getBreathingScale() {
-        return 1.0 + Math.sin(this.breathingPhase) * this.breathDepth;
+        // Check if groove is active
+        const isGrooving = this.rhythmAdapter?.isPlaying?.() ?? false;
+
+        // When grooving, reduce breathing depth to avoid fighting with groove pulse
+        const grooveReduction = isGrooving ? this.grooveBlendFactor : 1.0;
+
+        return 1.0 + Math.sin(this.breathingPhase) * this.breathDepth * grooveReduction;
     }
 
     /**
@@ -59486,6 +59506,7 @@ class BreathingAnimator {
      */
     destroy() {
         this.emotionBreathPatterns = null;
+        this.rhythmAdapter = null;
     }
 }
 
@@ -62628,6 +62649,10 @@ class Rhythm3DAdapter {
 
         // Maximum deltaTime to prevent smoothing overshoot during frame drops
         this._maxDeltaTime = 0.05; // 50ms cap (~20 FPS minimum)
+
+        // Pending groove change (for quantized transitions)
+        this._pendingGroove = null;
+        this._pendingGrooveOptions = null;
     }
 
     /**
@@ -62777,6 +62802,7 @@ class Rhythm3DAdapter {
      * @param {Object} [options] - Transition options
      * @param {number} [options.bars] - Transition duration in bars (default: immediate)
      * @param {number} [options.duration] - Transition duration in seconds (alternative to bars)
+     * @param {boolean} [options.quantize] - Wait for next bar boundary before transitioning
      */
     setGroove(grooveName, options = {}) {
         if (!GROOVE_PRESETS[grooveName]) {
@@ -62786,6 +62812,14 @@ class Rhythm3DAdapter {
 
         // If same groove, no-op
         if (this.currentGroove === grooveName && this.grooveTransition >= 1) {
+            return;
+        }
+
+        // If quantize is requested, queue the change for next bar boundary
+        if (options.quantize) {
+            this._pendingGroove = grooveName;
+            // Store options without quantize flag to avoid infinite loop
+            this._pendingGrooveOptions = { ...options, quantize: false };
             return;
         }
 
@@ -62872,6 +62906,14 @@ class Rhythm3DAdapter {
         this.intensity = timeInfo.intensity;
         this.bpm = timeInfo.bpm || this.bpm;
         this.pattern = timeInfo.pattern;
+
+        // Check for pending groove change at bar boundary (quantized transitions)
+        // Trigger when barProgress is near 0 (start of new bar)
+        if (this._pendingGroove && this.barProgress < 0.05) {
+            this.setGroove(this._pendingGroove, this._pendingGrooveOptions || {});
+            this._pendingGroove = null;
+            this._pendingGrooveOptions = null;
+        }
 
         // Update groove transition (for morphing between presets)
         if (this.grooveTransition < 1) {
@@ -89472,6 +89514,8 @@ class Core3DManager {
         this.rhythmEnabled = options.enableRhythm !== false; // Enabled by default
         if (this.rhythmEnabled) {
             this.rhythm3DAdapter.initialize();
+            // Wire up breathing animator to rhythm adapter for coordination
+            this.breathingAnimator.setRhythmAdapter(this.rhythm3DAdapter);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -89668,6 +89712,14 @@ class Core3DManager {
 
         // Update blink animator with new emotion
         this.blinkAnimator.setEmotion(emotion);
+
+        // Update groove preset based on emotion (if rhythm is playing)
+        // Energetic emotions → bounce groove, calm emotions → subtle groove, flowing → zen groove
+        if (this.rhythmEnabled && this.rhythm3DAdapter?.isPlaying?.()) {
+            const emotionGroove = this._getEmotionGroove(emotion);
+            // Use quantize + bars for smooth, musical transition
+            this.rhythm3DAdapter.setGroove(emotionGroove, { quantize: true, bars: 2 });
+        }
 
         // Immediately reset bloom to prevent accumulation (fast transition on emotion change)
         this.renderer.updateBloom(this.baseGlowIntensity, 1.0, this.geometryType);
@@ -91235,6 +91287,50 @@ class Core3DManager {
 
         // Dispose geometry cache
         dispose();
+    }
+
+    /**
+     * Map emotion to appropriate groove preset
+     * Energetic emotions use bounce groove, calm emotions use subtle groove,
+     * flowing/zen emotions use the flowing zen groove
+     * @private
+     * @param {string} emotion - Emotion name
+     * @returns {string} Groove preset name
+     */
+    _getEmotionGroove(emotion) {
+        const emotionGrooveMap = {
+            // Energetic emotions → groove2 (bouncy, energetic)
+            happy: 'groove2',
+            excited: 'groove2',
+            amused: 'groove2',
+            silly: 'groove2',
+            surprised: 'groove2',
+
+            // Calm/subtle emotions → groove1 (subtle, elegant)
+            calm: 'groove1',
+            neutral: 'groove1',
+            sad: 'groove1',
+            content: 'groove1',
+            focused: 'groove1',
+            bored: 'groove1',
+            tired: 'groove1',
+            sleepy: 'groove1',
+
+            // Flowing/zen emotions → groove3 (flowing, zen)
+            zen: 'groove3',
+            love: 'groove3',
+            grateful: 'groove3',
+            inspired: 'groove3',
+            hopeful: 'groove3',
+            proud: 'groove3',
+
+            // Intense emotions → groove2 with strong beats
+            angry: 'groove2',
+            anxious: 'groove2',
+            determined: 'groove2'
+        };
+
+        return emotionGrooveMap[emotion] || 'groove1';
     }
 
     /**
