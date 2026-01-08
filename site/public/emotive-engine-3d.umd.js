@@ -62604,7 +62604,8 @@ void main() {
 	            accentBoost: 0.0,          // Extra boost on accented beats
 	            grooveOffset: [0, 0, 0],   // Ambient groove position offset
 	            grooveScale: 1.0,          // Ambient groove scale pulse
-	            grooveRotation: [0, 0, 0]  // Ambient groove rotation sway
+	            grooveRotation: [0, 0, 0], // Ambient groove rotation sway
+	            grooveGlow: 1.0            // Ambient groove glow pulse (beat-synced)
 	        };
 
 	        // Target values (raw computed values before smoothing)
@@ -62616,7 +62617,8 @@ void main() {
 	            accentBoost: 0.0,
 	            grooveOffset: [0, 0, 0],
 	            grooveScale: 1.0,
-	            grooveRotation: [0, 0, 0]
+	            grooveRotation: [0, 0, 0],
+	            grooveGlow: 1.0
 	        };
 
 	        // Configuration
@@ -62660,6 +62662,33 @@ void main() {
 	    _lerpArray(current, target, speed, deltaTime) {
 	        const t = 1 - Math.exp(-speed * deltaTime);
 	        return current.map((v, i) => v + (target[i] - v) * t);
+	    }
+
+	    /**
+	     * Apply easing curve to a normalized value (-1 to 1 or 0 to 1)
+	     * Each preset can specify an easing type for different character
+	     * @private
+	     * @param {number} value - Input value (typically from sine wave, -1 to 1)
+	     * @param {string} easingType - Easing curve type ('sine', 'bounce', 'elastic')
+	     * @returns {number} Eased value
+	     */
+	    _applyEasing(value, easingType) {
+	        switch (easingType) {
+	            case 'bounce':
+	                // Sharper attack, slower decay - snappier, more rhythmic feel
+	                // Uses power curve to create punch on peaks
+	                return Math.sign(value) * Math.pow(Math.abs(value), 0.6);
+
+	            case 'elastic':
+	                // Playful overshoot with subtle wobble
+	                // Good for excited/energetic moods
+	                return value * (1 + 0.15 * Math.sin(Math.abs(value) * Math.PI * 2));
+
+	            case 'sine':
+	            default:
+	                // Smooth sine wave - current behavior, elegant and flowing
+	                return value;
+	        }
 	    }
 
 	    /**
@@ -62929,7 +62958,7 @@ void main() {
 	        const swayAmount = preset.swayAmount * conf;
 	        const pulseAmount = preset.pulseAmount * conf;
 	        const rotationAmount = preset.rotationAmount * conf;
-	        const { bounceFreq, swayFreq, phaseOffset } = preset;
+	        const { bounceFreq, swayFreq, phaseOffset, easing } = preset;
 
 	        // Compute groove motions from ABSOLUTE beat/bar progress
 	        // This is frame-rate independent because beatProgress/barProgress come from
@@ -62937,22 +62966,54 @@ void main() {
 
 	        // Vertical bounce: synced to beat with configurable frequency
 	        const bouncePhase = (this.beatProgress * bounceFreq * Math.PI * 2) + phaseOffset;
-	        const bounce = Math.sin(bouncePhase) * bounceAmount;
+	        const rawBounce = Math.sin(bouncePhase);
+	        const easedBounce = this._applyEasing(rawBounce, easing);
 
 	        // Horizontal sway: synced to bar with configurable frequency
 	        const swayPhase = (this.barProgress * swayFreq * Math.PI * 2) + phaseOffset;
-	        const sway = Math.sin(swayPhase) * swayAmount;
+	        const rawSway = Math.sin(swayPhase);
+	        const easedSway = this._applyEasing(rawSway, easing);
 
-	        // Scale pulse: synced to beat
-	        const pulse = 1.0 + Math.sin(bouncePhase) * pulseAmount;
+	        // Accent response: smooth curve that peaks at beat start, scaled by accent level
+	        // Uses cosine curve centered on beat boundaries (0 and 1) for smooth falloff
+	        // beatProgress 0.0 → peak, 0.5 → minimum, 1.0 → peak again
+	        const beatProximity = (Math.cos(this.beatProgress * Math.PI * 2) + 1) * 0.5; // 0-1, peaks at beat
+	        const accentStrength = Math.max(0, this.accent - 0.4) / 0.6; // 0-1, normalized above 0.4 threshold
+	        const accentBoost = beatProximity * accentStrength * 0.25; // Smooth accent curve
+
+	        // Apply easing and accent to motion values
+	        const bounce = easedBounce * bounceAmount * (1 + accentBoost);
+	        const sway = easedSway * swayAmount;
+
+	        // Scale pulse: synced to beat with accent boost
+	        const rawPulse = Math.sin(bouncePhase);
+	        const pulse = 1.0 + this._applyEasing(rawPulse, easing) * pulseAmount * (1 + accentBoost * 0.5);
 
 	        // Rotation sway: synced to bar for smooth rotation
-	        const rotationSway = Math.sin(swayPhase) * rotationAmount;
+	        const rotationSway = easedSway * rotationAmount;
+
+	        // Multi-axis motion for organic 3D feel
+	        // Use different phase relationships so axes don't move in lockstep
+	        // Z-drift: subtle forward/back bobbing, offset from sway for depth
+	        const zDrift = Math.sin(swayPhase + Math.PI / 3) * swayAmount * 0.3;
+
+	        // X/Y rotation for "head tilt" effect - slower frequencies for subtle organic motion
+	        const tiltX = Math.sin(swayPhase * 0.5) * rotationAmount * 0.4;
+	        const tiltY = Math.cos(bouncePhase * 0.7) * rotationAmount * 0.25;
+
+	        // Groove glow: subtle beat-synced glow pulse with accent response
+	        // Uses cosine for peak at beat start (when bouncePhase = 0)
+	        const glowBase = 1.0 + (Math.cos(bouncePhase) + 1) * 0.5 * 0.12 * conf;
+	        const accentGlow = beatProximity * accentStrength * 0.12; // Smooth glow accent
+	        const grooveGlow = glowBase + accentGlow;
 
 	        // Write to target values (these get smoothed in applySmoothing)
-	        this._target.grooveOffset = [sway, bounce, 0];
+	        // Position: X sway, Y bounce, Z drift (forward/back)
+	        this._target.grooveOffset = [sway, bounce, zDrift];
 	        this._target.grooveScale = pulse;
-	        this._target.grooveRotation = [0, 0, rotationSway];
+	        // Rotation: X tilt (nod), Y tilt (turn), Z sway (lean)
+	        this._target.grooveRotation = [tiltX, tiltY, rotationSway];
+	        this._target.grooveGlow = grooveGlow;
 	    }
 
 	    /**
@@ -63007,6 +63068,11 @@ void main() {
 	            this._target.grooveRotation,
 	            grooveSmoothingSpeed, dt
 	        );
+	        this.modulation.grooveGlow = this._lerp(
+	            this.modulation.grooveGlow,
+	            this._target.grooveGlow,
+	            grooveSmoothingSpeed, dt
+	        );
 	    }
 
 	    /**
@@ -63024,6 +63090,7 @@ void main() {
 	        this._target.grooveOffset = [0, 0, 0];
 	        this._target.grooveScale = 1.0;
 	        this._target.grooveRotation = [0, 0, 0];
+	        this._target.grooveGlow = 1.0;
 
 	        // Smooth toward neutral (slower speed for graceful fade-out)
 	        const fadeSpeed = 4.0;
@@ -63035,6 +63102,7 @@ void main() {
 	        this.modulation.grooveOffset = this._lerpArray(this.modulation.grooveOffset, [0, 0, 0], fadeSpeed, dt);
 	        this.modulation.grooveScale = this._lerp(this.modulation.grooveScale, 1.0, fadeSpeed, dt);
 	        this.modulation.grooveRotation = this._lerpArray(this.modulation.grooveRotation, [0, 0, 0], fadeSpeed, dt);
+	        this.modulation.grooveGlow = this._lerp(this.modulation.grooveGlow, 1.0, fadeSpeed, dt);
 	    }
 
 	    /**
@@ -90649,51 +90717,49 @@ void main() {
 	            : null;
 
 	        // Apply blended results with rhythm modulation
-	        // Position: add groove offset when no active gestures
+	        // Groove blend factor: reduce groove to 30% during gestures (not 0%)
+	        // This keeps the mascot feeling "alive" even during active animations
 	        const hasActiveGestures = this.animationManager.hasActiveAnimations();
-	        if (rhythmMod && !hasActiveGestures) {
-	            // Apply ambient groove when idle
+	        const grooveBlend = hasActiveGestures ? 0.3 : 1.0;
+
+	        if (rhythmMod) {
+	            // Position: blend groove offset with gesture position
+	            // During gestures: apply both groove (reduced) and rhythm multiplier
+	            const grooveOffsetX = rhythmMod.grooveOffset[0] * grooveBlend;
+	            const grooveOffsetY = rhythmMod.grooveOffset[1] * grooveBlend;
+	            const grooveOffsetZ = rhythmMod.grooveOffset[2] * grooveBlend;
+	            const posMult = hasActiveGestures ? rhythmMod.positionMultiplier : 1.0;
 	            this.position = [
-	                blended.position[0] + rhythmMod.grooveOffset[0],
-	                blended.position[1] + rhythmMod.grooveOffset[1],
-	                blended.position[2] + rhythmMod.grooveOffset[2]
+	                blended.position[0] * posMult + grooveOffsetX,
+	                blended.position[1] * posMult + grooveOffsetY,
+	                blended.position[2] * posMult + grooveOffsetZ
 	            ];
-	        } else if (rhythmMod && hasActiveGestures) {
-	            // Scale gesture position by rhythm multiplier
-	            this.position = [
-	                blended.position[0] * rhythmMod.positionMultiplier,
-	                blended.position[1] * rhythmMod.positionMultiplier,
-	                blended.position[2] * rhythmMod.positionMultiplier
+
+	            // Rotation: blend groove sway (additive to gesture rotation)
+	            this.rotation = [
+	                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend,
+	                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend,
+	                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend
 	            ];
+
+	            // Scale: blend groove pulse with rhythm multiplier
+	            // grooveScale oscillates around 1.0, so we lerp toward 1.0 during gestures
+	            const grooveScaleEffect = 1.0 + (rhythmMod.grooveScale - 1.0) * grooveBlend;
+	            const scaleMult = hasActiveGestures ? rhythmMod.scaleMultiplier : 1.0;
+	            this.scale = blended.scale * grooveScaleEffect * scaleMult;
 	        } else {
 	            this.position = blended.position;
-	        }
-
-	        // Rotation: add groove sway when idle
-	        if (rhythmMod && !hasActiveGestures) {
-	            this.rotation = [
-	                blended.rotation[0] + rhythmMod.grooveRotation[0],
-	                blended.rotation[1] + rhythmMod.grooveRotation[1],
-	                blended.rotation[2] + rhythmMod.grooveRotation[2]
-	            ];
-	        } else {
 	            this.rotation = blended.rotation;
-	        }
-
-	        // Scale: apply groove pulse when idle, or rhythm multiplier during gestures
-	        if (rhythmMod && !hasActiveGestures) {
-	            this.scale = blended.scale * rhythmMod.grooveScale;
-	        } else if (rhythmMod && hasActiveGestures) {
-	            this.scale = blended.scale * rhythmMod.scaleMultiplier;
-	        } else {
 	            this.scale = blended.scale;
 	        }
 
 	        // Only apply blended glow if no manual override is active
 	        if (this.glowIntensityOverride === null) {
-	            // Apply rhythm glow multiplier during gestures
-	            if (rhythmMod && hasActiveGestures) {
-	                this.glowIntensity = blended.glowIntensity * rhythmMod.glowMultiplier;
+	            if (rhythmMod) {
+	                // Blend groove glow with gesture glow multiplier
+	                const grooveGlowEffect = 1.0 + (rhythmMod.grooveGlow - 1.0) * grooveBlend;
+	                const glowMult = hasActiveGestures ? rhythmMod.glowMultiplier : 1.0;
+	                this.glowIntensity = blended.glowIntensity * grooveGlowEffect * glowMult;
 	            } else {
 	                this.glowIntensity = blended.glowIntensity;
 	            }

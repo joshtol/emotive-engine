@@ -1537,51 +1537,49 @@ export class Core3DManager {
             : null;
 
         // Apply blended results with rhythm modulation
-        // Position: add groove offset when no active gestures
+        // Groove blend factor: reduce groove to 30% during gestures (not 0%)
+        // This keeps the mascot feeling "alive" even during active animations
         const hasActiveGestures = this.animationManager.hasActiveAnimations();
-        if (rhythmMod && !hasActiveGestures) {
-            // Apply ambient groove when idle
+        const grooveBlend = hasActiveGestures ? 0.3 : 1.0;
+
+        if (rhythmMod) {
+            // Position: blend groove offset with gesture position
+            // During gestures: apply both groove (reduced) and rhythm multiplier
+            const grooveOffsetX = rhythmMod.grooveOffset[0] * grooveBlend;
+            const grooveOffsetY = rhythmMod.grooveOffset[1] * grooveBlend;
+            const grooveOffsetZ = rhythmMod.grooveOffset[2] * grooveBlend;
+            const posMult = hasActiveGestures ? rhythmMod.positionMultiplier : 1.0;
             this.position = [
-                blended.position[0] + rhythmMod.grooveOffset[0],
-                blended.position[1] + rhythmMod.grooveOffset[1],
-                blended.position[2] + rhythmMod.grooveOffset[2]
+                blended.position[0] * posMult + grooveOffsetX,
+                blended.position[1] * posMult + grooveOffsetY,
+                blended.position[2] * posMult + grooveOffsetZ
             ];
-        } else if (rhythmMod && hasActiveGestures) {
-            // Scale gesture position by rhythm multiplier
-            this.position = [
-                blended.position[0] * rhythmMod.positionMultiplier,
-                blended.position[1] * rhythmMod.positionMultiplier,
-                blended.position[2] * rhythmMod.positionMultiplier
+
+            // Rotation: blend groove sway (additive to gesture rotation)
+            this.rotation = [
+                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend,
+                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend,
+                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend
             ];
+
+            // Scale: blend groove pulse with rhythm multiplier
+            // grooveScale oscillates around 1.0, so we lerp toward 1.0 during gestures
+            const grooveScaleEffect = 1.0 + (rhythmMod.grooveScale - 1.0) * grooveBlend;
+            const scaleMult = hasActiveGestures ? rhythmMod.scaleMultiplier : 1.0;
+            this.scale = blended.scale * grooveScaleEffect * scaleMult;
         } else {
             this.position = blended.position;
-        }
-
-        // Rotation: add groove sway when idle
-        if (rhythmMod && !hasActiveGestures) {
-            this.rotation = [
-                blended.rotation[0] + rhythmMod.grooveRotation[0],
-                blended.rotation[1] + rhythmMod.grooveRotation[1],
-                blended.rotation[2] + rhythmMod.grooveRotation[2]
-            ];
-        } else {
             this.rotation = blended.rotation;
-        }
-
-        // Scale: apply groove pulse when idle, or rhythm multiplier during gestures
-        if (rhythmMod && !hasActiveGestures) {
-            this.scale = blended.scale * rhythmMod.grooveScale;
-        } else if (rhythmMod && hasActiveGestures) {
-            this.scale = blended.scale * rhythmMod.scaleMultiplier;
-        } else {
             this.scale = blended.scale;
         }
 
         // Only apply blended glow if no manual override is active
         if (this.glowIntensityOverride === null) {
-            // Apply rhythm glow multiplier during gestures
-            if (rhythmMod && hasActiveGestures) {
-                this.glowIntensity = blended.glowIntensity * rhythmMod.glowMultiplier;
+            if (rhythmMod) {
+                // Blend groove glow with gesture glow multiplier
+                const grooveGlowEffect = 1.0 + (rhythmMod.grooveGlow - 1.0) * grooveBlend;
+                const glowMult = hasActiveGestures ? rhythmMod.glowMultiplier : 1.0;
+                this.glowIntensity = blended.glowIntensity * grooveGlowEffect * glowMult;
             } else {
                 this.glowIntensity = blended.glowIntensity;
             }
