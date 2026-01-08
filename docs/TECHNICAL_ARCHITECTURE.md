@@ -33,9 +33,37 @@ The visual output is driven by a deterministic state machine that translates abs
 ### 3. Rhythm Synchronization Engine
 The engine includes a custom **Audio Analysis & Rhythm System** (`Rhythm3DAdapter`) that syncs animations to musical time.
 
-*   **Beat Detection:** Real-time BPM analysis.
+*   **Beat Detection:** Real-time BPM analysis using `AgentBPMDetector`—a multi-hypothesis system that tracks competing BPM candidates until one "wins" with sufficient confidence.
 *   **Groove Templates:** Animations don't just "bounce on beat"—they follow groove patterns (Swing, Waltz, Dubstep).
 *   **Implementation:** Gestures like `bounce` or `nod` can lock to the nearest beat grid, ensuring the mascot dances in time with audio.
+
+#### Groove Confidence System
+A key UX innovation is the **Groove Confidence** system, which prevents jarring animation transitions during BPM detection.
+
+*   **Problem Solved:** Without this, animations would start at full intensity with an assumed BPM, then visibly "snap" to the correct tempo once detection locks in—breaking immersion.
+*   **Solution:** Animation intensity scales with detection confidence through progressive stages:
+
+| Lock Stage | Confidence | Groove Intensity | Visual Effect |
+|------------|------------|------------------|---------------|
+| 0 (Detecting) | 0% | 15% | Tentative, searching feel |
+| 1 (Initial) | 25% | 40% | Starting to find the beat |
+| 2 (Refining) | 50% | 65% | Growing conviction |
+| 3 (Final) | 75% | 85% | Nearly locked in |
+| Finalized | 100% | 100% | Full groove expression |
+
+*   **API:**
+    ```javascript
+    // Automatic: starts at 15% and ramps up with BPM detection
+    mascot.listenTo(audioElement);
+
+    // Manual control for non-audio use cases
+    mascot.setGrooveConfidence(0.5);  // 50% intensity
+    const confidence = mascot.getGrooveConfidence();
+
+    // Monitor via status
+    const status = mascot.getBPMStatus();
+    console.log(status.grooveConfidence);  // 0.15 - 1.0
+    ```
 
 ---
 

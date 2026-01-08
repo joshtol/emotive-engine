@@ -1082,6 +1082,39 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Set groove confidence (animation intensity scalar)
+     *
+     * This controls how pronounced the groove animations are:
+     * - 0.15 = Very subtle, tentative feel (like searching for the beat)
+     * - 0.5 = Moderate groove
+     * - 1.0 = Full groove intensity
+     *
+     * When BPM detection is active, this is set automatically based on lock stage.
+     * Use this method to manually control groove intensity when not using BPM detection,
+     * or to override the automatic behavior.
+     *
+     * @example
+     * // Start with tentative groove, then ramp up
+     * mascot.setGrooveConfidence(0.2);
+     * setTimeout(() => mascot.setGrooveConfidence(1.0), 3000);
+     *
+     * @param {number} confidence - Groove confidence (0-1, typically 0.15-1.0)
+     */
+    setGrooveConfidence(confidence) {
+        if (this.core3D?.rhythm3DAdapter) {
+            this.core3D.rhythm3DAdapter.setGrooveConfidence(confidence);
+        }
+    }
+
+    /**
+     * Get current groove confidence
+     * @returns {number} Current groove confidence (0-1)
+     */
+    getGrooveConfidence() {
+        return this.core3D?.rhythm3DAdapter?.grooveConfidence ?? 1.0;
+    }
+
+    /**
      * Set groove configuration for idle animations (advanced tuning)
      * @param {Object} config - Groove settings
      * @param {number} config.grooveBounceAmount - Vertical bounce amplitude (default: 0.02)
@@ -1877,16 +1910,35 @@ export class EmotiveMascot3D {
 
     /**
      * Get BPM detection status
-     * @returns {Object} Detection status with bpm, confidence, locked, and agent info
+     * @returns {Object} Detection status object
+     * @returns {number} returns.bpm - Current detected BPM (60-180)
+     * @returns {number} returns.confidence - Detection confidence (0-1)
+     * @returns {boolean} returns.locked - Whether BPM is locked (Stage 1+)
+     * @returns {number} returns.lockStage - Lock stage (0=detecting, 1=initial, 2=refining, 3=final)
+     * @returns {string} returns.correctionType - 'none', 'halved', or 'doubled'
+     * @returns {boolean} returns.finalized - True when fully locked and memory cleaned
+     * @returns {number} returns.grooveConfidence - Animation intensity scalar (0.15-1.0)
+     * @returns {number} returns.agentCount - Number of BPM candidates in histogram
+     * @returns {number} returns.peakCount - Total peaks detected
+     * @returns {Array} returns.topAgents - Top 5 BPM candidates with scores
+     * @returns {number} returns.intervalCount - Number of intervals in buffer
      */
     getBPMStatus() {
         if (!this._bpmDetector) {
             return {
                 bpm: this._detectedBPM || 120,
+                subdivision: 1,
                 confidence: 0,
                 locked: false,
+                lockStage: 0,
+                correctionType: 'none',
+                finalized: false,
+                grooveConfidence: 1.0,  // Default to full when no detection active
                 agentCount: 0,
-                topAgents: []
+                peakCount: 0,
+                histogramSize: 0,
+                topAgents: [],
+                intervalCount: 0
             };
         }
         return this._bpmDetector.getStatus();
