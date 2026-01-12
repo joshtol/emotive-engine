@@ -44,25 +44,27 @@ export default AnimationLoopManager; // class for multi-instance
 
 ## Priority 2: Architecture — Reduce File Sizes
 
-### Task 2.1: Extract Audio Integration from EmotiveMascot3D
-**Severity:** High (God class at 2,492 lines)
+### Task 2.1: Extract Audio Integration from EmotiveMascot3D ✅ COMPLETE
+**Severity:** High (Was 2,492 lines, now 1,892 lines)
 **File:** `src/3d/index.js`
 
-**Problem:** Audio connection/analysis code (~170 lines) duplicates patterns from existing `src/core/audio/` modules.
+**Solution:** Created `src/3d/audio/AudioBridge.js` (826 lines) containing:
+- Audio context and analyzer management
+- CORS workaround via fetch + decodeAudioData buffer decode
+- Dual analyzer setup (main + buffer for CORS bypass)
+- Agent-based BPM detection with validation and auto-retry
+- Event binding/cleanup for play/pause/seek/ended
+- Groove confidence callbacks for animation intensity
 
-**Existing Audio Modules (already extracted):**
-- `src/core/audio/AudioAnalyzer.js`
-- `src/core/audio/AudioLevelProcessor.js`
-- `src/core/audio/SoundSystem.js`
-- `src/core/audio/rhythm.js`
+**Completed:**
+- [x] Create `src/3d/audio/AudioBridge.js` with callback-based API
+- [x] Move `connectAudio()`, `disconnectAudio()` logic
+- [x] Move all BPM detection methods (`_startBPMDetection`, `_validateAnalyzerWorking`, etc.)
+- [x] Move buffer analysis methods (`_startBufferAnalysis`, `_stopBufferAnalysis`, `_rebuildBufferAnalysis`)
+- [x] Update `EmotiveMascot3D` to use lazy-initialized AudioBridge via `_getAudioBridge()`
+- [x] Reduce `index.js` by ~600 lines (from 2,492 to 1,892)
 
-**Tasks:**
-- [ ] Create `src/3d/audio/AudioBridge.js` to handle:
-  - `connectAudio()` logic (lines 1334-1450)
-  - `listenTo()` audio element binding (lines 1451-1550)
-  - Buffer decoding and CORS workarounds
-- [ ] Delegate to existing `AudioAnalyzer` where possible
-- [ ] Reduce `index.js` by ~170 lines
+**Note:** Kept all functionality intact. AudioBridge uses callbacks for rhythm start/stop/BPM change rather than direct coupling to EmotiveMascot3D.
 
 ---
 
@@ -144,10 +146,10 @@ export default AnimationLoopManager; // class for multi-instance
 
 ## Checklist Summary
 
-| Feature | Current | Target |
-|---------|---------|--------|
-| **SSR Safety** | `init()` crashes | Safe import, clear error on `init()` |
-| **Multi-Instance** | Singleton blocks | Fully isolated instances |
-| **Main File Size** | 2,492 lines | <1,500 lines |
-| **Config** | Hardcoded magic numbers | Centralized, overridable |
-| **Types** | JSDoc | `.d.ts` declarations |
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **SSR Safety** | ✅ Complete | Safe import, clear error on `init()` |
+| **Multi-Instance** | ✅ Complete | Fully isolated instances |
+| **Main File Size** | 🔄 In Progress | 1,892 lines (was 2,492), target <1,500 |
+| **Config** | ⏳ Pending | Hardcoded magic numbers → centralized |
+| **Types** | ⏳ Pending | JSDoc → `.d.ts` declarations |
