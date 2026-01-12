@@ -628,8 +628,11 @@
             color: var(--accent);
         }
 
-        /* Mobile responsive */
+        /* ═══════════════════════════════════════════════════════════════════════════
+           MOBILE RESPONSIVE
+           ═══════════════════════════════════════════════════════════════════════════ */
         @media (max-width: 1000px) {
+            /* Groove buttons - horizontal on tablet */
             .groove-buttons {
                 flex-direction: row;
                 flex-wrap: wrap;
@@ -638,10 +641,123 @@
             .groove-btn {
                 flex: 1 1 calc(50% - 0.5rem);
                 min-width: 140px;
+                padding: 0.75rem;
             }
 
             .groove-info p {
                 display: none;
+            }
+
+            .groove-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+
+            /* Compact BPM display */
+            .bpm-display {
+                padding: 0.75rem;
+            }
+
+            .bpm-value {
+                font-size: 1.5rem;
+            }
+
+            /* Compact audio rows */
+            .audio-row,
+            .audio-source-row,
+            .custom-file-row {
+                flex-wrap: wrap;
+            }
+
+            .track-select {
+                min-width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .audio-source-row button {
+                flex: 1;
+            }
+
+            /* Dance panel - scrollable */
+            .dance-panel {
+                max-height: none;
+            }
+
+            /* Gesture grid - tighter */
+            .gesture-grid {
+                gap: 3px;
+            }
+
+            .gesture-chip {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.6rem;
+            }
+
+            /* Status log - shorter on mobile */
+            .log {
+                height: 100px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            /* Small phone - stack groove buttons */
+            .groove-buttons {
+                flex-direction: column;
+            }
+
+            .groove-btn {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            /* Even more compact BPM */
+            .bpm-value {
+                font-size: 1.25rem;
+            }
+
+            /* Smaller gesture chips */
+            .gesture-chip {
+                padding: 0.15rem 0.35rem;
+                font-size: 0.55rem;
+            }
+
+            .gesture-section-title {
+                font-size: 0.6rem;
+            }
+
+            /* Dance status - compact */
+            .dance-status {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .dance-stat {
+                flex: 1 1 calc(50% - 0.5rem);
+            }
+
+            /* Intensity slider - full width label */
+            .intensity-slider {
+                flex-wrap: wrap;
+            }
+
+            .intensity-slider label {
+                width: 100%;
+                margin-bottom: 0.25rem;
+            }
+
+            /* Transition row - stack */
+            .transition-row {
+                flex-wrap: wrap;
+            }
+
+            .transition-row label {
+                width: 100%;
+                margin-bottom: 0.25rem;
+            }
+
+            .transition-row select {
+                width: 100%;
             }
         }
     </style>
