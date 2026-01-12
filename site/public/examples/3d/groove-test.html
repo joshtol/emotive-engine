@@ -1,17 +1,41 @@
 <!DOCTYPE html>
 <!--
-  GROOVE SYSTEM TEST - Emotive Engine 3D Demo
+  ═══════════════════════════════════════════════════════════════════════════════
+  GROOVE SYSTEM - Emotive Engine 3D Demo
+  ═══════════════════════════════════════════════════════════════════════════════
 
-  Test BPM detection and groove presets with real-time audio analysis.
-  Features automatic beat tracking, tap tempo, and seamless groove transitions.
+  A comprehensive demonstration of the Emotive Engine's audio-reactive groove
+  system. This demo showcases real-time BPM detection, groove presets, and
+  the Dance Choreographer that automatically triggers gestures to music.
 
-  What you'll learn:
-  - Real-time BPM detection from audio
-  - Groove preset system with smooth transitions
-  - Audio reactive animation sync
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  WHAT YOU'LL LEARN                                                          │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │  1. Audio Integration                                                       │
+  │     - Connecting audio sources (files, drag-drop, built-in tracks)          │
+  │     - Web Audio API integration with AudioContext                           │
+  │     - CORS-friendly audio decoding for cross-origin sources                 │
+  │                                                                             │
+  │  2. BPM Detection                                                           │
+  │     - Agent-based tempo detection with confidence scoring                   │
+  │     - Multi-stage lock system (detecting → locked → finalized)              │
+  │     - Tap tempo as manual fallback                                          │
+  │                                                                             │
+  │  3. Groove System                                                           │
+  │     - Three preset grooves: Subtle, Energetic, Flowing                      │
+  │     - Beat-synced transitions (1, 2, 4, or 8 bars)                          │
+  │     - Groove blending with intensity control                                │
+  │                                                                             │
+  │  4. Dance Choreographer                                                     │
+  │     - Automatic gesture triggering based on audio energy                    │
+  │     - Accent gestures (pop, bob, swell) that enhance groove                 │
+  │     - Climactic gestures (burst, spin) for high-energy moments              │
+  │     - Rate-limited glow effects for visual safety                           │
+  └─────────────────────────────────────────────────────────────────────────────┘
 
-  Complexity: Advanced
-  Features: Audio analysis, BPM detection, groove presets
+  Complexity: ⭐⭐⭐⭐ Advanced
+  Features: Audio analysis, BPM detection, groove presets, dance choreography
+  Prerequisites: Basic understanding of Web Audio API helpful but not required
 -->
 <html lang="en">
 <head>
@@ -884,43 +908,112 @@
     </div>
 
     <script type="module">
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * IMPORTS
+         * ═══════════════════════════════════════════════════════════════════════════
+         * EmotiveMascot3D: Main 3D mascot class with audio-reactive features
+         * demo-utils: Shared utilities for toggle controls and visual settings
+         */
         import EmotiveMascot3D from '/emotive-engine-3d.js';
         import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
 
-        // Demo tracks
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * CONFIGURATION CONSTANTS
+         * ═══════════════════════════════════════════════════════════════════════════
+         * Centralized configuration makes the demo easier to customize and maintain.
+         * Junior devs: Modify these values to experiment with different behaviors!
+         */
+
+        // Available demo audio tracks
+        // Each track is optimized for different BPM detection scenarios
         const DEMO_TRACKS = {
-            // Music tracks
+            // Music tracks - full songs for realistic testing
             female: '/assets/tracks/music/electric-glow-f.wav',
             male: '/assets/tracks/music/electric-glow-m.wav',
-            // Calibration - pure clicks
+
+            // Calibration - pure metronome clicks at specific BPMs
+            // Use these to verify BPM detection accuracy
             'click-60': '/assets/tracks/test/click-60.wav',
             'click-90': '/assets/tracks/test/click-90.wav',
             'click-120': '/assets/tracks/test/click-120.wav',
             'click-150': '/assets/tracks/test/click-150.wav',
-            // Calibration - subdivision tests
+
+            // Calibration - subdivision tests for complex rhythm detection
             'click-120-kicksnare': '/assets/tracks/test/click-120-kicksnare.wav',
             'click-120-hihat': '/assets/tracks/test/click-120-hihat.wav'
         };
 
-        // State
-        let mascot = null;
-        let audioElement = null;
-        let audioContext = null;
-        let isPlaying = false;
-        let tapTimes = [];
-        let lastFrameTime = performance.now();
-        let frameCount = 0;
-        let currentTrack = 'female';
-        let currentFile = null;  // For custom file import
+        // Mascot configuration - these match EmotiveMascot3D constructor options
+        const MASCOT_CONFIG = {
+            coreGeometry: 'crystal',      // Starting geometry (crystal, moon, sun)
+            enableParticles: true,        // Floating particle effects
+            enablePostProcessing: true,   // Bloom and glow effects
+            enableBlinking: true,         // Periodic "blink" animation
+            enableBreathing: true,        // Subtle scale oscillation
+            autoRotate: true,             // Slow rotation when idle
+            autoRotateSpeed: 0.3,         // Rotation speed (0.1 = slow, 1.0 = fast)
+            enableControls: true,         // Mouse/touch camera controls
+            cameraDistance: 1.2,          // Distance from center (1.0 = close)
+            fov: 30,                      // Field of view (lower = less distortion)
+            minZoom: 0.9,                 // Minimum zoom level
+            maxZoom: 2.0,                 // Maximum zoom level
+            assetBasePath: '/assets'      // Path to OBJ models and textures
+        };
 
-        // DOM Elements
+        // Tap tempo configuration
+        const TAP_TEMPO_CONFIG = {
+            maxTaps: 8,          // Number of taps to average
+            minBPM: 60,          // Minimum allowed BPM
+            maxBPM: 200,         // Maximum allowed BPM
+            resetTimeout: 2000   // Reset taps after 2 seconds of inactivity
+        };
+
+        // UI update intervals (in milliseconds)
+        const UPDATE_INTERVALS = {
+            danceStatus: 250,    // How often to refresh dance choreographer stats
+            fps: 1000            // FPS counter update rate
+        };
+
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * APPLICATION STATE
+         * ═══════════════════════════════════════════════════════════════════════════
+         * Mutable state variables that track the current application status.
+         * Keeping state in one place makes debugging easier.
+         */
+        let mascot = null;           // EmotiveMascot3D instance
+        let audioElement = null;     // HTML Audio element for playback
+        let audioContext = null;     // Web Audio API context (created by mascot)
+        let isPlaying = false;       // Playback state flag
+        let tapTimes = [];           // Timestamps for tap tempo calculation
+        let lastFrameTime = performance.now();  // For FPS calculation
+        let frameCount = 0;          // Frame counter for FPS
+        let currentTrack = 'female'; // Currently selected demo track
+        let currentFile = null;      // Custom file object (if user imported one)
+
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * DOM ELEMENT REFERENCES
+         * ═══════════════════════════════════════════════════════════════════════════
+         * Cache DOM elements once at startup for better performance.
+         * Tip: Group related elements together for easier maintenance.
+         */
+
+        // Container for the 3D mascot
         const container = document.getElementById('mascot-container');
+
+        // Audio playback controls
         const playBtn = document.getElementById('playBtn');
         const stopBtn = document.getElementById('stopBtn');
         const tapTempoBtn = document.getElementById('tapTempoBtn');
         const trackSelect = document.getElementById('trackSelect');
         const audioFileInput = document.getElementById('audioFile');
         const browseBtn = document.getElementById('browseBtn');
+        const copyLogBtn = document.getElementById('copyLogBtn');
+
+        // File import UI (switches between preset tracks and custom file)
         const trackSourceRow = document.getElementById('trackSourceRow');
         const customFileRow = document.getElementById('customFileRow');
         const customFileDisplay = document.getElementById('customFileDisplay');
@@ -928,20 +1021,25 @@
         const fileSize = document.getElementById('fileSize');
         const fileDuration = document.getElementById('fileDuration');
         const clearFileBtn = document.getElementById('clearFileBtn');
-        const copyLogBtn = document.getElementById('copyLogBtn');
         const globalDropOverlay = document.getElementById('globalDropOverlay');
+
+        // BPM detection display
         const bpmValue = document.getElementById('bpmValue');
         const beatIndicator = document.getElementById('beatIndicator');
         const confidenceFill = document.getElementById('confidenceFill');
         const lockStatus = document.getElementById('lockStatus');
         const agentCount = document.getElementById('agentCount');
-        const transitionMode = document.getElementById('transitionMode');
-        const logEl = document.getElementById('log');
-        const currentGrooveEl = document.getElementById('currentGroove');
-        const frameInfoEl = document.getElementById('frameInfo');
-        const grooveButtons = document.querySelectorAll('.groove-btn');
 
-        // Dance panel elements
+        // Groove preset controls
+        const transitionMode = document.getElementById('transitionMode');
+        const grooveButtons = document.querySelectorAll('.groove-btn');
+        const currentGrooveEl = document.getElementById('currentGroove');
+
+        // Status log and FPS
+        const logEl = document.getElementById('log');
+        const frameInfoEl = document.getElementById('frameInfo');
+
+        // Dance choreographer panel elements
         const danceToggle = document.getElementById('dance-toggle');
         const danceIntensitySlider = document.getElementById('danceIntensity');
         const intensityValueEl = document.getElementById('intensityValue');
@@ -952,13 +1050,27 @@
         const gestureChips = document.querySelectorAll('.gesture-chip');
         const comboChips = document.querySelectorAll('.combo-chip');
 
-        // Track active gestures for visual feedback
-        const activeGestures = new Map(); // gesture -> timeout ID
+        // Track active gestures for visual feedback (gesture name -> timeout ID)
+        const activeGestures = new Map();
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // LOGGING
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * UTILITY FUNCTIONS
+         * ═══════════════════════════════════════════════════════════════════════════
+         */
 
+        /**
+         * Add a timestamped entry to the status log panel.
+         * Color-coded by type for easy scanning:
+         *   - info (green): General status updates
+         *   - bpm (amber): BPM detection events
+         *   - groove (purple): Groove changes
+         *   - gesture (pink): Gesture triggers
+         *   - error (red): Error messages
+         *
+         * @param {string} message - The log message to display
+         * @param {string} type - Log type: 'info' | 'bpm' | 'groove' | 'gesture' | 'error'
+         */
         function log(message, type = 'info') {
             const time = new Date().toLocaleTimeString('en-US', {
                 hour12: false,
@@ -966,141 +1078,215 @@
                 minute: '2-digit',
                 second: '2-digit'
             });
+
             const entry = document.createElement('div');
             entry.className = 'log-entry';
             entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${message}</span>`;
+
+            // Insert at top (newest first)
             logEl.insertBefore(entry, logEl.firstChild);
 
-            // Keep log manageable
-            while (logEl.children.length > 50) {
+            // Limit log size to prevent memory issues
+            const MAX_LOG_ENTRIES = 50;
+            while (logEl.children.length > MAX_LOG_ENTRIES) {
                 logEl.removeChild(logEl.lastChild);
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // MASCOT INITIALIZATION
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        async function initMascot() {
-            log('Initializing 3D mascot...', 'info');
-
-            mascot = new EmotiveMascot3D({
-                coreGeometry: 'crystal',
-                enableParticles: true,
-                enablePostProcessing: true,
-                enableBlinking: true,
-                enableBreathing: true,
-                autoRotate: true,
-                autoRotateSpeed: 0.3,
-                enableControls: true,
-                cameraDistance: 1.2,
-                fov: 30,
-                minZoom: 0.9,
-                maxZoom: 2.0,
-                assetBasePath: '/assets'
-            });
-
-            await mascot.init(container);
-            mascot.start();
-
-            // Set initial emotion
-            mascot.setEmotion('calm');
-
-            // Enable groove
-            mascot.enableGroove();
-
-            log('Mascot ready, groove enabled', 'groove');
-            log(`Available presets: ${mascot.getGroovePresets().join(', ')}`, 'info');
-
-            // Start FPS counter
-            requestAnimationFrame(updateFPS);
-
-            // Preload the default track
-            await loadTrack('female');
-        }
-
-        function updateFPS() {
-            frameCount++;
-            const now = performance.now();
-            if (now - lastFrameTime >= 1000) {
-                frameInfoEl.textContent = `${frameCount} fps`;
-                frameCount = 0;
-                lastFrameTime = now;
-            }
-            requestAnimationFrame(updateFPS);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // AUDIO HANDLING
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        async function loadTrack(trackId) {
-            const url = DEMO_TRACKS[trackId];
-            if (!url) return;
-
-            log(`Loading: ${trackId} track...`, 'info');
-            currentTrack = trackId;
-
-            try {
-                // Clean up previous audio element
-                if (audioElement) {
-                    audioElement.pause();
-                    if (audioElement.src.startsWith('blob:')) {
-                        URL.revokeObjectURL(audioElement.src);
-                    }
-                    mascot.disconnectAudio();
-                }
-
-                // Create audio element with CORS for Web Audio API access
-                audioElement = new Audio();
-                audioElement.crossOrigin = 'anonymous';
-                audioElement.src = url;
-
-                // Wait for metadata to load
-                await new Promise((resolve, reject) => {
-                    audioElement.onloadedmetadata = resolve;
-                    audioElement.onerror = (e) => reject(new Error(`Failed to load ${url}`));
-                });
-
-                log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
-
-            } catch (err) {
-                log(`Error loading track: ${err.message}`, 'error');
-                console.error(err);
-            }
-        }
-
+        /**
+         * Format file size for display (bytes → KB/MB)
+         * @param {number} bytes - File size in bytes
+         * @returns {string} Human-readable file size
+         */
         function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
         }
 
+        /**
+         * Format duration in seconds to MM:SS
+         * @param {number} seconds - Duration in seconds
+         * @returns {string} Formatted duration (e.g., "3:45")
+         */
         function formatDuration(seconds) {
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * MASCOT INITIALIZATION
+         * ═══════════════════════════════════════════════════════════════════════════
+         */
+
+        /**
+         * Initialize the 3D mascot with audio-reactive features.
+         *
+         * This function demonstrates:
+         * 1. Creating an EmotiveMascot3D instance with configuration
+         * 2. Awaiting async initialization (loads OBJ models, textures)
+         * 3. Starting the render loop
+         * 4. Enabling groove system for beat-synced animation
+         *
+         * KEY EMOTIVE ENGINE APIS USED:
+         * - new EmotiveMascot3D(config) - Create mascot with options
+         * - mascot.init(container)      - Initialize and mount to DOM
+         * - mascot.start()              - Begin animation loop
+         * - mascot.setEmotion(name)     - Set emotional state (affects colors/speed)
+         * - mascot.enableGroove()       - Enable beat-synced animation system
+         * - mascot.getGroovePresets()   - List available groove configurations
+         */
+        async function initMascot() {
+            log('Initializing 3D mascot...', 'info');
+
+            // Create mascot instance with configuration from constants
+            mascot = new EmotiveMascot3D(MASCOT_CONFIG);
+
+            // Initialize (async - loads geometry, textures, shaders)
+            await mascot.init(container);
+
+            // Start the render loop
+            mascot.start();
+
+            // Set initial emotion - this affects glow color and animation speed
+            // Available emotions: neutral, joy, sadness, anger, fear, surprise,
+            // disgust, love, calm, excited, focused, suspicion, resting, euphoria
+            mascot.setEmotion('calm');
+
+            // Enable the groove system - this creates the rhythm adapter and
+            // allows the mascot to sync with BPM for beat-matched animations
+            mascot.enableGroove();
+
+            log('Mascot ready, groove enabled', 'groove');
+            log(`Available presets: ${mascot.getGroovePresets().join(', ')}`, 'info');
+
+            // Start FPS counter for performance monitoring
+            requestAnimationFrame(updateFPS);
+
+            // Preload the default audio track
+            await loadTrack('female');
+        }
+
+        /**
+         * Update FPS counter display.
+         * Uses requestAnimationFrame for accurate frame counting.
+         */
+        function updateFPS() {
+            frameCount++;
+            const now = performance.now();
+
+            // Update display once per second
+            if (now - lastFrameTime >= UPDATE_INTERVALS.fps) {
+                frameInfoEl.textContent = `${frameCount} fps`;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+
+            requestAnimationFrame(updateFPS);
+        }
+
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * AUDIO HANDLING
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * The Emotive Engine's audio system works with the Web Audio API:
+         * 1. Audio is loaded via an HTML Audio element
+         * 2. mascot.connectAudio() creates an AudioContext and analyzer
+         * 3. The analyzer extracts frequency data for BPM detection
+         * 4. BPM drives the groove system for beat-synced animation
+         *
+         * IMPORTANT: Due to browser autoplay policies, audio can only play
+         * after a user gesture (click/tap). That's why we use play buttons.
+         */
+
+        /**
+         * Load a demo track by ID.
+         *
+         * KEY API USED:
+         * - mascot.disconnectAudio() - Clean up previous audio connection
+         *
+         * @param {string} trackId - Key from DEMO_TRACKS object
+         */
+        async function loadTrack(trackId) {
+            const url = DEMO_TRACKS[trackId];
+            if (!url) {
+                log(`Unknown track: ${trackId}`, 'error');
+                return;
+            }
+
+            log(`Loading: ${trackId} track...`, 'info');
+            currentTrack = trackId;
+
+            try {
+                // Clean up previous audio element (prevents memory leaks)
+                if (audioElement) {
+                    audioElement.pause();
+                    // Revoke blob URLs to free memory
+                    if (audioElement.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(audioElement.src);
+                    }
+                    mascot.disconnectAudio();
+                }
+
+                // Create audio element
+                // crossOrigin='anonymous' is required for Web Audio API access
+                // to same-origin audio files served with CORS headers
+                audioElement = new Audio();
+                audioElement.crossOrigin = 'anonymous';
+                audioElement.src = url;
+
+                // Wait for metadata (duration, etc.) to load
+                await new Promise((resolve, reject) => {
+                    audioElement.onloadedmetadata = resolve;
+                    audioElement.onerror = () => reject(new Error(`Failed to load ${url}`));
+                });
+
+                log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
+
+            } catch (err) {
+                log(`Error loading track: ${err.message}`, 'error');
+                console.error('Track load error:', err);
+            }
+        }
+
+        /**
+         * Show custom file info in the UI.
+         * Switches from preset track dropdown to file display mode.
+         */
         function showFileLoaded(file, duration = null) {
             fileName.textContent = file.name;
             fileSize.textContent = formatFileSize(file.size);
             fileDuration.textContent = duration ? formatDuration(duration) : '--:--';
+
             // Switch from track selector to custom file display
             trackSourceRow.classList.add('hidden');
             customFileRow.classList.add('visible');
         }
 
+        /**
+         * Hide custom file info, return to preset track selector.
+         */
         function hideFileLoaded() {
-            // Switch back to track selector
             customFileRow.classList.remove('visible');
             trackSourceRow.classList.remove('hidden');
         }
 
+        /**
+         * Load a user-provided audio file (drag-drop or file picker).
+         *
+         * Uses URL.createObjectURL() to create a playable URL from a File object.
+         * Remember to revoke the URL when done to prevent memory leaks!
+         *
+         * @param {File} file - Audio file from input or drag-drop
+         */
         async function loadAudioFile(file) {
             log(`Loading: ${file.name}`, 'info');
 
             try {
+                // Create a blob URL for the file
                 const url = URL.createObjectURL(file);
 
                 // Clean up previous audio element
@@ -1112,30 +1298,45 @@
                     mascot.disconnectAudio();
                 }
 
-                // Create audio element with CORS for Web Audio API access
+                // Create and configure audio element
                 audioElement = new Audio();
                 audioElement.crossOrigin = 'anonymous';
                 audioElement.src = url;
 
-                // Wait for metadata to load
+                // Wait for metadata
                 await new Promise((resolve, reject) => {
                     audioElement.onloadedmetadata = resolve;
-                    audioElement.onerror = reject;
+                    audioElement.onerror = () => reject(new Error('Failed to decode audio file'));
                 });
 
                 log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
                 currentTrack = 'custom';
                 currentFile = file;
 
-                // Show file info with duration
+                // Update UI to show file info
                 showFileLoaded(file, audioElement.duration);
 
             } catch (err) {
                 log(`Error loading audio: ${err.message}`, 'error');
+                console.error('Audio file load error:', err);
                 hideFileLoaded();
             }
         }
 
+        /**
+         * Start audio playback and connect to the mascot for BPM detection.
+         *
+         * KEY APIS USED:
+         * - mascot.connectAudio(audioElement) - Connect audio for analysis
+         *   This creates an AudioContext, analyzer node, and starts BPM detection.
+         *   Returns a promise that resolves when connection is established.
+         *
+         * - mascot.startRhythm(bpm) - Called automatically when BPM is detected
+         *
+         * BROWSER AUTOPLAY POLICY:
+         * AudioContext must be created/resumed after a user gesture.
+         * That's why playAudio() should only be called from a click handler.
+         */
         async function playAudio() {
             if (!audioElement) {
                 log('No audio loaded', 'error');
@@ -1144,15 +1345,17 @@
 
             try {
                 // Resume AudioContext if suspended (browser autoplay policy)
+                // This can happen if the context was created before user interaction
                 if (audioContext && audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
 
-                // Connect audio to mascot (this creates the AudioContext internally)
+                // Connect audio to mascot for analysis and BPM detection
+                // This is the key integration point with the Emotive Engine
                 await mascot.connectAudio(audioElement);
                 log('Audio connected for BPM detection', 'bpm');
 
-                // Play the audio
+                // Start playback
                 await audioElement.play();
                 isPlaying = true;
                 playBtn.disabled = true;
@@ -1160,9 +1363,10 @@
 
                 log('Playing audio...', 'bpm');
 
-                // Monitor BPM
+                // Start monitoring BPM detection status
                 startBPMMonitor();
 
+                // Handle end of track
                 audioElement.onended = () => {
                     isPlaying = false;
                     playBtn.disabled = false;
@@ -1172,10 +1376,16 @@
 
             } catch (err) {
                 log(`Playback error: ${err.message}`, 'error');
-                console.error(err);
+                console.error('Playback error:', err);
             }
         }
 
+        /**
+         * Stop audio playback and reset rhythm.
+         *
+         * KEY API USED:
+         * - mascot.stopRhythm() - Stops beat-synced animation
+         */
         function stopAudio() {
             if (audioElement) {
                 audioElement.pause();
@@ -1188,8 +1398,35 @@
             log('Stopped', 'info');
         }
 
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * BPM DETECTION & MONITORING
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * The Emotive Engine uses an agent-based BPM detection system:
+         * 1. Multiple "agents" analyze audio at different tempo hypotheses
+         * 2. Agents vote based on detected beat patterns
+         * 3. Lock progresses through stages: Detecting → Stage 1 → Stage 2 → Stage 3 → Locked
+         * 4. Locked BPM drives the groove system for beat-synced animation
+         *
+         * LOCK STAGES:
+         * - Stage 0: Detecting - gathering initial data
+         * - Stage 1: Initial Lock (orange) - first tempo hypothesis
+         * - Stage 2: Refinement (yellow) - adjusting for accuracy
+         * - Stage 3: Final Lock (green) - confirming tempo
+         * - Locked: Finalized (gold) - BPM confirmed and stable
+         *
+         * KEY API USED:
+         * - mascot.getBPMStatus() - Returns detection status object
+         */
+
+        // Track lock state for detecting transitions
         let lastLockedState = false;
 
+        /**
+         * Start monitoring BPM detection status and update the UI.
+         * Updates confidence bar, lock stage indicator, and beat flash.
+         */
         function startBPMMonitor() {
             const updateBPM = () => {
                 if (!isPlaying) {
@@ -1271,83 +1508,138 @@
             requestAnimationFrame(updateBPM);
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // TAP TEMPO
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * TAP TEMPO
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * Tap tempo provides a manual fallback when BPM detection doesn't work
+         * (e.g., for music without clear beats, or for testing specific tempos).
+         *
+         * How it works:
+         * 1. User taps button in rhythm with the music
+         * 2. We track timestamps of last N taps
+         * 3. Calculate average interval between taps
+         * 4. Convert interval to BPM: 60000ms / interval = BPM
+         *
+         * KEY APIS USED:
+         * - mascot.setRhythmBPM(bpm) - Override the detected BPM
+         * - mascot.startRhythm(bpm)  - Start rhythm without audio
+         */
 
+        /**
+         * Handle a tap tempo button press.
+         * Calculates BPM from the intervals between taps.
+         */
         function handleTapTempo() {
             const now = performance.now();
             tapTimes.push(now);
 
-            // Keep last 8 taps
-            if (tapTimes.length > 8) {
+            // Keep only the last N taps (configurable via TAP_TEMPO_CONFIG)
+            if (tapTimes.length > TAP_TEMPO_CONFIG.maxTaps) {
                 tapTimes.shift();
             }
 
-            // Need at least 2 taps
+            // Need at least 2 taps to calculate interval
             if (tapTimes.length < 2) {
                 log('Tap again...', 'info');
                 return;
             }
 
-            // Calculate average interval
+            // Calculate average interval between consecutive taps
             let totalInterval = 0;
             for (let i = 1; i < tapTimes.length; i++) {
                 totalInterval += tapTimes[i] - tapTimes[i - 1];
             }
             const avgInterval = totalInterval / (tapTimes.length - 1);
+
+            // Convert interval to BPM (60 seconds = 60000 ms)
             const bpm = Math.round(60000 / avgInterval);
 
-            // Clamp to reasonable range
-            const clampedBPM = Math.max(60, Math.min(200, bpm));
+            // Clamp to reasonable range to prevent extreme values
+            const clampedBPM = Math.max(
+                TAP_TEMPO_CONFIG.minBPM,
+                Math.min(TAP_TEMPO_CONFIG.maxBPM, bpm)
+            );
 
+            // Update display and set BPM
             bpmValue.textContent = clampedBPM;
             mascot.setRhythmBPM(clampedBPM);
 
-            // Start rhythm if not playing audio
+            // Start rhythm if not already playing audio
+            // This allows manual tempo without audio file
             if (!isPlaying) {
                 mascot.startRhythm(clampedBPM);
             }
 
             log(`Tap tempo: ${clampedBPM} BPM`, 'bpm');
 
-            // Reset tap times after 2 seconds of inactivity
+            // Reset tap buffer after period of inactivity
             setTimeout(() => {
-                if (performance.now() - tapTimes[tapTimes.length - 1] > 2000) {
+                if (performance.now() - tapTimes[tapTimes.length - 1] > TAP_TEMPO_CONFIG.resetTimeout) {
                     tapTimes = [];
                 }
-            }, 2100);
+            }, TAP_TEMPO_CONFIG.resetTimeout + 100);
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // GROOVE CONTROLS
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * GROOVE CONTROLS
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * Groove presets define how the mascot moves to the beat:
+         * - subtle:    Gentle swaying, minimal movement (for calm moments)
+         * - energetic: Dynamic bouncing, larger movements (for high energy)
+         * - flowing:   Smooth, continuous motion (for ambient/chill tracks)
+         *
+         * Transitions can be:
+         * - instant: Immediate switch (may look abrupt)
+         * - 1-8 bars: Gradual crossfade over musical bars (looks natural)
+         *
+         * KEY APIS USED:
+         * - mascot.setGroove(name, options) - Set groove with optional transition
+         * - mascot.getGroovePresets()       - List available presets
+         */
 
+        /**
+         * Apply a groove preset with the selected transition mode.
+         * @param {string} grooveName - Groove preset name (subtle, energetic, flowing)
+         */
         function setGroove(grooveName) {
             const mode = transitionMode.value;
 
-            // Update UI
+            // Update button active states
             grooveButtons.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.groove === grooveName);
             });
             currentGrooveEl.textContent = grooveName;
 
-            // Apply groove
+            // Apply groove with appropriate transition
             if (mode === 'instant') {
+                // Immediate switch - no crossfade
                 mascot.setGroove(grooveName);
                 log(`Set groove: ${grooveName} (instant)`, 'groove');
             } else {
-                const bars = parseInt(mode);
+                // Gradual transition over N bars
+                const bars = parseInt(mode, 10);
                 mascot.setGroove(grooveName, { bars });
                 log(`Set groove: ${grooveName} (${bars} bar transition)`, 'groove');
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // EVENT LISTENERS
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * EVENT LISTENERS
+         * ═══════════════════════════════════════════════════════════════════════════
+         * All UI event handlers are grouped here for easy maintenance.
+         * Each handler is documented with its purpose.
+         */
 
-        // Track select change
+        // ─────────────────────────────────────────────────────────────────────────
+        // AUDIO SOURCE CONTROLS
+        // ─────────────────────────────────────────────────────────────────────────
+
+        // Handle preset track selection
         trackSelect.addEventListener('change', async (e) => {
             const value = e.target.value;
             hideFileLoaded();
@@ -1356,12 +1648,12 @@
             await loadTrack(value);
         });
 
-        // Browse button opens file picker
+        // Open file picker when Browse button is clicked
         browseBtn.addEventListener('click', () => {
             audioFileInput.click();
         });
 
-        // File input change
+        // Handle file selection from file picker
         audioFileInput.addEventListener('change', async (e) => {
             if (e.target.files.length > 0) {
                 if (isPlaying) stopAudio();
@@ -1374,23 +1666,31 @@
             audioFileInput.click();
         });
 
-        // Clear file button (×) - revert to preset track
+        // Clear custom file and revert to preset track
         clearFileBtn.addEventListener('click', () => {
             if (isPlaying) stopAudio();
+
+            // Clean up blob URL to prevent memory leak
             if (audioElement && audioElement.src.startsWith('blob:')) {
                 URL.revokeObjectURL(audioElement.src);
             }
+
             audioElement = null;
             currentFile = null;
             hideFileLoaded();
             audioFileInput.value = '';
+
             // Load default track
             loadTrack('female');
             trackSelect.value = 'female';
             log('Custom file removed', 'info');
         });
 
-        // Copy BPM debug log to clipboard - captures actual [BPM] console output
+        // ─────────────────────────────────────────────────────────────────────────
+        // DEBUG TOOLS
+        // ─────────────────────────────────────────────────────────────────────────
+
+        // Copy BPM detection debug log to clipboard (for debugging/reporting)
         copyLogBtn.addEventListener('click', async () => {
             const trackName = trackSelect.options[trackSelect.selectedIndex]?.text || currentTrack;
 
@@ -1398,7 +1698,7 @@
             let logText = mascot?.getBPMDebugLog?.() || 'No debug log available.';
 
             // Add track info header
-            logText = `Track: ${trackName}\n\n` + logText;
+            logText = `Track: ${trackName}\n\n${logText}`;
 
             try {
                 await navigator.clipboard.writeText(logText);
@@ -1406,16 +1706,28 @@
                 setTimeout(() => { copyLogBtn.textContent = 'Copy Log'; }, 1500);
                 log('BPM debug log copied to clipboard', 'info');
             } catch (err) {
-                log('Failed to copy: ' + err.message, 'error');
+                log(`Failed to copy: ${err.message}`, 'error');
             }
         });
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // GLOBAL DRAG & DROP
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * GLOBAL DRAG & DROP
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * Allows users to drag audio files anywhere onto the page.
+         * The overlay provides visual feedback during drag operations.
+         *
+         * IMPLEMENTATION NOTES:
+         * - dragCounter tracks nested drag events (drag into child elements)
+         * - Must call e.preventDefault() on all drag events to enable drop
+         * - Validate file type before loading to prevent errors
+         */
 
-        let dragCounter = 0;  // Track nested drag events
+        // Track nested drag events for proper overlay show/hide
+        let dragCounter = 0;
 
+        // Show overlay when dragging files over the page
         document.addEventListener('dragenter', (e) => {
             e.preventDefault();
             dragCounter++;
@@ -1424,6 +1736,7 @@
             }
         });
 
+        // Hide overlay when drag leaves the page
         document.addEventListener('dragleave', (e) => {
             e.preventDefault();
             dragCounter--;
@@ -1432,10 +1745,12 @@
             }
         });
 
+        // Required to enable drop
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
 
+        // Handle dropped files
         document.addEventListener('drop', async (e) => {
             e.preventDefault();
             dragCounter = 0;
@@ -1444,59 +1759,93 @@
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
-                // Check if it's an audio file
-                if (file.type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name)) {
+
+                // Validate file type (check MIME type or extension)
+                const isAudio = file.type.startsWith('audio/') ||
+                    /\.(mp3|wav|ogg|flac|m4a|aac)$/i.test(file.name);
+
+                if (isAudio) {
                     if (isPlaying) stopAudio();
                     await loadAudioFile(file);
                 } else {
-                    log('Please drop an audio file', 'error');
+                    log('Please drop an audio file (MP3, WAV, OGG, FLAC)', 'error');
                 }
             }
         });
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // PLAYBACK CONTROLS
+        // ─────────────────────────────────────────────────────────────────────────
 
         playBtn.addEventListener('click', playAudio);
         stopBtn.addEventListener('click', stopAudio);
         tapTempoBtn.addEventListener('click', handleTapTempo);
 
+        // Groove preset buttons
         grooveButtons.forEach(btn => {
             btn.addEventListener('click', () => setGroove(btn.dataset.groove));
         });
 
-        // Keyboard shortcuts
+        // ─────────────────────────────────────────────────────────────────────────
+        // KEYBOARD SHORTCUTS
+        // ─────────────────────────────────────────────────────────────────────────
+        // Space: Play/Stop | T: Tap Tempo | 1/2/3: Switch Groove
+
         document.addEventListener('keydown', (e) => {
+            // Ignore shortcuts when typing in inputs
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
             switch (e.key) {
-                case ' ':
-                    e.preventDefault();
-                    if (isPlaying) stopAudio();
-                    else playAudio();
-                    break;
-                case 't':
-                case 'T':
-                    handleTapTempo();
-                    break;
-                case '1':
-                    setGroove('groove1');
-                    break;
-                case '2':
-                    setGroove('groove2');
-                    break;
-                case '3':
-                    setGroove('groove3');
-                    break;
+            case ' ': // Space: Toggle playback
+                e.preventDefault();
+                if (isPlaying) stopAudio();
+                else playAudio();
+                break;
+            case 't': // T: Tap tempo
+            case 'T':
+                handleTapTempo();
+                break;
+            case '1': // 1/2/3: Switch groove presets
+                setGroove('groove1');
+                break;
+            case '2':
+                setGroove('groove2');
+                break;
+            case '3':
+                setGroove('groove3');
+                break;
             }
         });
 
-        // Setup shared toggles from demo-utils.js
+        // Setup shared toggle handlers from demo-utils.js
+        // These handle particles, glow, breathing, and auto-rotate toggles
         setupParticlesToggle(mascot);
         setupVisualToggles(mascot);
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // DANCE CHOREOGRAPHER PANEL
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * DANCE CHOREOGRAPHER PANEL
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * The Dance Choreographer automatically triggers gestures based on audio:
+         *
+         * GESTURE TYPES:
+         * - Accent gestures (pop, bob, swell): Enhance groove without overriding it
+         * - Absolute gestures (nod, burst, spin): Create distinct movements
+         * - Glow gestures (flash, glow): Visual brightness changes (rate-limited)
+         *
+         * TRIGGER SOURCES:
+         * - Bass energy: Triggers on low-frequency peaks (kick drums, bass drops)
+         * - Vocal/mid energy: Triggers on mid-frequency peaks (vocals, melody)
+         * - Beat timing: Aligns gestures to detected BPM
+         *
+         * KEY APIS USED:
+         * - mascot.enableDance()         - Enable automatic gesture triggering
+         * - mascot.disableDance()        - Disable choreographer
+         * - mascot.setDanceIntensity(n)  - Set intensity 0-1 (affects gesture frequency)
+         */
 
-        // Toggle dance on/off
+        // Toggle dance choreographer on/off
         danceToggle.addEventListener('click', () => {
             const isActive = danceToggle.classList.toggle('active');
             danceToggle.textContent = isActive ? 'On' : 'Off';
@@ -1510,24 +1859,30 @@
             }
         });
 
-        // Intensity slider
+        // Adjust dance intensity (0-100%)
+        // Higher intensity = more frequent gestures
         danceIntensitySlider.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
+            const value = parseInt(e.target.value, 10);
             intensityValueEl.textContent = `${value}%`;
             mascot?.setDanceIntensity?.(value / 100);
         });
 
-        // Highlight a gesture chip when fired
+        /**
+         * Highlight a gesture chip when fired.
+         * Provides visual feedback for which gestures are being triggered.
+         * @param {string} gestureName - Name of the gesture
+         * @param {number} duration - How long to keep highlighted (ms)
+         */
         function highlightGesture(gestureName, duration = 800) {
             const chip = document.querySelector(`.gesture-chip[data-gesture="${gestureName}"]`);
             if (!chip) return;
 
-            // Clear any existing timeout
+            // Clear any existing timeout (in case same gesture fires rapidly)
             if (activeGestures.has(gestureName)) {
                 clearTimeout(activeGestures.get(gestureName));
             }
 
-            // Activate
+            // Activate the chip visually
             chip.classList.add('active');
 
             // Deactivate after duration
@@ -1539,7 +1894,10 @@
             activeGestures.set(gestureName, timeoutId);
         }
 
-        // Highlight a combo when fired
+        /**
+         * Highlight a combo chip when a combo is triggered.
+         * Combos are sequences of gestures (like burst+spin for climactic moments).
+         */
         function highlightCombo(comboType, duration = 1200) {
             const chip = document.querySelector(`.combo-chip[data-combo="${comboType}"]`);
             if (!chip) return;
@@ -1548,24 +1906,28 @@
             setTimeout(() => chip.classList.remove('active'), duration);
         }
 
-        // Hook into gesture triggers to show visual feedback
-        // We'll patch the mascot.express method to intercept gesture calls
+        /**
+         * Hook into gesture triggers to show visual feedback.
+         * This demonstrates a useful debugging technique: patching methods
+         * to intercept calls without modifying the original library.
+         */
         function patchGestureTracking() {
             if (!mascot) return;
 
+            // Patch mascot.express() to intercept gesture calls
             const originalExpress = mascot.express.bind(mascot);
             mascot.express = function(gestureName) {
-                // Highlight the gesture in the UI
+                // Show visual feedback in UI
                 highlightGesture(gestureName);
 
-                // Log it
-                log(`Gesture: ${gestureName}`, 'groove');
+                // Log for debugging
+                log(`Gesture: ${gestureName}`, 'gesture');
 
-                // Call original
+                // Call the original method
                 return originalExpress(gestureName);
             };
 
-            // Also patch gesture() if it exists (used by choreographer)
+            // Also patch gesture() if it exists (used internally by choreographer)
             if (mascot.gesture) {
                 const originalGesture = mascot.gesture.bind(mascot);
                 mascot.gesture = function(gestureName, options = {}) {
@@ -1575,24 +1937,39 @@
             }
         }
 
-        // Update dance status display
+        /**
+         * Update the dance status display panel.
+         * Shows real-time choreographer state for debugging.
+         *
+         * KEY API USED:
+         * - mascot.getDanceStatus() - Returns choreographer state:
+         *   {
+         *     enabled: boolean,       // Is choreographer active
+         *     intensity: number,      // Current intensity (0-1)
+         *     currentGroove: string,  // Active groove preset
+         *     avgBass: string,        // Smoothed bass energy
+         *     avgVocal: string,       // Smoothed mid/vocal energy
+         *     barCount: number        // Bars since rhythm started
+         *   }
+         */
         function updateDanceStatus() {
             if (!mascot?.getDanceStatus) return;
 
             const status = mascot.getDanceStatus();
 
+            // Update display values
             danceGrooveEl.textContent = status.currentGroove || 'groove1';
             danceBassEl.textContent = status.avgBass || '0.00';
             danceVocalEl.textContent = status.avgVocal || '0.00';
             danceBarEl.textContent = status.barCount || '0';
 
-            // Highlight current groove in dance panel
+            // Highlight groove when enabled
             if (status.currentGroove) {
                 danceGrooveEl.classList.toggle('highlight', status.enabled);
             }
 
-            // Sync toggle and slider UI with choreographer state
-            // (handles auto-enable from BPM lock)
+            // Sync toggle UI with actual state
+            // (handles auto-enable when BPM locks)
             const isEnabled = status.enabled;
             const intensity = status.intensity || 0.5;
 
@@ -1602,18 +1979,22 @@
                 log('Dance auto-enabled (BPM locked)', 'groove');
             }
 
-            // Update slider to match intensity
+            // Sync slider with current intensity
             const sliderValue = Math.round(intensity * 100);
-            if (parseInt(danceIntensitySlider.value) !== sliderValue) {
+            if (parseInt(danceIntensitySlider.value, 10) !== sliderValue) {
                 danceIntensitySlider.value = sliderValue;
                 intensityValueEl.textContent = `${sliderValue}%`;
             }
         }
 
         // Update dance status periodically
-        setInterval(updateDanceStatus, 250);
+        setInterval(updateDanceStatus, UPDATE_INTERVALS.danceStatus);
 
-        // Allow clicking gesture chips to manually trigger them
+        // ─────────────────────────────────────────────────────────────────────────
+        // INTERACTIVE GESTURE CHIPS
+        // ─────────────────────────────────────────────────────────────────────────
+        // Click gesture chips to manually trigger them (great for testing!)
+
         gestureChips.forEach(chip => {
             chip.addEventListener('click', () => {
                 const gestureName = chip.dataset.gesture;
@@ -1624,18 +2005,20 @@
             chip.style.cursor = 'pointer';
         });
 
-        // Allow clicking combos to trigger a random gesture from that category
+        // Combo chips trigger a random gesture from their category
+        const COMBO_GESTURES = {
+            subtle: ['nod', 'sway', 'pulse', 'wiggle'],
+            moderate: ['bounce', 'headBob', 'lean'],
+            energetic: ['spin', 'jump', 'twist', 'hula']
+        };
+
         comboChips.forEach(chip => {
             chip.addEventListener('click', () => {
                 const comboType = chip.dataset.combo;
-                const combos = {
-                    subtle: ['nod', 'sway', 'pulse', 'wiggle'],
-                    moderate: ['bounce', 'headBob', 'lean'],
-                    energetic: ['spin', 'jump', 'twist', 'hula']
-                };
+                const gestures = COMBO_GESTURES[comboType];
 
-                const gestures = combos[comboType];
                 if (gestures && mascot) {
+                    // Pick a random gesture from the category
                     const gesture = gestures[Math.floor(Math.random() * gestures.length)];
                     highlightCombo(comboType);
                     mascot.express(gesture);
@@ -1644,24 +2027,41 @@
             chip.style.cursor = 'pointer';
         });
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // INIT
-        // ═══════════════════════════════════════════════════════════════════════════
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
+         * INITIALIZATION
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * Everything starts here! The async initMascot() function:
+         * 1. Creates the EmotiveMascot3D instance
+         * 2. Initializes WebGL renderer (loads geometry, shaders)
+         * 3. Starts the animation loop
+         * 4. Enables the groove system
+         * 5. Preloads the default audio track
+         *
+         * After initialization, we:
+         * - Patch gesture tracking for visual feedback
+         * - Enable the dance choreographer at full intensity
+         * - Log that we're ready to go!
+         */
+        initMascot()
+            .then(() => {
+                // Patch gesture tracking after mascot is initialized
+                patchGestureTracking();
 
-        initMascot().then(() => {
-            // Patch gesture tracking after mascot is initialized
-            patchGestureTracking();
+                // Enable dance choreographer at full intensity
+                // It will activate automatically when BPM locks
+                mascot?.enableDance?.();
+                mascot?.setDanceIntensity?.(1.0);
 
-            // Enable dance by default (will auto-trigger gestures when BPM locks)
-            mascot?.enableDance?.();
-            mascot?.setDanceIntensity?.(1.0);
-            log('Dance choreographer ready (will activate on BPM lock)', 'groove');
-        }).catch(err => {
-            log(`Init error: ${err.message}`, 'error');
-            console.error(err);
-        });
+                log('Dance choreographer ready (will activate on BPM lock)', 'groove');
+            })
+            .catch(err => {
+                log(`Init error: ${err.message}`, 'error');
+                console.error('Initialization failed:', err);
+            });
 
-        log('Groove Test initialized', 'info');
+        log('Groove Test initialized - press PLAY to start!', 'info');
     </script>
 </body>
 </html>
