@@ -258,108 +258,14 @@ function loadRoughGeometry(assetBasePath = '/assets') {
 }
 
 /**
- * Create smooth sphere geometry
- */
-export function createSphere(widthSegments = 64, heightSegments = 64) {
-    return new THREE.SphereGeometry(0.5, widthSegments, heightSegments);
-}
-
-/**
- * Create torus (donut) geometry
- */
-export function createTorus(radius = 0.4, tube = 0.15, radialSegments = 32, tubularSegments = 64) {
-    return new THREE.TorusGeometry(radius, tube, radialSegments, tubularSegments);
-}
-
-/**
- * Create icosahedron geometry
- */
-export function createIcosahedron(radius = 0.5, detail = 1) {
-    return new THREE.IcosahedronGeometry(radius, detail);
-}
-
-/**
- * Create octahedron geometry
- */
-export function createOctahedron(radius = 0.5, detail = 0) {
-    return new THREE.OctahedronGeometry(radius, detail);
-}
-
-/**
- * Create tetrahedron geometry
- */
-export function createTetrahedron(radius = 0.5, detail = 0) {
-    return new THREE.TetrahedronGeometry(radius, detail);
-}
-
-/**
- * Create dodecahedron geometry
- */
-export function createDodecahedron(radius = 0.5, detail = 0) {
-    return new THREE.DodecahedronGeometry(radius, detail);
-}
-
-/**
  * Core geometry registry using Three.js
+ *
+ * Safe geometries only - all use compatible material systems:
+ * - Crystal-type: crystal, rough, heart, star (CrystalSoul + SSS shader)
+ * - Moon: Custom lunar shader with phases and eclipse
+ * - Sun: Emissive shader with corona and eclipse effects
  */
 export const THREE_GEOMETRIES = {
-    sphere: {
-        geometry: createSphere(64, 64),
-        blink: {
-            type: 'vertical-squish',
-            duration: 150,
-            scaleAxis: [1.0, 0.3, 1.0],
-            curve: 'sine',
-            playful: { anticipation: 0.03, overshoot: 0.05 }
-        }
-    },
-
-    torus: {
-        geometry: createTorus(),
-        blink: {
-            type: 'vertical-squish',
-            duration: 150,
-            scaleAxis: [1.0, 0.4, 1.0],
-            rotation: [0, 0, Math.PI / 8],
-            curve: 'sine'
-        }
-    },
-
-    icosahedron: {
-        geometry: createIcosahedron(0.5, 1),
-        blink: { type: 'geometric-pulse', duration: 130, scaleAxis: [0.7, 0.7, 0.7], curve: 'sine' }
-    },
-
-    octahedron: {
-        geometry: createOctahedron(0.5, 0),
-        blink: { type: 'geometric-pulse', duration: 130, scaleAxis: [0.7, 0.7, 0.7], curve: 'sine' }
-    },
-
-    tetrahedron: {
-        geometry: createTetrahedron(0.5, 0),
-        blink: { type: 'geometric-pulse', duration: 110, scaleAxis: [0.75, 0.75, 0.75], rotation: [Math.PI / 6, 0, 0], curve: 'sine' }
-    },
-
-    dodecahedron: {
-        geometry: createDodecahedron(0.5, 0),
-        blink: { type: 'facet-flash', duration: 140, scaleAxis: [0.75, 0.75, 0.75], glowBoost: 0.4, curve: 'sine' }
-    },
-
-    'smooth-icosahedron': {
-        geometry: createIcosahedron(0.5, 2),
-        blink: { type: 'geometric-pulse', duration: 140, scaleAxis: [0.75, 0.75, 0.75], curve: 'sine' }
-    },
-
-    'faceted-icosahedron': {
-        geometry: createIcosahedron(0.5, 0),
-        blink: { type: 'facet-flash', duration: 120, scaleAxis: [0.7, 0.7, 0.7], glowBoost: 0.3, curve: 'sine' }
-    },
-
-    'ring': {
-        geometry: createTorus(0.4, 0.1, 16, 64),
-        blink: { type: 'vertical-squish', duration: 140, scaleAxis: [1.0, 0.5, 1.0], curve: 'sine' }
-    },
-
     moon: {
         geometry: createMoon(64, 64),
         material: 'custom',

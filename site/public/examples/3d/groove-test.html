@@ -412,6 +412,7 @@
         .log-bpm { color: #f59e0b; }
         .log-info { color: #10b981; }
         .log-error { color: #ef4444; }
+        .log-gesture { color: #ec4899; }
 
         /* Footer info */
         .footer-info {
@@ -427,6 +428,180 @@
         .current-groove {
             color: var(--accent);
             font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           DANCE CHOREOGRAPHER PANEL
+        ═══════════════════════════════════════════════════════════════════════════ */
+
+        .dance-panel {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dance-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .dance-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .intensity-slider {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        .intensity-slider label {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+            white-space: nowrap;
+        }
+
+        .intensity-slider input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .intensity-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .intensity-value {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 2.5rem;
+            text-align: right;
+        }
+
+        .gesture-section {
+            margin-bottom: 0.75rem;
+        }
+
+        .gesture-section-title {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #808080;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+
+        .gesture-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .gesture-chip {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.65rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #a0a0a0;
+            transition: all 0.15s ease;
+        }
+
+        .gesture-chip.active {
+            background: rgba(124, 58, 237, 0.3);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+        }
+
+        .gesture-chip.glow-type {
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .gesture-chip.glow-type.active {
+            background: rgba(251, 191, 36, 0.3);
+            border-color: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+        }
+
+        /* Accent gestures - dance-friendly, work WITH groove */
+        .gesture-chip.accent-type {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .gesture-chip.accent-type:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .gesture-chip.accent-type.active {
+            background: rgba(16, 185, 129, 0.35);
+            border-color: #10b981;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+        }
+
+        .combo-chip {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 4px;
+            color: #10b981;
+            transition: all 0.15s ease;
+        }
+
+        .combo-chip.active {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+            color: #fff;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .dance-status {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            font-size: 0.65rem;
+        }
+
+        .dance-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .dance-stat-label {
+            color: #606060;
+            text-transform: uppercase;
+            font-size: 0.55rem;
+        }
+
+        .dance-stat-value {
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .dance-stat-value.highlight {
+            color: var(--accent);
         }
 
         /* Mobile responsive */
@@ -555,6 +730,111 @@
     </div>
 
     <div class="right-menu">
+        <!-- Dance Choreographer Panel -->
+        <div class="section">
+            <h2 class="has-toggle">
+                <span>Dance Choreographer</span>
+                <div class="toggle-switch active" id="dance-toggle">On</div>
+            </h2>
+            <div class="section-content dance-panel">
+                <!-- Intensity Slider -->
+                <div class="intensity-slider">
+                    <label>Intensity</label>
+                    <input type="range" id="danceIntensity" min="0" max="100" value="100">
+                    <span class="intensity-value" id="intensityValue">100%</span>
+                </div>
+
+                <!-- 🎵 ACCENT GESTURES (Dance-friendly - work WITH groove) -->
+                <div class="gesture-section">
+                    <div class="gesture-section-title">✨ Accent (dance-friendly punctuation)</div>
+                    <div class="gesture-grid" id="accentGestures">
+                        <span class="gesture-chip accent-type" data-gesture="pop">pop</span>
+                        <span class="gesture-chip accent-type" data-gesture="bob">bob</span>
+                        <span class="gesture-chip accent-type" data-gesture="swell">swell</span>
+                        <span class="gesture-chip accent-type" data-gesture="swagger">swagger</span>
+                        <span class="gesture-chip accent-type" data-gesture="dip">dip</span>
+                        <span class="gesture-chip accent-type" data-gesture="flare">flare</span>
+                    </div>
+                </div>
+
+                <!-- 🎶 RHYTHMIC GESTURES (Absolute motion - can compete with groove) -->
+                <div class="gesture-section">
+                    <div class="gesture-section-title">🔄 Rhythmic (absolute motion)</div>
+                    <div class="gesture-grid" id="rhythmicGestures">
+                        <span class="gesture-chip" data-gesture="bounce">bounce</span>
+                        <span class="gesture-chip" data-gesture="pulse">pulse</span>
+                        <span class="gesture-chip" data-gesture="nod">nod</span>
+                        <span class="gesture-chip" data-gesture="sway">sway</span>
+                        <span class="gesture-chip" data-gesture="wiggle">wiggle</span>
+                        <span class="gesture-chip" data-gesture="headBob">headBob</span>
+                    </div>
+                </div>
+
+                <!-- 🚀 EXPRESSIVE GESTURES (for special moments) -->
+                <div class="gesture-section">
+                    <div class="gesture-section-title">🚀 Expressive (climactic moments)</div>
+                    <div class="gesture-grid" id="expressiveGestures">
+                        <span class="gesture-chip" data-gesture="spin">spin</span>
+                        <span class="gesture-chip" data-gesture="jump">jump</span>
+                        <span class="gesture-chip" data-gesture="twist">twist</span>
+                        <span class="gesture-chip" data-gesture="hula">hula</span>
+                    </div>
+                </div>
+
+                <!-- Subtle Emphasis -->
+                <div class="gesture-section">
+                    <div class="gesture-section-title">Subtle Emphasis</div>
+                    <div class="gesture-grid" id="subtleGestures">
+                        <span class="gesture-chip" data-gesture="twitch">twitch</span>
+                        <span class="gesture-chip" data-gesture="lean">lean</span>
+                        <span class="gesture-chip" data-gesture="tilt">tilt</span>
+                    </div>
+                </div>
+
+                <!-- Glow Effects (rate-limited) -->
+                <div class="gesture-section">
+                    <div class="gesture-section-title">⚡ Glow Effects (rate-limited)</div>
+                    <div class="gesture-grid" id="glowGestures">
+                        <span class="gesture-chip glow-type" data-gesture="flash">flash</span>
+                        <span class="gesture-chip glow-type" data-gesture="glow">glow</span>
+                        <span class="gesture-chip glow-type" data-gesture="burst">burst</span>
+                        <span class="gesture-chip glow-type" data-gesture="flicker">flicker</span>
+                    </div>
+                </div>
+
+                <!-- Combos -->
+                <div class="gesture-section">
+                    <div class="gesture-section-title">🎼 Combos</div>
+                    <div class="gesture-grid" id="combos">
+                        <span class="combo-chip" data-combo="subtle">subtle</span>
+                        <span class="combo-chip" data-combo="moderate">moderate</span>
+                        <span class="combo-chip" data-combo="energetic">energetic</span>
+                        <span class="combo-chip" data-combo="climactic">climactic</span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="dance-status">
+                    <div class="dance-stat">
+                        <span class="dance-stat-label">Groove</span>
+                        <span class="dance-stat-value" id="danceGroove">groove1</span>
+                    </div>
+                    <div class="dance-stat">
+                        <span class="dance-stat-label">Bass</span>
+                        <span class="dance-stat-value" id="danceBass">0.00</span>
+                    </div>
+                    <div class="dance-stat">
+                        <span class="dance-stat-label">Vocals</span>
+                        <span class="dance-stat-value" id="danceVocal">0.00</span>
+                    </div>
+                    <div class="dance-stat">
+                        <span class="dance-stat-label">Bar</span>
+                        <span class="dance-stat-value" id="danceBar">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="section visual-controls">
             <h2 class="has-toggle">
                 <span>Visuals</span>
@@ -660,6 +940,20 @@
         const currentGrooveEl = document.getElementById('currentGroove');
         const frameInfoEl = document.getElementById('frameInfo');
         const grooveButtons = document.querySelectorAll('.groove-btn');
+
+        // Dance panel elements
+        const danceToggle = document.getElementById('dance-toggle');
+        const danceIntensitySlider = document.getElementById('danceIntensity');
+        const intensityValueEl = document.getElementById('intensityValue');
+        const danceGrooveEl = document.getElementById('danceGroove');
+        const danceBassEl = document.getElementById('danceBass');
+        const danceVocalEl = document.getElementById('danceVocal');
+        const danceBarEl = document.getElementById('danceBar');
+        const gestureChips = document.querySelectorAll('.gesture-chip');
+        const comboChips = document.querySelectorAll('.combo-chip');
+
+        // Track active gestures for visual feedback
+        const activeGestures = new Map(); // gesture -> timeout ID
 
         // ═══════════════════════════════════════════════════════════════════════════
         // LOGGING
@@ -1199,10 +1493,170 @@
         setupVisualToggles(mascot);
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // DANCE CHOREOGRAPHER PANEL
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Toggle dance on/off
+        danceToggle.addEventListener('click', () => {
+            const isActive = danceToggle.classList.toggle('active');
+            danceToggle.textContent = isActive ? 'On' : 'Off';
+
+            if (isActive) {
+                mascot?.enableDance?.();
+                log('Dance choreographer enabled', 'groove');
+            } else {
+                mascot?.disableDance?.();
+                log('Dance choreographer disabled', 'info');
+            }
+        });
+
+        // Intensity slider
+        danceIntensitySlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            intensityValueEl.textContent = `${value}%`;
+            mascot?.setDanceIntensity?.(value / 100);
+        });
+
+        // Highlight a gesture chip when fired
+        function highlightGesture(gestureName, duration = 800) {
+            const chip = document.querySelector(`.gesture-chip[data-gesture="${gestureName}"]`);
+            if (!chip) return;
+
+            // Clear any existing timeout
+            if (activeGestures.has(gestureName)) {
+                clearTimeout(activeGestures.get(gestureName));
+            }
+
+            // Activate
+            chip.classList.add('active');
+
+            // Deactivate after duration
+            const timeoutId = setTimeout(() => {
+                chip.classList.remove('active');
+                activeGestures.delete(gestureName);
+            }, duration);
+
+            activeGestures.set(gestureName, timeoutId);
+        }
+
+        // Highlight a combo when fired
+        function highlightCombo(comboType, duration = 1200) {
+            const chip = document.querySelector(`.combo-chip[data-combo="${comboType}"]`);
+            if (!chip) return;
+
+            chip.classList.add('active');
+            setTimeout(() => chip.classList.remove('active'), duration);
+        }
+
+        // Hook into gesture triggers to show visual feedback
+        // We'll patch the mascot.express method to intercept gesture calls
+        function patchGestureTracking() {
+            if (!mascot) return;
+
+            const originalExpress = mascot.express.bind(mascot);
+            mascot.express = function(gestureName) {
+                // Highlight the gesture in the UI
+                highlightGesture(gestureName);
+
+                // Log it
+                log(`Gesture: ${gestureName}`, 'groove');
+
+                // Call original
+                return originalExpress(gestureName);
+            };
+
+            // Also patch gesture() if it exists (used by choreographer)
+            if (mascot.gesture) {
+                const originalGesture = mascot.gesture.bind(mascot);
+                mascot.gesture = function(gestureName, options = {}) {
+                    highlightGesture(gestureName);
+                    return originalGesture(gestureName, options);
+                };
+            }
+        }
+
+        // Update dance status display
+        function updateDanceStatus() {
+            if (!mascot?.getDanceStatus) return;
+
+            const status = mascot.getDanceStatus();
+
+            danceGrooveEl.textContent = status.currentGroove || 'groove1';
+            danceBassEl.textContent = status.avgBass || '0.00';
+            danceVocalEl.textContent = status.avgVocal || '0.00';
+            danceBarEl.textContent = status.barCount || '0';
+
+            // Highlight current groove in dance panel
+            if (status.currentGroove) {
+                danceGrooveEl.classList.toggle('highlight', status.enabled);
+            }
+
+            // Sync toggle and slider UI with choreographer state
+            // (handles auto-enable from BPM lock)
+            const isEnabled = status.enabled;
+            const intensity = status.intensity || 0.5;
+
+            if (isEnabled && !danceToggle.classList.contains('active')) {
+                danceToggle.classList.add('active');
+                danceToggle.textContent = 'On';
+                log('Dance auto-enabled (BPM locked)', 'groove');
+            }
+
+            // Update slider to match intensity
+            const sliderValue = Math.round(intensity * 100);
+            if (parseInt(danceIntensitySlider.value) !== sliderValue) {
+                danceIntensitySlider.value = sliderValue;
+                intensityValueEl.textContent = `${sliderValue}%`;
+            }
+        }
+
+        // Update dance status periodically
+        setInterval(updateDanceStatus, 250);
+
+        // Allow clicking gesture chips to manually trigger them
+        gestureChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const gestureName = chip.dataset.gesture;
+                if (gestureName && mascot) {
+                    mascot.express(gestureName);
+                }
+            });
+            chip.style.cursor = 'pointer';
+        });
+
+        // Allow clicking combos to trigger a random gesture from that category
+        comboChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const comboType = chip.dataset.combo;
+                const combos = {
+                    subtle: ['nod', 'sway', 'pulse', 'wiggle'],
+                    moderate: ['bounce', 'headBob', 'lean'],
+                    energetic: ['spin', 'jump', 'twist', 'hula']
+                };
+
+                const gestures = combos[comboType];
+                if (gestures && mascot) {
+                    const gesture = gestures[Math.floor(Math.random() * gestures.length)];
+                    highlightCombo(comboType);
+                    mascot.express(gesture);
+                }
+            });
+            chip.style.cursor = 'pointer';
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // INIT
         // ═══════════════════════════════════════════════════════════════════════════
 
-        initMascot().catch(err => {
+        initMascot().then(() => {
+            // Patch gesture tracking after mascot is initialized
+            patchGestureTracking();
+
+            // Enable dance by default (will auto-trigger gestures when BPM locks)
+            mascot?.enableDance?.();
+            mascot?.setDanceIntensity?.(1.0);
+            log('Dance choreographer ready (will activate on BPM lock)', 'groove');
+        }).catch(err => {
             log(`Init error: ${err.message}`, 'error');
             console.error(err);
         });

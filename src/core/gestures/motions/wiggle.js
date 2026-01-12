@@ -114,41 +114,35 @@ export default {
 
     /**
      * 3D translation for WebGL rendering
-     * Maps rapid 2D wiggle to 3D Y-axis rotation and slight X position shift
+     * Uses cameraRelativePosition for horizontal shimmy relative to camera view
      */
     '3d': {
         /**
          * Evaluate 3D transform for current progress
          * @param {number} progress - Animation progress (0-1)
          * @param {Object} motion - Gesture configuration
-         * @returns {Object} Transform with position, rotation, scale
+         * @returns {Object} Transform with cameraRelativePosition
          */
         evaluate(progress, motion) {
             const config = motion.config || {};
             const strength = motion.strength || 1.0;
             const amplitude = config.amplitude || 15; // pixels
-            const frequency = config.frequency || 6;
-            const damping = config.damping || 0.3;
 
-            // Scale pixel amplitude to 3D units
-            const PIXEL_TO_3D = 0.008; // 15px = 0.12 units
+            // Fast decay
+            const decay = Math.pow(1 - progress, 0.6);
+            // Rapid oscillation - left/right shimmy
+            const osc = Math.sin(progress * Math.PI * 12) * decay;
 
-            // Fast oscillating sine wave
-            const oscillation = Math.sin(progress * Math.PI * frequency);
-
-            // Apply damping envelope (fade out towards end)
-            const envelope = 1 - (progress * damping);
-
-            // Y-axis rotation (wiggling back and forth)
-            const yRotation = oscillation * 0.25 * strength * envelope;
-
-            // Slight X position shift for emphasis
-            const xPosition = oscillation * amplitude * PIXEL_TO_3D * strength * envelope;
+            // Scale amplitude: 15px default → 0.04 horizontal shimmy
+            const ampScale = (amplitude / 15) * strength;
+            const horizontal = osc * 0.04 * ampScale;
 
             return {
-                position: [xPosition, 0, 0],
-                rotation: [0, yRotation, 0],
-                scale: 1.0
+                // X in camera-relative = horizontal shimmy (always side-to-side in view)
+                cameraRelativePosition: [horizontal, 0, 0],
+                // Slight scale pulse
+                scale: 1.0 + Math.abs(osc) * 0.03,
+                glowIntensity: 1.0 + Math.abs(osc) * 0.1
             };
         }
     }

@@ -136,47 +136,46 @@ export default {
 
     /**
      * 3D translation for nod gesture
-     * Maps vertical nodding to X-axis rotation (pitch)
+     * Uses cameraRelativePosition for tidally-locked motion toward camera
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     * @returns {Object} 3D transform with cameraRelativePosition
      */
     '3d': {
         evaluate(progress, motion) {
             const config = { ...this.config, ...motion };
-            let {frequency} = config;
             let {amplitude} = config;
 
             // Apply rhythm modulation if present
             if (motion.rhythmModulation) {
                 amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
                 amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
-                if (motion.rhythmModulation.frequencyMultiplier) {
-                    frequency *= motion.rhythmModulation.frequencyMultiplier;
-                }
             }
 
-            // Single deep nod - use half-sine wave for down-and-up motion
-            // Changed from 2 cycles to 1 for single deliberate nod
-            const oscillation = Math.sin(progress * Math.PI); // Single cycle (0 → 1 → 0)
+            // Two quick forward dips toward camera (like nodding "yes yes")
+            // First nod: 0-0.4, second nod: 0.4-0.8, settle: 0.8-1.0
+            let forward = 0;
+            if (progress < 0.4) {
+                // First nod - full strength
+                const nodT = progress / 0.4;
+                forward = Math.sin(nodT * Math.PI) * 0.12;
+            } else if (progress < 0.8) {
+                // Second nod - smaller
+                const nodT = (progress - 0.4) / 0.4;
+                forward = Math.sin(nodT * Math.PI) * 0.07;
+            }
+            // else: settle back to 0
 
-            // Map to X-axis rotation (pitch) in radians
-            // Nodding is rotation around X-axis: positive = looking down, negative = looking up
-            // Increased multiplier for deeper nod
-            const pitchRotation = oscillation * (amplitude * 0.08); // Doubled for deeper single nod
-
-            // Slight forward/back movement on Z-axis for natural head motion
-            // Scale pixels to 3D units to prevent aggressive camera approach
-            const PIXEL_TO_3D = 0.015; // Increased for more visible depth on single nod
-            const depthMovement = oscillation * (amplitude * 0.1) * PIXEL_TO_3D;
-
-            // Dampen at the end
-            const dampening = progress > 0.9 ? 0.95 : 1.0;
+            // Scale by amplitude for rhythm modulation
+            const ampScale = amplitude / 15; // Normalize against default amplitude
+            forward *= ampScale;
 
             return {
-                position: [0, 0, depthMovement * dampening],
-                rotation: [pitchRotation * dampening, 0, 0],
-                scale: 1.0
+                // Z in camera-relative = toward camera (tidally locked!)
+                cameraRelativePosition: [0, 0, forward],
+                // Subtle scale accompaniment
+                scale: 1.0 - Math.abs(forward) * 0.3,
+                glowIntensity: 1.0 + Math.abs(forward) * 0.5
             };
         }
     }

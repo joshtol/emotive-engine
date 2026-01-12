@@ -44,6 +44,7 @@ import { getGesture } from '../core/gestures/index.js';
 import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AgentBPMDetector } from '../core/morpher/AgentBPMDetector.js';
+import { DanceChoreographer } from './animation/DanceChoreographer.js';
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -101,6 +102,9 @@ export class EmotiveMascot3D {
         // Renderers
         this.core3D = null;
         this.particleSystem = null;
+
+        // Dance choreographer (auto dance once BPM is locked)
+        this.danceChoreographer = null;
 
         // State
         this.isRunning = false;
@@ -199,10 +203,11 @@ export class EmotiveMascot3D {
                 this.particleSystem.canvasHeight = this.canvas2D.height;
             }
 
-            // Initialization complete
-            //     geometry: this.config.coreGeometry,
-            //     particles: this.config.enableParticles
-            // });
+            // Initialize dance choreographer (for auto-dancing when BPM locks)
+            this.danceChoreographer = new DanceChoreographer();
+            this.danceChoreographer.setRhythmAdapter(this.core3D?.rhythm3DAdapter);
+            this.danceChoreographer.setMascot(this);
+            // Note: audioDeformer is set later when listenTo() is called
 
             return this;
         } catch (error) {
@@ -350,6 +355,11 @@ export class EmotiveMascot3D {
                 this.container.appendChild(this.webglCanvas);
                 this._canvasAppended = true;
             }
+        }
+
+        // Update dance choreographer (auto-triggers gestures when BPM is locked)
+        if (this.danceChoreographer && !this._destroyed) {
+            this.danceChoreographer.update(deltaTime / 1000); // Convert to seconds
         }
 
         // Render 2D particles (or clear canvas if disabled)
@@ -518,6 +528,18 @@ export class EmotiveMascot3D {
         }
 
         this.eventManager.emit('gesture:trigger', { gesture: gestureName });
+    }
+
+    /**
+     * Trigger a gesture (alias for express, used by DanceChoreographer)
+     * @param {string} gestureName - Gesture name
+     * @param {Object} options - Options object
+     * @param {number} options.scale - Scale multiplier for gesture amplitude
+     */
+    gesture(gestureName, options = {}) {
+        // Scale is applied via the 3D core's gesture system
+        // For now, just call express - the scale option can be wired in later
+        this.express(gestureName);
     }
 
     /**
@@ -1177,6 +1199,69 @@ export class EmotiveMascot3D {
             return this.core3D.getCurrentGroove();
         }
         return 'groove1';
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // DANCE CHOREOGRAPHER API
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Enable automatic dance choreography
+     * When enabled, the mascot will automatically trigger gestures based on
+     * audio signals once BPM is locked.
+     */
+    enableDance() {
+        if (this.danceChoreographer) {
+            this.danceChoreographer.enable();
+        }
+    }
+
+    /**
+     * Disable automatic dance choreography
+     */
+    disableDance() {
+        if (this.danceChoreographer) {
+            this.danceChoreographer.disable();
+        }
+    }
+
+    /**
+     * Check if dance choreography is enabled
+     * @returns {boolean} True if dance is enabled
+     */
+    isDanceEnabled() {
+        return this.danceChoreographer?.enabled ?? false;
+    }
+
+    /**
+     * Set dance intensity (affects gesture frequency and amplitude)
+     *
+     * @example
+     * mascot.setDanceIntensity(0.2);  // Subtle, occasional gestures
+     * mascot.setDanceIntensity(0.8);  // Energetic, frequent gestures
+     *
+     * @param {number} intensity - Intensity value 0-1
+     */
+    setDanceIntensity(intensity) {
+        if (this.danceChoreographer) {
+            this.danceChoreographer.setIntensity(intensity);
+        }
+    }
+
+    /**
+     * Get current dance intensity
+     * @returns {number} Current intensity 0-1
+     */
+    getDanceIntensity() {
+        return this.danceChoreographer?.getIntensity() ?? 0.5;
+    }
+
+    /**
+     * Get dance choreographer status for debugging
+     * @returns {Object} Status object with enabled, intensity, currentGroove, etc.
+     */
+    getDanceStatus() {
+        return this.danceChoreographer?.getStatus() ?? { enabled: false };
     }
 
     /**
@@ -2351,6 +2436,10 @@ export class EmotiveMascot3D {
         }
         if (this.particleSystem) {
             this.particleSystem.destroy();
+        }
+        if (this.danceChoreographer) {
+            this.danceChoreographer.destroy();
+            this.danceChoreographer = null;
         }
 
         // Remove canvas elements from DOM

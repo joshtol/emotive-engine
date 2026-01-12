@@ -133,34 +133,53 @@ export default {
 
     /**
      * 3D core transformation for burst gesture
-     * Sudden expansion with scale spike and glow flash
+     * Explosive "toward camera" burst with scale, glow, and camera-relative motion
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     * @returns {Object} 3D transformation with cameraRelativePosition
      */
     '3d': {
         evaluate(progress, motion) {
-            const config = { ...this.config, ...motion };
-            const decay = config.decay || 0.5;
-            const strength = (motion.strength || 2.0) * (1 - progress * decay);
+            const strength = motion.strength || 2.0;
 
-            // Explosive scale spike that decays
-            const scale = 1.0 + (progress < 0.2 ? progress * 5 : (1 - progress) * 1.5) * strength;
+            // Phase 1: Explosive forward burst (0-0.15)
+            // Phase 2: Overshoot recoil back (0.15-0.35)
+            // Phase 3: Settle with damped oscillation (0.35-1.0)
+            let forward = 0, scale = 1.0, glow = 1.0, glowBoost = 0;
 
-            // Bright flash that fades quickly (normalized to ±30% max)
-            // Early flash (0-30% progress) peaks at 1.3, then fades back to 1.0
-            const flashIntensity = progress < 0.3 ? (0.3 - progress) : 0;
-            const glowIntensity = 1.0 + Math.min(flashIntensity * 1.0, 0.3);
+            if (progress < 0.15) {
+                // Explosive forward burst toward camera
+                const attack = progress / 0.15;
+                const eased = 1 - Math.pow(1 - attack, 3); // Ease-out
+                forward = eased * 0.15 * strength;  // Surge toward camera
+                scale = 1.0 + eased * 0.2 * strength;
+                glow = 1.0 + eased * 0.5;
+                glowBoost = eased * 0.4;  // Strong initial flash
+            } else if (progress < 0.35) {
+                // Recoil back past origin
+                const recoilT = (progress - 0.15) / 0.2;
+                const bounce = Math.sin(recoilT * Math.PI);
+                forward = 0.15 * (1 - recoilT * 1.5) * strength; // Go past zero
+                scale = 1.0 + 0.2 * (1 - recoilT) * strength - bounce * 0.1;
+                glow = 1.0 + (1 - recoilT) * 0.4;
+                glowBoost = (1 - recoilT) * 0.2;
+            } else {
+                // Damped settle
+                const settleT = (progress - 0.35) / 0.65;
+                const decay = Math.pow(1 - settleT, 2);
+                const ring = Math.sin(settleT * Math.PI * 2) * decay;
+                forward = ring * 0.03 * strength;
+                scale = 1.0 + ring * 0.05;
+                glow = 1.0 + Math.abs(ring) * 0.15;
+            }
 
-            // Glow boost for screen-space halo - burst gets strong initial flash
-            const glowBoost = flashIntensity * 2.5;
-
-            // Minimal position/rotation for burst
             return {
+                // Dramatic forward/back motion in camera-relative space
+                cameraRelativePosition: [0, 0, forward],
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity,
+                glowIntensity: glow,
                 glowBoost
             };
         }

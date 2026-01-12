@@ -14,6 +14,7 @@
  * - Channel-specific blending modes (additive vs multiplicative)
  * - Quaternion-based rotation composition
  * - Isolated glowBoost for screen-space glow layer (separate from material glow)
+ * - ACCENT GESTURES: scaleBoost, positionBoost, rotationBoost for dance punctuation
  */
 
 import * as THREE from 'three';
@@ -29,6 +30,13 @@ export class GestureBlender {
 
     /**
      * Blend multiple gesture animations into a single output
+     *
+     * Supports two types of gestures:
+     * 1. ABSOLUTE gestures: position, rotation, scale - create their own motion
+     * 2. ACCENT gestures: positionBoost, rotationBoost, scaleBoost - boost/multiply existing groove
+     *
+     * Accent gestures are designed to work as "punctuation" on top of groove, not compete with it.
+     *
      * @param {Array} animations - Array of active animations from ProceduralAnimator
      * @param {number} currentTime - Current animator time in milliseconds
      * @param {THREE.Quaternion} baseQuaternion - Base rotation quaternion
@@ -42,11 +50,26 @@ export class GestureBlender {
 
         // Initialize accumulator with identity values
         const accumulated = {
-            position: [0, 0, 0],                               // Additive channel
+            // ABSOLUTE channels (create motion)
+            position: [0, 0, 0],                               // Additive channel (world-space)
             rotationQuat: this.accumulatedRotationQuat,        // Multiplicative channel (reused)
             scale: 1.0,                                        // Multiplicative channel
             glowIntensity: 1.0,                                // Multiplicative channel
-            glowBoost: 0.0                                     // Additive channel (for glow layer)
+            glowBoost: 0.0,                                    // Additive channel (for glow layer)
+
+            // CAMERA-RELATIVE position (transformed in Core3DManager)
+            // Z = toward camera, Y = up, X = right (in view space)
+            cameraRelativePosition: [0, 0, 0],
+
+            // ACCENT/BOOST channels (enhance groove without replacing it)
+            positionBoost: [0, 0, 0],                          // Additive boost to groove position
+            rotationBoost: [0, 0, 0],                          // Additive boost to groove rotation
+            scaleBoost: 1.0,                                   // Multiplicative boost (1.0 = no change)
+
+            // Track if we have any accent gestures (affects groove blending behavior)
+            hasAccentGestures: false,
+            hasAbsoluteGestures: false,
+            hasCameraRelativeGestures: false
         };
 
         // Blend all active animations
@@ -58,6 +81,18 @@ export class GestureBlender {
                 const output = animation.evaluate(progress);
 
                 if (output) {
+                    // Track gesture type for groove blending decisions
+                    const isAccent = animation.isAccent === true;
+                    if (isAccent) {
+                        accumulated.hasAccentGestures = true;
+                    } else if (output.position || output.rotation || output.scale !== undefined) {
+                        accumulated.hasAbsoluteGestures = true;
+                    }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // ABSOLUTE CHANNELS (create their own motion)
+                    // ═══════════════════════════════════════════════════════════════
+
                     // POSITION: Additive blending (bounce + sway)
                     if (output.position) {
                         accumulated.position[0] += output.position[0];
@@ -88,13 +123,64 @@ export class GestureBlender {
                     }
 
                     // GLOW BOOST: Additive blending for isolated glow layer
-                    // This drives a separate screen-space halo effect without affecting base materials
-                    // glowBoost = 0 means no extra glow, glowBoost > 0 activates the glow layer
                     if (output.glowBoost !== undefined) {
                         accumulated.glowBoost += output.glowBoost;
                     }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // ACCENT/BOOST CHANNELS (enhance groove as punctuation)
+                    // ═══════════════════════════════════════════════════════════════
+
+                    // POSITION BOOST: Additive accent to groove position
+                    if (output.positionBoost) {
+                        accumulated.positionBoost[0] += output.positionBoost[0];
+                        accumulated.positionBoost[1] += output.positionBoost[1];
+                        accumulated.positionBoost[2] += output.positionBoost[2];
+                    }
+
+                    // ROTATION BOOST: Additive accent to groove rotation
+                    if (output.rotationBoost) {
+                        accumulated.rotationBoost[0] += output.rotationBoost[0];
+                        accumulated.rotationBoost[1] += output.rotationBoost[1];
+                        accumulated.rotationBoost[2] += output.rotationBoost[2];
+                    }
+
+                    // SCALE BOOST: Multiplicative accent (1.1 = 10% bigger, 0.9 = 10% smaller)
+                    // Clamped to prevent extreme stacking when multiple gestures fire
+                    if (output.scaleBoost !== undefined) {
+                        accumulated.scaleBoost *= output.scaleBoost;
+                    }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // CAMERA-RELATIVE POSITION (tidally locked gestures)
+                    // ═══════════════════════════════════════════════════════════════
+                    // Position in view space: Z = toward camera, Y = up, X = right
+                    // Transformed to world-space in Core3DManager using camera direction
+                    if (output.cameraRelativePosition) {
+                        accumulated.cameraRelativePosition[0] += output.cameraRelativePosition[0];
+                        accumulated.cameraRelativePosition[1] += output.cameraRelativePosition[1];
+                        accumulated.cameraRelativePosition[2] += output.cameraRelativePosition[2];
+                        accumulated.hasCameraRelativeGestures = true;
+                    }
                 }
             }
+        }
+
+        // Clamp accumulated boost values to prevent extreme visual artifacts
+        // scaleBoost: limit to ±15% (0.85 to 1.15)
+        accumulated.scaleBoost = Math.max(0.85, Math.min(1.15, accumulated.scaleBoost));
+
+        // glowBoost: limit to 0.5 (prevents blinding flashes)
+        accumulated.glowBoost = Math.min(0.5, accumulated.glowBoost);
+
+        // positionBoost: limit each axis to ±0.05 (prevents wild movements)
+        for (let i = 0; i < 3; i++) {
+            accumulated.positionBoost[i] = Math.max(-0.05, Math.min(0.05, accumulated.positionBoost[i]));
+        }
+
+        // rotationBoost: limit each axis to ±0.1 radians (~6 degrees)
+        for (let i = 0; i < 3; i++) {
+            accumulated.rotationBoost[i] = Math.max(-0.1, Math.min(0.1, accumulated.rotationBoost[i]));
         }
 
         // Combine base quaternion with accumulated gesture rotation
@@ -115,11 +201,26 @@ export class GestureBlender {
         const finalGlowIntensity = baseGlowIntensity * accumulated.glowIntensity;
 
         return {
+            // Absolute gesture outputs
             position: accumulated.position,
             rotation: finalRotation,
             scale: finalScale,
             glowIntensity: finalGlowIntensity,
-            glowBoost: accumulated.glowBoost,          // Isolated glow layer amount (0 = off, >0 = halo active)
+            glowBoost: accumulated.glowBoost,
+
+            // Camera-relative position (view-space, transformed in Core3DManager)
+            cameraRelativePosition: accumulated.cameraRelativePosition,
+
+            // Accent gesture outputs (for groove enhancement)
+            positionBoost: accumulated.positionBoost,
+            rotationBoost: accumulated.rotationBoost,
+            scaleBoost: accumulated.scaleBoost,
+
+            // Gesture type flags (for groove blending decisions)
+            hasAccentGestures: accumulated.hasAccentGestures,
+            hasAbsoluteGestures: accumulated.hasAbsoluteGestures,
+            hasCameraRelativeGestures: accumulated.hasCameraRelativeGestures,
+
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };
     }

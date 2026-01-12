@@ -572,7 +572,8 @@ export class CrystalSoul {
 
     /**
      * Dispose of resources
-     * Defers scene removal AND geometry disposal to next frame to avoid Three.js render race conditions
+     * Removes from scene SYNCHRONOUSLY to prevent Three.js projectObject crash,
+     * but defers geometry disposal to next frame for safety.
      */
     dispose() {
         // Prevent double disposal
@@ -581,26 +582,31 @@ export class CrystalSoul {
         // Set disposed flag FIRST to prevent async callbacks from running
         this._disposed = true;
 
-        // Mark invisible immediately (detach just sets visible=false now)
-        this.detach();
-
-        // Store references for deferred cleanup
+        // Store references for cleanup BEFORE clearing them
         const meshToDispose = this.mesh;
         const materialToDispose = this.material;
 
-        // Clear references immediately (so nothing tries to use them)
+        // CRITICAL FIX: Remove from scene SYNCHRONOUSLY
+        // This prevents Three.js projectObject from encountering the mesh after
+        // we've cleared our references. The previous deferred removal caused
+        // race conditions when morphing away from crystal-type geometries.
+        if (meshToDispose?.parent) {
+            meshToDispose.parent.remove(meshToDispose);
+        }
+
+        // Mark invisible (belt and suspenders)
+        if (meshToDispose) {
+            meshToDispose.visible = false;
+        }
+
+        // Clear references immediately
         this.mesh = null;
         this.material = null;
         this.parentMesh = null;
 
-        // Defer BOTH scene removal AND geometry disposal to next frame
-        // This avoids Three.js render race conditions with projectObject traversal
+        // Defer ONLY geometry disposal to next frame
+        // Scene removal already happened synchronously above
         requestAnimationFrame(() => {
-            // Remove from scene first
-            if (meshToDispose?.parent) {
-                meshToDispose.parent.remove(meshToDispose);
-            }
-            // Then dispose resources
             if (meshToDispose?.geometry) {
                 meshToDispose.geometry.dispose();
             }

@@ -80,6 +80,7 @@ export class AnimationManager {
 
     /**
      * Play gesture animation using 2D gesture data translated to 3D
+     * Falls back to procedural 3D-only gestures (like accent gestures) if not in 2D registry
      * @param {string} gestureName - Name of the gesture to play
      * @param {Object} callbacks - Callback functions
      * @param {Function} callbacks.onUpdate - Called with (props, progress) during animation
@@ -87,10 +88,17 @@ export class AnimationManager {
      * @returns {boolean} True if gesture was started successfully
      */
     playGesture(gestureName, callbacks = {}) {
-        // Get the 2D gesture definition
+        // First try the 2D gesture registry
         const gesture2D = getGesture(gestureName);
 
+        // If not in 2D registry, check for 3D-only procedural gestures (e.g., accent gestures)
         if (!gesture2D) {
+            const proceduralGesture = this.animator.createGestureAnimation(gestureName);
+            if (proceduralGesture && proceduralGesture.evaluate) {
+                // Use the procedural gesture directly
+                return this._playProceduralGesture(gestureName, proceduralGesture, callbacks);
+            }
+            // Truly unknown gesture
             console.warn(`Unknown gesture: ${gestureName}`);
             return false;
         }
@@ -170,6 +178,46 @@ export class AnimationManager {
                         callbacks.onComplete();
                     }
                 }
+            }
+        });
+
+        return true;
+    }
+
+    /**
+     * Play a procedural gesture (3D-only, not in 2D registry)
+     * Used for accent gestures like pop, punch, swell, swagger, dip, flare
+     * @private
+     * @param {string} gestureName - Name of the gesture
+     * @param {Object} proceduralGesture - Gesture definition from ProceduralAnimator
+     * @param {Object} callbacks - Callback functions
+     * @returns {boolean} True if gesture was started successfully
+     */
+    _playProceduralGesture(gestureName, proceduralGesture, callbacks = {}) {
+        // Get duration from procedural gesture (in seconds, convert to ms)
+        const durationSec = proceduralGesture.duration || 0.5;
+        const duration = durationSec * 1000;
+
+        // Start time
+        const startTime = this.animator.time;
+
+        // Enforce animation array size limit
+        if (this.animator.animations.length >= MAX_ACTIVE_ANIMATIONS) {
+            const removed = this.animator.animations.shift();
+            console.warn(`Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`);
+        }
+
+        // Add to animator's active animations
+        // Procedural gestures have isAccent flag for proper groove blending
+        this.animator.animations.push({
+            gestureName,
+            duration,
+            startTime,
+            isAccent: proceduralGesture.isAccent || false,  // Pass isAccent flag for GestureBlender
+            evaluate: proceduralGesture.evaluate,
+            callbacks: {
+                onUpdate: callbacks.onUpdate || null,
+                onComplete: callbacks.onComplete || null
             }
         });
 

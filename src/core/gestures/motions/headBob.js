@@ -115,40 +115,37 @@ export default {
 
     /**
      * 3D translation for WebGL rendering
-     * Maps rhythmic head bob to X-axis rotation (pitch) with tight, musical timing
+     * Uses cameraRelativePosition for tidally-locked motion toward camera
      */
     '3d': {
         /**
          * Evaluate 3D transform for current progress
          * @param {number} progress - Animation progress (0-1)
          * @param {Object} motion - Gesture configuration
-         * @returns {Object} Transform with position, rotation, scale
+         * @returns {Object} Transform with cameraRelativePosition
          */
         evaluate(progress, motion) {
             const config = motion.config || {};
             const strength = motion.strength || 1.0;
             const amplitude = config.amplitude || 12; // pixels
-            const frequency = config.frequency || 2; // 2 bobs - spammable
-            const damping = config.damping || 0.1;
 
-            // Quick rhythmic oscillation
-            const oscillation = Math.sin(progress * Math.PI * 2 * frequency);
+            // Sharp attack, smooth decay (like head bob on beat)
+            const envelope = progress < 0.15
+                ? progress / 0.15  // Quick attack
+                : Math.pow(1 - (progress - 0.15) / 0.85, 2);  // Smooth return
 
-            // Minimal damping - keep energy up for musical feel
-            const envelope = 1 - (progress * damping);
-
-            // X-axis rotation (pitch) - quicker and tighter than regular nod
-            // Scale from pixels: 12px → ~0.5 radians (~28°) for visible bob
-            const pitchRotation = oscillation * (amplitude * 0.045) * strength * envelope;
-
-            // Slight vertical position shift for emphasis
-            const PIXEL_TO_3D = 0.008; // 12px = 0.096 units
-            const yPosition = -oscillation * amplitude * PIXEL_TO_3D * strength * envelope;
+            // Scale amplitude: 12px default → 0.08 forward motion
+            const ampScale = (amplitude / 12) * strength;
+            const forward = envelope * 0.08 * ampScale;  // Move toward camera
 
             return {
-                position: [0, yPosition, 0],
-                rotation: [pitchRotation, 0, 0],
-                scale: 1.0
+                // Z in camera-relative = toward camera (tidally locked!)
+                cameraRelativePosition: [0, 0, forward],
+                // Slight Y dip for weight feel
+                position: [0, -envelope * 0.015 * ampScale, 0],
+                // Scale accompaniment
+                scale: 1.0 - envelope * 0.05,
+                glowIntensity: 1.0 + envelope * 0.15
             };
         }
     }

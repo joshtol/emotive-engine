@@ -232,6 +232,7 @@ export class Core3DManager {
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
+        this._skipRenderFrames = 0; // Frame counter for post-morph render skipping
 
         // Blink animator (emotion-aware)
         this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
@@ -1312,7 +1313,12 @@ export class Core3DManager {
         }
 
         // Swap geometry at midpoint (when scale is at minimum) for smooth transition
+        // Skip render for multiple frames after swap to let Three.js scene fully stabilize
+        // Single-frame skip isn't enough - null refs can persist for 1-2 additional frames
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
+            // Skip render for 3 frames after swap to ensure scene is fully stable
+            this._skipRenderFrames = 3;
+            console.log('[Core3DManager] Morph swap starting, will skip render for 3 frames');
             // ═══════════════════════════════════════════════════════════════════
             // RESET OLD GEOMETRY STATE
             // Clear shader uniforms to defaults before swapping to prevent
@@ -1546,41 +1552,164 @@ export class Core3DManager {
             ? this.rhythm3DAdapter.getModulation()
             : null;
 
-        // Apply blended results with rhythm modulation
-        // Groove blend factor: reduce groove to 30% during gestures (not 0%)
-        // This keeps the mascot feeling "alive" even during active animations
-        const hasActiveGestures = this.animationManager.hasActiveAnimations();
-        const grooveBlend = hasActiveGestures ? 0.3 : 1.0;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GROOVE + GESTURE BLENDING SYSTEM
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Two types of gestures:
+        // 1. ABSOLUTE gestures (bounce, spin): Create their own motion, reduce groove to avoid conflict
+        // 2. ACCENT gestures (pop, punch): Boost groove as punctuation, keep groove at full strength
+        //
+        // Key insight: Accent gestures work WITH the groove, not against it.
+
+        // Determine groove blend factor based on gesture type
+        // - Accent-only: Keep groove at 100% (accents enhance groove)
+        // - Absolute gestures: Reduce groove to 30% (avoid competing animations)
+        // - No gestures: Full groove
+        const hasAbsolute = blended.hasAbsoluteGestures;
+        const hasAccent = blended.hasAccentGestures;
+
+        // Smooth the groove blend transition to avoid discontinuity
+        // Initialize if not set
+        if (this._grooveBlendCurrent === undefined) {
+            this._grooveBlendCurrent = 1.0;
+        }
+
+        // Initialize smoothed boost values (match groove smoothing for consistent feel)
+        if (this._smoothedBoost === undefined) {
+            this._smoothedBoost = {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0],
+                scale: 1.0
+            };
+        }
+
+        // Target: 30% for absolute gestures, 100% for accent-only or no gestures
+        const grooveBlendTarget = hasAbsolute ? 0.3 : 1.0;
+
+        // Smooth transition (lerp toward target)
+        // Use same smoothing speed as groove for consistent feel
+        const blendSpeed = 12.0; // Match grooveSmoothingSpeed in Rhythm3DAdapter
+        const dt = deltaTime / 1000;
+        const t = 1 - Math.exp(-blendSpeed * dt);
+
+        this._grooveBlendCurrent += (grooveBlendTarget - this._grooveBlendCurrent) * t;
+        const grooveBlend = this._grooveBlendCurrent;
+
+        // Smooth boost values toward their targets (same speed as groove)
+        const targetPosBoost = blended.positionBoost || [0, 0, 0];
+        const targetRotBoost = blended.rotationBoost || [0, 0, 0];
+        const targetScaleBoost = blended.scaleBoost || 1.0;
+
+        for (let i = 0; i < 3; i++) {
+            this._smoothedBoost.position[i] += (targetPosBoost[i] - this._smoothedBoost.position[i]) * t;
+            this._smoothedBoost.rotation[i] += (targetRotBoost[i] - this._smoothedBoost.rotation[i]) * t;
+        }
+        this._smoothedBoost.scale += (targetScaleBoost - this._smoothedBoost.scale) * t;
+
+        // Use smoothed boost values (computed above) for all channels
+        const posBoost = this._smoothedBoost.position;
+        const rotBoost = this._smoothedBoost.rotation;
+        const scaleBoost = this._smoothedBoost.scale;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CAMERA-RELATIVE POSITION: Transform view-space to world-space
+        // ═══════════════════════════════════════════════════════════════════════════
+        // This enables "tidally locked" gestures that move toward/away from camera
+        // regardless of camera angle. View-space: Z = toward camera, Y = up, X = right
+        let camRelWorldX = 0, camRelWorldY = 0, camRelWorldZ = 0;
+
+        if (blended.hasCameraRelativeGestures && this.renderer.camera) {
+            const cam = this.renderer.camera;
+            const camRelPos = blended.cameraRelativePosition;
+
+            // Get camera's basis vectors in world space
+            // Forward = direction camera is looking (negative Z in camera space)
+            // We want "toward camera" so we negate it
+            if (!this._camTempVec3) {
+                this._camTempVec3 = new THREE.Vector3();
+                this._camRight = new THREE.Vector3();
+                this._camUp = new THREE.Vector3();
+                this._camForward = new THREE.Vector3();
+            }
+
+            // Ensure camera matrix is up to date
+            cam.updateMatrixWorld();
+
+            // Get camera direction (where it's looking)
+            cam.getWorldDirection(this._camForward);
+
+            // Right vector = camera's X axis in world space
+            this._camRight.setFromMatrixColumn(cam.matrixWorld, 0);
+
+            // Up vector = camera's Y axis in world space
+            this._camUp.setFromMatrixColumn(cam.matrixWorld, 1);
+
+            // Transform view-space position to world-space:
+            // X (right in view) -> camera right
+            // Y (up in view) -> camera up
+            // Z (toward camera in view) -> negative camera forward
+            camRelWorldX = this._camRight.x * camRelPos[0] + this._camUp.x * camRelPos[1] - this._camForward.x * camRelPos[2];
+            camRelWorldY = this._camRight.y * camRelPos[0] + this._camUp.y * camRelPos[1] - this._camForward.y * camRelPos[2];
+            camRelWorldZ = this._camRight.z * camRelPos[0] + this._camUp.z * camRelPos[1] - this._camForward.z * camRelPos[2];
+
+            // Debug: log first few frames to verify
+            if (!this._camRelDebugCount) this._camRelDebugCount = 0;
+            if (this._camRelDebugCount < 3 && (camRelPos[0] !== 0 || camRelPos[1] !== 0 || camRelPos[2] !== 0)) {
+                console.log('[CamRel] input:', camRelPos, '→ world:', [camRelWorldX, camRelWorldY, camRelWorldZ]);
+                console.log('[CamRel] forward:', this._camForward.toArray(), 'right:', this._camRight.toArray());
+                this._camRelDebugCount++;
+            }
+        }
 
         if (rhythmMod) {
-            // Position: blend groove offset with gesture position
-            // During gestures: apply both groove (reduced) and rhythm multiplier
+            // ═══════════════════════════════════════════════════════════════════════
+            // POSITION: Groove + Absolute gestures + Camera-relative + Accent boosts
+            // ═══════════════════════════════════════════════════════════════════════
+            // 1. Groove offset (scaled by grooveBlend)
             const grooveOffsetX = rhythmMod.grooveOffset[0] * grooveBlend;
             const grooveOffsetY = rhythmMod.grooveOffset[1] * grooveBlend;
             const grooveOffsetZ = rhythmMod.grooveOffset[2] * grooveBlend;
-            const posMult = hasActiveGestures ? rhythmMod.positionMultiplier : 1.0;
+
+            // 2. Absolute gesture position (with rhythm multiplier)
+            const posMult = hasAbsolute ? rhythmMod.positionMultiplier : 1.0;
+
+            // 3. Combine: gesture + camera-relative + groove + smoothed boost
             this.position = [
-                blended.position[0] * posMult + grooveOffsetX,
-                blended.position[1] * posMult + grooveOffsetY,
-                blended.position[2] * posMult + grooveOffsetZ
+                blended.position[0] * posMult + camRelWorldX + grooveOffsetX + posBoost[0],
+                blended.position[1] * posMult + camRelWorldY + grooveOffsetY + posBoost[1],
+                blended.position[2] * posMult + camRelWorldZ + grooveOffsetZ + posBoost[2]
             ];
 
-            // Rotation: blend groove sway (additive to gesture rotation)
+            // ═══════════════════════════════════════════════════════════════════════
+            // ROTATION: Groove sway + Absolute gestures + Accent boosts (smoothed)
+            // ═══════════════════════════════════════════════════════════════════════
             this.rotation = [
-                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend,
-                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend,
-                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend
+                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend + rotBoost[0],
+                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend + rotBoost[1],
+                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend + rotBoost[2]
             ];
 
-            // Scale: blend groove pulse with rhythm multiplier
-            // grooveScale oscillates around 1.0, so we lerp toward 1.0 during gestures
+            // ═══════════════════════════════════════════════════════════════════════
+            // SCALE: Groove pulse × Absolute gestures × Accent boost (smoothed)
+            // ═══════════════════════════════════════════════════════════════════════
+            // grooveScale oscillates around 1.0, so we lerp toward 1.0 when reduced
             const grooveScaleEffect = 1.0 + (rhythmMod.grooveScale - 1.0) * grooveBlend;
-            const scaleMult = hasActiveGestures ? rhythmMod.scaleMultiplier : 1.0;
-            this.scale = blended.scale * grooveScaleEffect * scaleMult;
+            const scaleMult = hasAbsolute ? rhythmMod.scaleMultiplier : 1.0;
+
+            this.scale = blended.scale * grooveScaleEffect * scaleMult * scaleBoost;
         } else {
-            this.position = blended.position;
-            this.rotation = blended.rotation;
-            this.scale = blended.scale;
+            // No rhythm - apply gestures + camera-relative with smoothed boosts
+            this.position = [
+                blended.position[0] + camRelWorldX + posBoost[0],
+                blended.position[1] + camRelWorldY + posBoost[1],
+                blended.position[2] + camRelWorldZ + posBoost[2]
+            ];
+            this.rotation = [
+                blended.rotation[0] + rotBoost[0],
+                blended.rotation[1] + rotBoost[1],
+                blended.rotation[2] + rotBoost[2]
+            ];
+            this.scale = blended.scale * scaleBoost;
         }
 
         // Only apply blended glow if no manual override is active
@@ -1588,7 +1717,7 @@ export class Core3DManager {
             if (rhythmMod) {
                 // Blend groove glow with gesture glow multiplier
                 const grooveGlowEffect = 1.0 + (rhythmMod.grooveGlow - 1.0) * grooveBlend;
-                const glowMult = hasActiveGestures ? rhythmMod.glowMultiplier : 1.0;
+                const glowMult = hasAbsolute ? rhythmMod.glowMultiplier : 1.0;
                 this.glowIntensity = blended.glowIntensity * grooveGlowEffect * glowMult;
             } else {
                 this.glowIntensity = blended.glowIntensity;
@@ -1724,6 +1853,15 @@ export class Core3DManager {
                 const normalizedCoreColor = [normalizedCore.r, normalizedCore.g, normalizedCore.b];
                 this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
             }
+        }
+
+        // Skip render for multiple frames after morph swap
+        // This prevents Three.js from iterating the scene while it's stabilizing
+        // The mascot is at scale ~0 during swap anyway, so skipping a few frames is invisible
+        if (this._skipRenderFrames > 0) {
+            this._skipRenderFrames--;
+            console.log(`[Core3DManager] Skipping render, ${this._skipRenderFrames} frames remaining`);
+            return;
         }
 
         // Render with Three.js

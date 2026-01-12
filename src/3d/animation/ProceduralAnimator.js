@@ -142,16 +142,140 @@ export class ProceduralAnimator {
 
     /**
      * Create gesture animation definition
+     *
+     * GESTURE CATEGORIES:
+     * - "Absolute" gestures (bounce, spin, float): Create their own motion, compete with groove
+     * - "Accent" gestures (pop, punch, swell): Multiply/boost existing groove, work as punctuation
+     *
+     * For dancing, prefer accent gestures - they complement the groove instead of fighting it.
      */
     createGestureAnimation(gestureName) {
         const gestures = {
-            bounce: {
-                duration: 0.8,
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ACCENT GESTURES (Dance-friendly - boost groove, don't compete)
+            // These use 'isAccent: true' to signal multiplicative blending
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            // ───────────────────────────────────────────────────────────────
+            // POP: Pure scale pulse - the classic beat hit
+            // Character: Quick size bump, no rotation/position
+            // ───────────────────────────────────────────────────────────────
+            pop: {
+                duration: 0.2,
+                isAccent: true,
                 evaluate: t => {
-                    const bounce = Math.abs(Math.sin(t * Math.PI));
+                    const envelope = Math.sin(t * Math.PI);
                     return {
-                        position: [0, bounce * 0.5, 0],
-                        scale: 1.0 + bounce * 0.1
+                        scaleBoost: 1.0 + envelope * 0.025  // 2.5% scale only
+                    };
+                }
+            },
+
+            // ───────────────────────────────────────────────────────────────
+            // BOB: Forward tilt accent - head nod feel
+            // Character: Rotation only, like nodding to the beat
+            // ───────────────────────────────────────────────────────────────
+            bob: {
+                duration: 0.25,
+                isAccent: true,
+                evaluate: t => {
+                    const envelope = Math.sin(t * Math.PI);
+                    return {
+                        rotationBoost: [envelope * 0.025, 0, 0]  // Forward tilt only
+                    };
+                }
+            },
+
+            // ───────────────────────────────────────────────────────────────
+            // SWELL: Glow build with scale - for transitions and builds
+            // Character: Glowing expansion, like breathing in deeply
+            // ───────────────────────────────────────────────────────────────
+            swell: {
+                duration: 0.6,
+                isAccent: true,
+                evaluate: t => {
+                    // Smooth bell curve envelope
+                    const envelope = Math.sin(t * Math.PI);
+                    // Slight ease-out for organic feel
+                    const eased = 1 - Math.pow(1 - envelope, 2);
+                    return {
+                        scaleBoost: 1.0 + eased * 0.04,  // 4% scale growth (visible)
+                        glowBoost: eased * 0.3           // 30% glow boost (noticeable)
+                    };
+                }
+            },
+
+            // ───────────────────────────────────────────────────────────────
+            // SWAGGER: Side lean - attitude/groove feel
+            // Character: Z-rotation lean, slight X drift
+            // ───────────────────────────────────────────────────────────────
+            swagger: {
+                duration: 0.4,
+                isAccent: true,
+                evaluate: t => {
+                    const envelope = Math.sin(t * Math.PI);
+                    return {
+                        rotationBoost: [0, 0, envelope * 0.04],  // Side lean
+                        positionBoost: [envelope * 0.01, 0, 0]   // Slight drift
+                    };
+                }
+            },
+
+            // ───────────────────────────────────────────────────────────────
+            // DIP: Downward bob - groove dip feel
+            // Character: Y-position dip with tiny squish
+            // ───────────────────────────────────────────────────────────────
+            dip: {
+                duration: 0.25,
+                isAccent: true,
+                evaluate: t => {
+                    const envelope = Math.sin(t * Math.PI);
+                    return {
+                        positionBoost: [0, -envelope * 0.015, 0],  // Down dip
+                        scaleBoost: 1.0 - envelope * 0.015         // Tiny squish
+                    };
+                }
+            },
+
+            // ───────────────────────────────────────────────────────────────
+            // FLARE: Combined accent - scale + glow burst
+            // Character: The "big" accent for drops/hits
+            // ───────────────────────────────────────────────────────────────
+            flare: {
+                duration: 0.3,
+                isAccent: true,
+                evaluate: t => {
+                    const envelope = Math.sin(t * Math.PI);
+                    return {
+                        scaleBoost: 1.0 + envelope * 0.03,
+                        glowBoost: envelope * 0.25
+                    };
+                }
+            },
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ABSOLUTE GESTURES (Original - create their own motion)
+            // These compete with groove, use sparingly during dance
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            bounce: {
+                duration: 1.0,
+                evaluate: t => {
+                    // Smooth elastic bounce with ease-out
+                    // Two bounces: main bounce + smaller secondary
+                    const phase = t * Math.PI * 2;
+                    const decay = 1 - t * 0.6; // Gradual decay
+                    const mainBounce = Math.sin(phase) * decay;
+                    const secondaryBounce = Math.sin(phase * 2) * decay * 0.3;
+                    const bounce = Math.max(0, mainBounce + secondaryBounce);
+
+                    // Squash and stretch for expressiveness
+                    const squash = 1.0 - bounce * 0.08; // Squash when landing
+                    const stretch = 1.0 + bounce * 0.05; // Stretch when rising
+
+                    return {
+                        position: [0, bounce * 0.35, 0],
+                        scale: bounce > 0.5 ? stretch : squash
                     };
                 }
             },
@@ -199,12 +323,275 @@ export class ProceduralAnimator {
                     };
                 }
             },
+            // Nod: Tidally locked double-nod toward camera
+            // Uses cameraRelativePosition so Z moves toward camera regardless of angle
             nod: {
+                duration: 0.5,
+                evaluate: t => {
+                    // Two quick forward dips (like nodding "yes yes")
+                    // First nod: 0-0.4, second nod: 0.4-0.8, settle: 0.8-1.0
+                    let forward = 0;
+                    if (t < 0.4) {
+                        // First nod - full strength
+                        const nodT = t / 0.4;
+                        forward = Math.sin(nodT * Math.PI) * 0.12;
+                    } else if (t < 0.8) {
+                        // Second nod - smaller
+                        const nodT = (t - 0.4) / 0.4;
+                        forward = Math.sin(nodT * Math.PI) * 0.07;
+                    }
+                    // else: settle back to 0
+
+                    return {
+                        // Z in camera-relative = toward camera (tidally locked!)
+                        cameraRelativePosition: [0, 0, forward],
+                        // Subtle scale accompaniment
+                        scale: 1.0 - Math.abs(forward) * 0.3,
+                        glowIntensity: 1.0 + Math.abs(forward) * 0.5
+                    };
+                }
+            },
+
+            // Wiggle: Rapid horizontal shimmy in camera-relative space
+            // Like excited shaking side to side (relative to camera view)
+            wiggle: {
+                duration: 0.4,
+                evaluate: t => {
+                    // Fast decay
+                    const decay = Math.pow(1 - t, 0.6);
+                    // Rapid oscillation - left/right shimmy
+                    const osc = Math.sin(t * Math.PI * 12) * decay;
+
+                    return {
+                        // X in camera-relative = horizontal shimmy (always side-to-side in view)
+                        cameraRelativePosition: [osc * 0.04, 0, 0],
+                        // Slight scale pulse
+                        scale: 1.0 + Math.abs(osc) * 0.03,
+                        glowIntensity: 1.0 + Math.abs(osc) * 0.1
+                    };
+                }
+            },
+
+            // HeadBob: Tidally locked forward bob toward camera
+            // Quick dip toward the camera - like a rhythmic head bob
+            headBob: {
+                duration: 0.3,
+                evaluate: t => {
+                    // Sharp attack, smooth decay (like head bob on beat)
+                    const envelope = t < 0.15
+                        ? t / 0.15  // Quick attack
+                        : Math.pow(1 - (t - 0.15) / 0.85, 2);  // Smooth return
+
+                    const forward = envelope * 0.08;  // Move toward camera
+
+                    return {
+                        // Z in camera-relative = toward camera (tidally locked!)
+                        cameraRelativePosition: [0, 0, forward],
+                        // Slight Y dip for weight feel
+                        position: [0, -envelope * 0.015, 0],
+                        // Scale accompaniment
+                        scale: 1.0 - envelope * 0.05,
+                        glowIntensity: 1.0 + envelope * 0.15
+                    };
+                }
+            },
+
+            // Sway: Gentle side-to-side lean with smooth onset
+            sway: {
+                duration: 1.2,
+                evaluate: t => {
+                    // Ease-in-out envelope for smooth entry and exit
+                    const envelope = t < 0.15
+                        ? t / 0.15 * t / 0.15  // Quadratic ease-in at start
+                        : t > 0.85
+                            ? Math.pow((1 - t) / 0.15, 2) // Quadratic ease-out at end
+                            : 1.0;
+
+                    // Smooth sine sway motion
+                    const sway = Math.sin(t * Math.PI * 2) * envelope;
+
+                    return {
+                        rotation: [0, 0, sway * 0.12],
+                        position: [sway * 0.06, 0, 0]
+                    };
+                }
+            },
+
+            // Jump: Quick up movement
+            jump: {
+                duration: 0.6,
+                evaluate: t => {
+                    // Parabolic jump (up fast, down slow)
+                    const jumpHeight = Math.sin(t * Math.PI);
+                    const squash = t < 0.1 ? 1.0 - t * 3 : (t > 0.9 ? 1.0 - (1 - t) * 3 : 1.0);
+                    return {
+                        position: [0, jumpHeight * 0.4, 0],
+                        scale: squash
+                    };
+                }
+            },
+
+            // Twist: Quick Y rotation
+            twist: {
+                duration: 0.5,
+                evaluate: t => {
+                    const twist = Math.sin(t * Math.PI * 2) * (1 - t * 0.5);
+                    return {
+                        rotation: [0, twist * 0.3, 0]
+                    };
+                }
+            },
+
+            // Hula: Circular hip motion
+            hula: {
+                duration: 1.0,
+                evaluate: t => {
+                    const phase = t * Math.PI * 2;
+                    return {
+                        position: [Math.sin(phase) * 0.05, 0, Math.cos(phase) * 0.03],
+                        rotation: [0, 0, Math.sin(phase) * 0.05]
+                    };
+                }
+            },
+
+            // Lean: Side-to-side tilt (Z-rotation = always perpendicular to camera view)
+            // Enhanced with X-position drift for more natural lean feel
+            lean: {
+                duration: 0.6,
+                evaluate: t => {
+                    // Smooth envelope
+                    const envelope = Math.sin(t * Math.PI);
+                    const lean = envelope;
+
+                    return {
+                        // Z-rotation is perpendicular to camera (side tilt)
+                        rotation: [0, 0, lean * 0.15],
+                        // Drift in direction of lean for weight shift feel
+                        position: [lean * 0.04, -Math.abs(lean) * 0.01, 0]
+                    };
+                }
+            },
+
+            // Tilt: Forward nod toward camera (X-rotation + Z-position)
+            // Redesigned to feel like "looking up/down" not "bowing"
+            tilt: {
+                duration: 0.5,
+                evaluate: t => {
+                    const envelope = Math.sin(t * Math.PI);
+                    const tilt = envelope;
+
+                    return {
+                        // Primary: Z-position toward camera (forward motion)
+                        position: [0, 0, tilt * 0.05],
+                        // Secondary: Subtle X-rotation for tilt feel
+                        rotation: [tilt * 0.08, 0, 0]
+                    };
+                }
+            },
+
+            // Twitch: Quick small jerk
+            twitch: {
+                duration: 0.2,
+                evaluate: t => {
+                    const twitch = (1 - t) * Math.sin(t * Math.PI * 6);
+                    return {
+                        rotation: [twitch * 0.03, twitch * 0.03, 0]
+                    };
+                }
+            },
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // GLOW-BASED GESTURES (Rate-limited for epilepsy safety)
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            // Flash: Quick bright pulse - like a camera flash
+            // Safety: Single pulse, no rapid flickering
+            flash: {
+                duration: 0.3,
+                evaluate: t => {
+                    // Quick attack, slower decay (like real flash)
+                    const flash = t < 0.2
+                        ? t / 0.2  // Fast attack
+                        : 1 - (t - 0.2) / 0.8;  // Slow decay
+
+                    return {
+                        glowIntensity: 1.0 + flash * 0.4,  // +40% brightness
+                        scale: 1.0 + flash * 0.03          // Tiny scale pop
+                    };
+                }
+            },
+
+            // Glow: Gentle sustained brightness increase
+            // Warm, soft feel - like embers glowing
+            glow: {
                 duration: 0.8,
                 evaluate: t => {
-                    const nod = Math.sin(t * Math.PI * 2);
+                    // Smooth bell curve
+                    const glow = Math.sin(t * Math.PI);
+
                     return {
-                        rotation: [nod * 0.3, 0, 0]
+                        glowIntensity: 1.0 + glow * 0.25,  // +25% brightness
+                        scale: 1.0 + glow * 0.02           // Very subtle scale
+                    };
+                }
+            },
+
+            // Burst: Explosive "toward camera" burst with scale and glow
+            // Like an energy release - dramatically moves toward viewer then recoils
+            burst: {
+                duration: 0.6,
+                evaluate: t => {
+                    // Phase 1: Explosive forward burst (0-0.15)
+                    // Phase 2: Overshoot recoil back (0.15-0.35)
+                    // Phase 3: Settle with damped oscillation (0.35-1.0)
+                    let forward = 0, scale = 1.0, glow = 1.0;
+
+                    if (t < 0.15) {
+                        // Explosive forward burst toward camera
+                        const attack = t / 0.15;
+                        const eased = 1 - Math.pow(1 - attack, 3); // Ease-out
+                        forward = eased * 0.15;  // Surge toward camera
+                        scale = 1.0 + eased * 0.2;
+                        glow = 1.0 + eased * 0.5;
+                    } else if (t < 0.35) {
+                        // Recoil back past origin
+                        const recoilT = (t - 0.15) / 0.2;
+                        const bounce = Math.sin(recoilT * Math.PI);
+                        forward = 0.15 * (1 - recoilT * 1.5); // Go past zero
+                        scale = 1.0 + 0.2 * (1 - recoilT) - bounce * 0.1;
+                        glow = 1.0 + (1 - recoilT) * 0.4;
+                    } else {
+                        // Damped settle
+                        const settleT = (t - 0.35) / 0.65;
+                        const decay = Math.pow(1 - settleT, 2);
+                        const ring = Math.sin(settleT * Math.PI * 2) * decay;
+                        forward = ring * 0.03;
+                        scale = 1.0 + ring * 0.05;
+                        glow = 1.0 + Math.abs(ring) * 0.15;
+                    }
+
+                    return {
+                        // Dramatic forward/back motion in camera-relative space
+                        cameraRelativePosition: [0, 0, forward],
+                        scale,
+                        glowIntensity: glow
+                    };
+                }
+            },
+
+            // Flicker: Subtle rapid shimmer - like candlelight
+            // Safe rate: 2 flickers over duration (not strobing)
+            flicker: {
+                duration: 0.6,
+                evaluate: t => {
+                    // Envelope to prevent hard start/stop
+                    const envelope = Math.sin(t * Math.PI);
+                    // Two gentle flickers (safe rate)
+                    const flicker = Math.sin(t * Math.PI * 4) * envelope;
+
+                    return {
+                        glowIntensity: 1.0 + flicker * 0.15,  // ±15% flicker
+                        scale: 1.0 + flicker * 0.01           // Barely perceptible scale
                     };
                 }
             }

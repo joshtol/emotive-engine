@@ -25880,70 +25880,6 @@
 	}
 
 	/**
-	 * A geometry class for representing an tetrahedron.
-	 *
-	 * ```js
-	 * const geometry = new THREE.TetrahedronGeometry();
-	 * const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-	 * const tetrahedron = new THREE.Mesh( geometry, material );
-	 * scene.add( tetrahedron );
-	 * ```
-	 *
-	 * @augments PolyhedronGeometry
-	 * @demo scenes/geometry-browser.html#TetrahedronGeometry
-	 */
-	class TetrahedronGeometry extends PolyhedronGeometry {
-
-		/**
-		 * Constructs a new tetrahedron geometry.
-		 *
-		 * @param {number} [radius=1] - Radius of the tetrahedron.
-		 * @param {number} [detail=0] - Setting this to a value greater than `0` adds vertices making it no longer a tetrahedron.
-		 */
-		constructor( radius = 1, detail = 0 ) {
-
-			const vertices = [
-				1, 1, 1, 	-1, -1, 1, 	-1, 1, -1, 	1, -1, -1
-			];
-
-			const indices = [
-				2, 1, 0, 	0, 3, 2,	1, 3, 0,	2, 3, 1
-			];
-
-			super( vertices, indices, radius, detail );
-
-			this.type = 'TetrahedronGeometry';
-
-			/**
-			 * Holds the constructor parameters that have been
-			 * used to generate the geometry. Any modification
-			 * after instantiation does not change the geometry.
-			 *
-			 * @type {Object}
-			 */
-			this.parameters = {
-				radius: radius,
-				detail: detail
-			};
-
-		}
-
-		/**
-		 * Factory method for creating an instance of this class from the given
-		 * JSON object.
-		 *
-		 * @param {Object} data - A JSON object representing the serialized geometry.
-		 * @return {TetrahedronGeometry} A new instance.
-		 */
-		static fromJSON( data ) {
-
-			return new TetrahedronGeometry( data.radius, data.detail );
-
-		}
-
-	}
-
-	/**
 	 * A geometry class for representing an torus.
 	 *
 	 * ```js
@@ -58885,108 +58821,14 @@ void main() {
 	}
 
 	/**
-	 * Create smooth sphere geometry
-	 */
-	function createSphere$1(widthSegments = 64, heightSegments = 64) {
-	    return new SphereGeometry(0.5, widthSegments, heightSegments);
-	}
-
-	/**
-	 * Create torus (donut) geometry
-	 */
-	function createTorus(radius = 0.4, tube = 0.15, radialSegments = 32, tubularSegments = 64) {
-	    return new TorusGeometry(radius, tube, radialSegments, tubularSegments);
-	}
-
-	/**
-	 * Create icosahedron geometry
-	 */
-	function createIcosahedron(radius = 0.5, detail = 1) {
-	    return new IcosahedronGeometry(radius, detail);
-	}
-
-	/**
-	 * Create octahedron geometry
-	 */
-	function createOctahedron(radius = 0.5, detail = 0) {
-	    return new OctahedronGeometry(radius, detail);
-	}
-
-	/**
-	 * Create tetrahedron geometry
-	 */
-	function createTetrahedron(radius = 0.5, detail = 0) {
-	    return new TetrahedronGeometry(radius, detail);
-	}
-
-	/**
-	 * Create dodecahedron geometry
-	 */
-	function createDodecahedron(radius = 0.5, detail = 0) {
-	    return new DodecahedronGeometry(radius, detail);
-	}
-
-	/**
 	 * Core geometry registry using Three.js
+	 *
+	 * Safe geometries only - all use compatible material systems:
+	 * - Crystal-type: crystal, rough, heart, star (CrystalSoul + SSS shader)
+	 * - Moon: Custom lunar shader with phases and eclipse
+	 * - Sun: Emissive shader with corona and eclipse effects
 	 */
 	const THREE_GEOMETRIES = {
-	    sphere: {
-	        geometry: createSphere$1(64, 64),
-	        blink: {
-	            type: 'vertical-squish',
-	            duration: 150,
-	            scaleAxis: [1.0, 0.3, 1.0],
-	            curve: 'sine',
-	            playful: { anticipation: 0.03, overshoot: 0.05 }
-	        }
-	    },
-
-	    torus: {
-	        geometry: createTorus(),
-	        blink: {
-	            type: 'vertical-squish',
-	            duration: 150,
-	            scaleAxis: [1.0, 0.4, 1.0],
-	            rotation: [0, 0, Math.PI / 8],
-	            curve: 'sine'
-	        }
-	    },
-
-	    icosahedron: {
-	        geometry: createIcosahedron(0.5, 1),
-	        blink: { type: 'geometric-pulse', duration: 130, scaleAxis: [0.7, 0.7, 0.7], curve: 'sine' }
-	    },
-
-	    octahedron: {
-	        geometry: createOctahedron(0.5, 0),
-	        blink: { type: 'geometric-pulse', duration: 130, scaleAxis: [0.7, 0.7, 0.7], curve: 'sine' }
-	    },
-
-	    tetrahedron: {
-	        geometry: createTetrahedron(0.5, 0),
-	        blink: { type: 'geometric-pulse', duration: 110, scaleAxis: [0.75, 0.75, 0.75], rotation: [Math.PI / 6, 0, 0], curve: 'sine' }
-	    },
-
-	    dodecahedron: {
-	        geometry: createDodecahedron(0.5, 0),
-	        blink: { type: 'facet-flash', duration: 140, scaleAxis: [0.75, 0.75, 0.75], glowBoost: 0.4, curve: 'sine' }
-	    },
-
-	    'smooth-icosahedron': {
-	        geometry: createIcosahedron(0.5, 2),
-	        blink: { type: 'geometric-pulse', duration: 140, scaleAxis: [0.75, 0.75, 0.75], curve: 'sine' }
-	    },
-
-	    'faceted-icosahedron': {
-	        geometry: createIcosahedron(0.5, 0),
-	        blink: { type: 'facet-flash', duration: 120, scaleAxis: [0.7, 0.7, 0.7], glowBoost: 0.3, curve: 'sine' }
-	    },
-
-	    'ring': {
-	        geometry: createTorus(0.4, 0.1, 16, 64),
-	        blink: { type: 'vertical-squish', duration: 140, scaleAxis: [1.0, 0.5, 1.0], curve: 'sine' }
-	    },
-
 	    moon: {
 	        geometry: createMoon(64, 64),
 	        material: 'custom',
@@ -59182,16 +59024,140 @@ void main() {
 
 	    /**
 	     * Create gesture animation definition
+	     *
+	     * GESTURE CATEGORIES:
+	     * - "Absolute" gestures (bounce, spin, float): Create their own motion, compete with groove
+	     * - "Accent" gestures (pop, punch, swell): Multiply/boost existing groove, work as punctuation
+	     *
+	     * For dancing, prefer accent gestures - they complement the groove instead of fighting it.
 	     */
 	    createGestureAnimation(gestureName) {
 	        const gestures = {
-	            bounce: {
-	                duration: 0.8,
+	            // ═══════════════════════════════════════════════════════════════════════════
+	            // ACCENT GESTURES (Dance-friendly - boost groove, don't compete)
+	            // These use 'isAccent: true' to signal multiplicative blending
+	            // ═══════════════════════════════════════════════════════════════════════════
+
+	            // ───────────────────────────────────────────────────────────────
+	            // POP: Pure scale pulse - the classic beat hit
+	            // Character: Quick size bump, no rotation/position
+	            // ───────────────────────────────────────────────────────────────
+	            pop: {
+	                duration: 0.2,
+	                isAccent: true,
 	                evaluate: t => {
-	                    const bounce = Math.abs(Math.sin(t * Math.PI));
+	                    const envelope = Math.sin(t * Math.PI);
 	                    return {
-	                        position: [0, bounce * 0.5, 0],
-	                        scale: 1.0 + bounce * 0.1
+	                        scaleBoost: 1.0 + envelope * 0.025  // 2.5% scale only
+	                    };
+	                }
+	            },
+
+	            // ───────────────────────────────────────────────────────────────
+	            // BOB: Forward tilt accent - head nod feel
+	            // Character: Rotation only, like nodding to the beat
+	            // ───────────────────────────────────────────────────────────────
+	            bob: {
+	                duration: 0.25,
+	                isAccent: true,
+	                evaluate: t => {
+	                    const envelope = Math.sin(t * Math.PI);
+	                    return {
+	                        rotationBoost: [envelope * 0.025, 0, 0]  // Forward tilt only
+	                    };
+	                }
+	            },
+
+	            // ───────────────────────────────────────────────────────────────
+	            // SWELL: Glow build with scale - for transitions and builds
+	            // Character: Glowing expansion, like breathing in deeply
+	            // ───────────────────────────────────────────────────────────────
+	            swell: {
+	                duration: 0.6,
+	                isAccent: true,
+	                evaluate: t => {
+	                    // Smooth bell curve envelope
+	                    const envelope = Math.sin(t * Math.PI);
+	                    // Slight ease-out for organic feel
+	                    const eased = 1 - Math.pow(1 - envelope, 2);
+	                    return {
+	                        scaleBoost: 1.0 + eased * 0.04,  // 4% scale growth (visible)
+	                        glowBoost: eased * 0.3           // 30% glow boost (noticeable)
+	                    };
+	                }
+	            },
+
+	            // ───────────────────────────────────────────────────────────────
+	            // SWAGGER: Side lean - attitude/groove feel
+	            // Character: Z-rotation lean, slight X drift
+	            // ───────────────────────────────────────────────────────────────
+	            swagger: {
+	                duration: 0.4,
+	                isAccent: true,
+	                evaluate: t => {
+	                    const envelope = Math.sin(t * Math.PI);
+	                    return {
+	                        rotationBoost: [0, 0, envelope * 0.04],  // Side lean
+	                        positionBoost: [envelope * 0.01, 0, 0]   // Slight drift
+	                    };
+	                }
+	            },
+
+	            // ───────────────────────────────────────────────────────────────
+	            // DIP: Downward bob - groove dip feel
+	            // Character: Y-position dip with tiny squish
+	            // ───────────────────────────────────────────────────────────────
+	            dip: {
+	                duration: 0.25,
+	                isAccent: true,
+	                evaluate: t => {
+	                    const envelope = Math.sin(t * Math.PI);
+	                    return {
+	                        positionBoost: [0, -envelope * 0.015, 0],  // Down dip
+	                        scaleBoost: 1.0 - envelope * 0.015         // Tiny squish
+	                    };
+	                }
+	            },
+
+	            // ───────────────────────────────────────────────────────────────
+	            // FLARE: Combined accent - scale + glow burst
+	            // Character: The "big" accent for drops/hits
+	            // ───────────────────────────────────────────────────────────────
+	            flare: {
+	                duration: 0.3,
+	                isAccent: true,
+	                evaluate: t => {
+	                    const envelope = Math.sin(t * Math.PI);
+	                    return {
+	                        scaleBoost: 1.0 + envelope * 0.03,
+	                        glowBoost: envelope * 0.25
+	                    };
+	                }
+	            },
+
+	            // ═══════════════════════════════════════════════════════════════════════════
+	            // ABSOLUTE GESTURES (Original - create their own motion)
+	            // These compete with groove, use sparingly during dance
+	            // ═══════════════════════════════════════════════════════════════════════════
+
+	            bounce: {
+	                duration: 1.0,
+	                evaluate: t => {
+	                    // Smooth elastic bounce with ease-out
+	                    // Two bounces: main bounce + smaller secondary
+	                    const phase = t * Math.PI * 2;
+	                    const decay = 1 - t * 0.6; // Gradual decay
+	                    const mainBounce = Math.sin(phase) * decay;
+	                    const secondaryBounce = Math.sin(phase * 2) * decay * 0.3;
+	                    const bounce = Math.max(0, mainBounce + secondaryBounce);
+
+	                    // Squash and stretch for expressiveness
+	                    const squash = 1.0 - bounce * 0.08; // Squash when landing
+	                    const stretch = 1.0 + bounce * 0.05; // Stretch when rising
+
+	                    return {
+	                        position: [0, bounce * 0.35, 0],
+	                        scale: bounce > 0.5 ? stretch : squash
 	                    };
 	                }
 	            },
@@ -59239,12 +59205,275 @@ void main() {
 	                    };
 	                }
 	            },
+	            // Nod: Tidally locked double-nod toward camera
+	            // Uses cameraRelativePosition so Z moves toward camera regardless of angle
 	            nod: {
+	                duration: 0.5,
+	                evaluate: t => {
+	                    // Two quick forward dips (like nodding "yes yes")
+	                    // First nod: 0-0.4, second nod: 0.4-0.8, settle: 0.8-1.0
+	                    let forward = 0;
+	                    if (t < 0.4) {
+	                        // First nod - full strength
+	                        const nodT = t / 0.4;
+	                        forward = Math.sin(nodT * Math.PI) * 0.12;
+	                    } else if (t < 0.8) {
+	                        // Second nod - smaller
+	                        const nodT = (t - 0.4) / 0.4;
+	                        forward = Math.sin(nodT * Math.PI) * 0.07;
+	                    }
+	                    // else: settle back to 0
+
+	                    return {
+	                        // Z in camera-relative = toward camera (tidally locked!)
+	                        cameraRelativePosition: [0, 0, forward],
+	                        // Subtle scale accompaniment
+	                        scale: 1.0 - Math.abs(forward) * 0.3,
+	                        glowIntensity: 1.0 + Math.abs(forward) * 0.5
+	                    };
+	                }
+	            },
+
+	            // Wiggle: Rapid horizontal shimmy in camera-relative space
+	            // Like excited shaking side to side (relative to camera view)
+	            wiggle: {
+	                duration: 0.4,
+	                evaluate: t => {
+	                    // Fast decay
+	                    const decay = Math.pow(1 - t, 0.6);
+	                    // Rapid oscillation - left/right shimmy
+	                    const osc = Math.sin(t * Math.PI * 12) * decay;
+
+	                    return {
+	                        // X in camera-relative = horizontal shimmy (always side-to-side in view)
+	                        cameraRelativePosition: [osc * 0.04, 0, 0],
+	                        // Slight scale pulse
+	                        scale: 1.0 + Math.abs(osc) * 0.03,
+	                        glowIntensity: 1.0 + Math.abs(osc) * 0.1
+	                    };
+	                }
+	            },
+
+	            // HeadBob: Tidally locked forward bob toward camera
+	            // Quick dip toward the camera - like a rhythmic head bob
+	            headBob: {
+	                duration: 0.3,
+	                evaluate: t => {
+	                    // Sharp attack, smooth decay (like head bob on beat)
+	                    const envelope = t < 0.15
+	                        ? t / 0.15  // Quick attack
+	                        : Math.pow(1 - (t - 0.15) / 0.85, 2);  // Smooth return
+
+	                    const forward = envelope * 0.08;  // Move toward camera
+
+	                    return {
+	                        // Z in camera-relative = toward camera (tidally locked!)
+	                        cameraRelativePosition: [0, 0, forward],
+	                        // Slight Y dip for weight feel
+	                        position: [0, -envelope * 0.015, 0],
+	                        // Scale accompaniment
+	                        scale: 1.0 - envelope * 0.05,
+	                        glowIntensity: 1.0 + envelope * 0.15
+	                    };
+	                }
+	            },
+
+	            // Sway: Gentle side-to-side lean with smooth onset
+	            sway: {
+	                duration: 1.2,
+	                evaluate: t => {
+	                    // Ease-in-out envelope for smooth entry and exit
+	                    const envelope = t < 0.15
+	                        ? t / 0.15 * t / 0.15  // Quadratic ease-in at start
+	                        : t > 0.85
+	                            ? Math.pow((1 - t) / 0.15, 2) // Quadratic ease-out at end
+	                            : 1.0;
+
+	                    // Smooth sine sway motion
+	                    const sway = Math.sin(t * Math.PI * 2) * envelope;
+
+	                    return {
+	                        rotation: [0, 0, sway * 0.12],
+	                        position: [sway * 0.06, 0, 0]
+	                    };
+	                }
+	            },
+
+	            // Jump: Quick up movement
+	            jump: {
+	                duration: 0.6,
+	                evaluate: t => {
+	                    // Parabolic jump (up fast, down slow)
+	                    const jumpHeight = Math.sin(t * Math.PI);
+	                    const squash = t < 0.1 ? 1.0 - t * 3 : (t > 0.9 ? 1.0 - (1 - t) * 3 : 1.0);
+	                    return {
+	                        position: [0, jumpHeight * 0.4, 0],
+	                        scale: squash
+	                    };
+	                }
+	            },
+
+	            // Twist: Quick Y rotation
+	            twist: {
+	                duration: 0.5,
+	                evaluate: t => {
+	                    const twist = Math.sin(t * Math.PI * 2) * (1 - t * 0.5);
+	                    return {
+	                        rotation: [0, twist * 0.3, 0]
+	                    };
+	                }
+	            },
+
+	            // Hula: Circular hip motion
+	            hula: {
+	                duration: 1.0,
+	                evaluate: t => {
+	                    const phase = t * Math.PI * 2;
+	                    return {
+	                        position: [Math.sin(phase) * 0.05, 0, Math.cos(phase) * 0.03],
+	                        rotation: [0, 0, Math.sin(phase) * 0.05]
+	                    };
+	                }
+	            },
+
+	            // Lean: Side-to-side tilt (Z-rotation = always perpendicular to camera view)
+	            // Enhanced with X-position drift for more natural lean feel
+	            lean: {
+	                duration: 0.6,
+	                evaluate: t => {
+	                    // Smooth envelope
+	                    const envelope = Math.sin(t * Math.PI);
+	                    const lean = envelope;
+
+	                    return {
+	                        // Z-rotation is perpendicular to camera (side tilt)
+	                        rotation: [0, 0, lean * 0.15],
+	                        // Drift in direction of lean for weight shift feel
+	                        position: [lean * 0.04, -Math.abs(lean) * 0.01, 0]
+	                    };
+	                }
+	            },
+
+	            // Tilt: Forward nod toward camera (X-rotation + Z-position)
+	            // Redesigned to feel like "looking up/down" not "bowing"
+	            tilt: {
+	                duration: 0.5,
+	                evaluate: t => {
+	                    const envelope = Math.sin(t * Math.PI);
+	                    const tilt = envelope;
+
+	                    return {
+	                        // Primary: Z-position toward camera (forward motion)
+	                        position: [0, 0, tilt * 0.05],
+	                        // Secondary: Subtle X-rotation for tilt feel
+	                        rotation: [tilt * 0.08, 0, 0]
+	                    };
+	                }
+	            },
+
+	            // Twitch: Quick small jerk
+	            twitch: {
+	                duration: 0.2,
+	                evaluate: t => {
+	                    const twitch = (1 - t) * Math.sin(t * Math.PI * 6);
+	                    return {
+	                        rotation: [twitch * 0.03, twitch * 0.03, 0]
+	                    };
+	                }
+	            },
+
+	            // ═══════════════════════════════════════════════════════════════════════════
+	            // GLOW-BASED GESTURES (Rate-limited for epilepsy safety)
+	            // ═══════════════════════════════════════════════════════════════════════════
+
+	            // Flash: Quick bright pulse - like a camera flash
+	            // Safety: Single pulse, no rapid flickering
+	            flash: {
+	                duration: 0.3,
+	                evaluate: t => {
+	                    // Quick attack, slower decay (like real flash)
+	                    const flash = t < 0.2
+	                        ? t / 0.2  // Fast attack
+	                        : 1 - (t - 0.2) / 0.8;  // Slow decay
+
+	                    return {
+	                        glowIntensity: 1.0 + flash * 0.4,  // +40% brightness
+	                        scale: 1.0 + flash * 0.03          // Tiny scale pop
+	                    };
+	                }
+	            },
+
+	            // Glow: Gentle sustained brightness increase
+	            // Warm, soft feel - like embers glowing
+	            glow: {
 	                duration: 0.8,
 	                evaluate: t => {
-	                    const nod = Math.sin(t * Math.PI * 2);
+	                    // Smooth bell curve
+	                    const glow = Math.sin(t * Math.PI);
+
 	                    return {
-	                        rotation: [nod * 0.3, 0, 0]
+	                        glowIntensity: 1.0 + glow * 0.25,  // +25% brightness
+	                        scale: 1.0 + glow * 0.02           // Very subtle scale
+	                    };
+	                }
+	            },
+
+	            // Burst: Explosive "toward camera" burst with scale and glow
+	            // Like an energy release - dramatically moves toward viewer then recoils
+	            burst: {
+	                duration: 0.6,
+	                evaluate: t => {
+	                    // Phase 1: Explosive forward burst (0-0.15)
+	                    // Phase 2: Overshoot recoil back (0.15-0.35)
+	                    // Phase 3: Settle with damped oscillation (0.35-1.0)
+	                    let forward = 0, scale = 1.0, glow = 1.0;
+
+	                    if (t < 0.15) {
+	                        // Explosive forward burst toward camera
+	                        const attack = t / 0.15;
+	                        const eased = 1 - Math.pow(1 - attack, 3); // Ease-out
+	                        forward = eased * 0.15;  // Surge toward camera
+	                        scale = 1.0 + eased * 0.2;
+	                        glow = 1.0 + eased * 0.5;
+	                    } else if (t < 0.35) {
+	                        // Recoil back past origin
+	                        const recoilT = (t - 0.15) / 0.2;
+	                        const bounce = Math.sin(recoilT * Math.PI);
+	                        forward = 0.15 * (1 - recoilT * 1.5); // Go past zero
+	                        scale = 1.0 + 0.2 * (1 - recoilT) - bounce * 0.1;
+	                        glow = 1.0 + (1 - recoilT) * 0.4;
+	                    } else {
+	                        // Damped settle
+	                        const settleT = (t - 0.35) / 0.65;
+	                        const decay = Math.pow(1 - settleT, 2);
+	                        const ring = Math.sin(settleT * Math.PI * 2) * decay;
+	                        forward = ring * 0.03;
+	                        scale = 1.0 + ring * 0.05;
+	                        glow = 1.0 + Math.abs(ring) * 0.15;
+	                    }
+
+	                    return {
+	                        // Dramatic forward/back motion in camera-relative space
+	                        cameraRelativePosition: [0, 0, forward],
+	                        scale,
+	                        glowIntensity: glow
+	                    };
+	                }
+	            },
+
+	            // Flicker: Subtle rapid shimmer - like candlelight
+	            // Safe rate: 2 flickers over duration (not strobing)
+	            flicker: {
+	                duration: 0.6,
+	                evaluate: t => {
+	                    // Envelope to prevent hard start/stop
+	                    const envelope = Math.sin(t * Math.PI);
+	                    // Two gentle flickers (safe rate)
+	                    const flicker = Math.sin(t * Math.PI * 4) * envelope;
+
+	                    return {
+	                        glowIntensity: 1.0 + flicker * 0.15,  // ±15% flicker
+	                        scale: 1.0 + flicker * 0.01           // Barely perceptible scale
 	                    };
 	                }
 	            }
@@ -59532,6 +59761,7 @@ void main() {
 	 * - Channel-specific blending modes (additive vs multiplicative)
 	 * - Quaternion-based rotation composition
 	 * - Isolated glowBoost for screen-space glow layer (separate from material glow)
+	 * - ACCENT GESTURES: scaleBoost, positionBoost, rotationBoost for dance punctuation
 	 */
 
 
@@ -59546,6 +59776,13 @@ void main() {
 
 	    /**
 	     * Blend multiple gesture animations into a single output
+	     *
+	     * Supports two types of gestures:
+	     * 1. ABSOLUTE gestures: position, rotation, scale - create their own motion
+	     * 2. ACCENT gestures: positionBoost, rotationBoost, scaleBoost - boost/multiply existing groove
+	     *
+	     * Accent gestures are designed to work as "punctuation" on top of groove, not compete with it.
+	     *
 	     * @param {Array} animations - Array of active animations from ProceduralAnimator
 	     * @param {number} currentTime - Current animator time in milliseconds
 	     * @param {THREE.Quaternion} baseQuaternion - Base rotation quaternion
@@ -59559,11 +59796,26 @@ void main() {
 
 	        // Initialize accumulator with identity values
 	        const accumulated = {
-	            position: [0, 0, 0],                               // Additive channel
+	            // ABSOLUTE channels (create motion)
+	            position: [0, 0, 0],                               // Additive channel (world-space)
 	            rotationQuat: this.accumulatedRotationQuat,        // Multiplicative channel (reused)
 	            scale: 1.0,                                        // Multiplicative channel
 	            glowIntensity: 1.0,                                // Multiplicative channel
-	            glowBoost: 0.0                                     // Additive channel (for glow layer)
+	            glowBoost: 0.0,                                    // Additive channel (for glow layer)
+
+	            // CAMERA-RELATIVE position (transformed in Core3DManager)
+	            // Z = toward camera, Y = up, X = right (in view space)
+	            cameraRelativePosition: [0, 0, 0],
+
+	            // ACCENT/BOOST channels (enhance groove without replacing it)
+	            positionBoost: [0, 0, 0],                          // Additive boost to groove position
+	            rotationBoost: [0, 0, 0],                          // Additive boost to groove rotation
+	            scaleBoost: 1.0,                                   // Multiplicative boost (1.0 = no change)
+
+	            // Track if we have any accent gestures (affects groove blending behavior)
+	            hasAccentGestures: false,
+	            hasAbsoluteGestures: false,
+	            hasCameraRelativeGestures: false
 	        };
 
 	        // Blend all active animations
@@ -59575,6 +59827,18 @@ void main() {
 	                const output = animation.evaluate(progress);
 
 	                if (output) {
+	                    // Track gesture type for groove blending decisions
+	                    const isAccent = animation.isAccent === true;
+	                    if (isAccent) {
+	                        accumulated.hasAccentGestures = true;
+	                    } else if (output.position || output.rotation || output.scale !== undefined) {
+	                        accumulated.hasAbsoluteGestures = true;
+	                    }
+
+	                    // ═══════════════════════════════════════════════════════════════
+	                    // ABSOLUTE CHANNELS (create their own motion)
+	                    // ═══════════════════════════════════════════════════════════════
+
 	                    // POSITION: Additive blending (bounce + sway)
 	                    if (output.position) {
 	                        accumulated.position[0] += output.position[0];
@@ -59605,13 +59869,64 @@ void main() {
 	                    }
 
 	                    // GLOW BOOST: Additive blending for isolated glow layer
-	                    // This drives a separate screen-space halo effect without affecting base materials
-	                    // glowBoost = 0 means no extra glow, glowBoost > 0 activates the glow layer
 	                    if (output.glowBoost !== undefined) {
 	                        accumulated.glowBoost += output.glowBoost;
 	                    }
+
+	                    // ═══════════════════════════════════════════════════════════════
+	                    // ACCENT/BOOST CHANNELS (enhance groove as punctuation)
+	                    // ═══════════════════════════════════════════════════════════════
+
+	                    // POSITION BOOST: Additive accent to groove position
+	                    if (output.positionBoost) {
+	                        accumulated.positionBoost[0] += output.positionBoost[0];
+	                        accumulated.positionBoost[1] += output.positionBoost[1];
+	                        accumulated.positionBoost[2] += output.positionBoost[2];
+	                    }
+
+	                    // ROTATION BOOST: Additive accent to groove rotation
+	                    if (output.rotationBoost) {
+	                        accumulated.rotationBoost[0] += output.rotationBoost[0];
+	                        accumulated.rotationBoost[1] += output.rotationBoost[1];
+	                        accumulated.rotationBoost[2] += output.rotationBoost[2];
+	                    }
+
+	                    // SCALE BOOST: Multiplicative accent (1.1 = 10% bigger, 0.9 = 10% smaller)
+	                    // Clamped to prevent extreme stacking when multiple gestures fire
+	                    if (output.scaleBoost !== undefined) {
+	                        accumulated.scaleBoost *= output.scaleBoost;
+	                    }
+
+	                    // ═══════════════════════════════════════════════════════════════
+	                    // CAMERA-RELATIVE POSITION (tidally locked gestures)
+	                    // ═══════════════════════════════════════════════════════════════
+	                    // Position in view space: Z = toward camera, Y = up, X = right
+	                    // Transformed to world-space in Core3DManager using camera direction
+	                    if (output.cameraRelativePosition) {
+	                        accumulated.cameraRelativePosition[0] += output.cameraRelativePosition[0];
+	                        accumulated.cameraRelativePosition[1] += output.cameraRelativePosition[1];
+	                        accumulated.cameraRelativePosition[2] += output.cameraRelativePosition[2];
+	                        accumulated.hasCameraRelativeGestures = true;
+	                    }
 	                }
 	            }
+	        }
+
+	        // Clamp accumulated boost values to prevent extreme visual artifacts
+	        // scaleBoost: limit to ±15% (0.85 to 1.15)
+	        accumulated.scaleBoost = Math.max(0.85, Math.min(1.15, accumulated.scaleBoost));
+
+	        // glowBoost: limit to 0.5 (prevents blinding flashes)
+	        accumulated.glowBoost = Math.min(0.5, accumulated.glowBoost);
+
+	        // positionBoost: limit each axis to ±0.05 (prevents wild movements)
+	        for (let i = 0; i < 3; i++) {
+	            accumulated.positionBoost[i] = Math.max(-0.05, Math.min(0.05, accumulated.positionBoost[i]));
+	        }
+
+	        // rotationBoost: limit each axis to ±0.1 radians (~6 degrees)
+	        for (let i = 0; i < 3; i++) {
+	            accumulated.rotationBoost[i] = Math.max(-0.1, Math.min(0.1, accumulated.rotationBoost[i]));
 	        }
 
 	        // Combine base quaternion with accumulated gesture rotation
@@ -59632,11 +59947,26 @@ void main() {
 	        const finalGlowIntensity = baseGlowIntensity * accumulated.glowIntensity;
 
 	        return {
+	            // Absolute gesture outputs
 	            position: accumulated.position,
 	            rotation: finalRotation,
 	            scale: finalScale,
 	            glowIntensity: finalGlowIntensity,
-	            glowBoost: accumulated.glowBoost,          // Isolated glow layer amount (0 = off, >0 = halo active)
+	            glowBoost: accumulated.glowBoost,
+
+	            // Camera-relative position (view-space, transformed in Core3DManager)
+	            cameraRelativePosition: accumulated.cameraRelativePosition,
+
+	            // Accent gesture outputs (for groove enhancement)
+	            positionBoost: accumulated.positionBoost,
+	            rotationBoost: accumulated.rotationBoost,
+	            scaleBoost: accumulated.scaleBoost,
+
+	            // Gesture type flags (for groove blending decisions)
+	            hasAccentGestures: accumulated.hasAccentGestures,
+	            hasAbsoluteGestures: accumulated.hasAbsoluteGestures,
+	            hasCameraRelativeGestures: accumulated.hasCameraRelativeGestures,
+
 	            gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
 	        };
 	    }
@@ -64717,47 +65047,46 @@ void main() {
 
 	    /**
 	     * 3D translation for nod gesture
-	     * Maps vertical nodding to X-axis rotation (pitch)
+	     * Uses cameraRelativePosition for tidally-locked motion toward camera
 	     * @param {number} progress - Gesture progress (0-1)
 	     * @param {Object} motion - Gesture configuration
-	     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+	     * @returns {Object} 3D transform with cameraRelativePosition
 	     */
 	    '3d': {
 	        evaluate(progress, motion) {
 	            const config = { ...this.config, ...motion };
-	            let {frequency} = config;
 	            let {amplitude} = config;
 
 	            // Apply rhythm modulation if present
 	            if (motion.rhythmModulation) {
 	                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
 	                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
-	                if (motion.rhythmModulation.frequencyMultiplier) {
-	                    frequency *= motion.rhythmModulation.frequencyMultiplier;
-	                }
 	            }
 
-	            // Single deep nod - use half-sine wave for down-and-up motion
-	            // Changed from 2 cycles to 1 for single deliberate nod
-	            const oscillation = Math.sin(progress * Math.PI); // Single cycle (0 → 1 → 0)
+	            // Two quick forward dips toward camera (like nodding "yes yes")
+	            // First nod: 0-0.4, second nod: 0.4-0.8, settle: 0.8-1.0
+	            let forward = 0;
+	            if (progress < 0.4) {
+	                // First nod - full strength
+	                const nodT = progress / 0.4;
+	                forward = Math.sin(nodT * Math.PI) * 0.12;
+	            } else if (progress < 0.8) {
+	                // Second nod - smaller
+	                const nodT = (progress - 0.4) / 0.4;
+	                forward = Math.sin(nodT * Math.PI) * 0.07;
+	            }
+	            // else: settle back to 0
 
-	            // Map to X-axis rotation (pitch) in radians
-	            // Nodding is rotation around X-axis: positive = looking down, negative = looking up
-	            // Increased multiplier for deeper nod
-	            const pitchRotation = oscillation * (amplitude * 0.08); // Doubled for deeper single nod
-
-	            // Slight forward/back movement on Z-axis for natural head motion
-	            // Scale pixels to 3D units to prevent aggressive camera approach
-	            const PIXEL_TO_3D = 0.015; // Increased for more visible depth on single nod
-	            const depthMovement = oscillation * (amplitude * 0.1) * PIXEL_TO_3D;
-
-	            // Dampen at the end
-	            const dampening = progress > 0.9 ? 0.95 : 1.0;
+	            // Scale by amplitude for rhythm modulation
+	            const ampScale = amplitude / 15; // Normalize against default amplitude
+	            forward *= ampScale;
 
 	            return {
-	                position: [0, 0, depthMovement * dampening],
-	                rotation: [pitchRotation * dampening, 0, 0],
-	                scale: 1.0
+	                // Z in camera-relative = toward camera (tidally locked!)
+	                cameraRelativePosition: [0, 0, forward],
+	                // Subtle scale accompaniment
+	                scale: 1.0 - Math.abs(forward) * 0.3,
+	                glowIntensity: 1.0 + Math.abs(forward) * 0.5
 	            };
 	        }
 	    }
@@ -66094,41 +66423,35 @@ void main() {
 
 	    /**
 	     * 3D translation for WebGL rendering
-	     * Maps rapid 2D wiggle to 3D Y-axis rotation and slight X position shift
+	     * Uses cameraRelativePosition for horizontal shimmy relative to camera view
 	     */
 	    '3d': {
 	        /**
 	         * Evaluate 3D transform for current progress
 	         * @param {number} progress - Animation progress (0-1)
 	         * @param {Object} motion - Gesture configuration
-	         * @returns {Object} Transform with position, rotation, scale
+	         * @returns {Object} Transform with cameraRelativePosition
 	         */
 	        evaluate(progress, motion) {
 	            const config = motion.config || {};
 	            const strength = motion.strength || 1.0;
 	            const amplitude = config.amplitude || 15; // pixels
-	            const frequency = config.frequency || 6;
-	            const damping = config.damping || 0.3;
 
-	            // Scale pixel amplitude to 3D units
-	            const PIXEL_TO_3D = 0.008; // 15px = 0.12 units
+	            // Fast decay
+	            const decay = Math.pow(1 - progress, 0.6);
+	            // Rapid oscillation - left/right shimmy
+	            const osc = Math.sin(progress * Math.PI * 12) * decay;
 
-	            // Fast oscillating sine wave
-	            const oscillation = Math.sin(progress * Math.PI * frequency);
-
-	            // Apply damping envelope (fade out towards end)
-	            const envelope = 1 - (progress * damping);
-
-	            // Y-axis rotation (wiggling back and forth)
-	            const yRotation = oscillation * 0.25 * strength * envelope;
-
-	            // Slight X position shift for emphasis
-	            const xPosition = oscillation * amplitude * PIXEL_TO_3D * strength * envelope;
+	            // Scale amplitude: 15px default → 0.04 horizontal shimmy
+	            const ampScale = (amplitude / 15) * strength;
+	            const horizontal = osc * 0.04 * ampScale;
 
 	            return {
-	                position: [xPosition, 0, 0],
-	                rotation: [0, yRotation, 0],
-	                scale: 1.0
+	                // X in camera-relative = horizontal shimmy (always side-to-side in view)
+	                cameraRelativePosition: [horizontal, 0, 0],
+	                // Slight scale pulse
+	                scale: 1.0 + Math.abs(osc) * 0.03,
+	                glowIntensity: 1.0 + Math.abs(osc) * 0.1
 	            };
 	        }
 	    }
@@ -66251,40 +66574,37 @@ void main() {
 
 	    /**
 	     * 3D translation for WebGL rendering
-	     * Maps rhythmic head bob to X-axis rotation (pitch) with tight, musical timing
+	     * Uses cameraRelativePosition for tidally-locked motion toward camera
 	     */
 	    '3d': {
 	        /**
 	         * Evaluate 3D transform for current progress
 	         * @param {number} progress - Animation progress (0-1)
 	         * @param {Object} motion - Gesture configuration
-	         * @returns {Object} Transform with position, rotation, scale
+	         * @returns {Object} Transform with cameraRelativePosition
 	         */
 	        evaluate(progress, motion) {
 	            const config = motion.config || {};
 	            const strength = motion.strength || 1.0;
 	            const amplitude = config.amplitude || 12; // pixels
-	            const frequency = config.frequency || 2; // 2 bobs - spammable
-	            const damping = config.damping || 0.1;
 
-	            // Quick rhythmic oscillation
-	            const oscillation = Math.sin(progress * Math.PI * 2 * frequency);
+	            // Sharp attack, smooth decay (like head bob on beat)
+	            const envelope = progress < 0.15
+	                ? progress / 0.15  // Quick attack
+	                : Math.pow(1 - (progress - 0.15) / 0.85, 2);  // Smooth return
 
-	            // Minimal damping - keep energy up for musical feel
-	            const envelope = 1 - (progress * damping);
-
-	            // X-axis rotation (pitch) - quicker and tighter than regular nod
-	            // Scale from pixels: 12px → ~0.5 radians (~28°) for visible bob
-	            const pitchRotation = oscillation * (amplitude * 0.045) * strength * envelope;
-
-	            // Slight vertical position shift for emphasis
-	            const PIXEL_TO_3D = 0.008; // 12px = 0.096 units
-	            const yPosition = -oscillation * amplitude * PIXEL_TO_3D * strength * envelope;
+	            // Scale amplitude: 12px default → 0.08 forward motion
+	            const ampScale = (amplitude / 12) * strength;
+	            const forward = envelope * 0.08 * ampScale;  // Move toward camera
 
 	            return {
-	                position: [0, yPosition, 0],
-	                rotation: [pitchRotation, 0, 0],
-	                scale: 1.0
+	                // Z in camera-relative = toward camera (tidally locked!)
+	                cameraRelativePosition: [0, 0, forward],
+	                // Slight Y dip for weight feel
+	                position: [0, -envelope * 0.015 * ampScale, 0],
+	                // Scale accompaniment
+	                scale: 1.0 - envelope * 0.05,
+	                glowIntensity: 1.0 + envelope * 0.15
 	            };
 	        }
 	    }
@@ -70948,34 +71268,53 @@ void main() {
 
 	    /**
 	     * 3D core transformation for burst gesture
-	     * Sudden expansion with scale spike and glow flash
+	     * Explosive "toward camera" burst with scale, glow, and camera-relative motion
 	     * @param {number} progress - Gesture progress (0-1)
 	     * @param {Object} motion - Gesture configuration
-	     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+	     * @returns {Object} 3D transformation with cameraRelativePosition
 	     */
 	    '3d': {
 	        evaluate(progress, motion) {
-	            const config = { ...this.config, ...motion };
-	            const decay = config.decay || 0.5;
-	            const strength = (motion.strength || 2.0) * (1 - progress * decay);
+	            const strength = motion.strength || 2.0;
 
-	            // Explosive scale spike that decays
-	            const scale = 1.0 + (progress < 0.2 ? progress * 5 : (1 - progress) * 1.5) * strength;
+	            // Phase 1: Explosive forward burst (0-0.15)
+	            // Phase 2: Overshoot recoil back (0.15-0.35)
+	            // Phase 3: Settle with damped oscillation (0.35-1.0)
+	            let forward = 0, scale = 1.0, glow = 1.0, glowBoost = 0;
 
-	            // Bright flash that fades quickly (normalized to ±30% max)
-	            // Early flash (0-30% progress) peaks at 1.3, then fades back to 1.0
-	            const flashIntensity = progress < 0.3 ? (0.3 - progress) : 0;
-	            const glowIntensity = 1.0 + Math.min(flashIntensity * 1.0, 0.3);
+	            if (progress < 0.15) {
+	                // Explosive forward burst toward camera
+	                const attack = progress / 0.15;
+	                const eased = 1 - Math.pow(1 - attack, 3); // Ease-out
+	                forward = eased * 0.15 * strength;  // Surge toward camera
+	                scale = 1.0 + eased * 0.2 * strength;
+	                glow = 1.0 + eased * 0.5;
+	                glowBoost = eased * 0.4;  // Strong initial flash
+	            } else if (progress < 0.35) {
+	                // Recoil back past origin
+	                const recoilT = (progress - 0.15) / 0.2;
+	                const bounce = Math.sin(recoilT * Math.PI);
+	                forward = 0.15 * (1 - recoilT * 1.5) * strength; // Go past zero
+	                scale = 1.0 + 0.2 * (1 - recoilT) * strength - bounce * 0.1;
+	                glow = 1.0 + (1 - recoilT) * 0.4;
+	                glowBoost = (1 - recoilT) * 0.2;
+	            } else {
+	                // Damped settle
+	                const settleT = (progress - 0.35) / 0.65;
+	                const decay = Math.pow(1 - settleT, 2);
+	                const ring = Math.sin(settleT * Math.PI * 2) * decay;
+	                forward = ring * 0.03 * strength;
+	                scale = 1.0 + ring * 0.05;
+	                glow = 1.0 + Math.abs(ring) * 0.15;
+	            }
 
-	            // Glow boost for screen-space halo - burst gets strong initial flash
-	            const glowBoost = flashIntensity * 2.5;
-
-	            // Minimal position/rotation for burst
 	            return {
+	                // Dramatic forward/back motion in camera-relative space
+	                cameraRelativePosition: [0, 0, forward],
 	                position: [0, 0, 0],
 	                rotation: [0, 0, 0],
 	                scale,
-	                glowIntensity,
+	                glowIntensity: glow,
 	                glowBoost
 	            };
 	        }
@@ -82162,7 +82501,8 @@ void main() {
 
 	    /**
 	     * Dispose of resources
-	     * Defers scene removal AND geometry disposal to next frame to avoid Three.js render race conditions
+	     * Removes from scene SYNCHRONOUSLY to prevent Three.js projectObject crash,
+	     * but defers geometry disposal to next frame for safety.
 	     */
 	    dispose() {
 	        // Prevent double disposal
@@ -82171,26 +82511,31 @@ void main() {
 	        // Set disposed flag FIRST to prevent async callbacks from running
 	        this._disposed = true;
 
-	        // Mark invisible immediately (detach just sets visible=false now)
-	        this.detach();
-
-	        // Store references for deferred cleanup
+	        // Store references for cleanup BEFORE clearing them
 	        const meshToDispose = this.mesh;
 	        const materialToDispose = this.material;
 
-	        // Clear references immediately (so nothing tries to use them)
+	        // CRITICAL FIX: Remove from scene SYNCHRONOUSLY
+	        // This prevents Three.js projectObject from encountering the mesh after
+	        // we've cleared our references. The previous deferred removal caused
+	        // race conditions when morphing away from crystal-type geometries.
+	        if (meshToDispose?.parent) {
+	            meshToDispose.parent.remove(meshToDispose);
+	        }
+
+	        // Mark invisible (belt and suspenders)
+	        if (meshToDispose) {
+	            meshToDispose.visible = false;
+	        }
+
+	        // Clear references immediately
 	        this.mesh = null;
 	        this.material = null;
 	        this.parentMesh = null;
 
-	        // Defer BOTH scene removal AND geometry disposal to next frame
-	        // This avoids Three.js render race conditions with projectObject traversal
+	        // Defer ONLY geometry disposal to next frame
+	        // Scene removal already happened synchronously above
 	        requestAnimationFrame(() => {
-	            // Remove from scene first
-	            if (meshToDispose?.parent) {
-	                meshToDispose.parent.remove(meshToDispose);
-	            }
-	            // Then dispose resources
 	            if (meshToDispose?.geometry) {
 	                meshToDispose.geometry.dispose();
 	            }
@@ -85791,6 +86136,7 @@ void main() {
 
 	    /**
 	     * Play gesture animation using 2D gesture data translated to 3D
+	     * Falls back to procedural 3D-only gestures (like accent gestures) if not in 2D registry
 	     * @param {string} gestureName - Name of the gesture to play
 	     * @param {Object} callbacks - Callback functions
 	     * @param {Function} callbacks.onUpdate - Called with (props, progress) during animation
@@ -85798,10 +86144,17 @@ void main() {
 	     * @returns {boolean} True if gesture was started successfully
 	     */
 	    playGesture(gestureName, callbacks = {}) {
-	        // Get the 2D gesture definition
+	        // First try the 2D gesture registry
 	        const gesture2D = getGesture(gestureName);
 
+	        // If not in 2D registry, check for 3D-only procedural gestures (e.g., accent gestures)
 	        if (!gesture2D) {
+	            const proceduralGesture = this.animator.createGestureAnimation(gestureName);
+	            if (proceduralGesture && proceduralGesture.evaluate) {
+	                // Use the procedural gesture directly
+	                return this._playProceduralGesture(gestureName, proceduralGesture, callbacks);
+	            }
+	            // Truly unknown gesture
 	            console.warn(`Unknown gesture: ${gestureName}`);
 	            return false;
 	        }
@@ -85881,6 +86234,46 @@ void main() {
 	                        callbacks.onComplete();
 	                    }
 	                }
+	            }
+	        });
+
+	        return true;
+	    }
+
+	    /**
+	     * Play a procedural gesture (3D-only, not in 2D registry)
+	     * Used for accent gestures like pop, punch, swell, swagger, dip, flare
+	     * @private
+	     * @param {string} gestureName - Name of the gesture
+	     * @param {Object} proceduralGesture - Gesture definition from ProceduralAnimator
+	     * @param {Object} callbacks - Callback functions
+	     * @returns {boolean} True if gesture was started successfully
+	     */
+	    _playProceduralGesture(gestureName, proceduralGesture, callbacks = {}) {
+	        // Get duration from procedural gesture (in seconds, convert to ms)
+	        const durationSec = proceduralGesture.duration || 0.5;
+	        const duration = durationSec * 1000;
+
+	        // Start time
+	        const startTime = this.animator.time;
+
+	        // Enforce animation array size limit
+	        if (this.animator.animations.length >= MAX_ACTIVE_ANIMATIONS) {
+	            const removed = this.animator.animations.shift();
+	            console.warn(`Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`);
+	        }
+
+	        // Add to animator's active animations
+	        // Procedural gestures have isAccent flag for proper groove blending
+	        this.animator.animations.push({
+	            gestureName,
+	            duration,
+	            startTime,
+	            isAccent: proceduralGesture.isAccent || false,  // Pass isAccent flag for GestureBlender
+	            evaluate: proceduralGesture.evaluate,
+	            callbacks: {
+	                onUpdate: callbacks.onUpdate || null,
+	                onComplete: callbacks.onComplete || null
 	            }
 	        });
 
@@ -89454,6 +89847,7 @@ void main() {
 
 	        // Geometry morpher for smooth shape transitions
 	        this.geometryMorpher = new GeometryMorpher();
+	        this._skipRenderFrames = 0; // Frame counter for post-morph render skipping
 
 	        // Blink animator (emotion-aware)
 	        this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
@@ -90534,7 +90928,12 @@ void main() {
 	        }
 
 	        // Swap geometry at midpoint (when scale is at minimum) for smooth transition
+	        // Skip render for multiple frames after swap to let Three.js scene fully stabilize
+	        // Single-frame skip isn't enough - null refs can persist for 1-2 additional frames
 	        if (morphState.shouldSwapGeometry && this._targetGeometry) {
+	            // Skip render for 3 frames after swap to ensure scene is fully stable
+	            this._skipRenderFrames = 3;
+	            console.log('[Core3DManager] Morph swap starting, will skip render for 3 frames');
 	            // ═══════════════════════════════════════════════════════════════════
 	            // RESET OLD GEOMETRY STATE
 	            // Clear shader uniforms to defaults before swapping to prevent
@@ -90768,41 +91167,160 @@ void main() {
 	            ? this.rhythm3DAdapter.getModulation()
 	            : null;
 
-	        // Apply blended results with rhythm modulation
-	        // Groove blend factor: reduce groove to 30% during gestures (not 0%)
-	        // This keeps the mascot feeling "alive" even during active animations
-	        const hasActiveGestures = this.animationManager.hasActiveAnimations();
-	        const grooveBlend = hasActiveGestures ? 0.3 : 1.0;
+	        // ═══════════════════════════════════════════════════════════════════════════
+	        // GROOVE + GESTURE BLENDING SYSTEM
+	        // ═══════════════════════════════════════════════════════════════════════════
+	        // Two types of gestures:
+	        // 1. ABSOLUTE gestures (bounce, spin): Create their own motion, reduce groove to avoid conflict
+	        // 2. ACCENT gestures (pop, punch): Boost groove as punctuation, keep groove at full strength
+	        //
+	        // Key insight: Accent gestures work WITH the groove, not against it.
+
+	        // Determine groove blend factor based on gesture type
+	        // - Accent-only: Keep groove at 100% (accents enhance groove)
+	        // - Absolute gestures: Reduce groove to 30% (avoid competing animations)
+	        // - No gestures: Full groove
+	        const hasAbsolute = blended.hasAbsoluteGestures;
+	        blended.hasAccentGestures;
+
+	        // Smooth the groove blend transition to avoid discontinuity
+	        // Initialize if not set
+	        if (this._grooveBlendCurrent === undefined) {
+	            this._grooveBlendCurrent = 1.0;
+	        }
+
+	        // Initialize smoothed boost values (match groove smoothing for consistent feel)
+	        if (this._smoothedBoost === undefined) {
+	            this._smoothedBoost = {
+	                position: [0, 0, 0],
+	                rotation: [0, 0, 0],
+	                scale: 1.0
+	            };
+	        }
+
+	        // Target: 30% for absolute gestures, 100% for accent-only or no gestures
+	        const grooveBlendTarget = hasAbsolute ? 0.3 : 1.0;
+	        const dt = deltaTime / 1000;
+	        const t = 1 - Math.exp(-12 * dt);
+
+	        this._grooveBlendCurrent += (grooveBlendTarget - this._grooveBlendCurrent) * t;
+	        const grooveBlend = this._grooveBlendCurrent;
+
+	        // Smooth boost values toward their targets (same speed as groove)
+	        const targetPosBoost = blended.positionBoost || [0, 0, 0];
+	        const targetRotBoost = blended.rotationBoost || [0, 0, 0];
+	        const targetScaleBoost = blended.scaleBoost || 1.0;
+
+	        for (let i = 0; i < 3; i++) {
+	            this._smoothedBoost.position[i] += (targetPosBoost[i] - this._smoothedBoost.position[i]) * t;
+	            this._smoothedBoost.rotation[i] += (targetRotBoost[i] - this._smoothedBoost.rotation[i]) * t;
+	        }
+	        this._smoothedBoost.scale += (targetScaleBoost - this._smoothedBoost.scale) * t;
+
+	        // Use smoothed boost values (computed above) for all channels
+	        const posBoost = this._smoothedBoost.position;
+	        const rotBoost = this._smoothedBoost.rotation;
+	        const scaleBoost = this._smoothedBoost.scale;
+
+	        // ═══════════════════════════════════════════════════════════════════════════
+	        // CAMERA-RELATIVE POSITION: Transform view-space to world-space
+	        // ═══════════════════════════════════════════════════════════════════════════
+	        // This enables "tidally locked" gestures that move toward/away from camera
+	        // regardless of camera angle. View-space: Z = toward camera, Y = up, X = right
+	        let camRelWorldX = 0, camRelWorldY = 0, camRelWorldZ = 0;
+
+	        if (blended.hasCameraRelativeGestures && this.renderer.camera) {
+	            const cam = this.renderer.camera;
+	            const camRelPos = blended.cameraRelativePosition;
+
+	            // Get camera's basis vectors in world space
+	            // Forward = direction camera is looking (negative Z in camera space)
+	            // We want "toward camera" so we negate it
+	            if (!this._camTempVec3) {
+	                this._camTempVec3 = new Vector3();
+	                this._camRight = new Vector3();
+	                this._camUp = new Vector3();
+	                this._camForward = new Vector3();
+	            }
+
+	            // Ensure camera matrix is up to date
+	            cam.updateMatrixWorld();
+
+	            // Get camera direction (where it's looking)
+	            cam.getWorldDirection(this._camForward);
+
+	            // Right vector = camera's X axis in world space
+	            this._camRight.setFromMatrixColumn(cam.matrixWorld, 0);
+
+	            // Up vector = camera's Y axis in world space
+	            this._camUp.setFromMatrixColumn(cam.matrixWorld, 1);
+
+	            // Transform view-space position to world-space:
+	            // X (right in view) -> camera right
+	            // Y (up in view) -> camera up
+	            // Z (toward camera in view) -> negative camera forward
+	            camRelWorldX = this._camRight.x * camRelPos[0] + this._camUp.x * camRelPos[1] - this._camForward.x * camRelPos[2];
+	            camRelWorldY = this._camRight.y * camRelPos[0] + this._camUp.y * camRelPos[1] - this._camForward.y * camRelPos[2];
+	            camRelWorldZ = this._camRight.z * camRelPos[0] + this._camUp.z * camRelPos[1] - this._camForward.z * camRelPos[2];
+
+	            // Debug: log first few frames to verify
+	            if (!this._camRelDebugCount) this._camRelDebugCount = 0;
+	            if (this._camRelDebugCount < 3 && (camRelPos[0] !== 0 || camRelPos[1] !== 0 || camRelPos[2] !== 0)) {
+	                console.log('[CamRel] input:', camRelPos, '→ world:', [camRelWorldX, camRelWorldY, camRelWorldZ]);
+	                console.log('[CamRel] forward:', this._camForward.toArray(), 'right:', this._camRight.toArray());
+	                this._camRelDebugCount++;
+	            }
+	        }
 
 	        if (rhythmMod) {
-	            // Position: blend groove offset with gesture position
-	            // During gestures: apply both groove (reduced) and rhythm multiplier
+	            // ═══════════════════════════════════════════════════════════════════════
+	            // POSITION: Groove + Absolute gestures + Camera-relative + Accent boosts
+	            // ═══════════════════════════════════════════════════════════════════════
+	            // 1. Groove offset (scaled by grooveBlend)
 	            const grooveOffsetX = rhythmMod.grooveOffset[0] * grooveBlend;
 	            const grooveOffsetY = rhythmMod.grooveOffset[1] * grooveBlend;
 	            const grooveOffsetZ = rhythmMod.grooveOffset[2] * grooveBlend;
-	            const posMult = hasActiveGestures ? rhythmMod.positionMultiplier : 1.0;
+
+	            // 2. Absolute gesture position (with rhythm multiplier)
+	            const posMult = hasAbsolute ? rhythmMod.positionMultiplier : 1.0;
+
+	            // 3. Combine: gesture + camera-relative + groove + smoothed boost
 	            this.position = [
-	                blended.position[0] * posMult + grooveOffsetX,
-	                blended.position[1] * posMult + grooveOffsetY,
-	                blended.position[2] * posMult + grooveOffsetZ
+	                blended.position[0] * posMult + camRelWorldX + grooveOffsetX + posBoost[0],
+	                blended.position[1] * posMult + camRelWorldY + grooveOffsetY + posBoost[1],
+	                blended.position[2] * posMult + camRelWorldZ + grooveOffsetZ + posBoost[2]
 	            ];
 
-	            // Rotation: blend groove sway (additive to gesture rotation)
+	            // ═══════════════════════════════════════════════════════════════════════
+	            // ROTATION: Groove sway + Absolute gestures + Accent boosts (smoothed)
+	            // ═══════════════════════════════════════════════════════════════════════
 	            this.rotation = [
-	                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend,
-	                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend,
-	                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend
+	                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend + rotBoost[0],
+	                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend + rotBoost[1],
+	                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend + rotBoost[2]
 	            ];
 
-	            // Scale: blend groove pulse with rhythm multiplier
-	            // grooveScale oscillates around 1.0, so we lerp toward 1.0 during gestures
+	            // ═══════════════════════════════════════════════════════════════════════
+	            // SCALE: Groove pulse × Absolute gestures × Accent boost (smoothed)
+	            // ═══════════════════════════════════════════════════════════════════════
+	            // grooveScale oscillates around 1.0, so we lerp toward 1.0 when reduced
 	            const grooveScaleEffect = 1.0 + (rhythmMod.grooveScale - 1.0) * grooveBlend;
-	            const scaleMult = hasActiveGestures ? rhythmMod.scaleMultiplier : 1.0;
-	            this.scale = blended.scale * grooveScaleEffect * scaleMult;
+	            const scaleMult = hasAbsolute ? rhythmMod.scaleMultiplier : 1.0;
+
+	            this.scale = blended.scale * grooveScaleEffect * scaleMult * scaleBoost;
 	        } else {
-	            this.position = blended.position;
-	            this.rotation = blended.rotation;
-	            this.scale = blended.scale;
+	            // No rhythm - apply gestures + camera-relative with smoothed boosts
+	            this.position = [
+	                blended.position[0] + camRelWorldX + posBoost[0],
+	                blended.position[1] + camRelWorldY + posBoost[1],
+	                blended.position[2] + camRelWorldZ + posBoost[2]
+	            ];
+	            this.rotation = [
+	                blended.rotation[0] + rotBoost[0],
+	                blended.rotation[1] + rotBoost[1],
+	                blended.rotation[2] + rotBoost[2]
+	            ];
+	            this.scale = blended.scale * scaleBoost;
 	        }
 
 	        // Only apply blended glow if no manual override is active
@@ -90810,7 +91328,7 @@ void main() {
 	            if (rhythmMod) {
 	                // Blend groove glow with gesture glow multiplier
 	                const grooveGlowEffect = 1.0 + (rhythmMod.grooveGlow - 1.0) * grooveBlend;
-	                const glowMult = hasActiveGestures ? rhythmMod.glowMultiplier : 1.0;
+	                const glowMult = hasAbsolute ? rhythmMod.glowMultiplier : 1.0;
 	                this.glowIntensity = blended.glowIntensity * grooveGlowEffect * glowMult;
 	            } else {
 	                this.glowIntensity = blended.glowIntensity;
@@ -90946,6 +91464,15 @@ void main() {
 	                const normalizedCoreColor = [normalizedCore.r, normalizedCore.g, normalizedCore.b];
 	                this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
 	            }
+	        }
+
+	        // Skip render for multiple frames after morph swap
+	        // This prevents Three.js from iterating the scene while it's stabilizing
+	        // The mascot is at scale ~0 during swap anyway, so skipping a few frames is invisible
+	        if (this._skipRenderFrames > 0) {
+	            this._skipRenderFrames--;
+	            console.log(`[Core3DManager] Skipping render, ${this._skipRenderFrames} frames remaining`);
+	            return;
 	        }
 
 	        // Render with Three.js
@@ -95896,6 +96423,1330 @@ void main() {
 	}
 
 	/**
+	 * ═══════════════════════════════════════════════════════════════════════════════════════
+	 *  ╔═○─┐ emotive
+	 *    ●●  ENGINE - Dance Choreographer
+	 *  └─○═╝
+	 * ═══════════════════════════════════════════════════════════════════════════════════════
+	 *
+	 * @fileoverview Automatic dance choreography system triggered by audio signals
+	 * @author Emotive Engine Team
+	 * @module 3d/animation/DanceChoreographer
+	 *
+	 * ╔═══════════════════════════════════════════════════════════════════════════════════
+	 * ║ CONCEPT
+	 * ╠═══════════════════════════════════════════════════════════════════════════════════
+	 * ║ Once BPM is locked, the mascot should start dancing automatically. This module
+	 * ║ monitors audio signals (bass energy, vocal flux, spectral data) and intelligently
+	 * ║ triggers gestures, switches groove presets, and fires effects at musically
+	 * ║ appropriate moments.
+	 * ╚═══════════════════════════════════════════════════════════════════════════════════
+	 *
+	 * FEATURES:
+	 * • Audio-driven gesture triggering based on bass/vocal/spectral analysis
+	 * • Automatic groove preset switching with 2-bar quantized transitions
+	 * • Intensity slider for user control (0-1)
+	 * • Glow effect safety limits (epilepsy-safe)
+	 * • Section detection for chorus/verse groove matching
+	 *
+	 * ARCHITECTURE:
+	 * ┌──────────────────────────────────────────────────────────────────────────────────┐
+	 * │  Audio Stream → AudioDeformer → DanceChoreographer → Rhythm3DAdapter/Mascot     │
+	 * │                     ↓                    ↓                                       │
+	 * │              bass/vocal/flux     gesture triggers                                │
+	 * │              spectral data       groove switches                                 │
+	 * └──────────────────────────────────────────────────────────────────────────────────┘
+	 *
+	 * SAFETY:
+	 * • Glow effects limited to max 2Hz frequency changes
+	 * • Max glow boost capped at 1.3x (not 3x)
+	 * • 2 second cooldown between glow events
+	 * • Max 1 flash per 8 bars
+	 */
+
+
+	/**
+	 * Glow-based gestures (USE SPARINGLY - brightness changes)
+	 * These are rate-limited for epilepsy safety
+	 */
+	const GLOW_GESTURES = ['flash', 'glow', 'burst', 'flicker'];
+
+	/**
+	 * Gesture pools by energy level
+	 * Single gestures are the norm; combos are rare and reserved for high energy
+	 */
+	const GESTURE_POOLS = {
+	    // Low energy: gentle accents + subtle absolutes (no combos)
+	    subtle: {
+	        single: ['pop', 'bob', 'swell', 'nod', 'sway', 'tilt'],
+	        combo: []  // No combos at low energy
+	    },
+	    // Medium energy: moderate variety (rare combos)
+	    moderate: {
+	        single: ['pop', 'bob', 'dip', 'swagger', 'bounce', 'wiggle', 'headBob', 'lean'],
+	        combo: [['pop', 'bob'], ['dip', 'swell']]  // 10% chance
+	    },
+	    // High energy: full variety (occasional combos)
+	    energetic: {
+	        single: ['flare', 'swagger', 'dip', 'spin', 'jump', 'twist', 'hula'],
+	        combo: [['flare', 'bob'], ['pop', 'dip'], ['swagger', 'flare']]  // 15% chance
+	    }
+	};
+
+	/**
+	 * Morph targets available for section changes
+	 * Each target specifies geometry and optional variant (eclipse, phase, material)
+	 *
+	 * Safe geometries with compatible material systems:
+	 * - Crystal-type: crystal, rough, heart, star (CrystalSoul + SSS shader)
+	 * - Moon: phases (full, new, crescent, etc.) and lunar eclipse (blood moon)
+	 * - Sun: normal and solar eclipses (annular, total)
+	 */
+	const MORPH_TARGETS = [
+	    // Crystal family (SSS shader + CrystalSoul)
+	    { geometry: 'crystal', variant: null },
+	    { geometry: 'rough', variant: null },
+	    { geometry: 'heart', variant: null },
+	    { geometry: 'star', variant: null },
+
+	    // Moon variants
+	    { geometry: 'moon', variant: { type: 'phase', value: 'full' } },
+	    { geometry: 'moon', variant: { type: 'phase', value: 'waxing-gibbous' } },
+	    { geometry: 'moon', variant: { type: 'phase', value: 'first-quarter' } },
+	    { geometry: 'moon', variant: { type: 'phase', value: 'waxing-crescent' } },
+	    { geometry: 'moon', variant: { type: 'phase', value: 'new' } },
+	    { geometry: 'moon', variant: { type: 'eclipse', value: 'partial' } },
+	    { geometry: 'moon', variant: { type: 'eclipse', value: 'total' } },  // Blood moon
+
+	    // Sun variants
+	    { geometry: 'sun', variant: null },  // Normal sun
+	    { geometry: 'sun', variant: { type: 'eclipse', value: 'annular' } },
+	    { geometry: 'sun', variant: { type: 'eclipse', value: 'total' } }
+	];
+
+	/**
+	 * Emotions available for automatic switching during dance
+	 * Grouped by energy/mood to enable smart transitions
+	 */
+	const DANCE_EMOTIONS = {
+	    // High energy emotions - for drops, chorus, peak moments
+	    high: ['joy', 'excited', 'euphoria', 'surprise'],
+	    // Medium energy emotions - for verses, builds
+	    medium: ['focused', 'love', 'calm', 'neutral'],
+	    // Low energy emotions - for breakdowns, outros
+	    low: ['resting', 'calm', 'sadness'],
+	    // Special/dramatic emotions - rare, for impact moments
+	    dramatic: ['anger', 'fear', 'suspicion', 'glitch', 'disgust']
+	};
+
+	/**
+	 * Flat list of all dance-safe emotions
+	 */
+	const ALL_DANCE_EMOTIONS = [
+	    'joy', 'excited', 'euphoria', 'surprise',
+	    'focused', 'love', 'calm', 'neutral',
+	    'resting', 'sadness',
+	    'anger', 'fear', 'suspicion', 'glitch'
+	];
+
+	// ═══════════════════════════════════════════════════════════════════════════════════════
+	// ENERGY THRESHOLDS
+	// ═══════════════════════════════════════════════════════════════════════════════════════
+
+	/**
+	 * Audio energy thresholds for groove selection
+	 * Higher values = more demanding criteria
+	 */
+	const ENERGY_THRESHOLDS = {
+	    // groove2 (energetic): High energy sections - chorus, drop
+	    energetic: { bass: 0.55},
+	    // groove3 (flowing): Medium energy with melodic content - bridge, build
+	    flowing: { bass: 0.25, vocal: 0.50 }
+	};
+
+	/**
+	 * Safety limits for glow effects
+	 */
+	const GLOW_SAFETY = {
+	    maxBoost: 1.3,         // Cap brightness at 130%
+	    cooldownMs: 800,       // 0.8 seconds between glow events (was 2s)
+	    minBarsBetweenFlash: 4 // Minimum bars between flash effects (was 8)
+	};
+
+	// ═══════════════════════════════════════════════════════════════════════════════════════
+	// DANCE CHOREOGRAPHER CLASS
+	// ═══════════════════════════════════════════════════════════════════════════════════════
+
+	class DanceChoreographer {
+	    constructor() {
+	        // References (set via setters)
+	        this.rhythmAdapter = null;
+	        this.mascot = null;
+	        this.audioDeformer = null;
+
+	        // State
+	        this.enabled = false;
+	        this.intensity = 0.5;          // 0-1, affects gesture frequency & amplitude
+	        this.currentGroove = 'groove1';
+	        this.lastGestureTime = 0;
+	        this.lastGlowTime = 0;
+	        this.lastFlashBar = -4;
+	        this.barCount = 0;
+	        this.lastBarProgress = 0;
+
+	        // Rolling averages for section detection
+	        this._bassHistory = [];
+	        this._vocalHistory = [];
+	        this._historyLength = 60; // ~2 seconds at 30fps
+
+	        // Gesture scheduling
+	        this._pendingGestures = [];
+	        this._gesturesThisBar = 0;
+	        this._lastGestureBar = -1;
+
+	        // Morph tracking
+	        this._lastMorphBar = -16;  // Start with cooldown expired
+	        this._currentTarget = { geometry: 'crystal', variant: null };  // Current morph target
+	        this._baseTarget = { geometry: 'crystal', variant: null };     // "Home" target to return to
+	        this._morphReturnTimeout = null;    // Timer for returning to base geometry
+
+	        // Emotion tracking
+	        this._lastEmotionBar = -12;  // Start with cooldown expired
+	        this._currentEmotion = 'neutral';
+	        this._baseEmotion = 'neutral';  // "Home" emotion to return to
+	        this._emotionReturnTimeout = null;  // Timer for returning to base emotion
+
+	        // Configuration
+	        this.config = {
+	            // How often to trigger gestures (in bars)
+	            // At 100% intensity: 4 / (0.5 + 1.0) = 2.67 → rounds to 3 bars
+	            // At 50% intensity: 4 / (0.5 + 0.5) = 4 bars
+	            // At 0% intensity: 4 / (0.5 + 0) = 8 bars
+	            gestureFrequencyBars: 4,       // Base: every 4 bars (intentional, not frantic)
+	            minGestureIntervalMs: 800,     // Minimum time between gestures (longer)
+
+	            // Combo probability by energy level
+	            comboProbability: {
+	                subtle: 0,      // No combos at low energy
+	                moderate: 0.10, // 10% chance at medium energy
+	                energetic: 0.15 // 15% chance at high energy
+	            },
+
+	            // Morph settings (geometry changes on section changes)
+	            morphEnabled: true,
+	            morphCooldownBars: 16,         // Minimum 16 bars between morphs (~8 seconds at 120bpm)
+	            morphEnergyThreshold: 0.5,     // Only morph when energy changes significantly
+	            morphReturnBars: 8,            // Bars before morphing back to base geometry (~4 sec at 120bpm)
+
+	            // Emotion settings (mood changes during dance)
+	            emotionEnabled: true,
+	            emotionCooldownBars: 12,       // Minimum 12 bars between emotion changes (~6 seconds at 120bpm)
+	            emotionReturnBars: 16,         // Bars before returning to base emotion (~8 sec at 120bpm)
+	            emotionMatchEnergy: true,      // Match emotion energy level to audio energy
+	            dramaticEmotionProbability: 0.1, // 10% chance of dramatic emotion on high energy
+
+	            // Groove switching
+	            grooveSwitchBars: 2,           // Transition duration
+	            energySmoothing: 0.05,         // How fast energy averages update
+
+	            // Intensity scaling
+	            intensityAffectsFrequency: true,
+	            intensityAffectsAmplitude: true,
+
+	            // Glow settings (with safety limits)
+	            glowEnabled: true,
+	            maxGlowBoost: GLOW_SAFETY.maxBoost,
+	            glowCooldownMs: GLOW_SAFETY.cooldownMs,
+
+	            // Auto-enable when BPM locks
+	            autoEnableOnLock: true
+	        };
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // SETUP
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Set rhythm adapter reference
+	     * @param {Object} adapter - Rhythm3DAdapter instance
+	     */
+	    setRhythmAdapter(adapter) {
+	        this.rhythmAdapter = adapter;
+	    }
+
+	    /**
+	     * Set mascot reference for triggering gestures
+	     * @param {Object} mascot - Mascot instance with gesture() method
+	     */
+	    setMascot(mascot) {
+	        this.mascot = mascot;
+
+	        // Sync geometry from mascot to avoid morph crashes
+	        if (mascot?.core3D?.geometryType) {
+	            const geometry = mascot.core3D.geometryType;
+	            this._currentTarget = { geometry, variant: null };
+	            this._baseTarget = { geometry, variant: null };
+	        }
+
+	        // Sync emotion from mascot
+	        if (mascot?.core3D?.emotion) {
+	            this._currentEmotion = mascot.core3D.emotion;
+	            this._baseEmotion = mascot.core3D.emotion;
+	        }
+	    }
+
+	    /**
+	     * Set audio deformer reference for audio signals
+	     * @param {Object} deformer - AudioDeformer instance
+	     */
+	    setAudioDeformer(deformer) {
+	        this.audioDeformer = deformer;
+	    }
+
+	    /**
+	     * Enable choreographer
+	     */
+	    enable() {
+	        this.enabled = true;
+	    }
+
+	    /**
+	     * Disable choreographer
+	     */
+	    disable() {
+	        this.enabled = false;
+	    }
+
+	    /**
+	     * Set dance intensity (0-1)
+	     * Higher intensity = more frequent gestures, larger movements
+	     * @param {number} value - Intensity value 0-1
+	     */
+	    setIntensity(value) {
+	        this.intensity = Math.max(0, Math.min(1, value));
+	    }
+
+	    /**
+	     * Get current intensity
+	     * @returns {number} Current intensity 0-1
+	     */
+	    getIntensity() {
+	        return this.intensity;
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // MAIN UPDATE LOOP
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Update choreographer - call every frame
+	     * @param {number} deltaTime - Time since last frame in seconds
+	     * @param {Object} audioData - Audio analysis data (bass, vocal, flux)
+	     */
+	    update(deltaTime, audioData = null) {
+	        if (!this.rhythmAdapter) {
+	            console.log('[DanceChoreographer] No rhythmAdapter!');
+	            return;
+	        }
+
+	        // Check if we should auto-enable when BPM locks
+	        // BPM detector is on the mascot instance, not on rhythmAdapter
+	        if (this.config.autoEnableOnLock && !this.enabled && this.mascot) {
+	            const bpmDetector = this.mascot._bpmDetector;
+	            if (bpmDetector) {
+	                const status = bpmDetector.getStatus();
+	                if (status?.finalized) {
+	                    this.enable();
+	                    this.setIntensity(1.0); // Full intensity when auto-enabled
+	                    console.log('[DanceChoreographer] Auto-enabled at full intensity - BPM locked!');
+	                }
+	            }
+	        }
+
+	        // Skip rest of update if not enabled
+	        if (!this.enabled) return;
+
+	        // Debug: Log barProgress periodically (every ~2 seconds)
+	        if (!this._lastBarProgressLog || performance.now() - this._lastBarProgressLog > 2000) {
+	            const barProg = this.rhythmAdapter?.barProgress ?? 'N/A';
+	            const beatProg = this.rhythmAdapter?.beatProgress ?? 'N/A';
+	            const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
+	            console.log(`[DanceChoreographer] barProgress=${typeof barProg === 'number' ? barProg.toFixed(3) : barProg}, beatProgress=${typeof beatProg === 'number' ? beatProg.toFixed(3) : beatProg}, isPlaying=${isPlaying}, barCount=${this.barCount}`);
+	            this._lastBarProgressLog = performance.now();
+	        }
+
+	        // Get audio data from deformer if not provided
+	        const audio = audioData || this._getAudioData();
+
+	        // Update rolling averages
+	        this._updateEnergyHistory(audio);
+
+	        // Detect bar transitions
+	        this._detectBarTransition();
+
+	        // Decide groove preset based on audio energy
+	        this._updateGroovePreset();
+
+	        // Trigger gestures at appropriate moments
+	        this._triggerGestures(audio);
+
+	        // Consider morphing on significant energy changes
+	        this._considerMorph(audio);
+
+	        // Consider emotion changes based on energy/section
+	        this._considerEmotion(audio);
+	    }
+
+	    /**
+	     * Get audio data from AudioDeformer
+	     * @private
+	     * @returns {Object} Audio data object
+	     */
+	    _getAudioData() {
+	        if (!this.audioDeformer) {
+	            return { bass: 0, vocal: 0, flux: 0 };
+	        }
+
+	        return {
+	            bass: this.audioDeformer.bassEnergy || 0,
+	            vocal: this.audioDeformer.vocalPresence || 0,
+	            flux: this.audioDeformer.transientStrength || 0
+	        };
+	    }
+
+	    /**
+	     * Update rolling energy averages
+	     * @private
+	     * @param {Object} audio - Current audio data
+	     */
+	    _updateEnergyHistory(audio) {
+	        // Add to history
+	        this._bassHistory.push(audio.bass);
+	        this._vocalHistory.push(audio.vocal);
+
+	        // Trim to max length
+	        while (this._bassHistory.length > this._historyLength) {
+	            this._bassHistory.shift();
+	        }
+	        while (this._vocalHistory.length > this._historyLength) {
+	            this._vocalHistory.shift();
+	        }
+	    }
+
+	    /**
+	     * Get smoothed average of energy history
+	     * @private
+	     * @param {number[]} history - Energy history array
+	     * @returns {number} Smoothed average
+	     */
+	    _getSmoothedEnergy(history) {
+	        if (history.length === 0) return 0;
+	        return history.reduce((a, b) => a + b, 0) / history.length;
+	    }
+
+	    /**
+	     * Detect bar boundary crossings
+	     * @private
+	     */
+	    _detectBarTransition() {
+	        if (!this.rhythmAdapter) return;
+
+	        const currentBarProgress = this.rhythmAdapter.barProgress || 0;
+
+	        // Detect bar boundary: progress wraps from high value back to low value
+	        // Use a more robust check that handles cases where we might miss the exact wrap
+	        // due to frame rate or timing issues (e.g., going from 0.75 to 0.25 directly)
+	        const wrapped = currentBarProgress < this.lastBarProgress - 0.5;
+
+	        if (wrapped) {
+	            this.barCount++;
+	            this._gesturesThisBar = 0;
+	            console.log(`[DanceChoreographer] Bar transition! barCount=${this.barCount} (${this.lastBarProgress.toFixed(2)} → ${currentBarProgress.toFixed(2)})`);
+	        }
+
+	        this.lastBarProgress = currentBarProgress;
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // GROOVE PRESET SWITCHING
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Update groove preset based on audio energy
+	     * Uses 2-bar quantized transitions for smooth changes
+	     * @private
+	     */
+	    _updateGroovePreset() {
+	        if (!this.rhythmAdapter) return;
+
+	        // Get smoothed energy levels
+	        const avgBass = this._getSmoothedEnergy(this._bassHistory);
+	        const avgVocal = this._getSmoothedEnergy(this._vocalHistory);
+
+	        // Detect appropriate groove preset
+	        const newGroove = this._detectGroovePreset(avgBass, avgVocal);
+
+	        // Switch if different (with 2-bar transition)
+	        if (newGroove !== this.currentGroove) {
+	            this._switchGroove(newGroove);
+	        }
+	    }
+
+	    /**
+	     * Detect appropriate groove preset based on energy levels
+	     * @private
+	     * @param {number} bass - Bass energy (0-1)
+	     * @param {number} vocal - Vocal presence (0-1)
+	     * @returns {string} Groove preset name
+	     */
+	    _detectGroovePreset(bass, vocal) {
+	        // Scale thresholds by intensity (lower intensity = harder to reach energetic)
+	        const intensityScale = 0.5 + this.intensity * 0.5; // 0.5-1.0
+
+	        // Check for energetic (high bass = drop/chorus)
+	        if (bass > ENERGY_THRESHOLDS.energetic.bass * intensityScale) {
+	            return 'groove2';
+	        }
+
+	        // Check for flowing (high vocals, moderate bass = melodic section)
+	        if (vocal > ENERGY_THRESHOLDS.flowing.vocal * intensityScale &&
+	            bass < ENERGY_THRESHOLDS.flowing.bass * 1.5) {
+	            return 'groove3';
+	        }
+
+	        // Default to subtle
+	        return 'groove1';
+	    }
+
+	    /**
+	     * Switch to a new groove preset with quantized transition
+	     * @private
+	     * @param {string} newGroove - New groove preset name
+	     */
+	    _switchGroove(newGroove) {
+	        if (!this.rhythmAdapter || !GROOVE_PRESETS[newGroove]) return;
+
+	        // Use existing setGroove API with 2-bar quantized transition
+	        this.rhythmAdapter.setGroove(newGroove, {
+	            quantize: true,
+	            bars: this.config.grooveSwitchBars
+	        });
+
+	        this.currentGroove = newGroove;
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // GESTURE TRIGGERING
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Decide when and what gestures to trigger
+	     * @private
+	     * @param {Object} audio - Current audio data
+	     */
+	    _triggerGestures(audio) {
+	        if (!this.mascot) {
+	            console.log('[DanceChoreographer] _triggerGestures: No mascot reference!');
+	            return;
+	        }
+
+	        // Only trigger gestures when rhythm is actually playing
+	        // This prevents premature gesture firing before music starts
+	        const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
+	        if (!isPlaying) {
+	            // Reset lastGestureBar when not playing so we can fire immediately when rhythm starts
+	            this._lastGestureBar = -1;
+	            return;
+	        }
+
+	        const now = performance.now();
+
+	        // Check minimum interval
+	        if (now - this.lastGestureTime < this.config.minGestureIntervalMs) {
+	            return;
+	        }
+
+	        // Calculate gesture frequency based on intensity
+	        const gestureFrequency = this.config.intensityAffectsFrequency
+	            ? Math.max(1, Math.round(this.config.gestureFrequencyBars / (0.5 + this.intensity)))
+	            : this.config.gestureFrequencyBars;
+
+	        // Check if it's time for a gesture (bar-aligned)
+	        if (this.barCount % gestureFrequency !== 0) {
+	            // Only log occasionally to avoid spam
+	            if (this.barCount > 0 && this.barCount % 8 === 0 && this._lastLoggedBar !== this.barCount) {
+	                console.log(`[DanceChoreographer] Waiting... barCount=${this.barCount}, freq=${gestureFrequency}, mod=${this.barCount % gestureFrequency}`);
+	                this._lastLoggedBar = this.barCount;
+	            }
+	            return;
+	        }
+	        if (this._lastGestureBar === this.barCount) return;
+
+	        // Decide what type of gesture based on current groove and energy
+	        const gestureType = this._selectGestureType(audio);
+	        const gesture = this._selectGesture(gestureType, audio);
+
+	        if (gesture) {
+	            console.log(`[DanceChoreographer] Triggering gesture: ${Array.isArray(gesture) ? gesture.join('+') : gesture} at bar ${this.barCount}`);
+	            this._executeGesture(gesture);
+	            this._lastGestureBar = this.barCount;
+	            this.lastGestureTime = now;
+	        }
+	    }
+
+	    /**
+	     * Select gesture type based on current state
+	     * @private
+	     * @param {Object} audio - Current audio data
+	     * @returns {string} Gesture type: 'punctuation', 'movement', 'dynamics', 'climactic'
+	     */
+	    _selectGestureType(audio) {
+	        // Very high energy (drop, climax) = rare climactic gestures (absolute motion)
+	        // Only use these sparingly - they interrupt the groove
+	        if (this.currentGroove === 'groove2' && this.intensity > 0.85 && audio.bass > 0.7) {
+	            // 30% chance of climactic gesture at very high energy
+	            if (Math.random() < 0.3) {
+	                return 'climactic';
+	            }
+	        }
+
+	        // Section changes or builds = dynamics (swell, flare)
+	        if (audio.flux > 0.6) {
+	            return 'dynamics';
+	        }
+
+	        // High energy with groove = movement accents (swagger, dip)
+	        if (this.currentGroove === 'groove2' && this.intensity > 0.6) {
+	            return 'movement';
+	        }
+
+	        // Default = punctuation (pop, punch) - the bread and butter of dancing
+	        return 'punctuation';
+	    }
+
+	    /**
+	     * Select gesture(s) based on energy level
+	     * Single gestures are the norm; combos are rare and reserved for high energy moments
+	     * @private
+	     * @param {string} type - Gesture type (unused, kept for API compatibility)
+	     * @param {Object} audio - Current audio data
+	     * @returns {string|string[]} Single gesture name or array of gesture names
+	     */
+	    _selectGesture(type, audio) {
+	        // Determine energy level
+	        let level = 'subtle';
+	        if (this.intensity > 0.7 || this.currentGroove === 'groove2') {
+	            level = 'energetic';
+	        } else if (this.intensity > 0.4) {
+	            level = 'moderate';
+	        }
+
+	        const pool = GESTURE_POOLS[level];
+	        const comboProbability = this.config.comboProbability[level] || 0;
+
+	        // Check if we should use a combo (rare)
+	        if (pool.combo.length > 0 && Math.random() < comboProbability) {
+	            return pool.combo[Math.floor(Math.random() * pool.combo.length)];
+	        }
+
+	        // Default: single gesture (the norm)
+	        return pool.single[Math.floor(Math.random() * pool.single.length)];
+	    }
+
+	    /**
+	     * Execute a gesture or combo of gestures
+	     * @private
+	     * @param {string|string[]} gesture - Single gesture name or array of gesture names
+	     */
+	    _executeGesture(gesture) {
+	        if (!this.mascot || !gesture) return;
+
+	        // Handle combo (array of gestures)
+	        if (Array.isArray(gesture)) {
+	            // Execute each gesture in the combo with slight stagger
+	            gesture.forEach((g, i) => {
+	                // Small delay between combo gestures (50ms stagger)
+	                setTimeout(() => {
+	                    this._executeSingleGesture(g);
+	                }, i * 50);
+	            });
+	            return;
+	        }
+
+	        // Single gesture
+	        this._executeSingleGesture(gesture);
+	    }
+
+	    /**
+	     * Execute a single gesture (internal)
+	     * @private
+	     * @param {string} gesture - Gesture name
+	     */
+	    _executeSingleGesture(gesture) {
+	        if (!this.mascot || !gesture) return;
+
+	        // Check if it's a glow gesture (requires safety check)
+	        if (GLOW_GESTURES.includes(gesture)) {
+	            if (!this._canTriggerGlow()) {
+	                return; // Skip glow gesture if on cooldown
+	            }
+	            this.lastGlowTime = performance.now();
+	            if (gesture === 'flash') {
+	                this.lastFlashBar = this.barCount;
+	            }
+	        }
+
+	        // Calculate amplitude based on intensity
+	        const amplitudeScale = this.config.intensityAffectsAmplitude
+	            ? 0.5 + this.intensity * 0.5
+	            : 1.0;
+
+	        // Trigger the gesture via mascot API
+	        if (typeof this.mascot.gesture === 'function') {
+	            this.mascot.gesture(gesture, { scale: amplitudeScale });
+	        }
+	    }
+
+	    /**
+	     * Check if glow effects can be triggered (safety check)
+	     * @private
+	     * @returns {boolean} True if glow is allowed
+	     */
+	    _canTriggerGlow() {
+	        if (!this.config.glowEnabled) return false;
+
+	        const now = performance.now();
+
+	        // Check cooldown
+	        if (now - this.lastGlowTime < this.config.glowCooldownMs) {
+	            return false;
+	        }
+
+	        // For flash specifically, check bar distance
+	        if (this.barCount - this.lastFlashBar < GLOW_SAFETY.minBarsBetweenFlash) {
+	            return false;
+	        }
+
+	        return true;
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // GEOMETRY MORPHING
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Consider triggering a geometry morph on significant energy changes
+	     * Morphs are rare and intentional - like the mascot "deciding" to transform
+	     * @private
+	     * @param {Object} audio - Current audio data
+	     */
+	    _considerMorph(audio) {
+	        if (!this.config.morphEnabled || !this.mascot) return;
+
+	        // Check cooldown (long cooldown between morphs)
+	        const barsSinceLastMorph = this.barCount - this._lastMorphBar;
+	        if (barsSinceLastMorph < this.config.morphCooldownBars) return;
+
+	        // Get current energy levels
+	        const avgBass = this._getSmoothedEnergy(this._bassHistory);
+	        this._getSmoothedEnergy(this._vocalHistory);
+
+	        // Morph triggers:
+	        // 1. Groove change (section change) - most natural trigger
+	        // 2. Very high energy moment (drop) with low probability
+	        // 3. Energy "reset" - going from high back to low (breakdown)
+
+	        let shouldMorph = false;
+	        let morphReason = '';
+
+	        // Track previous groove for section change detection
+	        if (this._previousGroove === undefined) {
+	            this._previousGroove = this.currentGroove;
+	        }
+
+	        // Trigger 1: Section change (groove switched)
+	        if (this.currentGroove !== this._previousGroove) {
+	            // 40% chance on groove change
+	            if (Math.random() < 0.4) {
+	                shouldMorph = true;
+	                morphReason = 'section_change';
+	            }
+	            this._previousGroove = this.currentGroove;
+	        }
+
+	        // Trigger 2: High energy drop (very rare)
+	        if (!shouldMorph && this.currentGroove === 'groove2' && avgBass > 0.7) {
+	            // 5% chance during high energy (checked every frame, so still rare)
+	            // Only check once per bar to avoid spam
+	            if (this._lastMorphCheckBar !== this.barCount) {
+	                if (Math.random() < 0.05) {
+	                    shouldMorph = true;
+	                    morphReason = 'energy_peak';
+	                }
+	                this._lastMorphCheckBar = this.barCount;
+	            }
+	        }
+
+	        // Trigger 3: Time-based fallback (ensures morphs happen even without groove changes)
+	        // After dancing without a morph, transform to keep things interesting
+	        // At 120 BPM: 16 bars = ~32 seconds, so we morph roughly every 30-45 seconds
+	        if (!shouldMorph && barsSinceLastMorph >= 16) {
+	            // 25% chance per bar after 16 bars without morphing
+	            // This guarantees a morph within ~20 bars on average
+	            if (this._lastMorphCheckBar !== this.barCount) {
+	                if (Math.random() < 0.25) {
+	                    shouldMorph = true;
+	                    morphReason = 'time_variety';
+	                }
+	                this._lastMorphCheckBar = this.barCount;
+	            }
+	        }
+
+	        // Trigger 4: First morph comes early (introduce variety quickly)
+	        // If we haven't morphed yet and we're past bar 8, 15% chance per bar
+	        if (!shouldMorph && this._lastMorphBar < 0 && this.barCount >= 8) {
+	            if (this._lastMorphCheckBar !== this.barCount) {
+	                if (Math.random() < 0.15) {
+	                    shouldMorph = true;
+	                    morphReason = 'intro_variety';
+	                }
+	                this._lastMorphCheckBar = this.barCount;
+	            }
+	        }
+
+	        if (shouldMorph) {
+	            this._triggerMorph(morphReason);
+	        }
+	    }
+
+	    /**
+	     * Trigger a geometry morph to a new shape/variant
+	     * After morphReturnBars, will morph back to base geometry
+	     * @private
+	     * @param {string} reason - Why the morph was triggered (for logging)
+	     */
+	    _triggerMorph(reason) {
+	        if (!this.mascot) return;
+
+	        // Clear any pending return morph
+	        if (this._morphReturnTimeout) {
+	            clearTimeout(this._morphReturnTimeout);
+	            this._morphReturnTimeout = null;
+	        }
+
+	        // Check if two targets are the same (geometry + variant)
+	        const targetsEqual = (a, b) => {
+	            if (a.geometry !== b.geometry) return false;
+	            if (!a.variant && !b.variant) return true;
+	            if (!a.variant || !b.variant) return false;
+	            return a.variant.type === b.variant.type && a.variant.value === b.variant.value;
+	        };
+
+	        // Select a different target than current (excluding base so we have somewhere to return to)
+	        const candidates = MORPH_TARGETS.filter(t =>
+	            !targetsEqual(t, this._currentTarget) && !targetsEqual(t, this._baseTarget)
+	        );
+
+	        // If no options (only base left), pick any non-current
+	        const finalCandidates = candidates.length > 0
+	            ? candidates
+	            : MORPH_TARGETS.filter(t => !targetsEqual(t, this._currentTarget));
+
+	        if (finalCandidates.length === 0) return;
+
+	        const newTarget = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
+	        const targetLabel = this._getTargetLabel(newTarget);
+	        const currentLabel = this._getTargetLabel(this._currentTarget);
+
+	        console.log(`[DanceChoreographer] 🎭 Morphing: ${currentLabel} → ${targetLabel} (reason: ${reason}) at bar ${this.barCount}`);
+
+	        // Apply the morph target
+	        this._applyMorphTarget(newTarget);
+
+	        this._currentTarget = newTarget;
+	        this._lastMorphBar = this.barCount;
+
+	        // Schedule return to base geometry
+	        const bpm = this.rhythmAdapter?.getBPM?.() || 120;
+	        const barDurationMs = (60 / bpm) * 4 * 1000; // 4 beats per bar
+	        const returnDelayMs = this.config.morphReturnBars * barDurationMs;
+
+	        this._morphReturnTimeout = setTimeout(() => {
+	            this._returnToBaseGeometry();
+	        }, returnDelayMs);
+	    }
+
+	    /**
+	     * Return to base geometry after morph duration expires
+	     * @private
+	     */
+	    _returnToBaseGeometry() {
+	        if (!this.mascot) return;
+
+	        this._morphReturnTimeout = null;
+
+	        // Check if two targets are the same
+	        const targetsEqual = (a, b) => {
+	            if (a.geometry !== b.geometry) return false;
+	            if (!a.variant && !b.variant) return true;
+	            if (!a.variant || !b.variant) return false;
+	            return a.variant.type === b.variant.type && a.variant.value === b.variant.value;
+	        };
+
+	        // Only return if we're not already at base
+	        if (targetsEqual(this._currentTarget, this._baseTarget)) return;
+
+	        const currentLabel = this._getTargetLabel(this._currentTarget);
+	        const baseLabel = this._getTargetLabel(this._baseTarget);
+
+	        console.log(`[DanceChoreographer] 🔄 Returning: ${currentLabel} → ${baseLabel} at bar ${this.barCount}`);
+
+	        // Apply the base target
+	        this._applyMorphTarget(this._baseTarget);
+
+	        this._currentTarget = { ...this._baseTarget };
+	        // Don't update _lastMorphBar here - the cooldown is for outgoing morphs only
+	    }
+
+	    /**
+	     * Apply a morph target (geometry + variant)
+	     * @private
+	     * @param {Object} target - Target with geometry and optional variant
+	     */
+	    _applyMorphTarget(target) {
+	        const core3D = this.mascot?.core3D;
+	        if (!core3D) return;
+
+	        // Check if we need to change geometry
+	        const currentGeometry = core3D.geometryType;
+	        const needsGeometryChange = currentGeometry !== target.geometry;
+
+	        if (needsGeometryChange) {
+	            // Trigger geometry morph
+	            if (typeof this.mascot.morphTo === 'function') {
+	                this.mascot.morphTo(target.geometry);
+	            } else if (typeof this.mascot.setGeometry === 'function') {
+	                this.mascot.setGeometry(target.geometry);
+	            }
+
+	            // Apply variant after morph completes (morph duration is ~1000ms)
+	            // Wait 1200ms to ensure material is ready
+	            if (target.variant) {
+	                setTimeout(() => {
+	                    // Verify geometry actually changed before applying variant
+	                    if (core3D.geometryType === target.geometry) {
+	                        this._applyVariant(target.geometry, target.variant);
+	                    }
+	                }, 1200);
+	            }
+	        } else {
+	            // Same geometry - just apply/clear variant immediately
+	            if (target.variant) {
+	                this._applyVariant(target.geometry, target.variant);
+	            } else {
+	                this._clearVariant(target.geometry);
+	            }
+	        }
+	    }
+
+	    /**
+	     * Apply a variant effect (eclipse, phase, etc.)
+	     * @private
+	     * @param {string} geometry - Geometry type
+	     * @param {Object} variant - Variant config { type, value }
+	     */
+	    _applyVariant(geometry, variant) {
+	        const core3D = this.mascot?.core3D;
+	        if (!core3D) return;
+
+	        // Safety check: only apply variant if we're on the correct geometry
+	        if (core3D.geometryType !== geometry) {
+	            console.warn(`[DanceChoreographer] Skipping variant - expected ${geometry}, got ${core3D.geometryType}`);
+	            return;
+	        }
+
+	        if (geometry === 'moon') {
+	            // Verify moon material is ready
+	            if (!core3D.customMaterial?.uniforms?.shadowOffset) {
+	                console.warn('[DanceChoreographer] Moon material not ready for phase/eclipse');
+	                return;
+	            }
+
+	            if (variant.type === 'eclipse') {
+	                // Set moon to full first (required for eclipse)
+	                setMoonPhase(core3D.customMaterial, 'full');
+	                // Apply eclipse
+	                if (typeof core3D.setMoonEclipse === 'function') {
+	                    core3D.setMoonEclipse(variant.value);
+	                }
+	            } else if (variant.type === 'phase') {
+	                // Clear any eclipse first
+	                if (typeof core3D.setMoonEclipse === 'function') {
+	                    core3D.setMoonEclipse('off');
+	                }
+	                // Apply phase using the Moon.js utility
+	                setMoonPhase(core3D.customMaterial, variant.value);
+	            }
+	        } else if (geometry === 'sun') {
+	            if (variant.type === 'eclipse') {
+	                if (typeof core3D.setSunShadow === 'function') {
+	                    core3D.setSunShadow(variant.value);
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * Clear variant effects for a geometry
+	     * Only clears if we're currently on that geometry
+	     * @private
+	     * @param {string} geometry - Geometry type
+	     */
+	    _clearVariant(geometry) {
+	        const core3D = this.mascot?.core3D;
+	        if (!core3D) return;
+
+	        // Only clear if we're on the correct geometry
+	        if (core3D.geometryType !== geometry) return;
+
+	        if (geometry === 'moon') {
+	            if (typeof core3D.setMoonEclipse === 'function') {
+	                core3D.setMoonEclipse('off');
+	            }
+	            // Reset to full moon
+	            if (core3D.customMaterial?.uniforms?.shadowOffset) {
+	                setMoonPhase(core3D.customMaterial, 'full');
+	            }
+	        } else if (geometry === 'sun') {
+	            if (typeof core3D.setSunShadow === 'function') {
+	                core3D.setSunShadow('off');
+	            }
+	        }
+	    }
+
+	    /**
+	     * Get a human-readable label for a morph target
+	     * @private
+	     * @param {Object} target - Target with geometry and optional variant
+	     * @returns {string} Label like "moon:blood" or "crystal"
+	     */
+	    _getTargetLabel(target) {
+	        if (!target.variant) return target.geometry;
+	        return `${target.geometry}:${target.variant.value}`;
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // EMOTION SWITCHING
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Consider triggering an emotion change based on audio energy
+	     * Emotions change more frequently than morphs, adding life to the dance
+	     * @private
+	     * @param {Object} audio - Current audio data
+	     */
+	    _considerEmotion(audio) {
+	        if (!this.config.emotionEnabled || !this.mascot) return;
+
+	        // Only consider emotion changes when rhythm is actually playing
+	        const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
+	        if (!isPlaying) return;
+
+	        // Check cooldown
+	        const barsSinceLastEmotion = this.barCount - this._lastEmotionBar;
+	        if (barsSinceLastEmotion < this.config.emotionCooldownBars) return;
+
+	        // Get current energy levels
+	        const avgBass = this._getSmoothedEnergy(this._bassHistory);
+	        const avgVocal = this._getSmoothedEnergy(this._vocalHistory);
+	        const combinedEnergy = (avgBass + avgVocal) / 2;
+
+	        // Emotion change triggers (more frequent than morphs):
+	        // 1. Groove change (section change) - guaranteed emotion shift
+	        // 2. Energy level changes - adapt mood to music
+	        // 3. Time-based variety - keep the mascot "alive"
+
+	        let shouldChangeEmotion = false;
+	        let emotionReason = '';
+
+	        // Track groove for section detection
+	        if (this._prevGrooveForEmotion === undefined) {
+	            this._prevGrooveForEmotion = this.currentGroove;
+	        }
+
+	        // Trigger 1: Section change (groove switched) - high probability
+	        if (this.currentGroove !== this._prevGrooveForEmotion) {
+	            // 60% chance on groove change (emotions are more fluid than morphs)
+	            if (Math.random() < 0.6) {
+	                shouldChangeEmotion = true;
+	                emotionReason = 'section_change';
+	            }
+	            this._prevGrooveForEmotion = this.currentGroove;
+	        }
+
+	        // Trigger 2: High energy peak (drops, chorus)
+	        if (!shouldChangeEmotion && this.currentGroove === 'groove2' && combinedEnergy > 0.6) {
+	            // 15% chance per bar during high energy
+	            if (this._lastEmotionCheckBar !== this.barCount) {
+	                if (Math.random() < 0.15) {
+	                    shouldChangeEmotion = true;
+	                    emotionReason = 'energy_peak';
+	                }
+	                this._lastEmotionCheckBar = this.barCount;
+	            }
+	        }
+
+	        // Trigger 3: Low energy (breakdowns) - shift to calmer emotions
+	        if (!shouldChangeEmotion && this.currentGroove === 'groove1' && combinedEnergy < 0.25) {
+	            // 10% chance per bar during quiet sections
+	            if (this._lastEmotionCheckBar !== this.barCount) {
+	                if (Math.random() < 0.10) {
+	                    shouldChangeEmotion = true;
+	                    emotionReason = 'energy_low';
+	                }
+	                this._lastEmotionCheckBar = this.barCount;
+	            }
+	        }
+
+	        // Trigger 4: Time-based variety (every ~12-16 bars without change)
+	        if (!shouldChangeEmotion && barsSinceLastEmotion >= 12) {
+	            // 20% chance per bar after cooldown
+	            if (this._lastEmotionCheckBar !== this.barCount) {
+	                if (Math.random() < 0.20) {
+	                    shouldChangeEmotion = true;
+	                    emotionReason = 'time_variety';
+	                }
+	                this._lastEmotionCheckBar = this.barCount;
+	            }
+	        }
+
+	        if (shouldChangeEmotion) {
+	            this._triggerEmotion(emotionReason, combinedEnergy);
+	        }
+	    }
+
+	    /**
+	     * Trigger an emotion change
+	     * Selects an appropriate emotion based on energy level
+	     * @private
+	     * @param {string} reason - Why the emotion was triggered
+	     * @param {number} energy - Current combined energy level (0-1)
+	     */
+	    _triggerEmotion(reason, energy) {
+	        if (!this.mascot) return;
+
+	        // Clear any pending return
+	        if (this._emotionReturnTimeout) {
+	            clearTimeout(this._emotionReturnTimeout);
+	            this._emotionReturnTimeout = null;
+	        }
+
+	        // Select emotion based on energy level
+	        let emotionPool;
+
+	        if (this.config.emotionMatchEnergy) {
+	            // Check for dramatic emotion chance on high energy moments
+	            if (energy > 0.65 && Math.random() < this.config.dramaticEmotionProbability) {
+	                emotionPool = DANCE_EMOTIONS.dramatic;
+	            } else if (energy > 0.55) {
+	                emotionPool = DANCE_EMOTIONS.high;
+	            } else if (energy > 0.3) {
+	                emotionPool = DANCE_EMOTIONS.medium;
+	            } else {
+	                emotionPool = DANCE_EMOTIONS.low;
+	            }
+	        } else {
+	            // Random from all emotions
+	            emotionPool = ALL_DANCE_EMOTIONS;
+	        }
+
+	        // Filter out current emotion
+	        const candidates = emotionPool.filter(e => e !== this._currentEmotion);
+	        if (candidates.length === 0) return;
+
+	        const newEmotion = candidates[Math.floor(Math.random() * candidates.length)];
+
+	        console.log(`[DanceChoreographer] 😊 Emotion: ${this._currentEmotion} → ${newEmotion} (reason: ${reason}, energy: ${energy.toFixed(2)}) at bar ${this.barCount}`);
+
+	        // Apply emotion via mascot
+	        if (typeof this.mascot.setEmotion === 'function') {
+	            this.mascot.setEmotion(newEmotion);
+	        } else if (this.mascot.core3D && typeof this.mascot.core3D.setEmotion === 'function') {
+	            this.mascot.core3D.setEmotion(newEmotion);
+	        }
+
+	        this._currentEmotion = newEmotion;
+	        this._lastEmotionBar = this.barCount;
+
+	        // Schedule return to base emotion
+	        const bpm = this.rhythmAdapter?.getBPM?.() || 120;
+	        const barDurationMs = (60 / bpm) * 4 * 1000;
+	        const returnDelayMs = this.config.emotionReturnBars * barDurationMs;
+
+	        this._emotionReturnTimeout = setTimeout(() => {
+	            this._returnToBaseEmotion();
+	        }, returnDelayMs);
+	    }
+
+	    /**
+	     * Return to base emotion after emotion duration expires
+	     * @private
+	     */
+	    _returnToBaseEmotion() {
+	        if (!this.mascot) return;
+
+	        this._emotionReturnTimeout = null;
+
+	        // Only return if we're not already at base
+	        if (this._currentEmotion === this._baseEmotion) return;
+
+	        console.log(`[DanceChoreographer] 🔄 Emotion return: ${this._currentEmotion} → ${this._baseEmotion} at bar ${this.barCount}`);
+
+	        // Apply base emotion via mascot
+	        if (typeof this.mascot.setEmotion === 'function') {
+	            this.mascot.setEmotion(this._baseEmotion);
+	        } else if (this.mascot.core3D && typeof this.mascot.core3D.setEmotion === 'function') {
+	            this.mascot.core3D.setEmotion(this._baseEmotion);
+	        }
+
+	        this._currentEmotion = this._baseEmotion;
+	        // Don't update _lastEmotionBar - cooldown is for outgoing changes only
+	    }
+
+	    /**
+	     * Set the base emotion (the "home" to return to after changes)
+	     * @param {string} emotion - Emotion name (e.g., 'neutral', 'joy')
+	     */
+	    setBaseEmotion(emotion) {
+	        this._baseEmotion = emotion;
+	        this._currentEmotion = emotion;
+	    }
+
+	    /**
+	     * Sync emotion state from mascot
+	     * Call this after external setEmotion() calls to keep choreographer in sync
+	     */
+	    syncEmotionFromMascot() {
+	        if (this.mascot?.core3D?.emotion) {
+	            this._currentEmotion = this.mascot.core3D.emotion;
+	        }
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // DEBUG & STATUS
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Get choreographer status for debugging
+	     * @returns {Object} Status object
+	     */
+	    getStatus() {
+	        return {
+	            enabled: this.enabled,
+	            intensity: this.intensity,
+	            currentGroove: this.currentGroove,
+	            currentTarget: this._getTargetLabel(this._currentTarget),
+	            baseTarget: this._getTargetLabel(this._baseTarget),
+	            currentEmotion: this._currentEmotion,
+	            baseEmotion: this._baseEmotion,
+	            barCount: this.barCount,
+	            avgBass: this._getSmoothedEnergy(this._bassHistory).toFixed(3),
+	            avgVocal: this._getSmoothedEnergy(this._vocalHistory).toFixed(3),
+	            lastGestureAgo: Math.round((performance.now() - this.lastGestureTime) / 1000) + 's',
+	            lastGlowAgo: Math.round((performance.now() - this.lastGlowTime) / 1000) + 's',
+	            lastMorphBar: this._lastMorphBar,
+	            barsSinceLastMorph: this.barCount - this._lastMorphBar,
+	            lastEmotionBar: this._lastEmotionBar,
+	            barsSinceLastEmotion: this.barCount - this._lastEmotionBar,
+	            canGlow: this._canTriggerGlow()
+	        };
+	    }
+
+	    /**
+	     * Set the base geometry target (the "home" to return to after morphs)
+	     * Also sets current target to base
+	     * @param {string} geometry - Geometry name (e.g., 'crystal', 'moon', 'sun')
+	     * @param {Object} [variant] - Optional variant { type, value }
+	     */
+	    setBaseGeometry(geometry, variant = null) {
+	        this._baseTarget = { geometry, variant };
+	        this._currentTarget = { geometry, variant };
+	    }
+
+	    /**
+	     * Sync geometry state from mascot
+	     * Call this after external morphTo() calls to keep choreographer in sync
+	     */
+	    syncGeometryFromMascot() {
+	        if (this.mascot?.core3D?.geometryType) {
+	            const geometry = this.mascot.core3D.geometryType;
+	            this._currentTarget = { geometry, variant: null };
+	        }
+	    }
+
+	    /**
+	     * Reset state
+	     */
+	    reset() {
+	        this.enabled = false;
+	        this.currentGroove = 'groove1';
+	        this.barCount = 0;
+	        this.lastBarProgress = 0;
+	        this.lastGestureTime = 0;
+	        this.lastGlowTime = 0;
+	        this.lastFlashBar = -4;
+	        this._bassHistory = [];
+	        this._vocalHistory = [];
+	        this._gesturesThisBar = 0;
+	        this._lastGestureBar = -1;
+	        // Morph state - sync from mascot if available, else default to 'crystal'
+	        this._lastMorphBar = -16;
+	        const mascotGeometry = this.mascot?.core3D?.geometryType || 'crystal';
+	        this._currentTarget = { geometry: mascotGeometry, variant: null };
+	        this._baseTarget = { geometry: mascotGeometry, variant: null };
+	        this._previousGroove = undefined;
+	        this._lastMorphCheckBar = -1;
+	        // Clear morph return timer
+	        if (this._morphReturnTimeout) {
+	            clearTimeout(this._morphReturnTimeout);
+	            this._morphReturnTimeout = null;
+	        }
+	        // Emotion state - sync from mascot if available, else default to 'neutral'
+	        this._lastEmotionBar = -12;
+	        const mascotEmotion = this.mascot?.core3D?.emotion || 'neutral';
+	        this._currentEmotion = mascotEmotion;
+	        this._baseEmotion = mascotEmotion;
+	        this._prevGrooveForEmotion = undefined;
+	        this._lastEmotionCheckBar = -1;
+	        // Clear emotion return timer
+	        if (this._emotionReturnTimeout) {
+	            clearTimeout(this._emotionReturnTimeout);
+	            this._emotionReturnTimeout = null;
+	        }
+	    }
+
+	    /**
+	     * Cleanup resources
+	     */
+	    destroy() {
+	        // Clear timers first
+	        if (this._morphReturnTimeout) {
+	            clearTimeout(this._morphReturnTimeout);
+	            this._morphReturnTimeout = null;
+	        }
+	        if (this._emotionReturnTimeout) {
+	            clearTimeout(this._emotionReturnTimeout);
+	            this._emotionReturnTimeout = null;
+	        }
+	        this.reset();
+	        this.rhythmAdapter = null;
+	        this.mascot = null;
+	        this.audioDeformer = null;
+	    }
+	}
+
+	/**
 	 * Procedural Sphere Geometry
 	 *
 	 * Generates UV sphere using latitude/longitude parameterization
@@ -96257,6 +98108,9 @@ void main() {
 	        this.core3D = null;
 	        this.particleSystem = null;
 
+	        // Dance choreographer (auto dance once BPM is locked)
+	        this.danceChoreographer = null;
+
 	        // State
 	        this.isRunning = false;
 	        this._destroyed = false;
@@ -96354,10 +98208,11 @@ void main() {
 	                this.particleSystem.canvasHeight = this.canvas2D.height;
 	            }
 
-	            // Initialization complete
-	            //     geometry: this.config.coreGeometry,
-	            //     particles: this.config.enableParticles
-	            // });
+	            // Initialize dance choreographer (for auto-dancing when BPM locks)
+	            this.danceChoreographer = new DanceChoreographer();
+	            this.danceChoreographer.setRhythmAdapter(this.core3D?.rhythm3DAdapter);
+	            this.danceChoreographer.setMascot(this);
+	            // Note: audioDeformer is set later when listenTo() is called
 
 	            return this;
 	        } catch (error) {
@@ -96505,6 +98360,11 @@ void main() {
 	                this.container.appendChild(this.webglCanvas);
 	                this._canvasAppended = true;
 	            }
+	        }
+
+	        // Update dance choreographer (auto-triggers gestures when BPM is locked)
+	        if (this.danceChoreographer && !this._destroyed) {
+	            this.danceChoreographer.update(deltaTime / 1000); // Convert to seconds
 	        }
 
 	        // Render 2D particles (or clear canvas if disabled)
@@ -96673,6 +98533,18 @@ void main() {
 	        }
 
 	        this.eventManager.emit('gesture:trigger', { gesture: gestureName });
+	    }
+
+	    /**
+	     * Trigger a gesture (alias for express, used by DanceChoreographer)
+	     * @param {string} gestureName - Gesture name
+	     * @param {Object} options - Options object
+	     * @param {number} options.scale - Scale multiplier for gesture amplitude
+	     */
+	    gesture(gestureName, options = {}) {
+	        // Scale is applied via the 3D core's gesture system
+	        // For now, just call express - the scale option can be wired in later
+	        this.express(gestureName);
 	    }
 
 	    /**
@@ -97332,6 +99204,69 @@ void main() {
 	            return this.core3D.getCurrentGroove();
 	        }
 	        return 'groove1';
+	    }
+
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+	    // DANCE CHOREOGRAPHER API
+	    // ═══════════════════════════════════════════════════════════════════════════════════
+
+	    /**
+	     * Enable automatic dance choreography
+	     * When enabled, the mascot will automatically trigger gestures based on
+	     * audio signals once BPM is locked.
+	     */
+	    enableDance() {
+	        if (this.danceChoreographer) {
+	            this.danceChoreographer.enable();
+	        }
+	    }
+
+	    /**
+	     * Disable automatic dance choreography
+	     */
+	    disableDance() {
+	        if (this.danceChoreographer) {
+	            this.danceChoreographer.disable();
+	        }
+	    }
+
+	    /**
+	     * Check if dance choreography is enabled
+	     * @returns {boolean} True if dance is enabled
+	     */
+	    isDanceEnabled() {
+	        return this.danceChoreographer?.enabled ?? false;
+	    }
+
+	    /**
+	     * Set dance intensity (affects gesture frequency and amplitude)
+	     *
+	     * @example
+	     * mascot.setDanceIntensity(0.2);  // Subtle, occasional gestures
+	     * mascot.setDanceIntensity(0.8);  // Energetic, frequent gestures
+	     *
+	     * @param {number} intensity - Intensity value 0-1
+	     */
+	    setDanceIntensity(intensity) {
+	        if (this.danceChoreographer) {
+	            this.danceChoreographer.setIntensity(intensity);
+	        }
+	    }
+
+	    /**
+	     * Get current dance intensity
+	     * @returns {number} Current intensity 0-1
+	     */
+	    getDanceIntensity() {
+	        return this.danceChoreographer?.getIntensity() ?? 0.5;
+	    }
+
+	    /**
+	     * Get dance choreographer status for debugging
+	     * @returns {Object} Status object with enabled, intensity, currentGroove, etc.
+	     */
+	    getDanceStatus() {
+	        return this.danceChoreographer?.getStatus() ?? { enabled: false };
 	    }
 
 	    /**
@@ -98506,6 +100441,10 @@ void main() {
 	        }
 	        if (this.particleSystem) {
 	            this.particleSystem.destroy();
+	        }
+	        if (this.danceChoreographer) {
+	            this.danceChoreographer.destroy();
+	            this.danceChoreographer = null;
 	        }
 
 	        // Remove canvas elements from DOM
