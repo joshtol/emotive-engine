@@ -36,6 +36,7 @@
  */
 
 import { Core3DManager } from './Core3DManager.js';
+import { CanvasLayerManager } from './CanvasLayerManager.js';
 import ParticleSystem from '../core/ParticleSystem.js'; // Reuse 2D particles!
 import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
@@ -94,7 +95,8 @@ export class EmotiveMascot3D {
             ...config
         };
 
-        // Create dual canvas system
+        // Canvas layer manager (dual canvas architecture)
+        this._canvasLayerManager = null;
         this.container = null;
         this.webglCanvas = null;
         this.canvas2D = null;
@@ -202,8 +204,15 @@ export class EmotiveMascot3D {
         }
 
         try {
-            // Setup dual canvas layers
-            this.setupCanvasLayers(container);
+            // Setup dual canvas layers via CanvasLayerManager
+            this._canvasLayerManager = new CanvasLayerManager({
+                canvasId: this.config.canvasId,
+                enableControls: this.config.enableControls
+            });
+            const layers = this._canvasLayerManager.setup(container);
+            this.container = layers.container;
+            this.webglCanvas = layers.webglCanvas;
+            this.canvas2D = layers.canvas2D;
 
             // Initialize 3D core renderer
             this.core3D = new Core3DManager(this.webglCanvas, {
@@ -250,78 +259,6 @@ export class EmotiveMascot3D {
             console.error('Failed to initialize 3D engine:', error);
             throw error;
         }
-    }
-
-    /**
-     * Setup dual canvas architecture
-     * WebGL canvas (back) + Canvas2D (front) stacked
-     * @private
-     * @param {HTMLElement} containerOrCanvas - Container element or canvas element
-     */
-    setupCanvasLayers(containerOrCanvas) {
-        // Create or use container
-        if (containerOrCanvas.tagName === 'CANVAS') {
-            // User provided single canvas, create container
-            const parent = containerOrCanvas.parentElement;
-            this.container = document.createElement('div');
-            this.container.style.position = 'relative';
-            // Use parent's size (styled by CSS) instead of canvas default size
-            this.container.style.width = '100%';
-            this.container.style.height = '100%';
-            parent.replaceChild(this.container, containerOrCanvas);
-        } else {
-            this.container = containerOrCanvas;
-            // Only set position if not already set (don't override fixed/absolute)
-            if (!this.container.style.position || this.container.style.position === 'static') {
-                this.container.style.position = 'relative';
-            }
-        }
-
-        // Create Canvas2D for particles (Layer 1 - back)
-        this.canvas2D = document.createElement('canvas');
-        this.canvas2D.id = `${this.config.canvasId}-particles`;
-        this.canvas2D.width = this.container.offsetWidth || 400;
-        this.canvas2D.height = this.container.offsetHeight || 400;
-        this.canvas2D.style.position = 'absolute';
-        this.canvas2D.style.top = '0';
-        this.canvas2D.style.left = '0';
-        this.canvas2D.style.width = '100%';
-        this.canvas2D.style.height = '100%';
-        this.canvas2D.style.background = 'transparent';
-        this.canvas2D.style.zIndex = '1';
-        // Disable pointer events - let WebGL canvas handle all interaction
-        this.canvas2D.style.pointerEvents = 'none';
-        this.container.appendChild(this.canvas2D);
-
-        // Create WebGL canvas for 3D core (Layer 2 - front)
-        // CRITICAL: Canvas is NOT appended to DOM here - it will be appended after first render
-        // This prevents any garbage data from being visible during GPU initialization
-        this.webglCanvas = document.createElement('canvas');
-        this.webglCanvas.id = `${this.config.canvasId}-3d`;
-        this.webglCanvas.width = this.canvas2D.width;
-        this.webglCanvas.height = this.canvas2D.height;
-        this.webglCanvas.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 2;
-        `;
-        // Only enable pointer events if controls are enabled (for orbit camera)
-        // Otherwise, let events pass through to allow page scrolling
-        if (this.config.enableControls) {
-            this.webglCanvas.style.pointerEvents = 'auto';
-            // Prevent browser touch gestures (scroll, zoom) on canvas when controls active
-            this.webglCanvas.style.touchAction = 'none';
-        } else {
-            // Disable all pointer/touch events so scrolling works through the canvas
-            this.webglCanvas.style.pointerEvents = 'none';
-            this.webglCanvas.style.touchAction = 'auto';
-        }
-        // NOTE: Canvas is NOT appended here - see animate() for deferred append after first render
-        this._canvasAppended = false;
     }
 
     /**
@@ -387,9 +324,8 @@ export class EmotiveMascot3D {
             // CRITICAL: Append canvas to DOM after first frame renders
             // Canvas is created but NOT added to DOM during setup to prevent garbage data flash
             // Only after the first successful render do we add it to the document
-            if (!this._canvasAppended && this.webglCanvas && this.container) {
-                this.container.appendChild(this.webglCanvas);
-                this._canvasAppended = true;
+            if (this._canvasLayerManager && !this._canvasLayerManager.isCanvasAppended()) {
+                this._canvasLayerManager.appendWebGLCanvas();
             }
         }
 
@@ -1823,12 +1759,10 @@ export class EmotiveMascot3D {
             this.danceChoreographer = null;
         }
 
-        // Remove canvas elements from DOM
-        if (this.webglCanvas && this.webglCanvas.parentNode) {
-            this.webglCanvas.parentNode.removeChild(this.webglCanvas);
-        }
-        if (this.canvas2D && this.canvas2D.parentNode) {
-            this.canvas2D.parentNode.removeChild(this.canvas2D);
+        // Clean up canvas layers
+        if (this._canvasLayerManager) {
+            this._canvasLayerManager.destroy();
+            this._canvasLayerManager = null;
         }
 
         // Null out DOM element references to prevent memory leaks

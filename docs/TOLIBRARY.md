@@ -68,15 +68,25 @@ export default AnimationLoopManager; // class for multi-instance
 
 ---
 
-### Task 2.2: Extract Canvas Layer Management
-**Severity:** Medium
-**File:** `src/3d/index.js` lines 225-289
+### Task 2.2: Extract Canvas Layer Management ✅ COMPLETE
+**Severity:** Medium (Was 1,892 lines, now 1,826 lines)
+**File:** `src/3d/index.js`
 
-**Tasks:**
-- [ ] Create `src/3d/CanvasLayerManager.js`
-- [ ] Move `setupCanvasLayers()` method
-- [ ] Move resize handling logic
-- [ ] Export for reuse in 2D engine if needed
+**Solution:** Created `src/3d/CanvasLayerManager.js` (173 lines) containing:
+- Dual canvas layer setup (WebGL back + Canvas2D front)
+- Container element handling (create or reuse)
+- Deferred WebGL canvas append for GPU initialization
+- Canvas dimension management
+- Cleanup/destroy logic
+
+**Completed:**
+- [x] Create `src/3d/CanvasLayerManager.js` with setup/destroy API
+- [x] Move `setupCanvasLayers()` method logic
+- [x] Update animate() to use `_canvasLayerManager.appendWebGLCanvas()`
+- [x] Update destroy() to use `_canvasLayerManager.destroy()`
+- [x] Reduce `index.js` by ~66 lines (from 1,892 to 1,826)
+
+**Note:** Resize handling stays in Core3DManager which handles Three.js renderer resize.
 
 ---
 
@@ -150,6 +160,6 @@ export default AnimationLoopManager; // class for multi-instance
 |---------|--------|-------|
 | **SSR Safety** | ✅ Complete | Safe import, clear error on `init()` |
 | **Multi-Instance** | ✅ Complete | Fully isolated instances |
-| **Main File Size** | 🔄 In Progress | 1,892 lines (was 2,492), target <1,500 |
+| **Main File Size** | 🔄 In Progress | 1,826 lines (was 2,492), target <1,500 |
 | **Config** | ⏳ Pending | Hardcoded magic numbers → centralized |
 | **Types** | ⏳ Pending | JSDoc → `.d.ts` declarations |
