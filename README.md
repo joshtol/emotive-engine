@@ -422,6 +422,58 @@ Or view the [live demo gallery](https://joshtol.github.io/emotive-engine).
 
 ---
 
+## Server-Side Rendering (SSR)
+
+The engine requires a browser environment. For SSR frameworks, use dynamic imports:
+
+### Next.js
+
+```javascript
+import dynamic from 'next/dynamic';
+
+const MascotComponent = dynamic(
+  () => import('@joshtol/emotive-engine/3d').then(mod => {
+    // Initialize after dynamic import
+    const mascot = new mod.EmotiveMascot3D({ coreGeometry: 'crystal' });
+    return { default: () => <div ref={el => el && mascot.init(el)} /> };
+  }),
+  { ssr: false }
+);
+```
+
+### Nuxt 3
+
+```vue
+<template>
+  <ClientOnly>
+    <div ref="container" />
+  </ClientOnly>
+</template>
+
+<script setup>
+const container = ref(null);
+
+onMounted(async () => {
+  const { EmotiveMascot3D } = await import('@joshtol/emotive-engine/3d');
+  const mascot = new EmotiveMascot3D({ coreGeometry: 'crystal' });
+  mascot.init(container.value);
+  mascot.start();
+});
+</script>
+```
+
+### SSR Detection Helper
+
+```javascript
+import { isSSR } from '@joshtol/emotive-engine/3d';
+
+if (!isSSR()) {
+  // Safe to initialize mascot
+}
+```
+
+---
+
 ## Performance Tips
 
 - Disable post-processing on mobile for 60fps

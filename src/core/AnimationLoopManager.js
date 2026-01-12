@@ -366,8 +366,10 @@ export class AnimationLoopManager {
     }
 }
 
-// Create singleton instance
+// Create shared singleton instance for backwards compatibility
+// NOTE: For multi-instance support, instantiate AnimationLoopManager directly
+// instead of using this singleton. Each mascot can have its own loop manager.
 export const animationLoopManager = new AnimationLoopManager();
 
-// Export for convenience
-export default animationLoopManager;
+// Export class as default for multi-instance usage
+export default AnimationLoopManager;

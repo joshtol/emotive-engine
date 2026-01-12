@@ -162,9 +162,17 @@ export class EmotiveMascot3D {
      * Initialize the 3D engine
      * @param {HTMLElement} container - Container element or canvas
      * @returns {EmotiveMascot3D} This instance for chaining
-     * @throws {Error} If initialization fails
+     * @throws {Error} If initialization fails or called in SSR environment
      */
     init(container) {
+        // SSR Guard: Prevent crashes in server-side rendering environments
+        if (typeof window === 'undefined') {
+            throw new Error(
+                'EmotiveMascot3D.init() requires a browser environment. ' +
+                'For SSR frameworks, use dynamic import with ssr:false (Next.js) or <ClientOnly> (Nuxt).'
+            );
+        }
+
         try {
             // Setup dual canvas layers
             this.setupCanvasLayers(container);
@@ -2490,3 +2498,6 @@ export { rhythm3DAdapter, Rhythm3DAdapter, GROOVE_PRESETS } from './animation/Rh
 
 // Export CrystalSoul for geometry preloading
 export { CrystalSoul } from './effects/CrystalSoul.js';
+
+// SSR detection helper for framework integration
+export const isSSR = () => typeof window === 'undefined';

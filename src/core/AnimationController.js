@@ -76,14 +76,18 @@
 
 // import PerformanceMonitor from './system/PerformanceMonitor.js'; // Unused - available for future performance monitoring
 import SimpleFPSCounter from './system/SimpleFPSCounter.js';
-import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
+import AnimationLoopManager, { animationLoopManager as defaultLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 
 class AnimationController {
     constructor(errorBoundary, config = {}) {
         this.errorBoundary = errorBoundary;
         this.config = config;
         this.config.targetFPS = config.targetFPS || 60;
-        
+
+        // Use provided loop manager or fall back to shared singleton
+        // For multi-instance support, pass a new AnimationLoopManager() in config
+        this.loopManager = config.loopManager || defaultLoopManager;
+
         // Animation state
         this.isRunning = false;
         this.animationFrameId = null;
@@ -208,7 +212,7 @@ class AnimationController {
             }
 
             // Register with AnimationLoopManager instead of direct RAF
-            this.loopCallbackId = animationLoopManager.register(
+            this.loopCallbackId = this.loopManager.register(
                 (deltaTime, timestamp) => this.animate(deltaTime, timestamp),
                 AnimationPriority.CRITICAL, // Main render loop is critical priority
                 this
@@ -236,7 +240,7 @@ class AnimationController {
 
             // Unregister from AnimationLoopManager
             if (this.loopCallbackId) {
-                animationLoopManager.unregister(this.loopCallbackId);
+                this.loopManager.unregister(this.loopCallbackId);
                 this.loopCallbackId = null;
             }
 

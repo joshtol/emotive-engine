@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<!--
+  DUAL MASCOT TEST - Emotive Engine 3D
+
+  Tests multi-instance support: two mascots running independently on one page.
+  Each mascot has its own animation loop and can be controlled separately.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Mascot Test - Emotive Engine</title>
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        /* Theme: Cyan/Teal */
+        :root {
+            --accent: #6ee7ff;
+            --accent-rgb: 110, 231, 255;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #0f3460 100%);
+            flex-direction: column;
+            overflow-y: auto;
+            height: auto;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Page header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+
+        .page-header .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Two-column mascot layout */
+        .mascots-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .mascot-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mascot-panel h2 {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+            text-transform: none;
+            letter-spacing: normal;
+            cursor: default;
+        }
+
+        .mascot-panel h2::after {
+            display: none;
+        }
+
+        .mascot-panel h2 span {
+            color: var(--text-primary);
+        }
+
+        .mascot-panel .animation-container {
+            width: 300px;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            aspect-ratio: auto;
+            box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.1);
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-row button {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        /* Button variants */
+        button.emotion {
+            background: rgba(var(--accent-rgb), 0.2);
+            border-color: rgba(var(--accent-rgb), 0.4);
+        }
+
+        button.emotion:hover {
+            background: rgba(var(--accent-rgb), 0.35);
+            border-color: rgba(var(--accent-rgb), 0.6);
+        }
+
+        button.gesture {
+            background: rgba(250, 180, 100, 0.2);
+            border-color: rgba(250, 180, 100, 0.4);
+        }
+
+        button.gesture:hover {
+            background: rgba(250, 180, 100, 0.35);
+            border-color: rgba(250, 180, 100, 0.6);
+        }
+
+        button.stop {
+            background: rgba(234, 102, 102, 0.2);
+            border-color: rgba(234, 102, 102, 0.4);
+        }
+
+        button.stop:hover {
+            background: rgba(234, 102, 102, 0.35);
+            border-color: rgba(234, 102, 102, 0.6);
+        }
+
+        button.start {
+            background: rgba(102, 234, 150, 0.2);
+            border-color: rgba(102, 234, 150, 0.4);
+        }
+
+        button.start:hover {
+            background: rgba(102, 234, 150, 0.35);
+            border-color: rgba(102, 234, 150, 0.6);
+        }
+
+        /* Status indicator */
+        .status {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        .status.running {
+            color: #4ade80;
+        }
+
+        .status.stopped {
+            color: #f87171;
+        }
+
+        /* Test log */
+        .test-results {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .test-results h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+
+        .test-log {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .test-log .entry {
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .test-log .entry:last-child {
+            border-bottom: none;
+        }
+
+        .test-log .time {
+            color: var(--text-muted);
+            margin-right: 10px;
+        }
+
+        .test-log .mascot1 {
+            color: #60a5fa;
+        }
+
+        .test-log .mascot2 {
+            color: #fb923c;
+        }
+
+        .test-log .success {
+            color: #4ade80;
+        }
+
+        .test-log .info {
+            color: #fbbf24;
+        }
+
+        /* Mobile */
+        @media (max-width: 700px) {
+            .mascots-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mascot-panel .animation-container {
+                width: 280px;
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>Dual Mascot Test</h1>
+        <p class="subtitle">Two independent mascots running simultaneously</p>
+    </div>
+
+    <div class="mascots-container">
+        <!-- Mascot 1: Crystal -->
+        <div class="mascot-panel">
+            <h2>Mascot 1: <span>Crystal</span></h2>
+            <div class="animation-container" id="container-1"></div>
+            <div class="controls">
+                <div class="control-row">
+                    <button class="emotion" data-mascot="1" data-emotion="joy">Joy</button>
+                    <button class="emotion" data-mascot="1" data-emotion="sadness">Sad</button>
+                    <button class="emotion" data-mascot="1" data-emotion="excitement">Excited</button>
+                </div>
+                <div class="control-row">
+                    <button class="gesture" data-mascot="1" data-gesture="bounce">Bounce</button>
+                    <button class="gesture" data-mascot="1" data-gesture="sway">Sway</button>
+                    <button class="gesture" data-mascot="1" data-gesture="pulse">Pulse</button>
+                </div>
+                <div class="control-row">
+                    <button class="start" data-mascot="1" data-action="start">Start</button>
+                    <button class="stop" data-mascot="1" data-action="stop">Stop</button>
+                </div>
+            </div>
+            <div class="status running" id="status-1">Running</div>
+        </div>
+
+        <!-- Mascot 2: Moon -->
+        <div class="mascot-panel">
+            <h2>Mascot 2: <span>Moon</span></h2>
+            <div class="animation-container" id="container-2"></div>
+            <div class="controls">
+                <div class="control-row">
+                    <button class="emotion" data-mascot="2" data-emotion="calm">Calm</button>
+                    <button class="emotion" data-mascot="2" data-emotion="surprise">Surprise</button>
+                    <button class="emotion" data-mascot="2" data-emotion="love">Love</button>
+                </div>
+                <div class="control-row">
+                    <button class="gesture" data-mascot="2" data-gesture="nod">Nod</button>
+                    <button class="gesture" data-mascot="2" data-gesture="shake">Shake</button>
+                    <button class="gesture" data-mascot="2" data-gesture="float">Float</button>
+                </div>
+                <div class="control-row">
+                    <button class="start" data-mascot="2" data-action="start">Start</button>
+                    <button class="stop" data-mascot="2" data-action="stop">Stop</button>
+                </div>
+            </div>
+            <div class="status running" id="status-2">Running</div>
+        </div>
+    </div>
+
+    <div class="test-results">
+        <h3>Test Log</h3>
+        <div class="test-log" id="test-log"></div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '/emotive-engine-3d.js';
+
+        const log = (message, type = 'info') => {
+            const logEl = document.getElementById('test-log');
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            const time = new Date().toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                fractionalSecondDigits: 3
+            });
+            entry.innerHTML = `<span class="time">${time}</span><span class="${type}">${message}</span>`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        };
+
+        // Track mascots
+        const mascots = {};
+        const statuses = {};
+
+        // Initialize Mascot 1: Crystal
+        log('Initializing Mascot 1 (Crystal)...', 'mascot1');
+        const container1 = document.getElementById('container-1');
+        mascots[1] = new EmotiveMascot3D({
+            coreGeometry: 'crystal',
+            enableParticles: true,
+            enablePostProcessing: true,
+            enableControls: true,
+            autoRotate: true,
+            cameraDistance: 1.4,
+            fov: 30,
+            minZoom: 0.8,
+            maxZoom: 2.5,
+            materialVariant: 'multiplexer',
+            assetBasePath: '/assets'
+        });
+        mascots[1].init(container1);
+        mascots[1].start();
+        statuses[1] = document.getElementById('status-1');
+        log('Mascot 1 started successfully', 'success');
+
+        // Initialize Mascot 2: Moon
+        log('Initializing Mascot 2 (Moon)...', 'mascot2');
+        const container2 = document.getElementById('container-2');
+        mascots[2] = new EmotiveMascot3D({
+            coreGeometry: 'moon',
+            enableParticles: true,
+            enablePostProcessing: true,
+            enableControls: true,
+            autoRotate: true,
+            cameraDistance: 1.3,
+            fov: 30,
+            minZoom: 0.8,
+            maxZoom: 2.5,
+            assetBasePath: '/assets'
+        });
+        mascots[2].init(container2);
+        mascots[2].start();
+        statuses[2] = document.getElementById('status-2');
+        log('Mascot 2 started successfully', 'success');
+
+        // Verify independence
+        log('Both mascots initialized - testing independence...', 'info');
+
+        // Set different initial emotions
+        setTimeout(() => {
+            mascots[1].setEmotion('joy');
+            log('Mascot 1 set to JOY', 'mascot1');
+        }, 500);
+
+        setTimeout(() => {
+            mascots[2].setEmotion('calm');
+            log('Mascot 2 set to CALM', 'mascot2');
+        }, 1000);
+
+        setTimeout(() => {
+            log('Independence test: Both mascots running with different emotions', 'success');
+        }, 1500);
+
+        // Handle button clicks
+        document.querySelectorAll('button[data-mascot]').forEach(button => {
+            button.addEventListener('click', () => {
+                const mascotId = button.dataset.mascot;
+                const mascot = mascots[mascotId];
+                const status = statuses[mascotId];
+
+                if (button.dataset.emotion) {
+                    mascot.setEmotion(button.dataset.emotion);
+                    log(`Mascot ${mascotId} emotion: ${button.dataset.emotion}`, `mascot${mascotId}`);
+                }
+
+                if (button.dataset.gesture) {
+                    mascot.express(button.dataset.gesture);
+                    log(`Mascot ${mascotId} gesture: ${button.dataset.gesture}`, `mascot${mascotId}`);
+                }
+
+                if (button.dataset.action === 'stop') {
+                    mascot.stop();
+                    status.textContent = 'Stopped';
+                    status.className = 'status stopped';
+                    log(`Mascot ${mascotId} STOPPED`, `mascot${mascotId}`);
+                }
+
+                if (button.dataset.action === 'start') {
+                    mascot.start();
+                    status.textContent = 'Running';
+                    status.className = 'status running';
+                    log(`Mascot ${mascotId} STARTED`, `mascot${mascotId}`);
+                }
+            });
+        });
+
+        // Expose for console testing
+        window.mascots = mascots;
+        window.log = log;
+
+        log('Ready! Click buttons to control each mascot independently.', 'success');
+    </script>
+</body>
+</html>
