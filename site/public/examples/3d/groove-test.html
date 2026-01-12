@@ -245,11 +245,12 @@
         }
 
         .audio-source-row .track-select {
-            flex: 1;
+            flex: 1 1 auto;
+            min-width: 0;  /* Allow shrinking below content size */
         }
 
         .audio-source-row button {
-            flex-shrink: 0;
+            flex: 0 0 auto;
             white-space: nowrap;
         }
 
@@ -452,6 +453,116 @@
         .current-groove {
             color: var(--accent);
             font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           COMPACT BPM DISPLAY (inactive state)
+        ═══════════════════════════════════════════════════════════════════════════ */
+        .bpm-display.compact {
+            padding: 0.5rem 0.75rem;
+        }
+
+        .bpm-display.compact .bpm-value {
+            font-size: 1.25rem;
+        }
+
+        .bpm-display.compact .confidence-bar,
+        .bpm-display.compact .lock-status {
+            display: none;
+        }
+
+        .bpm-display.compact .bpm-main {
+            margin-bottom: 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           COLLAPSIBLE ADVANCED GESTURES SECTION
+        ═══════════════════════════════════════════════════════════════════════════ */
+        .advanced-gestures {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: #808080;
+            margin-bottom: 0.5rem;
+            user-select: none;
+        }
+
+        .advanced-toggle:hover {
+            color: #a0a0a0;
+        }
+
+        .advanced-toggle .chevron {
+            transition: transform 0.2s;
+            font-size: 0.6rem;
+        }
+
+        .advanced-toggle.collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .advanced-content {
+            display: block;
+        }
+
+        .advanced-toggle.collapsed + .advanced-content {
+            display: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           HIDE KEYBOARD SHORTCUTS ON TOUCH DEVICES
+        ═══════════════════════════════════════════════════════════════════════════ */
+        @media (pointer: coarse) {
+            .keyboard-shortcuts-info {
+                display: none;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           DEBUG SECTION (collapsed by default)
+        ═══════════════════════════════════════════════════════════════════════════ */
+        .debug-section .section-content {
+            display: block;
+        }
+
+        .debug-section.collapsed .section-content {
+            display: none;
+        }
+
+        .debug-section h2 {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .debug-section h2::after {
+            content: '▼';
+            font-size: 0.6rem;
+            margin-left: 0.5rem;
+            opacity: 0.5;
+            transition: transform 0.2s;
+        }
+
+        .debug-section.collapsed h2::after {
+            transform: rotate(-90deg);
+        }
+
+        .debug-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .debug-buttons button {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 0.4rem;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════════
@@ -802,9 +913,8 @@
                     <button id="playBtn">Play</button>
                     <button id="stopBtn" disabled>Stop</button>
                     <button id="tapTempoBtn">Tap Tempo</button>
-                    <button id="copyLogBtn" title="Copy BPM debug log to clipboard">Copy Log</button>
                 </div>
-                <div class="bpm-display">
+                <div class="bpm-display compact">
                     <div class="bpm-main">
                         <div>
                             <div class="bpm-value" id="bpmValue">120</div>
@@ -831,27 +941,27 @@
                     <button class="groove-btn active" data-groove="groove1">
                         <div class="groove-icon">~</div>
                         <div class="groove-info">
-                            <h3>Groove 1 - Subtle</h3>
+                            <h3>Subtle</h3>
                             <p>Elegant, gentle bounce and sway</p>
                         </div>
                     </button>
                     <button class="groove-btn" data-groove="groove2">
                         <div class="groove-icon">^</div>
                         <div class="groove-info">
-                            <h3>Groove 2 - Energetic</h3>
+                            <h3>Energetic</h3>
                             <p>Bouncy, pronounced vertical motion</p>
                         </div>
                     </button>
                     <button class="groove-btn" data-groove="groove3">
                         <div class="groove-icon">S</div>
                         <div class="groove-info">
-                            <h3>Groove 3 - Flowing</h3>
+                            <h3>Flowing</h3>
                             <p>Smooth, emphasis on rotation</p>
                         </div>
                     </button>
                 </div>
                 <div class="transition-row">
-                    <label>Transition:</label>
+                    <label>Blend over:</label>
                     <select id="transitionMode">
                         <option value="instant">Instant</option>
                         <option value="1">1 bar</option>
@@ -884,67 +994,9 @@
                     <span class="intensity-value" id="intensityValue">100%</span>
                 </div>
 
-                <!-- 🎵 ACCENT GESTURES (Dance-friendly - work WITH groove) -->
+                <!-- 🎼 COMBOS - Primary interaction (shown prominently) -->
                 <div class="gesture-section">
-                    <div class="gesture-section-title">✨ Accent (dance-friendly punctuation)</div>
-                    <div class="gesture-grid" id="accentGestures">
-                        <span class="gesture-chip accent-type" data-gesture="pop">pop</span>
-                        <span class="gesture-chip accent-type" data-gesture="bob">bob</span>
-                        <span class="gesture-chip accent-type" data-gesture="swell">swell</span>
-                        <span class="gesture-chip accent-type" data-gesture="swagger">swagger</span>
-                        <span class="gesture-chip accent-type" data-gesture="dip">dip</span>
-                        <span class="gesture-chip accent-type" data-gesture="flare">flare</span>
-                    </div>
-                </div>
-
-                <!-- 🎶 RHYTHMIC GESTURES (Absolute motion - can compete with groove) -->
-                <div class="gesture-section">
-                    <div class="gesture-section-title">🔄 Rhythmic (absolute motion)</div>
-                    <div class="gesture-grid" id="rhythmicGestures">
-                        <span class="gesture-chip" data-gesture="bounce">bounce</span>
-                        <span class="gesture-chip" data-gesture="pulse">pulse</span>
-                        <span class="gesture-chip" data-gesture="nod">nod</span>
-                        <span class="gesture-chip" data-gesture="sway">sway</span>
-                        <span class="gesture-chip" data-gesture="wiggle">wiggle</span>
-                        <span class="gesture-chip" data-gesture="headBob">headBob</span>
-                    </div>
-                </div>
-
-                <!-- 🚀 EXPRESSIVE GESTURES (for special moments) -->
-                <div class="gesture-section">
-                    <div class="gesture-section-title">🚀 Expressive (climactic moments)</div>
-                    <div class="gesture-grid" id="expressiveGestures">
-                        <span class="gesture-chip" data-gesture="spin">spin</span>
-                        <span class="gesture-chip" data-gesture="jump">jump</span>
-                        <span class="gesture-chip" data-gesture="twist">twist</span>
-                        <span class="gesture-chip" data-gesture="hula">hula</span>
-                    </div>
-                </div>
-
-                <!-- Subtle Emphasis -->
-                <div class="gesture-section">
-                    <div class="gesture-section-title">Subtle Emphasis</div>
-                    <div class="gesture-grid" id="subtleGestures">
-                        <span class="gesture-chip" data-gesture="twitch">twitch</span>
-                        <span class="gesture-chip" data-gesture="lean">lean</span>
-                        <span class="gesture-chip" data-gesture="tilt">tilt</span>
-                    </div>
-                </div>
-
-                <!-- Glow Effects (rate-limited) -->
-                <div class="gesture-section">
-                    <div class="gesture-section-title">⚡ Glow Effects (rate-limited)</div>
-                    <div class="gesture-grid" id="glowGestures">
-                        <span class="gesture-chip glow-type" data-gesture="flash">flash</span>
-                        <span class="gesture-chip glow-type" data-gesture="glow">glow</span>
-                        <span class="gesture-chip glow-type" data-gesture="burst">burst</span>
-                        <span class="gesture-chip glow-type" data-gesture="flicker">flicker</span>
-                    </div>
-                </div>
-
-                <!-- Combos -->
-                <div class="gesture-section">
-                    <div class="gesture-section-title">🎼 Combos</div>
+                    <div class="gesture-section-title">🎼 Quick Combos</div>
                     <div class="gesture-grid" id="combos">
                         <span class="combo-chip" data-combo="subtle">subtle</span>
                         <span class="combo-chip" data-combo="moderate">moderate</span>
@@ -953,7 +1005,76 @@
                     </div>
                 </div>
 
-                <!-- Status -->
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ADVANCED GESTURES (collapsed by default)
+                ═══════════════════════════════════════════════════════════════════ -->
+                <div class="advanced-gestures">
+                    <div class="advanced-toggle collapsed" id="advancedToggle">
+                        <span class="chevron">▼</span>
+                        <span>Individual Gestures</span>
+                    </div>
+                    <div class="advanced-content">
+                        <!-- ✨ ACCENT GESTURES (Dance-friendly - work WITH groove) -->
+                        <div class="gesture-section">
+                            <div class="gesture-section-title">✨ Accent</div>
+                            <div class="gesture-grid" id="accentGestures">
+                                <span class="gesture-chip accent-type" data-gesture="pop">pop</span>
+                                <span class="gesture-chip accent-type" data-gesture="bob">bob</span>
+                                <span class="gesture-chip accent-type" data-gesture="swell">swell</span>
+                                <span class="gesture-chip accent-type" data-gesture="swagger">swagger</span>
+                                <span class="gesture-chip accent-type" data-gesture="dip">dip</span>
+                                <span class="gesture-chip accent-type" data-gesture="flare">flare</span>
+                            </div>
+                        </div>
+
+                        <!-- 🔄 RHYTHMIC GESTURES -->
+                        <div class="gesture-section">
+                            <div class="gesture-section-title">🔄 Rhythmic</div>
+                            <div class="gesture-grid" id="rhythmicGestures">
+                                <span class="gesture-chip" data-gesture="bounce">bounce</span>
+                                <span class="gesture-chip" data-gesture="pulse">pulse</span>
+                                <span class="gesture-chip" data-gesture="nod">nod</span>
+                                <span class="gesture-chip" data-gesture="sway">sway</span>
+                                <span class="gesture-chip" data-gesture="wiggle">wiggle</span>
+                                <span class="gesture-chip" data-gesture="headBob">headBob</span>
+                            </div>
+                        </div>
+
+                        <!-- 🚀 EXPRESSIVE GESTURES -->
+                        <div class="gesture-section">
+                            <div class="gesture-section-title">🚀 Expressive</div>
+                            <div class="gesture-grid" id="expressiveGestures">
+                                <span class="gesture-chip" data-gesture="spin">spin</span>
+                                <span class="gesture-chip" data-gesture="jump">jump</span>
+                                <span class="gesture-chip" data-gesture="twist">twist</span>
+                                <span class="gesture-chip" data-gesture="hula">hula</span>
+                            </div>
+                        </div>
+
+                        <!-- Subtle Emphasis -->
+                        <div class="gesture-section">
+                            <div class="gesture-section-title">Subtle</div>
+                            <div class="gesture-grid" id="subtleGestures">
+                                <span class="gesture-chip" data-gesture="twitch">twitch</span>
+                                <span class="gesture-chip" data-gesture="lean">lean</span>
+                                <span class="gesture-chip" data-gesture="tilt">tilt</span>
+                            </div>
+                        </div>
+
+                        <!-- ⚡ Glow Effects -->
+                        <div class="gesture-section">
+                            <div class="gesture-section-title">⚡ Glow</div>
+                            <div class="gesture-grid" id="glowGestures">
+                                <span class="gesture-chip glow-type" data-gesture="flash">flash</span>
+                                <span class="gesture-chip glow-type" data-gesture="glow">glow</span>
+                                <span class="gesture-chip glow-type" data-gesture="burst">burst</span>
+                                <span class="gesture-chip glow-type" data-gesture="flicker">flicker</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status (single instance - removed duplicate) -->
                 <div class="dance-status">
                     <div class="dance-stat">
                         <span class="dance-stat-label">Groove</span>
@@ -992,24 +1113,26 @@
             </div>
         </div>
 
-        <!-- Log Panel -->
-        <div class="section">
-            <h2>Status Log</h2>
+        <!-- Debug Section (collapsed by default) -->
+        <div class="section debug-section collapsed">
+            <h2>Debug</h2>
             <div class="section-content">
+                <div class="debug-buttons">
+                    <button id="copyLogBtn" title="Copy BPM debug log to clipboard">Copy BPM Log</button>
+                </div>
                 <div class="log" id="log"></div>
                 <div class="footer-info">
-                    <span>Current: <span class="current-groove" id="currentGroove">groove1</span></span>
+                    <span>Groove: <span class="current-groove" id="currentGroove">groove1</span></span>
                     <span id="frameInfo">-- fps</span>
                 </div>
             </div>
         </div>
 
-        <div class="section">
+        <!-- Keyboard shortcuts (hidden on touch devices via CSS) -->
+        <div class="section keyboard-shortcuts-info">
             <div class="info-box">
-                <strong>Keyboard shortcuts:</strong><br>
-                Space = play/stop<br>
-                T = tap tempo<br>
-                1/2/3 = groove presets
+                <strong>Keyboard:</strong>
+                Space = play/stop · T = tap · 1/2/3 = grooves
             </div>
         </div>
     </div>
@@ -1140,6 +1263,7 @@
         const globalDropOverlay = document.getElementById('globalDropOverlay');
 
         // BPM detection display
+        const bpmDisplay = document.querySelector('.bpm-display');
         const bpmValue = document.getElementById('bpmValue');
         const beatIndicator = document.getElementById('beatIndicator');
         const confidenceFill = document.getElementById('confidenceFill');
@@ -1477,6 +1601,9 @@
                 playBtn.disabled = true;
                 stopBtn.disabled = false;
 
+                // Expand BPM display when playing
+                bpmDisplay.classList.remove('compact');
+
                 log('Playing audio...', 'bpm');
 
                 // Start monitoring BPM detection status
@@ -1510,6 +1637,10 @@
             isPlaying = false;
             playBtn.disabled = false;
             stopBtn.disabled = true;
+
+            // Compact BPM display when stopped
+            bpmDisplay.classList.add('compact');
+
             mascot.stopRhythm();
             log('Stopped', 'info');
         }
@@ -1937,6 +2068,22 @@
         // These handle particles, glow, breathing, and auto-rotate toggles
         setupParticlesToggle(mascot);
         setupVisualToggles(mascot);
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // COLLAPSIBLE SECTIONS
+        // ─────────────────────────────────────────────────────────────────────────
+
+        // Advanced gestures toggle (collapsed by default)
+        const advancedToggle = document.getElementById('advancedToggle');
+        advancedToggle.addEventListener('click', () => {
+            advancedToggle.classList.toggle('collapsed');
+        });
+
+        // Debug section toggle (collapsed by default)
+        const debugSection = document.querySelector('.debug-section');
+        debugSection.querySelector('h2').addEventListener('click', () => {
+            debugSection.classList.toggle('collapsed');
+        });
 
         /**
          * ═══════════════════════════════════════════════════════════════════════════

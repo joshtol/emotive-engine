@@ -96846,6 +96846,15 @@ class DanceChoreographer {
     _detectBarTransition() {
         if (!this.rhythmAdapter) return;
 
+        // Only count bars when rhythm is actually playing
+        // This prevents phantom bar counting during idle or before music starts
+        const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
+        if (!isPlaying) {
+            // Reset lastBarProgress when not playing so we don't get false wraps when starting
+            this.lastBarProgress = 0;
+            return;
+        }
+
         const currentBarProgress = this.rhythmAdapter.barProgress || 0;
 
         // Detect bar boundary: progress wraps from high value back to low value
@@ -97137,6 +97146,11 @@ class DanceChoreographer {
      */
     _considerMorph(audio) {
         if (!this.config.morphEnabled || !this.mascot) return;
+
+        // Only consider morphs when rhythm is actually playing
+        // This prevents random morphs during idle or before music starts
+        const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
+        if (!isPlaying) return;
 
         // Check cooldown (long cooldown between morphs)
         const barsSinceLastMorph = this.barCount - this._lastMorphBar;
