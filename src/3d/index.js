@@ -1370,7 +1370,7 @@ export class EmotiveMascot3D {
                 this._decodedAudioBuffer = audioBuffer;
                 this._audioBufferDuration = audioBuffer.duration;
                 usedBufferSource = true;
-                console.log('[Audio] SUCCESS: Decoded audio buffer, duration:', audioBuffer.duration.toFixed(2) + 's');
+                console.log(`[Audio] SUCCESS: Decoded audio buffer, duration: ${audioBuffer.duration.toFixed(2)}s`);
             } catch (err) {
                 console.warn('[Audio] Buffer decode failed, falling back to MediaElementSource:', err.message);
             }
@@ -1575,7 +1575,9 @@ export class EmotiveMascot3D {
         if (this._analysisGainNode) {
             try {
                 this._analysisGainNode.disconnect();
-            } catch (e) {}
+            } catch (_e) {
+                // Already disconnected, ignore
+            }
             this._analysisGainNode = null;
         }
 
@@ -1620,10 +1622,7 @@ export class EmotiveMascot3D {
         for (let i = 0; i < Math.min(channelData.length, 44100); i++) {
             maxSample = Math.max(maxSample, Math.abs(channelData[i]));
         }
-        console.log('[Audio] Buffer check: channels=' + this._decodedAudioBuffer.numberOfChannels +
-                    ' bufferSampleRate=' + this._decodedAudioBuffer.sampleRate +
-                    ' contextSampleRate=' + this._audioContext.sampleRate +
-                    ' maxSample(first1s)=' + maxSample.toFixed(4));
+        console.log(`[Audio] Buffer check: channels=${this._decodedAudioBuffer.numberOfChannels} bufferSampleRate=${this._decodedAudioBuffer.sampleRate} contextSampleRate=${this._audioContext.sampleRate} maxSample(first1s)=${maxSample.toFixed(4)}`);
 
         // Create gain node FIRST (before connecting anything)
         // This ensures the full graph exists before source starts
@@ -1646,10 +1645,7 @@ export class EmotiveMascot3D {
         this._analysisSourceNode.start(0, startTime);
         this._analysisStartTime = this._audioContext.currentTime - startTime;
 
-        console.log('[Audio] Started buffer analysis from', startTime.toFixed(2) + 's',
-                    'contextState=' + this._audioContext.state,
-                    'analyzerConnected=' + !!this._bufferAnalyzerNode,
-                    'sourceBuffer=' + !!this._analysisSourceNode.buffer);
+        console.log(`[Audio] Started buffer analysis from ${startTime.toFixed(2)}s contextState=${this._audioContext.state} analyzerConnected=${!!this._bufferAnalyzerNode} sourceBuffer=${!!this._analysisSourceNode.buffer}`);
 
         // Debug: Check if analyzer can get data after delays
         const debugAnalyzer = () => {
@@ -1672,17 +1668,17 @@ export class EmotiveMascot3D {
 
         setTimeout(() => {
             const r = debugAnalyzer();
-            if (r) console.log('[Audio] 100ms check: freqMax=' + r.testMax + ' freqSum=' + r.testSum + ' timeMin=' + r.timeMin + ' timeMax=' + r.timeMax);
+            if (r) console.log(`[Audio] 100ms check: freqMax=${r.testMax} freqSum=${r.testSum} timeMin=${r.timeMin} timeMax=${r.timeMax}`);
         }, 100);
 
         setTimeout(() => {
             const r = debugAnalyzer();
-            if (r) console.log('[Audio] 500ms check: freqMax=' + r.testMax + ' freqSum=' + r.testSum + ' timeMin=' + r.timeMin + ' timeMax=' + r.timeMax);
+            if (r) console.log(`[Audio] 500ms check: freqMax=${r.testMax} freqSum=${r.testSum} timeMin=${r.timeMin} timeMax=${r.timeMax}`);
         }, 500);
 
         setTimeout(() => {
             const r = debugAnalyzer();
-            if (r) console.log('[Audio] 1000ms check: freqMax=' + r.testMax + ' freqSum=' + r.testSum + ' timeMin=' + r.timeMin + ' timeMax=' + r.timeMax);
+            if (r) console.log(`[Audio] 1000ms check: freqMax=${r.testMax} freqSum=${r.testSum} timeMin=${r.timeMin} timeMax=${r.timeMax}`);
         }, 1000);
 
         // Restart BPM detection AFTER source is connected and started
@@ -1780,18 +1776,6 @@ export class EmotiveMascot3D {
     }
 
     /**
-     * Reset BPM detection for a new track
-     * Call this when switching audio sources
-     */
-    resetBPMDetection() {
-        if (this._bpmDetector) {
-            this._bpmDetector.reset();
-            this._detectedBPM = 0;
-            console.log('[BPM] Detection reset for new track');
-        }
-    }
-
-    /**
      * Start agent-based BPM detection for accurate tempo lock
      * @private
      */
@@ -1821,7 +1805,7 @@ export class EmotiveMascot3D {
         let lastPeakTime = 0;
         let prevEnergy = 0;
         let prevTimeDomainAmplitude = 0; // Track previous amplitude for spike detection
-        let fluxHistory = [];
+        const fluxHistory = [];
         const fluxHistorySize = 20;
 
         let _onsetDebugCount = 0;
