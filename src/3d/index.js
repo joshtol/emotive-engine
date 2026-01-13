@@ -46,7 +46,7 @@ import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
 import { DanceChoreographer } from './animation/DanceChoreographer.js';
-import { FRAME_TIMING } from '../core/config/defaults.js';
+import { FRAME_TIMING, ACCESSIBILITY } from '../core/config/defaults.js';
 
 /**
  * Valid geometry types for morphTo()
@@ -168,6 +168,63 @@ export class EmotiveMascot3D {
 
         // Audio bridge for audio-reactive animations (initialized lazily)
         this._audioBridge = null;
+
+        // Accessibility: Check reduced motion preference
+        this._prefersReducedMotion = ACCESSIBILITY.prefersReducedMotion();
+        this._reducedMotionMediaQuery = null;
+    }
+
+    /**
+     * Check if user prefers reduced motion
+     * @returns {boolean} True if reduced motion is preferred
+     */
+    prefersReducedMotion() {
+        return this._prefersReducedMotion;
+    }
+
+    /**
+     * Set reduced motion mode manually
+     * @param {boolean} enabled - Whether to enable reduced motion
+     * @returns {EmotiveMascot3D} This instance for chaining
+     */
+    setReducedMotion(enabled) {
+        this._prefersReducedMotion = enabled;
+
+        // Apply reduced motion settings
+        if (enabled) {
+            if (ACCESSIBILITY.REDUCED_MOTION_DISABLE_AUTO_ROTATE) {
+                this.disableAutoRotate();
+            }
+            if (ACCESSIBILITY.REDUCED_MOTION_DISABLE_PARTICLES) {
+                this.disableParticles();
+            }
+        }
+
+        this.eventManager.emit('accessibility:reducedMotion', { enabled });
+        return this;
+    }
+
+    /**
+     * Setup listener for reduced motion media query changes
+     * @private
+     */
+    _setupReducedMotionListener() {
+        if (typeof window === 'undefined' || !window.matchMedia) return;
+
+        this._reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        // Handler for preference changes
+        this._reducedMotionHandler = event => {
+            this._prefersReducedMotion = event.matches;
+            this.setReducedMotion(event.matches);
+        };
+
+        // Use addEventListener for modern browsers, addListener for legacy
+        if (this._reducedMotionMediaQuery.addEventListener) {
+            this._reducedMotionMediaQuery.addEventListener('change', this._reducedMotionHandler);
+        } else if (this._reducedMotionMediaQuery.addListener) {
+            this._reducedMotionMediaQuery.addListener(this._reducedMotionHandler);
+        }
     }
 
     /**
@@ -269,6 +326,14 @@ export class EmotiveMascot3D {
             this.danceChoreographer.setRhythmAdapter(this.core3D?.rhythm3DAdapter);
             this.danceChoreographer.setMascot(this);
             // Note: audioDeformer is set later when listenTo() is called
+
+            // Accessibility: Listen for reduced motion preference changes
+            this._setupReducedMotionListener();
+
+            // Apply reduced motion settings if preference is set
+            if (this._prefersReducedMotion) {
+                this.setReducedMotion(true);
+            }
 
             return this;
         } catch (error) {
@@ -1841,6 +1906,17 @@ export class EmotiveMascot3D {
             this._elementTrackingHandlers = null;
         }
         this._attachedElement = null;
+
+        // Clean up reduced motion listener
+        if (this._reducedMotionMediaQuery && this._reducedMotionHandler) {
+            if (this._reducedMotionMediaQuery.removeEventListener) {
+                this._reducedMotionMediaQuery.removeEventListener('change', this._reducedMotionHandler);
+            } else if (this._reducedMotionMediaQuery.removeListener) {
+                this._reducedMotionMediaQuery.removeListener(this._reducedMotionHandler);
+            }
+            this._reducedMotionMediaQuery = null;
+            this._reducedMotionHandler = null;
+        }
 
         // Clear all pending gesture timeouts
         this.gestureTimeouts.forEach(id => clearTimeout(id));

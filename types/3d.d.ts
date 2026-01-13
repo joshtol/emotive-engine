@@ -428,6 +428,52 @@ export class EmotiveMascot3D {
 
     /** Detach mascot from tracked element */
     detachFromElement(): EmotiveMascot3D;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ACCESSIBILITY
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Check if user prefers reduced motion */
+    prefersReducedMotion(): boolean;
+
+    /** Set reduced motion mode manually */
+    setReducedMotion(enabled: boolean): EmotiveMascot3D;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // NATURAL LANGUAGE INTERFACE
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Parse natural language and apply emotions/gestures */
+    feel(description: string): FeelResult;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPER METHODS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Get list of available emotions */
+    getAvailableEmotions(): string[];
+
+    /** Get list of available gestures */
+    getAvailableGestures(): string[];
+
+    /** Get list of available geometries */
+    getAvailableGeometries(): string[];
+
+    /** Set groove preset */
+    setGroove(preset: string): EmotiveMascot3D;
+
+    /** Enable crystal soul effect */
+    enableCrystalSoul(): EmotiveMascot3D;
+
+    /** Disable crystal soul effect */
+    disableCrystalSoul(): EmotiveMascot3D;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // EVENT MANAGER
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Event manager for subscribing to mascot events */
+    readonly eventManager: EventManager;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -485,6 +531,52 @@ export interface AttachOptions {
     scale?: number;
     /** Whether to contain particles within element bounds (default: true) */
     containParticles?: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEEL RESULT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface FeelResult {
+    /** Whether the feel() call succeeded */
+    success: boolean;
+    /** Parsed intent data (emotion, gestures, etc.) */
+    parsed?: {
+        emotion?: EmotionName;
+        undertone?: string;
+        gestures?: GestureName[];
+        geometry?: GeometryType;
+    };
+    /** Error message if success is false */
+    error?: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EVENT MANAGER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export type EventName =
+    | 'emotion:change'
+    | 'gesture:start'
+    | 'gesture:end'
+    | 'morph:start'
+    | 'morph:end'
+    | 'position:change'
+    | 'scale:change'
+    | 'rhythm:start'
+    | 'rhythm:stop'
+    | 'bpm:change'
+    | 'accessibility:reducedMotion';
+
+export interface EventManager {
+    /** Subscribe to an event */
+    on(event: EventName, handler: (data: any) => void): void;
+
+    /** Unsubscribe from an event */
+    off(event: EventName, handler: (data: any) => void): void;
+
+    /** Emit an event */
+    emit(event: EventName, data: any): void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

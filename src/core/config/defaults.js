@@ -76,6 +76,29 @@ export const MONITORING = {
 };
 
 /**
+ * Accessibility configuration
+ */
+export const ACCESSIBILITY = {
+    /** Check if user prefers reduced motion (browser/OS setting) */
+    prefersReducedMotion: () => {
+        if (typeof window === 'undefined') return false;
+        return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    },
+
+    /** Reduced motion gesture duration multiplier (faster = less motion) */
+    REDUCED_MOTION_DURATION_MULTIPLIER: 0.3,
+
+    /** Reduced motion particle count multiplier */
+    REDUCED_MOTION_PARTICLE_MULTIPLIER: 0.25,
+
+    /** Whether to completely disable particles in reduced motion mode */
+    REDUCED_MOTION_DISABLE_PARTICLES: false,
+
+    /** Whether to disable auto-rotate in reduced motion mode */
+    REDUCED_MOTION_DISABLE_AUTO_ROTATE: true
+};
+
+/**
  * Combined defaults object for constructor overrides
  *
  * Usage:
@@ -113,6 +136,12 @@ export const DEFAULT_CONFIG = {
         featureFlagsRefresh: MONITORING.FEATURE_FLAGS_REFRESH,
         contextDecayInterval: MONITORING.CONTEXT_DECAY_INTERVAL,
         frustrationDecayInterval: MONITORING.FRUSTRATION_DECAY_INTERVAL
+    },
+    accessibility: {
+        reducedMotionDurationMultiplier: ACCESSIBILITY.REDUCED_MOTION_DURATION_MULTIPLIER,
+        reducedMotionParticleMultiplier: ACCESSIBILITY.REDUCED_MOTION_PARTICLE_MULTIPLIER,
+        reducedMotionDisableParticles: ACCESSIBILITY.REDUCED_MOTION_DISABLE_PARTICLES,
+        reducedMotionDisableAutoRotate: ACCESSIBILITY.REDUCED_MOTION_DISABLE_AUTO_ROTATE
     }
 };
 

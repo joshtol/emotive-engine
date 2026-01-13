@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessible Mascot - Emotive Engine</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .mascot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #mascot-container {
+            width: 300px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            cursor: pointer;
+        }
+
+        #mascot-container:focus-visible {
+            outline: 3px solid #4A90D9;
+            outline-offset: 4px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        button:focus-visible {
+            outline: 2px solid #4A90D9;
+            outline-offset: 2px;
+        }
+
+        button[aria-pressed="true"] {
+            background: #4A90D9;
+            border-color: #4A90D9;
+        }
+
+        .status-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .status-panel h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #aaa;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-value {
+            color: #4A90D9;
+            font-weight: 600;
+        }
+
+        .keyboard-help {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .keyboard-help h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            color: #888;
+        }
+
+        .keyboard-help ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .keyboard-help li {
+            margin: 0.25rem 0;
+        }
+
+        kbd {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+        }
+
+        .reduced-motion-notice {
+            background: #f59e0b20;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .reduced-motion-notice.visible {
+            display: block;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            button {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Accessible Mascot Demo</h1>
+        <p class="subtitle">Full keyboard navigation, screen reader support, and reduced motion</p>
+
+        <div id="reduced-motion-notice" class="reduced-motion-notice" role="alert">
+            <strong>Reduced motion enabled.</strong> Animations are minimized based on your system preference.
+        </div>
+
+        <div class="mascot-wrapper">
+            <figure>
+                <div
+                    id="mascot-container"
+                    tabindex="0"
+                    role="application"
+                    aria-label="Interactive mascot character. Press Enter or Space to make it bounce. Use arrow keys to change emotions."
+                >
+                    <noscript>
+                        <p style="padding: 2rem; text-align: center;">
+                            JavaScript is required for this interactive demo.
+                        </p>
+                    </noscript>
+                </div>
+                <figcaption id="mascot-description" class="sr-only">
+                    Animated 3D mascot currently showing neutral emotion.
+                </figcaption>
+            </figure>
+
+            <!-- Live region for screen reader announcements -->
+            <div id="mascot-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+        </div>
+
+        <div class="controls" role="group" aria-label="Emotion controls">
+            <button id="btn-neutral" aria-pressed="true" data-emotion="neutral">Neutral</button>
+            <button id="btn-joy" aria-pressed="false" data-emotion="joy">Joy</button>
+            <button id="btn-sadness" aria-pressed="false" data-emotion="sadness">Sadness</button>
+            <button id="btn-surprise" aria-pressed="false" data-emotion="surprise">Surprise</button>
+            <button id="btn-anger" aria-pressed="false" data-emotion="anger">Anger</button>
+        </div>
+
+        <div class="controls" role="group" aria-label="Gesture controls">
+            <button id="btn-bounce" data-gesture="bounce">Bounce</button>
+            <button id="btn-pulse" data-gesture="pulse">Pulse</button>
+            <button id="btn-shake" data-gesture="shake">Shake</button>
+            <button id="btn-spin" data-gesture="spin">Spin</button>
+        </div>
+
+        <div class="status-panel" aria-live="polite">
+            <h2>Current State</h2>
+            <div class="status-item">
+                <span>Emotion:</span>
+                <span id="status-emotion" class="status-value">neutral</span>
+            </div>
+            <div class="status-item">
+                <span>Reduced Motion:</span>
+                <span id="status-reduced-motion" class="status-value">No</span>
+            </div>
+            <div class="status-item">
+                <span>Last Gesture:</span>
+                <span id="status-gesture" class="status-value">None</span>
+            </div>
+        </div>
+
+        <div class="keyboard-help">
+            <h3>Keyboard Controls</h3>
+            <ul>
+                <li><kbd>Tab</kbd> - Focus the mascot</li>
+                <li><kbd>Enter</kbd> / <kbd>Space</kbd> - Trigger bounce gesture</li>
+                <li><kbd>↑</kbd> / <kbd>→</kbd> - Next emotion</li>
+                <li><kbd>↓</kbd> / <kbd>←</kbd> - Previous emotion</li>
+                <li><kbd>1</kbd>-<kbd>5</kbd> - Select emotion directly</li>
+                <li><kbd>Escape</kbd> - Reset to neutral</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        import { EmotiveMascot3D } from '../../dist/emotive-mascot-3d.js';
+
+        // Elements
+        const container = document.getElementById('mascot-container');
+        const statusEl = document.getElementById('mascot-status');
+        const descriptionEl = document.getElementById('mascot-description');
+        const reducedMotionNotice = document.getElementById('reduced-motion-notice');
+
+        // Status displays
+        const statusEmotion = document.getElementById('status-emotion');
+        const statusReducedMotion = document.getElementById('status-reduced-motion');
+        const statusGesture = document.getElementById('status-gesture');
+
+        // Emotion list for cycling
+        const emotions = ['neutral', 'joy', 'sadness', 'surprise', 'anger'];
+        let currentEmotionIndex = 0;
+
+        // Check reduced motion preference
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Initialize mascot with accessibility-friendly settings
+        const mascot = new EmotiveMascot3D({
+            enablePostProcessing: !prefersReducedMotion,
+            autoRotate: !prefersReducedMotion,
+            particleCount: prefersReducedMotion ? 0 : 100,
+            enableControls: false  // We'll handle input ourselves
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Show reduced motion notice if applicable
+        if (prefersReducedMotion) {
+            reducedMotionNotice.classList.add('visible');
+            statusReducedMotion.textContent = 'Yes';
+        }
+
+        // Listen for reduced motion changes
+        window.matchMedia('(prefers-reduced-motion: reduce)')
+            .addEventListener('change', (e) => {
+                if (e.matches) {
+                    mascot.setReducedMotion(true);
+                    mascot.disableParticles();
+                    mascot.disableAutoRotate();
+                    reducedMotionNotice.classList.add('visible');
+                    statusReducedMotion.textContent = 'Yes';
+                    statusEl.textContent = 'Reduced motion mode enabled';
+                } else {
+                    mascot.setReducedMotion(false);
+                    mascot.enableParticles();
+                    reducedMotionNotice.classList.remove('visible');
+                    statusReducedMotion.textContent = 'No';
+                    statusEl.textContent = 'Full animation mode enabled';
+                }
+            });
+
+        // Event listeners for mascot state changes
+        mascot.eventManager.on('emotion:change', ({ emotion }) => {
+            // Announce to screen readers
+            statusEl.textContent = `Mascot emotion changed to ${emotion}`;
+            descriptionEl.textContent = `Animated 3D mascot currently showing ${emotion} emotion.`;
+
+            // Update visual status
+            statusEmotion.textContent = emotion;
+
+            // Update button states
+            document.querySelectorAll('[data-emotion]').forEach(btn => {
+                const isActive = btn.dataset.emotion === emotion;
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+
+            // Update emotion index for keyboard cycling
+            currentEmotionIndex = emotions.indexOf(emotion);
+            if (currentEmotionIndex === -1) currentEmotionIndex = 0;
+        });
+
+        mascot.eventManager.on('gesture:start', ({ gesture }) => {
+            statusEl.textContent = `Mascot is performing ${gesture} gesture`;
+            statusGesture.textContent = gesture;
+        });
+
+        mascot.eventManager.on('gesture:end', ({ gesture }) => {
+            statusEl.textContent = `${gesture} gesture completed`;
+        });
+
+        // Keyboard navigation for mascot container
+        container.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'Enter':
+                case ' ':
+                    mascot.express('bounce');
+                    e.preventDefault();
+                    break;
+
+                case 'ArrowUp':
+                case 'ArrowRight':
+                    currentEmotionIndex = (currentEmotionIndex + 1) % emotions.length;
+                    mascot.setEmotion(emotions[currentEmotionIndex]);
+                    e.preventDefault();
+                    break;
+
+                case 'ArrowDown':
+                case 'ArrowLeft':
+                    currentEmotionIndex = (currentEmotionIndex - 1 + emotions.length) % emotions.length;
+                    mascot.setEmotion(emotions[currentEmotionIndex]);
+                    e.preventDefault();
+                    break;
+
+                case 'Escape':
+                    mascot.setEmotion('neutral');
+                    e.preventDefault();
+                    break;
+
+                // Number keys for direct emotion selection
+                case '1':
+                    mascot.setEmotion('neutral');
+                    e.preventDefault();
+                    break;
+                case '2':
+                    mascot.setEmotion('joy');
+                    e.preventDefault();
+                    break;
+                case '3':
+                    mascot.setEmotion('sadness');
+                    e.preventDefault();
+                    break;
+                case '4':
+                    mascot.setEmotion('surprise');
+                    e.preventDefault();
+                    break;
+                case '5':
+                    mascot.setEmotion('anger');
+                    e.preventDefault();
+                    break;
+            }
+        });
+
+        // Emotion buttons
+        document.querySelectorAll('[data-emotion]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                mascot.setEmotion(btn.dataset.emotion);
+            });
+        });
+
+        // Gesture buttons
+        document.querySelectorAll('[data-gesture]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                mascot.express(btn.dataset.gesture);
+            });
+        });
+
+        // Click on mascot triggers bounce
+        container.addEventListener('click', () => {
+            mascot.express('bounce');
+        });
+    </script>
+</body>
+</html>

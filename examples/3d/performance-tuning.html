@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Tuning - Emotive Engine</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 800px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #mascot-container {
+            width: 300px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+        }
+
+        .controls-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .controls-panel h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            color: #888;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        button.active {
+            background: #4A90D9;
+            border-color: #4A90D9;
+        }
+
+        .slider-group {
+            margin-bottom: 1rem;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .slider-value {
+            color: #4A90D9;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 0;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4A90D9;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .toggle-row label {
+            font-size: 0.85rem;
+        }
+
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            transition: 0.2s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: #4A90D9;
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stats-panel h3 {
+            margin: 0 0 0.75rem 0;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4A90D9;
+        }
+
+        .stat-value.good {
+            color: #22c55e;
+        }
+
+        .stat-value.warn {
+            color: #f59e0b;
+        }
+
+        .stat-value.bad {
+            color: #ef4444;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .tips {
+            background: rgba(74, 144, 217, 0.1);
+            border: 1px solid rgba(74, 144, 217, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #9fc5e8;
+        }
+
+        .tips strong {
+            color: #4A90D9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Performance Tuning Demo</h1>
+    <p class="subtitle">Experiment with quality settings and monitor performance impact</p>
+
+    <div class="layout">
+        <div>
+            <div id="mascot-container"></div>
+
+            <div class="stats-panel">
+                <h3>Performance Metrics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="fps-value" class="stat-value">60</div>
+                        <div class="stat-label">FPS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="frame-time" class="stat-value">16</div>
+                        <div class="stat-label">Frame (ms)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="particles-count" class="stat-value">0</div>
+                        <div class="stat-label">Particles</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="draw-calls" class="stat-value">-</div>
+                        <div class="stat-label">Draw Calls</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <h2>Quality Presets</h2>
+            <div class="preset-buttons">
+                <button id="preset-high" class="active">High</button>
+                <button id="preset-medium">Medium</button>
+                <button id="preset-low">Low</button>
+                <button id="preset-minimal">Minimal</button>
+            </div>
+
+            <h2>Features</h2>
+            <div class="toggle-row">
+                <label>Post-Processing (Bloom)</label>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-post" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <label>Particles</label>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-particles" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <label>Auto-Rotate</label>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-rotate" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <label>Crystal Soul Effect</label>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-crystal">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <h2>Particle Count</h2>
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Count</span>
+                    <span id="particle-count-value" class="slider-value">100</span>
+                </div>
+                <input type="range" id="particle-slider" min="0" max="300" value="100">
+            </div>
+
+            <h2>Actions</h2>
+            <div class="preset-buttons">
+                <button id="btn-bounce">Bounce</button>
+                <button id="btn-pulse">Pulse</button>
+                <button id="btn-morph-heart">Morph Heart</button>
+                <button id="btn-morph-sphere">Morph Sphere</button>
+            </div>
+
+            <div class="tips">
+                <strong>Tip:</strong> Disable post-processing for the biggest performance gain on mobile.
+                Reducing particle count helps on lower-end devices.
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { EmotiveMascot3D } from '../../dist/emotive-mascot-3d.js';
+
+        // Performance tracking
+        let frameCount = 0;
+        let lastFpsUpdate = performance.now();
+        let currentFps = 60;
+        let frameTimes = [];
+
+        // Config state
+        let config = {
+            enablePostProcessing: true,
+            enableParticles: true,
+            autoRotate: true,
+            enableCrystalSoul: false,
+            particleCount: 100
+        };
+
+        // Create mascot with current config
+        let mascot = null;
+
+        function createMascot() {
+            if (mascot) {
+                mascot.destroy();
+            }
+
+            mascot = new EmotiveMascot3D({
+                enablePostProcessing: config.enablePostProcessing,
+                particleCount: config.particleCount,
+                autoRotate: config.autoRotate,
+                enableShadows: false,
+                enableControls: true
+            });
+
+            const container = document.getElementById('mascot-container');
+            mascot.init(container);
+            mascot.start();
+
+            if (config.enableParticles) {
+                mascot.enableParticles();
+            } else {
+                mascot.disableParticles();
+            }
+
+            if (config.enableCrystalSoul) {
+                mascot.enableCrystalSoul();
+            }
+
+            mascot.setEmotion('joy');
+        }
+
+        createMascot();
+
+        // FPS monitoring
+        function updateStats() {
+            frameCount++;
+            const now = performance.now();
+            const elapsed = now - lastFpsUpdate;
+
+            if (elapsed >= 500) {
+                currentFps = Math.round((frameCount / elapsed) * 1000);
+                frameCount = 0;
+                lastFpsUpdate = now;
+
+                // Update FPS display
+                const fpsEl = document.getElementById('fps-value');
+                fpsEl.textContent = currentFps;
+                fpsEl.className = 'stat-value ' +
+                    (currentFps >= 55 ? 'good' : currentFps >= 30 ? 'warn' : 'bad');
+
+                // Frame time
+                const frameTime = Math.round(1000 / currentFps);
+                const frameTimeEl = document.getElementById('frame-time');
+                frameTimeEl.textContent = frameTime;
+                frameTimeEl.className = 'stat-value ' +
+                    (frameTime <= 17 ? 'good' : frameTime <= 33 ? 'warn' : 'bad');
+
+                // Particle count
+                document.getElementById('particles-count').textContent =
+                    config.enableParticles ? config.particleCount : 0;
+
+                // Draw calls (approximate)
+                let draws = 1; // Base geometry
+                if (config.enablePostProcessing) draws += 3;
+                if (config.enableParticles) draws += 1;
+                if (config.enableCrystalSoul) draws += 1;
+                document.getElementById('draw-calls').textContent = draws;
+            }
+
+            requestAnimationFrame(updateStats);
+        }
+        requestAnimationFrame(updateStats);
+
+        // Preset handlers
+        const presets = {
+            high: {
+                enablePostProcessing: true,
+                enableParticles: true,
+                autoRotate: true,
+                enableCrystalSoul: true,
+                particleCount: 200
+            },
+            medium: {
+                enablePostProcessing: true,
+                enableParticles: true,
+                autoRotate: true,
+                enableCrystalSoul: false,
+                particleCount: 100
+            },
+            low: {
+                enablePostProcessing: false,
+                enableParticles: true,
+                autoRotate: false,
+                enableCrystalSoul: false,
+                particleCount: 50
+            },
+            minimal: {
+                enablePostProcessing: false,
+                enableParticles: false,
+                autoRotate: false,
+                enableCrystalSoul: false,
+                particleCount: 0
+            }
+        };
+
+        function applyPreset(name) {
+            config = { ...presets[name] };
+            updateUI();
+            createMascot();
+
+            // Update active button
+            document.querySelectorAll('.preset-buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`preset-${name}`).classList.add('active');
+        }
+
+        function updateUI() {
+            document.getElementById('toggle-post').checked = config.enablePostProcessing;
+            document.getElementById('toggle-particles').checked = config.enableParticles;
+            document.getElementById('toggle-rotate').checked = config.autoRotate;
+            document.getElementById('toggle-crystal').checked = config.enableCrystalSoul;
+            document.getElementById('particle-slider').value = config.particleCount;
+            document.getElementById('particle-count-value').textContent = config.particleCount;
+        }
+
+        // Preset buttons
+        document.getElementById('preset-high').addEventListener('click', () => applyPreset('high'));
+        document.getElementById('preset-medium').addEventListener('click', () => applyPreset('medium'));
+        document.getElementById('preset-low').addEventListener('click', () => applyPreset('low'));
+        document.getElementById('preset-minimal').addEventListener('click', () => applyPreset('minimal'));
+
+        // Toggle handlers (apply changes without full recreation where possible)
+        document.getElementById('toggle-post').addEventListener('change', (e) => {
+            config.enablePostProcessing = e.target.checked;
+            // Post-processing requires recreation
+            createMascot();
+        });
+
+        document.getElementById('toggle-particles').addEventListener('change', (e) => {
+            config.enableParticles = e.target.checked;
+            if (e.target.checked) {
+                mascot.enableParticles();
+            } else {
+                mascot.disableParticles();
+            }
+        });
+
+        document.getElementById('toggle-rotate').addEventListener('change', (e) => {
+            config.autoRotate = e.target.checked;
+            if (e.target.checked) {
+                mascot.enableAutoRotate();
+            } else {
+                mascot.disableAutoRotate();
+            }
+        });
+
+        document.getElementById('toggle-crystal').addEventListener('change', (e) => {
+            config.enableCrystalSoul = e.target.checked;
+            if (e.target.checked) {
+                mascot.enableCrystalSoul();
+            } else {
+                mascot.disableCrystalSoul();
+            }
+        });
+
+        document.getElementById('particle-slider').addEventListener('input', (e) => {
+            config.particleCount = parseInt(e.target.value);
+            document.getElementById('particle-count-value').textContent = config.particleCount;
+        });
+
+        document.getElementById('particle-slider').addEventListener('change', (e) => {
+            // Recreate mascot with new particle count
+            createMascot();
+        });
+
+        // Action buttons
+        document.getElementById('btn-bounce').addEventListener('click', () => mascot.express('bounce'));
+        document.getElementById('btn-pulse').addEventListener('click', () => mascot.express('pulse'));
+        document.getElementById('btn-morph-heart').addEventListener('click', () => mascot.morphTo('heart'));
+        document.getElementById('btn-morph-sphere').addEventListener('click', () => mascot.morphTo('sphere'));
+    </script>
+</body>
+</html>
