@@ -142,16 +142,15 @@ Created comprehensive event documentation with:
 
 ---
 
-### Task 4.2: Add Migration Guide for Major Changes
-**Severity:** Low
-**Files:** Create `docs/MIGRATION.md`
+### ✅ Task 4.2: Add Migration Guide for Major Changes
+**Status:** Completed
+**Files:** `docs/MIGRATION.md`
 
-**Problem:** No guidance for upgrading between versions.
-
-**Tasks:**
-- [ ] Document deprecated methods and replacements
-- [ ] Document breaking changes between versions
-- [ ] Provide code migration examples
+Created migration guide covering:
+- Deprecated methods (`setGeometry()` → `morphTo()`)
+- New v3.3 features (input validation, method chaining, unified signatures, new events)
+- v3.2 changes (multi-instance support, SSR safety)
+- v3.0 breaking changes (import paths, config options, event names)
 
 ---
 
@@ -203,6 +202,9 @@ Created `test/integration/api-parity.test.js` with 20 tests verifying shared and
 **Task 4.1: Document All Events**
 Created `docs/EVENTS.md` documenting all 12 events with examples.
 
+**Task 4.2: Add Migration Guide**
+Created `docs/MIGRATION.md` documenting deprecated methods, new features, and breaking changes.
+
 ### Previous Sessions
 
 **Remove Global Singleton Export**
@@ -244,4 +246,5 @@ Added README section, live example at `dual-mascot-test.html`.
 | Config Defaults | `src/core/config/defaults.js` |
 | Audio Bridge | `src/3d/audio/AudioBridge.js` |
 | Event Reference | `docs/EVENTS.md` |
+| Migration Guide | `docs/MIGRATION.md` |
 | Integration Tests | `test/integration/lifecycle.test.js` |
