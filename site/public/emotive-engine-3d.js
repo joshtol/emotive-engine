@@ -50320,15 +50320,8 @@ class RenderPass extends Pass {
 
 
 /**
- * Modified separable Gaussian blur shader that preserves alpha channel
- */
-({
-    uniforms: {
-        'texSize': { value: new Vector2(0.5, 0.5) },
-        'direction': { value: new Vector2(0.5, 0.5) }}});
-
-/**
  * UnrealBloomPassAlpha - preserves alpha channel transparency
+ * Note: Separable blur shader is inlined in getSeperableBlurMaterial()
  */
 class UnrealBloomPassAlpha extends Pass {
     constructor(resolution, strength, radius, threshold) {
@@ -50706,7 +50699,7 @@ class UnrealBloomPassAlpha extends Pass {
         });
     }
 
-    getCompositeMaterial(nMips) {
+    getCompositeMaterial(_nMips) {
         return new ShaderMaterial({
             uniforms: {
                 'blurTexture1': { value: null },
@@ -52618,160 +52611,6 @@ function interceptControlUp( event ) {
 }
 
 /**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Universal Glow Intensity Filter
- *  └─○═╝
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Universal glow intensity calculator based on color luminance
- * @author Emotive Engine Team
- * @version 1.0.0
- * @module utils/glowIntensityFilter
- * @complexity ⭐⭐ Intermediate
- *
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Automatically calculates optimal glow intensity for glass materials based on
- * ║ color luminance. Ensures consistent visibility across all emotions regardless
- * ║ of their native color brightness.
- * ║
- * ║ DERIVED FROM: 14 hand-tuned emotion values using linear regression
- * ║ CORRELATION: -0.89 (very strong inverse relationship)
- * ║ FORMULA: intensity = -1.0692 × luminance + 1.2353
- * ║ WORKS FOR: Any hex color, not just predefined emotions
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-
-/**
- * Normalize RGB color (0-1 range) to have equal luminance across all colors
- * Same as normalizeColorLuminance but takes RGB array instead of hex string
- *
- * @param {Array} rgb - RGB array [r, g, b] with values in 0-1 range
- * @param {number} targetLuminance - Target luminance value (default 0.5)
- * @returns {Object} RGB object with normalized values {r, g, b} in sRGB space
- */
-function normalizeRGBLuminance(rgb, targetLuminance = 0.5) {
-    const [r, g, b] = rgb;
-
-    // Convert sRGB to linear RGB (inverse gamma)
-    const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    const rLin = toLinear(r);
-    const gLin = toLinear(g);
-    const bLin = toLinear(b);
-
-    // Calculate current luminance in linear space
-    const currentLuminance = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
-
-    // Calculate scale factor to achieve target luminance
-    const scaleFactor = targetLuminance / Math.max(currentLuminance, 0.001);
-
-    // Scale in linear space
-    let rLinScaled = rLin * scaleFactor;
-    let gLinScaled = gLin * scaleFactor;
-    let bLinScaled = bLin * scaleFactor;
-
-    // Clamp in linear space (before gamma) to prevent overflow
-    const maxLin = Math.max(rLinScaled, gLinScaled, bLinScaled);
-    if (maxLin > 1.0) {
-        rLinScaled /= maxLin;
-        gLinScaled /= maxLin;
-        bLinScaled /= maxLin;
-    }
-
-    // Convert back to sRGB (apply gamma)
-    const toSRGB = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1/2.4) - 0.055;
-
-    return {
-        r: Math.min(1.0, Math.max(0, toSRGB(rLinScaled))),
-        g: Math.min(1.0, Math.max(0, toSRGB(gLinScaled))),
-        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled)))
-    };
-}
-
-/**
- * Calculate relative luminance using W3C/WCAG sRGB formula
- * Uses ITU-R BT.709 coefficients for color-to-luminance conversion
- *
- * @param {string} hexColor - Hex color code (e.g., '#FF6B35')
- * @returns {number} Relative luminance value between 0 (black) and 1 (white)
- *
- * @example
- * calculateLuminance('#FFEB3B') // 0.8099 (bright yellow)
- * calculateLuminance('#6B46C1') // 0.1136 (dark purple)
- */
-function calculateLuminance(hexColor) {
-    // Convert hex to RGB (0-1 range)
-    const r = parseInt(hexColor.slice(1, 3), 16) / 255;
-    const g = parseInt(hexColor.slice(3, 5), 16) / 255;
-    const b = parseInt(hexColor.slice(5, 7), 16) / 255;
-
-    // Apply sRGB gamma correction (inverse transfer function)
-    // Official threshold is 0.04045 per W3C/sRGB specification
-    const linearize = c => {
-        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    };
-
-    const rLinear = linearize(r);
-    const gLinear = linearize(g);
-    const bLinear = linearize(b);
-
-    // Calculate relative luminance using ITU-R BT.709 coefficients
-    // These weights reflect human eye's sensitivity (green > red > blue)
-    return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-}
-
-/**
- * Calculate optimal glow intensity based on color luminance and material mode
- *
- * GLASS MODE (high transmission):
- * - Bright colors get washed out → need HIGHER intensity
- * - Dark colors stay visible → need LOWER intensity
- * - Formula inverted: positive slope
- *
- * GLOW MODE (dark background):
- * - Bright colors naturally visible → need LOWER intensity
- * - Dark colors hard to see → need HIGHER intensity
- * - Formula: negative slope (original)
- *
- * @param {string} hexColor - Hex color code (e.g., '#FF6B35')
- * @param {number} calibrationOffset - Optional offset to adjust global brightness (default: 0)
- * @param {string} mode - Material mode: 'glass' or 'glow' (default: 'glass')
- * @returns {number} Optimal glow intensity (typically 0.4 - 1.3)
- *
- * @example
- * // GLASS MODE (default) - bright colors need MORE intensity
- * getGlowIntensityForColor('#FFEB3B', 0, 'glass') // ~1.20 (bright yellow needs boost)
- * getGlowIntensityForColor('#4169E1', 0, 'glass') // ~0.70 (dark blue stays dim)
- *
- * // GLOW MODE - dark colors need MORE intensity
- * getGlowIntensityForColor('#FFEB3B', 0, 'glow') // ~0.37 (bright yellow stays dim)
- * getGlowIntensityForColor('#4169E1', 0, 'glow') // ~1.11 (dark blue needs boost)
- */
-function getGlowIntensityForColor(hexColor, calibrationOffset = 0, _mode = 'glow') {
-    const luminance = calculateLuminance(hexColor);
-
-    // Target perceived brightness (luminance × intensity = constant)
-    // This ensures all colors appear equally bright regardless of their base luminance
-    // Higher target needed because darker colors need significant boost
-    const targetBrightness = 0.5 + calibrationOffset;
-
-    // To achieve uniform perceived brightness, divide target by luminance
-    // Bright colors (high luminance) get low intensity multipliers
-    // Dark colors (low luminance) get high intensity multipliers
-    // Prevent division by very small numbers with minimum luminance threshold
-    const minLuminance = 0.05;
-    const intensity = targetBrightness / Math.max(luminance, minLuminance);
-
-    // Clamp to reasonable range
-    // Min 0.3: Ensures even brightest colors remain visible
-    // Max 10.0: Allows very dark colors to be boosted dramatically
-    return Math.max(0.3, Math.min(10.0, intensity));
-}
-
-/**
  * Isolated Glow Layer Effect
  *
  * A completely separate rendering layer that creates an expanding luminous halo
@@ -53530,7 +53369,7 @@ class ThreeRenderer {
                 let texture = null;
                 try {
                     texture = await hdrLoader.loadAsync(hdrPath);
-                } catch (e) {
+                } catch {
                     // HDRI loading failed - will fall back to procedural
                 }
 
@@ -53551,13 +53390,12 @@ class ThreeRenderer {
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (GPU memory leak fix)
                 pmremGenerator.dispose();
                 this._envMapLoading = false; // HDRI loaded successfully
-                console.log('[Emotive] HDRI environment map loaded');
                 return;
-            } catch (hdrError) {
+            } catch {
                 // HDRI is optional - silently fall back to procedural envmap
                 pmremGenerator.dispose();
             }
-        } catch (error) {
+        } catch {
             // HDRLoader not available - use procedural envmap
         }
 
@@ -53785,7 +53623,6 @@ class ThreeRenderer {
      */
     handleContextRestored() {
         this._contextLost = false;
-        console.log('✅ WebGL context restored - recreating resources');
 
         // Recreate all GPU resources
         this.recreateResources();
@@ -54475,7 +54312,6 @@ class ThreeRenderer {
     render(params = {}) {
         // Guard against calls after destroy
         if (this._destroyed) {
-            console.log('[ThreeRenderer] render() BLOCKED - destroyed');
             return;
         }
 
@@ -54486,7 +54322,6 @@ class ThreeRenderer {
 
         // Guard against rendering before scene is ready
         if (!this.scene || !this.camera || !this.renderer) {
-            console.log(`[ThreeRenderer] render() BLOCKED - scene=${!!this.scene}, camera=${!!this.camera}, renderer=${!!this.renderer}`);
             return;
         }
 
@@ -54544,7 +54379,7 @@ class ThreeRenderer {
             scale = 1.0,
             glowColor = [1, 1, 1],
             glowIntensity = 1.0,
-            glowColorHex = null,  // Hex color for luminance normalization
+            // glowColorHex - available for luminance normalization (currently unused)
             hasActiveGesture = false,  // Whether a gesture is currently active
             calibrationRotation = [0, 0, 0],  // Manual rotation offset applied on top of animations
             cameraRoll = 0,  // Camera-space roll rotation applied after all other rotations
@@ -54900,7 +54735,6 @@ class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
-        console.log(`[ThreeRenderer] destroy() CALLED, scene children=${this.scene?.children?.length}`);
 
         // Set destroyed flag first to prevent any pending render calls
         this._destroyed = true;
@@ -64044,6 +63878,5051 @@ class GeometryMorpher {
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
+ *    ●●  ENGINE
+ *  └─○═╝                                                                             
+ *                      ◐ ◑ ◒ ◓  UNDERTONE MODIFIERS  ◓ ◒ ◑ ◐                      
+ *                                                                                    
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Undertone Modifiers - Subtle Emotion Variations
+ * @author Emotive Engine Team
+ * @version 2.0.0
+ * @module UndertoneModifiers
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Undertones add NUANCE to emotions - like being "nervously happy" or              
+ * ║ "confidently angry". These modifiers STACK on top of emotion modifiers            
+ * ║ to create more complex, realistic emotional expressions.                          
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🎨 MULTIPLIER EFFECTS (Applied to Base Gesture)                                   
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • speed        : Animation speed (0.5=half speed, 2.0=double speed)               
+ * │ • amplitude    : Movement size (0.5=smaller, 2.0=bigger)                          
+ * │ • intensity    : Effect strength (0.5=subtle, 2.0=extreme)                        
+ * │ • smoothness   : Animation smoothing (0.5=jerky, 1.5=very smooth)                 
+ * │ • regularity   : Pattern consistency (0.5=chaotic, 1.0=regular)                   
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ ⚡ SPECIAL EFFECTS (Boolean Flags)                                                
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • addFlutter      : Butterfly-like motion (nervous)                               
+ * │ • addMicroShake   : Tiny trembling (nervous, tired)                               
+ * │ • addPower        : Strong, decisive motion (confident)                           
+ * │ • addDrag         : Sluggish, heavy motion (tired)                                
+ * │ • addTension      : Tight, controlled motion (intense)                            
+ * │ • addSoftness     : Gentle, flowing motion (subdued)                              
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ ❌ DO NOT ADD HERE (Belongs in Other Files)                                       
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ ✗ Base gesture definitions   → use gestureConfig.js                              
+ * │ ✗ Emotion modifiers         → use emotionModifiers.js                            
+ * │ ✗ Visual properties         → use emotionMap.js                                  
+ * │ ✗ Particle behaviors        → use Particle.js                                    
+ * │ ✗ State logic              → use EmotiveStateMachine.js                          
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                           ADDING NEW UNDERTONES                                   
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ 1. Create new undertone object with all base multipliers (default to 1.0)         
+ * ║ 2. Add special effect flags as needed (addXXX properties)                         
+ * ║ 3. Test combinations with ALL emotions for unexpected interactions                
+ * ║ 4. Document the intended "feel" and use cases                                     
+ * ║ 5. Add to valid undertones in ErrorBoundary.js                                    
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════
+ */
+
+const UNDERTONE_MODIFIERS = {
+    // No undertone - neutral multipliers
+    none: {
+        speed: 1.0,
+        amplitude: 1.0,
+        intensity: 1.0,
+        smoothness: 1.0,
+        regularity: 1.0,
+        '3d': {
+            rotation: { speedMultiplier: 1.0, shakeMultiplier: 1.0 },
+            glow: { intensityMultiplier: 1.0, pulseSpeedMultiplier: 1.0 },
+            scale: { breathDepthMultiplier: 1.0, breathRateMultiplier: 1.0 },
+            righting: { strengthMultiplier: 1.0 }
+        }
+    },
+
+    // Clear undertone - no modification
+    clear: {
+        speed: 1.0,
+        amplitude: 1.0,
+        intensity: 1.0,
+        smoothness: 1.0,
+        regularity: 1.0,
+        '3d': {
+            rotation: { speedMultiplier: 1.0, shakeMultiplier: 1.0 },
+            glow: { intensityMultiplier: 1.0, pulseSpeedMultiplier: 1.0 },
+            scale: { breathDepthMultiplier: 1.0, breathRateMultiplier: 1.0 },
+            righting: { strengthMultiplier: 1.0 }
+        }
+    },
+    
+    nervous: {
+        speed: 1.2,        // 20% faster
+        amplitude: 0.9,    // 10% smaller (contained)
+        intensity: 1.1,    // 10% more intense
+        smoothness: 0.7,   // 30% less smooth (fluttery)
+        regularity: 0.6,   // Irregular (butterflies)
+        addFlutter: true,  // Butterfly-like flutter
+        addMicroShake: true, // Subtle tremor
+        '3d': {
+            rotation: {
+                speedMultiplier: 1.5,      // Noticeably faster rotation (anxious energy)
+                shakeMultiplier: 3.5,      // Very visible shake/wobble (nervous tremor)
+                enableEpisodicWobble: true // Random shake bursts (at least once per rotation)
+            },
+            glow: {
+                intensityMultiplier: 1.25, // Brighter (heightened state)
+                pulseSpeedMultiplier: 2.0  // Rapid pulsing (racing heartbeat)
+            },
+            scale: {
+                breathDepthMultiplier: 0.5, // Very shallow rapid breaths
+                breathRateMultiplier: 1.8   // Much faster breathing (panic)
+            },
+            righting: {
+                strengthMultiplier: 0.7    // Less stable (nervous wobble)
+            }
+        }
+    },
+    
+    confident: {
+        speed: 0.9,        // 10% slower (deliberate)
+        amplitude: 1.3,    // 30% bigger (bold)
+        intensity: 1.2,    // 20% more intense
+        smoothness: 1.1,   // 10% smoother (controlled)
+        regularity: 1.2,   // Very regular (assured)
+        addPower: true,    // Strong, decisive motion
+        addHold: true,     // Brief pause at peaks
+        '3d': {
+            rotation: {
+                speedMultiplier: 0.7,      // Much slower, commanding presence
+                shakeMultiplier: 0.2       // Minimal shake (rock solid control)
+            },
+            glow: {
+                intensityMultiplier: 1.4,  // Noticeably brighter (bold presence)
+                pulseSpeedMultiplier: 0.7  // Slow steady pulse (calm confidence)
+            },
+            scale: {
+                breathDepthMultiplier: 1.5, // Deep powerful breaths
+                breathRateMultiplier: 0.7   // Slow breathing (total control)
+            },
+            righting: {
+                strengthMultiplier: 1.6    // Very stable (immovable)
+            }
+        }
+    },
+    
+    tired: {
+        speed: 0.7,        // 30% slower
+        amplitude: 0.7,    // 30% smaller
+        intensity: 0.8,    // 20% less intense
+        smoothness: 1.3,   // 30% smoother (sluggish)
+        regularity: 0.8,   // Slightly irregular (drowsy)
+        addDroop: true,    // Downward tendency
+        addPause: true,    // Occasional hesitation
+        '3d': {
+            rotation: {
+                speedMultiplier: 0.4,      // Very slow rotation (lethargic)
+                shakeMultiplier: 0.15      // Almost no shake (exhausted)
+            },
+            glow: {
+                intensityMultiplier: 0.5,  // Noticeably dimmer (low energy)
+                pulseSpeedMultiplier: 0.5  // Very slow pulse (drowsy)
+            },
+            scale: {
+                breathDepthMultiplier: 1.3, // Deep tired sighs
+                breathRateMultiplier: 0.5   // Very slow breathing (sleepy)
+            },
+            righting: {
+                strengthMultiplier: 0.6    // Unstable (drooping, sagging)
+            }
+        }
+    },
+    
+    intense: {
+        speed: 1.3,        // 30% faster
+        amplitude: 1.2,    // 20% bigger
+        intensity: 1.4,    // 40% more intense
+        smoothness: 0.6,   // 40% less smooth (sharp)
+        regularity: 0.9,   // Slightly irregular
+        addPulse: true,    // Pulsing intensity
+        addFocus: true,    // Concentrated motion
+        '3d': {
+            rotation: {
+                speedMultiplier: 1.6,      // Noticeably faster rotation (heightened)
+                shakeMultiplier: 2.5       // Strong shake (tension)
+            },
+            glow: {
+                intensityMultiplier: 1.8,  // Very bright (burning intensity)
+                pulseSpeedMultiplier: 2.2  // Very rapid pulsing (racing)
+            },
+            scale: {
+                breathDepthMultiplier: 1.6, // Deep intense breaths
+                breathRateMultiplier: 1.8   // Rapid breathing (adrenaline)
+            },
+            righting: {
+                strengthMultiplier: 1.3    // More stable (tense control)
+            }
+        }
+    },
+    
+    subdued: {
+        speed: 0.8,        // 20% slower
+        amplitude: 0.8,    // 20% smaller
+        intensity: 0.7,    // 30% less intense
+        smoothness: 1.2,   // 20% smoother
+        regularity: 1.1,   // Regular (restrained)
+        addSoftness: true, // Gentle, muted motion
+        addFade: true,     // Fading at edges
+        '3d': {
+            rotation: {
+                speedMultiplier: 0.5,      // Much slower rotation (gentle)
+                shakeMultiplier: 0.1       // Almost no shake (serene)
+            },
+            glow: {
+                intensityMultiplier: 0.55, // Noticeably dimmer (muted)
+                pulseSpeedMultiplier: 0.6  // Slow pulse (peaceful)
+            },
+            scale: {
+                breathDepthMultiplier: 0.7, // Shallow controlled breaths
+                breathRateMultiplier: 0.6   // Slow breathing (restrained)
+            },
+            righting: {
+                strengthMultiplier: 1.4    // Very stable (composed stillness)
+            }
+        }
+    }
+};
+
+/**
+ * Get undertone modifier
+ * @param {string} undertone - Name of the undertone
+ * @returns {Object} Modifier object with default values if undertone not found
+ */
+function getUndertoneModifier(undertone) {
+    if (!undertone || undertone === '' || undertone === 'clear') {
+        return UNDERTONE_MODIFIERS.clear;
+    }
+    return UNDERTONE_MODIFIERS[undertone] || UNDERTONE_MODIFIERS.clear;
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - 3D Color Utilities
+ *  └─○═╝
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Color conversion and manipulation utilities for 3D rendering
+ * @author Emotive Engine Team
+ * @module 3d/utils/ColorUtilities
+ */
+
+/**
+ * Convert hex color to RGB [0-1]
+ * @param {string} hex - Hex color code (with or without #)
+ * @returns {Array} RGB color [r, g, b] in [0-1] range
+ */
+function hexToRGB(hex) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+
+    // Parse
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+    return [r, g, b];
+}
+
+/**
+ * Convert RGB [0-1] to HSL [0-360, 0-100, 0-100]
+ * @param {number} r - Red component [0-1]
+ * @param {number} g - Green component [0-1]
+ * @param {number} b - Blue component [0-1]
+ * @returns {Array} HSL color [h, s, l]
+ */
+function rgbToHsl$1(r, g, b) {
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+    const sum = max + min;
+
+    let h = 0;
+    let s = 0;
+    const l = sum / 2;
+
+    if (diff !== 0) {
+        s = l > 0.5 ? diff / (2 - sum) : diff / sum;
+
+        switch (max) {
+        case r: h = ((g - b) / diff + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / diff + 2) / 6; break;
+        case b: h = ((r - g) / diff + 4) / 6; break;
+        }
+    }
+
+    return [h * 360, s * 100, l * 100];
+}
+
+/**
+ * Convert HSL [0-360, 0-100, 0-100] to RGB [0-1]
+ * @param {number} h - Hue [0-360]
+ * @param {number} s - Saturation [0-100]
+ * @param {number} l - Lightness [0-100]
+ * @returns {Array} RGB color [r, g, b] in [0-1] range
+ */
+function hslToRgb$1(h, s, l) {
+    h = h / 360;
+    s = s / 100;
+    l = l / 100;
+
+    let r, g, b;
+
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [r, g, b];
+}
+
+/**
+ * Apply undertone saturation multiplier to RGB color
+ * @param {Array} rgb - RGB color [r, g, b] in [0-1]
+ * @param {string|null} undertone - Undertone name
+ * @returns {Array} Modified RGB color
+ */
+function applyUndertoneSaturation$1(rgb, undertone) {
+    if (!undertone || undertone === 'clear' || undertone === 'none') {
+        return rgb;
+    }
+
+    // Saturation and lightness modifiers - AMPLIFIED for 3D visibility
+    const colorModifiers = {
+        'intense': { saturation: 2.5, lightness: 1.3 },     // Extremely vivid + much brighter
+        'confident': { saturation: 1.8, lightness: 1.15 },  // Bold saturated + brighter
+        'nervous': { saturation: 1.6, lightness: 1.1 },     // Heightened + slightly brighter
+        'tired': { saturation: 0.4, lightness: 0.65 },      // Very washed out + much dimmer
+        'subdued': { saturation: 0.25, lightness: 0.55 }    // Ghostly desaturated + very dim
+    };
+
+    const mods = colorModifiers[undertone];
+    if (!mods) return rgb;
+
+    // Convert to HSL
+    const hsl = rgbToHsl$1(rgb[0], rgb[1], rgb[2]);
+
+    // Apply saturation multiplier
+    hsl[1] = Math.min(100, hsl[1] * mods.saturation);
+
+    // Apply lightness multiplier (makes intense brighter, subdued darker)
+    hsl[2] = Math.min(100, Math.max(0, hsl[2] * mods.lightness));
+
+    // Convert back to RGB
+    return hslToRgb$1(hsl[0], hsl[1], hsl[2]);
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Universal Glow Intensity Filter
+ *  └─○═╝
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Universal glow intensity calculator based on color luminance
+ * @author Emotive Engine Team
+ * @version 1.0.0
+ * @module utils/glowIntensityFilter
+ * @complexity ⭐⭐ Intermediate
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Automatically calculates optimal glow intensity for glass materials based on
+ * ║ color luminance. Ensures consistent visibility across all emotions regardless
+ * ║ of their native color brightness.
+ * ║
+ * ║ DERIVED FROM: 14 hand-tuned emotion values using linear regression
+ * ║ CORRELATION: -0.89 (very strong inverse relationship)
+ * ║ FORMULA: intensity = -1.0692 × luminance + 1.2353
+ * ║ WORKS FOR: Any hex color, not just predefined emotions
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+
+/**
+ * Normalize RGB color (0-1 range) to have equal luminance across all colors
+ * Same as normalizeColorLuminance but takes RGB array instead of hex string
+ *
+ * @param {Array} rgb - RGB array [r, g, b] with values in 0-1 range
+ * @param {number} targetLuminance - Target luminance value (default 0.5)
+ * @returns {Object} RGB object with normalized values {r, g, b} in sRGB space
+ */
+function normalizeRGBLuminance(rgb, targetLuminance = 0.5) {
+    const [r, g, b] = rgb;
+
+    // Convert sRGB to linear RGB (inverse gamma)
+    const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const rLin = toLinear(r);
+    const gLin = toLinear(g);
+    const bLin = toLinear(b);
+
+    // Calculate current luminance in linear space
+    const currentLuminance = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+
+    // Calculate scale factor to achieve target luminance
+    const scaleFactor = targetLuminance / Math.max(currentLuminance, 0.001);
+
+    // Scale in linear space
+    let rLinScaled = rLin * scaleFactor;
+    let gLinScaled = gLin * scaleFactor;
+    let bLinScaled = bLin * scaleFactor;
+
+    // Clamp in linear space (before gamma) to prevent overflow
+    const maxLin = Math.max(rLinScaled, gLinScaled, bLinScaled);
+    if (maxLin > 1.0) {
+        rLinScaled /= maxLin;
+        gLinScaled /= maxLin;
+        bLinScaled /= maxLin;
+    }
+
+    // Convert back to sRGB (apply gamma)
+    const toSRGB = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1/2.4) - 0.055;
+
+    return {
+        r: Math.min(1.0, Math.max(0, toSRGB(rLinScaled))),
+        g: Math.min(1.0, Math.max(0, toSRGB(gLinScaled))),
+        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled)))
+    };
+}
+
+/**
+ * Calculate relative luminance using W3C/WCAG sRGB formula
+ * Uses ITU-R BT.709 coefficients for color-to-luminance conversion
+ *
+ * @param {string} hexColor - Hex color code (e.g., '#FF6B35')
+ * @returns {number} Relative luminance value between 0 (black) and 1 (white)
+ *
+ * @example
+ * calculateLuminance('#FFEB3B') // 0.8099 (bright yellow)
+ * calculateLuminance('#6B46C1') // 0.1136 (dark purple)
+ */
+function calculateLuminance(hexColor) {
+    // Convert hex to RGB (0-1 range)
+    const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+    const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+    const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+
+    // Apply sRGB gamma correction (inverse transfer function)
+    // Official threshold is 0.04045 per W3C/sRGB specification
+    const linearize = c => {
+        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+
+    const rLinear = linearize(r);
+    const gLinear = linearize(g);
+    const bLinear = linearize(b);
+
+    // Calculate relative luminance using ITU-R BT.709 coefficients
+    // These weights reflect human eye's sensitivity (green > red > blue)
+    return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+}
+
+/**
+ * Calculate optimal glow intensity based on color luminance and material mode
+ *
+ * GLASS MODE (high transmission):
+ * - Bright colors get washed out → need HIGHER intensity
+ * - Dark colors stay visible → need LOWER intensity
+ * - Formula inverted: positive slope
+ *
+ * GLOW MODE (dark background):
+ * - Bright colors naturally visible → need LOWER intensity
+ * - Dark colors hard to see → need HIGHER intensity
+ * - Formula: negative slope (original)
+ *
+ * @param {string} hexColor - Hex color code (e.g., '#FF6B35')
+ * @param {number} calibrationOffset - Optional offset to adjust global brightness (default: 0)
+ * @param {string} mode - Material mode: 'glass' or 'glow' (default: 'glass')
+ * @returns {number} Optimal glow intensity (typically 0.4 - 1.3)
+ *
+ * @example
+ * // GLASS MODE (default) - bright colors need MORE intensity
+ * getGlowIntensityForColor('#FFEB3B', 0, 'glass') // ~1.20 (bright yellow needs boost)
+ * getGlowIntensityForColor('#4169E1', 0, 'glass') // ~0.70 (dark blue stays dim)
+ *
+ * // GLOW MODE - dark colors need MORE intensity
+ * getGlowIntensityForColor('#FFEB3B', 0, 'glow') // ~0.37 (bright yellow stays dim)
+ * getGlowIntensityForColor('#4169E1', 0, 'glow') // ~1.11 (dark blue needs boost)
+ */
+function getGlowIntensityForColor(hexColor, calibrationOffset = 0, _mode = 'glow') {
+    const luminance = calculateLuminance(hexColor);
+
+    // Target perceived brightness (luminance × intensity = constant)
+    // This ensures all colors appear equally bright regardless of their base luminance
+    // Higher target needed because darker colors need significant boost
+    const targetBrightness = 0.5 + calibrationOffset;
+
+    // To achieve uniform perceived brightness, divide target by luminance
+    // Bright colors (high luminance) get low intensity multipliers
+    // Dark colors (low luminance) get high intensity multipliers
+    // Prevent division by very small numbers with minimum luminance threshold
+    const minLuminance = 0.05;
+    const intensity = targetBrightness / Math.max(luminance, minLuminance);
+
+    // Clamp to reasonable range
+    // Min 0.3: Ensures even brightest colors remain visible
+    // Max 10.0: Allows very dark colors to be boosted dramatically
+    return Math.max(0.3, Math.min(10.0, intensity));
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE
+ *  └─○═╝                                                                             
+ *                     ◐ ◑ ◒ ◓  COLOR UTILS  ◓ ◒ ◑ ◐                     
+ *                                                                                    
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Color Utils - Color Interpolation & Manipulation
+ * @author Emotive Engine Team
+ * @version 2.1.0
+ * @module ColorUtils
+ * @complexity ⭐ Beginner-friendly
+ * @audience Useful utility functions for color manipulation. Well-tested and documented.
+ * @changelog 2.1.0 - Added undertone saturation modifiers for dynamic depth
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ The COLOR SCIENCE module of the engine. Provides smooth color transitions         
+ * ║ between emotional states using HSL interpolation for perceptually uniform         
+ * ║ transitions that feel natural and emotionally resonant.                           
+ * ║                                                                                    
+ * ║ NEW: Undertone saturation system creates dynamic depth by adjusting saturation    
+ * ║ based on emotional undertones (intense → oversaturated, subdued → desaturated)    
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🎨 COLOR OPERATIONS                                                               
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ • Hex to RGB/HSL conversion                                                       
+ * │ • RGB to Hex/HSL conversion                                                       
+ * │ • HSL interpolation for smooth transitions                                        
+ * │ • Color mixing and blending                                                       
+ * │ • Luminance calculations                                                          
+ * │ • Perceptually uniform color shifts                                               
+ * │ • Undertone-based saturation adjustments                                          
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ┌───────────────────────────────────────────────────────────────────────────────────
+ * │ 🌈 UNDERTONE SATURATION SYSTEM                                                    
+ * ├───────────────────────────────────────────────────────────────────────────────────
+ * │ Undertones dynamically adjust color saturation to create emotional depth:         
+ * │                                                                                    
+ * │ • INTENSE   : +60% saturation - Electric, vibrant, overwhelming                   
+ * │ • CONFIDENT : +30% saturation - Bold, present, assertive                          
+ * │ • NERVOUS   : +15% saturation - Slightly heightened, anxious energy               
+ * │ • CLEAR     :   0% saturation - Normal midtone, balanced state                    
+ * │ • TIRED     : -20% saturation - Washed out, fading, depleted                      
+ * │ • SUBDUED   : -50% saturation - Ghostly, barely there, withdrawn                  
+ * │                                                                                    
+ * │ This creates a visual hierarchy where emotional intensity directly affects        
+ * │ the vibrancy and presence of colors, making the mascot's state immediately        
+ * │ readable through color alone.                                                     
+ * └───────────────────────────────────────────────────────────────────────────────────
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Converts hex color to RGB values
+ * @param {string} hex - Hex color string (e.g., '#FF0000')
+ * @returns {Object} RGB object with r, g, b properties
+ */
+function hexToRgb(hex) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Handle 3-digit hex
+    if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+    }
+    
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    return { r, g, b };
+}
+
+/**
+ * Converts RGB values to hex color
+ * @param {number} r - Red component (0-255)
+ * @param {number} g - Green component (0-255)
+ * @param {number} b - Blue component (0-255)
+ * @returns {string} Hex color string
+ */
+function rgbToHex(r, g, b) {
+    const toHex = component => {
+        const hex = Math.round(Math.max(0, Math.min(255, component))).toString(16);
+        return hex.length === 1 ? `0${hex}` : hex;
+    };
+    
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/**
+ * Converts RGB to HSL color space
+ * @param {number} r - Red component (0-255)
+ * @param {number} g - Green component (0-255)
+ * @param {number} b - Blue component (0-255)
+ * @returns {Object} HSL object with h, s, l properties
+ */
+function rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    let h, s;
+    
+    if (max === min) {
+        h = s = 0; // achromatic
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        
+        switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+/**
+ * Converts HSL to RGB color space
+ * @param {number} h - Hue (0-360)
+ * @param {number} s - Saturation (0-100)
+ * @param {number} l - Lightness (0-100)
+ * @returns {Object} RGB object with r, g, b properties
+ */
+function hslToRgb(h, s, l) {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    
+    const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+    };
+    
+    let r, g, b;
+    
+    if (s === 0) {
+        r = g = b = l; // achromatic
+    } else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
+}
+
+/**
+ * Adjusts the saturation of a color
+ * @param {string} hex - Hex color
+ * @param {number} factor - Saturation factor (0.5 = less saturated, 1.5 = more saturated)
+ * @returns {string} Adjusted color (hex)
+ */
+function adjustSaturation(hex, factor) {
+    const rgb = hexToRgb(hex);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    
+    hsl.s = Math.max(0, Math.min(100, hsl.s * factor));
+    
+    const adjustedRgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+    return rgbToHex(adjustedRgb.r, adjustedRgb.g, adjustedRgb.b);
+}
+
+/**
+ * Undertone saturation modifiers for dynamic emotional depth
+ * Maps undertone names to saturation adjustment factors
+ */
+const UNDERTONE_SATURATION = {
+    intense: 1.6,    // +60% saturation - Electric, overwhelming
+    confident: 1.3,  // +30% saturation - Bold, present
+    nervous: 1.15,   // +15% saturation - Slightly heightened
+    clear: 1.0,      // No change - Normal midtone
+    tired: 0.8,      // -20% saturation - Washed out, fading
+    subdued: 0.5     // -50% saturation - Ghostly, barely there
+};
+
+/**
+ * Applies undertone saturation adjustment to a color
+ * @param {string} hex - Base color
+ * @param {string} undertone - Undertone name (intense, confident, nervous, clear, tired, subdued)
+ * @returns {string} Adjusted color with undertone saturation applied
+ */
+function applyUndertoneSaturation(hex, undertone) {
+    if (!undertone || undertone === 'clear') {
+        return hex; // No adjustment for clear or missing undertone
+    }
+    
+    const factor = UNDERTONE_SATURATION[undertone.toLowerCase()];
+    if (!factor || factor === 1.0) {
+        return hex;
+    }
+    
+    return adjustSaturation(hex, factor);
+}
+
+/**
+ * Applies undertone saturation to an array of colors (for particle systems)
+ * @param {Array} colors - Array of colors (can be strings or objects with color property)
+ * @param {string} undertone - Undertone name
+ * @returns {Array} Adjusted color array with undertone saturation applied
+ */
+function applyUndertoneSaturationToArray(colors, undertone) {
+    if (!colors || !Array.isArray(colors)) return colors;
+    if (!undertone || undertone === 'clear') return colors;
+    
+    return colors.map(colorItem => {
+        if (typeof colorItem === 'string') {
+            // Simple color string
+            return applyUndertoneSaturation(colorItem, undertone);
+        } else if (colorItem && typeof colorItem === 'object' && colorItem.color) {
+            // Weighted color object
+            return {
+                ...colorItem,
+                color: applyUndertoneSaturation(colorItem.color, undertone)
+            };
+        }
+        return colorItem;
+    });
+}
+
+/**
+ * Emotional color palette for the mascot system
+ */
+const EMOTIONAL_COLORS = {
+    neutral: '#B0B0B0',
+    joy: '#FFD700',
+    sadness: '#4169E1',
+    anger: '#DC143C',
+    fear: '#8B008B',
+    surprise: '#FF8C00',
+    disgust: '#9ACD32',
+    love: '#FF69B4'
+};
+
+/**
+ * Gets RGB values for emotional colors (for performance)
+ */
+Object.fromEntries(
+    Object.entries(EMOTIONAL_COLORS).map(([emotion, hex]) => {
+        const rgb = hexToRgb(hex);
+        return [emotion, `${rgb.r}, ${rgb.g}, ${rgb.b}`];
+    })
+);
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Rhythm Integration Module
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * @fileoverview Integration layer between rhythm engine and existing subsystems
+ * @author Emotive Engine Team
+ * @module core/rhythmIntegration
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║ CONCEPT                                                                           
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ This module connects the rhythm engine to existing subsystems without modifying   
+ * ║ their core behavior. It reads rhythm configurations from individual files and     
+ * ║ applies timing modulations based on musical events.                              
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ * 
+ * INTEGRATION POINTS:
+ * • Particle System - Emission timing, behavior modulation
+ * • Gesture System - Animation sync, duration adjustment
+ * • Emotion System - Intensity mapping, transition timing
+ * • Renderer - Glow pulsing, visual effects sync
+ * 
+ * ┌──────────────────────────────────────────────────────────────────────────────────┐
+ * │  MODULAR RHYTHM FLOW                                                             │
+ * │                                                                                   │
+ * │  gesture.js ──┐                                                                  │
+ * │  emotion.js ──┼→ [Integration] ← [Rhythm Engine]                                │
+ * │  behavior.js ─┘         ↓                                                        │
+ * │                   Apply Timing                                                   │
+ * │                                                                                   │
+ * └──────────────────────────────────────────────────────────────────────────────────┘
+ */
+
+
+class RhythmIntegration {
+    constructor() {
+        this.enabled = false;
+        this.adapter = null;
+        this.subsystemConfigs = new Map();
+        this.activeModulations = new Map();
+    }
+    
+    /**
+     * Initialize rhythm integration
+     */
+    initialize() {
+        this.adapter = rhythmEngine.getAdapter();
+        this.enabled = true;
+        
+        // Subscribe to rhythm events
+        this.adapter.onBeat(this.handleBeat.bind(this));
+        this.adapter.onBar(this.handleBar.bind(this));
+        
+    }
+    
+    /**
+     * Update BPM from detected audio
+     * @param {number} newBPM - Detected BPM from audio analysis
+     */
+    updateBPM(newBPM) {
+        if (newBPM >= 60 && newBPM <= 220) {
+            // Check if rhythm was manually stopped
+            if (window.rhythmManuallyStoppedForCurrentAudio) {
+                return; // Don't auto-update if manually stopped
+            }
+
+            // Auto-start rhythm engine if not running
+            if (!rhythmEngine.isRunning) {
+
+                // Auto-start the rhythm engine for gesture sync
+                this.start(newBPM, 'straight');
+
+                // Trigger the rhythm sync visualizer to show BPM
+                if (window.rhythmSyncVisualizer && !window.rhythmSyncVisualizer.state.active) {
+                    // Rhythm integration logging removed for production
+                    window.rhythmSyncVisualizer.start();
+                }
+
+                return;
+            }
+            
+            // If running, always update BPM regardless of whether it changed
+            // This ensures new tracks get their correct BPM
+            rhythmEngine.setBPM(newBPM);
+            
+            // BPM is now shown visually through the beat histogram bars
+        }
+    }
+    
+    /**
+     * Register a subsystem's rhythm configuration
+     * Called when loading gestures, emotions, behaviors, etc.
+     */
+    registerConfig(type, name, config) {
+        if (!config.rhythm || !config.rhythm.enabled) return;
+        
+        const key = `${type}:${name}`;
+        this.subsystemConfigs.set(key, {
+            type,
+            name,
+            rhythmConfig: config.rhythm,
+            originalConfig: config
+        });
+        
+    }
+    
+    /**
+     * Apply rhythm modulation to a gesture
+     */
+    applyGestureRhythm(gesture, _particle, _progress, _dt) {
+        if (!this.enabled || !gesture.rhythm?.enabled) return {};
+        
+
+        const rhythmConfig = gesture.rhythm;
+        const modulation = {};
+        
+        // Apply amplitude sync
+        if (rhythmConfig.amplitudeSync) {
+            const sync = rhythmConfig.amplitudeSync;
+            const beatSync = this.adapter.getBeatSync(
+                sync.offBeat || 0.8,
+                sync.onBeat || 1.5,
+                sync.curve || 'linear'
+            );
+            modulation.amplitudeMultiplier = beatSync;
+        }
+        
+        // Apply wobble sync
+        if (rhythmConfig.wobbleSync) {
+            const sync = rhythmConfig.wobbleSync;
+            if (this.adapter.isOnSubdivision(sync.subdivision, 0.1)) {
+                modulation.wobbleMultiplier = 1 + sync.intensity;
+            } else {
+                modulation.wobbleMultiplier = 1;
+            }
+        }
+        
+        // Apply accent response
+        if (rhythmConfig.accentResponse?.enabled) {
+            const accentedValue = this.adapter.getAccentedValue(
+                1,
+                rhythmConfig.accentResponse.multiplier || 1.5
+            );
+            modulation.accentMultiplier = accentedValue;
+        }
+        
+        // Apply pattern overrides
+        const currentPattern = this.adapter.getPattern();
+        if (currentPattern && rhythmConfig.patternOverrides?.[currentPattern]) {
+            Object.assign(modulation, rhythmConfig.patternOverrides[currentPattern]);
+        }
+        
+        return modulation;
+    }
+    
+    /**
+     * Apply rhythm modulation to particle emission
+     */
+    applyParticleRhythm(emotionState, _particleSystem) {
+        if (!this.enabled || !emotionState.rhythm?.enabled) return {};
+        
+        const timeInfo = this.adapter.getTimeInfo();
+        const rhythmConfig = emotionState.rhythm;
+        const modulation = {};
+        
+        // Particle emission sync
+        if (rhythmConfig.particleEmission) {
+            const emission = rhythmConfig.particleEmission;
+            
+            if (emission.syncMode === 'beat' && this.adapter.isOnBeat(0.1)) {
+                // Emit burst on beat
+                modulation.emitBurst = emission.burstSize || 3;
+            } else if (emission.offBeatRate !== undefined) {
+                // Reduce emission between beats
+                modulation.emissionRate = emission.offBeatRate;
+            }
+        }
+        
+        // Glow sync
+        if (rhythmConfig.glowSync) {
+            const glow = rhythmConfig.glowSync;
+            const glowIntensity = this.adapter.getBeatSync(
+                glow.intensityRange[0] || 1.0,
+                glow.intensityRange[1] || 2.0,
+                'pulse'
+            );
+            modulation.glowIntensity = glowIntensity;
+        }
+        
+        // Breathing sync
+        if (rhythmConfig.breathSync?.mode === 'bars') {
+            const breath = rhythmConfig.breathSync;
+            const barsElapsed = timeInfo.bar % breath.barsPerBreath;
+            const breathProgress = barsElapsed / breath.barsPerBreath;
+            modulation.breathPhase = breathProgress * Math.PI * 2;
+        }
+        
+        return modulation;
+    }
+    
+    /**
+     * Apply rhythm to particle behavior
+     */
+    applyBehaviorRhythm(behavior, _particle, _dt) {
+        if (!this.enabled || !behavior.rhythm?.enabled) return {};
+        
+        const timeInfo = this.adapter.getTimeInfo();
+        const rhythmConfig = behavior.rhythm;
+        const modulation = {};
+        
+        // Glitch timing for glitchy behavior
+        if (rhythmConfig.glitchTiming) {
+            const glitch = rhythmConfig.glitchTiming;
+            const isOnSubdivision = this.adapter.isOnSubdivision(glitch.subdivision, 0.05);
+            
+            if (isOnSubdivision && Math.random() < glitch.probability) {
+                const intensity = this.adapter.isOnBeat() 
+                    ? glitch.intensityOnBeat 
+                    : glitch.intensityOffBeat;
+                modulation.triggerGlitch = true;
+                modulation.glitchIntensity = intensity;
+            }
+        }
+        
+        // Orbital rhythm
+        if (rhythmConfig.orbitRhythm) {
+            const orbit = rhythmConfig.orbitRhythm;
+            
+            if (orbit.baseSpeed === 'tempo') {
+                modulation.speedMultiplier = this.adapter.getBPM() / 120; // Normalize to 120 BPM
+            }
+            
+            if (orbit.beatAcceleration && this.adapter.isOnBeat(0.1)) {
+                modulation.speedBoost = orbit.beatAcceleration;
+            }
+            
+            if (orbit.barReset && timeInfo.beatInBar === 0) {
+                modulation.resetOrbit = true;
+            }
+        }
+        
+        // Stutter sync
+        if (rhythmConfig.stutterSync) {
+            const stutter = rhythmConfig.stutterSync;
+            const pattern = this.adapter.getPattern();
+            
+            if (pattern && stutter.patterns?.[pattern]) {
+                const patternConfig = stutter.patterns[pattern];
+                
+                if (patternConfig.freezeOnDrop && timeInfo.beatInBar === 2) {
+                    modulation.freeze = true;
+                    modulation.freezeDuration = patternConfig.dropDuration;
+                } else if (patternConfig.randomFreeze && Math.random() < patternConfig.randomFreeze) {
+                    modulation.freeze = true;
+                    modulation.freezeDuration = patternConfig.duration;
+                }
+            }
+        }
+        
+        return modulation;
+    }
+    
+    /**
+     * Handle beat event
+     */
+    handleBeat(beatInfo) {
+        // Store beat info for subsystems to access
+        this.lastBeatInfo = beatInfo;
+        
+        // Could trigger specific effects here if needed
+        // But mainly subsystems will query rhythm state during their update
+    }
+    
+    /**
+     * Handle bar event
+     */
+    handleBar(barInfo) {
+        // Store bar info for subsystems to access
+        this.lastBarInfo = barInfo;
+    }
+    
+    /**
+     * Get duration adjusted for musical time
+     */
+    getMusicalDuration(rhythmConfig, originalDuration) {
+        if (!this.enabled || !rhythmConfig?.durationSync) return originalDuration;
+        
+        const sync = rhythmConfig.durationSync;
+        
+        if (sync.mode === 'bars') {
+            return this.adapter.beatsToMs(sync.bars * 4); // Assuming 4/4 time
+        } else if (sync.mode === 'beats') {
+            return this.adapter.beatsToMs(sync.beats);
+        }
+        
+        return originalDuration;
+    }
+    
+    /**
+     * Check if rhythm is enabled globally
+     */
+    isEnabled() {
+        return this.enabled && this.adapter.isPlaying();
+    }
+    
+    /**
+     * Start rhythm playback
+     */
+    start(bpm = 120, pattern = 'straight') {
+        if (bpm) rhythmEngine.setBPM(bpm);
+        if (pattern) rhythmEngine.setPattern(pattern);
+        rhythmEngine.start();
+        this.enabled = true;
+    }
+    
+    /**
+     * Stop rhythm playback
+     */
+    stop() {
+        rhythmEngine.stop();
+        this.enabled = false;
+        // Unlock BPM when stopping
+        this.bpmLocked = false;
+        this.lockedBPM = null;
+    }
+    
+    /**
+     * Set rhythm pattern
+     */
+    setPattern(pattern) {
+        rhythmEngine.setPattern(pattern);
+    }
+    
+    /**
+     * Set BPM
+     */
+    setBPM(bpm) {
+        rhythmEngine.setBPM(bpm);
+        // Update the locked BPM if manually changed
+        if (this.bpmLocked) {
+            this.lockedBPM = bpm;
+            // BPM locking logging removed for production
+        }
+    }
+    
+    /**
+     * Resample BPM - unlocks detection for one update
+     */
+    resampleBPM() {
+        // BPM resampling logging removed for production
+        this.bpmLocked = false;
+        this.lockedBPM = null;
+    }
+    
+    /**
+     * Set time signature from detected pattern
+     */
+    setTimeSignature(signature) {
+        this.timeSignature = signature;
+        
+        // Update UI if available
+        const timeSigDisplay = document.getElementById('time-sig-display');
+        if (timeSigDisplay) {
+            timeSigDisplay.textContent = signature;
+        }
+        
+        // Could update rhythm patterns based on time signature here
+        // For example, switch to waltz pattern for 3/4
+        if (signature === '3/4' && rhythmEngine.getPattern() !== 'waltz') ;
+    }
+    
+    /**
+     * Sync to external audio
+     */
+    syncToAudio(audioContext, audioSource) {
+        rhythmEngine.syncToAudio(audioContext, audioSource);
+    }
+}
+
+// Create singleton instance
+const rhythmIntegration = new RhythmIntegration();
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Emotion Cache System
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Pre-cached emotion system for instant emotion transitions
+ * @author Emotive Engine Team
+ * @module cache/EmotionCache
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Pre-caches all emotion states and their configurations for instant access.
+ * ║ Eliminates the need to load emotion data on-demand, improving transition
+ * ║ performance from ~20-50ms to <5ms.
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+
+/**
+ * EmotionCache - Pre-caches all emotion configurations for instant access
+ */
+class EmotionCache {
+    constructor() {
+        // Cache storage
+        this.emotionCache = new Map();
+        this.visualParamsCache = new Map();
+        this.modifiersCache = new Map();
+        this.transitionCache = new Map();
+        
+        // Performance tracking
+        this.stats = {
+            hits: 0,
+            misses: 0,
+            loadTime: 0,
+            cacheSize: 0
+        };
+        
+        // Cache configuration
+        this.isInitialized = false;
+        this.loadStartTime = 0;
+        
+        // Initialize cache
+        this.initialize();
+    }
+    
+    /**
+     * Initialize the emotion cache by pre-loading all emotions
+     */
+    initialize() {
+        this.loadStartTime = performance.now();
+        
+        try {
+            // Get all available emotions
+            const emotions = listEmotions();
+            
+            // Pre-cache each emotion
+            emotions.forEach(emotionName => {
+                this.cacheEmotion(emotionName);
+            });
+            
+            // Pre-cache common transitions
+            this.cacheCommonTransitions(emotions);
+            
+            this.isInitialized = true;
+            this.stats.loadTime = performance.now() - this.loadStartTime;
+            this.stats.cacheSize = this.emotionCache.size;
+
+            // Removed verbose initialization log
+
+        } catch (error) {
+            console.error('[EmotionCache] Initialization failed:', error);
+            this.isInitialized = false;
+        }
+    }
+    
+    /**
+     * Cache a single emotion and its related data
+     * @param {string} emotionName - Name of the emotion to cache
+     */
+    cacheEmotion(emotionName) {
+        try {
+            // Cache main emotion configuration
+            const emotion = getEmotion(emotionName);
+            if (emotion) {
+                this.emotionCache.set(emotionName, emotion);
+            }
+            
+            // Cache visual parameters (pre-evaluated)
+            const visualParams = getEmotionVisualParams(emotionName);
+            this.visualParamsCache.set(emotionName, visualParams);
+            
+            // Cache modifiers
+            const modifiers = getEmotionModifiers(emotionName);
+            this.modifiersCache.set(emotionName, modifiers);
+            
+        } catch (error) {
+            console.warn(`[EmotionCache] Failed to cache emotion '${emotionName}':`, error);
+        }
+    }
+    
+    /**
+     * Cache common emotion transitions
+     * @param {Array<string>} emotions - List of emotion names
+     */
+    cacheCommonTransitions(emotions) {
+        // Cache transitions between common emotion pairs
+        const commonPairs = [
+            ['neutral', 'joy'],
+            ['neutral', 'sadness'],
+            ['neutral', 'anger'],
+            ['joy', 'sadness'],
+            ['sadness', 'joy'],
+            ['anger', 'calm'],
+            ['calm', 'anger']
+        ];
+        
+        commonPairs.forEach(([from, to]) => {
+            if (emotions.includes(from) && emotions.includes(to)) {
+                try {
+                    const transition = getTransitionParams(from, to);
+                    const key = `${from}->${to}`;
+                    this.transitionCache.set(key, transition);
+                } catch (error) {
+                    console.warn(`[EmotionCache] Failed to cache transition '${from}->${to}':`, error);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Get cached emotion configuration
+     * @param {string} emotionName - Name of the emotion
+     * @returns {Object|null} Cached emotion configuration
+     */
+    getEmotion(emotionName) {
+        if (!this.isInitialized) {
+            console.warn('[EmotionCache] Cache not initialized, falling back to direct access');
+            return getEmotion(emotionName);
+        }
+        
+        const cached = this.emotionCache.get(emotionName);
+        if (cached) {
+            this.stats.hits++;
+            return cached;
+        }
+        
+        this.stats.misses++;
+        console.warn(`[EmotionCache] Cache miss for emotion '${emotionName}', consider adding to pre-cache`);
+        return getEmotion(emotionName);
+    }
+    
+    /**
+     * Get cached visual parameters
+     * @param {string} emotionName - Name of the emotion
+     * @returns {Object} Cached visual parameters
+     */
+    getVisualParams(emotionName) {
+        if (!this.isInitialized) {
+            return getEmotionVisualParams(emotionName);
+        }
+        
+        const cached = this.visualParamsCache.get(emotionName);
+        if (cached) {
+            this.stats.hits++;
+            return cached;
+        }
+        
+        this.stats.misses++;
+        return getEmotionVisualParams(emotionName);
+    }
+    
+    /**
+     * Get cached modifiers
+     * @param {string} emotionName - Name of the emotion
+     * @returns {Object} Cached modifiers
+     */
+    getModifiers(emotionName) {
+        if (!this.isInitialized) {
+            return getEmotionModifiers(emotionName);
+        }
+        
+        const cached = this.modifiersCache.get(emotionName);
+        if (cached) {
+            this.stats.hits++;
+            return cached;
+        }
+        
+        this.stats.misses++;
+        return getEmotionModifiers(emotionName);
+    }
+    
+    /**
+     * Get cached transition parameters
+     * @param {string} fromEmotion - Starting emotion
+     * @param {string} toEmotion - Target emotion
+     * @returns {Object} Cached transition parameters
+     */
+    getTransitionParams(fromEmotion, toEmotion) {
+        if (!this.isInitialized) {
+            return getTransitionParams(fromEmotion, toEmotion);
+        }
+        
+        const key = `${fromEmotion}->${toEmotion}`;
+        const cached = this.transitionCache.get(key);
+        if (cached) {
+            this.stats.hits++;
+            return cached;
+        }
+        
+        this.stats.misses++;
+        return getTransitionParams(fromEmotion, toEmotion);
+    }
+    
+    /**
+     * Check if emotion is cached
+     * @param {string} emotionName - Name of the emotion
+     * @returns {boolean} True if emotion is cached
+     */
+    hasEmotion(emotionName) {
+        return this.emotionCache.has(emotionName);
+    }
+    
+    /**
+     * Get cache statistics
+     * @returns {Object} Cache performance statistics
+     */
+    getStats() {
+        const totalRequests = this.stats.hits + this.stats.misses;
+        const hitRate = totalRequests > 0 ? (this.stats.hits / totalRequests * 100).toFixed(2) : 0;
+        
+        return {
+            isInitialized: this.isInitialized,
+            loadTime: this.stats.loadTime,
+            cacheSize: this.stats.cacheSize,
+            hits: this.stats.hits,
+            misses: this.stats.misses,
+            hitRate: `${hitRate}%`,
+            emotions: this.emotionCache.size,
+            visualParams: this.visualParamsCache.size,
+            modifiers: this.modifiersCache.size,
+            transitions: this.transitionCache.size
+        };
+    }
+    
+    /**
+     * Clear all caches
+     */
+    clear() {
+        this.emotionCache.clear();
+        this.visualParamsCache.clear();
+        this.modifiersCache.clear();
+        this.transitionCache.clear();
+        this.isInitialized = false;
+        this.stats = { hits: 0, misses: 0, loadTime: 0, cacheSize: 0 };
+    }
+    
+    /**
+     * Reinitialize cache (useful for dynamic emotion loading)
+     */
+    reinitialize() {
+        this.clear();
+        this.initialize();
+    }
+}
+
+// Create singleton instance
+const emotionCache = new EmotionCache();
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Color Utilities
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Color selection and manipulation utilities for particles
+ * @author Emotive Engine Team
+ * @module particles/utils/colorUtils
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Handles weighted color selection for particles. Each emotion has a palette of     
+ * ║ colors with different weights (probabilities). This creates visual variety        
+ * ║ while maintaining the emotional theme.                                            
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Select a color from an array with optional weights
+ * 
+ * EXAMPLE INPUT:
+ * [
+ *   { color: '#FF69B4', weight: 30 },  // 30% chance
+ *   { color: '#FFB6C1', weight: 25 },  // 25% chance
+ *   { color: '#FF1493', weight: 20 },  // 20% chance
+ *   '#FFC0CB',                          // Remaining weight split evenly
+ *   '#C71585'                           // between unweighted colors
+ * ]
+ * 
+ * @param {Array} colors - Array of color strings or {color, weight} objects
+ * @returns {string} Selected hex color
+ */
+function selectWeightedColor(colors) {
+    if (!colors || colors.length === 0) return '#FFFFFF';
+    
+    // Parse colors and weights
+    let totalExplicitWeight = 0;
+    let unweightedCount = 0;
+    const parsedColors = [];
+    
+    for (const item of colors) {
+        if (typeof item === 'string') {
+            // Simple string color - will get default weight
+            parsedColors.push({ color: item, weight: null });
+            unweightedCount++;
+        } else if (item && typeof item === 'object' && item.color) {
+            // Object with color and optional weight
+            parsedColors.push({ color: item.color, weight: item.weight || null });
+            if (item.weight) {
+                totalExplicitWeight += item.weight;
+            } else {
+                unweightedCount++;
+            }
+        }
+    }
+    
+    // Calculate weight for unweighted colors
+    // If weights total 75, and there are 2 unweighted colors, each gets 12.5
+    const remainingWeight = Math.max(0, 100 - totalExplicitWeight);
+    const defaultWeight = unweightedCount > 0 ? remainingWeight / unweightedCount : 0;
+    
+    // Build cumulative probability table for efficient selection
+    const probTable = [];
+    let cumulative = 0;
+    
+    for (const item of parsedColors) {
+        const weight = item.weight !== null ? item.weight : defaultWeight;
+        cumulative += weight;
+        probTable.push({ color: item.color, threshold: cumulative });
+    }
+    
+    // Select based on random value
+    const random = Math.random() * cumulative;
+    for (const entry of probTable) {
+        if (random <= entry.threshold) {
+            return entry.color;
+        }
+    }
+    
+    // Fallback to last color (shouldn't happen but safety first)
+    return parsedColors[parsedColors.length - 1].color;
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Ambient Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Gentle upward drift behavior for neutral emotional state
+ * @author Emotive Engine Team
+ * @module particles/behaviors/ambient
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a calm, peaceful atmosphere with particles gently drifting upward         
+ * ║ like smoke or steam. This is the default behavior for neutral emotional states.   
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *        ↑  ↑  ↑
+ *       ·  ·  ·    ← particles drift straight up
+ *      ·  ·  ·  
+ *     ·  ⭐  ·     ← orb center
+ *      ·  ·  ·
+ *       ·  ·  ·
+ * 
+ * USED BY EMOTIONS:
+ * - neutral (default calm state)
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase upwardSpeed for faster rising (more energy)
+ * - Decrease friction for longer-lasting momentum
+ * - Add waviness for side-to-side motion (currently disabled)
+ */
+
+
+/**
+ * Initialize ambient behavior for a particle
+ * Sets up initial velocities and behavior-specific data
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeAmbient(particle) {
+    // Start with gentle upward movement
+    particle.vx = 0;  // NO horizontal drift
+    particle.vy = -0.04 - Math.random() * 0.02;  // Slower upward movement
+    particle.lifeDecay = 0.002;  // Even slower fade - particles last ~8 seconds
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        // Languid upward drift
+        upwardSpeed: 0.0005,      // Very slow continuous upward drift
+        waviness: 0,              // NO side-to-side (set to 0.5-2 for wave motion)
+        friction: 0.998           // Even more gradual slowdown
+    };
+}
+
+/**
+ * Update ambient behavior each frame
+ * Applies gentle upward drift with air resistance
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X (unused but kept for consistency)
+ * @param {number} centerY - Orb center Y (unused but kept for consistency)
+ */
+function updateAmbient(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+    
+    // Apply friction to y velocity only (frame-rate independent)
+    // Use exponential decay: friction^dt where dt is normalized to 60fps
+    particle.vy *= Math.pow(data.friction, dt);
+    
+    // Add continuous upward drift
+    particle.vy -= data.upwardSpeed * dt;
+    
+    // NO horizontal movement or waviness (zen-like straight up)
+    particle.vx = 0;
+}
+
+// Export behavior definition for registry
+var ambient = {
+    name: 'ambient',
+    emoji: '☁️',
+    description: 'Gentle upward drift like smoke',
+    initialize: initializeAmbient,
+    update: updateAmbient
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Particle Physics Configuration
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Physics constants for particle behavior
+ * @author Emotive Engine Team
+ * @module particles/config/physics
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Core physics values that control how particles move and interact with the world.  
+ * ║ Modify these with caution as they affect all particle behaviors globally.         
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ PHYSICS CONSTANTS - Core physics values (modify with caution)
+// └─────────────────────────────────────────────────────────────────────────────────────
+const PHYSICS = {
+    // Math constants
+    TWO_PI: Math.PI * 2};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Orbiting Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Romantic orbiting behavior for love emotional state
+ * @author Emotive Engine Team
+ * @module particles/behaviors/orbiting
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a romantic atmosphere with particles orbiting the orb like fireflies      
+ * ║ dancing at a valentine's day party. Features individual blinking and sparkles.    
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *        ✨     ✨
+ *      💕  ╭───╮  💕    ← particles orbit & sparkle
+ *    ✨   │  ⭐  │   ✨   ← orb center
+ *      💕  ╰───╯  💕
+ *        ✨     ✨
+ * 
+ * USED BY EMOTIONS:
+ * - love (romantic valentine vibes)
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase angularVelocity for faster spinning
+ * - Increase floatAmount for more vertical movement
+ * - Adjust blinkSpeed for different firefly effects
+ * - Increase baseRadius for wider orbits
+ */
+
+
+/**
+ * Initialize orbiting behavior for a particle
+ * Creates valentine fireflies with individual timing
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeOrbiting(particle) {
+    // Individual fade timing - each particle has its own lifespan
+    particle.lifeDecay = 0.001 + Math.random() * 0.002;  // Variable decay (0.001-0.003)
+    
+    // Use emotion colors if provided - glittery valentine palette
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    // Check if this is a lighter/sparkle color (light pinks)
+    particle.isSparkle = particle.color === '#FFE4E1' || 
+                        particle.color === '#FFCCCB' || 
+                        particle.color === '#FFC0CB';
+    
+    // Particles orbit at various distances for depth
+    const orbRadius = (particle.scaleFactor || 1) * 40; // Approximate orb size
+    const depthLayer = Math.random();
+    const baseRadius = orbRadius * (1.3 + depthLayer * 0.9); // 1.3x to 2.2x orb radius
+    
+    // Glitter firefly properties - each with unique timing
+    particle.blinkPhase = Math.random() * PHYSICS.TWO_PI; // Random starting phase
+    particle.blinkSpeed = 0.3 + Math.random() * 1.2; // Varied blink speeds (0.3-1.5)
+    particle.blinkIntensity = 0.6 + Math.random() * 0.4; // How bright the blink gets
+    
+    // Individual fade properties
+    particle.fadePhase = Math.random() * PHYSICS.TWO_PI; // Random fade starting phase
+    particle.fadeSpeed = 0.1 + Math.random() * 0.3; // Different fade speeds
+    particle.minOpacity = 0.2 + Math.random() * 0.2; // Min brightness varies (0.2-0.4)
+    particle.maxOpacity = 0.8 + Math.random() * 0.2; // Max brightness varies (0.8-1.0)
+    
+    // Sparkles have different properties
+    if (particle.isSparkle) {
+        particle.blinkSpeed *= 2; // Sparkles blink faster
+        particle.blinkIntensity = 1.0; // Full intensity sparkles
+        particle.minOpacity = 0; // Can fade to nothing
+        particle.maxOpacity = 1.0; // Can be fully bright
+    }
+    
+    particle.behaviorData = {
+        angle: Math.random() * PHYSICS.TWO_PI,
+        radius: baseRadius,
+        baseRadius,
+        angularVelocity: 0.0008 + Math.random() * 0.0017,  // Varied rotation speeds
+        swayAmount: 3 + Math.random() * 7,  // Gentle floating sway
+        swaySpeed: 0.2 + Math.random() * 0.5,  // Varied sway rhythm
+        floatOffset: Math.random() * PHYSICS.TWO_PI,  // Random vertical float phase
+        floatSpeed: 0.3 + Math.random() * 0.7,  // Varied vertical floating speed
+        floatAmount: 2 + Math.random() * 6,  // How much they float up/down
+        twinklePhase: Math.random() * PHYSICS.TWO_PI,  // Individual twinkle timing
+        twinkleSpeed: 2 + Math.random() * 3  // Fast twinkle for glitter effect
+    };
+}
+
+/**
+ * Update orbiting behavior each frame
+ * Creates romantic firefly dance with sparkles
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X position
+ * @param {number} centerY - Orb center Y position
+ */
+function updateOrbiting(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+
+    // Slow romantic rotation around the orb
+    data.angle += data.angularVelocity * dt;
+
+    // Gentle swaying motion
+    const swayOffset = Math.sin(data.angle * data.swaySpeed) * data.swayAmount;
+
+    // Radius changes for breathing effect
+    const radiusPulse = Math.sin(data.angle * 1.5) * 6;
+
+    // Use data.radius if it exists (can be modified by gestures), otherwise use baseRadius
+    const currentRadius = (data.radius || data.baseRadius) + radiusPulse + swayOffset * 0.2;
+
+    // Calculate desired orbital position
+    const targetX = centerX + Math.cos(data.angle) * currentRadius;
+    const targetY = centerY + Math.sin(data.angle) * currentRadius;
+
+    // Add gentle vertical floating (like fireflies)
+    data.floatOffset += data.floatSpeed * dt * 0.001;
+    const verticalFloat = Math.sin(data.floatOffset) * data.floatAmount;
+
+    // Smoothly move towards target position instead of directly setting it
+    // This allows gestures to temporarily offset particles
+    const smoothingFactor = 0.1; // How quickly particles return to orbit
+    particle.vx = (targetX - particle.x) * smoothingFactor;
+    particle.vy = (targetY + verticalFloat - particle.y) * smoothingFactor;
+    
+    // Update individual fade phase
+    particle.fadePhase += particle.fadeSpeed * dt * 0.001;
+    
+    // Calculate individual particle fade (independent timing)
+    const fadeValue = Math.sin(particle.fadePhase) * 0.5 + 0.5; // 0 to 1
+    const fadeOpacity = particle.minOpacity + (particle.maxOpacity - particle.minOpacity) * fadeValue;
+    
+    // Firefly blinking effect
+    particle.blinkPhase += particle.blinkSpeed * dt * 0.002;
+    
+    // Create a complex glitter blink with multiple harmonics
+    let blinkValue;
+    if (particle.isSparkle) {
+        // Sparkles have sharp, dramatic twinkles
+        data.twinklePhase += data.twinkleSpeed * dt * 0.001;
+        const twinkle = Math.pow(Math.sin(data.twinklePhase), 16); // Sharp peaks
+        const shimmer = Math.sin(particle.blinkPhase * 5) * 0.2;
+        blinkValue = twinkle * 0.7 + shimmer + 0.1;
+    } else {
+        // Regular particles have smoother, firefly-like pulses
+        blinkValue = Math.sin(particle.blinkPhase) * 0.4 + 
+                    Math.sin(particle.blinkPhase * 3) * 0.3 +
+                    Math.sin(particle.blinkPhase * 7) * 0.2 +
+                    Math.sin(particle.blinkPhase * 11) * 0.1; // Added harmonic
+    }
+    
+    // Map to 0-1 range with intensity control
+    const normalizedBlink = (blinkValue + 1) * 0.5; // Convert from -1,1 to 0,1
+    const blink = 0.2 + normalizedBlink * particle.blinkIntensity * 0.8;
+    
+    // Combine individual fade with blink effect
+    particle.opacity = particle.baseOpacity * fadeOpacity * blink;
+    
+    // Sparkles pulse size more dramatically
+    if (particle.isSparkle) {
+        particle.size = particle.baseSize * (0.5 + normalizedBlink * 1.0); // 50-150% size
+    } else {
+        particle.size = particle.baseSize * (0.8 + normalizedBlink * 0.3); // 80-110% size
+    }
+    
+    // Add subtle color shift for sparkles (shimmer effect)
+    if (particle.isSparkle) {
+        // Light pink sparkles can shift to white at peak brightness
+        if (normalizedBlink > 0.85) {
+            particle.tempColor = '#FFFFFF'; // Flash white at peak for extra sparkle
+        } else {
+            particle.tempColor = particle.color;
+        }
+    }
+}
+
+// Export behavior definition for registry
+var orbiting = {
+    name: 'orbiting',
+    emoji: '💕',
+    description: 'Romantic firefly dance around the orb',
+    initialize: initializeOrbiting,
+    update: updateOrbiting
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Rising Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Buoyant upward movement for joyful states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/rising
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a buoyant, uplifting atmosphere with particles rising like bubbles        
+ * ║ or balloons. Slight horizontal drift adds organic movement.                       
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *      ↗  ↑  ↖
+ *     ·  ·  ·    ← particles rise with drift
+ *    ·  ·  ·  
+ *   ·  ⭐  ·     ← orb center
+ *    ·  ·  ·
+ *     ·  ·  ·
+ * 
+ * USED BY EMOTIONS:
+ * - joy (subtle happiness)
+ * - optimism
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase buoyancy for faster rising (like helium balloons)
+ * - Increase driftAmount for more side-to-side movement
+ * - Decrease air resistance for longer-lasting momentum
+ */
+
+
+/**
+ * Initialize rising behavior for a particle
+ * Sets up buoyant upward movement with gentle drift
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeRising(particle) {
+    particle.vx = (Math.random() - 0.5) * 0.02;  // Even slower horizontal drift
+    particle.vy = -0.05 - Math.random() * 0.03;   // Much slower upward movement
+    particle.lifeDecay = 0.002;                   // Very slow decay
+    particle.baseOpacity = 0.7 + Math.random() * 0.3;  // More opaque (70-100%)
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        buoyancy: 0.001,      // Even gentler upward force
+        driftAmount: 0.005    // Minimal drift
+    };
+}
+
+/**
+ * Update rising behavior each frame
+ * Applies buoyancy and gentle drift
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X (unused)
+ * @param {number} centerY - Orb center Y (unused)
+ */
+function updateRising(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+    
+    // Add buoyancy (upward force)
+    particle.vy -= data.buoyancy * dt;
+    
+    // Add horizontal drift
+    particle.vx += (Math.random() - 0.5) * data.driftAmount * dt;
+    
+    // Apply air resistance (frame-independent)
+    particle.vx *= Math.pow(0.995, dt);
+    particle.vy *= Math.pow(0.998, dt);
+}
+
+// Export behavior definition for registry
+var rising = {
+    name: 'rising',
+    emoji: '🎈',
+    description: 'Buoyant upward movement like balloons',
+    initialize: initializeRising,
+    update: updateRising
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Falling Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Heavy downward drift for sad emotional states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/falling
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a melancholic atmosphere with particles slowly falling like tears         
+ * ║ or autumn leaves. Heavy, weighted movement conveys sadness.                       
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *     ·  ·  ·
+ *    ·  ·  ·  
+ *   ·  ⭐  ·     ← orb center
+ *    ·  ·  ·
+ *     ·  ·  ·    ← particles fall slowly
+ *      ↓  ↓  ↓
+ * 
+ * USED BY EMOTIONS:
+ * - sadness (melancholy, grief)
+ * - disappointment
+ * - tired
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase gravity for heavier falling (more weight)
+ * - Decrease drag for faster falling (less air resistance)
+ * - Add horizontal drift for leaf-like falling
+ */
+
+
+/**
+ * Initialize falling behavior for a particle
+ * Sets up slow, heavy downward movement
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeFalling(particle) {
+    // Exact copy of ambient but falling DOWN instead of up
+    particle.vx = 0;  // NO horizontal drift
+    particle.vy = 0.04 + Math.random() * 0.02;  // Same speed as ambient but downward (positive = down)
+    particle.lifeDecay = 0.002;  // Same as ambient
+
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+
+    // Generate random 3D direction for uniform sphere distribution
+    // This is used by the 3D translator for positioning
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const theta = u1 * Math.PI * 2;
+    const cosPhi = 2.0 * u2 - 1.0;
+    const sinPhi = Math.sqrt(1.0 - cosPhi * cosPhi);
+
+    particle.behaviorData = {
+        downwardSpeed: 0.0005,  // Same as ambient's upwardSpeed
+        friction: 0.998,        // Same as ambient
+        // 3D direction for translator (uniform sphere distribution)
+        fallingDir: {
+            x: sinPhi * Math.cos(theta),
+            y: cosPhi,
+            z: sinPhi * Math.sin(theta)
+        },
+        // Random orbit distance (0.7x to 1.1x core radius, actual value set by translator)
+        orbitDistanceRatio: 0.7 + Math.random() * 0.4
+    };
+}
+
+/**
+ * Update falling behavior each frame
+ * Mirror of ambient but falling DOWN instead of rising up
+ *
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X (unused)
+ * @param {number} centerY - Orb center Y (unused)
+ */
+function updateFalling(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+
+    // Apply friction to y velocity only (frame-rate independent)
+    // Use exponential decay: friction^dt where dt is normalized to 60fps
+    particle.vy *= Math.pow(data.friction, dt);
+
+    // Add continuous downward drift (opposite of ambient's upward)
+    particle.vy += data.downwardSpeed * dt;
+
+    // NO horizontal movement (zen-like straight down, like ambient goes straight up)
+    particle.vx = 0;
+}
+
+// Export behavior definition for registry
+var falling = {
+    name: 'falling',
+    emoji: '💧',
+    description: 'Heavy downward drift like tears',
+    initialize: initializeFalling,
+    update: updateFalling
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Playground Configuration 🎮
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Safe values for experimentation and tweaking
+ * @author Emotive Engine Team
+ * @module particles/config/playground
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                            🎮 PLAYGROUND VALUES                                   
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ SAFE TO MODIFY! These values are designed for experimentation.                    
+ * ║ Change them to create new visual effects and behaviors.                           
+ * ║                                                                                    
+ * ║ TIP: After changing values, refresh your browser to see the effects!              
+ * ║ TIP: Set window.DEBUG_PARTICLES = true in console to visualize changes            
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+const PLAYGROUND = {
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ POPCORN BEHAVIOR - Joy particles that pop!
+    // └─────────────────────────────────────────────────────────────────────────────────
+    popcorn: {
+        POP_DELAY_MAX: 2000,   // 🎯 Slowest pop (ms) - Try: 1000-5000
+        POP_FORCE_MIN: 3,      // 🎯 Weakest pop - Try: 1-5
+        POP_FORCE_MAX: 8,      // 🎯 Strongest pop - Try: 5-15
+        BOUNCE_HEIGHT: 0.7     // 🎯 Bounce energy retained - Try: 0.3-0.9
+    }};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Popcorn Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Spontaneous popping with bounces for joyful celebration
+ * @author Emotive Engine Team
+ * @module particles/behaviors/popcorn
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a celebratory atmosphere with particles that wait, then POP! and bounce   
+ * ║ around with gravity. Perfect for pure joy and celebration moments.                
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *     Stage 1: Wait      Stage 2: POP!       Stage 3: Bounce
+ *         ·                  💥 ↗             ↘ 
+ *        ···                ↖ 💥 ↗              ↓
+ *       ·⭐·                  💥                 🎊 ← bounce!
+ *        ···                ↙ 💥 ↘              ↑
+ *         ·                  💥 ↓               ↗
+ * 
+ * USED BY EMOTIONS:
+ * - joy (celebration, happiness, excitement)
+ * 
+ * RECIPE TO MODIFY:
+ * - Decrease popDelay for faster popping (more energetic)
+ * - Increase popStrength for bigger pops
+ * - Adjust gravity for different bounce physics
+ * - Increase maxBounces for longer bouncing
+ */
+
+
+/**
+ * Initialize popcorn behavior for a particle
+ * Sets up kernel waiting to pop
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializePopcorn(particle) {
+    // Start with little to no movement (kernel waiting to pop)
+    particle.vx = (Math.random() - 0.5) * 0.1;
+    particle.vy = (Math.random() - 0.5) * 0.1;
+    // Faster, more varied decay for dynamic disappearing
+    particle.lifeDecay = 0.008 + Math.random() * 0.012; // Random between 0.008-0.020
+    
+    // Use emotion colors if provided, otherwise default popcorn colors
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    } else {
+        // Default popcorn colors (buttery whites and yellows)
+        const colors = ['#FFFFFF', '#FFFACD', '#FFF8DC', '#FFFFE0', '#FAFAD2'];
+        particle.color = selectWeightedColor(colors);
+    }
+    
+    // Vary sizes more dramatically - some big fluffy pieces, some small
+    particle.size = (Math.random() < 0.3) ? 
+        (8 + Math.random() * 4) * particle.scaleFactor * particle.particleSizeMultiplier : // 30% big
+        (2 + Math.random() * 4) * particle.scaleFactor * particle.particleSizeMultiplier;  // 70% small
+    particle.baseSize = particle.size;
+    
+    // Less glow, more solid popcorn look
+    particle.hasGlow = Math.random() < 0.2; // Only 20% have glow
+    particle.glowSizeMultiplier = particle.hasGlow ? 1.2 : 0;
+    
+    particle.behaviorData = {
+        // Popcorn popping mechanics
+        popDelay: Math.random() * PLAYGROUND.popcorn.POP_DELAY_MAX,
+        hasPopped: false,
+        popStrength: PLAYGROUND.popcorn.POP_FORCE_MIN + 
+                    Math.random() * (PLAYGROUND.popcorn.POP_FORCE_MAX - PLAYGROUND.popcorn.POP_FORCE_MIN),
+        
+        // Physics after popping
+        gravity: 0.098,                    // Gravity strength
+        bounceDamping: PLAYGROUND.popcorn.BOUNCE_HEIGHT,
+        bounceCount: 0,
+        maxBounces: 2 + Math.floor(Math.random() * 2), // 2-3 bounces
+        
+        // Visual flair
+        spinRate: (Math.random() - 0.5) * 10, // Rotation speed (for future use)
+        lifetime: 0                           // Track time since spawn
+    };
+}
+
+/**
+ * Update popcorn behavior each frame
+ * Handles waiting, popping, and bouncing phases
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X position
+ * @param {number} centerY - Orb center Y position
+ */
+function updatePopcorn(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    data.lifetime += dt * 16.67; // Convert to milliseconds
+    
+    // Check if it's time to pop
+    if (!data.hasPopped && data.lifetime > data.popDelay) {
+        // POP! Sudden burst of velocity in all directions for celebration
+        data.hasPopped = true;
+        const popAngle = Math.random() * Math.PI * 2; // Full 360 degree spread
+        particle.vx = Math.cos(popAngle) * data.popStrength * 1.5; // Extra horizontal spread
+        particle.vy = Math.sin(popAngle) * data.popStrength - 0.3; // Slight upward bias for joy
+        
+        // Expand size when popping for dramatic effect
+        particle.size = particle.baseSize * 1.25;
+    }
+    
+    if (data.hasPopped) {
+        // Apply gravity
+        particle.vy += data.gravity * dt;
+        
+        // Check for ground bounce
+        const groundLevel = centerY + 100 * particle.scaleFactor; // Below the orb
+        if (particle.y > groundLevel && data.bounceCount < data.maxBounces) {
+            particle.y = groundLevel;
+            particle.vy = -Math.abs(particle.vy) * data.bounceDamping; // Bounce up with damping
+            particle.vx *= 0.9; // Reduce horizontal speed on bounce
+            data.bounceCount++;
+            
+            // Shrink slightly with each bounce
+            particle.size = particle.baseSize * (1.5 - data.bounceCount * 0.1);
+        }
+        
+        // Fade dramatically after final bounce
+        if (data.bounceCount >= data.maxBounces) {
+            particle.lifeDecay = 0.03 + Math.random() * 0.02; // Very fast fade
+            particle.size *= 0.95; // Also shrink rapidly
+        }
+        
+        // Dynamic fading based on velocity - slower particles fade faster
+        const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+        if (speed < 0.5) {
+            particle.lifeDecay *= 1.5; // 50% faster fade when moving slowly
+        }
+    }
+}
+
+// Export behavior definition for registry
+var popcorn = {
+    name: 'popcorn',
+    emoji: '🍿',
+    description: 'Spontaneous popping with gravity and bounces',
+    initialize: initializePopcorn,
+    update: updatePopcorn
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Burst Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Explosive expansion for surprise and suspicion states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/burst
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates dramatic expansion effects. For surprise: fast burst then sudden stop.    
+ * ║ For suspicion: controlled, watchful expansion. Particles shoot out from center.   
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *   Surprise:                  Suspicion:
+ *       💥→                        •→
+ *     ↗ 💥 ↘                    ↗ • ↘
+ *   ← ⭐ →    STOP!          ← ⭐ →    (controlled)
+ *     ↙ 💥 ↖                    ↙ • ↖
+ *       💥←                        •←
+ * 
+ * USED BY EMOTIONS:
+ * - surprise (dramatic burst then stop)
+ * - suspicion (controlled, watchful expansion)
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase speed for more dramatic burst
+ * - Adjust friction for different deceleration
+ * - Change stopTime for surprise effect timing
+ */
+
+
+/**
+ * Initialize burst behavior for a particle
+ * Sets up explosive outward movement
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeBurst(particle) {
+    // Check emotion type for behavior variation
+    const isSuspicion = particle.emotion === 'suspicion';
+    const isSurprise = particle.emotion === 'surprise';
+    const isGlitch = particle.emotion === 'glitch';
+    
+    // Random direction for burst
+    const angle = Math.random() * PHYSICS.TWO_PI;
+    
+    // Speed based on emotion
+    const speed = isSuspicion ? 
+        (1.0 + Math.random() * 0.8) :      // Controlled burst for suspicion (1-1.8)
+        (isSurprise ? 
+            (7.0 + Math.random() * 5.0) :  // Much faster burst for surprise (7-12)
+            (isGlitch ?
+                (2.0 + Math.random() * 1.5) : // Moderate burst for glitch (2-3.5)
+                (3.5 + Math.random() * 2.5)));  // Normal burst for others (3.5-6)
+    
+    particle.vx = Math.cos(angle) * speed;
+    particle.vy = Math.sin(angle) * speed;
+    
+    // Lifespan based on emotion
+    particle.lifeDecay = isSuspicion ? 
+        0.010 : 
+        (isSurprise ? 0.006 + Math.random() * 0.008 : 
+            (isGlitch ? 0.012 : 0.015));
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    // Make suspicion particles more visible
+    if (isSuspicion) {
+        particle.size = (6 + Math.random() * 4) * 
+                       (particle.scaleFactor || 1) * 
+                       (particle.particleSizeMultiplier || 1);
+        particle.baseSize = particle.size;
+        particle.opacity = 1.0;  // Full opacity for visibility
+        particle.baseOpacity = particle.opacity;
+    }
+    
+    particle.behaviorData = {
+        isSuspicion,
+        isSurprise,
+        isGlitch,
+        age: 0,
+        fadeStart: isSuspicion ? 0.3 : 0.2,  // When to start fading
+        // Glitch wiggle properties
+        glitchPhase: Math.random() * Math.PI * 2,
+        glitchIntensity: isGlitch ? 0.3 : 0,
+        glitchFrequency: isGlitch ? 0.1 : 0
+    };
+}
+
+/**
+ * Update burst behavior each frame
+ * Handles explosive expansion with emotion-specific variations
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X (unused)
+ * @param {number} centerY - Orb center Y (unused)
+ */
+function updateBurst(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+    
+    // Surprise particles: burst out then STOP suddenly
+    if (data.isSurprise) {
+        // Track age for timing the stop
+        data.age += dt * 0.016; // Convert to seconds
+        
+        if (data.age < 0.15) {
+            // First 0.15 seconds: maintain high speed
+            const friction = 0.98;
+            particle.vx *= Math.pow(friction, dt);
+            particle.vy *= Math.pow(friction, dt);
+        } else if (data.age < 0.25) {
+            // 0.15-0.25 seconds: SUDDEN STOP!
+            const friction = 0.85; // Heavy braking
+            particle.vx *= Math.pow(friction, dt);
+            particle.vy *= Math.pow(friction, dt);
+        } else {
+            // After stop: float gently
+            const friction = 0.99;
+            particle.vx *= Math.pow(friction, dt);
+            particle.vy *= Math.pow(friction, dt);
+            // Tiny random drift
+            particle.vx += (Math.random() - 0.5) * 0.01 * dt;
+            particle.vy += (Math.random() - 0.5) * 0.01 * dt;
+        }
+    } else {
+        // Normal burst behavior for other emotions
+        const friction = data.isSuspicion ? 0.99 : (data.isGlitch ? 0.97 : 0.95);
+        particle.vx *= Math.pow(friction, dt);
+        particle.vy *= Math.pow(friction, dt);
+    }
+    
+    // For suspicion, add a subtle scanning motion
+    if (data.isSuspicion) {
+        // Add a very subtle side-to-side drift
+        const time = Date.now() * 0.001;
+        particle.vx += Math.sin(time * 2 + particle.id) * 0.01 * dt;
+    }
+    
+    // For glitch, add wiggle effect
+    if (data.isGlitch) {
+        data.age += dt * 0.016; // Track age for glitch timing
+        
+        // Update glitch phase
+        data.glitchPhase += data.glitchFrequency * dt;
+        
+        // Add wiggle to velocity
+        const wiggleX = Math.sin(data.glitchPhase) * data.glitchIntensity * dt;
+        const wiggleY = Math.cos(data.glitchPhase * 1.3) * data.glitchIntensity * dt;
+        
+        particle.vx += wiggleX;
+        particle.vy += wiggleY;
+        
+        // Occasionally add random glitch bursts
+        if (Math.random() < 0.02) { // 2% chance per frame
+            const burstAngle = Math.random() * Math.PI * 2;
+            const burstSpeed = 0.5 + Math.random() * 0.5;
+            particle.vx += Math.cos(burstAngle) * burstSpeed;
+            particle.vy += Math.sin(burstAngle) * burstSpeed;
+        }
+    }
+}
+
+// Export behavior definition for registry
+var burst$1 = {
+    name: 'burst',
+    emoji: '💥',
+    description: 'Explosive expansion from center',
+    initialize: initializeBurst,
+    update: updateBurst
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Aggressive Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Sharp, chaotic movement for angry emotional states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/aggressive
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates an intense, volatile atmosphere with particles moving erratically.        
+ * ║ Sharp jitters and sudden bursts of movement convey anger and frustration.         
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *      ⚡→    ←⚡
+ *        ↘  ↙       ← erratic, sharp movements
+ *    ⚡← ⭐ →⚡      ← orb center (shaking)
+ *        ↗  ↖
+ *      ⚡←    →⚡
+ * 
+ * USED BY EMOTIONS:
+ * - anger (rage, fury)
+ * - frustration
+ * - irritation
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase jitter for more chaotic movement
+ * - Increase acceleration for more violent bursts
+ * - Decrease speedDecay for longer-lasting energy
+ */
+
+
+/**
+ * Initialize aggressive behavior for a particle
+ * Sets up chaotic, sharp movement patterns
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeAggressive(particle) {
+    const angle = Math.random() * PHYSICS.TWO_PI;
+    const speed = 1.5 + Math.random() * 2;
+    particle.vx = Math.cos(angle) * speed;
+    particle.vy = Math.sin(angle) * speed;
+    particle.lifeDecay = 0.015;
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        acceleration: 0.05,
+        jitter: 0.3,
+        speedDecay: 0.95
+    };
+}
+
+/**
+ * Update aggressive behavior each frame
+ * Applies jitter and random acceleration bursts
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X (unused)
+ * @param {number} centerY - Orb center Y (unused)
+ */
+function updateAggressive(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+    
+    // Add jitter to movement
+    particle.vx += (Math.random() - 0.5) * data.jitter * dt;
+    particle.vy += (Math.random() - 0.5) * data.jitter * dt;
+    
+    // Apply speed decay (frame-independent)
+    particle.vx *= Math.pow(data.speedDecay, dt);
+    particle.vy *= Math.pow(data.speedDecay, dt);
+    
+    // Occasionally add burst of acceleration
+    // Scale probability with frame time
+    if (Math.random() < Math.min(0.05 * dt, 0.5)) {
+        const angle = Math.random() * PHYSICS.TWO_PI;
+        particle.vx += Math.cos(angle) * data.acceleration;
+        particle.vy += Math.sin(angle) * data.acceleration;
+    }
+}
+
+// Export behavior definition for registry
+var aggressive = {
+    name: 'aggressive',
+    emoji: '⚡',
+    description: 'Sharp, chaotic movement with violent bursts',
+    initialize: initializeAggressive,
+    update: updateAggressive
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Scattering Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Particles fleeing from center for fear states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/scattering
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates an anxious atmosphere with particles frantically fleeing from the center. 
+ * ║ Conveys fear, panic, and the desire to escape.                                    
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *    ← · · · →
+ *    ↖       ↗       ← particles flee outward
+ *  · · ⭐ · ·       ← orb center (source of fear)
+ *    ↙       ↘
+ *    ← · · · →
+ * 
+ * USED BY EMOTIONS:
+ * - fear (panic, anxiety)
+ * - startled
+ * - nervous
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase fleeSpeed for more frantic escape
+ * - Increase panicFactor for more erratic fleeing
+ * - Add jitter for nervous shaking while fleeing
+ */
+
+
+/**
+ * Initialize scattering behavior for a particle
+ * Sets up fleeing movement away from center
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeScattering(particle) {
+    // Will be set relative to center in update
+    particle.vx = 0;
+    particle.vy = 0;
+    particle.lifeDecay = 0.008;  // Live longer to spread further
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        fleeSpeed: 2.0,     // Much faster fleeing
+        panicFactor: 1.2,   // More panicked movement
+        initialized: false
+    };
+}
+
+/**
+ * Update scattering behavior each frame
+ * Particles flee away from center with panic
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (frame time)
+ * @param {number} centerX - Orb center X position
+ * @param {number} centerY - Orb center Y position
+ */
+function updateScattering(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    
+    // Initialize flee direction if not done
+    if (!data.initialized) {
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+            particle.vx = (dx / distance) * data.fleeSpeed;
+            particle.vy = (dy / distance) * data.fleeSpeed;
+        } else {
+            // If at center, pick random direction
+            const angle = Math.random() * PHYSICS.TWO_PI;
+            particle.vx = Math.cos(angle) * data.fleeSpeed;
+            particle.vy = Math.sin(angle) * data.fleeSpeed;
+        }
+        data.initialized = true;
+    }
+    
+    // Continue fleeing with panic factor
+    const dx = particle.x - centerX;
+    const dy = particle.y - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance > 0) {
+        // Add acceleration away from center
+        particle.vx += (dx / distance) * data.panicFactor * 0.01 * dt;
+        particle.vy += (dy / distance) * data.panicFactor * 0.01 * dt;
+    }
+    
+    // Add nervous jitter
+    particle.vx += (Math.random() - 0.5) * 0.1 * dt;
+    particle.vy += (Math.random() - 0.5) * 0.1 * dt;
+    
+    // Apply friction
+    particle.vx *= Math.pow(0.98, dt);
+    particle.vy *= Math.pow(0.98, dt);
+}
+
+// Export behavior definition for registry
+var scattering = {
+    name: 'scattering',
+    emoji: '😨',
+    description: 'Particles flee from center in panic',
+    initialize: initializeScattering,
+    update: updateScattering
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Repelling Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Particles pushed away from center for aversion states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/repelling
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a space of rejection with particles being pushed away from the center,    
+ * ║ maintaining a minimum distance. Conveys disgust, rejection, and boundaries.       
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *    ← - - - →
+ *    ↖       ↗       ← particles pushed away
+ *  - - (  ) - -      ← empty zone around center
+ *    ↙       ↘       ← minimum distance maintained
+ *    ← - - - →
+ * 
+ * USED BY EMOTIONS:
+ * - disgust (keeping things at bay)
+ * - contempt
+ * - aversion
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase repelStrength for stronger push
+ * - Increase minDistance for larger empty zone
+ * - Adjust damping for smoother/rougher motion
+ */
+
+
+/**
+ * Initialize repelling behavior for a particle
+ * Sets up repulsion from center
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeRepelling(particle) {
+    particle.vx = 0;
+    particle.vy = 0;
+    particle.lifeDecay = 0.01; // Moderate life
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        repelStrength: 0.8,      // How strongly to push away
+        minDistance: 50,         // Minimum distance from center
+        initialized: false       // Track if initial repel has been applied
+    };
+}
+
+/**
+ * Update repelling behavior - particles maintain distance from center
+ * 
+ * Used for: DISGUST emotion (keeping unpleasant things away)
+ * Visual effect: Particles are pushed away from center and maintain a 
+ *                minimum distance, creating an empty zone
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center (canvas center)
+ * @param {number} centerY - Y coordinate of the orb's center (canvas center)
+ */
+function updateRepelling(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    
+    // STEP 1: Calculate distance from center
+    // dx/dy = distance from center to particle (can be negative)
+    const dx = particle.x - centerX;
+    const dy = particle.y - centerY;
+    // dist = straight-line distance using Pythagorean theorem
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // STEP 2: Apply repelling force if too close to center
+    // This ensures particles maintain minimum distance
+    if (!data.initialized || distance < data.minDistance) {
+        if (distance > 0) {
+            // Calculate repel force (stronger when closer)
+            // Math.max(distance, 5) prevents division by very small numbers
+            const repelForce = data.repelStrength / Math.max(distance, 5);
+            
+            // Apply force in direction away from center
+            // dx/distance = unit vector component pointing away
+            // Multiply by dt for frame-rate independence
+            particle.vx += (dx / distance) * repelForce * dt;
+            particle.vy += (dy / distance) * repelForce * dt;
+        }
+        data.initialized = true;
+    }
+    
+    // STEP 3: Apply gentle damping to smooth motion
+    // This prevents infinite acceleration and creates natural deceleration
+    // Math.pow ensures frame-rate independence
+    particle.vx *= Math.pow(0.99, dt);
+    particle.vy *= Math.pow(0.99, dt);
+}
+
+// Export behavior definition for registry
+var repelling = {
+    name: 'repelling',
+    emoji: '🚫',
+    description: 'Particles pushed away from center, maintaining distance',
+    initialize: initializeRepelling,
+    update: updateRepelling
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Connecting Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Chaotic particles drawn to center for social connection states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/connecting
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates an energetic social atmosphere with particles moving chaotically but       
+ * ║ staying connected to the center. Like a lively party or bustling community.       
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *    ↗↘ ↖↙ ↗↘
+ *   ↙ ↗ ↘ ↖ ↙       ← chaotic but connected
+ *  ↘ ↖ ⭐ ↗ ↙       ← drawn to center
+ *   ↗ ↙ ↖ ↘ ↗       ← higher energy than ambient
+ *    ↙↖ ↗↘ ↙↖
+ * 
+ * USED BY EMOTIONS:
+ * - curiosity (social exploration)
+ * - playfulness
+ * - engagement
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase attractionForce for stronger pull to center
+ * - Increase chaosFactor for more erratic movement
+ * - Decrease friction for more energetic motion
+ */
+
+
+/**
+ * Initialize connecting behavior for a particle
+ * Sets up chaotic but connected movement
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeConnecting(particle) {
+    // Original Emotive connecting: speed 2-7, higher chaos
+    const angle = Math.random() * PHYSICS.TWO_PI;
+    const speed = 2 + Math.random() * 5; // Faster than ambient
+    particle.vx = Math.cos(angle) * speed;
+    particle.vy = Math.sin(angle) * speed;
+    particle.lifeDecay = 0.012; // Shorter life for more dynamic feel
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        // Higher attraction and chaos for connecting state
+        attractionForce: 0.008,  // Stronger pull (original)
+        chaosFactor: 1.0,        // Higher chaos (original)
+        friction: 0.95          // Less friction than ambient
+    };
+}
+
+/**
+ * Update connecting behavior - chaotic movement with center attraction
+ * 
+ * Used for: CURIOSITY/SOCIAL emotions (engaged, exploring, connecting)
+ * Visual effect: Particles move chaotically but are drawn back to center,
+ *                creating a bustling, connected atmosphere
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center (canvas center)
+ * @param {number} centerY - Y coordinate of the orb's center (canvas center)
+ */
+function updateConnecting(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    
+    // STEP 1: Apply friction to slow particles gradually
+    // This prevents infinite acceleration
+    // Math.pow ensures frame-rate independence
+    particle.vx *= Math.pow(data.friction, dt);
+    particle.vy *= Math.pow(data.friction, dt);
+    
+    // STEP 2: Apply attraction force towards center
+    // (centerX - this.x) gives direction vector to center
+    // Multiplied by attractionForce to control strength
+    const attractX = (centerX - particle.x) * data.attractionForce;
+    const attractY = (centerY - particle.y) * data.attractionForce;
+    
+    // STEP 3: Add chaos for erratic movement
+    // (Math.random() - 0.5) gives random value between -0.5 and 0.5
+    // Multiplied by chaosFactor for intensity
+    const chaosX = (Math.random() - 0.5) * data.chaosFactor;
+    const chaosY = (Math.random() - 0.5) * data.chaosFactor;
+    
+    // STEP 4: Combine forces
+    // Attraction keeps particles connected to center
+    // Chaos makes movement unpredictable and lively
+    particle.vx += attractX + chaosX;
+    particle.vy += attractY + chaosY;
+}
+
+// Export behavior definition for registry
+var connecting = {
+    name: 'connecting',
+    emoji: '🔗',
+    description: 'Chaotic movement with center attraction for social states',
+    initialize: initializeConnecting,
+    update: updateConnecting
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Resting Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Ultra-slow movement for deeply relaxed states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/resting
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates an atmosphere of deep calm and rest. Particles barely move, creating      
+ * ║ a meditative, peaceful environment. Like watching dust motes in sunlight.         
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *        ·
+ *       · ·         ← barely moving
+ *      · · ·        ← vertical drift only
+ *     · ⭐ ·        ← no horizontal motion
+ *      · · ·        
+ *       · ·         
+ *        ·
+ * 
+ * USED BY EMOTIONS:
+ * - sleepy (deep rest)
+ * - meditative
+ * - tranquil
+ * 
+ * RECIPE TO MODIFY:
+ * - Decrease upwardSpeed for even slower movement
+ * - Increase lifeDecay for shorter-lived particles
+ * - Add tiny horizontal drift for slight variation
+ */
+
+
+/**
+ * Initialize resting behavior for a particle
+ * Sets up minimal movement
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeResting(particle) {
+    particle.vx = 0;  // NO horizontal movement
+    particle.vy = -0.01;  // Tiniest upward drift
+    particle.lifeDecay = 0.001;  // Very slow fade - particles last 10+ seconds
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        upwardSpeed: 0.00002,  // Barely perceptible upward drift
+        friction: 0.999       // Almost no friction (preserve any motion)
+    };
+}
+
+/**
+ * Update resting behavior - ultra-slow vertical drift
+ * 
+ * Used for: SLEEPY/MEDITATIVE emotions (deep rest, tranquility)
+ * Visual effect: Particles drift upward so slowly they appear almost still,
+ *                creating a deeply peaceful atmosphere
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center (unused)
+ * @param {number} centerY - Y coordinate of the orb's center (unused)
+ */
+function updateResting(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+    
+    // STEP 1: Apply friction to vertical velocity only
+    // This creates a very gentle deceleration
+    // Math.pow ensures frame-rate independence
+    particle.vy *= Math.pow(data.friction, dt);
+    
+    // STEP 2: Add tiny continuous upward drift
+    // Negative value because canvas Y increases downward
+    // Multiplied by dt for frame-rate independence
+    particle.vy -= data.upwardSpeed * dt;
+    
+    // STEP 3: Enforce NO horizontal movement
+    // This creates the characteristic vertical-only drift
+    // Essential for the peaceful, non-chaotic feel
+    particle.vx = 0;
+}
+
+// Export behavior definition for registry
+var resting = {
+    name: 'resting',
+    emoji: '😴',
+    description: 'Ultra-slow vertical drift for deep rest states',
+    initialize: initializeResting,
+    update: updateResting
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Radiant Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Particles radiating outward like sun rays for euphoric states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/radiant
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a euphoric atmosphere with particles bursting outward like sunbeams,      
+ * ║ with shimmering and twinkling effects. Perfect for moments of pure joy and hope.  
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *        ☀️
+ *    ✨  ↗  ✨       ← particles radiate outward
+ *  ✨ ↖ ⭐ ↗ ✨     ← orb center (like the sun)
+ *    ✨  ↘  ✨       ← with shimmer effect
+ *        ☀️
+ * 
+ * USED BY EMOTIONS:
+ * - euphoria (first day of spring, sunrise vibes)
+ * - elation
+ * - triumph
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase radialSpeed for faster radiation
+ * - Increase shimmerSpeed for faster twinkling
+ * - Adjust friction for longer/shorter rays
+ */
+
+
+/**
+ * Initialize radiant behavior for a particle
+ * Sets up sunburst radiation pattern
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeRadiant(particle) {
+    // Particles burst outward from center like sunbeams
+    const angle = Math.random() * PHYSICS.TWO_PI;
+    const speed = 0.8 + Math.random() * 0.4; // Moderate to fast speed
+    particle.vx = Math.cos(angle) * speed;
+    particle.vy = Math.sin(angle) * speed;
+    particle.lifeDecay = 0.006; // Moderate life - last ~8-10 seconds
+    
+    // Use emotion colors if provided, otherwise default sunrise colors
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    } else {
+        // Default golden sunrise colors
+        const colors = ['#FFD700', '#FFB347', '#FFA500', '#FF69B4'];
+        particle.color = selectWeightedColor(colors);
+    }
+    
+    // More particles have glow for radiant effect
+    particle.hasGlow = Math.random() < 0.7; // 70% chance of glow
+    particle.glowSizeMultiplier = particle.hasGlow ? (1.5 + Math.random() * 0.5) : 0;
+    
+    particle.behaviorData = {
+        // Continuous outward radiation
+        radialSpeed: 0.02,        // Constant outward acceleration
+        shimmer: Math.random() * PHYSICS.TWO_PI, // Initial shimmer phase
+        shimmerSpeed: 0.1,        // Shimmer oscillation speed
+        friction: 0.99            // Very light friction for long rays
+    };
+}
+
+/**
+ * Update radiant behavior - particles radiate outward like sun rays
+ * 
+ * Used for: EUPHORIA emotion (first day of spring, sunrise vibes)
+ * Visual effect: Particles burst outward from center like sunbeams, with a 
+ *                shimmering/twinkling effect as they travel
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center (canvas center)
+ * @param {number} centerY - Y coordinate of the orb's center (canvas center)
+ */
+function updateRadiant(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    
+    // STEP 1: Calculate this particle's direction from the orb center
+    // dx/dy = distance from center to particle (can be negative)
+    const dx = particle.x - centerX;
+    const dy = particle.y - centerY;
+    // dist = straight-line distance using Pythagorean theorem
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    // STEP 2: Push particle outward from center (like sun rays)
+    if (dist > 0) {
+        // Convert dx/dy into a unit vector (length = 1) pointing away from center
+        // This gives us pure direction without magnitude
+        const dirX = dx / dist;
+        const dirY = dy / dist;
+        
+        // Add velocity in the outward direction
+        // radialSpeed controls how fast particles shoot outward
+        // Multiply by dt to make movement frame-rate independent
+        particle.vx += dirX * data.radialSpeed * dt;
+        particle.vy += dirY * data.radialSpeed * dt;
+    }
+    
+    // STEP 3: Create shimmering effect (particles twinkle as they radiate)
+    // Increment shimmer phase over time (shimmerSpeed controls twinkle rate)
+    data.shimmer += data.shimmerSpeed * dt;
+    // Create sine wave oscillation (-1 to 1)
+    const shimmerEffect = Math.sin(data.shimmer);
+    // Make particle size pulse: baseSize ± 20%
+    particle.size = particle.baseSize * (1 + shimmerEffect * 0.2);
+    // Make particle opacity pulse: baseOpacity ± 30%
+    particle.opacity = particle.baseOpacity * (1 + shimmerEffect * 0.3);
+    
+    // STEP 4: Apply friction to slow particles over time
+    // This prevents infinite acceleration and creates natural deceleration
+    particle.vx *= Math.pow(data.friction, dt);
+    particle.vy *= Math.pow(data.friction, dt);
+}
+
+// Export behavior definition for registry
+var radiant = {
+    name: 'radiant',
+    emoji: '☀️',
+    description: 'Particles radiate outward like sunbeams',
+    initialize: initializeRadiant,
+    update: updateRadiant
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Ascending Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Slow, steady upward float for zen and meditative states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/ascending
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a zen atmosphere with particles rising like incense smoke. Slow, steady,  
+ * ║ and ethereal movement that gradually fades as particles ascend.                   
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *        ↑
+ *       ~~~        ← gentle wave motion
+ *        ↑
+ *       ~~~        ← like incense smoke
+ *        ↑
+ *      ⭐⭐⭐      ← orb center
+ *        
+ * 
+ * USED BY EMOTIONS:
+ * - zen (deep meditation)
+ * - contemplative
+ * - spiritual
+ * 
+ * RECIPE TO MODIFY:
+ * - Decrease ascensionSpeed for slower rise
+ * - Increase waveFactor for more horizontal drift
+ * - Adjust fadeStartDistance to control when fade begins
+ */
+
+
+/**
+ * Initialize ascending behavior for a particle
+ * Sets up slow, steady upward movement
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeAscending(particle) {
+    // Very slow, steady upward movement
+    particle.vx = (Math.random() - 0.5) * 0.02;  // Minimal horizontal drift
+    particle.vy = -0.03 - Math.random() * 0.02;  // Slow upward movement (0.03-0.05)
+    particle.lifeDecay = 0.0008;  // Very long-lived particles (30+ seconds)
+    
+    // Larger, more ethereal particles for zen
+    particle.size = (6 + Math.random() * 6) * 
+        (particle.scaleFactor || 1) * 
+        (particle.particleSizeMultiplier || 1) * 
+        1.33;  // 1.33x larger for zen (reduced from 2x)
+    particle.baseSize = particle.size;
+    particle.baseOpacity = 0.2 + Math.random() * 0.2;  // Very translucent (20-40%)
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        // Continuous gentle upward drift
+        ascensionSpeed: 0.0003,      // Very gentle continuous upward
+        waveFactor: 0.5,             // Subtle horizontal wave motion
+        waveFrequency: 0.001,        // Very slow wave oscillation
+        friction: 0.998,             // Almost no slowdown
+        fadeStartDistance: 100       // Start fading after rising 100px
+    };
+}
+
+/**
+ * Update ascending behavior - slow upward float like incense
+ * 
+ * Used for: ZEN/CONTEMPLATIVE emotions (meditation, spirituality)
+ * Visual effect: Particles rise slowly and steadily with subtle wave motion,
+ *                gradually fading as they ascend like incense smoke
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center (unused)
+ * @param {number} centerY - Y coordinate of the orb's center (unused)
+ */
+function updateAscending(particle, dt, _centerX, _centerY) {
+    const data = particle.behaviorData;
+    
+    // Validate data exists
+    if (!data) {
+        initializeAscending(particle);
+        return;
+    }
+    
+    // STEP 1: Apply friction to velocities
+    // Very light friction to maintain smooth motion
+    // Math.pow ensures frame-rate independence
+    particle.vx *= Math.pow(data.friction, dt);
+    particle.vy *= Math.pow(data.friction, dt);
+    
+    // STEP 2: Add continuous upward ascension
+    // Negative because canvas Y increases downward
+    // Multiplied by dt for frame-rate independence
+    particle.vy -= data.ascensionSpeed * dt;
+    
+    // STEP 3: Add subtle wave motion for organic feel
+    // Creates the characteristic incense smoke waviness
+    // Age gives us time-based oscillation
+    const waveOffset = Math.sin(particle.age * data.waveFrequency * 1000) * data.waveFactor;
+    particle.vx += waveOffset * 0.001 * dt;
+    
+    // STEP 4: Track initial Y position for fade calculation
+    if (particle.initialY === undefined) {
+        particle.initialY = particle.y;
+    }
+    
+    // STEP 5: Calculate distance traveled upward
+    const distanceTraveled = particle.initialY - particle.y;
+    
+    // STEP 6: Start fading after traveling fadeStartDistance pixels
+    // This creates the incense smoke dissipation effect
+    if (distanceTraveled > data.fadeStartDistance) {
+        const fadeProgress = (distanceTraveled - data.fadeStartDistance) / 100;
+        const fadeFactor = Math.max(0, 1 - fadeProgress);
+        particle.baseOpacity *= 0.995;  // Gradual fade
+        
+        // Accelerate life decay as particle fades
+        if (fadeFactor < 0.5) {
+            particle.lifeDecay *= 1.02;
+        }
+    }
+    
+    // STEP 7: Dampen excessive horizontal movement
+    // Keeps the ascension primarily vertical
+    if (Math.abs(particle.vx) > 0.05) {
+        particle.vx *= Math.pow(0.95, dt);
+    }
+    
+    // STEP 8: Cap upward velocity for consistency
+    // Prevents particles from accelerating too much
+    if (particle.vy < -0.1) {
+        particle.vy = -0.1;
+    }
+}
+
+// Export behavior definition for registry
+var ascending = {
+    name: 'ascending',
+    emoji: '🧘',
+    description: 'Slow steady upward float like incense smoke',
+    initialize: initializeAscending,
+    update: updateAscending
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Erratic Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Nervous, jittery movement for anxious states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/erratic
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a nervous, unstable atmosphere with particles jittering and changing       
+ * ║ direction unpredictably. Conveys anxiety, nervousness, and instability.           
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *    ↗↙↖  ↘↗
+ *   ↙ ↗↘  ↖↙       ← unpredictable changes
+ *  ↘↖ ⭐ ↗↙        ← jittery movement
+ *   ↗ ↙↖  ↘↗       ← nervous energy
+ *    ↙↗↘  ↖↙
+ * 
+ * USED BY EMOTIONS:
+ * - nervous (anxiety, jitters)
+ * - unstable
+ * - agitated
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase jitterStrength for more shaking
+ * - Increase directionChangeRate for more frequent changes
+ * - Increase speedVariation for more erratic speed changes
+ */
+
+
+/**
+ * Initialize erratic behavior for a particle
+ * Sets up nervous, jittery movement
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeErratic(particle) {
+    // Random, chaotic initial direction
+    const angle = Math.random() * PHYSICS.TWO_PI;
+    const speed = 0.1 + Math.random() * 0.15;
+    particle.vx = Math.cos(angle) * speed;
+    particle.vy = Math.sin(angle) * speed;
+    particle.lifeDecay = 0.004;  // Shorter lived due to nervous energy
+    
+    particle.size = (2 + Math.random() * 4) * 
+        (particle.scaleFactor || 1) * 
+        (particle.particleSizeMultiplier || 1);  // Varied sizes scaled
+    particle.baseSize = particle.size;
+    particle.baseOpacity = 0.4 + Math.random() * 0.3;  // More visible
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        jitterStrength: 0.02,        // Random direction changes
+        directionChangeRate: 0.1,    // How often to change direction
+        speedVariation: 0.3,         // Speed changes randomly
+        spinRate: 0.05 + Math.random() * 0.1  // Particles spin
+    };
+}
+
+/**
+ * Update erratic behavior - nervous, jittery movement
+ * 
+ * Used for: NERVOUS/ANXIOUS emotions (anxiety, instability, agitation)
+ * Visual effect: Particles jitter nervously, changing direction and speed
+ *                unpredictably, creating an unstable atmosphere
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center (unused)
+ * @param {number} centerY - Y coordinate of the orb's center (unused)
+ */
+function updateErratic(particle, dt) {
+    const data = particle.behaviorData;
+    
+    // STEP 1: Add constant jitter to movement
+    // Creates the nervous shaking effect
+    // (Math.random() - 0.5) gives values between -0.5 and 0.5
+    // Multiplied by jitterStrength and dt for controlled chaos
+    particle.vx += (Math.random() - 0.5) * data.jitterStrength * dt;
+    particle.vy += (Math.random() - 0.5) * data.jitterStrength * dt;
+    
+    // STEP 2: Randomly change direction occasionally
+    // Creates unpredictable movement patterns
+    // Math.min ensures probability doesn't exceed reasonable bounds
+    if (Math.random() < Math.min(data.directionChangeRate * dt, 0.5)) {
+        // Pick new random direction
+        const newAngle = Math.random() * PHYSICS.TWO_PI;
+        const currentSpeed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+        
+        // Apply new direction while maintaining similar speed
+        particle.vx = Math.cos(newAngle) * currentSpeed;
+        particle.vy = Math.sin(newAngle) * currentSpeed;
+    }
+    
+    // STEP 3: Vary the speed randomly
+    // Creates erratic acceleration/deceleration
+    const speedMultiplier = 1 + (Math.random() - 0.5) * data.speedVariation * dt;
+    particle.vx *= speedMultiplier;
+    particle.vy *= speedMultiplier;
+    
+    // STEP 4: Apply spin to particle size
+    // Makes particles appear to rotate/vibrate
+    const spinPhase = particle.age * data.spinRate * 1000;
+    particle.size = particle.baseSize * (1 + Math.sin(spinPhase) * 0.2);
+    
+    // STEP 5: Fluctuate opacity nervously
+    // Creates a flickering effect
+    particle.opacity = particle.baseOpacity * (0.8 + Math.random() * 0.4);
+    
+    // STEP 6: Apply damping to prevent infinite acceleration
+    // Keeps movement bounded
+    particle.vx *= Math.pow(0.98, dt);
+    particle.vy *= Math.pow(0.98, dt);
+    
+    // STEP 7: Cap maximum velocity
+    // Prevents particles from moving too fast
+    const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+    if (speed > 0.5) {
+        particle.vx = (particle.vx / speed) * 0.5;
+        particle.vy = (particle.vy / speed) * 0.5;
+    }
+}
+
+// Export behavior definition for registry
+var erratic = {
+    name: 'erratic',
+    emoji: '😰',
+    description: 'Nervous jittery movement for anxious states',
+    initialize: initializeErratic,
+    update: updateErratic
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Cautious Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Slow, careful movement with pauses for suspicious states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/cautious
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates a watchful, suspicious atmosphere with particles moving slowly and         
+ * ║ pausing frequently, as if carefully observing. Like being on guard.               
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * VISUAL DIAGRAM:
+ *    · → · STOP
+ *   STOP ← ·        ← move, then pause
+ *    · ⭐ ·         ← watching center
+ *   · STOP →        ← pause, then move
+ *    STOP · ← ·
+ * 
+ * USED BY EMOTIONS:
+ * - suspicion (watchful, guarded)
+ * - uncertainty
+ * - wariness
+ * 
+ * RECIPE TO MODIFY:
+ * - Increase pauseDuration for longer stops
+ * - Decrease moveDuration for shorter movements
+ * - Adjust watchRadius to control patrol area
+ */
+
+
+/**
+ * Initialize cautious behavior for a particle
+ * Sets up slow, deliberate movement patterns
+ * 
+ * @param {Particle} particle - The particle to initialize
+ */
+function initializeCautious(particle) {
+    // Particles move very slowly and deliberately
+    const angle = Math.random() * PHYSICS.TWO_PI;
+    const speed = 0.02 + Math.random() * 0.03; // Very slow: 0.02-0.05 units/frame
+    particle.vx = Math.cos(angle) * speed;
+    particle.vy = Math.sin(angle) * speed;
+    particle.lifeDecay = 0.001;  // Very long-lived for visibility
+    particle.life = 1.0;  // Ensure full life
+    
+    particle.size = (4 + Math.random() * 4) * 
+        (particle.scaleFactor || 1) * 
+        (particle.particleSizeMultiplier || 1);
+    particle.baseSize = particle.size;
+    particle.baseOpacity = 0.8 + Math.random() * 0.2;  // Very visible (80-100%)
+    particle.opacity = particle.baseOpacity;
+    
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+    
+    particle.behaviorData = {
+        pauseTimer: Math.random() * 2,      // Start with random pause offset
+        pauseDuration: 0.5 + Math.random() * 0.5,  // Pause for 0.5-1s
+        moveDuration: 1 + Math.random() * 0.5,     // Move for 1-1.5s
+        isMoving: Math.random() > 0.5,             // Randomly start moving or paused
+        moveTimer: 0,
+        originalVx: particle.vx,
+        originalVy: particle.vy,
+        watchRadius: 50 + Math.random() * 30       // Stay within 50-80 units of core
+    };
+}
+
+/**
+ * Update cautious behavior - slow movement with frequent pauses
+ * 
+ * Used for: SUSPICION/UNCERTAINTY emotions (watchful, guarded, wary)
+ * Visual effect: Particles move slowly and deliberately, pausing frequently
+ *                as if carefully observing their surroundings
+ * 
+ * @param {Particle} particle - The particle to update
+ * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
+ * @param {number} centerX - X coordinate of the orb's center
+ * @param {number} centerY - Y coordinate of the orb's center
+ */
+function updateCautious(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    
+    // STEP 1: Update movement timer
+    // Tracks how long we've been in current state (moving or paused)
+    data.moveTimer += dt;
+    
+    // STEP 2: Switch between moving and pausing states
+    if (data.isMoving) {
+        // Currently moving - check if time to pause
+        if (data.moveTimer > data.moveDuration) {
+            data.isMoving = false;
+            data.moveTimer = 0;
+            // Stop movement during pause (watchful stillness)
+            particle.vx = 0;
+            particle.vy = 0;
+        } else {
+            // Continue moving at cautious speed
+            particle.vx = data.originalVx;
+            particle.vy = data.originalVy;
+        }
+    } else {
+        // Currently paused - check if time to move
+        if (data.moveTimer > data.pauseDuration) {
+            data.isMoving = true;
+            data.moveTimer = 0;
+            // Pick a new careful direction
+            const angle = Math.random() * PHYSICS.TWO_PI;
+            const speed = 0.02 + Math.random() * 0.03;
+            particle.vx = Math.cos(angle) * speed;
+            particle.vy = Math.sin(angle) * speed;
+            // Store for next movement phase
+            data.originalVx = particle.vx;
+            data.originalVy = particle.vy;
+        }
+    }
+    
+    // STEP 3: Keep particles within watch radius of core
+    // They're suspicious, so they don't stray too far
+    const dx = particle.x - centerX;
+    const dy = particle.y - centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist > data.watchRadius) {
+        // Pull back towards core slowly (maintaining caution)
+        const pullStrength = 0.02;
+        particle.vx -= (dx / dist) * pullStrength * dt;
+        particle.vy -= (dy / dist) * pullStrength * dt;
+    }
+    
+    // STEP 4: Apply very light damping
+    // Keeps movement controlled and deliberate
+    particle.vx *= Math.pow(0.995, dt);
+    particle.vy *= Math.pow(0.995, dt);
+    
+    // STEP 5: Subtle opacity flicker during pauses
+    // Creates a watchful "blinking" effect
+    if (!data.isMoving) {
+        particle.opacity = particle.baseOpacity * (0.9 + Math.sin(particle.age * 5) * 0.1);
+    } else {
+        particle.opacity = particle.baseOpacity;
+    }
+}
+
+// Export behavior definition for registry
+var cautious = {
+    name: 'cautious',
+    emoji: '🤨',
+    description: 'Slow careful movement with watchful pauses',
+    initialize: initializeCautious,
+    update: updateCautious
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Surveillance Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Searchlight scanning behavior for suspicious/paranoid states
+ * @author Emotive Engine Team
+ * @module particles/behaviors/surveillance
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║ CONCEPT                                                                           
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Particles act like searchlights or surveillance cameras, slowly scanning back     
+ * ║ and forth in arcs, pausing at edges, occasionally darting to new positions.       
+ * ║ Creates a paranoid, watchful atmosphere with deliberate, searching movements.     
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ * 
+ * BEHAVIOR PATTERN:
+ * • Slow horizontal scanning arcs (like searchlights)
+ * • Pause at scan extremes (checking corners)
+ * • Occasional quick darts to new positions (alert response)
+ * • Some particles patrol perimeter (edge surveillance)
+ * • Random freezing in place (listening/watching)
+ * 
+ * ┌──────────────────────────────────────────────────────────────────────────────────┐
+ * │  VISUAL: Searchlight Scanning                                                    │
+ * │                                                                                   │
+ * │     ←─────────────→  (slow scan)                                                │
+ * │    •               •                                                             │
+ * │                                                                                   │
+ * │   pause...     ...pause                                                         │
+ * │                                                                                   │
+ * │     DART! ──→ • (quick repositioning)                                          │
+ * └──────────────────────────────────────────────────────────────────────────────────┘
+ */
+
+
+var surveillance = {
+    name: 'surveillance',
+    emoji: '👁️',
+    description: 'Searchlight scanning with paranoid watchfulness',
+    
+    /**
+     * Initialize particle state for surveillance behavior
+     */
+    initialize(particle, _config) {
+        // Set particle color from emotion palette
+        if (particle.emotionColors && particle.emotionColors.length > 0) {
+            particle.color = selectWeightedColor(particle.emotionColors);
+        }
+        
+        particle.behaviorState = {
+            // Scanning properties
+            scanAngle: Math.random() * Math.PI - Math.PI/2,  // Current scan angle
+            scanDirection: Math.random() < 0.5 ? 1 : -1,      // Scan direction
+            scanSpeed: 0.3 + Math.random() * 0.2,             // Individual scan rate
+            scanRange: Math.PI/3 + Math.random() * Math.PI/4, // Scan arc size
+            scanCenter: Math.random() * Math.PI * 2,          // Center of scan arc
+            pauseTimer: 0,                                     // Pause at edges
+            pauseDuration: 500 + Math.random() * 500,         // How long to pause
+            
+            // Movement states
+            mode: 'scanning',  // 'scanning', 'darting', 'frozen', 'patrolling'
+            modeTimer: 0,
+            nextModeChange: 2000 + Math.random() * 3000,
+            
+            // Dart properties
+            dartTarget: { x: 0, y: 0 },
+            dartSpeed: 0,
+            
+            // Patrol properties
+            patrolRadius: 150 + Math.random() * 100,
+            patrolAngle: Math.random() * Math.PI * 2,
+            
+            // Threat response
+            alertLevel: 0,
+            lastPosition: { x: particle.x, y: particle.y }
+        };
+        
+        // Assign roles: 70% scanners, 20% patrollers, 10% watchers
+        const role = Math.random();
+        if (role < 0.7) {
+            particle.behaviorState.primaryRole = 'scanner';
+        } else if (role < 0.9) {
+            particle.behaviorState.primaryRole = 'patroller';
+            particle.behaviorState.mode = 'patrolling';
+        } else {
+            particle.behaviorState.primaryRole = 'watcher';
+            particle.behaviorState.mode = 'frozen';
+        }
+    },
+    
+    /**
+     * Update particle physics for surveillance behavior
+     */
+    update(particle, dt, config) {
+        const state = particle.behaviorState;
+        if (!state) return;
+        
+        // Update mode timer
+        state.modeTimer += dt * 16;
+        
+        // Check for mode changes
+        if (state.modeTimer > state.nextModeChange) {
+            this.changeMode(particle, state, config);
+            state.modeTimer = 0;
+            state.nextModeChange = 2000 + Math.random() * 4000;
+        }
+        
+        // Update based on current mode
+        switch(state.mode) {
+        case 'scanning':
+            this.updateScanning(particle, dt, state, config);
+            break;
+        case 'darting':
+            this.updateDarting(particle, dt, state, config);
+            break;
+        case 'frozen':
+            this.updateFrozen(particle, dt, state, config);
+            break;
+        case 'patrolling':
+            this.updatePatrolling(particle, dt, state, config);
+            break;
+        }
+        
+        // Apply slight downward drift for weight
+        particle.vy += 0.05 * dt;
+        
+        // Update position
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        
+        // Store last position
+        state.lastPosition.x = particle.x;
+        state.lastPosition.y = particle.y;
+    },
+    
+    /**
+     * Scanning mode - slow searchlight sweeps
+     */
+    updateScanning(particle, dt, state, _config) {
+        // Update scan angle
+        if (state.pauseTimer > 0) {
+            // Pausing at edge of scan
+            state.pauseTimer -= dt * 16;
+            particle.vx *= 0.9;  // Slow down during pause
+            particle.vy *= 0.9;
+        } else {
+            // Active scanning
+            state.scanAngle += state.scanDirection * state.scanSpeed * dt * 0.02;
+            
+            // Check scan limits and pause at edges
+            if (Math.abs(state.scanAngle) > state.scanRange / 2) {
+                state.scanDirection *= -1;
+                state.pauseTimer = state.pauseDuration;
+                state.scanAngle = Math.sign(state.scanAngle) * state.scanRange / 2;
+            }
+        }
+        
+        // Apply scanning motion
+        const actualAngle = state.scanCenter + state.scanAngle;
+        const speed = 0.8 + state.alertLevel * 0.5;
+        particle.vx = Math.cos(actualAngle) * speed;
+        particle.vy = Math.sin(actualAngle) * speed * 0.3;  // Less vertical movement
+    },
+    
+    /**
+     * Darting mode - quick repositioning
+     */
+    updateDarting(particle, dt, state, _config) {
+        const dx = state.dartTarget.x - particle.x;
+        const dy = state.dartTarget.y - particle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 5) {
+            // Move toward dart target quickly
+            particle.vx = (dx / distance) * state.dartSpeed;
+            particle.vy = (dy / distance) * state.dartSpeed;
+        } else {
+            // Reached target, switch back to scanning
+            state.mode = 'scanning';
+            state.modeTimer = 0;
+        }
+    },
+    
+    /**
+     * Frozen mode - watchful stillness
+     */
+    updateFrozen(particle, _dt, _state, _config) {
+        // Almost no movement, just tiny vibrations
+        particle.vx *= 0.95;
+        particle.vy *= 0.95;
+        
+        // Occasional tiny twitch
+        if (Math.random() < 0.01) {
+            particle.vx += (Math.random() - 0.5) * 0.5;
+            particle.vy += (Math.random() - 0.5) * 0.5;
+        }
+    },
+    
+    /**
+     * Patrolling mode - edge surveillance
+     */
+    updatePatrolling(particle, dt, state, config) {
+        // Patrol in a circle around the edge
+        state.patrolAngle += 0.01 * dt;
+
+        // Calculate target position relative to core center
+        const coreX = config.corePosition?.x ?? config.canvasWidth / 2;
+        const coreY = config.corePosition?.y ?? config.canvasHeight / 2;
+
+        const targetX = coreX + Math.cos(state.patrolAngle) * state.patrolRadius;
+        const targetY = coreY + Math.sin(state.patrolAngle) * state.patrolRadius;
+
+        // Move toward patrol position
+        const dx = targetX - particle.x;
+        const dy = targetY - particle.y;
+
+        particle.vx = dx * 0.02;
+        particle.vy = dy * 0.02;
+    },
+    
+    /**
+     * Change behavior mode
+     */
+    changeMode(particle, state, config) {
+        const rand = Math.random();
+
+        // Get core position for relative positioning
+        const coreX = config?.corePosition?.x ?? (config?.canvasWidth / 2 || particle.x);
+        const coreY = config?.corePosition?.y ?? (config?.canvasHeight / 2 || particle.y);
+
+        // Mode transition probabilities based on role
+        if (state.primaryRole === 'scanner') {
+            if (rand < 0.1) {
+                // Dart to new position (relative to core)
+                state.mode = 'darting';
+                state.dartTarget = {
+                    x: coreX + (Math.random() - 0.5) * 200,
+                    y: coreY + (Math.random() - 0.5) * 200
+                };
+                state.dartSpeed = 3 + Math.random() * 2;
+            } else if (rand < 0.2) {
+                // Freeze and watch
+                state.mode = 'frozen';
+            } else {
+                // Continue scanning
+                state.mode = 'scanning';
+            }
+        } else if (state.primaryRole === 'patroller') {
+            if (rand < 0.1) {
+                state.mode = 'frozen';
+            } else {
+                state.mode = 'patrolling';
+            }
+        } else {
+            // Watcher role
+            if (rand < 0.3) {
+                state.mode = 'scanning';
+            } else {
+                state.mode = 'frozen';
+            }
+        }
+    }
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Glitchy Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Digital glitch behavior with stuttering orbits and corruption
+ * @author Emotive Engine Team
+ * @module particles/behaviors/glitchy
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║ CONCEPT                                                                           
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Particles orbit like in love state but with digital glitches, stutters, and      
+ * ║ corruption artifacts. Creates a captivating dubstep-like visual rhythm.           
+ * ║ Combines smooth orbiting with sudden position jumps and digital artifacts.        
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ * 
+ * BEHAVIOR PATTERN:
+ * • Base orbiting motion (like love state)
+ * • Random position jumps (teleportation glitches)
+ * • Stuttering/freezing (frame drops)
+ * • Trail duplication (ghosting artifacts)
+ * • RGB channel separation
+ * • Digital noise bursts
+ * 
+ * ┌──────────────────────────────────────────────────────────────────────────────────┐
+ * │  VISUAL: Glitched Orbiting                                                       │
+ * │                                                                                   │
+ * │       ░░▒▒▓▓█  ←─ Digital trail                                                 │
+ * │     •  ┊  •                                                                      │
+ * │   •┊  ⚡  ┊•  ←─ Glitch jump                                                    │
+ * │     •  ┊  •                                                                      │
+ * │       ░░▒▒▓▓█                                                                    │
+ * └──────────────────────────────────────────────────────────────────────────────────┘
+ */
+
+
+var glitchy = {
+    name: 'glitchy',
+    emoji: '⚡',
+    description: 'Digital glitch with stuttering orbits and corruption',
+    
+    // Rhythm configuration for glitchy behavior
+    rhythm: {
+        enabled: true,
+        
+        // Glitch events sync to rhythm
+        glitchTiming: {
+            mode: 'subdivision',     // Glitch on subdivisions
+            subdivision: 'sixteenth', // 16th notes for rapid glitches
+            probability: 0.3,        // 30% chance on each 16th
+            intensityOnBeat: 2.0,    // Stronger glitches on beat
+            intensityOffBeat: 0.5    // Weaker between beats
+        },
+        
+        // Stutter/freeze timing
+        stutterSync: {
+            mode: 'pattern',         // Based on rhythm pattern
+            patterns: {
+                'dubstep': {
+                    freezeOnDrop: true,  // Freeze on the drop (beat 3)
+                    dropDuration: 100    // Freeze for 100ms
+                },
+                'breakbeat': {
+                    randomFreeze: 0.1,   // 10% chance per beat
+                    duration: 50         // Short 50ms freezes
+                }
+            }
+        },
+        
+        // Orbital speed modulation
+        orbitRhythm: {
+            baseSpeed: 'tempo',      // Speed scales with BPM
+            wobbleSync: 'eighth',    // Wobble on 8th notes
+            beatAcceleration: 1.5,   // Speed boost on beat
+            barReset: true           // Reset orbit angle each bar
+        },
+        
+        // RGB split effect rhythm
+        rgbSync: {
+            enabled: true,
+            amount: 'intensity',     // Split based on musical intensity
+            direction: 'beat',        // Change split direction on beat
+            maxSplit: 10             // Maximum pixel split
+        },
+        
+        // Digital noise bursts
+        noiseRhythm: {
+            trigger: 'accent',       // Noise on accented beats
+            duration: 50,            // 50ms noise bursts
+            intensity: 'drop'        // Scale with drop intensity
+        }
+    },
+    
+    /**
+     * Initialize particle state for glitchy behavior
+     */
+    initialize(particle, _config, _centerX, _centerY) {
+        // Set particle color from emotion palette
+        if (particle.emotionColors && particle.emotionColors.length > 0) {
+            particle.color = selectWeightedColor(particle.emotionColors);
+        }
+        
+        particle.behaviorState = {
+            // Orbital properties (spread out from center)
+            orbitAngle: Math.random() * Math.PI * 2,
+            orbitRadius: 300 + Math.random() * 400,  // Dramatically increased to 300-700 for very wide spread
+            orbitSpeed: 0.01 + Math.random() * 0.02,
+            
+            // Glitch properties
+            glitchTimer: 0,
+            nextGlitch: Math.random() * 500 + 100,
+            isGlitching: false,
+            glitchDuration: 0,
+            glitchOffset: { x: 0, y: 0 },
+            
+            // Stutter properties
+            stutterTimer: 0,
+            nextStutter: Math.random() * 200 + 50,
+            isFrozen: false,
+            frozenPosition: { x: 0, y: 0 },
+            frozenVelocity: { x: 0, y: 0 },
+            
+            // Trail ghost properties
+            hasGhost: Math.random() < 0.3,
+            ghostOffset: Math.random() * 20 + 10,
+            ghostAngle: Math.random() * Math.PI * 2,
+            
+            // RGB separation
+            rgbSplit: Math.random() < 0.4,
+            rgbPhase: Math.random() * Math.PI * 2,
+            
+            // Digital noise
+            noiseLevel: 0,
+            noiseBurst: false,
+            
+            // Dubstep rhythm sync
+            beatPhase: Math.random() * Math.PI * 2,
+            beatFrequency: 0.05 + Math.random() * 0.03,
+            dropIntensity: 0
+        };
+        
+        // Special properties for glitch
+        particle.lifeDecay = 0.0015; // Slower decay for trails
+        particle.hasGlow = true; // Always glow for digital effect
+        particle.glowSizeMultiplier = 3.0 + Math.random() * 2; // Much bigger glows for visibility
+    },
+    
+    /**
+     * Update particle physics for glitchy behavior
+     */
+    update(particle, dt, centerX, centerY) {
+        const state = particle.behaviorState;
+        if (!state) return;
+        
+        // centerX and centerY are passed correctly from updateBehavior
+        // No need for fallbacks - they should always be provided
+        
+        // Update timers
+        state.glitchTimer += dt * 16;
+        state.stutterTimer += dt * 16;
+        
+        // Check for stutter/freeze
+        if (state.stutterTimer > state.nextStutter) {
+            if (!state.isFrozen) {
+                // Start freeze
+                state.isFrozen = true;
+                state.frozenPosition = { x: particle.x, y: particle.y };
+                state.frozenVelocity = { x: particle.vx, y: particle.vy };
+                state.stutterTimer = 0;
+                state.nextStutter = 20 + Math.random() * 40; // Short freeze
+            } else {
+                // End freeze
+                state.isFrozen = false;
+                state.stutterTimer = 0;
+                state.nextStutter = 100 + Math.random() * 300;
+                
+                // Sometimes jump on unfreeze (larger jumps to maintain spread)
+                if (Math.random() < 0.3) {
+                    particle.x += (Math.random() - 0.5) * 60;  // Increased from 20 to 60
+                    particle.y += (Math.random() - 0.5) * 60;  // Increased from 20 to 60
+                }
+            }
+        }
+        
+        // Check for glitch events
+        if (state.glitchTimer > state.nextGlitch && !state.isGlitching) {
+            state.isGlitching = true;
+            state.glitchDuration = 50 + Math.random() * 100;
+            state.glitchOffset = {
+                x: (Math.random() - 0.5) * 80,  // Increased from 30 to 80 for wider spread
+                y: (Math.random() - 0.5) * 80   // Increased from 30 to 80 for wider spread
+            };
+            state.glitchTimer = 0;
+            
+            // Change color during glitch
+            if (Math.random() < 0.5 && particle.emotionColors) {
+                particle.color = selectWeightedColor(particle.emotionColors);
+            }
+        }
+        
+        // End glitch
+        if (state.isGlitching && state.glitchTimer > state.glitchDuration) {
+            state.isGlitching = false;
+            state.glitchTimer = 0;
+            state.nextGlitch = 200 + Math.random() * 800;
+            state.glitchOffset = { x: 0, y: 0 };
+        }
+        
+        // Update beat phase for dubstep rhythm
+        state.beatPhase += state.beatFrequency * dt;
+        const beatIntensity = Math.sin(state.beatPhase) * 0.5 + 0.5;
+        
+        // Calculate drop intensity (periodic bass drops)
+        const dropCycle = state.beatPhase % (Math.PI * 4);
+        if (dropCycle < Math.PI * 0.5) {
+            state.dropIntensity = Math.min(1, state.dropIntensity + dt * 0.1);
+        } else {
+            state.dropIntensity = Math.max(0, state.dropIntensity - dt * 0.05);
+        }
+        
+        if (!state.isFrozen) {
+            // Update orbital position with beat modulation
+            state.orbitAngle += state.orbitSpeed * dt * (1 + beatIntensity * 0.5);
+            
+            // Add drop wobble
+            const wobbleRadius = state.orbitRadius * (1 + state.dropIntensity * 0.3 * Math.sin(state.beatPhase * 4));
+            
+            // Calculate target position relative to center
+            let targetX = centerX + Math.cos(state.orbitAngle) * wobbleRadius;
+            let targetY = centerY + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
+            
+            // Apply glitch offset (stronger effect for wider spread)
+            if (state.isGlitching) {
+                targetX += state.glitchOffset.x * Math.random() * 0.8;  // Increased from 0.5 to 0.8
+                targetY += state.glitchOffset.y * Math.random() * 0.8;  // Increased from 0.5 to 0.8
+            }
+            
+            // RGB split effect
+            if (state.rgbSplit) {
+                const splitAmount = 3 * (1 + state.dropIntensity);
+                targetX += Math.sin(state.rgbPhase) * splitAmount;
+                targetY += Math.cos(state.rgbPhase) * splitAmount;
+                state.rgbPhase += 0.1 * dt;
+            }
+            
+            // Digital noise bursts on drops (larger to maintain spread)
+            if (state.dropIntensity > 0.8 && Math.random() < 0.1) {
+                targetX += (Math.random() - 0.5) * 30;  // Increased from 10 to 30
+                targetY += (Math.random() - 0.5) * 30;  // Increased from 10 to 30
+            }
+            
+            // Minimal pull to center to allow maximum spread
+            const smoothing = state.isGlitching ? 0.02 : 0.03;  // Further reduced from 0.03/0.05
+            particle.vx = (targetX - particle.x) * smoothing;
+            particle.vy = (targetY - particle.y) * smoothing;
+            
+            // Add jitter based on beat
+            particle.vx += (Math.random() - 0.5) * beatIntensity * 2;
+            particle.vy += (Math.random() - 0.5) * beatIntensity * 2;
+            
+        } else {
+            // Frozen - vibrate in place
+            particle.vx = (Math.random() - 0.5) * 0.5;
+            particle.vy = (Math.random() - 0.5) * 0.5;
+        }
+        
+        // Apply velocity
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        
+        // Flicker opacity for digital effect
+        if (Math.random() < 0.02) {
+            particle.opacity = 0.1 + Math.random() * 0.9;
+        }
+        
+        // Size pulsing with beat
+        particle.size = particle.baseSize * (1 + beatIntensity * 0.3 + state.dropIntensity * 0.5);
+    }
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE v4.0 - Spaz Particle Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Ultra-aggressive particle behavior with explosive spread and chaotic motion
+ * @author Emotive Engine Team
+ * @version 4.0.0
+ * @module particles/behaviors/spaz
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Creates particles that explode outward in all directions with chaotic, erratic    
+ * ║ motion. Particles spawn far from center and maintain aggressive spread patterns.  
+ * ║ Perfect for high-energy emotions like glitch, anger, or excitement.              
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+var spaz = {
+    name: 'spaz',
+    description: 'Ultra-aggressive particles with explosive spread and chaotic motion',
+    
+    /**
+     * Initialize particle with spaz behavior
+     * @param {Object} particle - Particle object to initialize
+     * @param {Object} config - Configuration object
+     * @param {number} centerX - Center X coordinate
+     * @param {number} centerY - Center Y coordinate
+     */
+    initialize(particle, config, centerX, centerY) {
+        // Set basic particle properties
+        particle.x = centerX;
+        particle.y = centerY;
+        particle.life = 1.0;
+        particle.size = 3 + Math.random() * 4; // Larger particles for visibility
+        
+        // Explosive velocity - particles shoot out in random directions
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 200 + Math.random() * 300; // Very fast initial velocity
+        particle.vx = Math.cos(angle) * speed;
+        particle.vy = Math.sin(angle) * speed;
+        
+        // Spaz-specific state
+        particle.behaviorState = {
+            // Explosive properties
+            explosionPhase: 0, // 0 = initial explosion, 1 = chaotic motion
+            explosionTimer: 0,
+            explosionDuration: 1000 + Math.random() * 2000, // 1-3 seconds
+            
+            // Chaotic motion properties
+            chaosTimer: 0,
+            nextChaosChange: 100 + Math.random() * 200, // Change direction every 100-300ms
+            chaosAngle: angle,
+            chaosSpeed: 50 + Math.random() * 100,
+            
+            // Spaz-specific effects
+            spazIntensity: 0.8 + Math.random() * 0.4, // How intense the spazzing is
+            zigzagPattern: Math.random() < 0.5, // Some particles zigzag
+            spiralPattern: Math.random() < 0.3, // Some particles spiral
+            teleportChance: 0.02, // 2% chance to teleport to random position
+            
+            // Visual effects
+            sizePulse: true,
+            sizePulseSpeed: 0.1 + Math.random() * 0.05,
+            sizePulsePhase: Math.random() * Math.PI * 2,
+            colorShift: Math.random() < 0.3, // Some particles shift colors
+            colorShiftSpeed: 0.05 + Math.random() * 0.03
+        };
+        
+        // Special properties for spaz
+        particle.lifeDecay = 0.0008; // Slower decay for longer trails
+        particle.hasGlow = true; // Always glow for maximum visibility
+        particle.glowSizeMultiplier = 4.0 + Math.random() * 3; // Very large glows
+        particle.glowIntensity = 1.5 + Math.random() * 0.5; // Bright glows
+    },
+    
+    /**
+     * Update particle physics for spaz behavior
+     * @param {Object} particle - Particle to update
+     * @param {number} dt - Delta time in milliseconds
+     * @param {number} centerX - Center X coordinate
+     * @param {number} centerY - Center Y coordinate
+     */
+    update(particle, dt, centerX, centerY) {
+        const state = particle.behaviorState;
+        
+        // Update timers
+        state.explosionTimer += dt;
+        state.chaosTimer += dt;
+        
+        // Phase 1: Initial explosion (first 500ms)
+        if (state.explosionPhase === 0 && state.explosionTimer < 500) {
+            // Maintain explosive velocity with slight deceleration
+            particle.vx *= 0.98;
+            particle.vy *= 0.98;
+            
+            // Add random bursts during explosion
+            if (Math.random() < 0.1) {
+                particle.vx += (Math.random() - 0.5) * 100;
+                particle.vy += (Math.random() - 0.5) * 100;
+            }
+        }
+        // Phase 2: Transition to chaotic motion
+        else if (state.explosionPhase === 0 && state.explosionTimer >= 500) {
+            state.explosionPhase = 1;
+            // Set up chaotic motion
+            state.chaosAngle = Math.random() * Math.PI * 2;
+            state.chaosSpeed = 30 + Math.random() * 70;
+        }
+        // Phase 3: Chaotic motion
+        else if (state.explosionPhase === 1) {
+            // Change direction periodically
+            if (state.chaosTimer >= state.nextChaosChange) {
+                state.chaosAngle = Math.random() * Math.PI * 2;
+                state.chaosSpeed = 20 + Math.random() * 80;
+                state.nextChaosChange = 50 + Math.random() * 150;
+                state.chaosTimer = 0;
+            }
+            
+            // Apply chaotic motion
+            const chaosVx = Math.cos(state.chaosAngle) * state.chaosSpeed;
+            const chaosVy = Math.sin(state.chaosAngle) * state.chaosSpeed;
+            
+            // Mix with current velocity for smooth transitions
+            particle.vx = particle.vx * 0.7 + chaosVx * 0.3;
+            particle.vy = particle.vy * 0.7 + chaosVy * 0.3;
+            
+            // Special patterns
+            if (state.zigzagPattern) {
+                // Zigzag motion
+                const zigzagAngle = state.chaosTimer * 0.01;
+                particle.vx += Math.sin(zigzagAngle) * 20;
+                particle.vy += Math.cos(zigzagAngle) * 20;
+            }
+            
+            if (state.spiralPattern) {
+                // Spiral motion
+                const spiralAngle = state.chaosTimer * 0.005;
+                const spiralRadius = 50 + Math.sin(state.chaosTimer * 0.003) * 30;
+                particle.vx += Math.cos(spiralAngle) * spiralRadius * 0.1;
+                particle.vy += Math.sin(spiralAngle) * spiralRadius * 0.1;
+            }
+        }
+        
+        // Teleport effect (rare)
+        if (Math.random() < state.teleportChance) {
+            const teleportAngle = Math.random() * Math.PI * 2;
+            const teleportDistance = 200 + Math.random() * 400;
+            particle.x = centerX + Math.cos(teleportAngle) * teleportDistance;
+            particle.y = centerY + Math.sin(teleportAngle) * teleportDistance;
+            particle.vx = (Math.random() - 0.5) * 200;
+            particle.vy = (Math.random() - 0.5) * 200;
+        }
+        
+        // Update position
+        particle.x += particle.vx * (dt / 1000);
+        particle.y += particle.vy * (dt / 1000);
+        
+        // Size pulsing effect
+        if (state.sizePulse) {
+            state.sizePulsePhase += state.sizePulseSpeed * dt;
+            const pulseMultiplier = 1.0 + Math.sin(state.sizePulsePhase) * 0.5;
+            particle.size = (3 + Math.random() * 4) * pulseMultiplier;
+        }
+        
+        // Color shifting effect
+        if (state.colorShift) {
+            state.colorShiftPhase = (state.colorShiftPhase || 0) + state.colorShiftSpeed * dt;
+            // This would be handled by the renderer if color shifting is implemented
+        }
+        
+        // Apply friction to prevent infinite acceleration
+        particle.vx *= 0.995;
+        particle.vy *= 0.995;
+        
+        // Decay life
+        particle.life -= particle.lifeDecay * dt;
+        
+        // Reset particle if it goes too far or dies
+        if (particle.life <= 0 || 
+            Math.abs(particle.x - centerX) > 2000 || 
+            Math.abs(particle.y - centerY) > 2000) {
+            particle.life = 0;
+        }
+    },
+    
+    /**
+     * Get spawn position for spaz particles
+     * @param {number} centerX - Center X coordinate
+     * @param {number} centerY - Center Y coordinate
+     * @returns {Object} Spawn position {x, y}
+     */
+    getSpawnPosition(centerX, centerY) {
+        // Spawn particles in a wide ring around the center
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 100 + Math.random() * 200; // Spawn 100-300 pixels from center
+        return {
+            x: centerX + Math.cos(angle) * radius,
+            y: centerY + Math.sin(angle) * radius
+        };
+    },
+    
+    /**
+     * Get visual properties for spaz particles
+     * @returns {Object} Visual properties
+     */
+    getVisualProperties() {
+        return {
+            glowColor: '#FF00AA', // Hot magenta
+            glowIntensity: 2.0,
+            particleColors: [
+                { color: '#FF00AA', weight: 30 }, // Hot magenta
+                { color: '#00FFAA', weight: 25 }, // Bright cyan-green
+                { color: '#FFAA00', weight: 20 }, // Digital amber
+                { color: '#AA00FF', weight: 15 }, // Purple
+                { color: '#00AAFF', weight: 10 }  // Blue
+            ]
+        };
+    }
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Directed Particle Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Directed behavior - particles move in focused, straight paths
+ * @author Emotive Engine Team
+ * @module particles/behaviors/directed
+ */
+
+/**
+ * DIRECTED BEHAVIOR - FOCUSED STRAIGHT PATHS
+ * Used by: focused emotion
+ * 
+ * Particles move in deliberate, straight lines toward a target or direction,
+ * representing intense concentration and focus.
+ */
+var directed = {
+    name: 'directed',
+    emoji: '🎯',
+    description: 'Focused, straight-line movement toward target',
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ CONFIGURATION
+    // └─────────────────────────────────────────────────────────────────────────────────
+    config: {
+        speed: 3.0,              // Fast movement
+        acceleration: 0.15,      // Quick acceleration
+        focusStrength: 0.8,      // Strong pull toward target
+        randomness: 0.1,         // Minimal deviation
+        edgeBuffer: 50           // Buffer from canvas edges
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ INITIALIZATION
+    // └─────────────────────────────────────────────────────────────────────────────────
+    initialize(particle, centerX, centerY, _canvasWidth, _canvasHeight) {
+        // Set initial direction toward center
+        const dx = centerX - particle.x;
+        const dy = centerY - particle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+            particle.vx = (dx / distance) * this.config.speed;
+            particle.vy = (dy / distance) * this.config.speed;
+        } else {
+            // Random initial direction if at center
+            const angle = Math.random() * Math.PI * 2;
+            particle.vx = Math.cos(angle) * this.config.speed;
+            particle.vy = Math.sin(angle) * this.config.speed;
+        }
+        
+        // Store target position
+        particle.targetX = centerX;
+        particle.targetY = centerY;
+        particle.directedPhase = 0;
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ UPDATE LOOP
+    // └─────────────────────────────────────────────────────────────────────────────────
+    update(particle, dt, centerX, centerY, canvasWidth, canvasHeight) {
+        // Update phase for variation
+        particle.directedPhase += dt * 0.05;
+        
+        // Calculate direction to target
+        const dx = particle.targetX - particle.x;
+        const dy = particle.targetY - particle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 10) {
+            // Move toward target with focus strength
+            const targetVx = (dx / distance) * this.config.speed;
+            const targetVy = (dy / distance) * this.config.speed;
+            
+            // Apply acceleration toward target velocity
+            particle.vx += (targetVx - particle.vx) * this.config.acceleration * dt;
+            particle.vy += (targetVy - particle.vy) * this.config.acceleration * dt;
+            
+            // Add minimal randomness for organic feel
+            particle.vx += (Math.random() - 0.5) * this.config.randomness;
+            particle.vy += (Math.random() - 0.5) * this.config.randomness;
+        } else {
+            // Near target, pick new target
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 100 + Math.random() * 200;
+            particle.targetX = centerX + Math.cos(angle) * radius;
+            particle.targetY = centerY + Math.sin(angle) * radius;
+            
+            // Keep within canvas bounds
+            particle.targetX = Math.max(this.config.edgeBuffer, 
+                Math.min(canvasWidth - this.config.edgeBuffer, particle.targetX));
+            particle.targetY = Math.max(this.config.edgeBuffer, 
+                Math.min(canvasHeight - this.config.edgeBuffer, particle.targetY));
+        }
+        
+        // Apply velocity
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        
+        // Edge bouncing with dampening
+        if (particle.x <= 0 || particle.x >= canvasWidth) {
+            particle.vx *= -0.8;
+            particle.x = Math.max(0, Math.min(canvasWidth, particle.x));
+            // Pick new target after bounce
+            particle.targetX = centerX + (Math.random() - 0.5) * 300;
+        }
+        if (particle.y <= 0 || particle.y >= canvasHeight) {
+            particle.vy *= -0.8;
+            particle.y = Math.max(0, Math.min(canvasHeight, particle.y));
+            // Pick new target after bounce
+            particle.targetY = centerY + (Math.random() - 0.5) * 300;
+        }
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ VISUAL CHARACTERISTICS
+    // └─────────────────────────────────────────────────────────────────────────────────
+    visuals: {
+        trailLength: 'medium',      // Medium trail for motion clarity
+        opacity: 0.9,               // High opacity for focus
+        sizeMultiplier: 1.0,        // Standard size
+        blurAmount: 0.2             // Sharp, focused appearance
+    }
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Fizzy Particle Behavior
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Fizzy behavior - bubbly, effervescent particle movement
+ * @author Emotive Engine Team
+ * @module particles/behaviors/fizzy
+ */
+
+/**
+ * FIZZY BEHAVIOR - BUBBLY EFFERVESCENCE
+ * Used by: excited emotion
+ * 
+ * Particles bubble upward with random pops and fizz, like carbonation in soda.
+ * Creates an energetic, celebratory atmosphere.
+ */
+var fizzy = {
+    name: 'fizzy',
+    emoji: '🫧',
+    description: 'Bubbly, effervescent movement like carbonation',
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ CONFIGURATION
+    // └─────────────────────────────────────────────────────────────────────────────────
+    config: {
+        baseRiseSpeed: 2.5,      // Base upward velocity
+        wobbleAmplitude: 30,     // Horizontal wobble range
+        wobbleFrequency: 0.15,   // Wobble oscillation speed
+        popChance: 0.002,        // Chance to "pop" per frame
+        popForce: 8,             // Force of pop burst
+        fizziness: 0.3,          // Random velocity variation
+        gravity: -0.05           // Slight upward bias
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ INITIALIZATION
+    // └─────────────────────────────────────────────────────────────────────────────────
+    initialize(particle, _centerX, _centerY, _canvasWidth, _canvasHeight) {
+        // Start with upward velocity
+        particle.vx = (Math.random() - 0.5) * 2;
+        particle.vy = -this.config.baseRiseSpeed - Math.random() * 2;
+        
+        // Fizzy properties
+        particle.wobblePhase = Math.random() * Math.PI * 2;
+        particle.wobbleSpeed = this.config.wobbleFrequency * (0.8 + Math.random() * 0.4);
+        particle.bubbleSize = 0.5 + Math.random() * 0.5;
+        particle.popTimer = 0;
+        particle.isFizzing = true;
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ UPDATE LOOP
+    // └─────────────────────────────────────────────────────────────────────────────────
+    update(particle, dt, centerX, centerY, canvasWidth, canvasHeight) {
+        // Update wobble phase
+        particle.wobblePhase += particle.wobbleSpeed * dt;
+        
+        // Apply wobble to horizontal movement
+        const wobble = Math.sin(particle.wobblePhase) * this.config.wobbleAmplitude;
+        particle.vx = wobble * 0.05 + (Math.random() - 0.5) * this.config.fizziness;
+        
+        // Apply upward force with variation
+        particle.vy += this.config.gravity * dt;
+        particle.vy += (Math.random() - 0.5) * this.config.fizziness;
+        
+        // Random "pop" events
+        if (Math.random() < this.config.popChance) {
+            // Pop! Send particle in random direction
+            const popAngle = Math.random() * Math.PI * 2;
+            particle.vx = Math.cos(popAngle) * this.config.popForce;
+            particle.vy = Math.sin(popAngle) * this.config.popForce * 0.7; // Slightly favor horizontal
+            particle.popTimer = 1; // Visual feedback timer
+            
+            // Resize on pop
+            particle.bubbleSize = 0.3 + Math.random() * 0.7;
+        }
+        
+        // Decay pop effect
+        if (particle.popTimer > 0) {
+            particle.popTimer -= dt * 0.05;
+            // Slow down after pop
+            particle.vx *= 0.95;
+            particle.vy *= 0.95;
+        }
+        
+        // Apply velocity
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        
+        // Wrap around vertically (bubbles rise and restart)
+        if (particle.y < -50) {
+            particle.y = canvasHeight + 50;
+            particle.x = centerX + (Math.random() - 0.5) * 300;
+            particle.vy = -this.config.baseRiseSpeed - Math.random() * 2;
+            particle.bubbleSize = 0.5 + Math.random() * 0.5;
+        }
+        
+        // Horizontal bounds with soft bounce
+        if (particle.x <= 0 || particle.x >= canvasWidth) {
+            particle.vx *= -0.5;
+            particle.x = Math.max(0, Math.min(canvasWidth, particle.x));
+        }
+        
+        // Bottom boundary (bubbles can spawn from bottom)
+        if (particle.y > canvasHeight + 50) {
+            particle.y = canvasHeight;
+            particle.vy = -this.config.baseRiseSpeed * 1.5;
+        }
+        
+        // Update size based on bubble properties
+        particle.size = particle.baseSize * particle.bubbleSize * 
+                       (1 + Math.sin(particle.wobblePhase * 2) * 0.1);
+    },
+    
+    // ┌─────────────────────────────────────────────────────────────────────────────────
+    // │ VISUAL CHARACTERISTICS
+    // └─────────────────────────────────────────────────────────────────────────────────
+    visuals: {
+        trailLength: 'short',       // Short trails for bubbly feel
+        opacity: 0.6,               // Semi-transparent like bubbles
+        sizeMultiplier: 1.2,        // Slightly larger for bubble effect
+        blurAmount: 0.5,            // Soft, bubble-like appearance
+        sparkle: true               // Occasional sparkle effect
+    }
+};
+
+/**
+ * Calm Particle Behavior
+ * Particles drift peacefully with minimal, smooth movement
+ */
+
+
+// Behavior configuration
+const config = {
+    breathingPeriod: 8000};
+
+/**
+ * Initialize a particle with calm properties
+ * @param {Object} particle - The particle to initialize
+ */
+function initializeCalm(particle) {
+    // Start with faster initial burst movement
+    particle.vx = (Math.random() - 0.5) * 0.5;  // Increased 5x from 0.1
+    particle.vy = (Math.random() - 0.5) * 0.5;  // Increased 5x from 0.1
+    particle.lifeDecay = 0.003;  // Moderate fade (particles last ~5-6 seconds)
+
+    // Use emotion colors if provided
+    if (particle.emotionColors && particle.emotionColors.length > 0) {
+        particle.color = selectWeightedColor(particle.emotionColors);
+    }
+
+    // Calm-specific behavior data
+    particle.behaviorData = {
+        orbitAngle: Math.random() * Math.PI * 2,  // Starting angle around center
+        orbitRadius: 40 + Math.random() * 60,      // Distance from center (40-100 pixels)
+        orbitSpeed: 0.0008 + Math.random() * 0.0006, // Faster orbit speed (4x)
+        floatOffset: Math.random() * Math.PI * 2,
+        breathingOffset: Math.random() * Math.PI * 2,
+        lifetime: 0
+    };
+}
+
+/**
+ * Update calm behavior each frame
+ * @param {Object} particle - The particle to update
+ * @param {number} dt - Delta time
+ * @param {number} centerX - Orb center X
+ * @param {number} centerY - Orb center Y
+ */
+function updateCalm(particle, dt, centerX, centerY) {
+    const data = particle.behaviorData;
+    if (!data) return;
+
+    data.lifetime += dt;
+
+    // Breathing effect (very subtle size change)
+    const breathPhase = (data.lifetime + data.breathingOffset * config.breathingPeriod) / config.breathingPeriod;
+    const breathIntensity = Math.sin(breathPhase * Math.PI * 2) * 0.5 + 0.5;
+
+    // Apply subtle size pulsing
+    particle.size = particle.baseSize * (0.95 + breathIntensity * 0.05);
+
+    // Slow orbital movement around the mascot
+    data.orbitAngle += data.orbitSpeed * dt;
+
+    // Vary the orbit radius slightly over time for organic movement
+    const radiusVariation = Math.sin(data.lifetime * 0.0001 + data.floatOffset) * 10;
+    const currentRadius = data.orbitRadius + radiusVariation;
+
+    // Calculate target position in orbit
+    const targetX = centerX + Math.cos(data.orbitAngle) * currentRadius;
+    const targetY = centerY + Math.sin(data.orbitAngle) * currentRadius;
+
+    // Add vertical floating motion
+    const floatY = Math.sin(data.lifetime * 0.0003 + data.breathingOffset) * 15;
+
+    // Smoothly move toward orbital position
+    const dx = targetX - particle.x;
+    const dy = (targetY + floatY) - particle.y;
+
+    // Faster movement toward target position
+    particle.vx = dx * 0.03;  // Faster following (3x)
+    particle.vy = dy * 0.03;  // Faster following (3x)
+
+    // Add more random drift for organic feel
+    particle.vx += (Math.random() - 0.5) * 0.02;  // More drift
+    particle.vy += (Math.random() - 0.5) * 0.02;  // More drift
+
+    // Apply very light friction
+    particle.vx *= 0.98;
+    particle.vy *= 0.98;
+}
+
+// Export behavior definition for registry
+var zen = {
+    name: 'zen',
+    emoji: '☯️',
+    description: 'Peaceful orbital movement like a hovering aura',
+    initialize: initializeCalm,
+    update: updateCalm
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Plugin Behavior Adapter
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Adapter for plugin-defined particle behaviors
+ * @author Emotive Engine Team
+ * @module particles/behaviors/plugin-adapter
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Bridges the gap between the plugin system and modular particle behaviors.         
+ * ║ Allows plugins to register custom particle behaviors that integrate seamlessly    
+ * ║ with the modular particle system.                                                 
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+
+// Registry for plugin-defined behaviors
+const pluginBehaviors = new Map();
+
+/**
+ * Register a custom particle behavior from a plugin
+ * @param {string} name - Unique name for the behavior
+ * @param {Object} behaviorDef - Behavior definition object
+ * @returns {boolean} Success status
+ */
+function registerPluginBehavior(name, behaviorDef) {
+    if (pluginBehaviors.has(name)) ;
+    
+    // Validate behavior definition
+    if (!behaviorDef.initialize || typeof behaviorDef.initialize !== 'function') {
+        return false;
+    }
+    
+    if (!behaviorDef.update || typeof behaviorDef.update !== 'function') {
+        return false;
+    }
+    
+    // Store the behavior
+    pluginBehaviors.set(name, {
+        name,
+        emoji: behaviorDef.emoji || '🔌',
+        description: behaviorDef.description || `Plugin behavior: ${name}`,
+        initialize: behaviorDef.initialize,
+        update: behaviorDef.update,
+        isPlugin: true
+    });
+    
+    return true;
+}
+
+/**
+ * Unregister a plugin behavior
+ * @param {string} name - Name of the behavior to remove
+ * @returns {boolean} Success status
+ */
+function unregisterPluginBehavior(name) {
+    if (pluginBehaviors.has(name)) {
+        pluginBehaviors.delete(name);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Get a plugin behavior by name
+ * @param {string} name - Name of the behavior
+ * @returns {Object|null} Behavior definition or null
+ */
+function getPluginBehavior(name) {
+    return pluginBehaviors.get(name) || null;
+}
+
+/**
+ * Get all registered plugin behaviors
+ * @returns {Array} Array of behavior names
+ */
+function getAllPluginBehaviors() {
+    return Array.from(pluginBehaviors.keys());
+}
+
+/**
+ * Create a behavior wrapper for legacy plugin particle effects
+ * Converts old-style particle definitions to modular behavior format
+ * @param {Object} legacyBehavior - Legacy behavior configuration
+ * @returns {Object} Modular behavior definition
+ */
+function createLegacyAdapter$1(legacyBehavior) {
+    return {
+        name: legacyBehavior.name || 'legacy',
+        emoji: '🔄',
+        description: legacyBehavior.description || 'Legacy plugin behavior',
+        
+        initialize(particle) {
+            // Apply legacy configuration
+            if (legacyBehavior.size) {
+                particle.size = typeof legacyBehavior.size === 'object' ?
+                    legacyBehavior.size.min + Math.random() * (legacyBehavior.size.max - legacyBehavior.size.min) :
+                    legacyBehavior.size;
+                particle.baseSize = particle.size;
+            }
+            
+            if (legacyBehavior.speed) {
+                const speed = typeof legacyBehavior.speed === 'object' ?
+                    legacyBehavior.speed.min + Math.random() * (legacyBehavior.speed.max - legacyBehavior.speed.min) :
+                    legacyBehavior.speed;
+                const angle = Math.random() * Math.PI * 2;
+                particle.vx = Math.cos(angle) * speed;
+                particle.vy = Math.sin(angle) * speed;
+            }
+            
+            if (legacyBehavior.lifespan) {
+                const lifespan = typeof legacyBehavior.lifespan === 'object' ?
+                    legacyBehavior.lifespan.min + Math.random() * (legacyBehavior.lifespan.max - legacyBehavior.lifespan.min) :
+                    legacyBehavior.lifespan;
+                particle.lifeDecay = 1000 / lifespan; // Convert ms to decay rate
+            }
+            
+            if (legacyBehavior.color) {
+                particle.color = Array.isArray(legacyBehavior.color) ?
+                    selectWeightedColor(legacyBehavior.color) :
+                    legacyBehavior.color;
+            }
+            
+            if (legacyBehavior.opacity) {
+                particle.life = typeof legacyBehavior.opacity === 'object' ?
+                    legacyBehavior.opacity.min + Math.random() * (legacyBehavior.opacity.max - legacyBehavior.opacity.min) :
+                    legacyBehavior.opacity;
+            }
+            
+            // Store legacy-specific data
+            particle.behaviorData = {
+                movementType: legacyBehavior.movementType || 'linear',
+                turbulence: legacyBehavior.turbulence || 0,
+                drift: legacyBehavior.drift || 0,
+                acceleration: legacyBehavior.acceleration || 0,
+                ...legacyBehavior.customData
+            };
+        },
+        
+        update(particle, dt, centerX, centerY) {
+            const data = particle.behaviorData;
+            
+            // Apply movement based on type
+            switch (data.movementType) {
+            case 'wander':
+                // Random wandering
+                particle.vx += (Math.random() - 0.5) * data.turbulence * dt;
+                particle.vy += (Math.random() - 0.5) * data.turbulence * dt;
+                break;
+                    
+            case 'fall':
+                // Falling with drift
+                particle.vy += 0.1 * dt; // Gravity
+                particle.vx += (Math.random() - 0.5) * data.drift * dt;
+                break;
+                    
+            case 'rain':
+                // Digital rain effect
+                particle.vy += data.acceleration * dt;
+                break;
+                    
+            case 'orbit': {
+                // Orbital motion
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    const angle = Math.atan2(dy, dx) + 0.02 * dt;
+                    particle.x = centerX + Math.cos(angle) * dist;
+                    particle.y = centerY + Math.sin(angle) * dist;
+                }
+                break;
+            }
+            }
+            
+            // Call custom update if provided
+            if (legacyBehavior.customUpdate) {
+                legacyBehavior.customUpdate(particle, dt, centerX, centerY);
+            }
+        }
+    };
+}
+
+// Export adapter functions for plugin system integration
+var pluginAdapter$1 = {
+    registerPluginBehavior,
+    unregisterPluginBehavior,
+    getPluginBehavior,
+    getAllPluginBehaviors,
+    createLegacyAdapter: createLegacyAdapter$1
+};
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE v4.0 - Behavior Registry
+ *  └─○═╝                                                                             
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview Central registry for all particle behaviors with plugin support
+ * @author Emotive Engine Team
+ * @version 4.0.0
+ * @module particles/behaviors
+ * 
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                                   PURPOSE                                         
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Control center for particle behaviors with plugin adapter integration.            
+ * ║ • Each behavior defines unique particle physics and movement patterns             
+ * ║ • Core behaviors loaded synchronously at startup                                  
+ * ║ • Plugin behaviors registered dynamically via adapter                             
+ * ║ • Value-agnostic design for easy physics tuning                                   
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ */
+
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ BEHAVIOR COLLECTION
+// └─────────────────────────────────────────────────────────────────────────────────────
+const BEHAVIORS = [
+    ambient,
+    directed,
+    fizzy,
+    orbiting,
+    rising,
+    falling,
+    popcorn,
+    burst$1,
+    aggressive,
+    scattering,
+    repelling,
+    connecting,
+    resting,
+    radiant,
+    ascending,
+    erratic,
+    cautious,
+    surveillance,
+    glitchy,
+    spaz,
+    zen
+];
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ BEHAVIOR REGISTRY - Fast lookup by name
+// └─────────────────────────────────────────────────────────────────────────────────────
+const BEHAVIOR_REGISTRY = {};
+
+// Build the registry from the behaviors array - SYNCHRONOUSLY
+BEHAVIORS.forEach(behavior => {
+    BEHAVIOR_REGISTRY[behavior.name] = behavior;
+    // Debug logging removed for production
+});
+
+/**
+ * Get a behavior by name (checks both core and plugin behaviors)
+ * @param {string} name - Behavior name (e.g., 'ambient', 'orbiting')
+ * @returns {Object|null} Behavior object or null if not found
+ */
+function getBehavior(name) {
+    // Check core behaviors first
+    if (BEHAVIOR_REGISTRY[name]) {
+        return BEHAVIOR_REGISTRY[name];
+    }
+    // Check plugin behaviors
+    const pluginBehavior = pluginAdapter$1.getPluginBehavior(name);
+    if (pluginBehavior) {
+        return pluginBehavior;
+    }
+    return null;
+}
+
+/**
+ * Initialize a particle with a specific behavior
+ * @param {Particle} particle - The particle to initialize
+ * @param {string} behaviorName - Name of the behavior to apply
+ * @returns {boolean} True if behavior was found and applied
+ */
+function initializeBehavior(particle, behaviorName) {
+    const behavior = getBehavior(behaviorName);
+    if (behavior && behavior.initialize) {
+        behavior.initialize(particle);
+        return true;
+    }
+    // Fallback to ambient if behavior not found
+    if (behaviorName !== 'ambient') {
+        console.warn(`⚠️ Behavior '${behaviorName}' not found, falling back to ambient`);
+        return initializeBehavior(particle, 'ambient');
+    }
+    return false;
+}
+
+/**
+ * Update a particle's behavior
+ * @param {Particle} particle - The particle to update
+ * @param {string} behaviorName - Name of the behavior
+ * @param {number} dt - Delta time
+ * @param {number} centerX - Orb center X
+ * @param {number} centerY - Orb center Y
+ * @returns {boolean} True if behavior was found and updated
+ */
+function updateBehavior(particle, behaviorName, dt, centerX, centerY) {
+    const behavior = getBehavior(behaviorName);
+    if (behavior && behavior.update) {
+        behavior.update(particle, dt, centerX, centerY);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Get list of all available behaviors (core and plugin)
+ * @returns {Array} Array of behavior names and descriptions
+ */
+function listBehaviors() {
+    // Get core behaviors
+    const coreBehaviors = Object.values(BEHAVIOR_REGISTRY).map(behavior => ({
+        name: behavior.name,
+        emoji: behavior.emoji || '🎯',
+        description: behavior.description || 'No description',
+        type: 'core'
+    }));
+    
+    // Get plugin behaviors
+    const pluginBehaviorNames = pluginAdapter$1.getAllPluginBehaviors();
+    const pluginBehaviors = pluginBehaviorNames.map(name => {
+        const behavior = pluginAdapter$1.getPluginBehavior(name);
+        return {
+            name: behavior.name,
+            emoji: behavior.emoji || '🔌',
+            description: behavior.description || 'Plugin behavior',
+            type: 'plugin'
+        };
+    });
+    
+    return [...coreBehaviors, ...pluginBehaviors];
+}
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ DEBUG UTILITIES
+// └─────────────────────────────────────────────────────────────────────────────────────
+if (typeof window !== 'undefined' && window.DEBUG_PARTICLES) {
+    window.ParticleBehaviors = {
+        registry: BEHAVIOR_REGISTRY,
+        list: listBehaviors,
+        get: getBehavior
+    };
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
  *    ●●  ENGINE v4.0 - Gesture Plugin Adapter
  *  └─○═╝                                                                             
  * ═══════════════════════════════════════════════════════════════════════════════════════
@@ -64137,7 +69016,7 @@ function clearPluginGestures() {
  * @param {Object} legacyGesture - Old format gesture
  * @returns {Object} New format gesture
  */
-function createLegacyAdapter$1(legacyGesture) {
+function createLegacyAdapter(legacyGesture) {
     return {
         name: legacyGesture.name || 'unknown',
         type: legacyGesture.type || 'blending',
@@ -64165,13 +69044,13 @@ function createLegacyAdapter$1(legacyGesture) {
 }
 
 // Export adapter interface
-var pluginAdapter$1 = {
+var pluginAdapter = {
     registerPluginGesture,
     unregisterPluginGesture,
     getPluginGesture,
     getAllPluginGestures,
     clearPluginGestures,
-    createLegacyAdapter: createLegacyAdapter$1
+    createLegacyAdapter
 };
 
 /**
@@ -71213,7 +76092,7 @@ var flicker = {
  * @audience Good examples for creating custom gesture effects
  */
 
-var burst$1 = {
+var burst = {
     name: 'burst',
     emoji: '💥',
     type: 'blending',
@@ -73965,7 +78844,7 @@ const EFFECT_GESTURES = [
     wave,
     drift,
     flicker,
-    burst$1,
+    burst,
     directional,
     settle,
     fade,
@@ -74011,7 +78890,7 @@ function getGesture(name) {
     }
     
     // Check plugin gestures
-    const pluginGesture = pluginAdapter$1.getPluginGesture(name);
+    const pluginGesture = pluginAdapter.getPluginGesture(name);
     if (pluginGesture) {
         return pluginGesture;
     }
@@ -74048,9 +78927,9 @@ function listGestures() {
     });
     
     // Add plugin gestures
-    const pluginGestureNames = pluginAdapter$1.getAllPluginGestures();
+    const pluginGestureNames = pluginAdapter.getAllPluginGestures();
     pluginGestureNames.forEach(name => {
-        const gesture = pluginAdapter$1.getPluginGesture(name);
+        const gesture = pluginAdapter.getPluginGesture(name);
         allGestures.push({
             name: gesture.name,
             emoji: gesture.emoji || '🔌',
@@ -74061,4897 +78940,6 @@ function listGestures() {
     });
     
     return allGestures;
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                      ◐ ◑ ◒ ◓  UNDERTONE MODIFIERS  ◓ ◒ ◑ ◐                      
- *                                                                                    
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Undertone Modifiers - Subtle Emotion Variations
- * @author Emotive Engine Team
- * @version 2.0.0
- * @module UndertoneModifiers
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Undertones add NUANCE to emotions - like being "nervously happy" or              
- * ║ "confidently angry". These modifiers STACK on top of emotion modifiers            
- * ║ to create more complex, realistic emotional expressions.                          
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎨 MULTIPLIER EFFECTS (Applied to Base Gesture)                                   
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • speed        : Animation speed (0.5=half speed, 2.0=double speed)               
- * │ • amplitude    : Movement size (0.5=smaller, 2.0=bigger)                          
- * │ • intensity    : Effect strength (0.5=subtle, 2.0=extreme)                        
- * │ • smoothness   : Animation smoothing (0.5=jerky, 1.5=very smooth)                 
- * │ • regularity   : Pattern consistency (0.5=chaotic, 1.0=regular)                   
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ ⚡ SPECIAL EFFECTS (Boolean Flags)                                                
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • addFlutter      : Butterfly-like motion (nervous)                               
- * │ • addMicroShake   : Tiny trembling (nervous, tired)                               
- * │ • addPower        : Strong, decisive motion (confident)                           
- * │ • addDrag         : Sluggish, heavy motion (tired)                                
- * │ • addTension      : Tight, controlled motion (intense)                            
- * │ • addSoftness     : Gentle, flowing motion (subdued)                              
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ ❌ DO NOT ADD HERE (Belongs in Other Files)                                       
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ ✗ Base gesture definitions   → use gestureConfig.js                              
- * │ ✗ Emotion modifiers         → use emotionModifiers.js                            
- * │ ✗ Visual properties         → use emotionMap.js                                  
- * │ ✗ Particle behaviors        → use Particle.js                                    
- * │ ✗ State logic              → use EmotiveStateMachine.js                          
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                           ADDING NEW UNDERTONES                                   
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ 1. Create new undertone object with all base multipliers (default to 1.0)         
- * ║ 2. Add special effect flags as needed (addXXX properties)                         
- * ║ 3. Test combinations with ALL emotions for unexpected interactions                
- * ║ 4. Document the intended "feel" and use cases                                     
- * ║ 5. Add to valid undertones in ErrorBoundary.js                                    
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * ════════════════════════════════════════════════════════════════════════════════════
- */
-
-const UNDERTONE_MODIFIERS = {
-    // No undertone - neutral multipliers
-    none: {
-        speed: 1.0,
-        amplitude: 1.0,
-        intensity: 1.0,
-        smoothness: 1.0,
-        regularity: 1.0,
-        '3d': {
-            rotation: { speedMultiplier: 1.0, shakeMultiplier: 1.0 },
-            glow: { intensityMultiplier: 1.0, pulseSpeedMultiplier: 1.0 },
-            scale: { breathDepthMultiplier: 1.0, breathRateMultiplier: 1.0 },
-            righting: { strengthMultiplier: 1.0 }
-        }
-    },
-
-    // Clear undertone - no modification
-    clear: {
-        speed: 1.0,
-        amplitude: 1.0,
-        intensity: 1.0,
-        smoothness: 1.0,
-        regularity: 1.0,
-        '3d': {
-            rotation: { speedMultiplier: 1.0, shakeMultiplier: 1.0 },
-            glow: { intensityMultiplier: 1.0, pulseSpeedMultiplier: 1.0 },
-            scale: { breathDepthMultiplier: 1.0, breathRateMultiplier: 1.0 },
-            righting: { strengthMultiplier: 1.0 }
-        }
-    },
-    
-    nervous: {
-        speed: 1.2,        // 20% faster
-        amplitude: 0.9,    // 10% smaller (contained)
-        intensity: 1.1,    // 10% more intense
-        smoothness: 0.7,   // 30% less smooth (fluttery)
-        regularity: 0.6,   // Irregular (butterflies)
-        addFlutter: true,  // Butterfly-like flutter
-        addMicroShake: true, // Subtle tremor
-        '3d': {
-            rotation: {
-                speedMultiplier: 1.5,      // Noticeably faster rotation (anxious energy)
-                shakeMultiplier: 3.5,      // Very visible shake/wobble (nervous tremor)
-                enableEpisodicWobble: true // Random shake bursts (at least once per rotation)
-            },
-            glow: {
-                intensityMultiplier: 1.25, // Brighter (heightened state)
-                pulseSpeedMultiplier: 2.0  // Rapid pulsing (racing heartbeat)
-            },
-            scale: {
-                breathDepthMultiplier: 0.5, // Very shallow rapid breaths
-                breathRateMultiplier: 1.8   // Much faster breathing (panic)
-            },
-            righting: {
-                strengthMultiplier: 0.7    // Less stable (nervous wobble)
-            }
-        }
-    },
-    
-    confident: {
-        speed: 0.9,        // 10% slower (deliberate)
-        amplitude: 1.3,    // 30% bigger (bold)
-        intensity: 1.2,    // 20% more intense
-        smoothness: 1.1,   // 10% smoother (controlled)
-        regularity: 1.2,   // Very regular (assured)
-        addPower: true,    // Strong, decisive motion
-        addHold: true,     // Brief pause at peaks
-        '3d': {
-            rotation: {
-                speedMultiplier: 0.7,      // Much slower, commanding presence
-                shakeMultiplier: 0.2       // Minimal shake (rock solid control)
-            },
-            glow: {
-                intensityMultiplier: 1.4,  // Noticeably brighter (bold presence)
-                pulseSpeedMultiplier: 0.7  // Slow steady pulse (calm confidence)
-            },
-            scale: {
-                breathDepthMultiplier: 1.5, // Deep powerful breaths
-                breathRateMultiplier: 0.7   // Slow breathing (total control)
-            },
-            righting: {
-                strengthMultiplier: 1.6    // Very stable (immovable)
-            }
-        }
-    },
-    
-    tired: {
-        speed: 0.7,        // 30% slower
-        amplitude: 0.7,    // 30% smaller
-        intensity: 0.8,    // 20% less intense
-        smoothness: 1.3,   // 30% smoother (sluggish)
-        regularity: 0.8,   // Slightly irregular (drowsy)
-        addDroop: true,    // Downward tendency
-        addPause: true,    // Occasional hesitation
-        '3d': {
-            rotation: {
-                speedMultiplier: 0.4,      // Very slow rotation (lethargic)
-                shakeMultiplier: 0.15      // Almost no shake (exhausted)
-            },
-            glow: {
-                intensityMultiplier: 0.5,  // Noticeably dimmer (low energy)
-                pulseSpeedMultiplier: 0.5  // Very slow pulse (drowsy)
-            },
-            scale: {
-                breathDepthMultiplier: 1.3, // Deep tired sighs
-                breathRateMultiplier: 0.5   // Very slow breathing (sleepy)
-            },
-            righting: {
-                strengthMultiplier: 0.6    // Unstable (drooping, sagging)
-            }
-        }
-    },
-    
-    intense: {
-        speed: 1.3,        // 30% faster
-        amplitude: 1.2,    // 20% bigger
-        intensity: 1.4,    // 40% more intense
-        smoothness: 0.6,   // 40% less smooth (sharp)
-        regularity: 0.9,   // Slightly irregular
-        addPulse: true,    // Pulsing intensity
-        addFocus: true,    // Concentrated motion
-        '3d': {
-            rotation: {
-                speedMultiplier: 1.6,      // Noticeably faster rotation (heightened)
-                shakeMultiplier: 2.5       // Strong shake (tension)
-            },
-            glow: {
-                intensityMultiplier: 1.8,  // Very bright (burning intensity)
-                pulseSpeedMultiplier: 2.2  // Very rapid pulsing (racing)
-            },
-            scale: {
-                breathDepthMultiplier: 1.6, // Deep intense breaths
-                breathRateMultiplier: 1.8   // Rapid breathing (adrenaline)
-            },
-            righting: {
-                strengthMultiplier: 1.3    // More stable (tense control)
-            }
-        }
-    },
-    
-    subdued: {
-        speed: 0.8,        // 20% slower
-        amplitude: 0.8,    // 20% smaller
-        intensity: 0.7,    // 30% less intense
-        smoothness: 1.2,   // 20% smoother
-        regularity: 1.1,   // Regular (restrained)
-        addSoftness: true, // Gentle, muted motion
-        addFade: true,     // Fading at edges
-        '3d': {
-            rotation: {
-                speedMultiplier: 0.5,      // Much slower rotation (gentle)
-                shakeMultiplier: 0.1       // Almost no shake (serene)
-            },
-            glow: {
-                intensityMultiplier: 0.55, // Noticeably dimmer (muted)
-                pulseSpeedMultiplier: 0.6  // Slow pulse (peaceful)
-            },
-            scale: {
-                breathDepthMultiplier: 0.7, // Shallow controlled breaths
-                breathRateMultiplier: 0.6   // Slow breathing (restrained)
-            },
-            righting: {
-                strengthMultiplier: 1.4    // Very stable (composed stillness)
-            }
-        }
-    }
-};
-
-/**
- * Get undertone modifier
- * @param {string} undertone - Name of the undertone
- * @returns {Object} Modifier object with default values if undertone not found
- */
-function getUndertoneModifier(undertone) {
-    if (!undertone || undertone === '' || undertone === 'clear') {
-        return UNDERTONE_MODIFIERS.clear;
-    }
-    return UNDERTONE_MODIFIERS[undertone] || UNDERTONE_MODIFIERS.clear;
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - 3D Color Utilities
- *  └─○═╝
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Color conversion and manipulation utilities for 3D rendering
- * @author Emotive Engine Team
- * @module 3d/utils/ColorUtilities
- */
-
-/**
- * Convert hex color to RGB [0-1]
- * @param {string} hex - Hex color code (with or without #)
- * @returns {Array} RGB color [r, g, b] in [0-1] range
- */
-function hexToRGB(hex) {
-    // Remove # if present
-    hex = hex.replace('#', '');
-
-    // Parse
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-
-    return [r, g, b];
-}
-
-/**
- * Convert RGB [0-1] to HSL [0-360, 0-100, 0-100]
- * @param {number} r - Red component [0-1]
- * @param {number} g - Green component [0-1]
- * @param {number} b - Blue component [0-1]
- * @returns {Array} HSL color [h, s, l]
- */
-function rgbToHsl$1(r, g, b) {
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const diff = max - min;
-    const sum = max + min;
-
-    let h = 0;
-    let s = 0;
-    const l = sum / 2;
-
-    if (diff !== 0) {
-        s = l > 0.5 ? diff / (2 - sum) : diff / sum;
-
-        switch (max) {
-        case r: h = ((g - b) / diff + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / diff + 2) / 6; break;
-        case b: h = ((r - g) / diff + 4) / 6; break;
-        }
-    }
-
-    return [h * 360, s * 100, l * 100];
-}
-
-/**
- * Convert HSL [0-360, 0-100, 0-100] to RGB [0-1]
- * @param {number} h - Hue [0-360]
- * @param {number} s - Saturation [0-100]
- * @param {number} l - Lightness [0-100]
- * @returns {Array} RGB color [r, g, b] in [0-1] range
- */
-function hslToRgb$1(h, s, l) {
-    h = h / 360;
-    s = s / 100;
-    l = l / 100;
-
-    let r, g, b;
-
-    if (s === 0) {
-        r = g = b = l;
-    } else {
-        const hue2rgb = (p, q, t) => {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1/6) return p + (q - p) * 6 * t;
-            if (t < 1/2) return q;
-            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-            return p;
-        };
-
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
-
-    return [r, g, b];
-}
-
-/**
- * Apply undertone saturation multiplier to RGB color
- * @param {Array} rgb - RGB color [r, g, b] in [0-1]
- * @param {string|null} undertone - Undertone name
- * @returns {Array} Modified RGB color
- */
-function applyUndertoneSaturation$1(rgb, undertone) {
-    if (!undertone || undertone === 'clear' || undertone === 'none') {
-        return rgb;
-    }
-
-    // Saturation and lightness modifiers - AMPLIFIED for 3D visibility
-    const colorModifiers = {
-        'intense': { saturation: 2.5, lightness: 1.3 },     // Extremely vivid + much brighter
-        'confident': { saturation: 1.8, lightness: 1.15 },  // Bold saturated + brighter
-        'nervous': { saturation: 1.6, lightness: 1.1 },     // Heightened + slightly brighter
-        'tired': { saturation: 0.4, lightness: 0.65 },      // Very washed out + much dimmer
-        'subdued': { saturation: 0.25, lightness: 0.55 }    // Ghostly desaturated + very dim
-    };
-
-    const mods = colorModifiers[undertone];
-    if (!mods) return rgb;
-
-    // Convert to HSL
-    const hsl = rgbToHsl$1(rgb[0], rgb[1], rgb[2]);
-
-    // Apply saturation multiplier
-    hsl[1] = Math.min(100, hsl[1] * mods.saturation);
-
-    // Apply lightness multiplier (makes intense brighter, subdued darker)
-    hsl[2] = Math.min(100, Math.max(0, hsl[2] * mods.lightness));
-
-    // Convert back to RGB
-    return hslToRgb$1(hsl[0], hsl[1], hsl[2]);
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                     ◐ ◑ ◒ ◓  COLOR UTILS  ◓ ◒ ◑ ◐                     
- *                                                                                    
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Color Utils - Color Interpolation & Manipulation
- * @author Emotive Engine Team
- * @version 2.1.0
- * @module ColorUtils
- * @complexity ⭐ Beginner-friendly
- * @audience Useful utility functions for color manipulation. Well-tested and documented.
- * @changelog 2.1.0 - Added undertone saturation modifiers for dynamic depth
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The COLOR SCIENCE module of the engine. Provides smooth color transitions         
- * ║ between emotional states using HSL interpolation for perceptually uniform         
- * ║ transitions that feel natural and emotionally resonant.                           
- * ║                                                                                    
- * ║ NEW: Undertone saturation system creates dynamic depth by adjusting saturation    
- * ║ based on emotional undertones (intense → oversaturated, subdued → desaturated)    
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎨 COLOR OPERATIONS                                                               
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Hex to RGB/HSL conversion                                                       
- * │ • RGB to Hex/HSL conversion                                                       
- * │ • HSL interpolation for smooth transitions                                        
- * │ • Color mixing and blending                                                       
- * │ • Luminance calculations                                                          
- * │ • Perceptually uniform color shifts                                               
- * │ • Undertone-based saturation adjustments                                          
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🌈 UNDERTONE SATURATION SYSTEM                                                    
- * ├───────────────────────────────────────────────────────────────────────────────────
- * │ Undertones dynamically adjust color saturation to create emotional depth:         
- * │                                                                                    
- * │ • INTENSE   : +60% saturation - Electric, vibrant, overwhelming                   
- * │ • CONFIDENT : +30% saturation - Bold, present, assertive                          
- * │ • NERVOUS   : +15% saturation - Slightly heightened, anxious energy               
- * │ • CLEAR     :   0% saturation - Normal midtone, balanced state                    
- * │ • TIRED     : -20% saturation - Washed out, fading, depleted                      
- * │ • SUBDUED   : -50% saturation - Ghostly, barely there, withdrawn                  
- * │                                                                                    
- * │ This creates a visual hierarchy where emotional intensity directly affects        
- * │ the vibrancy and presence of colors, making the mascot's state immediately        
- * │ readable through color alone.                                                     
- * └───────────────────────────────────────────────────────────────────────────────────
- *
- * ════════════════════════════════════════════════════════════════════════════════════
- */
-
-/**
- * Converts hex color to RGB values
- * @param {string} hex - Hex color string (e.g., '#FF0000')
- * @returns {Object} RGB object with r, g, b properties
- */
-function hexToRgb(hex) {
-    // Remove # if present
-    hex = hex.replace('#', '');
-    
-    // Handle 3-digit hex
-    if (hex.length === 3) {
-        hex = hex.split('').map(char => char + char).join('');
-    }
-    
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    
-    return { r, g, b };
-}
-
-/**
- * Converts RGB values to hex color
- * @param {number} r - Red component (0-255)
- * @param {number} g - Green component (0-255)
- * @param {number} b - Blue component (0-255)
- * @returns {string} Hex color string
- */
-function rgbToHex(r, g, b) {
-    const toHex = component => {
-        const hex = Math.round(Math.max(0, Math.min(255, component))).toString(16);
-        return hex.length === 1 ? `0${hex}` : hex;
-    };
-    
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
-/**
- * Converts RGB to HSL color space
- * @param {number} r - Red component (0-255)
- * @param {number} g - Green component (0-255)
- * @param {number} b - Blue component (0-255)
- * @returns {Object} HSL object with h, s, l properties
- */
-function rgbToHsl(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
-    
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const l = (max + min) / 2;
-    let h, s;
-    
-    if (max === min) {
-        h = s = 0; // achromatic
-    } else {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        
-        switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-    
-    return { h: h * 360, s: s * 100, l: l * 100 };
-}
-
-/**
- * Converts HSL to RGB color space
- * @param {number} h - Hue (0-360)
- * @param {number} s - Saturation (0-100)
- * @param {number} l - Lightness (0-100)
- * @returns {Object} RGB object with r, g, b properties
- */
-function hslToRgb(h, s, l) {
-    h /= 360;
-    s /= 100;
-    l /= 100;
-    
-    const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-    };
-    
-    let r, g, b;
-    
-    if (s === 0) {
-        r = g = b = l; // achromatic
-    } else {
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
-    
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
-}
-
-/**
- * Adjusts the saturation of a color
- * @param {string} hex - Hex color
- * @param {number} factor - Saturation factor (0.5 = less saturated, 1.5 = more saturated)
- * @returns {string} Adjusted color (hex)
- */
-function adjustSaturation(hex, factor) {
-    const rgb = hexToRgb(hex);
-    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-    
-    hsl.s = Math.max(0, Math.min(100, hsl.s * factor));
-    
-    const adjustedRgb = hslToRgb(hsl.h, hsl.s, hsl.l);
-    return rgbToHex(adjustedRgb.r, adjustedRgb.g, adjustedRgb.b);
-}
-
-/**
- * Undertone saturation modifiers for dynamic emotional depth
- * Maps undertone names to saturation adjustment factors
- */
-const UNDERTONE_SATURATION = {
-    intense: 1.6,    // +60% saturation - Electric, overwhelming
-    confident: 1.3,  // +30% saturation - Bold, present
-    nervous: 1.15,   // +15% saturation - Slightly heightened
-    clear: 1.0,      // No change - Normal midtone
-    tired: 0.8,      // -20% saturation - Washed out, fading
-    subdued: 0.5     // -50% saturation - Ghostly, barely there
-};
-
-/**
- * Applies undertone saturation adjustment to a color
- * @param {string} hex - Base color
- * @param {string} undertone - Undertone name (intense, confident, nervous, clear, tired, subdued)
- * @returns {string} Adjusted color with undertone saturation applied
- */
-function applyUndertoneSaturation(hex, undertone) {
-    if (!undertone || undertone === 'clear') {
-        return hex; // No adjustment for clear or missing undertone
-    }
-    
-    const factor = UNDERTONE_SATURATION[undertone.toLowerCase()];
-    if (!factor || factor === 1.0) {
-        return hex;
-    }
-    
-    return adjustSaturation(hex, factor);
-}
-
-/**
- * Applies undertone saturation to an array of colors (for particle systems)
- * @param {Array} colors - Array of colors (can be strings or objects with color property)
- * @param {string} undertone - Undertone name
- * @returns {Array} Adjusted color array with undertone saturation applied
- */
-function applyUndertoneSaturationToArray(colors, undertone) {
-    if (!colors || !Array.isArray(colors)) return colors;
-    if (!undertone || undertone === 'clear') return colors;
-    
-    return colors.map(colorItem => {
-        if (typeof colorItem === 'string') {
-            // Simple color string
-            return applyUndertoneSaturation(colorItem, undertone);
-        } else if (colorItem && typeof colorItem === 'object' && colorItem.color) {
-            // Weighted color object
-            return {
-                ...colorItem,
-                color: applyUndertoneSaturation(colorItem.color, undertone)
-            };
-        }
-        return colorItem;
-    });
-}
-
-/**
- * Emotional color palette for the mascot system
- */
-const EMOTIONAL_COLORS = {
-    neutral: '#B0B0B0',
-    joy: '#FFD700',
-    sadness: '#4169E1',
-    anger: '#DC143C',
-    fear: '#8B008B',
-    surprise: '#FF8C00',
-    disgust: '#9ACD32',
-    love: '#FF69B4'
-};
-
-/**
- * Gets RGB values for emotional colors (for performance)
- */
-Object.fromEntries(
-    Object.entries(EMOTIONAL_COLORS).map(([emotion, hex]) => {
-        const rgb = hexToRgb(hex);
-        return [emotion, `${rgb.r}, ${rgb.g}, ${rgb.b}`];
-    })
-);
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Rhythm Integration Module
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- * 
- * @fileoverview Integration layer between rhythm engine and existing subsystems
- * @author Emotive Engine Team
- * @module core/rhythmIntegration
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║ CONCEPT                                                                           
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ This module connects the rhythm engine to existing subsystems without modifying   
- * ║ their core behavior. It reads rhythm configurations from individual files and     
- * ║ applies timing modulations based on musical events.                              
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- * 
- * INTEGRATION POINTS:
- * • Particle System - Emission timing, behavior modulation
- * • Gesture System - Animation sync, duration adjustment
- * • Emotion System - Intensity mapping, transition timing
- * • Renderer - Glow pulsing, visual effects sync
- * 
- * ┌──────────────────────────────────────────────────────────────────────────────────┐
- * │  MODULAR RHYTHM FLOW                                                             │
- * │                                                                                   │
- * │  gesture.js ──┐                                                                  │
- * │  emotion.js ──┼→ [Integration] ← [Rhythm Engine]                                │
- * │  behavior.js ─┘         ↓                                                        │
- * │                   Apply Timing                                                   │
- * │                                                                                   │
- * └──────────────────────────────────────────────────────────────────────────────────┘
- */
-
-
-class RhythmIntegration {
-    constructor() {
-        this.enabled = false;
-        this.adapter = null;
-        this.subsystemConfigs = new Map();
-        this.activeModulations = new Map();
-    }
-    
-    /**
-     * Initialize rhythm integration
-     */
-    initialize() {
-        this.adapter = rhythmEngine.getAdapter();
-        this.enabled = true;
-        
-        // Subscribe to rhythm events
-        this.adapter.onBeat(this.handleBeat.bind(this));
-        this.adapter.onBar(this.handleBar.bind(this));
-        
-    }
-    
-    /**
-     * Update BPM from detected audio
-     * @param {number} newBPM - Detected BPM from audio analysis
-     */
-    updateBPM(newBPM) {
-        if (newBPM >= 60 && newBPM <= 220) {
-            // Check if rhythm was manually stopped
-            if (window.rhythmManuallyStoppedForCurrentAudio) {
-                return; // Don't auto-update if manually stopped
-            }
-
-            // Auto-start rhythm engine if not running
-            if (!rhythmEngine.isRunning) {
-
-                // Auto-start the rhythm engine for gesture sync
-                this.start(newBPM, 'straight');
-
-                // Trigger the rhythm sync visualizer to show BPM
-                if (window.rhythmSyncVisualizer && !window.rhythmSyncVisualizer.state.active) {
-                    // Rhythm integration logging removed for production
-                    window.rhythmSyncVisualizer.start();
-                }
-
-                return;
-            }
-            
-            // If running, always update BPM regardless of whether it changed
-            // This ensures new tracks get their correct BPM
-            rhythmEngine.setBPM(newBPM);
-            
-            // BPM is now shown visually through the beat histogram bars
-        }
-    }
-    
-    /**
-     * Register a subsystem's rhythm configuration
-     * Called when loading gestures, emotions, behaviors, etc.
-     */
-    registerConfig(type, name, config) {
-        if (!config.rhythm || !config.rhythm.enabled) return;
-        
-        const key = `${type}:${name}`;
-        this.subsystemConfigs.set(key, {
-            type,
-            name,
-            rhythmConfig: config.rhythm,
-            originalConfig: config
-        });
-        
-    }
-    
-    /**
-     * Apply rhythm modulation to a gesture
-     */
-    applyGestureRhythm(gesture, _particle, _progress, _dt) {
-        if (!this.enabled || !gesture.rhythm?.enabled) return {};
-        
-
-        const rhythmConfig = gesture.rhythm;
-        const modulation = {};
-        
-        // Apply amplitude sync
-        if (rhythmConfig.amplitudeSync) {
-            const sync = rhythmConfig.amplitudeSync;
-            const beatSync = this.adapter.getBeatSync(
-                sync.offBeat || 0.8,
-                sync.onBeat || 1.5,
-                sync.curve || 'linear'
-            );
-            modulation.amplitudeMultiplier = beatSync;
-        }
-        
-        // Apply wobble sync
-        if (rhythmConfig.wobbleSync) {
-            const sync = rhythmConfig.wobbleSync;
-            if (this.adapter.isOnSubdivision(sync.subdivision, 0.1)) {
-                modulation.wobbleMultiplier = 1 + sync.intensity;
-            } else {
-                modulation.wobbleMultiplier = 1;
-            }
-        }
-        
-        // Apply accent response
-        if (rhythmConfig.accentResponse?.enabled) {
-            const accentedValue = this.adapter.getAccentedValue(
-                1,
-                rhythmConfig.accentResponse.multiplier || 1.5
-            );
-            modulation.accentMultiplier = accentedValue;
-        }
-        
-        // Apply pattern overrides
-        const currentPattern = this.adapter.getPattern();
-        if (currentPattern && rhythmConfig.patternOverrides?.[currentPattern]) {
-            Object.assign(modulation, rhythmConfig.patternOverrides[currentPattern]);
-        }
-        
-        return modulation;
-    }
-    
-    /**
-     * Apply rhythm modulation to particle emission
-     */
-    applyParticleRhythm(emotionState, _particleSystem) {
-        if (!this.enabled || !emotionState.rhythm?.enabled) return {};
-        
-        const timeInfo = this.adapter.getTimeInfo();
-        const rhythmConfig = emotionState.rhythm;
-        const modulation = {};
-        
-        // Particle emission sync
-        if (rhythmConfig.particleEmission) {
-            const emission = rhythmConfig.particleEmission;
-            
-            if (emission.syncMode === 'beat' && this.adapter.isOnBeat(0.1)) {
-                // Emit burst on beat
-                modulation.emitBurst = emission.burstSize || 3;
-            } else if (emission.offBeatRate !== undefined) {
-                // Reduce emission between beats
-                modulation.emissionRate = emission.offBeatRate;
-            }
-        }
-        
-        // Glow sync
-        if (rhythmConfig.glowSync) {
-            const glow = rhythmConfig.glowSync;
-            const glowIntensity = this.adapter.getBeatSync(
-                glow.intensityRange[0] || 1.0,
-                glow.intensityRange[1] || 2.0,
-                'pulse'
-            );
-            modulation.glowIntensity = glowIntensity;
-        }
-        
-        // Breathing sync
-        if (rhythmConfig.breathSync?.mode === 'bars') {
-            const breath = rhythmConfig.breathSync;
-            const barsElapsed = timeInfo.bar % breath.barsPerBreath;
-            const breathProgress = barsElapsed / breath.barsPerBreath;
-            modulation.breathPhase = breathProgress * Math.PI * 2;
-        }
-        
-        return modulation;
-    }
-    
-    /**
-     * Apply rhythm to particle behavior
-     */
-    applyBehaviorRhythm(behavior, _particle, _dt) {
-        if (!this.enabled || !behavior.rhythm?.enabled) return {};
-        
-        const timeInfo = this.adapter.getTimeInfo();
-        const rhythmConfig = behavior.rhythm;
-        const modulation = {};
-        
-        // Glitch timing for glitchy behavior
-        if (rhythmConfig.glitchTiming) {
-            const glitch = rhythmConfig.glitchTiming;
-            const isOnSubdivision = this.adapter.isOnSubdivision(glitch.subdivision, 0.05);
-            
-            if (isOnSubdivision && Math.random() < glitch.probability) {
-                const intensity = this.adapter.isOnBeat() 
-                    ? glitch.intensityOnBeat 
-                    : glitch.intensityOffBeat;
-                modulation.triggerGlitch = true;
-                modulation.glitchIntensity = intensity;
-            }
-        }
-        
-        // Orbital rhythm
-        if (rhythmConfig.orbitRhythm) {
-            const orbit = rhythmConfig.orbitRhythm;
-            
-            if (orbit.baseSpeed === 'tempo') {
-                modulation.speedMultiplier = this.adapter.getBPM() / 120; // Normalize to 120 BPM
-            }
-            
-            if (orbit.beatAcceleration && this.adapter.isOnBeat(0.1)) {
-                modulation.speedBoost = orbit.beatAcceleration;
-            }
-            
-            if (orbit.barReset && timeInfo.beatInBar === 0) {
-                modulation.resetOrbit = true;
-            }
-        }
-        
-        // Stutter sync
-        if (rhythmConfig.stutterSync) {
-            const stutter = rhythmConfig.stutterSync;
-            const pattern = this.adapter.getPattern();
-            
-            if (pattern && stutter.patterns?.[pattern]) {
-                const patternConfig = stutter.patterns[pattern];
-                
-                if (patternConfig.freezeOnDrop && timeInfo.beatInBar === 2) {
-                    modulation.freeze = true;
-                    modulation.freezeDuration = patternConfig.dropDuration;
-                } else if (patternConfig.randomFreeze && Math.random() < patternConfig.randomFreeze) {
-                    modulation.freeze = true;
-                    modulation.freezeDuration = patternConfig.duration;
-                }
-            }
-        }
-        
-        return modulation;
-    }
-    
-    /**
-     * Handle beat event
-     */
-    handleBeat(beatInfo) {
-        // Store beat info for subsystems to access
-        this.lastBeatInfo = beatInfo;
-        
-        // Could trigger specific effects here if needed
-        // But mainly subsystems will query rhythm state during their update
-    }
-    
-    /**
-     * Handle bar event
-     */
-    handleBar(barInfo) {
-        // Store bar info for subsystems to access
-        this.lastBarInfo = barInfo;
-    }
-    
-    /**
-     * Get duration adjusted for musical time
-     */
-    getMusicalDuration(rhythmConfig, originalDuration) {
-        if (!this.enabled || !rhythmConfig?.durationSync) return originalDuration;
-        
-        const sync = rhythmConfig.durationSync;
-        
-        if (sync.mode === 'bars') {
-            return this.adapter.beatsToMs(sync.bars * 4); // Assuming 4/4 time
-        } else if (sync.mode === 'beats') {
-            return this.adapter.beatsToMs(sync.beats);
-        }
-        
-        return originalDuration;
-    }
-    
-    /**
-     * Check if rhythm is enabled globally
-     */
-    isEnabled() {
-        return this.enabled && this.adapter.isPlaying();
-    }
-    
-    /**
-     * Start rhythm playback
-     */
-    start(bpm = 120, pattern = 'straight') {
-        if (bpm) rhythmEngine.setBPM(bpm);
-        if (pattern) rhythmEngine.setPattern(pattern);
-        rhythmEngine.start();
-        this.enabled = true;
-    }
-    
-    /**
-     * Stop rhythm playback
-     */
-    stop() {
-        rhythmEngine.stop();
-        this.enabled = false;
-        // Unlock BPM when stopping
-        this.bpmLocked = false;
-        this.lockedBPM = null;
-    }
-    
-    /**
-     * Set rhythm pattern
-     */
-    setPattern(pattern) {
-        rhythmEngine.setPattern(pattern);
-    }
-    
-    /**
-     * Set BPM
-     */
-    setBPM(bpm) {
-        rhythmEngine.setBPM(bpm);
-        // Update the locked BPM if manually changed
-        if (this.bpmLocked) {
-            this.lockedBPM = bpm;
-            // BPM locking logging removed for production
-        }
-    }
-    
-    /**
-     * Resample BPM - unlocks detection for one update
-     */
-    resampleBPM() {
-        // BPM resampling logging removed for production
-        this.bpmLocked = false;
-        this.lockedBPM = null;
-    }
-    
-    /**
-     * Set time signature from detected pattern
-     */
-    setTimeSignature(signature) {
-        this.timeSignature = signature;
-        
-        // Update UI if available
-        const timeSigDisplay = document.getElementById('time-sig-display');
-        if (timeSigDisplay) {
-            timeSigDisplay.textContent = signature;
-        }
-        
-        // Could update rhythm patterns based on time signature here
-        // For example, switch to waltz pattern for 3/4
-        if (signature === '3/4' && rhythmEngine.getPattern() !== 'waltz') ;
-    }
-    
-    /**
-     * Sync to external audio
-     */
-    syncToAudio(audioContext, audioSource) {
-        rhythmEngine.syncToAudio(audioContext, audioSource);
-    }
-}
-
-// Create singleton instance
-const rhythmIntegration = new RhythmIntegration();
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Emotion Cache System
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Pre-cached emotion system for instant emotion transitions
- * @author Emotive Engine Team
- * @module cache/EmotionCache
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Pre-caches all emotion states and their configurations for instant access.
- * ║ Eliminates the need to load emotion data on-demand, improving transition
- * ║ performance from ~20-50ms to <5ms.
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-
-/**
- * EmotionCache - Pre-caches all emotion configurations for instant access
- */
-class EmotionCache {
-    constructor() {
-        // Cache storage
-        this.emotionCache = new Map();
-        this.visualParamsCache = new Map();
-        this.modifiersCache = new Map();
-        this.transitionCache = new Map();
-        
-        // Performance tracking
-        this.stats = {
-            hits: 0,
-            misses: 0,
-            loadTime: 0,
-            cacheSize: 0
-        };
-        
-        // Cache configuration
-        this.isInitialized = false;
-        this.loadStartTime = 0;
-        
-        // Initialize cache
-        this.initialize();
-    }
-    
-    /**
-     * Initialize the emotion cache by pre-loading all emotions
-     */
-    initialize() {
-        this.loadStartTime = performance.now();
-        
-        try {
-            // Get all available emotions
-            const emotions = listEmotions();
-            
-            // Pre-cache each emotion
-            emotions.forEach(emotionName => {
-                this.cacheEmotion(emotionName);
-            });
-            
-            // Pre-cache common transitions
-            this.cacheCommonTransitions(emotions);
-            
-            this.isInitialized = true;
-            this.stats.loadTime = performance.now() - this.loadStartTime;
-            this.stats.cacheSize = this.emotionCache.size;
-
-            // Removed verbose initialization log
-
-        } catch (error) {
-            console.error('[EmotionCache] Initialization failed:', error);
-            this.isInitialized = false;
-        }
-    }
-    
-    /**
-     * Cache a single emotion and its related data
-     * @param {string} emotionName - Name of the emotion to cache
-     */
-    cacheEmotion(emotionName) {
-        try {
-            // Cache main emotion configuration
-            const emotion = getEmotion(emotionName);
-            if (emotion) {
-                this.emotionCache.set(emotionName, emotion);
-            }
-            
-            // Cache visual parameters (pre-evaluated)
-            const visualParams = getEmotionVisualParams(emotionName);
-            this.visualParamsCache.set(emotionName, visualParams);
-            
-            // Cache modifiers
-            const modifiers = getEmotionModifiers(emotionName);
-            this.modifiersCache.set(emotionName, modifiers);
-            
-        } catch (error) {
-            console.warn(`[EmotionCache] Failed to cache emotion '${emotionName}':`, error);
-        }
-    }
-    
-    /**
-     * Cache common emotion transitions
-     * @param {Array<string>} emotions - List of emotion names
-     */
-    cacheCommonTransitions(emotions) {
-        // Cache transitions between common emotion pairs
-        const commonPairs = [
-            ['neutral', 'joy'],
-            ['neutral', 'sadness'],
-            ['neutral', 'anger'],
-            ['joy', 'sadness'],
-            ['sadness', 'joy'],
-            ['anger', 'calm'],
-            ['calm', 'anger']
-        ];
-        
-        commonPairs.forEach(([from, to]) => {
-            if (emotions.includes(from) && emotions.includes(to)) {
-                try {
-                    const transition = getTransitionParams(from, to);
-                    const key = `${from}->${to}`;
-                    this.transitionCache.set(key, transition);
-                } catch (error) {
-                    console.warn(`[EmotionCache] Failed to cache transition '${from}->${to}':`, error);
-                }
-            }
-        });
-    }
-    
-    /**
-     * Get cached emotion configuration
-     * @param {string} emotionName - Name of the emotion
-     * @returns {Object|null} Cached emotion configuration
-     */
-    getEmotion(emotionName) {
-        if (!this.isInitialized) {
-            console.warn('[EmotionCache] Cache not initialized, falling back to direct access');
-            return getEmotion(emotionName);
-        }
-        
-        const cached = this.emotionCache.get(emotionName);
-        if (cached) {
-            this.stats.hits++;
-            return cached;
-        }
-        
-        this.stats.misses++;
-        console.warn(`[EmotionCache] Cache miss for emotion '${emotionName}', consider adding to pre-cache`);
-        return getEmotion(emotionName);
-    }
-    
-    /**
-     * Get cached visual parameters
-     * @param {string} emotionName - Name of the emotion
-     * @returns {Object} Cached visual parameters
-     */
-    getVisualParams(emotionName) {
-        if (!this.isInitialized) {
-            return getEmotionVisualParams(emotionName);
-        }
-        
-        const cached = this.visualParamsCache.get(emotionName);
-        if (cached) {
-            this.stats.hits++;
-            return cached;
-        }
-        
-        this.stats.misses++;
-        return getEmotionVisualParams(emotionName);
-    }
-    
-    /**
-     * Get cached modifiers
-     * @param {string} emotionName - Name of the emotion
-     * @returns {Object} Cached modifiers
-     */
-    getModifiers(emotionName) {
-        if (!this.isInitialized) {
-            return getEmotionModifiers(emotionName);
-        }
-        
-        const cached = this.modifiersCache.get(emotionName);
-        if (cached) {
-            this.stats.hits++;
-            return cached;
-        }
-        
-        this.stats.misses++;
-        return getEmotionModifiers(emotionName);
-    }
-    
-    /**
-     * Get cached transition parameters
-     * @param {string} fromEmotion - Starting emotion
-     * @param {string} toEmotion - Target emotion
-     * @returns {Object} Cached transition parameters
-     */
-    getTransitionParams(fromEmotion, toEmotion) {
-        if (!this.isInitialized) {
-            return getTransitionParams(fromEmotion, toEmotion);
-        }
-        
-        const key = `${fromEmotion}->${toEmotion}`;
-        const cached = this.transitionCache.get(key);
-        if (cached) {
-            this.stats.hits++;
-            return cached;
-        }
-        
-        this.stats.misses++;
-        return getTransitionParams(fromEmotion, toEmotion);
-    }
-    
-    /**
-     * Check if emotion is cached
-     * @param {string} emotionName - Name of the emotion
-     * @returns {boolean} True if emotion is cached
-     */
-    hasEmotion(emotionName) {
-        return this.emotionCache.has(emotionName);
-    }
-    
-    /**
-     * Get cache statistics
-     * @returns {Object} Cache performance statistics
-     */
-    getStats() {
-        const totalRequests = this.stats.hits + this.stats.misses;
-        const hitRate = totalRequests > 0 ? (this.stats.hits / totalRequests * 100).toFixed(2) : 0;
-        
-        return {
-            isInitialized: this.isInitialized,
-            loadTime: this.stats.loadTime,
-            cacheSize: this.stats.cacheSize,
-            hits: this.stats.hits,
-            misses: this.stats.misses,
-            hitRate: `${hitRate}%`,
-            emotions: this.emotionCache.size,
-            visualParams: this.visualParamsCache.size,
-            modifiers: this.modifiersCache.size,
-            transitions: this.transitionCache.size
-        };
-    }
-    
-    /**
-     * Clear all caches
-     */
-    clear() {
-        this.emotionCache.clear();
-        this.visualParamsCache.clear();
-        this.modifiersCache.clear();
-        this.transitionCache.clear();
-        this.isInitialized = false;
-        this.stats = { hits: 0, misses: 0, loadTime: 0, cacheSize: 0 };
-    }
-    
-    /**
-     * Reinitialize cache (useful for dynamic emotion loading)
-     */
-    reinitialize() {
-        this.clear();
-        this.initialize();
-    }
-}
-
-// Create singleton instance
-const emotionCache = new EmotionCache();
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Color Utilities
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Color selection and manipulation utilities for particles
- * @author Emotive Engine Team
- * @module particles/utils/colorUtils
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Handles weighted color selection for particles. Each emotion has a palette of     
- * ║ colors with different weights (probabilities). This creates visual variety        
- * ║ while maintaining the emotional theme.                                            
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-/**
- * Select a color from an array with optional weights
- * 
- * EXAMPLE INPUT:
- * [
- *   { color: '#FF69B4', weight: 30 },  // 30% chance
- *   { color: '#FFB6C1', weight: 25 },  // 25% chance
- *   { color: '#FF1493', weight: 20 },  // 20% chance
- *   '#FFC0CB',                          // Remaining weight split evenly
- *   '#C71585'                           // between unweighted colors
- * ]
- * 
- * @param {Array} colors - Array of color strings or {color, weight} objects
- * @returns {string} Selected hex color
- */
-function selectWeightedColor(colors) {
-    if (!colors || colors.length === 0) return '#FFFFFF';
-    
-    // Parse colors and weights
-    let totalExplicitWeight = 0;
-    let unweightedCount = 0;
-    const parsedColors = [];
-    
-    for (const item of colors) {
-        if (typeof item === 'string') {
-            // Simple string color - will get default weight
-            parsedColors.push({ color: item, weight: null });
-            unweightedCount++;
-        } else if (item && typeof item === 'object' && item.color) {
-            // Object with color and optional weight
-            parsedColors.push({ color: item.color, weight: item.weight || null });
-            if (item.weight) {
-                totalExplicitWeight += item.weight;
-            } else {
-                unweightedCount++;
-            }
-        }
-    }
-    
-    // Calculate weight for unweighted colors
-    // If weights total 75, and there are 2 unweighted colors, each gets 12.5
-    const remainingWeight = Math.max(0, 100 - totalExplicitWeight);
-    const defaultWeight = unweightedCount > 0 ? remainingWeight / unweightedCount : 0;
-    
-    // Build cumulative probability table for efficient selection
-    const probTable = [];
-    let cumulative = 0;
-    
-    for (const item of parsedColors) {
-        const weight = item.weight !== null ? item.weight : defaultWeight;
-        cumulative += weight;
-        probTable.push({ color: item.color, threshold: cumulative });
-    }
-    
-    // Select based on random value
-    const random = Math.random() * cumulative;
-    for (const entry of probTable) {
-        if (random <= entry.threshold) {
-            return entry.color;
-        }
-    }
-    
-    // Fallback to last color (shouldn't happen but safety first)
-    return parsedColors[parsedColors.length - 1].color;
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Ambient Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Gentle upward drift behavior for neutral emotional state
- * @author Emotive Engine Team
- * @module particles/behaviors/ambient
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a calm, peaceful atmosphere with particles gently drifting upward         
- * ║ like smoke or steam. This is the default behavior for neutral emotional states.   
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *        ↑  ↑  ↑
- *       ·  ·  ·    ← particles drift straight up
- *      ·  ·  ·  
- *     ·  ⭐  ·     ← orb center
- *      ·  ·  ·
- *       ·  ·  ·
- * 
- * USED BY EMOTIONS:
- * - neutral (default calm state)
- * 
- * RECIPE TO MODIFY:
- * - Increase upwardSpeed for faster rising (more energy)
- * - Decrease friction for longer-lasting momentum
- * - Add waviness for side-to-side motion (currently disabled)
- */
-
-
-/**
- * Initialize ambient behavior for a particle
- * Sets up initial velocities and behavior-specific data
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeAmbient(particle) {
-    // Start with gentle upward movement
-    particle.vx = 0;  // NO horizontal drift
-    particle.vy = -0.04 - Math.random() * 0.02;  // Slower upward movement
-    particle.lifeDecay = 0.002;  // Even slower fade - particles last ~8 seconds
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        // Languid upward drift
-        upwardSpeed: 0.0005,      // Very slow continuous upward drift
-        waviness: 0,              // NO side-to-side (set to 0.5-2 for wave motion)
-        friction: 0.998           // Even more gradual slowdown
-    };
-}
-
-/**
- * Update ambient behavior each frame
- * Applies gentle upward drift with air resistance
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X (unused but kept for consistency)
- * @param {number} centerY - Orb center Y (unused but kept for consistency)
- */
-function updateAmbient(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-    
-    // Apply friction to y velocity only (frame-rate independent)
-    // Use exponential decay: friction^dt where dt is normalized to 60fps
-    particle.vy *= Math.pow(data.friction, dt);
-    
-    // Add continuous upward drift
-    particle.vy -= data.upwardSpeed * dt;
-    
-    // NO horizontal movement or waviness (zen-like straight up)
-    particle.vx = 0;
-}
-
-// Export behavior definition for registry
-var ambient = {
-    name: 'ambient',
-    emoji: '☁️',
-    description: 'Gentle upward drift like smoke',
-    initialize: initializeAmbient,
-    update: updateAmbient
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Particle Physics Configuration
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Physics constants for particle behavior
- * @author Emotive Engine Team
- * @module particles/config/physics
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Core physics values that control how particles move and interact with the world.  
- * ║ Modify these with caution as they affect all particle behaviors globally.         
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ PHYSICS CONSTANTS - Core physics values (modify with caution)
-// └─────────────────────────────────────────────────────────────────────────────────────
-const PHYSICS = {
-    // Math constants
-    TWO_PI: Math.PI * 2};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Orbiting Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Romantic orbiting behavior for love emotional state
- * @author Emotive Engine Team
- * @module particles/behaviors/orbiting
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a romantic atmosphere with particles orbiting the orb like fireflies      
- * ║ dancing at a valentine's day party. Features individual blinking and sparkles.    
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *        ✨     ✨
- *      💕  ╭───╮  💕    ← particles orbit & sparkle
- *    ✨   │  ⭐  │   ✨   ← orb center
- *      💕  ╰───╯  💕
- *        ✨     ✨
- * 
- * USED BY EMOTIONS:
- * - love (romantic valentine vibes)
- * 
- * RECIPE TO MODIFY:
- * - Increase angularVelocity for faster spinning
- * - Increase floatAmount for more vertical movement
- * - Adjust blinkSpeed for different firefly effects
- * - Increase baseRadius for wider orbits
- */
-
-
-/**
- * Initialize orbiting behavior for a particle
- * Creates valentine fireflies with individual timing
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeOrbiting(particle) {
-    // Individual fade timing - each particle has its own lifespan
-    particle.lifeDecay = 0.001 + Math.random() * 0.002;  // Variable decay (0.001-0.003)
-    
-    // Use emotion colors if provided - glittery valentine palette
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    // Check if this is a lighter/sparkle color (light pinks)
-    particle.isSparkle = particle.color === '#FFE4E1' || 
-                        particle.color === '#FFCCCB' || 
-                        particle.color === '#FFC0CB';
-    
-    // Particles orbit at various distances for depth
-    const orbRadius = (particle.scaleFactor || 1) * 40; // Approximate orb size
-    const depthLayer = Math.random();
-    const baseRadius = orbRadius * (1.3 + depthLayer * 0.9); // 1.3x to 2.2x orb radius
-    
-    // Glitter firefly properties - each with unique timing
-    particle.blinkPhase = Math.random() * PHYSICS.TWO_PI; // Random starting phase
-    particle.blinkSpeed = 0.3 + Math.random() * 1.2; // Varied blink speeds (0.3-1.5)
-    particle.blinkIntensity = 0.6 + Math.random() * 0.4; // How bright the blink gets
-    
-    // Individual fade properties
-    particle.fadePhase = Math.random() * PHYSICS.TWO_PI; // Random fade starting phase
-    particle.fadeSpeed = 0.1 + Math.random() * 0.3; // Different fade speeds
-    particle.minOpacity = 0.2 + Math.random() * 0.2; // Min brightness varies (0.2-0.4)
-    particle.maxOpacity = 0.8 + Math.random() * 0.2; // Max brightness varies (0.8-1.0)
-    
-    // Sparkles have different properties
-    if (particle.isSparkle) {
-        particle.blinkSpeed *= 2; // Sparkles blink faster
-        particle.blinkIntensity = 1.0; // Full intensity sparkles
-        particle.minOpacity = 0; // Can fade to nothing
-        particle.maxOpacity = 1.0; // Can be fully bright
-    }
-    
-    particle.behaviorData = {
-        angle: Math.random() * PHYSICS.TWO_PI,
-        radius: baseRadius,
-        baseRadius,
-        angularVelocity: 0.0008 + Math.random() * 0.0017,  // Varied rotation speeds
-        swayAmount: 3 + Math.random() * 7,  // Gentle floating sway
-        swaySpeed: 0.2 + Math.random() * 0.5,  // Varied sway rhythm
-        floatOffset: Math.random() * PHYSICS.TWO_PI,  // Random vertical float phase
-        floatSpeed: 0.3 + Math.random() * 0.7,  // Varied vertical floating speed
-        floatAmount: 2 + Math.random() * 6,  // How much they float up/down
-        twinklePhase: Math.random() * PHYSICS.TWO_PI,  // Individual twinkle timing
-        twinkleSpeed: 2 + Math.random() * 3  // Fast twinkle for glitter effect
-    };
-}
-
-/**
- * Update orbiting behavior each frame
- * Creates romantic firefly dance with sparkles
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X position
- * @param {number} centerY - Orb center Y position
- */
-function updateOrbiting(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-
-    // Slow romantic rotation around the orb
-    data.angle += data.angularVelocity * dt;
-
-    // Gentle swaying motion
-    const swayOffset = Math.sin(data.angle * data.swaySpeed) * data.swayAmount;
-
-    // Radius changes for breathing effect
-    const radiusPulse = Math.sin(data.angle * 1.5) * 6;
-
-    // Use data.radius if it exists (can be modified by gestures), otherwise use baseRadius
-    const currentRadius = (data.radius || data.baseRadius) + radiusPulse + swayOffset * 0.2;
-
-    // Calculate desired orbital position
-    const targetX = centerX + Math.cos(data.angle) * currentRadius;
-    const targetY = centerY + Math.sin(data.angle) * currentRadius;
-
-    // Add gentle vertical floating (like fireflies)
-    data.floatOffset += data.floatSpeed * dt * 0.001;
-    const verticalFloat = Math.sin(data.floatOffset) * data.floatAmount;
-
-    // Smoothly move towards target position instead of directly setting it
-    // This allows gestures to temporarily offset particles
-    const smoothingFactor = 0.1; // How quickly particles return to orbit
-    particle.vx = (targetX - particle.x) * smoothingFactor;
-    particle.vy = (targetY + verticalFloat - particle.y) * smoothingFactor;
-    
-    // Update individual fade phase
-    particle.fadePhase += particle.fadeSpeed * dt * 0.001;
-    
-    // Calculate individual particle fade (independent timing)
-    const fadeValue = Math.sin(particle.fadePhase) * 0.5 + 0.5; // 0 to 1
-    const fadeOpacity = particle.minOpacity + (particle.maxOpacity - particle.minOpacity) * fadeValue;
-    
-    // Firefly blinking effect
-    particle.blinkPhase += particle.blinkSpeed * dt * 0.002;
-    
-    // Create a complex glitter blink with multiple harmonics
-    let blinkValue;
-    if (particle.isSparkle) {
-        // Sparkles have sharp, dramatic twinkles
-        data.twinklePhase += data.twinkleSpeed * dt * 0.001;
-        const twinkle = Math.pow(Math.sin(data.twinklePhase), 16); // Sharp peaks
-        const shimmer = Math.sin(particle.blinkPhase * 5) * 0.2;
-        blinkValue = twinkle * 0.7 + shimmer + 0.1;
-    } else {
-        // Regular particles have smoother, firefly-like pulses
-        blinkValue = Math.sin(particle.blinkPhase) * 0.4 + 
-                    Math.sin(particle.blinkPhase * 3) * 0.3 +
-                    Math.sin(particle.blinkPhase * 7) * 0.2 +
-                    Math.sin(particle.blinkPhase * 11) * 0.1; // Added harmonic
-    }
-    
-    // Map to 0-1 range with intensity control
-    const normalizedBlink = (blinkValue + 1) * 0.5; // Convert from -1,1 to 0,1
-    const blink = 0.2 + normalizedBlink * particle.blinkIntensity * 0.8;
-    
-    // Combine individual fade with blink effect
-    particle.opacity = particle.baseOpacity * fadeOpacity * blink;
-    
-    // Sparkles pulse size more dramatically
-    if (particle.isSparkle) {
-        particle.size = particle.baseSize * (0.5 + normalizedBlink * 1.0); // 50-150% size
-    } else {
-        particle.size = particle.baseSize * (0.8 + normalizedBlink * 0.3); // 80-110% size
-    }
-    
-    // Add subtle color shift for sparkles (shimmer effect)
-    if (particle.isSparkle) {
-        // Light pink sparkles can shift to white at peak brightness
-        if (normalizedBlink > 0.85) {
-            particle.tempColor = '#FFFFFF'; // Flash white at peak for extra sparkle
-        } else {
-            particle.tempColor = particle.color;
-        }
-    }
-}
-
-// Export behavior definition for registry
-var orbiting = {
-    name: 'orbiting',
-    emoji: '💕',
-    description: 'Romantic firefly dance around the orb',
-    initialize: initializeOrbiting,
-    update: updateOrbiting
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Rising Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Buoyant upward movement for joyful states
- * @author Emotive Engine Team
- * @module particles/behaviors/rising
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a buoyant, uplifting atmosphere with particles rising like bubbles        
- * ║ or balloons. Slight horizontal drift adds organic movement.                       
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *      ↗  ↑  ↖
- *     ·  ·  ·    ← particles rise with drift
- *    ·  ·  ·  
- *   ·  ⭐  ·     ← orb center
- *    ·  ·  ·
- *     ·  ·  ·
- * 
- * USED BY EMOTIONS:
- * - joy (subtle happiness)
- * - optimism
- * 
- * RECIPE TO MODIFY:
- * - Increase buoyancy for faster rising (like helium balloons)
- * - Increase driftAmount for more side-to-side movement
- * - Decrease air resistance for longer-lasting momentum
- */
-
-
-/**
- * Initialize rising behavior for a particle
- * Sets up buoyant upward movement with gentle drift
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeRising(particle) {
-    particle.vx = (Math.random() - 0.5) * 0.02;  // Even slower horizontal drift
-    particle.vy = -0.05 - Math.random() * 0.03;   // Much slower upward movement
-    particle.lifeDecay = 0.002;                   // Very slow decay
-    particle.baseOpacity = 0.7 + Math.random() * 0.3;  // More opaque (70-100%)
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        buoyancy: 0.001,      // Even gentler upward force
-        driftAmount: 0.005    // Minimal drift
-    };
-}
-
-/**
- * Update rising behavior each frame
- * Applies buoyancy and gentle drift
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X (unused)
- * @param {number} centerY - Orb center Y (unused)
- */
-function updateRising(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-    
-    // Add buoyancy (upward force)
-    particle.vy -= data.buoyancy * dt;
-    
-    // Add horizontal drift
-    particle.vx += (Math.random() - 0.5) * data.driftAmount * dt;
-    
-    // Apply air resistance (frame-independent)
-    particle.vx *= Math.pow(0.995, dt);
-    particle.vy *= Math.pow(0.998, dt);
-}
-
-// Export behavior definition for registry
-var rising = {
-    name: 'rising',
-    emoji: '🎈',
-    description: 'Buoyant upward movement like balloons',
-    initialize: initializeRising,
-    update: updateRising
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Falling Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Heavy downward drift for sad emotional states
- * @author Emotive Engine Team
- * @module particles/behaviors/falling
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a melancholic atmosphere with particles slowly falling like tears         
- * ║ or autumn leaves. Heavy, weighted movement conveys sadness.                       
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *     ·  ·  ·
- *    ·  ·  ·  
- *   ·  ⭐  ·     ← orb center
- *    ·  ·  ·
- *     ·  ·  ·    ← particles fall slowly
- *      ↓  ↓  ↓
- * 
- * USED BY EMOTIONS:
- * - sadness (melancholy, grief)
- * - disappointment
- * - tired
- * 
- * RECIPE TO MODIFY:
- * - Increase gravity for heavier falling (more weight)
- * - Decrease drag for faster falling (less air resistance)
- * - Add horizontal drift for leaf-like falling
- */
-
-
-/**
- * Initialize falling behavior for a particle
- * Sets up slow, heavy downward movement
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeFalling(particle) {
-    // Exact copy of ambient but falling DOWN instead of up
-    particle.vx = 0;  // NO horizontal drift
-    particle.vy = 0.04 + Math.random() * 0.02;  // Same speed as ambient but downward (positive = down)
-    particle.lifeDecay = 0.002;  // Same as ambient
-
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-
-    // Generate random 3D direction for uniform sphere distribution
-    // This is used by the 3D translator for positioning
-    const u1 = Math.random();
-    const u2 = Math.random();
-    const theta = u1 * Math.PI * 2;
-    const cosPhi = 2.0 * u2 - 1.0;
-    const sinPhi = Math.sqrt(1.0 - cosPhi * cosPhi);
-
-    particle.behaviorData = {
-        downwardSpeed: 0.0005,  // Same as ambient's upwardSpeed
-        friction: 0.998,        // Same as ambient
-        // 3D direction for translator (uniform sphere distribution)
-        fallingDir: {
-            x: sinPhi * Math.cos(theta),
-            y: cosPhi,
-            z: sinPhi * Math.sin(theta)
-        },
-        // Random orbit distance (0.7x to 1.1x core radius, actual value set by translator)
-        orbitDistanceRatio: 0.7 + Math.random() * 0.4
-    };
-}
-
-/**
- * Update falling behavior each frame
- * Mirror of ambient but falling DOWN instead of rising up
- *
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X (unused)
- * @param {number} centerY - Orb center Y (unused)
- */
-function updateFalling(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-
-    // Apply friction to y velocity only (frame-rate independent)
-    // Use exponential decay: friction^dt where dt is normalized to 60fps
-    particle.vy *= Math.pow(data.friction, dt);
-
-    // Add continuous downward drift (opposite of ambient's upward)
-    particle.vy += data.downwardSpeed * dt;
-
-    // NO horizontal movement (zen-like straight down, like ambient goes straight up)
-    particle.vx = 0;
-}
-
-// Export behavior definition for registry
-var falling = {
-    name: 'falling',
-    emoji: '💧',
-    description: 'Heavy downward drift like tears',
-    initialize: initializeFalling,
-    update: updateFalling
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Playground Configuration 🎮
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Safe values for experimentation and tweaking
- * @author Emotive Engine Team
- * @module particles/config/playground
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                            🎮 PLAYGROUND VALUES                                   
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ SAFE TO MODIFY! These values are designed for experimentation.                    
- * ║ Change them to create new visual effects and behaviors.                           
- * ║                                                                                    
- * ║ TIP: After changing values, refresh your browser to see the effects!              
- * ║ TIP: Set window.DEBUG_PARTICLES = true in console to visualize changes            
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-const PLAYGROUND = {
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ POPCORN BEHAVIOR - Joy particles that pop!
-    // └─────────────────────────────────────────────────────────────────────────────────
-    popcorn: {
-        POP_DELAY_MAX: 2000,   // 🎯 Slowest pop (ms) - Try: 1000-5000
-        POP_FORCE_MIN: 3,      // 🎯 Weakest pop - Try: 1-5
-        POP_FORCE_MAX: 8,      // 🎯 Strongest pop - Try: 5-15
-        BOUNCE_HEIGHT: 0.7     // 🎯 Bounce energy retained - Try: 0.3-0.9
-    }};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Popcorn Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Spontaneous popping with bounces for joyful celebration
- * @author Emotive Engine Team
- * @module particles/behaviors/popcorn
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a celebratory atmosphere with particles that wait, then POP! and bounce   
- * ║ around with gravity. Perfect for pure joy and celebration moments.                
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *     Stage 1: Wait      Stage 2: POP!       Stage 3: Bounce
- *         ·                  💥 ↗             ↘ 
- *        ···                ↖ 💥 ↗              ↓
- *       ·⭐·                  💥                 🎊 ← bounce!
- *        ···                ↙ 💥 ↘              ↑
- *         ·                  💥 ↓               ↗
- * 
- * USED BY EMOTIONS:
- * - joy (celebration, happiness, excitement)
- * 
- * RECIPE TO MODIFY:
- * - Decrease popDelay for faster popping (more energetic)
- * - Increase popStrength for bigger pops
- * - Adjust gravity for different bounce physics
- * - Increase maxBounces for longer bouncing
- */
-
-
-/**
- * Initialize popcorn behavior for a particle
- * Sets up kernel waiting to pop
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializePopcorn(particle) {
-    // Start with little to no movement (kernel waiting to pop)
-    particle.vx = (Math.random() - 0.5) * 0.1;
-    particle.vy = (Math.random() - 0.5) * 0.1;
-    // Faster, more varied decay for dynamic disappearing
-    particle.lifeDecay = 0.008 + Math.random() * 0.012; // Random between 0.008-0.020
-    
-    // Use emotion colors if provided, otherwise default popcorn colors
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    } else {
-        // Default popcorn colors (buttery whites and yellows)
-        const colors = ['#FFFFFF', '#FFFACD', '#FFF8DC', '#FFFFE0', '#FAFAD2'];
-        particle.color = selectWeightedColor(colors);
-    }
-    
-    // Vary sizes more dramatically - some big fluffy pieces, some small
-    particle.size = (Math.random() < 0.3) ? 
-        (8 + Math.random() * 4) * particle.scaleFactor * particle.particleSizeMultiplier : // 30% big
-        (2 + Math.random() * 4) * particle.scaleFactor * particle.particleSizeMultiplier;  // 70% small
-    particle.baseSize = particle.size;
-    
-    // Less glow, more solid popcorn look
-    particle.hasGlow = Math.random() < 0.2; // Only 20% have glow
-    particle.glowSizeMultiplier = particle.hasGlow ? 1.2 : 0;
-    
-    particle.behaviorData = {
-        // Popcorn popping mechanics
-        popDelay: Math.random() * PLAYGROUND.popcorn.POP_DELAY_MAX,
-        hasPopped: false,
-        popStrength: PLAYGROUND.popcorn.POP_FORCE_MIN + 
-                    Math.random() * (PLAYGROUND.popcorn.POP_FORCE_MAX - PLAYGROUND.popcorn.POP_FORCE_MIN),
-        
-        // Physics after popping
-        gravity: 0.098,                    // Gravity strength
-        bounceDamping: PLAYGROUND.popcorn.BOUNCE_HEIGHT,
-        bounceCount: 0,
-        maxBounces: 2 + Math.floor(Math.random() * 2), // 2-3 bounces
-        
-        // Visual flair
-        spinRate: (Math.random() - 0.5) * 10, // Rotation speed (for future use)
-        lifetime: 0                           // Track time since spawn
-    };
-}
-
-/**
- * Update popcorn behavior each frame
- * Handles waiting, popping, and bouncing phases
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X position
- * @param {number} centerY - Orb center Y position
- */
-function updatePopcorn(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    data.lifetime += dt * 16.67; // Convert to milliseconds
-    
-    // Check if it's time to pop
-    if (!data.hasPopped && data.lifetime > data.popDelay) {
-        // POP! Sudden burst of velocity in all directions for celebration
-        data.hasPopped = true;
-        const popAngle = Math.random() * Math.PI * 2; // Full 360 degree spread
-        particle.vx = Math.cos(popAngle) * data.popStrength * 1.5; // Extra horizontal spread
-        particle.vy = Math.sin(popAngle) * data.popStrength - 0.3; // Slight upward bias for joy
-        
-        // Expand size when popping for dramatic effect
-        particle.size = particle.baseSize * 1.25;
-    }
-    
-    if (data.hasPopped) {
-        // Apply gravity
-        particle.vy += data.gravity * dt;
-        
-        // Check for ground bounce
-        const groundLevel = centerY + 100 * particle.scaleFactor; // Below the orb
-        if (particle.y > groundLevel && data.bounceCount < data.maxBounces) {
-            particle.y = groundLevel;
-            particle.vy = -Math.abs(particle.vy) * data.bounceDamping; // Bounce up with damping
-            particle.vx *= 0.9; // Reduce horizontal speed on bounce
-            data.bounceCount++;
-            
-            // Shrink slightly with each bounce
-            particle.size = particle.baseSize * (1.5 - data.bounceCount * 0.1);
-        }
-        
-        // Fade dramatically after final bounce
-        if (data.bounceCount >= data.maxBounces) {
-            particle.lifeDecay = 0.03 + Math.random() * 0.02; // Very fast fade
-            particle.size *= 0.95; // Also shrink rapidly
-        }
-        
-        // Dynamic fading based on velocity - slower particles fade faster
-        const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
-        if (speed < 0.5) {
-            particle.lifeDecay *= 1.5; // 50% faster fade when moving slowly
-        }
-    }
-}
-
-// Export behavior definition for registry
-var popcorn = {
-    name: 'popcorn',
-    emoji: '🍿',
-    description: 'Spontaneous popping with gravity and bounces',
-    initialize: initializePopcorn,
-    update: updatePopcorn
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Burst Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Explosive expansion for surprise and suspicion states
- * @author Emotive Engine Team
- * @module particles/behaviors/burst
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates dramatic expansion effects. For surprise: fast burst then sudden stop.    
- * ║ For suspicion: controlled, watchful expansion. Particles shoot out from center.   
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *   Surprise:                  Suspicion:
- *       💥→                        •→
- *     ↗ 💥 ↘                    ↗ • ↘
- *   ← ⭐ →    STOP!          ← ⭐ →    (controlled)
- *     ↙ 💥 ↖                    ↙ • ↖
- *       💥←                        •←
- * 
- * USED BY EMOTIONS:
- * - surprise (dramatic burst then stop)
- * - suspicion (controlled, watchful expansion)
- * 
- * RECIPE TO MODIFY:
- * - Increase speed for more dramatic burst
- * - Adjust friction for different deceleration
- * - Change stopTime for surprise effect timing
- */
-
-
-/**
- * Initialize burst behavior for a particle
- * Sets up explosive outward movement
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeBurst(particle) {
-    // Check emotion type for behavior variation
-    const isSuspicion = particle.emotion === 'suspicion';
-    const isSurprise = particle.emotion === 'surprise';
-    const isGlitch = particle.emotion === 'glitch';
-    
-    // Random direction for burst
-    const angle = Math.random() * PHYSICS.TWO_PI;
-    
-    // Speed based on emotion
-    const speed = isSuspicion ? 
-        (1.0 + Math.random() * 0.8) :      // Controlled burst for suspicion (1-1.8)
-        (isSurprise ? 
-            (7.0 + Math.random() * 5.0) :  // Much faster burst for surprise (7-12)
-            (isGlitch ?
-                (2.0 + Math.random() * 1.5) : // Moderate burst for glitch (2-3.5)
-                (3.5 + Math.random() * 2.5)));  // Normal burst for others (3.5-6)
-    
-    particle.vx = Math.cos(angle) * speed;
-    particle.vy = Math.sin(angle) * speed;
-    
-    // Lifespan based on emotion
-    particle.lifeDecay = isSuspicion ? 
-        0.010 : 
-        (isSurprise ? 0.006 + Math.random() * 0.008 : 
-            (isGlitch ? 0.012 : 0.015));
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    // Make suspicion particles more visible
-    if (isSuspicion) {
-        particle.size = (6 + Math.random() * 4) * 
-                       (particle.scaleFactor || 1) * 
-                       (particle.particleSizeMultiplier || 1);
-        particle.baseSize = particle.size;
-        particle.opacity = 1.0;  // Full opacity for visibility
-        particle.baseOpacity = particle.opacity;
-    }
-    
-    particle.behaviorData = {
-        isSuspicion,
-        isSurprise,
-        isGlitch,
-        age: 0,
-        fadeStart: isSuspicion ? 0.3 : 0.2,  // When to start fading
-        // Glitch wiggle properties
-        glitchPhase: Math.random() * Math.PI * 2,
-        glitchIntensity: isGlitch ? 0.3 : 0,
-        glitchFrequency: isGlitch ? 0.1 : 0
-    };
-}
-
-/**
- * Update burst behavior each frame
- * Handles explosive expansion with emotion-specific variations
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X (unused)
- * @param {number} centerY - Orb center Y (unused)
- */
-function updateBurst(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-    
-    // Surprise particles: burst out then STOP suddenly
-    if (data.isSurprise) {
-        // Track age for timing the stop
-        data.age += dt * 0.016; // Convert to seconds
-        
-        if (data.age < 0.15) {
-            // First 0.15 seconds: maintain high speed
-            const friction = 0.98;
-            particle.vx *= Math.pow(friction, dt);
-            particle.vy *= Math.pow(friction, dt);
-        } else if (data.age < 0.25) {
-            // 0.15-0.25 seconds: SUDDEN STOP!
-            const friction = 0.85; // Heavy braking
-            particle.vx *= Math.pow(friction, dt);
-            particle.vy *= Math.pow(friction, dt);
-        } else {
-            // After stop: float gently
-            const friction = 0.99;
-            particle.vx *= Math.pow(friction, dt);
-            particle.vy *= Math.pow(friction, dt);
-            // Tiny random drift
-            particle.vx += (Math.random() - 0.5) * 0.01 * dt;
-            particle.vy += (Math.random() - 0.5) * 0.01 * dt;
-        }
-    } else {
-        // Normal burst behavior for other emotions
-        const friction = data.isSuspicion ? 0.99 : (data.isGlitch ? 0.97 : 0.95);
-        particle.vx *= Math.pow(friction, dt);
-        particle.vy *= Math.pow(friction, dt);
-    }
-    
-    // For suspicion, add a subtle scanning motion
-    if (data.isSuspicion) {
-        // Add a very subtle side-to-side drift
-        const time = Date.now() * 0.001;
-        particle.vx += Math.sin(time * 2 + particle.id) * 0.01 * dt;
-    }
-    
-    // For glitch, add wiggle effect
-    if (data.isGlitch) {
-        data.age += dt * 0.016; // Track age for glitch timing
-        
-        // Update glitch phase
-        data.glitchPhase += data.glitchFrequency * dt;
-        
-        // Add wiggle to velocity
-        const wiggleX = Math.sin(data.glitchPhase) * data.glitchIntensity * dt;
-        const wiggleY = Math.cos(data.glitchPhase * 1.3) * data.glitchIntensity * dt;
-        
-        particle.vx += wiggleX;
-        particle.vy += wiggleY;
-        
-        // Occasionally add random glitch bursts
-        if (Math.random() < 0.02) { // 2% chance per frame
-            const burstAngle = Math.random() * Math.PI * 2;
-            const burstSpeed = 0.5 + Math.random() * 0.5;
-            particle.vx += Math.cos(burstAngle) * burstSpeed;
-            particle.vy += Math.sin(burstAngle) * burstSpeed;
-        }
-    }
-}
-
-// Export behavior definition for registry
-var burst = {
-    name: 'burst',
-    emoji: '💥',
-    description: 'Explosive expansion from center',
-    initialize: initializeBurst,
-    update: updateBurst
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Aggressive Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Sharp, chaotic movement for angry emotional states
- * @author Emotive Engine Team
- * @module particles/behaviors/aggressive
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates an intense, volatile atmosphere with particles moving erratically.        
- * ║ Sharp jitters and sudden bursts of movement convey anger and frustration.         
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *      ⚡→    ←⚡
- *        ↘  ↙       ← erratic, sharp movements
- *    ⚡← ⭐ →⚡      ← orb center (shaking)
- *        ↗  ↖
- *      ⚡←    →⚡
- * 
- * USED BY EMOTIONS:
- * - anger (rage, fury)
- * - frustration
- * - irritation
- * 
- * RECIPE TO MODIFY:
- * - Increase jitter for more chaotic movement
- * - Increase acceleration for more violent bursts
- * - Decrease speedDecay for longer-lasting energy
- */
-
-
-/**
- * Initialize aggressive behavior for a particle
- * Sets up chaotic, sharp movement patterns
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeAggressive(particle) {
-    const angle = Math.random() * PHYSICS.TWO_PI;
-    const speed = 1.5 + Math.random() * 2;
-    particle.vx = Math.cos(angle) * speed;
-    particle.vy = Math.sin(angle) * speed;
-    particle.lifeDecay = 0.015;
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        acceleration: 0.05,
-        jitter: 0.3,
-        speedDecay: 0.95
-    };
-}
-
-/**
- * Update aggressive behavior each frame
- * Applies jitter and random acceleration bursts
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X (unused)
- * @param {number} centerY - Orb center Y (unused)
- */
-function updateAggressive(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-    
-    // Add jitter to movement
-    particle.vx += (Math.random() - 0.5) * data.jitter * dt;
-    particle.vy += (Math.random() - 0.5) * data.jitter * dt;
-    
-    // Apply speed decay (frame-independent)
-    particle.vx *= Math.pow(data.speedDecay, dt);
-    particle.vy *= Math.pow(data.speedDecay, dt);
-    
-    // Occasionally add burst of acceleration
-    // Scale probability with frame time
-    if (Math.random() < Math.min(0.05 * dt, 0.5)) {
-        const angle = Math.random() * PHYSICS.TWO_PI;
-        particle.vx += Math.cos(angle) * data.acceleration;
-        particle.vy += Math.sin(angle) * data.acceleration;
-    }
-}
-
-// Export behavior definition for registry
-var aggressive = {
-    name: 'aggressive',
-    emoji: '⚡',
-    description: 'Sharp, chaotic movement with violent bursts',
-    initialize: initializeAggressive,
-    update: updateAggressive
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Scattering Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Particles fleeing from center for fear states
- * @author Emotive Engine Team
- * @module particles/behaviors/scattering
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates an anxious atmosphere with particles frantically fleeing from the center. 
- * ║ Conveys fear, panic, and the desire to escape.                                    
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *    ← · · · →
- *    ↖       ↗       ← particles flee outward
- *  · · ⭐ · ·       ← orb center (source of fear)
- *    ↙       ↘
- *    ← · · · →
- * 
- * USED BY EMOTIONS:
- * - fear (panic, anxiety)
- * - startled
- * - nervous
- * 
- * RECIPE TO MODIFY:
- * - Increase fleeSpeed for more frantic escape
- * - Increase panicFactor for more erratic fleeing
- * - Add jitter for nervous shaking while fleeing
- */
-
-
-/**
- * Initialize scattering behavior for a particle
- * Sets up fleeing movement away from center
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeScattering(particle) {
-    // Will be set relative to center in update
-    particle.vx = 0;
-    particle.vy = 0;
-    particle.lifeDecay = 0.008;  // Live longer to spread further
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        fleeSpeed: 2.0,     // Much faster fleeing
-        panicFactor: 1.2,   // More panicked movement
-        initialized: false
-    };
-}
-
-/**
- * Update scattering behavior each frame
- * Particles flee away from center with panic
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (frame time)
- * @param {number} centerX - Orb center X position
- * @param {number} centerY - Orb center Y position
- */
-function updateScattering(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    
-    // Initialize flee direction if not done
-    if (!data.initialized) {
-        const dx = particle.x - centerX;
-        const dy = particle.y - centerY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance > 0) {
-            particle.vx = (dx / distance) * data.fleeSpeed;
-            particle.vy = (dy / distance) * data.fleeSpeed;
-        } else {
-            // If at center, pick random direction
-            const angle = Math.random() * PHYSICS.TWO_PI;
-            particle.vx = Math.cos(angle) * data.fleeSpeed;
-            particle.vy = Math.sin(angle) * data.fleeSpeed;
-        }
-        data.initialized = true;
-    }
-    
-    // Continue fleeing with panic factor
-    const dx = particle.x - centerX;
-    const dy = particle.y - centerY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance > 0) {
-        // Add acceleration away from center
-        particle.vx += (dx / distance) * data.panicFactor * 0.01 * dt;
-        particle.vy += (dy / distance) * data.panicFactor * 0.01 * dt;
-    }
-    
-    // Add nervous jitter
-    particle.vx += (Math.random() - 0.5) * 0.1 * dt;
-    particle.vy += (Math.random() - 0.5) * 0.1 * dt;
-    
-    // Apply friction
-    particle.vx *= Math.pow(0.98, dt);
-    particle.vy *= Math.pow(0.98, dt);
-}
-
-// Export behavior definition for registry
-var scattering = {
-    name: 'scattering',
-    emoji: '😨',
-    description: 'Particles flee from center in panic',
-    initialize: initializeScattering,
-    update: updateScattering
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Repelling Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Particles pushed away from center for aversion states
- * @author Emotive Engine Team
- * @module particles/behaviors/repelling
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a space of rejection with particles being pushed away from the center,    
- * ║ maintaining a minimum distance. Conveys disgust, rejection, and boundaries.       
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *    ← - - - →
- *    ↖       ↗       ← particles pushed away
- *  - - (  ) - -      ← empty zone around center
- *    ↙       ↘       ← minimum distance maintained
- *    ← - - - →
- * 
- * USED BY EMOTIONS:
- * - disgust (keeping things at bay)
- * - contempt
- * - aversion
- * 
- * RECIPE TO MODIFY:
- * - Increase repelStrength for stronger push
- * - Increase minDistance for larger empty zone
- * - Adjust damping for smoother/rougher motion
- */
-
-
-/**
- * Initialize repelling behavior for a particle
- * Sets up repulsion from center
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeRepelling(particle) {
-    particle.vx = 0;
-    particle.vy = 0;
-    particle.lifeDecay = 0.01; // Moderate life
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        repelStrength: 0.8,      // How strongly to push away
-        minDistance: 50,         // Minimum distance from center
-        initialized: false       // Track if initial repel has been applied
-    };
-}
-
-/**
- * Update repelling behavior - particles maintain distance from center
- * 
- * Used for: DISGUST emotion (keeping unpleasant things away)
- * Visual effect: Particles are pushed away from center and maintain a 
- *                minimum distance, creating an empty zone
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center (canvas center)
- * @param {number} centerY - Y coordinate of the orb's center (canvas center)
- */
-function updateRepelling(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    
-    // STEP 1: Calculate distance from center
-    // dx/dy = distance from center to particle (can be negative)
-    const dx = particle.x - centerX;
-    const dy = particle.y - centerY;
-    // dist = straight-line distance using Pythagorean theorem
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // STEP 2: Apply repelling force if too close to center
-    // This ensures particles maintain minimum distance
-    if (!data.initialized || distance < data.minDistance) {
-        if (distance > 0) {
-            // Calculate repel force (stronger when closer)
-            // Math.max(distance, 5) prevents division by very small numbers
-            const repelForce = data.repelStrength / Math.max(distance, 5);
-            
-            // Apply force in direction away from center
-            // dx/distance = unit vector component pointing away
-            // Multiply by dt for frame-rate independence
-            particle.vx += (dx / distance) * repelForce * dt;
-            particle.vy += (dy / distance) * repelForce * dt;
-        }
-        data.initialized = true;
-    }
-    
-    // STEP 3: Apply gentle damping to smooth motion
-    // This prevents infinite acceleration and creates natural deceleration
-    // Math.pow ensures frame-rate independence
-    particle.vx *= Math.pow(0.99, dt);
-    particle.vy *= Math.pow(0.99, dt);
-}
-
-// Export behavior definition for registry
-var repelling = {
-    name: 'repelling',
-    emoji: '🚫',
-    description: 'Particles pushed away from center, maintaining distance',
-    initialize: initializeRepelling,
-    update: updateRepelling
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Connecting Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Chaotic particles drawn to center for social connection states
- * @author Emotive Engine Team
- * @module particles/behaviors/connecting
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates an energetic social atmosphere with particles moving chaotically but       
- * ║ staying connected to the center. Like a lively party or bustling community.       
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *    ↗↘ ↖↙ ↗↘
- *   ↙ ↗ ↘ ↖ ↙       ← chaotic but connected
- *  ↘ ↖ ⭐ ↗ ↙       ← drawn to center
- *   ↗ ↙ ↖ ↘ ↗       ← higher energy than ambient
- *    ↙↖ ↗↘ ↙↖
- * 
- * USED BY EMOTIONS:
- * - curiosity (social exploration)
- * - playfulness
- * - engagement
- * 
- * RECIPE TO MODIFY:
- * - Increase attractionForce for stronger pull to center
- * - Increase chaosFactor for more erratic movement
- * - Decrease friction for more energetic motion
- */
-
-
-/**
- * Initialize connecting behavior for a particle
- * Sets up chaotic but connected movement
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeConnecting(particle) {
-    // Original Emotive connecting: speed 2-7, higher chaos
-    const angle = Math.random() * PHYSICS.TWO_PI;
-    const speed = 2 + Math.random() * 5; // Faster than ambient
-    particle.vx = Math.cos(angle) * speed;
-    particle.vy = Math.sin(angle) * speed;
-    particle.lifeDecay = 0.012; // Shorter life for more dynamic feel
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        // Higher attraction and chaos for connecting state
-        attractionForce: 0.008,  // Stronger pull (original)
-        chaosFactor: 1.0,        // Higher chaos (original)
-        friction: 0.95          // Less friction than ambient
-    };
-}
-
-/**
- * Update connecting behavior - chaotic movement with center attraction
- * 
- * Used for: CURIOSITY/SOCIAL emotions (engaged, exploring, connecting)
- * Visual effect: Particles move chaotically but are drawn back to center,
- *                creating a bustling, connected atmosphere
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center (canvas center)
- * @param {number} centerY - Y coordinate of the orb's center (canvas center)
- */
-function updateConnecting(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    
-    // STEP 1: Apply friction to slow particles gradually
-    // This prevents infinite acceleration
-    // Math.pow ensures frame-rate independence
-    particle.vx *= Math.pow(data.friction, dt);
-    particle.vy *= Math.pow(data.friction, dt);
-    
-    // STEP 2: Apply attraction force towards center
-    // (centerX - this.x) gives direction vector to center
-    // Multiplied by attractionForce to control strength
-    const attractX = (centerX - particle.x) * data.attractionForce;
-    const attractY = (centerY - particle.y) * data.attractionForce;
-    
-    // STEP 3: Add chaos for erratic movement
-    // (Math.random() - 0.5) gives random value between -0.5 and 0.5
-    // Multiplied by chaosFactor for intensity
-    const chaosX = (Math.random() - 0.5) * data.chaosFactor;
-    const chaosY = (Math.random() - 0.5) * data.chaosFactor;
-    
-    // STEP 4: Combine forces
-    // Attraction keeps particles connected to center
-    // Chaos makes movement unpredictable and lively
-    particle.vx += attractX + chaosX;
-    particle.vy += attractY + chaosY;
-}
-
-// Export behavior definition for registry
-var connecting = {
-    name: 'connecting',
-    emoji: '🔗',
-    description: 'Chaotic movement with center attraction for social states',
-    initialize: initializeConnecting,
-    update: updateConnecting
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Resting Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Ultra-slow movement for deeply relaxed states
- * @author Emotive Engine Team
- * @module particles/behaviors/resting
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates an atmosphere of deep calm and rest. Particles barely move, creating      
- * ║ a meditative, peaceful environment. Like watching dust motes in sunlight.         
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *        ·
- *       · ·         ← barely moving
- *      · · ·        ← vertical drift only
- *     · ⭐ ·        ← no horizontal motion
- *      · · ·        
- *       · ·         
- *        ·
- * 
- * USED BY EMOTIONS:
- * - sleepy (deep rest)
- * - meditative
- * - tranquil
- * 
- * RECIPE TO MODIFY:
- * - Decrease upwardSpeed for even slower movement
- * - Increase lifeDecay for shorter-lived particles
- * - Add tiny horizontal drift for slight variation
- */
-
-
-/**
- * Initialize resting behavior for a particle
- * Sets up minimal movement
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeResting(particle) {
-    particle.vx = 0;  // NO horizontal movement
-    particle.vy = -0.01;  // Tiniest upward drift
-    particle.lifeDecay = 0.001;  // Very slow fade - particles last 10+ seconds
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        upwardSpeed: 0.00002,  // Barely perceptible upward drift
-        friction: 0.999       // Almost no friction (preserve any motion)
-    };
-}
-
-/**
- * Update resting behavior - ultra-slow vertical drift
- * 
- * Used for: SLEEPY/MEDITATIVE emotions (deep rest, tranquility)
- * Visual effect: Particles drift upward so slowly they appear almost still,
- *                creating a deeply peaceful atmosphere
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center (unused)
- * @param {number} centerY - Y coordinate of the orb's center (unused)
- */
-function updateResting(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-    
-    // STEP 1: Apply friction to vertical velocity only
-    // This creates a very gentle deceleration
-    // Math.pow ensures frame-rate independence
-    particle.vy *= Math.pow(data.friction, dt);
-    
-    // STEP 2: Add tiny continuous upward drift
-    // Negative value because canvas Y increases downward
-    // Multiplied by dt for frame-rate independence
-    particle.vy -= data.upwardSpeed * dt;
-    
-    // STEP 3: Enforce NO horizontal movement
-    // This creates the characteristic vertical-only drift
-    // Essential for the peaceful, non-chaotic feel
-    particle.vx = 0;
-}
-
-// Export behavior definition for registry
-var resting = {
-    name: 'resting',
-    emoji: '😴',
-    description: 'Ultra-slow vertical drift for deep rest states',
-    initialize: initializeResting,
-    update: updateResting
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Radiant Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Particles radiating outward like sun rays for euphoric states
- * @author Emotive Engine Team
- * @module particles/behaviors/radiant
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a euphoric atmosphere with particles bursting outward like sunbeams,      
- * ║ with shimmering and twinkling effects. Perfect for moments of pure joy and hope.  
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *        ☀️
- *    ✨  ↗  ✨       ← particles radiate outward
- *  ✨ ↖ ⭐ ↗ ✨     ← orb center (like the sun)
- *    ✨  ↘  ✨       ← with shimmer effect
- *        ☀️
- * 
- * USED BY EMOTIONS:
- * - euphoria (first day of spring, sunrise vibes)
- * - elation
- * - triumph
- * 
- * RECIPE TO MODIFY:
- * - Increase radialSpeed for faster radiation
- * - Increase shimmerSpeed for faster twinkling
- * - Adjust friction for longer/shorter rays
- */
-
-
-/**
- * Initialize radiant behavior for a particle
- * Sets up sunburst radiation pattern
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeRadiant(particle) {
-    // Particles burst outward from center like sunbeams
-    const angle = Math.random() * PHYSICS.TWO_PI;
-    const speed = 0.8 + Math.random() * 0.4; // Moderate to fast speed
-    particle.vx = Math.cos(angle) * speed;
-    particle.vy = Math.sin(angle) * speed;
-    particle.lifeDecay = 0.006; // Moderate life - last ~8-10 seconds
-    
-    // Use emotion colors if provided, otherwise default sunrise colors
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    } else {
-        // Default golden sunrise colors
-        const colors = ['#FFD700', '#FFB347', '#FFA500', '#FF69B4'];
-        particle.color = selectWeightedColor(colors);
-    }
-    
-    // More particles have glow for radiant effect
-    particle.hasGlow = Math.random() < 0.7; // 70% chance of glow
-    particle.glowSizeMultiplier = particle.hasGlow ? (1.5 + Math.random() * 0.5) : 0;
-    
-    particle.behaviorData = {
-        // Continuous outward radiation
-        radialSpeed: 0.02,        // Constant outward acceleration
-        shimmer: Math.random() * PHYSICS.TWO_PI, // Initial shimmer phase
-        shimmerSpeed: 0.1,        // Shimmer oscillation speed
-        friction: 0.99            // Very light friction for long rays
-    };
-}
-
-/**
- * Update radiant behavior - particles radiate outward like sun rays
- * 
- * Used for: EUPHORIA emotion (first day of spring, sunrise vibes)
- * Visual effect: Particles burst outward from center like sunbeams, with a 
- *                shimmering/twinkling effect as they travel
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center (canvas center)
- * @param {number} centerY - Y coordinate of the orb's center (canvas center)
- */
-function updateRadiant(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    
-    // STEP 1: Calculate this particle's direction from the orb center
-    // dx/dy = distance from center to particle (can be negative)
-    const dx = particle.x - centerX;
-    const dy = particle.y - centerY;
-    // dist = straight-line distance using Pythagorean theorem
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    
-    // STEP 2: Push particle outward from center (like sun rays)
-    if (dist > 0) {
-        // Convert dx/dy into a unit vector (length = 1) pointing away from center
-        // This gives us pure direction without magnitude
-        const dirX = dx / dist;
-        const dirY = dy / dist;
-        
-        // Add velocity in the outward direction
-        // radialSpeed controls how fast particles shoot outward
-        // Multiply by dt to make movement frame-rate independent
-        particle.vx += dirX * data.radialSpeed * dt;
-        particle.vy += dirY * data.radialSpeed * dt;
-    }
-    
-    // STEP 3: Create shimmering effect (particles twinkle as they radiate)
-    // Increment shimmer phase over time (shimmerSpeed controls twinkle rate)
-    data.shimmer += data.shimmerSpeed * dt;
-    // Create sine wave oscillation (-1 to 1)
-    const shimmerEffect = Math.sin(data.shimmer);
-    // Make particle size pulse: baseSize ± 20%
-    particle.size = particle.baseSize * (1 + shimmerEffect * 0.2);
-    // Make particle opacity pulse: baseOpacity ± 30%
-    particle.opacity = particle.baseOpacity * (1 + shimmerEffect * 0.3);
-    
-    // STEP 4: Apply friction to slow particles over time
-    // This prevents infinite acceleration and creates natural deceleration
-    particle.vx *= Math.pow(data.friction, dt);
-    particle.vy *= Math.pow(data.friction, dt);
-}
-
-// Export behavior definition for registry
-var radiant = {
-    name: 'radiant',
-    emoji: '☀️',
-    description: 'Particles radiate outward like sunbeams',
-    initialize: initializeRadiant,
-    update: updateRadiant
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Ascending Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Slow, steady upward float for zen and meditative states
- * @author Emotive Engine Team
- * @module particles/behaviors/ascending
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a zen atmosphere with particles rising like incense smoke. Slow, steady,  
- * ║ and ethereal movement that gradually fades as particles ascend.                   
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *        ↑
- *       ~~~        ← gentle wave motion
- *        ↑
- *       ~~~        ← like incense smoke
- *        ↑
- *      ⭐⭐⭐      ← orb center
- *        
- * 
- * USED BY EMOTIONS:
- * - zen (deep meditation)
- * - contemplative
- * - spiritual
- * 
- * RECIPE TO MODIFY:
- * - Decrease ascensionSpeed for slower rise
- * - Increase waveFactor for more horizontal drift
- * - Adjust fadeStartDistance to control when fade begins
- */
-
-
-/**
- * Initialize ascending behavior for a particle
- * Sets up slow, steady upward movement
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeAscending(particle) {
-    // Very slow, steady upward movement
-    particle.vx = (Math.random() - 0.5) * 0.02;  // Minimal horizontal drift
-    particle.vy = -0.03 - Math.random() * 0.02;  // Slow upward movement (0.03-0.05)
-    particle.lifeDecay = 0.0008;  // Very long-lived particles (30+ seconds)
-    
-    // Larger, more ethereal particles for zen
-    particle.size = (6 + Math.random() * 6) * 
-        (particle.scaleFactor || 1) * 
-        (particle.particleSizeMultiplier || 1) * 
-        1.33;  // 1.33x larger for zen (reduced from 2x)
-    particle.baseSize = particle.size;
-    particle.baseOpacity = 0.2 + Math.random() * 0.2;  // Very translucent (20-40%)
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        // Continuous gentle upward drift
-        ascensionSpeed: 0.0003,      // Very gentle continuous upward
-        waveFactor: 0.5,             // Subtle horizontal wave motion
-        waveFrequency: 0.001,        // Very slow wave oscillation
-        friction: 0.998,             // Almost no slowdown
-        fadeStartDistance: 100       // Start fading after rising 100px
-    };
-}
-
-/**
- * Update ascending behavior - slow upward float like incense
- * 
- * Used for: ZEN/CONTEMPLATIVE emotions (meditation, spirituality)
- * Visual effect: Particles rise slowly and steadily with subtle wave motion,
- *                gradually fading as they ascend like incense smoke
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center (unused)
- * @param {number} centerY - Y coordinate of the orb's center (unused)
- */
-function updateAscending(particle, dt, _centerX, _centerY) {
-    const data = particle.behaviorData;
-    
-    // Validate data exists
-    if (!data) {
-        initializeAscending(particle);
-        return;
-    }
-    
-    // STEP 1: Apply friction to velocities
-    // Very light friction to maintain smooth motion
-    // Math.pow ensures frame-rate independence
-    particle.vx *= Math.pow(data.friction, dt);
-    particle.vy *= Math.pow(data.friction, dt);
-    
-    // STEP 2: Add continuous upward ascension
-    // Negative because canvas Y increases downward
-    // Multiplied by dt for frame-rate independence
-    particle.vy -= data.ascensionSpeed * dt;
-    
-    // STEP 3: Add subtle wave motion for organic feel
-    // Creates the characteristic incense smoke waviness
-    // Age gives us time-based oscillation
-    const waveOffset = Math.sin(particle.age * data.waveFrequency * 1000) * data.waveFactor;
-    particle.vx += waveOffset * 0.001 * dt;
-    
-    // STEP 4: Track initial Y position for fade calculation
-    if (particle.initialY === undefined) {
-        particle.initialY = particle.y;
-    }
-    
-    // STEP 5: Calculate distance traveled upward
-    const distanceTraveled = particle.initialY - particle.y;
-    
-    // STEP 6: Start fading after traveling fadeStartDistance pixels
-    // This creates the incense smoke dissipation effect
-    if (distanceTraveled > data.fadeStartDistance) {
-        const fadeProgress = (distanceTraveled - data.fadeStartDistance) / 100;
-        const fadeFactor = Math.max(0, 1 - fadeProgress);
-        particle.baseOpacity *= 0.995;  // Gradual fade
-        
-        // Accelerate life decay as particle fades
-        if (fadeFactor < 0.5) {
-            particle.lifeDecay *= 1.02;
-        }
-    }
-    
-    // STEP 7: Dampen excessive horizontal movement
-    // Keeps the ascension primarily vertical
-    if (Math.abs(particle.vx) > 0.05) {
-        particle.vx *= Math.pow(0.95, dt);
-    }
-    
-    // STEP 8: Cap upward velocity for consistency
-    // Prevents particles from accelerating too much
-    if (particle.vy < -0.1) {
-        particle.vy = -0.1;
-    }
-}
-
-// Export behavior definition for registry
-var ascending = {
-    name: 'ascending',
-    emoji: '🧘',
-    description: 'Slow steady upward float like incense smoke',
-    initialize: initializeAscending,
-    update: updateAscending
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Erratic Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Nervous, jittery movement for anxious states
- * @author Emotive Engine Team
- * @module particles/behaviors/erratic
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a nervous, unstable atmosphere with particles jittering and changing       
- * ║ direction unpredictably. Conveys anxiety, nervousness, and instability.           
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *    ↗↙↖  ↘↗
- *   ↙ ↗↘  ↖↙       ← unpredictable changes
- *  ↘↖ ⭐ ↗↙        ← jittery movement
- *   ↗ ↙↖  ↘↗       ← nervous energy
- *    ↙↗↘  ↖↙
- * 
- * USED BY EMOTIONS:
- * - nervous (anxiety, jitters)
- * - unstable
- * - agitated
- * 
- * RECIPE TO MODIFY:
- * - Increase jitterStrength for more shaking
- * - Increase directionChangeRate for more frequent changes
- * - Increase speedVariation for more erratic speed changes
- */
-
-
-/**
- * Initialize erratic behavior for a particle
- * Sets up nervous, jittery movement
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeErratic(particle) {
-    // Random, chaotic initial direction
-    const angle = Math.random() * PHYSICS.TWO_PI;
-    const speed = 0.1 + Math.random() * 0.15;
-    particle.vx = Math.cos(angle) * speed;
-    particle.vy = Math.sin(angle) * speed;
-    particle.lifeDecay = 0.004;  // Shorter lived due to nervous energy
-    
-    particle.size = (2 + Math.random() * 4) * 
-        (particle.scaleFactor || 1) * 
-        (particle.particleSizeMultiplier || 1);  // Varied sizes scaled
-    particle.baseSize = particle.size;
-    particle.baseOpacity = 0.4 + Math.random() * 0.3;  // More visible
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        jitterStrength: 0.02,        // Random direction changes
-        directionChangeRate: 0.1,    // How often to change direction
-        speedVariation: 0.3,         // Speed changes randomly
-        spinRate: 0.05 + Math.random() * 0.1  // Particles spin
-    };
-}
-
-/**
- * Update erratic behavior - nervous, jittery movement
- * 
- * Used for: NERVOUS/ANXIOUS emotions (anxiety, instability, agitation)
- * Visual effect: Particles jitter nervously, changing direction and speed
- *                unpredictably, creating an unstable atmosphere
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center (unused)
- * @param {number} centerY - Y coordinate of the orb's center (unused)
- */
-function updateErratic(particle, dt) {
-    const data = particle.behaviorData;
-    
-    // STEP 1: Add constant jitter to movement
-    // Creates the nervous shaking effect
-    // (Math.random() - 0.5) gives values between -0.5 and 0.5
-    // Multiplied by jitterStrength and dt for controlled chaos
-    particle.vx += (Math.random() - 0.5) * data.jitterStrength * dt;
-    particle.vy += (Math.random() - 0.5) * data.jitterStrength * dt;
-    
-    // STEP 2: Randomly change direction occasionally
-    // Creates unpredictable movement patterns
-    // Math.min ensures probability doesn't exceed reasonable bounds
-    if (Math.random() < Math.min(data.directionChangeRate * dt, 0.5)) {
-        // Pick new random direction
-        const newAngle = Math.random() * PHYSICS.TWO_PI;
-        const currentSpeed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
-        
-        // Apply new direction while maintaining similar speed
-        particle.vx = Math.cos(newAngle) * currentSpeed;
-        particle.vy = Math.sin(newAngle) * currentSpeed;
-    }
-    
-    // STEP 3: Vary the speed randomly
-    // Creates erratic acceleration/deceleration
-    const speedMultiplier = 1 + (Math.random() - 0.5) * data.speedVariation * dt;
-    particle.vx *= speedMultiplier;
-    particle.vy *= speedMultiplier;
-    
-    // STEP 4: Apply spin to particle size
-    // Makes particles appear to rotate/vibrate
-    const spinPhase = particle.age * data.spinRate * 1000;
-    particle.size = particle.baseSize * (1 + Math.sin(spinPhase) * 0.2);
-    
-    // STEP 5: Fluctuate opacity nervously
-    // Creates a flickering effect
-    particle.opacity = particle.baseOpacity * (0.8 + Math.random() * 0.4);
-    
-    // STEP 6: Apply damping to prevent infinite acceleration
-    // Keeps movement bounded
-    particle.vx *= Math.pow(0.98, dt);
-    particle.vy *= Math.pow(0.98, dt);
-    
-    // STEP 7: Cap maximum velocity
-    // Prevents particles from moving too fast
-    const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
-    if (speed > 0.5) {
-        particle.vx = (particle.vx / speed) * 0.5;
-        particle.vy = (particle.vy / speed) * 0.5;
-    }
-}
-
-// Export behavior definition for registry
-var erratic = {
-    name: 'erratic',
-    emoji: '😰',
-    description: 'Nervous jittery movement for anxious states',
-    initialize: initializeErratic,
-    update: updateErratic
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Cautious Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Slow, careful movement with pauses for suspicious states
- * @author Emotive Engine Team
- * @module particles/behaviors/cautious
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a watchful, suspicious atmosphere with particles moving slowly and         
- * ║ pausing frequently, as if carefully observing. Like being on guard.               
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- *
- * VISUAL DIAGRAM:
- *    · → · STOP
- *   STOP ← ·        ← move, then pause
- *    · ⭐ ·         ← watching center
- *   · STOP →        ← pause, then move
- *    STOP · ← ·
- * 
- * USED BY EMOTIONS:
- * - suspicion (watchful, guarded)
- * - uncertainty
- * - wariness
- * 
- * RECIPE TO MODIFY:
- * - Increase pauseDuration for longer stops
- * - Decrease moveDuration for shorter movements
- * - Adjust watchRadius to control patrol area
- */
-
-
-/**
- * Initialize cautious behavior for a particle
- * Sets up slow, deliberate movement patterns
- * 
- * @param {Particle} particle - The particle to initialize
- */
-function initializeCautious(particle) {
-    // Particles move very slowly and deliberately
-    const angle = Math.random() * PHYSICS.TWO_PI;
-    const speed = 0.02 + Math.random() * 0.03; // Very slow: 0.02-0.05 units/frame
-    particle.vx = Math.cos(angle) * speed;
-    particle.vy = Math.sin(angle) * speed;
-    particle.lifeDecay = 0.001;  // Very long-lived for visibility
-    particle.life = 1.0;  // Ensure full life
-    
-    particle.size = (4 + Math.random() * 4) * 
-        (particle.scaleFactor || 1) * 
-        (particle.particleSizeMultiplier || 1);
-    particle.baseSize = particle.size;
-    particle.baseOpacity = 0.8 + Math.random() * 0.2;  // Very visible (80-100%)
-    particle.opacity = particle.baseOpacity;
-    
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-    
-    particle.behaviorData = {
-        pauseTimer: Math.random() * 2,      // Start with random pause offset
-        pauseDuration: 0.5 + Math.random() * 0.5,  // Pause for 0.5-1s
-        moveDuration: 1 + Math.random() * 0.5,     // Move for 1-1.5s
-        isMoving: Math.random() > 0.5,             // Randomly start moving or paused
-        moveTimer: 0,
-        originalVx: particle.vx,
-        originalVy: particle.vy,
-        watchRadius: 50 + Math.random() * 30       // Stay within 50-80 units of core
-    };
-}
-
-/**
- * Update cautious behavior - slow movement with frequent pauses
- * 
- * Used for: SUSPICION/UNCERTAINTY emotions (watchful, guarded, wary)
- * Visual effect: Particles move slowly and deliberately, pausing frequently
- *                as if carefully observing their surroundings
- * 
- * @param {Particle} particle - The particle to update
- * @param {number} dt - Delta time (milliseconds since last frame, typically ~16.67 for 60fps)
- * @param {number} centerX - X coordinate of the orb's center
- * @param {number} centerY - Y coordinate of the orb's center
- */
-function updateCautious(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    
-    // STEP 1: Update movement timer
-    // Tracks how long we've been in current state (moving or paused)
-    data.moveTimer += dt;
-    
-    // STEP 2: Switch between moving and pausing states
-    if (data.isMoving) {
-        // Currently moving - check if time to pause
-        if (data.moveTimer > data.moveDuration) {
-            data.isMoving = false;
-            data.moveTimer = 0;
-            // Stop movement during pause (watchful stillness)
-            particle.vx = 0;
-            particle.vy = 0;
-        } else {
-            // Continue moving at cautious speed
-            particle.vx = data.originalVx;
-            particle.vy = data.originalVy;
-        }
-    } else {
-        // Currently paused - check if time to move
-        if (data.moveTimer > data.pauseDuration) {
-            data.isMoving = true;
-            data.moveTimer = 0;
-            // Pick a new careful direction
-            const angle = Math.random() * PHYSICS.TWO_PI;
-            const speed = 0.02 + Math.random() * 0.03;
-            particle.vx = Math.cos(angle) * speed;
-            particle.vy = Math.sin(angle) * speed;
-            // Store for next movement phase
-            data.originalVx = particle.vx;
-            data.originalVy = particle.vy;
-        }
-    }
-    
-    // STEP 3: Keep particles within watch radius of core
-    // They're suspicious, so they don't stray too far
-    const dx = particle.x - centerX;
-    const dy = particle.y - centerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    
-    if (dist > data.watchRadius) {
-        // Pull back towards core slowly (maintaining caution)
-        const pullStrength = 0.02;
-        particle.vx -= (dx / dist) * pullStrength * dt;
-        particle.vy -= (dy / dist) * pullStrength * dt;
-    }
-    
-    // STEP 4: Apply very light damping
-    // Keeps movement controlled and deliberate
-    particle.vx *= Math.pow(0.995, dt);
-    particle.vy *= Math.pow(0.995, dt);
-    
-    // STEP 5: Subtle opacity flicker during pauses
-    // Creates a watchful "blinking" effect
-    if (!data.isMoving) {
-        particle.opacity = particle.baseOpacity * (0.9 + Math.sin(particle.age * 5) * 0.1);
-    } else {
-        particle.opacity = particle.baseOpacity;
-    }
-}
-
-// Export behavior definition for registry
-var cautious = {
-    name: 'cautious',
-    emoji: '🤨',
-    description: 'Slow careful movement with watchful pauses',
-    initialize: initializeCautious,
-    update: updateCautious
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Surveillance Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Searchlight scanning behavior for suspicious/paranoid states
- * @author Emotive Engine Team
- * @module particles/behaviors/surveillance
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║ CONCEPT                                                                           
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Particles act like searchlights or surveillance cameras, slowly scanning back     
- * ║ and forth in arcs, pausing at edges, occasionally darting to new positions.       
- * ║ Creates a paranoid, watchful atmosphere with deliberate, searching movements.     
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- * 
- * BEHAVIOR PATTERN:
- * • Slow horizontal scanning arcs (like searchlights)
- * • Pause at scan extremes (checking corners)
- * • Occasional quick darts to new positions (alert response)
- * • Some particles patrol perimeter (edge surveillance)
- * • Random freezing in place (listening/watching)
- * 
- * ┌──────────────────────────────────────────────────────────────────────────────────┐
- * │  VISUAL: Searchlight Scanning                                                    │
- * │                                                                                   │
- * │     ←─────────────→  (slow scan)                                                │
- * │    •               •                                                             │
- * │                                                                                   │
- * │   pause...     ...pause                                                         │
- * │                                                                                   │
- * │     DART! ──→ • (quick repositioning)                                          │
- * └──────────────────────────────────────────────────────────────────────────────────┘
- */
-
-
-var surveillance = {
-    name: 'surveillance',
-    emoji: '👁️',
-    description: 'Searchlight scanning with paranoid watchfulness',
-    
-    /**
-     * Initialize particle state for surveillance behavior
-     */
-    initialize(particle, _config) {
-        // Set particle color from emotion palette
-        if (particle.emotionColors && particle.emotionColors.length > 0) {
-            particle.color = selectWeightedColor(particle.emotionColors);
-        }
-        
-        particle.behaviorState = {
-            // Scanning properties
-            scanAngle: Math.random() * Math.PI - Math.PI/2,  // Current scan angle
-            scanDirection: Math.random() < 0.5 ? 1 : -1,      // Scan direction
-            scanSpeed: 0.3 + Math.random() * 0.2,             // Individual scan rate
-            scanRange: Math.PI/3 + Math.random() * Math.PI/4, // Scan arc size
-            scanCenter: Math.random() * Math.PI * 2,          // Center of scan arc
-            pauseTimer: 0,                                     // Pause at edges
-            pauseDuration: 500 + Math.random() * 500,         // How long to pause
-            
-            // Movement states
-            mode: 'scanning',  // 'scanning', 'darting', 'frozen', 'patrolling'
-            modeTimer: 0,
-            nextModeChange: 2000 + Math.random() * 3000,
-            
-            // Dart properties
-            dartTarget: { x: 0, y: 0 },
-            dartSpeed: 0,
-            
-            // Patrol properties
-            patrolRadius: 150 + Math.random() * 100,
-            patrolAngle: Math.random() * Math.PI * 2,
-            
-            // Threat response
-            alertLevel: 0,
-            lastPosition: { x: particle.x, y: particle.y }
-        };
-        
-        // Assign roles: 70% scanners, 20% patrollers, 10% watchers
-        const role = Math.random();
-        if (role < 0.7) {
-            particle.behaviorState.primaryRole = 'scanner';
-        } else if (role < 0.9) {
-            particle.behaviorState.primaryRole = 'patroller';
-            particle.behaviorState.mode = 'patrolling';
-        } else {
-            particle.behaviorState.primaryRole = 'watcher';
-            particle.behaviorState.mode = 'frozen';
-        }
-    },
-    
-    /**
-     * Update particle physics for surveillance behavior
-     */
-    update(particle, dt, config) {
-        const state = particle.behaviorState;
-        if (!state) return;
-        
-        // Update mode timer
-        state.modeTimer += dt * 16;
-        
-        // Check for mode changes
-        if (state.modeTimer > state.nextModeChange) {
-            this.changeMode(particle, state, config);
-            state.modeTimer = 0;
-            state.nextModeChange = 2000 + Math.random() * 4000;
-        }
-        
-        // Update based on current mode
-        switch(state.mode) {
-        case 'scanning':
-            this.updateScanning(particle, dt, state, config);
-            break;
-        case 'darting':
-            this.updateDarting(particle, dt, state, config);
-            break;
-        case 'frozen':
-            this.updateFrozen(particle, dt, state, config);
-            break;
-        case 'patrolling':
-            this.updatePatrolling(particle, dt, state, config);
-            break;
-        }
-        
-        // Apply slight downward drift for weight
-        particle.vy += 0.05 * dt;
-        
-        // Update position
-        particle.x += particle.vx * dt;
-        particle.y += particle.vy * dt;
-        
-        // Store last position
-        state.lastPosition.x = particle.x;
-        state.lastPosition.y = particle.y;
-    },
-    
-    /**
-     * Scanning mode - slow searchlight sweeps
-     */
-    updateScanning(particle, dt, state, _config) {
-        // Update scan angle
-        if (state.pauseTimer > 0) {
-            // Pausing at edge of scan
-            state.pauseTimer -= dt * 16;
-            particle.vx *= 0.9;  // Slow down during pause
-            particle.vy *= 0.9;
-        } else {
-            // Active scanning
-            state.scanAngle += state.scanDirection * state.scanSpeed * dt * 0.02;
-            
-            // Check scan limits and pause at edges
-            if (Math.abs(state.scanAngle) > state.scanRange / 2) {
-                state.scanDirection *= -1;
-                state.pauseTimer = state.pauseDuration;
-                state.scanAngle = Math.sign(state.scanAngle) * state.scanRange / 2;
-            }
-        }
-        
-        // Apply scanning motion
-        const actualAngle = state.scanCenter + state.scanAngle;
-        const speed = 0.8 + state.alertLevel * 0.5;
-        particle.vx = Math.cos(actualAngle) * speed;
-        particle.vy = Math.sin(actualAngle) * speed * 0.3;  // Less vertical movement
-    },
-    
-    /**
-     * Darting mode - quick repositioning
-     */
-    updateDarting(particle, dt, state, _config) {
-        const dx = state.dartTarget.x - particle.x;
-        const dy = state.dartTarget.y - particle.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance > 5) {
-            // Move toward dart target quickly
-            particle.vx = (dx / distance) * state.dartSpeed;
-            particle.vy = (dy / distance) * state.dartSpeed;
-        } else {
-            // Reached target, switch back to scanning
-            state.mode = 'scanning';
-            state.modeTimer = 0;
-        }
-    },
-    
-    /**
-     * Frozen mode - watchful stillness
-     */
-    updateFrozen(particle, _dt, _state, _config) {
-        // Almost no movement, just tiny vibrations
-        particle.vx *= 0.95;
-        particle.vy *= 0.95;
-        
-        // Occasional tiny twitch
-        if (Math.random() < 0.01) {
-            particle.vx += (Math.random() - 0.5) * 0.5;
-            particle.vy += (Math.random() - 0.5) * 0.5;
-        }
-    },
-    
-    /**
-     * Patrolling mode - edge surveillance
-     */
-    updatePatrolling(particle, dt, state, config) {
-        // Patrol in a circle around the edge
-        state.patrolAngle += 0.01 * dt;
-
-        // Calculate target position relative to core center
-        const coreX = config.corePosition?.x ?? config.canvasWidth / 2;
-        const coreY = config.corePosition?.y ?? config.canvasHeight / 2;
-
-        const targetX = coreX + Math.cos(state.patrolAngle) * state.patrolRadius;
-        const targetY = coreY + Math.sin(state.patrolAngle) * state.patrolRadius;
-
-        // Move toward patrol position
-        const dx = targetX - particle.x;
-        const dy = targetY - particle.y;
-
-        particle.vx = dx * 0.02;
-        particle.vy = dy * 0.02;
-    },
-    
-    /**
-     * Change behavior mode
-     */
-    changeMode(particle, state, config) {
-        const rand = Math.random();
-
-        // Get core position for relative positioning
-        const coreX = config?.corePosition?.x ?? (config?.canvasWidth / 2 || particle.x);
-        const coreY = config?.corePosition?.y ?? (config?.canvasHeight / 2 || particle.y);
-
-        // Mode transition probabilities based on role
-        if (state.primaryRole === 'scanner') {
-            if (rand < 0.1) {
-                // Dart to new position (relative to core)
-                state.mode = 'darting';
-                state.dartTarget = {
-                    x: coreX + (Math.random() - 0.5) * 200,
-                    y: coreY + (Math.random() - 0.5) * 200
-                };
-                state.dartSpeed = 3 + Math.random() * 2;
-            } else if (rand < 0.2) {
-                // Freeze and watch
-                state.mode = 'frozen';
-            } else {
-                // Continue scanning
-                state.mode = 'scanning';
-            }
-        } else if (state.primaryRole === 'patroller') {
-            if (rand < 0.1) {
-                state.mode = 'frozen';
-            } else {
-                state.mode = 'patrolling';
-            }
-        } else {
-            // Watcher role
-            if (rand < 0.3) {
-                state.mode = 'scanning';
-            } else {
-                state.mode = 'frozen';
-            }
-        }
-    }
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Glitchy Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Digital glitch behavior with stuttering orbits and corruption
- * @author Emotive Engine Team
- * @module particles/behaviors/glitchy
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║ CONCEPT                                                                           
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Particles orbit like in love state but with digital glitches, stutters, and      
- * ║ corruption artifacts. Creates a captivating dubstep-like visual rhythm.           
- * ║ Combines smooth orbiting with sudden position jumps and digital artifacts.        
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- * 
- * BEHAVIOR PATTERN:
- * • Base orbiting motion (like love state)
- * • Random position jumps (teleportation glitches)
- * • Stuttering/freezing (frame drops)
- * • Trail duplication (ghosting artifacts)
- * • RGB channel separation
- * • Digital noise bursts
- * 
- * ┌──────────────────────────────────────────────────────────────────────────────────┐
- * │  VISUAL: Glitched Orbiting                                                       │
- * │                                                                                   │
- * │       ░░▒▒▓▓█  ←─ Digital trail                                                 │
- * │     •  ┊  •                                                                      │
- * │   •┊  ⚡  ┊•  ←─ Glitch jump                                                    │
- * │     •  ┊  •                                                                      │
- * │       ░░▒▒▓▓█                                                                    │
- * └──────────────────────────────────────────────────────────────────────────────────┘
- */
-
-
-var glitchy = {
-    name: 'glitchy',
-    emoji: '⚡',
-    description: 'Digital glitch with stuttering orbits and corruption',
-    
-    // Rhythm configuration for glitchy behavior
-    rhythm: {
-        enabled: true,
-        
-        // Glitch events sync to rhythm
-        glitchTiming: {
-            mode: 'subdivision',     // Glitch on subdivisions
-            subdivision: 'sixteenth', // 16th notes for rapid glitches
-            probability: 0.3,        // 30% chance on each 16th
-            intensityOnBeat: 2.0,    // Stronger glitches on beat
-            intensityOffBeat: 0.5    // Weaker between beats
-        },
-        
-        // Stutter/freeze timing
-        stutterSync: {
-            mode: 'pattern',         // Based on rhythm pattern
-            patterns: {
-                'dubstep': {
-                    freezeOnDrop: true,  // Freeze on the drop (beat 3)
-                    dropDuration: 100    // Freeze for 100ms
-                },
-                'breakbeat': {
-                    randomFreeze: 0.1,   // 10% chance per beat
-                    duration: 50         // Short 50ms freezes
-                }
-            }
-        },
-        
-        // Orbital speed modulation
-        orbitRhythm: {
-            baseSpeed: 'tempo',      // Speed scales with BPM
-            wobbleSync: 'eighth',    // Wobble on 8th notes
-            beatAcceleration: 1.5,   // Speed boost on beat
-            barReset: true           // Reset orbit angle each bar
-        },
-        
-        // RGB split effect rhythm
-        rgbSync: {
-            enabled: true,
-            amount: 'intensity',     // Split based on musical intensity
-            direction: 'beat',        // Change split direction on beat
-            maxSplit: 10             // Maximum pixel split
-        },
-        
-        // Digital noise bursts
-        noiseRhythm: {
-            trigger: 'accent',       // Noise on accented beats
-            duration: 50,            // 50ms noise bursts
-            intensity: 'drop'        // Scale with drop intensity
-        }
-    },
-    
-    /**
-     * Initialize particle state for glitchy behavior
-     */
-    initialize(particle, _config, _centerX, _centerY) {
-        // Set particle color from emotion palette
-        if (particle.emotionColors && particle.emotionColors.length > 0) {
-            particle.color = selectWeightedColor(particle.emotionColors);
-        }
-        
-        particle.behaviorState = {
-            // Orbital properties (spread out from center)
-            orbitAngle: Math.random() * Math.PI * 2,
-            orbitRadius: 300 + Math.random() * 400,  // Dramatically increased to 300-700 for very wide spread
-            orbitSpeed: 0.01 + Math.random() * 0.02,
-            
-            // Glitch properties
-            glitchTimer: 0,
-            nextGlitch: Math.random() * 500 + 100,
-            isGlitching: false,
-            glitchDuration: 0,
-            glitchOffset: { x: 0, y: 0 },
-            
-            // Stutter properties
-            stutterTimer: 0,
-            nextStutter: Math.random() * 200 + 50,
-            isFrozen: false,
-            frozenPosition: { x: 0, y: 0 },
-            frozenVelocity: { x: 0, y: 0 },
-            
-            // Trail ghost properties
-            hasGhost: Math.random() < 0.3,
-            ghostOffset: Math.random() * 20 + 10,
-            ghostAngle: Math.random() * Math.PI * 2,
-            
-            // RGB separation
-            rgbSplit: Math.random() < 0.4,
-            rgbPhase: Math.random() * Math.PI * 2,
-            
-            // Digital noise
-            noiseLevel: 0,
-            noiseBurst: false,
-            
-            // Dubstep rhythm sync
-            beatPhase: Math.random() * Math.PI * 2,
-            beatFrequency: 0.05 + Math.random() * 0.03,
-            dropIntensity: 0
-        };
-        
-        // Special properties for glitch
-        particle.lifeDecay = 0.0015; // Slower decay for trails
-        particle.hasGlow = true; // Always glow for digital effect
-        particle.glowSizeMultiplier = 3.0 + Math.random() * 2; // Much bigger glows for visibility
-    },
-    
-    /**
-     * Update particle physics for glitchy behavior
-     */
-    update(particle, dt, centerX, centerY) {
-        const state = particle.behaviorState;
-        if (!state) return;
-        
-        // centerX and centerY are passed correctly from updateBehavior
-        // No need for fallbacks - they should always be provided
-        
-        // Update timers
-        state.glitchTimer += dt * 16;
-        state.stutterTimer += dt * 16;
-        
-        // Check for stutter/freeze
-        if (state.stutterTimer > state.nextStutter) {
-            if (!state.isFrozen) {
-                // Start freeze
-                state.isFrozen = true;
-                state.frozenPosition = { x: particle.x, y: particle.y };
-                state.frozenVelocity = { x: particle.vx, y: particle.vy };
-                state.stutterTimer = 0;
-                state.nextStutter = 20 + Math.random() * 40; // Short freeze
-            } else {
-                // End freeze
-                state.isFrozen = false;
-                state.stutterTimer = 0;
-                state.nextStutter = 100 + Math.random() * 300;
-                
-                // Sometimes jump on unfreeze (larger jumps to maintain spread)
-                if (Math.random() < 0.3) {
-                    particle.x += (Math.random() - 0.5) * 60;  // Increased from 20 to 60
-                    particle.y += (Math.random() - 0.5) * 60;  // Increased from 20 to 60
-                }
-            }
-        }
-        
-        // Check for glitch events
-        if (state.glitchTimer > state.nextGlitch && !state.isGlitching) {
-            state.isGlitching = true;
-            state.glitchDuration = 50 + Math.random() * 100;
-            state.glitchOffset = {
-                x: (Math.random() - 0.5) * 80,  // Increased from 30 to 80 for wider spread
-                y: (Math.random() - 0.5) * 80   // Increased from 30 to 80 for wider spread
-            };
-            state.glitchTimer = 0;
-            
-            // Change color during glitch
-            if (Math.random() < 0.5 && particle.emotionColors) {
-                particle.color = selectWeightedColor(particle.emotionColors);
-            }
-        }
-        
-        // End glitch
-        if (state.isGlitching && state.glitchTimer > state.glitchDuration) {
-            state.isGlitching = false;
-            state.glitchTimer = 0;
-            state.nextGlitch = 200 + Math.random() * 800;
-            state.glitchOffset = { x: 0, y: 0 };
-        }
-        
-        // Update beat phase for dubstep rhythm
-        state.beatPhase += state.beatFrequency * dt;
-        const beatIntensity = Math.sin(state.beatPhase) * 0.5 + 0.5;
-        
-        // Calculate drop intensity (periodic bass drops)
-        const dropCycle = state.beatPhase % (Math.PI * 4);
-        if (dropCycle < Math.PI * 0.5) {
-            state.dropIntensity = Math.min(1, state.dropIntensity + dt * 0.1);
-        } else {
-            state.dropIntensity = Math.max(0, state.dropIntensity - dt * 0.05);
-        }
-        
-        if (!state.isFrozen) {
-            // Update orbital position with beat modulation
-            state.orbitAngle += state.orbitSpeed * dt * (1 + beatIntensity * 0.5);
-            
-            // Add drop wobble
-            const wobbleRadius = state.orbitRadius * (1 + state.dropIntensity * 0.3 * Math.sin(state.beatPhase * 4));
-            
-            // Calculate target position relative to center
-            let targetX = centerX + Math.cos(state.orbitAngle) * wobbleRadius;
-            let targetY = centerY + Math.sin(state.orbitAngle) * wobbleRadius * 0.6; // Elliptical
-            
-            // Apply glitch offset (stronger effect for wider spread)
-            if (state.isGlitching) {
-                targetX += state.glitchOffset.x * Math.random() * 0.8;  // Increased from 0.5 to 0.8
-                targetY += state.glitchOffset.y * Math.random() * 0.8;  // Increased from 0.5 to 0.8
-            }
-            
-            // RGB split effect
-            if (state.rgbSplit) {
-                const splitAmount = 3 * (1 + state.dropIntensity);
-                targetX += Math.sin(state.rgbPhase) * splitAmount;
-                targetY += Math.cos(state.rgbPhase) * splitAmount;
-                state.rgbPhase += 0.1 * dt;
-            }
-            
-            // Digital noise bursts on drops (larger to maintain spread)
-            if (state.dropIntensity > 0.8 && Math.random() < 0.1) {
-                targetX += (Math.random() - 0.5) * 30;  // Increased from 10 to 30
-                targetY += (Math.random() - 0.5) * 30;  // Increased from 10 to 30
-            }
-            
-            // Minimal pull to center to allow maximum spread
-            const smoothing = state.isGlitching ? 0.02 : 0.03;  // Further reduced from 0.03/0.05
-            particle.vx = (targetX - particle.x) * smoothing;
-            particle.vy = (targetY - particle.y) * smoothing;
-            
-            // Add jitter based on beat
-            particle.vx += (Math.random() - 0.5) * beatIntensity * 2;
-            particle.vy += (Math.random() - 0.5) * beatIntensity * 2;
-            
-        } else {
-            // Frozen - vibrate in place
-            particle.vx = (Math.random() - 0.5) * 0.5;
-            particle.vy = (Math.random() - 0.5) * 0.5;
-        }
-        
-        // Apply velocity
-        particle.x += particle.vx * dt;
-        particle.y += particle.vy * dt;
-        
-        // Flicker opacity for digital effect
-        if (Math.random() < 0.02) {
-            particle.opacity = 0.1 + Math.random() * 0.9;
-        }
-        
-        // Size pulsing with beat
-        particle.size = particle.baseSize * (1 + beatIntensity * 0.3 + state.dropIntensity * 0.5);
-    }
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE v4.0 - Spaz Particle Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Ultra-aggressive particle behavior with explosive spread and chaotic motion
- * @author Emotive Engine Team
- * @version 4.0.0
- * @module particles/behaviors/spaz
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates particles that explode outward in all directions with chaotic, erratic    
- * ║ motion. Particles spawn far from center and maintain aggressive spread patterns.  
- * ║ Perfect for high-energy emotions like glitch, anger, or excitement.              
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-var spaz = {
-    name: 'spaz',
-    description: 'Ultra-aggressive particles with explosive spread and chaotic motion',
-    
-    /**
-     * Initialize particle with spaz behavior
-     * @param {Object} particle - Particle object to initialize
-     * @param {Object} config - Configuration object
-     * @param {number} centerX - Center X coordinate
-     * @param {number} centerY - Center Y coordinate
-     */
-    initialize(particle, config, centerX, centerY) {
-        // Set basic particle properties
-        particle.x = centerX;
-        particle.y = centerY;
-        particle.life = 1.0;
-        particle.size = 3 + Math.random() * 4; // Larger particles for visibility
-        
-        // Explosive velocity - particles shoot out in random directions
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 200 + Math.random() * 300; // Very fast initial velocity
-        particle.vx = Math.cos(angle) * speed;
-        particle.vy = Math.sin(angle) * speed;
-        
-        // Spaz-specific state
-        particle.behaviorState = {
-            // Explosive properties
-            explosionPhase: 0, // 0 = initial explosion, 1 = chaotic motion
-            explosionTimer: 0,
-            explosionDuration: 1000 + Math.random() * 2000, // 1-3 seconds
-            
-            // Chaotic motion properties
-            chaosTimer: 0,
-            nextChaosChange: 100 + Math.random() * 200, // Change direction every 100-300ms
-            chaosAngle: angle,
-            chaosSpeed: 50 + Math.random() * 100,
-            
-            // Spaz-specific effects
-            spazIntensity: 0.8 + Math.random() * 0.4, // How intense the spazzing is
-            zigzagPattern: Math.random() < 0.5, // Some particles zigzag
-            spiralPattern: Math.random() < 0.3, // Some particles spiral
-            teleportChance: 0.02, // 2% chance to teleport to random position
-            
-            // Visual effects
-            sizePulse: true,
-            sizePulseSpeed: 0.1 + Math.random() * 0.05,
-            sizePulsePhase: Math.random() * Math.PI * 2,
-            colorShift: Math.random() < 0.3, // Some particles shift colors
-            colorShiftSpeed: 0.05 + Math.random() * 0.03
-        };
-        
-        // Special properties for spaz
-        particle.lifeDecay = 0.0008; // Slower decay for longer trails
-        particle.hasGlow = true; // Always glow for maximum visibility
-        particle.glowSizeMultiplier = 4.0 + Math.random() * 3; // Very large glows
-        particle.glowIntensity = 1.5 + Math.random() * 0.5; // Bright glows
-    },
-    
-    /**
-     * Update particle physics for spaz behavior
-     * @param {Object} particle - Particle to update
-     * @param {number} dt - Delta time in milliseconds
-     * @param {number} centerX - Center X coordinate
-     * @param {number} centerY - Center Y coordinate
-     */
-    update(particle, dt, centerX, centerY) {
-        const state = particle.behaviorState;
-        
-        // Update timers
-        state.explosionTimer += dt;
-        state.chaosTimer += dt;
-        
-        // Phase 1: Initial explosion (first 500ms)
-        if (state.explosionPhase === 0 && state.explosionTimer < 500) {
-            // Maintain explosive velocity with slight deceleration
-            particle.vx *= 0.98;
-            particle.vy *= 0.98;
-            
-            // Add random bursts during explosion
-            if (Math.random() < 0.1) {
-                particle.vx += (Math.random() - 0.5) * 100;
-                particle.vy += (Math.random() - 0.5) * 100;
-            }
-        }
-        // Phase 2: Transition to chaotic motion
-        else if (state.explosionPhase === 0 && state.explosionTimer >= 500) {
-            state.explosionPhase = 1;
-            // Set up chaotic motion
-            state.chaosAngle = Math.random() * Math.PI * 2;
-            state.chaosSpeed = 30 + Math.random() * 70;
-        }
-        // Phase 3: Chaotic motion
-        else if (state.explosionPhase === 1) {
-            // Change direction periodically
-            if (state.chaosTimer >= state.nextChaosChange) {
-                state.chaosAngle = Math.random() * Math.PI * 2;
-                state.chaosSpeed = 20 + Math.random() * 80;
-                state.nextChaosChange = 50 + Math.random() * 150;
-                state.chaosTimer = 0;
-            }
-            
-            // Apply chaotic motion
-            const chaosVx = Math.cos(state.chaosAngle) * state.chaosSpeed;
-            const chaosVy = Math.sin(state.chaosAngle) * state.chaosSpeed;
-            
-            // Mix with current velocity for smooth transitions
-            particle.vx = particle.vx * 0.7 + chaosVx * 0.3;
-            particle.vy = particle.vy * 0.7 + chaosVy * 0.3;
-            
-            // Special patterns
-            if (state.zigzagPattern) {
-                // Zigzag motion
-                const zigzagAngle = state.chaosTimer * 0.01;
-                particle.vx += Math.sin(zigzagAngle) * 20;
-                particle.vy += Math.cos(zigzagAngle) * 20;
-            }
-            
-            if (state.spiralPattern) {
-                // Spiral motion
-                const spiralAngle = state.chaosTimer * 0.005;
-                const spiralRadius = 50 + Math.sin(state.chaosTimer * 0.003) * 30;
-                particle.vx += Math.cos(spiralAngle) * spiralRadius * 0.1;
-                particle.vy += Math.sin(spiralAngle) * spiralRadius * 0.1;
-            }
-        }
-        
-        // Teleport effect (rare)
-        if (Math.random() < state.teleportChance) {
-            const teleportAngle = Math.random() * Math.PI * 2;
-            const teleportDistance = 200 + Math.random() * 400;
-            particle.x = centerX + Math.cos(teleportAngle) * teleportDistance;
-            particle.y = centerY + Math.sin(teleportAngle) * teleportDistance;
-            particle.vx = (Math.random() - 0.5) * 200;
-            particle.vy = (Math.random() - 0.5) * 200;
-        }
-        
-        // Update position
-        particle.x += particle.vx * (dt / 1000);
-        particle.y += particle.vy * (dt / 1000);
-        
-        // Size pulsing effect
-        if (state.sizePulse) {
-            state.sizePulsePhase += state.sizePulseSpeed * dt;
-            const pulseMultiplier = 1.0 + Math.sin(state.sizePulsePhase) * 0.5;
-            particle.size = (3 + Math.random() * 4) * pulseMultiplier;
-        }
-        
-        // Color shifting effect
-        if (state.colorShift) {
-            state.colorShiftPhase = (state.colorShiftPhase || 0) + state.colorShiftSpeed * dt;
-            // This would be handled by the renderer if color shifting is implemented
-        }
-        
-        // Apply friction to prevent infinite acceleration
-        particle.vx *= 0.995;
-        particle.vy *= 0.995;
-        
-        // Decay life
-        particle.life -= particle.lifeDecay * dt;
-        
-        // Reset particle if it goes too far or dies
-        if (particle.life <= 0 || 
-            Math.abs(particle.x - centerX) > 2000 || 
-            Math.abs(particle.y - centerY) > 2000) {
-            particle.life = 0;
-        }
-    },
-    
-    /**
-     * Get spawn position for spaz particles
-     * @param {number} centerX - Center X coordinate
-     * @param {number} centerY - Center Y coordinate
-     * @returns {Object} Spawn position {x, y}
-     */
-    getSpawnPosition(centerX, centerY) {
-        // Spawn particles in a wide ring around the center
-        const angle = Math.random() * Math.PI * 2;
-        const radius = 100 + Math.random() * 200; // Spawn 100-300 pixels from center
-        return {
-            x: centerX + Math.cos(angle) * radius,
-            y: centerY + Math.sin(angle) * radius
-        };
-    },
-    
-    /**
-     * Get visual properties for spaz particles
-     * @returns {Object} Visual properties
-     */
-    getVisualProperties() {
-        return {
-            glowColor: '#FF00AA', // Hot magenta
-            glowIntensity: 2.0,
-            particleColors: [
-                { color: '#FF00AA', weight: 30 }, // Hot magenta
-                { color: '#00FFAA', weight: 25 }, // Bright cyan-green
-                { color: '#FFAA00', weight: 20 }, // Digital amber
-                { color: '#AA00FF', weight: 15 }, // Purple
-                { color: '#00AAFF', weight: 10 }  // Blue
-            ]
-        };
-    }
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Directed Particle Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Directed behavior - particles move in focused, straight paths
- * @author Emotive Engine Team
- * @module particles/behaviors/directed
- */
-
-/**
- * DIRECTED BEHAVIOR - FOCUSED STRAIGHT PATHS
- * Used by: focused emotion
- * 
- * Particles move in deliberate, straight lines toward a target or direction,
- * representing intense concentration and focus.
- */
-var directed = {
-    name: 'directed',
-    emoji: '🎯',
-    description: 'Focused, straight-line movement toward target',
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ CONFIGURATION
-    // └─────────────────────────────────────────────────────────────────────────────────
-    config: {
-        speed: 3.0,              // Fast movement
-        acceleration: 0.15,      // Quick acceleration
-        focusStrength: 0.8,      // Strong pull toward target
-        randomness: 0.1,         // Minimal deviation
-        edgeBuffer: 50           // Buffer from canvas edges
-    },
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ INITIALIZATION
-    // └─────────────────────────────────────────────────────────────────────────────────
-    initialize(particle, centerX, centerY, _canvasWidth, _canvasHeight) {
-        // Set initial direction toward center
-        const dx = centerX - particle.x;
-        const dy = centerY - particle.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance > 0) {
-            particle.vx = (dx / distance) * this.config.speed;
-            particle.vy = (dy / distance) * this.config.speed;
-        } else {
-            // Random initial direction if at center
-            const angle = Math.random() * Math.PI * 2;
-            particle.vx = Math.cos(angle) * this.config.speed;
-            particle.vy = Math.sin(angle) * this.config.speed;
-        }
-        
-        // Store target position
-        particle.targetX = centerX;
-        particle.targetY = centerY;
-        particle.directedPhase = 0;
-    },
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ UPDATE LOOP
-    // └─────────────────────────────────────────────────────────────────────────────────
-    update(particle, dt, centerX, centerY, canvasWidth, canvasHeight) {
-        // Update phase for variation
-        particle.directedPhase += dt * 0.05;
-        
-        // Calculate direction to target
-        const dx = particle.targetX - particle.x;
-        const dy = particle.targetY - particle.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance > 10) {
-            // Move toward target with focus strength
-            const targetVx = (dx / distance) * this.config.speed;
-            const targetVy = (dy / distance) * this.config.speed;
-            
-            // Apply acceleration toward target velocity
-            particle.vx += (targetVx - particle.vx) * this.config.acceleration * dt;
-            particle.vy += (targetVy - particle.vy) * this.config.acceleration * dt;
-            
-            // Add minimal randomness for organic feel
-            particle.vx += (Math.random() - 0.5) * this.config.randomness;
-            particle.vy += (Math.random() - 0.5) * this.config.randomness;
-        } else {
-            // Near target, pick new target
-            const angle = Math.random() * Math.PI * 2;
-            const radius = 100 + Math.random() * 200;
-            particle.targetX = centerX + Math.cos(angle) * radius;
-            particle.targetY = centerY + Math.sin(angle) * radius;
-            
-            // Keep within canvas bounds
-            particle.targetX = Math.max(this.config.edgeBuffer, 
-                Math.min(canvasWidth - this.config.edgeBuffer, particle.targetX));
-            particle.targetY = Math.max(this.config.edgeBuffer, 
-                Math.min(canvasHeight - this.config.edgeBuffer, particle.targetY));
-        }
-        
-        // Apply velocity
-        particle.x += particle.vx * dt;
-        particle.y += particle.vy * dt;
-        
-        // Edge bouncing with dampening
-        if (particle.x <= 0 || particle.x >= canvasWidth) {
-            particle.vx *= -0.8;
-            particle.x = Math.max(0, Math.min(canvasWidth, particle.x));
-            // Pick new target after bounce
-            particle.targetX = centerX + (Math.random() - 0.5) * 300;
-        }
-        if (particle.y <= 0 || particle.y >= canvasHeight) {
-            particle.vy *= -0.8;
-            particle.y = Math.max(0, Math.min(canvasHeight, particle.y));
-            // Pick new target after bounce
-            particle.targetY = centerY + (Math.random() - 0.5) * 300;
-        }
-    },
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ VISUAL CHARACTERISTICS
-    // └─────────────────────────────────────────────────────────────────────────────────
-    visuals: {
-        trailLength: 'medium',      // Medium trail for motion clarity
-        opacity: 0.9,               // High opacity for focus
-        sizeMultiplier: 1.0,        // Standard size
-        blurAmount: 0.2             // Sharp, focused appearance
-    }
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Fizzy Particle Behavior
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Fizzy behavior - bubbly, effervescent particle movement
- * @author Emotive Engine Team
- * @module particles/behaviors/fizzy
- */
-
-/**
- * FIZZY BEHAVIOR - BUBBLY EFFERVESCENCE
- * Used by: excited emotion
- * 
- * Particles bubble upward with random pops and fizz, like carbonation in soda.
- * Creates an energetic, celebratory atmosphere.
- */
-var fizzy = {
-    name: 'fizzy',
-    emoji: '🫧',
-    description: 'Bubbly, effervescent movement like carbonation',
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ CONFIGURATION
-    // └─────────────────────────────────────────────────────────────────────────────────
-    config: {
-        baseRiseSpeed: 2.5,      // Base upward velocity
-        wobbleAmplitude: 30,     // Horizontal wobble range
-        wobbleFrequency: 0.15,   // Wobble oscillation speed
-        popChance: 0.002,        // Chance to "pop" per frame
-        popForce: 8,             // Force of pop burst
-        fizziness: 0.3,          // Random velocity variation
-        gravity: -0.05           // Slight upward bias
-    },
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ INITIALIZATION
-    // └─────────────────────────────────────────────────────────────────────────────────
-    initialize(particle, _centerX, _centerY, _canvasWidth, _canvasHeight) {
-        // Start with upward velocity
-        particle.vx = (Math.random() - 0.5) * 2;
-        particle.vy = -this.config.baseRiseSpeed - Math.random() * 2;
-        
-        // Fizzy properties
-        particle.wobblePhase = Math.random() * Math.PI * 2;
-        particle.wobbleSpeed = this.config.wobbleFrequency * (0.8 + Math.random() * 0.4);
-        particle.bubbleSize = 0.5 + Math.random() * 0.5;
-        particle.popTimer = 0;
-        particle.isFizzing = true;
-    },
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ UPDATE LOOP
-    // └─────────────────────────────────────────────────────────────────────────────────
-    update(particle, dt, centerX, centerY, canvasWidth, canvasHeight) {
-        // Update wobble phase
-        particle.wobblePhase += particle.wobbleSpeed * dt;
-        
-        // Apply wobble to horizontal movement
-        const wobble = Math.sin(particle.wobblePhase) * this.config.wobbleAmplitude;
-        particle.vx = wobble * 0.05 + (Math.random() - 0.5) * this.config.fizziness;
-        
-        // Apply upward force with variation
-        particle.vy += this.config.gravity * dt;
-        particle.vy += (Math.random() - 0.5) * this.config.fizziness;
-        
-        // Random "pop" events
-        if (Math.random() < this.config.popChance) {
-            // Pop! Send particle in random direction
-            const popAngle = Math.random() * Math.PI * 2;
-            particle.vx = Math.cos(popAngle) * this.config.popForce;
-            particle.vy = Math.sin(popAngle) * this.config.popForce * 0.7; // Slightly favor horizontal
-            particle.popTimer = 1; // Visual feedback timer
-            
-            // Resize on pop
-            particle.bubbleSize = 0.3 + Math.random() * 0.7;
-        }
-        
-        // Decay pop effect
-        if (particle.popTimer > 0) {
-            particle.popTimer -= dt * 0.05;
-            // Slow down after pop
-            particle.vx *= 0.95;
-            particle.vy *= 0.95;
-        }
-        
-        // Apply velocity
-        particle.x += particle.vx * dt;
-        particle.y += particle.vy * dt;
-        
-        // Wrap around vertically (bubbles rise and restart)
-        if (particle.y < -50) {
-            particle.y = canvasHeight + 50;
-            particle.x = centerX + (Math.random() - 0.5) * 300;
-            particle.vy = -this.config.baseRiseSpeed - Math.random() * 2;
-            particle.bubbleSize = 0.5 + Math.random() * 0.5;
-        }
-        
-        // Horizontal bounds with soft bounce
-        if (particle.x <= 0 || particle.x >= canvasWidth) {
-            particle.vx *= -0.5;
-            particle.x = Math.max(0, Math.min(canvasWidth, particle.x));
-        }
-        
-        // Bottom boundary (bubbles can spawn from bottom)
-        if (particle.y > canvasHeight + 50) {
-            particle.y = canvasHeight;
-            particle.vy = -this.config.baseRiseSpeed * 1.5;
-        }
-        
-        // Update size based on bubble properties
-        particle.size = particle.baseSize * particle.bubbleSize * 
-                       (1 + Math.sin(particle.wobblePhase * 2) * 0.1);
-    },
-    
-    // ┌─────────────────────────────────────────────────────────────────────────────────
-    // │ VISUAL CHARACTERISTICS
-    // └─────────────────────────────────────────────────────────────────────────────────
-    visuals: {
-        trailLength: 'short',       // Short trails for bubbly feel
-        opacity: 0.6,               // Semi-transparent like bubbles
-        sizeMultiplier: 1.2,        // Slightly larger for bubble effect
-        blurAmount: 0.5,            // Soft, bubble-like appearance
-        sparkle: true               // Occasional sparkle effect
-    }
-};
-
-/**
- * Calm Particle Behavior
- * Particles drift peacefully with minimal, smooth movement
- */
-
-
-// Behavior configuration
-const config = {
-    breathingPeriod: 8000};
-
-/**
- * Initialize a particle with calm properties
- * @param {Object} particle - The particle to initialize
- */
-function initializeCalm(particle) {
-    // Start with faster initial burst movement
-    particle.vx = (Math.random() - 0.5) * 0.5;  // Increased 5x from 0.1
-    particle.vy = (Math.random() - 0.5) * 0.5;  // Increased 5x from 0.1
-    particle.lifeDecay = 0.003;  // Moderate fade (particles last ~5-6 seconds)
-
-    // Use emotion colors if provided
-    if (particle.emotionColors && particle.emotionColors.length > 0) {
-        particle.color = selectWeightedColor(particle.emotionColors);
-    }
-
-    // Calm-specific behavior data
-    particle.behaviorData = {
-        orbitAngle: Math.random() * Math.PI * 2,  // Starting angle around center
-        orbitRadius: 40 + Math.random() * 60,      // Distance from center (40-100 pixels)
-        orbitSpeed: 0.0008 + Math.random() * 0.0006, // Faster orbit speed (4x)
-        floatOffset: Math.random() * Math.PI * 2,
-        breathingOffset: Math.random() * Math.PI * 2,
-        lifetime: 0
-    };
-}
-
-/**
- * Update calm behavior each frame
- * @param {Object} particle - The particle to update
- * @param {number} dt - Delta time
- * @param {number} centerX - Orb center X
- * @param {number} centerY - Orb center Y
- */
-function updateCalm(particle, dt, centerX, centerY) {
-    const data = particle.behaviorData;
-    if (!data) return;
-
-    data.lifetime += dt;
-
-    // Breathing effect (very subtle size change)
-    const breathPhase = (data.lifetime + data.breathingOffset * config.breathingPeriod) / config.breathingPeriod;
-    const breathIntensity = Math.sin(breathPhase * Math.PI * 2) * 0.5 + 0.5;
-
-    // Apply subtle size pulsing
-    particle.size = particle.baseSize * (0.95 + breathIntensity * 0.05);
-
-    // Slow orbital movement around the mascot
-    data.orbitAngle += data.orbitSpeed * dt;
-
-    // Vary the orbit radius slightly over time for organic movement
-    const radiusVariation = Math.sin(data.lifetime * 0.0001 + data.floatOffset) * 10;
-    const currentRadius = data.orbitRadius + radiusVariation;
-
-    // Calculate target position in orbit
-    const targetX = centerX + Math.cos(data.orbitAngle) * currentRadius;
-    const targetY = centerY + Math.sin(data.orbitAngle) * currentRadius;
-
-    // Add vertical floating motion
-    const floatY = Math.sin(data.lifetime * 0.0003 + data.breathingOffset) * 15;
-
-    // Smoothly move toward orbital position
-    const dx = targetX - particle.x;
-    const dy = (targetY + floatY) - particle.y;
-
-    // Faster movement toward target position
-    particle.vx = dx * 0.03;  // Faster following (3x)
-    particle.vy = dy * 0.03;  // Faster following (3x)
-
-    // Add more random drift for organic feel
-    particle.vx += (Math.random() - 0.5) * 0.02;  // More drift
-    particle.vy += (Math.random() - 0.5) * 0.02;  // More drift
-
-    // Apply very light friction
-    particle.vx *= 0.98;
-    particle.vy *= 0.98;
-}
-
-// Export behavior definition for registry
-var zen = {
-    name: 'zen',
-    emoji: '☯️',
-    description: 'Peaceful orbital movement like a hovering aura',
-    initialize: initializeCalm,
-    update: updateCalm
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE - Plugin Behavior Adapter
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Adapter for plugin-defined particle behaviors
- * @author Emotive Engine Team
- * @module particles/behaviors/plugin-adapter
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Bridges the gap between the plugin system and modular particle behaviors.         
- * ║ Allows plugins to register custom particle behaviors that integrate seamlessly    
- * ║ with the modular particle system.                                                 
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-
-// Registry for plugin-defined behaviors
-const pluginBehaviors = new Map();
-
-/**
- * Register a custom particle behavior from a plugin
- * @param {string} name - Unique name for the behavior
- * @param {Object} behaviorDef - Behavior definition object
- * @returns {boolean} Success status
- */
-function registerPluginBehavior(name, behaviorDef) {
-    if (pluginBehaviors.has(name)) ;
-    
-    // Validate behavior definition
-    if (!behaviorDef.initialize || typeof behaviorDef.initialize !== 'function') {
-        return false;
-    }
-    
-    if (!behaviorDef.update || typeof behaviorDef.update !== 'function') {
-        return false;
-    }
-    
-    // Store the behavior
-    pluginBehaviors.set(name, {
-        name,
-        emoji: behaviorDef.emoji || '🔌',
-        description: behaviorDef.description || `Plugin behavior: ${name}`,
-        initialize: behaviorDef.initialize,
-        update: behaviorDef.update,
-        isPlugin: true
-    });
-    
-    return true;
-}
-
-/**
- * Unregister a plugin behavior
- * @param {string} name - Name of the behavior to remove
- * @returns {boolean} Success status
- */
-function unregisterPluginBehavior(name) {
-    if (pluginBehaviors.has(name)) {
-        pluginBehaviors.delete(name);
-        return true;
-    }
-    return false;
-}
-
-/**
- * Get a plugin behavior by name
- * @param {string} name - Name of the behavior
- * @returns {Object|null} Behavior definition or null
- */
-function getPluginBehavior(name) {
-    return pluginBehaviors.get(name) || null;
-}
-
-/**
- * Get all registered plugin behaviors
- * @returns {Array} Array of behavior names
- */
-function getAllPluginBehaviors() {
-    return Array.from(pluginBehaviors.keys());
-}
-
-/**
- * Create a behavior wrapper for legacy plugin particle effects
- * Converts old-style particle definitions to modular behavior format
- * @param {Object} legacyBehavior - Legacy behavior configuration
- * @returns {Object} Modular behavior definition
- */
-function createLegacyAdapter(legacyBehavior) {
-    return {
-        name: legacyBehavior.name || 'legacy',
-        emoji: '🔄',
-        description: legacyBehavior.description || 'Legacy plugin behavior',
-        
-        initialize(particle) {
-            // Apply legacy configuration
-            if (legacyBehavior.size) {
-                particle.size = typeof legacyBehavior.size === 'object' ?
-                    legacyBehavior.size.min + Math.random() * (legacyBehavior.size.max - legacyBehavior.size.min) :
-                    legacyBehavior.size;
-                particle.baseSize = particle.size;
-            }
-            
-            if (legacyBehavior.speed) {
-                const speed = typeof legacyBehavior.speed === 'object' ?
-                    legacyBehavior.speed.min + Math.random() * (legacyBehavior.speed.max - legacyBehavior.speed.min) :
-                    legacyBehavior.speed;
-                const angle = Math.random() * Math.PI * 2;
-                particle.vx = Math.cos(angle) * speed;
-                particle.vy = Math.sin(angle) * speed;
-            }
-            
-            if (legacyBehavior.lifespan) {
-                const lifespan = typeof legacyBehavior.lifespan === 'object' ?
-                    legacyBehavior.lifespan.min + Math.random() * (legacyBehavior.lifespan.max - legacyBehavior.lifespan.min) :
-                    legacyBehavior.lifespan;
-                particle.lifeDecay = 1000 / lifespan; // Convert ms to decay rate
-            }
-            
-            if (legacyBehavior.color) {
-                particle.color = Array.isArray(legacyBehavior.color) ?
-                    selectWeightedColor(legacyBehavior.color) :
-                    legacyBehavior.color;
-            }
-            
-            if (legacyBehavior.opacity) {
-                particle.life = typeof legacyBehavior.opacity === 'object' ?
-                    legacyBehavior.opacity.min + Math.random() * (legacyBehavior.opacity.max - legacyBehavior.opacity.min) :
-                    legacyBehavior.opacity;
-            }
-            
-            // Store legacy-specific data
-            particle.behaviorData = {
-                movementType: legacyBehavior.movementType || 'linear',
-                turbulence: legacyBehavior.turbulence || 0,
-                drift: legacyBehavior.drift || 0,
-                acceleration: legacyBehavior.acceleration || 0,
-                ...legacyBehavior.customData
-            };
-        },
-        
-        update(particle, dt, centerX, centerY) {
-            const data = particle.behaviorData;
-            
-            // Apply movement based on type
-            switch (data.movementType) {
-            case 'wander':
-                // Random wandering
-                particle.vx += (Math.random() - 0.5) * data.turbulence * dt;
-                particle.vy += (Math.random() - 0.5) * data.turbulence * dt;
-                break;
-                    
-            case 'fall':
-                // Falling with drift
-                particle.vy += 0.1 * dt; // Gravity
-                particle.vx += (Math.random() - 0.5) * data.drift * dt;
-                break;
-                    
-            case 'rain':
-                // Digital rain effect
-                particle.vy += data.acceleration * dt;
-                break;
-                    
-            case 'orbit': {
-                // Orbital motion
-                const dx = particle.x - centerX;
-                const dy = particle.y - centerY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 0) {
-                    const angle = Math.atan2(dy, dx) + 0.02 * dt;
-                    particle.x = centerX + Math.cos(angle) * dist;
-                    particle.y = centerY + Math.sin(angle) * dist;
-                }
-                break;
-            }
-            }
-            
-            // Call custom update if provided
-            if (legacyBehavior.customUpdate) {
-                legacyBehavior.customUpdate(particle, dt, centerX, centerY);
-            }
-        }
-    };
-}
-
-// Export adapter functions for plugin system integration
-var pluginAdapter = {
-    registerPluginBehavior,
-    unregisterPluginBehavior,
-    getPluginBehavior,
-    getAllPluginBehaviors,
-    createLegacyAdapter
-};
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *  ╔═○─┐ emotive
- *    ●●  ENGINE v4.0 - Behavior Registry
- *  └─○═╝                                                                             
- * ═══════════════════════════════════════════════════════════════════════════════════════
- *
- * @fileoverview Central registry for all particle behaviors with plugin support
- * @author Emotive Engine Team
- * @version 4.0.0
- * @module particles/behaviors
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Control center for particle behaviors with plugin adapter integration.            
- * ║ • Each behavior defines unique particle physics and movement patterns             
- * ║ • Core behaviors loaded synchronously at startup                                  
- * ║ • Plugin behaviors registered dynamically via adapter                             
- * ║ • Value-agnostic design for easy physics tuning                                   
- * ╚═══════════════════════════════════════════════════════════════════════════════════
- */
-
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ BEHAVIOR COLLECTION
-// └─────────────────────────────────────────────────────────────────────────────────────
-const BEHAVIORS = [
-    ambient,
-    directed,
-    fizzy,
-    orbiting,
-    rising,
-    falling,
-    popcorn,
-    burst,
-    aggressive,
-    scattering,
-    repelling,
-    connecting,
-    resting,
-    radiant,
-    ascending,
-    erratic,
-    cautious,
-    surveillance,
-    glitchy,
-    spaz,
-    zen
-];
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ BEHAVIOR REGISTRY - Fast lookup by name
-// └─────────────────────────────────────────────────────────────────────────────────────
-const BEHAVIOR_REGISTRY = {};
-
-// Build the registry from the behaviors array - SYNCHRONOUSLY
-BEHAVIORS.forEach(behavior => {
-    BEHAVIOR_REGISTRY[behavior.name] = behavior;
-    // Debug logging removed for production
-});
-
-/**
- * Get a behavior by name (checks both core and plugin behaviors)
- * @param {string} name - Behavior name (e.g., 'ambient', 'orbiting')
- * @returns {Object|null} Behavior object or null if not found
- */
-function getBehavior(name) {
-    // Check core behaviors first
-    if (BEHAVIOR_REGISTRY[name]) {
-        return BEHAVIOR_REGISTRY[name];
-    }
-    // Check plugin behaviors
-    const pluginBehavior = pluginAdapter.getPluginBehavior(name);
-    if (pluginBehavior) {
-        return pluginBehavior;
-    }
-    return null;
-}
-
-/**
- * Initialize a particle with a specific behavior
- * @param {Particle} particle - The particle to initialize
- * @param {string} behaviorName - Name of the behavior to apply
- * @returns {boolean} True if behavior was found and applied
- */
-function initializeBehavior(particle, behaviorName) {
-    const behavior = getBehavior(behaviorName);
-    if (behavior && behavior.initialize) {
-        behavior.initialize(particle);
-        return true;
-    }
-    // Fallback to ambient if behavior not found
-    if (behaviorName !== 'ambient') {
-        console.warn(`⚠️ Behavior '${behaviorName}' not found, falling back to ambient`);
-        return initializeBehavior(particle, 'ambient');
-    }
-    return false;
-}
-
-/**
- * Update a particle's behavior
- * @param {Particle} particle - The particle to update
- * @param {string} behaviorName - Name of the behavior
- * @param {number} dt - Delta time
- * @param {number} centerX - Orb center X
- * @param {number} centerY - Orb center Y
- * @returns {boolean} True if behavior was found and updated
- */
-function updateBehavior(particle, behaviorName, dt, centerX, centerY) {
-    const behavior = getBehavior(behaviorName);
-    if (behavior && behavior.update) {
-        behavior.update(particle, dt, centerX, centerY);
-        return true;
-    }
-    return false;
-}
-
-/**
- * Get list of all available behaviors (core and plugin)
- * @returns {Array} Array of behavior names and descriptions
- */
-function listBehaviors() {
-    // Get core behaviors
-    const coreBehaviors = Object.values(BEHAVIOR_REGISTRY).map(behavior => ({
-        name: behavior.name,
-        emoji: behavior.emoji || '🎯',
-        description: behavior.description || 'No description',
-        type: 'core'
-    }));
-    
-    // Get plugin behaviors
-    const pluginBehaviorNames = pluginAdapter.getAllPluginBehaviors();
-    const pluginBehaviors = pluginBehaviorNames.map(name => {
-        const behavior = pluginAdapter.getPluginBehavior(name);
-        return {
-            name: behavior.name,
-            emoji: behavior.emoji || '🔌',
-            description: behavior.description || 'Plugin behavior',
-            type: 'plugin'
-        };
-    });
-    
-    return [...coreBehaviors, ...pluginBehaviors];
-}
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ DEBUG UTILITIES
-// └─────────────────────────────────────────────────────────────────────────────────────
-if (typeof window !== 'undefined' && window.DEBUG_PARTICLES) {
-    window.ParticleBehaviors = {
-        registry: BEHAVIOR_REGISTRY,
-        list: listBehaviors,
-        get: getBehavior
-    };
 }
 
 /**
@@ -90166,7 +90154,6 @@ class Core3DManager {
 
         // Apply undertone glow multiplier to base intensity
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
-            this.baseGlowIntensity;
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
         }
 
@@ -90841,8 +90828,6 @@ class Core3DManager {
     breathePhase(phase, durationSec) {
         // Delegate to BreathingPhaseManager
         this.breathingPhaseManager.startPhase(phase, durationSec);
-        const state = this.breathingPhaseManager.getState();
-        console.log(`[Core3D] breathePhase: ${phase} for ${durationSec}s (${state.startScale.toFixed(2)} → ${state.targetScale.toFixed(2)})`);
     }
 
     /**
@@ -90850,7 +90835,6 @@ class Core3DManager {
      */
     stopBreathingPhase() {
         this.breathingPhaseManager.stop();
-        console.log('[Core3D] breathePhase stopped, scale reset to 1.0');
     }
 
     /**
@@ -90996,7 +90980,6 @@ class Core3DManager {
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
             // Skip render for 3 frames after swap to ensure scene is fully stable
             this._skipRenderFrames = 3;
-            console.log('[Core3DManager] Morph swap starting, will skip render for 3 frames');
             // ═══════════════════════════════════════════════════════════════════
             // RESET OLD GEOMETRY STATE
             // Clear shader uniforms to defaults before swapping to prevent
@@ -91244,7 +91227,6 @@ class Core3DManager {
         // - Absolute gestures: Reduce groove to 30% (avoid competing animations)
         // - No gestures: Full groove
         const hasAbsolute = blended.hasAbsoluteGestures;
-        blended.hasAccentGestures;
 
         // Smooth the groove blend transition to avoid discontinuity
         // Initialize if not set
@@ -91326,13 +91308,6 @@ class Core3DManager {
             camRelWorldY = this._camRight.y * camRelPos[0] + this._camUp.y * camRelPos[1] - this._camForward.y * camRelPos[2];
             camRelWorldZ = this._camRight.z * camRelPos[0] + this._camUp.z * camRelPos[1] - this._camForward.z * camRelPos[2];
 
-            // Debug: log first few frames to verify
-            if (!this._camRelDebugCount) this._camRelDebugCount = 0;
-            if (this._camRelDebugCount < 3 && (camRelPos[0] !== 0 || camRelPos[1] !== 0 || camRelPos[2] !== 0)) {
-                console.log('[CamRel] input:', camRelPos, '→ world:', [camRelWorldX, camRelWorldY, camRelWorldZ]);
-                console.log('[CamRel] forward:', this._camForward.toArray(), 'right:', this._camRight.toArray());
-                this._camRelDebugCount++;
-            }
         }
 
         if (rhythmMod) {
@@ -91534,7 +91509,6 @@ class Core3DManager {
         // The mascot is at scale ~0 during swap anyway, so skipping a few frames is invisible
         if (this._skipRenderFrames > 0) {
             this._skipRenderFrames--;
-            console.log(`[Core3DManager] Skipping render, ${this._skipRenderFrames} frames remaining`);
             return;
         }
 
@@ -91675,7 +91649,7 @@ class Core3DManager {
                 child === undefined ? 'UNDEFINED!' :
                     child.visible === null ? 'visible=NULL!' :
                         child.visible === undefined ? 'visible=UNDEF!' : 'OK';
-            console.log(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
+            console.warn(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
         });
     }
 
@@ -91747,7 +91721,6 @@ class Core3DManager {
      * @private
      */
     async _handleContextRestored() {
-        console.log(`[Core3D:${this._instanceId}] Recreating custom materials after context restoration`);
 
         if (this._destroyed || !this.coreMesh) {
             return;
@@ -91783,8 +91756,6 @@ class Core3DManager {
                 if (this.onMaterialSwap) {
                     this.onMaterialSwap();
                 }
-
-                console.log(`[Core3D:${this._instanceId}] Custom material recreated successfully`);
             }
         }
     }
@@ -91813,15 +91784,6 @@ class Core3DManager {
      * Cleanup
      */
     destroy() {
-        // Log SYNCHRONOUSLY with all state at time of call
-        ({
-            id: this._instanceId,
-            ready: this._ready,
-            destroyed: this._destroyed,
-            hasCrystalSoul: !!this.crystalSoul,
-            hasRenderer: !!this.renderer
-        });
-
         // Set destroyed flag first to prevent any pending render calls
         this._destroyed = true;
 
@@ -99543,10 +99505,10 @@ class EmotiveMascot3D {
      * Set emotional state (same API as 2D version)
      * @param {string} emotion - Emotion name
      * @param {string|number|Object|null} undertoneOrDurationOrOptions - Undertone string, duration number, or options object
-     * @param {number} [timestamp] - Optional timestamp (unused in 3D, for API compatibility)
+     * @param {number} [_timestamp] - Optional timestamp (unused in 3D, for API compatibility)
      * @returns {EmotiveMascot3D} this instance for chaining
      */
-    setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
+    setEmotion(emotion, undertoneOrDurationOrOptions, _timestamp) {
         // Guard against calls after destroy
         if (this._isDestroyed()) return this;
 
@@ -99685,7 +99647,7 @@ class EmotiveMascot3D {
      * @param {number} options.scale - Scale multiplier for gesture amplitude
      * @returns {EmotiveMascot3D} this instance for chaining
      */
-    gesture(gestureName, options = {}) {
+    gesture(gestureName, _options = {}) {
         // Scale is applied via the 3D core's gesture system
         // For now, just call express - the scale option can be wired in later
         return this.express(gestureName);
@@ -100660,7 +100622,7 @@ class EmotiveMascot3D {
      * @param {number} duration - Animation duration in milliseconds
      * @param {string} easing - Easing function name (currently only 'easeOutCubic' supported)
      */
-    animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
+    animateToPosition(x, y, z = 0, duration = 1000, _easing = 'easeOutCubic') {
         if (!this.container) return;
 
         const startPos = this.getPosition();
@@ -100866,7 +100828,7 @@ class EmotiveMascot3D {
         // Set up material swap callback if not already done
         if (this.core3D && !this._materialSwapCallbackSet) {
             this._materialSwapCallbackSet = true;
-            this.core3D.onMaterialSwap = info => {
+            this.core3D.onMaterialSwap = () => {
                 // Re-apply SSS preset after material is swapped during morph
                 if (this._currentSSSPreset) {
                     // Small delay to ensure material uniforms are fully initialized

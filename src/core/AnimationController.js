@@ -81,7 +81,7 @@ import { FRAME_TIMING, VISIBILITY } from './config/defaults.js';
 
 // import PerformanceMonitor from './system/PerformanceMonitor.js'; // Unused - available for future performance monitoring
 import SimpleFPSCounter from './system/SimpleFPSCounter.js';
-import AnimationLoopManager, { animationLoopManager as defaultLoopManager, AnimationPriority } from './AnimationLoopManager.js';
+import { animationLoopManager as defaultLoopManager, AnimationPriority } from './AnimationLoopManager.js';
 
 class AnimationController {
     constructor(errorBoundary, config = {}) {

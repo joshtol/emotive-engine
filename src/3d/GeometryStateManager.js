@@ -11,7 +11,7 @@
  * - Called during the "shrink" phase of morph before geometry swap
  */
 
-import * as THREE from 'three';
+// THREE - available for type checking if needed
 import { MOON_PHASES } from './geometries/Moon.js';
 import { CRYSTAL_DEFAULT_UNIFORMS } from './shaders/crystalWithSoul.js';
 

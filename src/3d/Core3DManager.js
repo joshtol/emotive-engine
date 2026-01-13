@@ -23,10 +23,10 @@ import { GeometryMorpher } from './utils/GeometryMorpher.js';
 // are now managed by BehaviorController
 import { updateSunMaterial, SUN_ROTATION_CONFIG } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
-import { getGesture } from '../core/gestures/index.js';
+// getGesture - available but currently unused (gestures handled by GestureBlender)
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
-import { hexToRGB, rgbToHsl, hslToRgb, applyUndertoneSaturation } from './utils/ColorUtilities.js';
-import { getGlowIntensityForColor, normalizeColorLuminance, normalizeRGBLuminance } from '../utils/glowIntensityFilter.js';
+import { hexToRGB, applyUndertoneSaturation } from './utils/ColorUtilities.js';
+import { getGlowIntensityForColor, normalizeRGBLuminance } from '../utils/glowIntensityFilter.js';
 import ParticleSystem from '../core/ParticleSystem.js';
 import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { CrystalSoul } from './effects/CrystalSoul.js';
@@ -492,7 +492,6 @@ export class Core3DManager {
 
         // Apply undertone glow multiplier to base intensity
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
-            const beforeUndertone = this.baseGlowIntensity;
             this.baseGlowIntensity *= undertoneModifier['3d'].glow.intensityMultiplier;
         }
 
@@ -1167,8 +1166,6 @@ export class Core3DManager {
     breathePhase(phase, durationSec) {
         // Delegate to BreathingPhaseManager
         this.breathingPhaseManager.startPhase(phase, durationSec);
-        const state = this.breathingPhaseManager.getState();
-        console.log(`[Core3D] breathePhase: ${phase} for ${durationSec}s (${state.startScale.toFixed(2)} → ${state.targetScale.toFixed(2)})`);
     }
 
     /**
@@ -1176,7 +1173,6 @@ export class Core3DManager {
      */
     stopBreathingPhase() {
         this.breathingPhaseManager.stop();
-        console.log('[Core3D] breathePhase stopped, scale reset to 1.0');
     }
 
     /**
@@ -1322,7 +1318,6 @@ export class Core3DManager {
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
             // Skip render for 3 frames after swap to ensure scene is fully stable
             this._skipRenderFrames = 3;
-            console.log('[Core3DManager] Morph swap starting, will skip render for 3 frames');
             // ═══════════════════════════════════════════════════════════════════
             // RESET OLD GEOMETRY STATE
             // Clear shader uniforms to defaults before swapping to prevent
@@ -1570,7 +1565,6 @@ export class Core3DManager {
         // - Absolute gestures: Reduce groove to 30% (avoid competing animations)
         // - No gestures: Full groove
         const hasAbsolute = blended.hasAbsoluteGestures;
-        const hasAccent = blended.hasAccentGestures;
 
         // Smooth the groove blend transition to avoid discontinuity
         // Initialize if not set
@@ -1656,13 +1650,6 @@ export class Core3DManager {
             camRelWorldY = this._camRight.y * camRelPos[0] + this._camUp.y * camRelPos[1] - this._camForward.y * camRelPos[2];
             camRelWorldZ = this._camRight.z * camRelPos[0] + this._camUp.z * camRelPos[1] - this._camForward.z * camRelPos[2];
 
-            // Debug: log first few frames to verify
-            if (!this._camRelDebugCount) this._camRelDebugCount = 0;
-            if (this._camRelDebugCount < 3 && (camRelPos[0] !== 0 || camRelPos[1] !== 0 || camRelPos[2] !== 0)) {
-                console.log('[CamRel] input:', camRelPos, '→ world:', [camRelWorldX, camRelWorldY, camRelWorldZ]);
-                console.log('[CamRel] forward:', this._camForward.toArray(), 'right:', this._camRight.toArray());
-                this._camRelDebugCount++;
-            }
         }
 
         if (rhythmMod) {
@@ -1864,7 +1851,6 @@ export class Core3DManager {
         // The mascot is at scale ~0 during swap anyway, so skipping a few frames is invisible
         if (this._skipRenderFrames > 0) {
             this._skipRenderFrames--;
-            console.log(`[Core3DManager] Skipping render, ${this._skipRenderFrames} frames remaining`);
             return;
         }
 
@@ -2005,7 +1991,7 @@ export class Core3DManager {
                 child === undefined ? 'UNDEFINED!' :
                     child.visible === null ? 'visible=NULL!' :
                         child.visible === undefined ? 'visible=UNDEF!' : 'OK';
-            console.log(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
+            console.warn(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
         });
     }
 
@@ -2077,7 +2063,6 @@ export class Core3DManager {
      * @private
      */
     async _handleContextRestored() {
-        console.log(`[Core3D:${this._instanceId}] Recreating custom materials after context restoration`);
 
         if (this._destroyed || !this.coreMesh) {
             return;
@@ -2113,8 +2098,6 @@ export class Core3DManager {
                 if (this.onMaterialSwap) {
                     this.onMaterialSwap();
                 }
-
-                console.log(`[Core3D:${this._instanceId}] Custom material recreated successfully`);
             }
         }
     }
@@ -2143,15 +2126,6 @@ export class Core3DManager {
      * Cleanup
      */
     destroy() {
-        // Log SYNCHRONOUSLY with all state at time of call
-        const state = {
-            id: this._instanceId,
-            ready: this._ready,
-            destroyed: this._destroyed,
-            hasCrystalSoul: !!this.crystalSoul,
-            hasRenderer: !!this.renderer
-        };
-
         // Set destroyed flag first to prevent any pending render calls
         this._destroyed = true;
 

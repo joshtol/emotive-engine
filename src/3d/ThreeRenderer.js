@@ -15,10 +15,10 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+// ShaderPass - available for custom post-processing if needed
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { normalizeColorLuminance } from '../utils/glowIntensityFilter.js';
+// normalizeColorLuminance - available for advanced color normalization
 import { GlowLayer } from './effects/GlowLayer.js';
 import { CameraPresetManager } from './managers/CameraPresetManager.js';
 
@@ -331,7 +331,7 @@ export class ThreeRenderer {
                 let texture = null;
                 try {
                     texture = await hdrLoader.loadAsync(hdrPath);
-                } catch (e) {
+                } catch {
                     // HDRI loading failed - will fall back to procedural
                 }
 
@@ -352,13 +352,12 @@ export class ThreeRenderer {
                 texture.dispose(); // CRITICAL: Dispose source texture after PMREM conversion (GPU memory leak fix)
                 pmremGenerator.dispose();
                 this._envMapLoading = false; // HDRI loaded successfully
-                console.log('[Emotive] HDRI environment map loaded');
                 return;
-            } catch (hdrError) {
+            } catch {
                 // HDRI is optional - silently fall back to procedural envmap
                 pmremGenerator.dispose();
             }
-        } catch (error) {
+        } catch {
             // HDRLoader not available - use procedural envmap
         }
 
@@ -586,7 +585,6 @@ export class ThreeRenderer {
      */
     handleContextRestored() {
         this._contextLost = false;
-        console.log('✅ WebGL context restored - recreating resources');
 
         // Recreate all GPU resources
         this.recreateResources();
@@ -1276,7 +1274,6 @@ export class ThreeRenderer {
     render(params = {}) {
         // Guard against calls after destroy
         if (this._destroyed) {
-            console.log('[ThreeRenderer] render() BLOCKED - destroyed');
             return;
         }
 
@@ -1287,7 +1284,6 @@ export class ThreeRenderer {
 
         // Guard against rendering before scene is ready
         if (!this.scene || !this.camera || !this.renderer) {
-            console.log(`[ThreeRenderer] render() BLOCKED - scene=${!!this.scene}, camera=${!!this.camera}, renderer=${!!this.renderer}`);
             return;
         }
 
@@ -1345,7 +1341,7 @@ export class ThreeRenderer {
             scale = 1.0,
             glowColor = [1, 1, 1],
             glowIntensity = 1.0,
-            glowColorHex = null,  // Hex color for luminance normalization
+            // glowColorHex - available for luminance normalization (currently unused)
             hasActiveGesture = false,  // Whether a gesture is currently active
             calibrationRotation = [0, 0, 0],  // Manual rotation offset applied on top of animations
             cameraRoll = 0,  // Camera-space roll rotation applied after all other rotations
@@ -1701,7 +1697,6 @@ export class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
-        console.log(`[ThreeRenderer] destroy() CALLED, scene children=${this.scene?.children?.length}`);
 
         // Set destroyed flag first to prevent any pending render calls
         this._destroyed = true;

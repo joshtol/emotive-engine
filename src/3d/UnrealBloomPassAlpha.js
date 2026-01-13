@@ -20,7 +20,7 @@ import {
     MeshBasicMaterial,
     RGBAFormat,
     ShaderMaterial,
-    UniformsUtils,
+    // UniformsUtils - available for uniform cloning if needed
     Vector2,
     Vector3,
     WebGLRenderTarget
@@ -28,66 +28,8 @@ import {
 import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 
 /**
- * Modified separable Gaussian blur shader that preserves alpha channel
- */
-const SeparableBlurShaderAlpha = {
-    name: 'SeparableBlurShaderAlpha',
-
-    uniforms: {
-        'tDiffuse': { value: null },
-        'texSize': { value: new Vector2(0.5, 0.5) },
-        'direction': { value: new Vector2(0.5, 0.5) },
-        'kernelRadius': { value: 1.0 }
-    },
-
-    vertexShader: /* glsl */`
-        varying vec2 vUv;
-
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        }
-    `,
-
-    fragmentShader: /* glsl */`
-        #include <common>
-        varying vec2 vUv;
-        uniform sampler2D tDiffuse;
-        uniform vec2 texSize;
-        uniform vec2 direction;
-        uniform float kernelRadius;
-
-        float gaussianPdf(in float x, in float sigma) {
-            return 0.39894 * exp( -0.5 * x * x/( sigma * sigma))/sigma;
-        }
-
-        void main() {
-            vec2 invSize = 1.0 / texSize;
-            float sigma = kernelRadius/2.0;
-            float weightSum = gaussianPdf(0.0, sigma);
-            vec4 diffuseSum = texture2D( tDiffuse, vUv) * weightSum;
-
-            vec2 delta = direction * invSize * kernelRadius/float(MAX_RADIUS);
-
-            for( int i = 1; i < MAX_RADIUS; i ++ ) {
-                float x = kernelRadius * float(i) / float(MAX_RADIUS);
-                float w = gaussianPdf(x, sigma);
-
-                vec2 uvOffset = delta * float(i);
-                vec4 sample1 = texture2D( tDiffuse, vUv + uvOffset);
-                vec4 sample2 = texture2D( tDiffuse, vUv - uvOffset);
-
-                diffuseSum += ((sample1 + sample2) * w);
-                weightSum += (2.0 * w);
-            }
-
-            gl_FragColor = diffuseSum/weightSum;
-        }
-    `
-};
-
-/**
  * UnrealBloomPassAlpha - preserves alpha channel transparency
+ * Note: Separable blur shader is inlined in getSeperableBlurMaterial()
  */
 export class UnrealBloomPassAlpha extends Pass {
     constructor(resolution, strength, radius, threshold) {
@@ -465,7 +407,7 @@ export class UnrealBloomPassAlpha extends Pass {
         });
     }
 
-    getCompositeMaterial(nMips) {
+    getCompositeMaterial(_nMips) {
         return new ShaderMaterial({
             uniforms: {
                 'blurTexture1': { value: null },

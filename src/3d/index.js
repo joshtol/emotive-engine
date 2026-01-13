@@ -419,10 +419,10 @@ export class EmotiveMascot3D {
      * Set emotional state (same API as 2D version)
      * @param {string} emotion - Emotion name
      * @param {string|number|Object|null} undertoneOrDurationOrOptions - Undertone string, duration number, or options object
-     * @param {number} [timestamp] - Optional timestamp (unused in 3D, for API compatibility)
+     * @param {number} [_timestamp] - Optional timestamp (unused in 3D, for API compatibility)
      * @returns {EmotiveMascot3D} this instance for chaining
      */
-    setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
+    setEmotion(emotion, undertoneOrDurationOrOptions, _timestamp) {
         // Guard against calls after destroy
         if (this._isDestroyed()) return this;
 
@@ -564,7 +564,7 @@ export class EmotiveMascot3D {
      * @param {number} options.scale - Scale multiplier for gesture amplitude
      * @returns {EmotiveMascot3D} this instance for chaining
      */
-    gesture(gestureName, options = {}) {
+    gesture(gestureName, _options = {}) {
         // Scale is applied via the 3D core's gesture system
         // For now, just call express - the scale option can be wired in later
         return this.express(gestureName);
@@ -1539,7 +1539,7 @@ export class EmotiveMascot3D {
      * @param {number} duration - Animation duration in milliseconds
      * @param {string} easing - Easing function name (currently only 'easeOutCubic' supported)
      */
-    animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
+    animateToPosition(x, y, z = 0, duration = 1000, _easing = 'easeOutCubic') {
         if (!this.container) return;
 
         const startPos = this.getPosition();
@@ -1745,7 +1745,7 @@ export class EmotiveMascot3D {
         // Set up material swap callback if not already done
         if (this.core3D && !this._materialSwapCallbackSet) {
             this._materialSwapCallbackSet = true;
-            this.core3D.onMaterialSwap = info => {
+            this.core3D.onMaterialSwap = () => {
                 // Re-apply SSS preset after material is swapped during morph
                 if (this._currentSSSPreset) {
                     // Small delay to ensure material uniforms are fully initialized

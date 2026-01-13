@@ -89,9 +89,7 @@
 
 // import { interpolateHsl, applyUndertoneSaturation, rgbToHex, hexToRgb } from '../utils/colorUtils.js'; // Unused imports - available for future use
 import GestureCompositor from './GestureCompositor.js';
-import { getEmotion } from './emotions/index.js';
-import { emotionCache } from './cache/EmotionCache.js';
-import { getEffect, applyEffect, isEffectActive } from './effects/index.js';
+// getEmotion, emotionCache, getEffect, applyEffect, isEffectActive - available for emotion processing
 // import { getGesture } from './gestures/index.js'; // Unused import - available for future use
 // import musicalDuration from './MusicalDuration.js'; // Unused import - available for future use
 
@@ -128,7 +126,7 @@ import { CanvasContextManager } from './renderer/CanvasContextManager.js';
 import { ResourceCleanupManager } from './renderer/ResourceCleanupManager.js';
 import { TimerCoordinator } from './renderer/TimerCoordinator.js';
 import { GazeInputHandler } from './renderer/GazeInputHandler.js';
-import { animationLoopManager, AnimationPriority } from './AnimationLoopManager.js';
+// animationLoopManager, AnimationPriority - available for animation loop management
 import { gradientCache } from './renderer/GradientCache.js';
 
 class EmotiveRenderer {
