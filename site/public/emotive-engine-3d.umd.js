@@ -53853,7 +53853,7 @@ void main() {
 	            } else if (this.coreMesh?.material) {
 	                // Context is valid but textures might be invalidated
 	                // Check if the material has textures that need revalidation
-	                const material = this.coreMesh.material;
+	                const { material } = this.coreMesh;
 	                if (material.map && !material.map.image) {
 	                    // Texture image was garbage collected - trigger reload
 	                    console.warn('⚠️ Texture invalidated on visibility change - triggering reload');
