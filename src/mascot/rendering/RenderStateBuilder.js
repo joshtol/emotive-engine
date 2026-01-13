@@ -8,10 +8,51 @@
  * - Audio level capture
  * - Gaze offset retrieval
  * - Performance timing setup
+ *
+ * @module RenderStateBuilder
  */
 export class RenderStateBuilder {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create RenderStateBuilder
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} [deps.animationController] - Animation controller instance
+     * @param {Object} [deps.audioLevelProcessor] - Audio level processor instance
+     * @param {Object} [deps.gazeTracker] - Gaze tracker instance
+     * @param {Object} deps.particleSystem - Particle system instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} deps.state - Shared state with debugMode and speaking properties
+     *
+     * @example
+     * // New DI style:
+     * new RenderStateBuilder({ animationController, audioLevelProcessor, gazeTracker, particleSystem, stateMachine, state })
+     *
+     * // Legacy style:
+     * new RenderStateBuilder(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.stateMachine && deps.particleSystem && !deps.errorBoundary) {
+            // New DI style
+            this.animationController = deps.animationController || null;
+            this.audioLevelProcessor = deps.audioLevelProcessor || null;
+            this.gazeTracker = deps.gazeTracker || null;
+            this.particleSystem = deps.particleSystem;
+            this.stateMachine = deps.stateMachine;
+            this._state = deps.state || { debugMode: false, speaking: false };
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.animationController = mascot.animationController;
+            this.audioLevelProcessor = mascot.audioLevelProcessor;
+            this.gazeTracker = mascot.gazeTracker;
+            this.particleSystem = mascot.particleSystem;
+            this.stateMachine = mascot.stateMachine;
+            this._state = {
+                get debugMode() { return mascot.debugMode; },
+                get speaking() { return mascot.speaking; }
+            };
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -19,7 +60,7 @@ export class RenderStateBuilder {
      * @returns {Object} Render state with timing, emotional state, and input data
      */
     buildRenderState() {
-        const renderStart = this.mascot.debugMode ? performance.now() : 0;
+        const renderStart = this._state.debugMode ? performance.now() : 0;
         const deltaTime = this.getDeltaTime();
 
         const renderState = this.createRenderState();
@@ -32,8 +73,8 @@ export class RenderStateBuilder {
      * @returns {number} Delta time in milliseconds
      */
     getDeltaTime() {
-        return this.mascot.animationController ?
-            this.mascot.animationController.deltaTime :
+        return this.animationController ?
+            this.animationController.deltaTime :
             16.67; // Default fallback value
     }
 
@@ -43,12 +84,12 @@ export class RenderStateBuilder {
      */
     createRenderState() {
         return {
-            properties: this.mascot.stateMachine.getCurrentEmotionalProperties(),
-            emotion: this.mascot.stateMachine.getCurrentState().emotion,
-            undertone: this.mascot.stateMachine.getCurrentState().undertone,
-            particleSystem: this.mascot.particleSystem,
-            speaking: this.mascot.speaking,
-            audioLevel: this.mascot.audioLevelProcessor.getCurrentLevel(),
+            properties: this.stateMachine.getCurrentEmotionalProperties(),
+            emotion: this.stateMachine.getCurrentState().emotion,
+            undertone: this.stateMachine.getCurrentState().undertone,
+            particleSystem: this.particleSystem,
+            speaking: this._state.speaking,
+            audioLevel: this.audioLevelProcessor ? this.audioLevelProcessor.getCurrentLevel() : 0,
             gazeOffset: this.getGazeOffset()
         };
     }
@@ -58,8 +99,8 @@ export class RenderStateBuilder {
      * @returns {Object} Gaze offset with x and y coordinates
      */
     getGazeOffset() {
-        return this.mascot.gazeTracker ?
-            this.mascot.gazeTracker.currentGaze :
+        return this.gazeTracker ?
+            this.gazeTracker.currentGaze :
             { x: 0, y: 0 };
     }
 }

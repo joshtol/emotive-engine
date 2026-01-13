@@ -9,12 +9,58 @@
  * - Plugin rendering
  * - Debug info rendering
  * - Performance logging
+ *
+ * @module RenderLayerOrchestrator
  */
 import { emotiveDebugger } from '../../utils/debugger.js';
 
 export class RenderLayerOrchestrator {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create RenderLayerOrchestrator
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.canvasManager - Canvas manager instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.particleSystem - Particle system instance
+     * @param {Object} [deps.pluginSystem] - Plugin system instance
+     * @param {Object} deps.renderer - Renderer instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} deps.state - Shared state with debugMode property
+     * @param {Function} deps.renderDebugInfo - Debug info render function
+     *
+     * @example
+     * // New DI style:
+     * new RenderLayerOrchestrator({ canvasManager, config, particleSystem, renderer, stateMachine, state, renderDebugInfo })
+     *
+     * // Legacy style:
+     * new RenderLayerOrchestrator(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.canvasManager && deps.particleSystem && deps.renderer && deps.stateMachine && !deps.errorBoundary) {
+            // New DI style
+            this.canvasManager = deps.canvasManager;
+            this.config = deps.config;
+            this.particleSystem = deps.particleSystem;
+            this.pluginSystem = deps.pluginSystem || null;
+            this.renderer = deps.renderer;
+            this.stateMachine = deps.stateMachine;
+            this._state = deps.state || { debugMode: false };
+            this._renderDebugInfo = deps.renderDebugInfo || (() => {});
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.canvasManager = mascot.canvasManager;
+            this.config = mascot.config;
+            this.particleSystem = mascot.particleSystem;
+            this.pluginSystem = mascot.pluginSystem;
+            this.renderer = mascot.renderer;
+            this.stateMachine = mascot.stateMachine;
+            this._state = {
+                get debugMode() { return mascot.debugMode; }
+            };
+            this._renderDebugInfo = dt => mascot.renderDebugInfo(dt);
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -38,8 +84,8 @@ export class RenderLayerOrchestrator {
      * @param {Object} gestureTransform - Gesture transform data
      */
     renderBackgroundParticles(glowColor, gestureTransform) {
-        this.mascot.particleSystem.renderBackground(
-            this.mascot.canvasManager.getContext(),
+        this.particleSystem.renderBackground(
+            this.canvasManager.getContext(),
             glowColor,
             gestureTransform
         );
@@ -52,7 +98,7 @@ export class RenderLayerOrchestrator {
      * @param {Object} gestureTransform - Gesture transform data
      */
     renderOrb(renderState, deltaTime, gestureTransform) {
-        this.mascot.renderer.render(renderState, deltaTime, gestureTransform);
+        this.renderer.render(renderState, deltaTime, gestureTransform);
     }
 
     /**
@@ -61,8 +107,8 @@ export class RenderLayerOrchestrator {
      * @param {Object} gestureTransform - Gesture transform data
      */
     renderForegroundParticles(glowColor, gestureTransform) {
-        this.mascot.particleSystem.renderForeground(
-            this.mascot.canvasManager.getContext(),
+        this.particleSystem.renderForeground(
+            this.canvasManager.getContext(),
             glowColor,
             gestureTransform
         );
@@ -72,9 +118,9 @@ export class RenderLayerOrchestrator {
      * Render active plugins
      */
     renderPlugins() {
-        if (this.mascot.pluginSystem) {
-            const state = this.mascot.stateMachine.getCurrentState();
-            this.mascot.pluginSystem.render(this.mascot.canvasManager.getContext(), state);
+        if (this.pluginSystem) {
+            const state = this.stateMachine.getCurrentState();
+            this.pluginSystem.render(this.canvasManager.getContext(), state);
         }
     }
 
@@ -83,8 +129,8 @@ export class RenderLayerOrchestrator {
      * @param {number} deltaTime - Time since last frame
      */
     renderDebugIfEnabled(deltaTime) {
-        if (this.mascot.config.showFPS || this.mascot.config.showDebug) {
-            this.mascot.renderDebugInfo(deltaTime);
+        if (this.config.showFPS || this.config.showDebug) {
+            this._renderDebugInfo(deltaTime);
         }
     }
 
@@ -94,7 +140,7 @@ export class RenderLayerOrchestrator {
      * @param {number} deltaTime - Time since last frame
      */
     logPerformanceIfDebug(renderStart, deltaTime) {
-        if (!this.mascot.debugMode) return;
+        if (!this._state.debugMode) return;
 
         const renderTime = performance.now() - renderStart;
 
@@ -102,7 +148,7 @@ export class RenderLayerOrchestrator {
             emotiveDebugger.log('WARN', 'Slow render frame detected', {
                 renderTime,
                 deltaTime,
-                particleCount: this.mascot.particleSystem.getStats().activeParticles
+                particleCount: this.particleSystem.getStats().activeParticles
             });
         }
     }

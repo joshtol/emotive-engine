@@ -10,10 +10,52 @@
  * - Gesture information
  * - Audio level display
  * - Background boxes for readability
+ *
+ * @module DebugInfoRenderer
  */
 export class DebugInfoRenderer {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create DebugInfoRenderer
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.canvasManager - Canvas manager instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.particleSystem - Particle system instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} deps.state - Shared state with audioLevel, currentModularGesture, speaking
+     *
+     * @example
+     * // New DI style:
+     * new DebugInfoRenderer({ animationController, canvasManager, config, particleSystem, stateMachine, state })
+     *
+     * // Legacy style:
+     * new DebugInfoRenderer(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.canvasManager && deps.config && deps.particleSystem && deps.stateMachine && !deps.errorBoundary) {
+            // New DI style
+            this.animationController = deps.animationController;
+            this.canvasManager = deps.canvasManager;
+            this.config = deps.config;
+            this.particleSystem = deps.particleSystem;
+            this.stateMachine = deps.stateMachine;
+            this._state = deps.state || { audioLevel: 0, currentModularGesture: null, speaking: false };
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.animationController = mascot.animationController;
+            this.canvasManager = mascot.canvasManager;
+            this.config = mascot.config;
+            this.particleSystem = mascot.particleSystem;
+            this.stateMachine = mascot.stateMachine;
+            this._state = {
+                get audioLevel() { return mascot.audioLevel; },
+                get currentModularGesture() { return mascot.currentModularGesture; },
+                get speaking() { return mascot.speaking; }
+            };
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -21,7 +63,7 @@ export class DebugInfoRenderer {
      * @param {number} _deltaTime - Time since last frame (unused but kept for API consistency)
      */
     renderDebugInfo(_deltaTime) {
-        const ctx = this.mascot.canvasManager.getContext();
+        const ctx = this.canvasManager.getContext();
         ctx.save();
 
         this.setupTextStyle(ctx);
@@ -29,11 +71,11 @@ export class DebugInfoRenderer {
         let y = 20;
         const lineHeight = 16;
 
-        if (this.mascot.config.showFPS) {
+        if (this.config.showFPS) {
             y = this.renderFPSInfo(ctx, y, lineHeight);
         }
 
-        if (this.mascot.config.showDebug) {
+        if (this.config.showDebug) {
             this.renderDebugDetails(ctx, y, lineHeight);
         }
 
@@ -59,10 +101,10 @@ export class DebugInfoRenderer {
      * @returns {number} Updated Y position
      */
     renderFPSInfo(ctx, y, lineHeight) {
-        const metrics = this.mascot.animationController.getPerformanceMetrics();
+        const metrics = this.animationController.getPerformanceMetrics();
         const fps = metrics.instantFps || metrics.fps || 0;
         const frameTime = metrics.averageFrameTime ? metrics.averageFrameTime.toFixed(1) : '0.0';
-        const particleStats = this.mascot.particleSystem.getStats();
+        const particleStats = this.particleSystem.getStats();
 
         const lines = [
             `FPS: ${fps}`,
@@ -93,7 +135,7 @@ export class DebugInfoRenderer {
             if (width > maxWidth) maxWidth = width;
         });
 
-        const x = this.mascot.canvasManager.width - maxWidth - padding - 10;
+        const x = this.canvasManager.width - maxWidth - padding - 10;
 
         return { x, maxWidth };
     }
@@ -168,15 +210,15 @@ export class DebugInfoRenderer {
      * @param {number} lineHeight - Height of each line
      */
     renderDebugDetails(ctx, y, lineHeight) {
-        const state = this.mascot.stateMachine.getCurrentState();
-        const particleStats = this.mascot.particleSystem.getStats();
+        const state = this.stateMachine.getCurrentState();
+        const particleStats = this.particleSystem.getStats();
 
         const debugInfo = [
             `Emotion: ${state.emotion}${state.undertone ? ` (${state.undertone})` : ''}`,
             `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
-            `Gesture: ${this.mascot.currentModularGesture ? this.mascot.currentModularGesture.type : 'none'}`,
-            `Speaking: ${this.mascot.speaking ? 'yes' : 'no'}`,
-            `Audio Level: ${(this.mascot.audioLevel * 100).toFixed(1)}%`
+            `Gesture: ${this._state.currentModularGesture ? this._state.currentModularGesture.type : 'none'}`,
+            `Speaking: ${this._state.speaking ? 'yes' : 'no'}`,
+            `Audio Level: ${(this._state.audioLevel * 100).toFixed(1)}%`
         ];
 
         // Draw debug info with background for readability
