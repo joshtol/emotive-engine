@@ -112,22 +112,28 @@ export default AnimationLoopManager; // class for multi-instance
 
 ## Priority 3: Developer Experience
 
-### Task 3.1: Centralize Magic Numbers
+### Task 3.1: Centralize Magic Numbers 🔄 IN PROGRESS
 **Severity:** Medium
 **Scattered across:** Multiple files
 
-**Known Magic Numbers:**
-- `20` — deltaTime cap (AnimationController.js:411)
-- `16.67` — target frame time (AnimationController.js:418)
-- `30000` — long pause threshold ms (AnimationController.js:346)
-- `10000` — medium pause threshold ms (AnimationController.js:348)
-- `256` — FFT size (index.js:1352)
-- `0.8` — analyzer smoothing (index.js:1353)
+**Solution:** Created `src/core/config/defaults.js` with categorized constants:
+- `FRAME_TIMING` — TARGET_FRAME_TIME (16.67), DELTA_TIME_CAP (20), FRAME_BUDGET
+- `VISIBILITY` — LONG_PAUSE_THRESHOLD (30000), MEDIUM_PAUSE_THRESHOLD (10000), reduction factors
+- `AUDIO` — FFT_SIZE (256), SMOOTHING_TIME_CONSTANT (0.8), BPM_LOCK_TIMEOUT (10000)
+- `MONITORING` — Health check, feature flags, context decay intervals
+- `DEFAULT_CONFIG` — Combined object for constructor overrides
 
-**Tasks:**
-- [ ] Create `src/core/config/defaults.js` with all timing/threshold constants
-- [ ] Export as `DEFAULT_CONFIG` object
+**Completed:**
+- [x] Create `src/core/config/defaults.js` with all timing/threshold constants
+- [x] Export as `DEFAULT_CONFIG` object
+- [x] Update AnimationController.js to use FRAME_TIMING and VISIBILITY constants
+- [x] Update ParticleSystem.js to use VISIBILITY constants
+- [x] Update AudioBridge.js to use AUDIO constants
+
+**Remaining:**
 - [ ] Allow override via constructor: `new EmotiveMascot3D({ timing: { deltaTimeCap: 25 } })`
+
+**Note:** Constructor override support deferred - current implementation provides central config for easy modification without runtime overhead.
 
 ---
 
@@ -167,5 +173,5 @@ export default AnimationLoopManager; // class for multi-instance
 | **SSR Safety** | ✅ Complete | Safe import, clear error on `init()` |
 | **Multi-Instance** | ✅ Complete | Fully isolated instances |
 | **Main File Size** | 🔄 In Progress | 1,826 lines (was 2,492), target <1,500 |
-| **Config** | ⏳ Pending | Hardcoded magic numbers → centralized |
+| **Config** | 🔄 In Progress | src/core/config/defaults.js created, key files updated |
 | **Types** | ⏳ Pending | JSDoc → `.d.ts` declarations |

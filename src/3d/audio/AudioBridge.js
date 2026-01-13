@@ -11,6 +11,7 @@
  */
 
 import { AgentBPMDetector } from '../../core/morpher/AgentBPMDetector.js';
+import { AUDIO } from '../../core/config/defaults.js';
 
 export class AudioBridge {
     /**
@@ -75,8 +76,8 @@ export class AudioBridge {
         // Create analyzer node
         if (!this._analyzerNode) {
             this._analyzerNode = this._audioContext.createAnalyser();
-            this._analyzerNode.fftSize = 256;
-            this._analyzerNode.smoothingTimeConstant = 0.8;
+            this._analyzerNode.fftSize = AUDIO.FFT_SIZE;
+            this._analyzerNode.smoothingTimeConstant = AUDIO.SMOOTHING_TIME_CONSTANT;
         }
 
         // Try to use fetch + decodeAudioData to bypass CORS tainted audio issue

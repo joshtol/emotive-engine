@@ -2,9 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                     ◐ ◑ ◒ ◓  PARTICLE SYSTEM  ◓ ◒ ◑ ◐                     
- *                                                                                    
+ *  └─○═╝
+ *                     ◐ ◑ ◒ ◓  PARTICLE SYSTEM  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Particle System - Orchestrator of Emotional Atmosphere with 3D Depth
@@ -15,6 +15,11 @@
  * @changelog 2.3.0 - Batch rendering optimization for reduced state changes
  * @changelog 2.2.0 - Added undertone saturation system for dynamic particle depth
  * @changelog 2.1.0 - Added support for passing emotion colors to individual particles
+ */
+
+import { VISIBILITY } from './config/defaults.js';
+
+/**
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -513,21 +518,24 @@ class ParticleSystem {
         this.resetAccumulator();
 
         // Determine action based on gap duration
-        if (gapMs > 30000) {
+        if (gapMs > VISIBILITY.LONG_PAUSE_THRESHOLD) {
             // Very long gap (30+ seconds): clear all particles for clean slate
             this.clear();
-        } else if (gapMs > 10000) {
+        } else if (gapMs > VISIBILITY.MEDIUM_PAUSE_THRESHOLD) {
             // Medium gap (10-30 seconds): reduce particle count gradually
             const currentCount = this.particles.length;
             const referenceCount = pausedCount ?? currentCount;
-            const targetCount = Math.max(10, Math.floor(referenceCount * 0.5));
+            const targetCount = Math.max(
+                VISIBILITY.MIN_PARTICLES_AFTER_REDUCTION,
+                Math.floor(referenceCount * VISIBILITY.PARTICLE_REDUCTION_FACTOR)
+            );
 
             // Remove oldest particles until we reach target
             while (this.particles.length > targetCount) {
                 this.removeParticle(0); // Remove oldest (first in array)
             }
         }
-        // Short gaps (<10 seconds): keep all particles, just reset accumulator
+        // Short gaps (<MEDIUM_PAUSE_THRESHOLD): keep all particles, just reset accumulator
     }
 
     /**

@@ -11,6 +11,11 @@
  * @author Emotive Engine Team
  * @version 2.0.0
  * @module AnimationController
+ */
+
+import { FRAME_TIMING, VISIBILITY } from './config/defaults.js';
+
+/**
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE                                         
@@ -349,17 +354,17 @@ class AnimationController {
                 // TAB FOCUS FIX: Don't reset canvas context aggressively
                 if (this.renderer) {
                     // Only reset if gap was very long
-                    if (gap > 30000) {
+                    if (gap > VISIBILITY.LONG_PAUSE_THRESHOLD) {
                         this.renderer.resetCanvasContext();
                     }
-                    
+
                     // Reset any active animations
                     if (this.renderer.gestureAnimator) {
                         this.renderer.gestureAnimator.resumeAnimation?.();
                     }
 
                     // Only force clean render for very long gaps
-                    if (gap > 30000) {
+                    if (gap > VISIBILITY.LONG_PAUSE_THRESHOLD) {
                         this.renderer.forceCleanRender = true;
                     }
                 }
@@ -399,14 +404,14 @@ class AnimationController {
         
         // TAB FOCUS FIX: More aggressive deltaTime cap for smooth recovery
         // After tab focus, browsers can give inconsistent timing
-        if (this.deltaTime > 20) {
-            this.deltaTime = 20; // Reduced from 50ms to 20ms for smoother recovery
+        if (this.deltaTime > FRAME_TIMING.DELTA_TIME_CAP) {
+            this.deltaTime = FRAME_TIMING.DELTA_TIME_CAP;
         }
-        
+
         // TAB FOCUS FIX: Detect and handle tab focus recovery
-        if (this.deltaTime > 16.67 && this.deltaTime < 20) {
+        if (this.deltaTime > FRAME_TIMING.TARGET_FRAME_TIME && this.deltaTime < FRAME_TIMING.DELTA_TIME_CAP) {
             // Likely tab focus recovery - use target frame time
-            this.deltaTime = 16.67; // Force 60fps timing
+            this.deltaTime = FRAME_TIMING.TARGET_FRAME_TIME;
         }
         
         this.lastFrameTime = currentTime;
