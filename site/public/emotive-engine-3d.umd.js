@@ -53281,11 +53281,17 @@ void main() {
 	        }
 
 	        // WebGL context loss handling (critical for mobile stability)
+	        // IMPORTANT: Listen on renderer.domElement, not the original canvas
+	        // Three.js may use a different canvas internally
 	        this._contextLost = false;
 	        this._boundHandleContextLost = this.handleContextLost.bind(this);
 	        this._boundHandleContextRestored = this.handleContextRestored.bind(this);
-	        canvas.addEventListener('webglcontextlost', this._boundHandleContextLost, false);
-	        canvas.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+	        this.renderer.domElement.addEventListener('webglcontextlost', this._boundHandleContextLost, false);
+	        this.renderer.domElement.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+
+	        // Page visibility change handling (detect tab switches that may invalidate GPU resources)
+	        this._boundHandleVisibilityChange = this._handleVisibilityChange.bind(this);
+	        document.addEventListener('visibilitychange', this._boundHandleVisibilityChange);
 
 	        // Create camera
 	        const fov = options.fov !== undefined ? options.fov : 45;
@@ -53785,9 +53791,15 @@ void main() {
 	     */
 	    handleContextRestored() {
 	        this._contextLost = false;
+	        console.log('✅ WebGL context restored - recreating resources');
 
 	        // Recreate all GPU resources
 	        this.recreateResources();
+
+	        // Notify external listeners (e.g., Core3DManager) to recreate custom materials
+	        if (this.onContextRestored) {
+	            this.onContextRestored();
+	        }
 	    }
 
 	    /**
@@ -53816,9 +53828,41 @@ void main() {
 	            }
 	        }
 
-	        // Note: Three.js automatically recreates geometries and textures
-	        // when they are first accessed after context restoration
+	        // Note: For custom materials (crystal, moon, sun), the Core3DManager
+	        // handles recreation via the onContextRestored callback
 
+	    }
+
+	    /**
+	     * Handle page visibility changes
+	     * When tab becomes visible again, check if GPU resources need reloading
+	     * @private
+	     */
+	    _handleVisibilityChange() {
+	        if (this._destroyed) return;
+
+	        if (!document.hidden) {
+	            // Tab became visible - check if textures are still valid
+	            // Some browsers silently invalidate GPU resources without triggering webglcontextlost
+	            const gl = this.renderer?.getContext();
+	            if (gl && gl.isContextLost()) {
+	                // Context was lost silently - manually trigger restoration flow
+	                console.warn('⚠️ WebGL context lost detected on visibility change');
+	                this._contextLost = true;
+	                // The context restoration will be handled by the browser's webglcontextrestored event
+	            } else if (this.coreMesh?.material) {
+	                // Context is valid but textures might be invalidated
+	                // Check if the material has textures that need revalidation
+	                const material = this.coreMesh.material;
+	                if (material.map && !material.map.image) {
+	                    // Texture image was garbage collected - trigger reload
+	                    console.warn('⚠️ Texture invalidated on visibility change - triggering reload');
+	                    if (this.onContextRestored) {
+	                        this.onContextRestored();
+	                    }
+	                }
+	            }
+	        }
 	    }
 
 	    /**
@@ -54441,6 +54485,11 @@ void main() {
 	            return;
 	        }
 
+	        // Guard against rendering while WebGL context is lost
+	        if (this._contextLost) {
+	            return;
+	        }
+
 	        // Guard against rendering before scene is ready
 	        if (!this.scene || !this.camera || !this.renderer) {
 	            console.log(`[ThreeRenderer] render() BLOCKED - scene=${!!this.scene}, camera=${!!this.camera}, renderer=${!!this.renderer}`);
@@ -54863,10 +54912,13 @@ void main() {
 	        this._destroyed = true;
 
 	        // Remove WebGL context event listeners
-	        if (this.canvas) {
-	            this.canvas.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);
-	            this.canvas.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+	        if (this.renderer?.domElement) {
+	            this.renderer.domElement.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);
+	            this.renderer.domElement.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
 	        }
+
+	        // Remove visibility change listener
+	        document.removeEventListener('visibilitychange', this._boundHandleVisibilityChange);
 
 	        // Cancel camera animation RAF
 	        if (this.cameraAnimationId) {
@@ -61977,6 +62029,16 @@ void main() {
 	}
 
 	/**
+	 * Check if an emotion exists (checks both core and plugin)
+	 * @param {string} emotionName - Name of the emotion to check
+	 * @returns {boolean} True if emotion exists
+	 */
+	function hasEmotion(emotionName) {
+	    const resolvedName = emotionAliases[emotionName] || emotionName;
+	    return emotionRegistry.has(resolvedName) || pluginAdapter$2.getPluginEmotion(resolvedName) !== null;
+	}
+
+	/**
 	 * Get emotion transition parameters
 	 * @param {string} fromEmotion - Starting emotion
 	 * @param {string} toEmotion - Target emotion
@@ -62262,6 +62324,55 @@ void main() {
 	        this.isBlinking = false;
 	    }
 	}
+
+	/**
+	 * Default configuration constants for Emotive Engine
+	 *
+	 * These constants control timing, thresholds, and animation parameters
+	 * across the engine. Import and use these instead of hardcoded magic numbers.
+	 *
+	 * @module core/config/defaults
+	 */
+
+	/**
+	 * Frame timing constants for animation consistency
+	 */
+	const FRAME_TIMING = {
+	    /** Target frame time for 60 FPS (ms) */
+	    TARGET_FRAME_TIME: 16.67,
+
+	    /** Maximum delta time for particle physics - prevents position explosions (ms) */
+	    PARTICLE_DELTA_CAP: 50,
+
+	    /** Maximum delta time for 3D render loop - more tolerant for frame drops (ms) */
+	    RENDER_DELTA_CAP: 100};
+
+	/**
+	 * Visibility/tab change thresholds
+	 */
+	const VISIBILITY = {
+	    /** Gap threshold for clearing all particles (ms) */
+	    LONG_PAUSE_THRESHOLD: 30000,
+
+	    /** Gap threshold for reducing particle count (ms) */
+	    MEDIUM_PAUSE_THRESHOLD: 10000,
+
+	    /** Particle reduction factor for medium gaps */
+	    PARTICLE_REDUCTION_FACTOR: 0.5,
+
+	    /** Minimum particles to keep after reduction */
+	    MIN_PARTICLES_AFTER_REDUCTION: 10
+	};
+
+	/**
+	 * Audio analyzer configuration
+	 */
+	const AUDIO = {
+	    /** FFT size for audio analysis (must be power of 2) */
+	    FFT_SIZE: 256,
+
+	    /** Smoothing time constant for analyzer (0-1) */
+	    SMOOTHING_TIME_CONSTANT: 0.8};
 
 	/**
 	 * ═══════════════════════════════════════════════════════════════════════════════════════
@@ -62818,46 +62929,6 @@ void main() {
 	 * @fileoverview Bridges RhythmEngine with the 3D animation system
 	 * @author Emotive Engine Team
 	 * @module 3d/animation/Rhythm3DAdapter
-	 *
-	 * ╔═══════════════════════════════════════════════════════════════════════════════════
-	 * ║ CONCEPT
-	 * ╠═══════════════════════════════════════════════════════════════════════════════════
-	 * ║ Translates musical timing from RhythmEngine into multipliers and modulation
-	 * ║ values that the 3D system (GestureBlender, Core3DManager) can use to sync
-	 * ║ animations with rhythm.
-	 * ╚═══════════════════════════════════════════════════════════════════════════════════
-	 *
-	 * FEATURES:
-	 * • Beat-synced gesture intensity modulation
-	 * • Accent-aware animation scaling
-	 * • Ambient groove idle animations (subtle bounce/sway when no gestures)
-	 * • BPM-aware duration conversion for gestures
-	 * • Pattern-specific modulation overrides
-	 * • Multiple groove presets with seamless transitions
-	 *
-	 * GROOVE PRESETS:
-	 * • groove1 (subtle): Minimal, elegant - gentle bounce and sway
-	 * • groove2 (energetic): Bouncy, lively - pronounced vertical motion
-	 * • groove3 (flowing): Smooth, languid - emphasis on rotation and sway
-	 *
-	 * ARCHITECTURE:
-	 * ┌──────────────────────────────────────────────────────────────────────────────────┐
-	 * │  RHYTHM FLOW TO 3D                                                               │
-	 * │                                                                                   │
-	 * │  [RhythmEngine] → [Rhythm3DAdapter] → [GestureBlender / Core3DManager]          │
-	 * │       ↓                   ↓                                                      │
-	 * │   beat/accent         modulation                                                 │
-	 * │   intensity          multipliers                                                 │
-	 * │                                                                                   │
-	 * └──────────────────────────────────────────────────────────────────────────────────┘
-	 *
-	 * TIMING MODEL (Frame-Rate Independent):
-	 * ┌──────────────────────────────────────────────────────────────────────────────────┐
-	 * │  • RhythmEngine provides absolute beatProgress/barProgress from performance.now()│
-	 * │  • Groove computed from absolute beat phase (NOT accumulated frame deltas)       │
-	 * │  • Smoothing applied only to OUTPUT values, not timing                          │
-	 * │  • deltaTime clamped to prevent overshoot during frame drops                    │
-	 * └──────────────────────────────────────────────────────────────────────────────────┘
 	 */
 
 
@@ -62984,7 +63055,8 @@ void main() {
 	        };
 
 	        // Maximum deltaTime to prevent smoothing overshoot during frame drops
-	        this._maxDeltaTime = 0.05; // 50ms cap (~20 FPS minimum)
+	        // Convert from ms to seconds (PARTICLE_DELTA_CAP is 50ms = 0.05s)
+	        this._maxDeltaTime = FRAME_TIMING.PARTICLE_DELTA_CAP / 1000;
 
 	        // Pending groove change (for quantized transitions)
 	        this._pendingGroove = null;
@@ -73964,6 +74036,40 @@ void main() {
 	}
 
 	/**
+	 * Get list of all available gestures (core and plugin)
+	 * @returns {Array} Array of gesture info objects
+	 */
+	function listGestures() {
+	    const allGestures = [];
+	    
+	    // Add core gestures
+	    Object.values(GESTURE_REGISTRY).forEach(gesture => {
+	        allGestures.push({
+	            name: gesture.name,
+	            emoji: gesture.emoji || '🎭',
+	            type: gesture.type,
+	            description: gesture.description || 'No description',
+	            source: 'core'
+	        });
+	    });
+	    
+	    // Add plugin gestures
+	    const pluginGestureNames = pluginAdapter$1.getAllPluginGestures();
+	    pluginGestureNames.forEach(name => {
+	        const gesture = pluginAdapter$1.getPluginGesture(name);
+	        allGestures.push({
+	            name: gesture.name,
+	            emoji: gesture.emoji || '🔌',
+	            type: gesture.type,
+	            description: gesture.description || 'Plugin gesture',
+	            source: 'plugin'
+	        });
+	    });
+	    
+	    return allGestures;
+	}
+
+	/**
 	 * ═══════════════════════════════════════════════════════════════════════════════════════
 	 *  ╔═○─┐ emotive
 	 *    ●●  ENGINE
@@ -78955,32 +79061,12 @@ void main() {
 	 * ═══════════════════════════════════════════════════════════════════════════════════════
 	 *  ╔═○─┐ emotive
 	 *    ●●  ENGINE - Modular Particle System with 3D Depth
-	 *  └─○═╝                                                                             
+	 *  └─○═╝
 	 * ═══════════════════════════════════════════════════════════════════════════════════════
 	 *
 	 * @fileoverview Orchestrator for the modular particle system with z-coordinate depth
 	 * @author Emotive Engine Team
 	 * @module core/Particle-modular
-	 * 
-	 * ╔═══════════════════════════════════════════════════════════════════════════════════
-	 * ║                               MODULAR ARCHITECTURE                                
-	 * ╠═══════════════════════════════════════════════════════════════════════════════════
-	 * ║ This is a drop-in replacement for the original Particle.js                        
-	 * ║ Same API, but with modular architecture for easier maintenance                    
-	 * ║                                                                                    
-	 * ║ STRUCTURE:                                                                         
-	 * ║ - Particle class (this file) - orchestrates everything                            
-	 * ║ - particles/behaviors/* - behavior modules                                     
-	 * ║ - particles/config/* - configuration constants                                    
-	 * ║ - particles/utils/* - utility functions                                           
-	 * ║ - gestures/* - modular gesture system                                             
-	 * ║                                                                                    
-	 * ║ 3D DEPTH SYSTEM:                                                                   
-	 * ║ - Z-coordinate ranges from -1 (behind orb) to +1 (in front)                       
-	 * ║ - 1/13 particles spawn in foreground, 12/13 in background                         
-	 * ║ - Depth affects visual size (20% scaling based on z)                              
-	 * ║ - Foreground particles spawn with offset to prevent stacking                      
-	 * ╚═══════════════════════════════════════════════════════════════════════════════════
 	 */
 
 
@@ -79082,9 +79168,9 @@ void main() {
 	     */
 	    update(deltaTime, centerX, centerY, _undertoneModifier = null, gestureMotion = null, gestureProgress = 0, containmentBounds = null) {
 	        // Cap deltaTime to prevent huge jumps
-	        const cappedDeltaTime = Math.min(deltaTime, 50);
+	        const cappedDeltaTime = Math.min(deltaTime, FRAME_TIMING.PARTICLE_DELTA_CAP);
 	        // Normalize to 60 FPS equivalent for consistent physics
-	        const dt = cappedDeltaTime / 16.67; // 16.67ms = 60 FPS frame time
+	        const dt = cappedDeltaTime / FRAME_TIMING.TARGET_FRAME_TIME;
 	        
 	        // Universal law: Gestures override state behavior based on their motion type
 	        // Use the modular gesture system to determine gesture behavior
@@ -79662,6 +79748,10 @@ void main() {
 	 * @fileoverview Particle Spawner - Manages particle spawning logic
 	 * @author Emotive Engine Team
 	 * @module core/particle/ParticleSpawner
+	 */
+
+
+	/**
 	 *
 	 * ╔═══════════════════════════════════════════════════════════════════════════════════
 	 * ║                                   PURPOSE
@@ -79867,7 +79957,7 @@ void main() {
 	        // particleRate represents desired particles per second
 	        // deltaTime is in milliseconds
 	        // Cap deltaTime to prevent huge accumulation spikes
-	        const cappedDeltaTime = Math.min(deltaTime, 50);
+	        const cappedDeltaTime = Math.min(deltaTime, FRAME_TIMING.PARTICLE_DELTA_CAP);
 	        const particlesPerSecond = particleRate;
 	        const particlesPerMs = particlesPerSecond / 1000;
 
@@ -80150,9 +80240,9 @@ void main() {
 	 * ═══════════════════════════════════════════════════════════════════════════════════════
 	 *  ╔═○─┐ emotive
 	 *    ●●  ENGINE
-	 *  └─○═╝                                                                             
-	 *                     ◐ ◑ ◒ ◓  PARTICLE SYSTEM  ◓ ◒ ◑ ◐                     
-	 *                                                                                    
+	 *  └─○═╝
+	 *                     ◐ ◑ ◒ ◓  PARTICLE SYSTEM  ◓ ◒ ◑ ◐
+	 *
 	 * ═══════════════════════════════════════════════════════════════════════════════════════
 	 *
 	 * @fileoverview Particle System - Orchestrator of Emotional Atmosphere with 3D Depth
@@ -80163,62 +80253,6 @@ void main() {
 	 * @changelog 2.3.0 - Batch rendering optimization for reduced state changes
 	 * @changelog 2.2.0 - Added undertone saturation system for dynamic particle depth
 	 * @changelog 2.1.0 - Added support for passing emotion colors to individual particles
-	 * 
-	 * ╔═══════════════════════════════════════════════════════════════════════════════════
-	 * ║                                   PURPOSE                                         
-	 * ╠═══════════════════════════════════════════════════════════════════════════════════
-	 * ║ The CONDUCTOR of particle chaos. Manages the lifecycle, behavior, and             
-	 * ║ performance of all particles. Uses object pooling to prevent memory leaks         
-	 * ║ and coordinates particles to create emotional atmospheres around the orb.         
-	 * ║                                                                                    
-	 * ║ NEW: Undertone saturation dynamically adjusts particle colors based on emotional  
-	 * ║ intensity, creating visual depth through saturation levels.                       
-	 * ╚═══════════════════════════════════════════════════════════════════════════════════
-	 *
-	 * ┌───────────────────────────────────────────────────────────────────────────────────
-	 * │ 🎭 SYSTEM FEATURES                                                                
-	 * ├───────────────────────────────────────────────────────────────────────────────────
-	 * │ • Object pooling for performance (reuse dead particles)                           
-	 * │ • Time-based spawning with accumulator                                            
-	 * │ • Automatic cleanup every 5 seconds                                               
-	 * │ • Memory leak detection and prevention                                            
-	 * │ • Dynamic particle limits based on emotion                                        
-	 * │ • 13 different particle behaviors                                                 
-	 * │ • Undertone-based saturation adjustments for particle colors                      
-	 * └───────────────────────────────────────────────────────────────────────────────────
-	 *
-	 * ┌───────────────────────────────────────────────────────────────────────────────────
-	 * │ 🔄 OBJECT POOL STRATEGY                                                           
-	 * ├───────────────────────────────────────────────────────────────────────────────────
-	 * │ • Lazy initialization (create as needed)                                          
-	 * │ • Max pool size: 50 particles                                                     
-	 * │ • Reuse dead particles before creating new                                        
-	 * │ • Track pool hits/misses for optimization                                         
-	 * │ • Absolute max: 2x configured limit (prevents runaway)                            
-	 * └───────────────────────────────────────────────────────────────────────────────────
-	 *
-	 * ┌───────────────────────────────────────────────────────────────────────────────────
-	 * │ 📊 PERFORMANCE LIMITS                                                             
-	 * ├───────────────────────────────────────────────────────────────────────────────────
-	 * │ • Default max particles  : 50                                                     
-	 * │ • Absolute max particles : 100 (2x default)                                       
-	 * │ • Pool size             : Min(maxParticles, 50)                                  
-	 * │ • Cleanup interval      : 5000ms                                                 
-	 * │ • Spawn rate            : Based on emotion config                                
-	 * └───────────────────────────────────────────────────────────────────────────────────
-	 *
-	 * ╔═══════════════════════════════════════════════════════════════════════════════════
-	 * ║                              MEMORY MANAGEMENT                                    
-	 * ╠═══════════════════════════════════════════════════════════════════════════════════
-	 * ║ Critical for preventing memory leaks:                                             
-	 * ║ 1. Reuse particles from pool when available                                       
-	 * ║ 2. Clear references when returning to pool                                        
-	 * ║ 3. Periodic cleanup of excess particles                                           
-	 * ║ 4. Track creation/destruction for leak detection                                  
-	 * ║ 5. Hard limits prevent runaway particle creation                                  
-	 * ╚═══════════════════════════════════════════════════════════════════════════════════
-	 *
-	 * ════════════════════════════════════════════════════════════════════════════════════
 	 */
 
 
@@ -80641,6 +80675,37 @@ void main() {
 	    _render(ctx, emotionColor, gestureTransform = null) {
 	        // Delegate to ParticleRenderer
 	        this.particleRenderer.render(ctx, this.particles, emotionColor, gestureTransform);
+	    }
+
+	    /**
+	     * Handle visibility resume after tab was hidden
+	     * Manages particle count based on how long the tab was hidden
+	     * @param {number} gapMs - Time in milliseconds the tab was hidden
+	     * @param {number} [pausedCount] - Optional: particle count when paused (for gradual reduction)
+	     */
+	    onVisibilityResume(gapMs, pausedCount = null) {
+	        // Reset spawn accumulator to prevent particle burst on resume
+	        this.resetAccumulator();
+
+	        // Determine action based on gap duration
+	        if (gapMs > VISIBILITY.LONG_PAUSE_THRESHOLD) {
+	            // Very long gap (30+ seconds): clear all particles for clean slate
+	            this.clear();
+	        } else if (gapMs > VISIBILITY.MEDIUM_PAUSE_THRESHOLD) {
+	            // Medium gap (10-30 seconds): reduce particle count gradually
+	            const currentCount = this.particles.length;
+	            const referenceCount = pausedCount ?? currentCount;
+	            const targetCount = Math.max(
+	                VISIBILITY.MIN_PARTICLES_AFTER_REDUCTION,
+	                Math.floor(referenceCount * VISIBILITY.PARTICLE_REDUCTION_FACTOR)
+	            );
+
+	            // Remove oldest particles until we reach target
+	            while (this.particles.length > targetCount) {
+	                this.removeParticle(0); // Remove oldest (first in array)
+	            }
+	        }
+	        // Short gaps (<MEDIUM_PAUSE_THRESHOLD): keep all particles, just reset accumulator
 	    }
 
 	    /**
@@ -89718,6 +89783,10 @@ void main() {
 	            maxZoom: options.maxZoom, // Maximum zoom distance
 	            assetBasePath: this.assetBasePath // Base path for HDRI and other assets
 	        });
+
+	        // Register for WebGL context restoration to recreate custom materials
+	        this.renderer.onContextRestored = () => this._handleContextRestored();
+
 	        const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 
 	        if (!geometryConfig) {
@@ -91676,6 +91745,54 @@ void main() {
 	        this.crystalInnerCore = this.crystalSoul.mesh;
 	        this.crystalInnerCoreMaterial = this.crystalSoul.material;
 	        this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
+	    }
+
+	    /**
+	     * Handle WebGL context restoration by recreating custom materials and textures
+	     * Called by ThreeRenderer when the browser restores the WebGL context
+	     * @private
+	     */
+	    async _handleContextRestored() {
+	        console.log(`[Core3D:${this._instanceId}] Recreating custom materials after context restoration`);
+
+	        if (this._destroyed || !this.coreMesh) {
+	            return;
+	        }
+
+	        // Recreate custom material with textures (crystal, moon, sun)
+	        if (this.customMaterialType) {
+	            const emotionData = getEmotion(this.emotion);
+	            const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
+	                glowColor: this.glowColor || [1.0, 1.0, 0.95],
+	                glowIntensity: this.glowIntensity || 1.0,
+	                materialVariant: this.materialVariant,
+	                emotionData,
+	                assetBasePath: this.assetBasePath
+	            });
+
+	            if (materialResult) {
+	                // Dispose old material
+	                if (this.customMaterial) {
+	                    disposeCustomMaterial(this.customMaterial);
+	                }
+
+	                // Apply new material
+	                this.customMaterial = materialResult.material;
+	                this.coreMesh.material = this.customMaterial;
+
+	                // Recreate crystal soul if needed
+	                if (this.customMaterialType === 'crystal' && this.crystalSoul) {
+	                    await this._createCrystalInnerCoreAsync();
+	                }
+
+	                // Notify external listeners (e.g., demos applying SSS presets)
+	                if (this.onMaterialSwap) {
+	                    this.onMaterialSwap();
+	                }
+
+	                console.log(`[Core3D:${this._instanceId}] Custom material recreated successfully`);
+	            }
+	        }
 	    }
 
 	    /**
@@ -96670,8 +96787,8 @@ void main() {
 	        // Create analyzer node
 	        if (!this._analyzerNode) {
 	            this._analyzerNode = this._audioContext.createAnalyser();
-	            this._analyzerNode.fftSize = 256;
-	            this._analyzerNode.smoothingTimeConstant = 0.8;
+	            this._analyzerNode.fftSize = AUDIO.FFT_SIZE;
+	            this._analyzerNode.smoothingTimeConstant = AUDIO.SMOOTHING_TIME_CONSTANT;
 	        }
 
 	        // Try to use fetch + decodeAudioData to bypass CORS tainted audio issue
@@ -99062,6 +99179,12 @@ void main() {
 
 
 	/**
+	 * Valid geometry types for morphTo()
+	 * @type {string[]}
+	 */
+	const VALID_GEOMETRIES = ['sphere', 'crystal', 'diamond', 'rough', 'heart', 'star', 'moon', 'sun'];
+
+	/**
 	 * EmotiveMascot3D - 3D rendering variant
 	 *
 	 * Hybrid architecture:
@@ -99175,6 +99298,15 @@ void main() {
 
 	        // Audio bridge for audio-reactive animations (initialized lazily)
 	        this._audioBridge = null;
+	    }
+
+	    /**
+	     * Check if the mascot has been destroyed
+	     * @private
+	     * @returns {boolean} True if destroyed
+	     */
+	    _isDestroyed() {
+	        return this._destroyed || !this.eventManager || !this.eventManager._listeners;
 	    }
 
 	    /**
@@ -99325,9 +99457,9 @@ void main() {
 	        }
 
 	        // Calculate deltaTime and cap it to prevent huge jumps when tab is inactive
-	        // Max 100ms prevents rotation explosions when tabbing back in
+	        // Max cap prevents rotation explosions when tabbing back in
 	        const rawDeltaTime = currentTime - this.lastFrameTime;
-	        const deltaTime = Math.min(rawDeltaTime, 100); // deltaTime in milliseconds
+	        const deltaTime = Math.min(rawDeltaTime, FRAME_TIMING.RENDER_DELTA_CAP);
 
 	        this.lastFrameTime = currentTime;
 
@@ -99416,27 +99548,44 @@ void main() {
 	    /**
 	     * Set emotional state (same API as 2D version)
 	     * @param {string} emotion - Emotion name
-	     * @param {Object|string|null} options - Options object or undertone string
+	     * @param {string|number|Object|null} undertoneOrDurationOrOptions - Undertone string, duration number, or options object
+	     * @param {number} [timestamp] - Optional timestamp (unused in 3D, for API compatibility)
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
-	    setEmotion(emotion, options) {
+	    setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
 	        // Guard against calls after destroy
-	        if (!this.eventManager || !this.eventManager._listeners) return;
+	        if (this._isDestroyed()) return this;
+
+	        // Validate emotion parameter
+	        if (!emotion || typeof emotion !== 'string') {
+	            console.warn(`[EmotiveMascot3D] setEmotion: Invalid emotion "${emotion}". Use getAvailableEmotions() for valid options.`);
+	            return this;
+	        }
+
+	        // Warn on unknown emotion (but still allow it for custom emotions)
+	        if (!hasEmotion(emotion)) {
+	            console.warn(`[EmotiveMascot3D] Unknown emotion "${emotion}". Valid emotions: ${listEmotions().join(', ')}`);
+	        }
 
 	        this.emotion = emotion;
 
-	        // Handle options parameter (can be undertone string or options object)
-	        // If no options provided, keep existing undertone
-	        if (options !== undefined) {
-	            if (typeof options === 'string') {
-	                this.undertone = options;
-	            } else if (options && typeof options === 'object') {
-	                this.undertone = options.undertone || null;
-	            } else if (options === null) {
+	        // Handle different parameter formats (matching 2D API)
+	        // let duration = 500; // Default duration (unused for now, could be used for particle transition)
+
+	        if (undertoneOrDurationOrOptions !== undefined) {
+	            if (typeof undertoneOrDurationOrOptions === 'string') {
+	                // It's an undertone
+	                this.undertone = undertoneOrDurationOrOptions;
+	            } else if (typeof undertoneOrDurationOrOptions === 'number') ; else if (undertoneOrDurationOrOptions && typeof undertoneOrDurationOrOptions === 'object') {
+	                // It's an options object
+	                this.undertone = undertoneOrDurationOrOptions.undertone || null;
+	                // duration = undertoneOrDurationOrOptions.duration || 500;
+	            } else if (undertoneOrDurationOrOptions === null) {
 	                // Explicitly clearing undertone
 	                this.undertone = null;
 	            }
 	        }
-	        // else: options undefined, keep existing this.undertone
+	        // else: undefined, keep existing this.undertone
 
 	        if (this.core3D) {
 	            this.core3D.setEmotion(emotion, this.undertone);
@@ -99448,13 +99597,18 @@ void main() {
 	        }
 
 	        this.eventManager.emit('emotion:change', { emotion, undertone: this.undertone });
+	        return this;
 	    }
 
 	    /**
 	     * Update the undertone without resetting emotion
 	     * @param {string|null} undertone - The undertone to apply
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
 	    updateUndertone(undertone) {
+	        // Guard against calls after destroy
+	        if (this._isDestroyed()) return this;
+
 	        this.undertone = undertone;
 
 	        // Re-apply emotion with new undertone
@@ -99463,23 +99617,32 @@ void main() {
 	        }
 
 	        this.eventManager.emit('undertone:change', { undertone });
+	        return this;
 	    }
 
 	    /**
 	     * Set the undertone (alias for updateUndertone)
 	     * @param {string|null} undertone - The undertone to apply
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
 	    setUndertone(undertone) {
-	        this.updateUndertone(undertone);
+	        return this.updateUndertone(undertone);
 	    }
 
 	    /**
 	     * Express a gesture (same API as 2D version)
 	     * @param {string} gestureName - Gesture name
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
 	    express(gestureName) {
 	        // Guard against calls after destroy
-	        if (!this.eventManager || !this.eventManager._listeners) return;
+	        if (this._isDestroyed()) return this;
+
+	        // Validate gesture parameter
+	        if (!gestureName || typeof gestureName !== 'string') {
+	            console.warn(`[EmotiveMascot3D] express: Invalid gesture "${gestureName}". Use getAvailableGestures() for valid options.`);
+	            return this;
+	        }
 
 	        // Apply gesture to 3D core
 	        if (this.core3D) {
@@ -99511,9 +99674,14 @@ void main() {
 	                }
 	            }, duration);
 	            this.gestureTimeouts.push(timeoutId);
+	        } else {
+	            // Warn on unknown gesture
+	            const gestureNames = listGestures().map(g => g.name);
+	            console.warn(`[EmotiveMascot3D] Unknown gesture "${gestureName}". Valid gestures: ${gestureNames.slice(0, 10).join(', ')}...`);
 	        }
 
 	        this.eventManager.emit('gesture:trigger', { gesture: gestureName });
+	        return this;
 	    }
 
 	    /**
@@ -99521,11 +99689,12 @@ void main() {
 	     * @param {string} gestureName - Gesture name
 	     * @param {Object} options - Options object
 	     * @param {number} options.scale - Scale multiplier for gesture amplitude
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
 	    gesture(gestureName, options = {}) {
 	        // Scale is applied via the 3D core's gesture system
 	        // For now, just call express - the scale option can be wired in later
-	        this.express(gestureName);
+	        return this.express(gestureName);
 	    }
 
 	    /**
@@ -99602,8 +99771,23 @@ void main() {
 	     * @param {number} options.duration - Transition duration in ms (default: 800ms)
 	     * @param {string} options.materialVariant - Material variant to use (e.g., 'multiplexer' for moon blood moon)
 	     * @param {Function} options.onMaterialSwap - Callback when material is swapped (at morph midpoint)
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
 	    morphTo(shapeName, options = {}) {
+	        // Guard against calls after destroy
+	        if (this._isDestroyed()) return this;
+
+	        // Validate shapeName parameter
+	        if (!shapeName || typeof shapeName !== 'string') {
+	            console.warn(`[EmotiveMascot3D] morphTo: Invalid shape "${shapeName}". Use getAvailableGeometries() for valid options.`);
+	            return this;
+	        }
+
+	        // Warn on unknown geometry
+	        if (!VALID_GEOMETRIES.includes(shapeName)) {
+	            console.warn(`[EmotiveMascot3D] Unknown geometry "${shapeName}". Valid geometries: ${VALID_GEOMETRIES.join(', ')}`);
+	        }
+
 	        if (this.core3D) {
 	            // Set material variant before morphing (if specified)
 	            if (options.materialVariant !== undefined) {
@@ -99629,6 +99813,7 @@ void main() {
 	            this.core3D.morphToShape(shapeName, duration);
 	        }
 	        this.eventManager.emit('shape:morph', { shape: shapeName });
+	        return this;
 	    }
 
 	    /**
@@ -99650,7 +99835,7 @@ void main() {
 	     */
 	    feel(intent) {
 	        // Guard against calls after destroy
-	        if (!this.eventManager || !this.eventManager._listeners) {
+	        if (this._isDestroyed()) {
 	            return { success: false, error: 'Engine destroyed', parsed: null };
 	        }
 
@@ -99663,7 +99848,7 @@ void main() {
 
 	        // Check rate limit
 	        if (limiter.calls.length >= limiter.maxCallsPerSecond) {
-	            console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
+	            console.warn(`[EmotiveMascot3D] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`);
 	            return {
 	                success: false,
 	                error: 'Rate limit exceeded',
@@ -100406,11 +100591,16 @@ void main() {
 	     * @param {number} x - X offset from base position (pixels)
 	     * @param {number} y - Y offset from base position (pixels)
 	     * @param {number} z - Z offset (unused for container positioning)
+	     * @returns {EmotiveMascot3D} this instance for chaining
+	     * @fires position:change
 	     */
 	    setPosition(x, y, z = 0) {
-	        if (!this.container) return;
+	        if (!this.container) return this;
 
-	        // Store position for reference
+	        // Store previous position for event
+	        const previous = this.position || { x: 0, y: 0, z: 0 };
+
+	        // Store new position
 	        this.position = { x, y, z };
 
 	        // Use transform only to avoid conflicting with CSS position properties
@@ -100427,6 +100617,13 @@ void main() {
 	            // Use translate for both x and y offset to keep base position intact
 	            this.container.style.transform = `translate(${x}px, calc(-50% + ${y}px))`;
 	        }
+
+	        // Emit position change event
+	        if (this.eventManager) {
+	            this.eventManager.emit('position:change', { x, y, z, previous });
+	        }
+
+	        return this;
 	    }
 
 	    /**
@@ -100435,6 +100632,30 @@ void main() {
 	     */
 	    getPosition() {
 	        return this.position || { x: 0, y: 0, z: 0 };
+	    }
+
+	    /**
+	     * Get list of available emotions
+	     * @returns {string[]} Array of emotion names
+	     */
+	    getAvailableEmotions() {
+	        return listEmotions();
+	    }
+
+	    /**
+	     * Get list of available gestures
+	     * @returns {Array<{name: string, emoji: string, type: string, description: string}>} Array of gesture info objects
+	     */
+	    getAvailableGestures() {
+	        return listGestures();
+	    }
+
+	    /**
+	     * Get list of available geometries for morphTo()
+	     * @returns {string[]} Array of geometry names
+	     */
+	    getAvailableGeometries() {
+	        return [...VALID_GEOMETRIES];
 	    }
 
 	    /**
@@ -100478,8 +100699,13 @@ void main() {
 	     * For 3D, this primarily affects the particle system containment
 	     * @param {Object|null} bounds - Bounds object {width, height} in pixels, null to disable
 	     * @param {number} scale - Scale factor for mascot (affects particle spawn radius)
+	     * @returns {EmotiveMascot3D} This instance for chaining
+	     * @fires scale:change
 	     */
 	    setContainment(bounds, scale = 1) {
+	        // Store previous scale for event
+	        const previousScale = this._containmentScale || 1;
+
 	        // Store containment settings
 	        this._containmentBounds = bounds;
 	        this._containmentScale = scale;
@@ -100490,6 +100716,11 @@ void main() {
 	            // Adjust based on scale factor
 	            const baseRadius = this.config.particleSpawnRadius || 150;
 	            this.particleSystem.setSpawnRadius(baseRadius * scale);
+	        }
+
+	        // Emit scale change event if scale changed
+	        if (this.eventManager && scale !== previousScale) {
+	            this.eventManager.emit('scale:change', { scale, previous: previousScale });
 	        }
 
 	        return this;
@@ -100554,35 +100785,20 @@ void main() {
 	    _updateAttachedPosition() {
 	        if (!this._attachedElement || !this.container) return;
 
-	        const rect = this._attachedElement.getBoundingClientRect();
-	        const isMobile = window.innerWidth < 768;
+	        const targetRect = this._attachedElement.getBoundingClientRect();
+	        const containerRect = this.container.getBoundingClientRect();
 
 	        // Get element center in viewport coordinates
-	        const elementCenterX = rect.left + rect.width / 2;
-	        const elementCenterY = rect.top + rect.height / 2;
+	        const elementCenterX = targetRect.left + targetRect.width / 2;
+	        const elementCenterY = targetRect.top + targetRect.height / 2;
 
-	        // Calculate the container's base position (where it would be with no offset)
-	        // This depends on the CSS positioning set by MascotRenderer
-	        let containerBaseCenterX, containerBaseCenterY;
+	        // Get container center from actual DOM position (works with any CSS layout)
+	        const containerCenterX = containerRect.left + containerRect.width / 2;
+	        const containerCenterY = containerRect.top + containerRect.height / 2;
 
-	        if (isMobile) {
-	            // Mobile: container CSS is top: 18%, left: 50%, transform: translate(-50%, -50%)
-	            // So the container center is at (50% of viewport width, 18% of viewport height)
-	            containerBaseCenterX = window.innerWidth / 2;
-	            containerBaseCenterY = window.innerHeight * 0.18;
-	        } else {
-	            // Desktop: container CSS is left: calc(max(20px, (50vw - 500px) / 2 - 375px)), top: 50%
-	            // The left position places the container center at roughly the left third
-	            // Container width is 750px, so center is at left + 375px
-	            const containerWidth = 750;
-	            const leftPos = Math.max(20, (window.innerWidth / 2 - 500) / 2 - 375);
-	            containerBaseCenterX = leftPos + containerWidth / 2;
-	            containerBaseCenterY = window.innerHeight / 2;
-	        }
-
-	        // Calculate offset needed to move from container's base position to element center
-	        const offsetX = elementCenterX - containerBaseCenterX + this._attachOptions.offsetX;
-	        const offsetY = elementCenterY - containerBaseCenterY + this._attachOptions.offsetY;
+	        // Calculate offset needed to move from container's position to element center
+	        const offsetX = elementCenterX - containerCenterX + this._attachOptions.offsetX;
+	        const offsetY = elementCenterY - containerCenterY + this._attachOptions.offsetY;
 
 	        // Use animation on first attach, instant updates on scroll/resize
 	        const isFirstAttach = !this._hasAttachedBefore;
@@ -100675,13 +100891,16 @@ void main() {
 	    }
 
 	    /**
-	     * Change the geometry type (alias for morphTo for API consistency)
+	     * Change the geometry type (alias for morphTo)
+	     * @deprecated Use morphTo() instead. This method will be removed in v4.0.
 	     * @param {string} geometryName - Name of geometry: crystal, moon, sun, heart, rough, sphere, star
 	     * @param {Object} options - Optional configuration
 	     * @param {number} options.duration - Transition duration in ms (default: 800ms)
+	     * @returns {EmotiveMascot3D} this instance for chaining
 	     */
 	    setGeometry(geometryName, options = {}) {
-	        this.morphTo(geometryName, options);
+	        console.warn('[EmotiveMascot3D] setGeometry() is deprecated. Use morphTo() instead.');
+	        return this.morphTo(geometryName, options);
 	    }
 
 	    /**
