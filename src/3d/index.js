@@ -40,13 +40,19 @@ import { CanvasLayerManager } from './CanvasLayerManager.js';
 import ParticleSystem from '../core/ParticleSystem.js'; // Reuse 2D particles!
 import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
-import { getEmotion } from '../core/emotions/index.js';
-import { getGesture } from '../core/gestures/index.js';
+import { getEmotion, listEmotions, hasEmotion } from '../core/emotions/index.js';
+import { getGesture, listGestures } from '../core/gestures/index.js';
 import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
 import { DanceChoreographer } from './animation/DanceChoreographer.js';
 import { FRAME_TIMING } from '../core/config/defaults.js';
+
+/**
+ * Valid geometry types for morphTo()
+ * @type {string[]}
+ */
+const VALID_GEOMETRIES = ['sphere', 'crystal', 'diamond', 'rough', 'heart', 'star', 'moon', 'sun'];
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -162,6 +168,15 @@ export class EmotiveMascot3D {
 
         // Audio bridge for audio-reactive animations (initialized lazily)
         this._audioBridge = null;
+    }
+
+    /**
+     * Check if the mascot has been destroyed
+     * @private
+     * @returns {boolean} True if destroyed
+     */
+    _isDestroyed() {
+        return this._destroyed || !this.eventManager || !this.eventManager._listeners;
     }
 
     /**
@@ -403,27 +418,47 @@ export class EmotiveMascot3D {
     /**
      * Set emotional state (same API as 2D version)
      * @param {string} emotion - Emotion name
-     * @param {Object|string|null} options - Options object or undertone string
+     * @param {string|number|Object|null} undertoneOrDurationOrOptions - Undertone string, duration number, or options object
+     * @param {number} [timestamp] - Optional timestamp (unused in 3D, for API compatibility)
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
-    setEmotion(emotion, options) {
+    setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
         // Guard against calls after destroy
-        if (!this.eventManager || !this.eventManager._listeners) return;
+        if (this._isDestroyed()) return this;
+
+        // Validate emotion parameter
+        if (!emotion || typeof emotion !== 'string') {
+            console.warn(`[EmotiveMascot3D] setEmotion: Invalid emotion "${emotion}". Use getAvailableEmotions() for valid options.`);
+            return this;
+        }
+
+        // Warn on unknown emotion (but still allow it for custom emotions)
+        if (!hasEmotion(emotion)) {
+            console.warn(`[EmotiveMascot3D] Unknown emotion "${emotion}". Valid emotions: ${listEmotions().join(', ')}`);
+        }
 
         this.emotion = emotion;
 
-        // Handle options parameter (can be undertone string or options object)
-        // If no options provided, keep existing undertone
-        if (options !== undefined) {
-            if (typeof options === 'string') {
-                this.undertone = options;
-            } else if (options && typeof options === 'object') {
-                this.undertone = options.undertone || null;
-            } else if (options === null) {
+        // Handle different parameter formats (matching 2D API)
+        // let duration = 500; // Default duration (unused for now, could be used for particle transition)
+
+        if (undertoneOrDurationOrOptions !== undefined) {
+            if (typeof undertoneOrDurationOrOptions === 'string') {
+                // It's an undertone
+                this.undertone = undertoneOrDurationOrOptions;
+            } else if (typeof undertoneOrDurationOrOptions === 'number') {
+                // It's a duration - accepted for API compatibility but 3D doesn't use it yet
+                // Keep existing undertone
+            } else if (undertoneOrDurationOrOptions && typeof undertoneOrDurationOrOptions === 'object') {
+                // It's an options object
+                this.undertone = undertoneOrDurationOrOptions.undertone || null;
+                // duration = undertoneOrDurationOrOptions.duration || 500;
+            } else if (undertoneOrDurationOrOptions === null) {
                 // Explicitly clearing undertone
                 this.undertone = null;
             }
         }
-        // else: options undefined, keep existing this.undertone
+        // else: undefined, keep existing this.undertone
 
         if (this.core3D) {
             this.core3D.setEmotion(emotion, this.undertone);
@@ -435,13 +470,18 @@ export class EmotiveMascot3D {
         }
 
         this.eventManager.emit('emotion:change', { emotion, undertone: this.undertone });
+        return this;
     }
 
     /**
      * Update the undertone without resetting emotion
      * @param {string|null} undertone - The undertone to apply
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
     updateUndertone(undertone) {
+        // Guard against calls after destroy
+        if (this._isDestroyed()) return this;
+
         this.undertone = undertone;
 
         // Re-apply emotion with new undertone
@@ -450,23 +490,32 @@ export class EmotiveMascot3D {
         }
 
         this.eventManager.emit('undertone:change', { undertone });
+        return this;
     }
 
     /**
      * Set the undertone (alias for updateUndertone)
      * @param {string|null} undertone - The undertone to apply
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
     setUndertone(undertone) {
-        this.updateUndertone(undertone);
+        return this.updateUndertone(undertone);
     }
 
     /**
      * Express a gesture (same API as 2D version)
      * @param {string} gestureName - Gesture name
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
     express(gestureName) {
         // Guard against calls after destroy
-        if (!this.eventManager || !this.eventManager._listeners) return;
+        if (this._isDestroyed()) return this;
+
+        // Validate gesture parameter
+        if (!gestureName || typeof gestureName !== 'string') {
+            console.warn(`[EmotiveMascot3D] express: Invalid gesture "${gestureName}". Use getAvailableGestures() for valid options.`);
+            return this;
+        }
 
         // Apply gesture to 3D core
         if (this.core3D) {
@@ -498,9 +547,14 @@ export class EmotiveMascot3D {
                 }
             }, duration);
             this.gestureTimeouts.push(timeoutId);
+        } else {
+            // Warn on unknown gesture
+            const gestureNames = listGestures().map(g => g.name);
+            console.warn(`[EmotiveMascot3D] Unknown gesture "${gestureName}". Valid gestures: ${gestureNames.slice(0, 10).join(', ')}...`);
         }
 
         this.eventManager.emit('gesture:trigger', { gesture: gestureName });
+        return this;
     }
 
     /**
@@ -508,11 +562,12 @@ export class EmotiveMascot3D {
      * @param {string} gestureName - Gesture name
      * @param {Object} options - Options object
      * @param {number} options.scale - Scale multiplier for gesture amplitude
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
     gesture(gestureName, options = {}) {
         // Scale is applied via the 3D core's gesture system
         // For now, just call express - the scale option can be wired in later
-        this.express(gestureName);
+        return this.express(gestureName);
     }
 
     /**
@@ -589,8 +644,23 @@ export class EmotiveMascot3D {
      * @param {number} options.duration - Transition duration in ms (default: 800ms)
      * @param {string} options.materialVariant - Material variant to use (e.g., 'multiplexer' for moon blood moon)
      * @param {Function} options.onMaterialSwap - Callback when material is swapped (at morph midpoint)
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
     morphTo(shapeName, options = {}) {
+        // Guard against calls after destroy
+        if (this._isDestroyed()) return this;
+
+        // Validate shapeName parameter
+        if (!shapeName || typeof shapeName !== 'string') {
+            console.warn(`[EmotiveMascot3D] morphTo: Invalid shape "${shapeName}". Use getAvailableGeometries() for valid options.`);
+            return this;
+        }
+
+        // Warn on unknown geometry
+        if (!VALID_GEOMETRIES.includes(shapeName)) {
+            console.warn(`[EmotiveMascot3D] Unknown geometry "${shapeName}". Valid geometries: ${VALID_GEOMETRIES.join(', ')}`);
+        }
+
         if (this.core3D) {
             // Set material variant before morphing (if specified)
             if (options.materialVariant !== undefined) {
@@ -616,6 +686,7 @@ export class EmotiveMascot3D {
             this.core3D.morphToShape(shapeName, duration);
         }
         this.eventManager.emit('shape:morph', { shape: shapeName });
+        return this;
     }
 
     /**
@@ -637,7 +708,7 @@ export class EmotiveMascot3D {
      */
     feel(intent) {
         // Guard against calls after destroy
-        if (!this.eventManager || !this.eventManager._listeners) {
+        if (this._isDestroyed()) {
             return { success: false, error: 'Engine destroyed', parsed: null };
         }
 
@@ -650,7 +721,7 @@ export class EmotiveMascot3D {
 
         // Check rate limit
         if (limiter.calls.length >= limiter.maxCallsPerSecond) {
-            console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
+            console.warn(`[EmotiveMascot3D] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`);
             return {
                 success: false,
                 error: 'Rate limit exceeded',
@@ -1393,11 +1464,16 @@ export class EmotiveMascot3D {
      * @param {number} x - X offset from base position (pixels)
      * @param {number} y - Y offset from base position (pixels)
      * @param {number} z - Z offset (unused for container positioning)
+     * @returns {EmotiveMascot3D} this instance for chaining
+     * @fires position:change
      */
     setPosition(x, y, z = 0) {
-        if (!this.container) return;
+        if (!this.container) return this;
 
-        // Store position for reference
+        // Store previous position for event
+        const previous = this.position || { x: 0, y: 0, z: 0 };
+
+        // Store new position
         this.position = { x, y, z };
 
         // Use transform only to avoid conflicting with CSS position properties
@@ -1414,6 +1490,13 @@ export class EmotiveMascot3D {
             // Use translate for both x and y offset to keep base position intact
             this.container.style.transform = `translate(${x}px, calc(-50% + ${y}px))`;
         }
+
+        // Emit position change event
+        if (this.eventManager) {
+            this.eventManager.emit('position:change', { x, y, z, previous });
+        }
+
+        return this;
     }
 
     /**
@@ -1422,6 +1505,30 @@ export class EmotiveMascot3D {
      */
     getPosition() {
         return this.position || { x: 0, y: 0, z: 0 };
+    }
+
+    /**
+     * Get list of available emotions
+     * @returns {string[]} Array of emotion names
+     */
+    getAvailableEmotions() {
+        return listEmotions();
+    }
+
+    /**
+     * Get list of available gestures
+     * @returns {Array<{name: string, emoji: string, type: string, description: string}>} Array of gesture info objects
+     */
+    getAvailableGestures() {
+        return listGestures();
+    }
+
+    /**
+     * Get list of available geometries for morphTo()
+     * @returns {string[]} Array of geometry names
+     */
+    getAvailableGeometries() {
+        return [...VALID_GEOMETRIES];
     }
 
     /**
@@ -1465,8 +1572,13 @@ export class EmotiveMascot3D {
      * For 3D, this primarily affects the particle system containment
      * @param {Object|null} bounds - Bounds object {width, height} in pixels, null to disable
      * @param {number} scale - Scale factor for mascot (affects particle spawn radius)
+     * @returns {EmotiveMascot3D} This instance for chaining
+     * @fires scale:change
      */
     setContainment(bounds, scale = 1) {
+        // Store previous scale for event
+        const previousScale = this._containmentScale || 1;
+
         // Store containment settings
         this._containmentBounds = bounds;
         this._containmentScale = scale;
@@ -1477,6 +1589,11 @@ export class EmotiveMascot3D {
             // Adjust based on scale factor
             const baseRadius = this.config.particleSpawnRadius || 150;
             this.particleSystem.setSpawnRadius(baseRadius * scale);
+        }
+
+        // Emit scale change event if scale changed
+        if (this.eventManager && scale !== previousScale) {
+            this.eventManager.emit('scale:change', { scale, previous: previousScale });
         }
 
         return this;
@@ -1541,35 +1658,20 @@ export class EmotiveMascot3D {
     _updateAttachedPosition() {
         if (!this._attachedElement || !this.container) return;
 
-        const rect = this._attachedElement.getBoundingClientRect();
-        const isMobile = window.innerWidth < 768;
+        const targetRect = this._attachedElement.getBoundingClientRect();
+        const containerRect = this.container.getBoundingClientRect();
 
         // Get element center in viewport coordinates
-        const elementCenterX = rect.left + rect.width / 2;
-        const elementCenterY = rect.top + rect.height / 2;
+        const elementCenterX = targetRect.left + targetRect.width / 2;
+        const elementCenterY = targetRect.top + targetRect.height / 2;
 
-        // Calculate the container's base position (where it would be with no offset)
-        // This depends on the CSS positioning set by MascotRenderer
-        let containerBaseCenterX, containerBaseCenterY;
+        // Get container center from actual DOM position (works with any CSS layout)
+        const containerCenterX = containerRect.left + containerRect.width / 2;
+        const containerCenterY = containerRect.top + containerRect.height / 2;
 
-        if (isMobile) {
-            // Mobile: container CSS is top: 18%, left: 50%, transform: translate(-50%, -50%)
-            // So the container center is at (50% of viewport width, 18% of viewport height)
-            containerBaseCenterX = window.innerWidth / 2;
-            containerBaseCenterY = window.innerHeight * 0.18;
-        } else {
-            // Desktop: container CSS is left: calc(max(20px, (50vw - 500px) / 2 - 375px)), top: 50%
-            // The left position places the container center at roughly the left third
-            // Container width is 750px, so center is at left + 375px
-            const containerWidth = 750;
-            const leftPos = Math.max(20, (window.innerWidth / 2 - 500) / 2 - 375);
-            containerBaseCenterX = leftPos + containerWidth / 2;
-            containerBaseCenterY = window.innerHeight / 2;
-        }
-
-        // Calculate offset needed to move from container's base position to element center
-        const offsetX = elementCenterX - containerBaseCenterX + this._attachOptions.offsetX;
-        const offsetY = elementCenterY - containerBaseCenterY + this._attachOptions.offsetY;
+        // Calculate offset needed to move from container's position to element center
+        const offsetX = elementCenterX - containerCenterX + this._attachOptions.offsetX;
+        const offsetY = elementCenterY - containerCenterY + this._attachOptions.offsetY;
 
         // Use animation on first attach, instant updates on scroll/resize
         const isFirstAttach = !this._hasAttachedBefore;
@@ -1662,13 +1764,16 @@ export class EmotiveMascot3D {
     }
 
     /**
-     * Change the geometry type (alias for morphTo for API consistency)
+     * Change the geometry type (alias for morphTo)
+     * @deprecated Use morphTo() instead. This method will be removed in v4.0.
      * @param {string} geometryName - Name of geometry: crystal, moon, sun, heart, rough, sphere, star
      * @param {Object} options - Optional configuration
      * @param {number} options.duration - Transition duration in ms (default: 800ms)
+     * @returns {EmotiveMascot3D} this instance for chaining
      */
     setGeometry(geometryName, options = {}) {
-        this.morphTo(geometryName, options);
+        console.warn('[EmotiveMascot3D] setGeometry() is deprecated. Use morphTo() instead.');
+        return this.morphTo(geometryName, options);
     }
 
     /**

@@ -1,199 +1,250 @@
-# Transition to Library Architecture (TOLIBRARY)
+# Library Improvement Roadmap
 
-**Status:** Actionable Roadmap
-**Goal:** Refactor `@joshtol/emotive-engine` from a single-purpose application to a modular, consumable library.
+**Goal:** Make `@joshtol/emotive-engine` easier for developers to integrate, debug, and extend.
 
 ---
 
-## Priority 1: Critical — Multi-Instance & SSR Support
+## Priority 1: Critical — Error Handling & Validation
 
-### Task 1.1: Remove Global Singleton Export ✅ COMPLETE
-**Severity:** Critical (Blocks multi-instance usage)
-**File:** `src/core/AnimationLoopManager.js` lines 369-375
+These issues cause silent failures that waste developer time debugging.
 
-**Solution:** Default export changed to class, singleton kept for backwards compatibility:
+### ✅ Task 1.1: Add Input Validation to Core APIs
+**Status:** Completed
+**Files:** `src/3d/index.js`
+
+Added validation with helpful warnings to `setEmotion()`, `express()`, `morphTo()`:
+- Invalid inputs log warnings with valid alternatives via `getAvailableEmotions()`, `getAvailableGestures()`, `getAvailableGeometries()`
+- Unknown but valid-format inputs warn but still proceed (allows custom extensions)
+
+---
+
+### ✅ Task 1.2: Standardize Return Values for Method Chaining
+**Status:** Completed
+**File:** `src/3d/index.js`
+
+All state-changing methods now return `this` for chaining:
+- `setEmotion()`, `express()`, `morphTo()`, `updateUndertone()`, `setPosition()`, `setContainment()`
+
+---
+
+### ✅ Task 1.3: Improve Destroy Guard Consistency
+**Status:** Completed
+**File:** `src/3d/index.js`
+
+Added `_isDestroyed()` helper method used consistently across all methods:
+- Methods returning `this` use: `if (this._isDestroyed()) return this;`
+- Methods returning result objects use: `if (this._isDestroyed()) return { success: false, ... };`
+
+---
+
+## Priority 2: High — API Consistency
+
+These issues cause confusion when switching between 2D and 3D modes.
+
+### ✅ Task 2.1: Unify 2D/3D setEmotion Signatures
+**Status:** Completed
+**Files:** `src/3d/index.js`
+
+3D `setEmotion()` now accepts same parameter formats as 2D:
+- `setEmotion('joy', 500)` - duration as number
+- `setEmotion('joy', 'calm')` - undertone as string
+- `setEmotion('joy', { undertone: 'calm' })` - options object
+
+---
+
+### ✅ Task 2.2: Deprecate Confusing Method Aliases
+**Status:** Completed
+**File:** `src/3d/index.js`
+
+Added deprecation warning to `setGeometry()`:
 ```javascript
-export const animationLoopManager = new AnimationLoopManager(); // backwards compat
-export default AnimationLoopManager; // class for multi-instance
+setGeometry(geometryName, options = {}) {
+    console.warn('[EmotiveMascot3D] setGeometry() is deprecated. Use morphTo() instead.');
+    return this.morphTo(geometryName, options);
+}
 ```
 
-**Completed:**
-- [x] Change default export to class: `export default AnimationLoopManager`
-- [x] Update `src/core/AnimationController.js` to use `this.loopManager` (injectable via config)
-- [x] Add optional `loopManager` config param for shared instances when desired
-- [x] Test page: `site/public/examples/3d/dual-mascot-test.html`
+---
 
-**Note:** 3D engine (`EmotiveMascot3D`) already uses its own RAF loop directly, so multiple 3D instances work independently without any changes.
+### ✅ Task 2.3: Standardize Event Emission Patterns
+**Status:** Completed
+**Files:** `src/3d/index.js`, `docs/EVENTS.md`
+
+- Added `position:change` event to `setPosition()` with `{ x, y, z, previous }` payload
+- Added `scale:change` event to `setContainment()` with `{ scale, previous }` payload
+- Created comprehensive `docs/EVENTS.md` documenting all 12 events with examples
 
 ---
 
-### Task 1.2: Add SSR Guards to init() ✅ COMPLETE
-**Severity:** High (Crashes Next.js/Nuxt on import)
-**File:** `src/3d/index.js`
+## Priority 3: Medium — Testing Gaps
 
-**Solution:** Guard added at top of `init()` with clear error message for SSR environments.
+These gaps make refactoring risky and hide regressions.
 
-**Completed:**
-- [x] Add guard at top of `init()`: throws descriptive error in SSR
-- [x] Export `isSSR()` helper at `src/3d/index.js:2503`
-- [x] Document SSR usage in README (Next.js, Nuxt 3 examples)
+### Task 3.1: Add EmotiveMascot3D Unit Tests
+**Severity:** High (Core 3D class untested)
+**Files:** Create `test/unit/3d/EmotiveMascot3D.test.js`
 
-**Note:** Constructor remains SSR-safe (can instantiate on server, just can't call `init()`).
+**Problem:** No unit tests for the main 3D class:
+- `setEmotion()` behavior untested
+- `feel()` parsing and rate limiting untested
+- `morphTo()` geometry transitions untested
+- Destroy/cleanup sequences untested
 
----
+**Tasks:**
+- [ ] Create `test/unit/3d/EmotiveMascot3D.test.js`
+- [ ] Test `setEmotion()` with valid/invalid emotions
+- [ ] Test `express()` with valid/invalid gestures
+- [ ] Test `feel()` parsing with various natural language inputs
+- [ ] Test `feel()` rate limiting behavior
+- [ ] Test `morphTo()` geometry transitions
+- [ ] Test lifecycle: init → start → stop → destroy
+- [ ] Test post-destroy method calls don't throw
 
-## Priority 2: Architecture — Reduce File Sizes
-
-### Task 2.1: Extract Audio Integration from EmotiveMascot3D ✅ COMPLETE
-**Severity:** High (Was 2,492 lines, now 1,892 lines)
-**File:** `src/3d/index.js`
-
-**Solution:** Created `src/3d/audio/AudioBridge.js` (826 lines) containing:
-- Audio context and analyzer management
-- CORS workaround via fetch + decodeAudioData buffer decode
-- Dual analyzer setup (main + buffer for CORS bypass)
-- Agent-based BPM detection with validation and auto-retry
-- Event binding/cleanup for play/pause/seek/ended
-- Groove confidence callbacks for animation intensity
-
-**Completed:**
-- [x] Create `src/3d/audio/AudioBridge.js` with callback-based API
-- [x] Move `connectAudio()`, `disconnectAudio()` logic
-- [x] Move all BPM detection methods (`_startBPMDetection`, `_validateAnalyzerWorking`, etc.)
-- [x] Move buffer analysis methods (`_startBufferAnalysis`, `_stopBufferAnalysis`, `_rebuildBufferAnalysis`)
-- [x] Update `EmotiveMascot3D` to use lazy-initialized AudioBridge via `_getAudioBridge()`
-- [x] Reduce `index.js` by ~600 lines (from 2,492 to 1,892)
-
-**Note:** Kept all functionality intact. AudioBridge uses callbacks for rhythm start/stop/BPM change rather than direct coupling to EmotiveMascot3D.
+**Acceptance:** 3D class has >80% method coverage.
 
 ---
 
-### Task 2.2: Extract Canvas Layer Management ✅ COMPLETE
-**Severity:** Medium (Was 1,892 lines, now 1,826 lines)
-**File:** `src/3d/index.js`
+### Task 3.2: Add 2D/3D API Parity Tests
+**Severity:** Medium (API drift between modes)
+**Files:** Create `test/integration/api-parity.test.js`
 
-**Solution:** Created `src/3d/CanvasLayerManager.js` (173 lines) containing:
-- Dual canvas layer setup (WebGL back + Canvas2D front)
-- Container element handling (create or reuse)
-- Deferred WebGL canvas append for GPU initialization
-- Canvas dimension management
-- Cleanup/destroy logic
+**Problem:** No tests verify 2D and 3D APIs match. They can drift apart unnoticed.
 
-**Completed:**
-- [x] Create `src/3d/CanvasLayerManager.js` with setup/destroy API
-- [x] Move `setupCanvasLayers()` method logic
-- [x] Update animate() to use `_canvasLayerManager.appendWebGLCanvas()`
-- [x] Update destroy() to use `_canvasLayerManager.destroy()`
-- [x] Reduce `index.js` by ~66 lines (from 1,892 to 1,826)
+**Tasks:**
+- [ ] Create `test/integration/api-parity.test.js`
+- [ ] Test both modes have same public methods
+- [ ] Test same inputs produce same events
+- [ ] Test method signatures match (where applicable)
 
-**Note:** Resize handling stays in Core3DManager which handles Three.js renderer resize.
+**Acceptance:** Test fails if 2D/3D public APIs diverge.
 
 ---
 
-### Task 2.3: Refactor Visibility Change Handling ✅ COMPLETE
-**Severity:** Medium (Was leaky abstraction)
-**File:** `src/core/AnimationController.js`
+### Task 3.3: Add TypeScript Definition Tests
+**Severity:** Medium (Type definitions can be wrong)
+**Files:** Create `test/types/` directory
 
-**Problem:** Controller directly manipulated `particleSystem.particles` array.
+**Problem:** TypeScript definitions aren't tested against implementation.
 
-**Solution:** Added `ParticleSystem.onVisibilityResume(gapMs, pausedCount)` method that encapsulates:
-- Accumulator reset
-- Gap-based particle management (clear all >30s, reduce 50% 10-30s, keep all <10s)
+**Tasks:**
+- [ ] Create `test/types/index.test-d.ts` using `tsd` or `dtslint`
+- [ ] Verify `EmotiveMascotConfig` matches actual options
+- [ ] Verify method signatures match implementation
+- [ ] Add to CI pipeline
 
-**Completed:**
-- [x] Add `ParticleSystem.onVisibilityResume(gapMs, pausedCount)` method
-- [x] Move particle reduction logic into ParticleSystem
-- [x] Update AnimationController to call `particleSystem.onVisibilityResume()`
-- [x] Reduced AnimationController by ~10 lines
-
-**Note:** Renderer and StateMachine already use proper APIs (gap-based conditionals).
+**Acceptance:** Type definition errors caught before publish.
 
 ---
 
-## Priority 3: Developer Experience
+## Priority 4: Low — Documentation & DX
 
-### Task 3.1: Centralize Magic Numbers ✅ COMPLETE
-**Severity:** Medium
-**Scattered across:** Multiple files
+These improve developer experience but don't block usage.
 
-**Solution:** Created `src/core/config/defaults.js` with categorized constants:
-- `FRAME_TIMING` — TARGET_FRAME_TIME (16.67), DELTA_TIME_CAP (20), FRAME_BUDGET
-- `VISIBILITY` — LONG_PAUSE_THRESHOLD (30000), MEDIUM_PAUSE_THRESHOLD (10000), reduction factors
-- `AUDIO` — FFT_SIZE (256), SMOOTHING_TIME_CONSTANT (0.8), BPM_LOCK_TIMEOUT (10000)
-- `MONITORING` — Health check, feature flags, context decay intervals
-- `DEFAULT_CONFIG` — Combined object for easy source modification
+### ✅ Task 4.1: Document All Events
+**Status:** Completed
+**Files:** `docs/EVENTS.md`
 
-**Completed:**
-- [x] Create `src/core/config/defaults.js` with all timing/threshold constants
-- [x] Export as `DEFAULT_CONFIG` object
-- [x] Update AnimationController.js to use FRAME_TIMING and VISIBILITY constants
-- [x] Update ParticleSystem.js to use VISIBILITY constants
-- [x] Update AudioBridge.js to use AUDIO constants
-
-**Additional constants unified:**
-- [x] `PARTICLE_DELTA_CAP` (50ms) - Used in Particle.js, ParticleSpawner.js, Rhythm3DAdapter.js
-- [x] `RENDER_DELTA_CAP` (100ms) - Used in 3D index.js for render loop tolerance
-
-**Note:** Runtime constructor override not implemented — these are internal physics/stability guards, not user preferences. Editing `defaults.js` is the intended modification path.
+Created comprehensive event documentation with:
+- All 12 events cataloged with payload shapes
+- Code examples for each event
+- Event design principles documented
 
 ---
 
-### Task 3.2: Improve Type Safety ✅ COMPLETE
+### Task 4.2: Add Migration Guide for Major Changes
 **Severity:** Low
-**Current:** Comprehensive `.d.ts` declarations
+**Files:** Create `docs/MIGRATION.md`
 
-**Solution:** Type definitions already exist at `types/index.d.ts` and `types/3d.d.ts` with comprehensive coverage. Added missing module definition interfaces.
+**Problem:** No guidance for upgrading between versions.
 
-**Completed:**
-- [x] `types/index.d.ts` already exists with `EmotiveMascotConfig`, `EmotiveMascot3DConfig` (covers MascotConfig)
-- [x] `types/3d.d.ts` already exists with `EmotionName`, `GestureName`, geometry types
-- [x] `package.json` already configured with `"types": "types/index.d.ts"`
-- [x] Added `EmotionConfig` interface for custom emotion module definitions
-- [x] Added `GestureConfig` interface for custom gesture module definitions
-- [x] Added `VisualParams`, `GestureModifiers`, `TransitionConfig` supporting interfaces
-- [x] Added `Emotion3DConfig`, `SoulAnimationConfig`, `GestureRhythmConfig` for advanced usage
-- [ ] Full TypeScript migration deferred (large effort, low ROI currently)
-
-**Note:** The original task predated the existing type definitions. Types are now comprehensive for both library consumers and developers creating custom emotions/gestures.
+**Tasks:**
+- [ ] Document deprecated methods and replacements
+- [ ] Document breaking changes between versions
+- [ ] Provide code migration examples
 
 ---
 
-## Priority 4: Documentation & Testing
+### Task 4.3: Improve Error Messages with Context
+**Severity:** Low
+**File:** Multiple
 
-### Task 4.1: Document Multi-Instance Usage ✅ COMPLETE
-**Solution:** Documentation already existed, added README section for visibility.
+**Problem:** Some errors lack context:
+```javascript
+console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
+// Hardcoded "10" but actual limit is in _feelRateLimiter.maxCallsPerSecond
+```
 
-**Completed:**
-- [x] Live example: `site/public/examples/3d/dual-mascot-test.html`
-- [x] Added "Multi-Instance Support" section to README.md with code example
-- [x] SSR framework integration already documented in README.md (Next.js, Nuxt 3)
-- [x] `isSSR()` helper documented for SSR detection
-
-### Task 4.2: Add Integration Tests ✅ COMPLETE
-**Solution:** Extended `test/integration/lifecycle.test.js` with new test suites.
-
-**Completed:**
-- [x] Test: Create/destroy mascot lifecycle (existed in "Full Lifecycle" suite)
-- [x] Test: Multiple mascots don't interfere (new "Multi-Instance Independence" suite - 5 tests)
-- [x] Test: Tab visibility pause/resume (new "Visibility Change Handling" suite - 3 tests)
-- [x] Test: Audio connection and disconnection (new "Audio Connection" suite - 4 tests)
-
-**Test coverage added:**
-- Multi-instance: simultaneous run, independent states, independent stop/destroy, rapid switching
-- Visibility: hidden event, visible after hidden, multiple toggles
-- Audio: connect with mock, disconnect, disconnect without connect, connect/disconnect cycles
-
-Run with: `npm run test:integration`
+**Tasks:**
+- [ ] Audit all `console.warn` and `console.error` calls
+- [ ] Use actual config values in error messages
+- [ ] Add suggestions for how to fix issues
 
 ---
 
-## Checklist Summary
+## Completed Tasks (Archive)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| **SSR Safety** | ✅ Complete | Safe import, clear error on `init()` |
-| **Multi-Instance** | ✅ Complete | Fully isolated instances |
-| **Main File Size** | 🔄 In Progress | 1,826 lines (was 2,492), target <1,500 |
-| **Config** | ✅ Complete | src/core/config/defaults.js with FRAME_TIMING, VISIBILITY, AUDIO |
-| **Types** | ✅ Complete | Comprehensive `.d.ts` with EmotionConfig, GestureConfig, VisualParams |
-| **Integration Tests** | ✅ Complete | 32 tests covering lifecycle, multi-instance, visibility, audio |
+### Session: January 2026 - API Improvements
+
+**Task 1.1: Add Input Validation to Core APIs**
+Added validation with warnings to `setEmotion()`, `express()`, `morphTo()`. Added helper methods: `getAvailableEmotions()`, `getAvailableGestures()`, `getAvailableGeometries()`.
+
+**Task 1.2: Standardize Return Values for Method Chaining**
+All state-changing methods now return `this` for chaining.
+
+**Task 1.3: Improve Destroy Guard Consistency**
+Added `_isDestroyed()` helper method, standardized guards across all methods.
+
+**Task 2.1: Unify 2D/3D setEmotion Signatures**
+3D `setEmotion()` now accepts string, number, or object as second parameter.
+
+**Task 2.2: Deprecate Confusing Method Aliases**
+Added deprecation warning to `setGeometry()`.
+
+**Task 2.3: Standardize Event Emission Patterns**
+Added `position:change` and `scale:change` events with `previous` value tracking.
+
+**Task 4.1: Document All Events**
+Created `docs/EVENTS.md` documenting all 12 events with examples.
+
+### Previous Sessions
+
+**Remove Global Singleton Export**
+AnimationLoopManager exports class, singleton kept for backwards compatibility.
+
+**Add SSR Guards to init()**
+Guard at top of `init()` throws descriptive error in SSR environments.
+
+**Extract Audio Integration**
+Created `src/3d/audio/AudioBridge.js` (826 lines), reduced main file by ~600 lines.
+
+**Extract Canvas Layer Management**
+Created `src/3d/CanvasLayerManager.js` (173 lines).
+
+**Centralize Magic Numbers**
+Created `src/core/config/defaults.js` with FRAME_TIMING, VISIBILITY, AUDIO constants.
+
+**Improve Type Safety**
+Added EmotionConfig, GestureConfig, and related interfaces to `types/index.d.ts`.
+
+**Document Multi-Instance Usage**
+Added README section, live example at `dual-mascot-test.html`.
+
+**Add Integration Tests**
+32 tests covering lifecycle, multi-instance, visibility, audio.
+
+**Fix Hardcoded CSS Layout in Attachment**
+`_updateAttachedPosition()` now uses `getBoundingClientRect()` instead of hardcoded CSS calculations.
+
+---
+
+## Quick Reference: File Locations
+
+| Component | File |
+|-----------|------|
+| 3D Main Class | `src/3d/index.js` |
+| 2D Main Class | `src/EmotiveMascotPublic.js` |
+| TypeScript Types | `types/index.d.ts`, `types/3d.d.ts` |
+| Config Defaults | `src/core/config/defaults.js` |
+| Audio Bridge | `src/3d/audio/AudioBridge.js` |
+| Event Reference | `docs/EVENTS.md` |
+| Integration Tests | `test/integration/lifecycle.test.js` |
