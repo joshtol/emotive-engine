@@ -23,7 +23,8 @@ export class OffsetPositionManager {
      * new OffsetPositionManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.positionController) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
             // New DI style
             this.errorBoundary = deps.errorBoundary;
             this.positionController = deps.positionController;

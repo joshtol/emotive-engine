@@ -61,7 +61,8 @@ export class VisualTransformationManager {
      * new VisualTransformationManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.canvasResizeManager && deps.offsetPositionManager && deps.shapeTransformManager) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
             // New DI style
             this.canvasResizeManager = deps.canvasResizeManager;
             this.offsetPositionManager = deps.offsetPositionManager;
