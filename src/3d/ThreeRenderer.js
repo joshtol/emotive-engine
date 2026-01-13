@@ -76,11 +76,17 @@ export class ThreeRenderer {
         }
 
         // WebGL context loss handling (critical for mobile stability)
+        // IMPORTANT: Listen on renderer.domElement, not the original canvas
+        // Three.js may use a different canvas internally
         this._contextLost = false;
         this._boundHandleContextLost = this.handleContextLost.bind(this);
         this._boundHandleContextRestored = this.handleContextRestored.bind(this);
-        canvas.addEventListener('webglcontextlost', this._boundHandleContextLost, false);
-        canvas.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+        this.renderer.domElement.addEventListener('webglcontextlost', this._boundHandleContextLost, false);
+        this.renderer.domElement.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+
+        // Page visibility change handling (detect tab switches that may invalidate GPU resources)
+        this._boundHandleVisibilityChange = this._handleVisibilityChange.bind(this);
+        document.addEventListener('visibilitychange', this._boundHandleVisibilityChange);
 
         // Create camera
         const fov = options.fov !== undefined ? options.fov : 45;
@@ -580,9 +586,15 @@ export class ThreeRenderer {
      */
     handleContextRestored() {
         this._contextLost = false;
+        console.log('✅ WebGL context restored - recreating resources');
 
         // Recreate all GPU resources
         this.recreateResources();
+
+        // Notify external listeners (e.g., Core3DManager) to recreate custom materials
+        if (this.onContextRestored) {
+            this.onContextRestored();
+        }
     }
 
     /**
@@ -611,9 +623,41 @@ export class ThreeRenderer {
             }
         }
 
-        // Note: Three.js automatically recreates geometries and textures
-        // when they are first accessed after context restoration
+        // Note: For custom materials (crystal, moon, sun), the Core3DManager
+        // handles recreation via the onContextRestored callback
 
+    }
+
+    /**
+     * Handle page visibility changes
+     * When tab becomes visible again, check if GPU resources need reloading
+     * @private
+     */
+    _handleVisibilityChange() {
+        if (this._destroyed) return;
+
+        if (!document.hidden) {
+            // Tab became visible - check if textures are still valid
+            // Some browsers silently invalidate GPU resources without triggering webglcontextlost
+            const gl = this.renderer?.getContext();
+            if (gl && gl.isContextLost()) {
+                // Context was lost silently - manually trigger restoration flow
+                console.warn('⚠️ WebGL context lost detected on visibility change');
+                this._contextLost = true;
+                // The context restoration will be handled by the browser's webglcontextrestored event
+            } else if (this.coreMesh?.material) {
+                // Context is valid but textures might be invalidated
+                // Check if the material has textures that need revalidation
+                const material = this.coreMesh.material;
+                if (material.map && !material.map.image) {
+                    // Texture image was garbage collected - trigger reload
+                    console.warn('⚠️ Texture invalidated on visibility change - triggering reload');
+                    if (this.onContextRestored) {
+                        this.onContextRestored();
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1236,6 +1280,11 @@ export class ThreeRenderer {
             return;
         }
 
+        // Guard against rendering while WebGL context is lost
+        if (this._contextLost) {
+            return;
+        }
+
         // Guard against rendering before scene is ready
         if (!this.scene || !this.camera || !this.renderer) {
             console.log(`[ThreeRenderer] render() BLOCKED - scene=${!!this.scene}, camera=${!!this.camera}, renderer=${!!this.renderer}`);
@@ -1658,10 +1707,13 @@ export class ThreeRenderer {
         this._destroyed = true;
 
         // Remove WebGL context event listeners
-        if (this.canvas) {
-            this.canvas.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);
-            this.canvas.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+        if (this.renderer?.domElement) {
+            this.renderer.domElement.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);
+            this.renderer.domElement.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
         }
+
+        // Remove visibility change listener
+        document.removeEventListener('visibilitychange', this._boundHandleVisibilityChange);
 
         // Cancel camera animation RAF
         if (this.cameraAnimationId) {

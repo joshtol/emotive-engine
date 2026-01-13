@@ -103,6 +103,10 @@ export class Core3DManager {
             maxZoom: options.maxZoom, // Maximum zoom distance
             assetBasePath: this.assetBasePath // Base path for HDRI and other assets
         });
+
+        // Register for WebGL context restoration to recreate custom materials
+        this.renderer.onContextRestored = () => this._handleContextRestored();
+
         const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 
         if (!geometryConfig) {
@@ -2065,6 +2069,54 @@ export class Core3DManager {
         this.crystalInnerCore = this.crystalSoul.mesh;
         this.crystalInnerCoreMaterial = this.crystalSoul.material;
         this.crystalInnerCoreBaseScale = this.crystalSoul.baseScale;
+    }
+
+    /**
+     * Handle WebGL context restoration by recreating custom materials and textures
+     * Called by ThreeRenderer when the browser restores the WebGL context
+     * @private
+     */
+    async _handleContextRestored() {
+        console.log(`[Core3D:${this._instanceId}] Recreating custom materials after context restoration`);
+
+        if (this._destroyed || !this.coreMesh) {
+            return;
+        }
+
+        // Recreate custom material with textures (crystal, moon, sun)
+        if (this.customMaterialType) {
+            const emotionData = getEmotion(this.emotion);
+            const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
+                glowColor: this.glowColor || [1.0, 1.0, 0.95],
+                glowIntensity: this.glowIntensity || 1.0,
+                materialVariant: this.materialVariant,
+                emotionData,
+                assetBasePath: this.assetBasePath
+            });
+
+            if (materialResult) {
+                // Dispose old material
+                if (this.customMaterial) {
+                    disposeCustomMaterial(this.customMaterial);
+                }
+
+                // Apply new material
+                this.customMaterial = materialResult.material;
+                this.coreMesh.material = this.customMaterial;
+
+                // Recreate crystal soul if needed
+                if (this.customMaterialType === 'crystal' && this.crystalSoul) {
+                    await this._createCrystalInnerCoreAsync();
+                }
+
+                // Notify external listeners (e.g., demos applying SSS presets)
+                if (this.onMaterialSwap) {
+                    this.onMaterialSwap();
+                }
+
+                console.log(`[Core3D:${this._instanceId}] Custom material recreated successfully`);
+            }
+        }
     }
 
     /**
