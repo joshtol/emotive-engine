@@ -80,43 +80,34 @@ setGeometry(geometryName, options = {}) {
 
 These gaps make refactoring risky and hide regressions.
 
-### Task 3.1: Add EmotiveMascot3D Unit Tests
-**Severity:** High (Core 3D class untested)
-**Files:** Create `test/unit/3d/EmotiveMascot3D.test.js`
+### ✅ Task 3.1: Add EmotiveMascot3D Unit Tests
+**Status:** Completed
+**Files:** `test/unit/3d/EmotiveMascot3D.test.js` (53 tests)
 
-**Problem:** No unit tests for the main 3D class:
-- `setEmotion()` behavior untested
-- `feel()` parsing and rate limiting untested
-- `morphTo()` geometry transitions untested
-- Destroy/cleanup sequences untested
-
-**Tasks:**
-- [ ] Create `test/unit/3d/EmotiveMascot3D.test.js`
-- [ ] Test `setEmotion()` with valid/invalid emotions
-- [ ] Test `express()` with valid/invalid gestures
-- [ ] Test `feel()` parsing with various natural language inputs
-- [ ] Test `feel()` rate limiting behavior
-- [ ] Test `morphTo()` geometry transitions
-- [ ] Test lifecycle: init → start → stop → destroy
-- [ ] Test post-destroy method calls don't throw
-
-**Acceptance:** 3D class has >80% method coverage.
+Tests cover:
+- Constructor with default/custom config
+- `setEmotion()` with valid/invalid emotions, undertones, durations
+- `express()` with valid/invalid gestures
+- `feel()` parsing and rate limiting
+- `morphTo()` geometry validation
+- `updateUndertone()` and `setPosition()` events
+- Method chaining (return this)
+- Post-destroy behavior
+- Deprecated method warnings
 
 ---
 
-### Task 3.2: Add 2D/3D API Parity Tests
-**Severity:** Medium (API drift between modes)
-**Files:** Create `test/integration/api-parity.test.js`
+### ✅ Task 3.2: Add 2D/3D API Parity Tests
+**Status:** Completed
+**Files:** `test/integration/api-parity.test.js` (20 tests)
 
-**Problem:** No tests verify 2D and 3D APIs match. They can drift apart unnoticed.
-
-**Tasks:**
-- [ ] Create `test/integration/api-parity.test.js`
-- [ ] Test both modes have same public methods
-- [ ] Test same inputs produce same events
-- [ ] Test method signatures match (where applicable)
-
-**Acceptance:** Test fails if 2D/3D public APIs diverge.
+Tests verify:
+- Required shared methods exist on both classes
+- 2D-only and 3D-only methods are documented
+- `setEmotion()` signature accepts same formats on 3D (string, number, object)
+- Method chaining returns `this`
+- Event emission works correctly
+- Helper methods return correct types
 
 ---
 
@@ -183,7 +174,7 @@ console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
 
 ## Completed Tasks (Archive)
 
-### Session: January 2026 - API Improvements
+### Session: January 2026 - API Improvements & Testing
 
 **Task 1.1: Add Input Validation to Core APIs**
 Added validation with warnings to `setEmotion()`, `express()`, `morphTo()`. Added helper methods: `getAvailableEmotions()`, `getAvailableGestures()`, `getAvailableGeometries()`.
@@ -202,6 +193,12 @@ Added deprecation warning to `setGeometry()`.
 
 **Task 2.3: Standardize Event Emission Patterns**
 Added `position:change` and `scale:change` events with `previous` value tracking.
+
+**Task 3.1: Add EmotiveMascot3D Unit Tests**
+Created `test/unit/3d/EmotiveMascot3D.test.js` with 53 tests covering API validation, chaining, events, and lifecycle.
+
+**Task 3.2: Add 2D/3D API Parity Tests**
+Created `test/integration/api-parity.test.js` with 20 tests verifying shared and mode-specific methods.
 
 **Task 4.1: Document All Events**
 Created `docs/EVENTS.md` documenting all 12 events with examples.
