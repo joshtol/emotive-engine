@@ -469,7 +469,7 @@ class EmotiveMascotPublic {
 
         // Check rate limit
         if (limiter.calls.length >= limiter.maxCallsPerSecond) {
-            console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
+            console.warn(`[EmotiveMascot] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`);
             return {
                 success: false,
                 error: 'Rate limit exceeded',
@@ -486,7 +486,7 @@ class EmotiveMascotPublic {
         // Validate
         const validation = this._intentParser.validate(parsed);
         if (!validation.valid) {
-            console.warn('[feel] Invalid intent:', validation.errors);
+            console.warn('[EmotiveMascot] feel: Invalid intent:', validation.errors);
             return {
                 success: false,
                 error: validation.errors.join('; '),
@@ -523,7 +523,7 @@ class EmotiveMascotPublic {
                 parsed
             };
         } catch (error) {
-            console.error('[feel] Execution error:', error);
+            console.error('[EmotiveMascot] feel: Execution error:', error);
             return {
                 success: false,
                 error: error.message,

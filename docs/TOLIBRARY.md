@@ -154,20 +154,14 @@ Created migration guide covering:
 
 ---
 
-### Task 4.3: Improve Error Messages with Context
-**Severity:** Low
-**File:** Multiple
+### ✅ Task 4.3: Improve Error Messages with Context
+**Status:** Completed
+**Files:** `src/3d/index.js`, `src/EmotiveMascotPublic.js`
 
-**Problem:** Some errors lack context:
-```javascript
-console.warn('[feel] Rate limit exceeded. Max 10 calls per second.');
-// Hardcoded "10" but actual limit is in _feelRateLimiter.maxCallsPerSecond
-```
-
-**Tasks:**
-- [ ] Audit all `console.warn` and `console.error` calls
-- [ ] Use actual config values in error messages
-- [ ] Add suggestions for how to fix issues
+Improvements:
+- Fixed hardcoded rate limit value in 2D `feel()` to use dynamic `limiter.maxCallsPerSecond`
+- Standardized 2D warning prefixes to `[EmotiveMascot]` (matching 3D's `[EmotiveMascot3D]`)
+- All validation warnings now include valid alternatives via helper methods
 
 ---
 
@@ -204,6 +198,9 @@ Created `docs/EVENTS.md` documenting all 12 events with examples.
 
 **Task 4.2: Add Migration Guide**
 Created `docs/MIGRATION.md` documenting deprecated methods, new features, and breaking changes.
+
+**Task 4.3: Improve Error Messages**
+Fixed hardcoded values in warnings, standardized prefixes across 2D/3D.
 
 ### Previous Sessions
 
