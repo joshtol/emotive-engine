@@ -37,7 +37,7 @@ export class ParticleConfigCalculator {
      * @param {Object} renderState - Current render state
      * @returns {Object} Orb position with x and y coordinates
      */
-    calculateOrbPosition(renderState) {
+    calculateOrbPosition(_renderState) {
         // Always use effective center for particle spawning (with position offsets applied)
         const effectiveCenter = this.mascot.renderer.getEffectiveCenter();
         const orbX = effectiveCenter.x;

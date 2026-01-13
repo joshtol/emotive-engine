@@ -18,7 +18,7 @@
 import { getEmotion } from '../../core/emotions/index.js';
 
 export class BlinkAnimator {
-    constructor(geometryConfig, options = {}) {
+    constructor(geometryConfig, _options = {}) {
         // Geometry-specific blink config
         this.blinkConfig = geometryConfig.blink || this.getDefaultBlinkConfig();
         this.currentGeometryType = null;

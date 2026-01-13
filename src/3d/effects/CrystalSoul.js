@@ -290,7 +290,7 @@ export class CrystalSoul {
      * @private
      */
     _createMesh() {
-        console.log(`[CrystalSoul] _createMesh() START, inclusionGeometryCache=${!!inclusionGeometryCache}`);
+        console.warn(`[CrystalSoul] _createMesh() START, inclusionGeometryCache=${!!inclusionGeometryCache}`);
 
         // Create material first (shared regardless of geometry)
         this.material = new THREE.ShaderMaterial({

@@ -209,10 +209,10 @@ export class Particle3DOrchestrator {
 
     /**
      * Set emotion explicitly (called when emotion changes)
-     * @param {string} emotion - New emotion
-     * @param {string|null} undertone - New undertone
+     * @param {string} _emotion - New emotion (triggers recalculation)
+     * @param {string|null} _undertone - New undertone (triggers recalculation)
      */
-    setEmotion(emotion, undertone = null) {
+    setEmotion(_emotion, _undertone = null) {
         // Force recalculation on next update
         this.currentEmotion = null;
         this.currentUndertone = null;

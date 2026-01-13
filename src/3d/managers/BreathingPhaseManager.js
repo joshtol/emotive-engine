@@ -54,17 +54,17 @@ export class BreathingPhaseManager {
 
         // Set target scale based on phase
         switch (phase) {
-            case 'inhale':
-                this._targetScale = PHASE_SCALES.inhale;
-                break;
-            case 'exhale':
-                this._targetScale = PHASE_SCALES.exhale;
-                break;
-            case 'hold':
-            default:
-                // Hold at current scale - no animation needed
-                this._targetScale = this._startScale;
-                break;
+        case 'inhale':
+            this._targetScale = PHASE_SCALES.inhale;
+            break;
+        case 'exhale':
+            this._targetScale = PHASE_SCALES.exhale;
+            break;
+        case 'hold':
+        default:
+            // Hold at current scale - no animation needed
+            this._targetScale = this._startScale;
+            break;
         }
     }
 

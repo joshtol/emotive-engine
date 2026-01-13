@@ -53,7 +53,7 @@ const MULTI_WORD_PHRASES = [
 /**
  * Characters that act as separators between intent components
  */
-const SEPARATORS = /[,;|\/]+/;
+const SEPARATORS = /[,;|/]+/;
 
 /**
  * Words to strip (articles, filler words that don't affect meaning)

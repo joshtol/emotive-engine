@@ -95,10 +95,10 @@ class ElementTargetingAnimations extends ElementTargeting {
 
         return () => {
             this.activeAnimations.delete(animationId);
-            const rafId = this.animationRAFIds.get(animationId);
-            if (rafId !== undefined) {
-                cancelAnimationFrame(rafId);
-                this.activeRAFIds.delete(rafId);
+            const currentRafId = this.animationRAFIds.get(animationId);
+            if (currentRafId !== undefined) {
+                cancelAnimationFrame(currentRafId);
+                this.activeRAFIds.delete(currentRafId);
                 this.animationRAFIds.delete(animationId);
             }
         };
@@ -170,10 +170,10 @@ class ElementTargetingAnimations extends ElementTargeting {
 
         return () => {
             this.activeAnimations.delete(animationId);
-            const rafId = this.animationRAFIds.get(animationId);
-            if (rafId !== undefined) {
-                cancelAnimationFrame(rafId);
-                this.activeRAFIds.delete(rafId);
+            const currentRafId = this.animationRAFIds.get(animationId);
+            if (currentRafId !== undefined) {
+                cancelAnimationFrame(currentRafId);
+                this.activeRAFIds.delete(currentRafId);
                 this.animationRAFIds.delete(animationId);
             }
         };
@@ -241,10 +241,10 @@ class ElementTargetingAnimations extends ElementTargeting {
 
         return () => {
             this.activeAnimations.delete(animationId);
-            const rafId = this.animationRAFIds.get(animationId);
-            if (rafId !== undefined) {
-                cancelAnimationFrame(rafId);
-                this.activeRAFIds.delete(rafId);
+            const currentRafId = this.animationRAFIds.get(animationId);
+            if (currentRafId !== undefined) {
+                cancelAnimationFrame(currentRafId);
+                this.activeRAFIds.delete(currentRafId);
                 this.animationRAFIds.delete(animationId);
             }
         };
@@ -314,10 +314,10 @@ class ElementTargetingAnimations extends ElementTargeting {
 
         return () => {
             this.activeAnimations.delete(animationId);
-            const rafId = this.animationRAFIds.get(animationId);
-            if (rafId !== undefined) {
-                cancelAnimationFrame(rafId);
-                this.activeRAFIds.delete(rafId);
+            const currentRafId = this.animationRAFIds.get(animationId);
+            if (currentRafId !== undefined) {
+                cancelAnimationFrame(currentRafId);
+                this.activeRAFIds.delete(currentRafId);
                 this.animationRAFIds.delete(animationId);
             }
         };
@@ -393,10 +393,10 @@ class ElementTargetingAnimations extends ElementTargeting {
 
         return () => {
             this.activeAnimations.delete(animationId);
-            const rafId = this.animationRAFIds.get(animationId);
-            if (rafId !== undefined) {
-                cancelAnimationFrame(rafId);
-                this.activeRAFIds.delete(rafId);
+            const currentRafId = this.animationRAFIds.get(animationId);
+            if (currentRafId !== undefined) {
+                cancelAnimationFrame(currentRafId);
+                this.activeRAFIds.delete(currentRafId);
                 this.animationRAFIds.delete(animationId);
             }
         };

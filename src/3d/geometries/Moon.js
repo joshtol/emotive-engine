@@ -732,7 +732,7 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
     const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
     const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
 
-    const colorMap = textureLoader.load(
+    textureLoader.load(
         colorPath,
         texture => {
             material.uniforms.colorMap.value = texture;
@@ -753,7 +753,7 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
         }
     );
 
-    const normalMap = textureLoader.load(normalPath, texture => {
+    textureLoader.load(normalPath, texture => {
         material.uniforms.normalMap.value = texture;
     });
 

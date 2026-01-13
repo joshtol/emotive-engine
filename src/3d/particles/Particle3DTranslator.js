@@ -354,7 +354,7 @@ export class Particle3DTranslator {
      * ORBITING: Circular paths around the core in full 3D sphere
      * Each particle orbits in its own tilted plane for 360°x360°x360° coverage
      */
-    _translateOrbiting(particle, corePosition, canvasSize) {
+    _translateOrbiting(particle, corePosition, _canvasSize) {
         const behaviorData = particle.behaviorData || {};
 
         // Get or generate unique orbital plane for this particle
@@ -498,7 +498,7 @@ export class Particle3DTranslator {
     /**
      * BURST: Radial explosion from center with uniform 3D distribution
      */
-    _translateBurst(particle, corePosition, canvasSize) {
+    _translateBurst(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
@@ -552,7 +552,7 @@ export class Particle3DTranslator {
     /**
      * SCATTERING: Dispersing outward in all directions with uniform 3D distribution (Fear)
      */
-    _translateScattering(particle, corePosition, canvasSize) {
+    _translateScattering(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
@@ -571,7 +571,7 @@ export class Particle3DTranslator {
     /**
      * REPELLING: Push away from core with uniform 3D distribution (Disgust)
      */
-    _translateRepelling(particle, corePosition, canvasSize) {
+    _translateRepelling(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
@@ -647,7 +647,7 @@ export class Particle3DTranslator {
     /**
      * RADIANT: Expanding glow from center with uniform 3D distribution
      */
-    _translateRadiant(particle, corePosition, canvasSize) {
+    _translateRadiant(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction
         const dir = this._getUniformDirection3D(particle);
 
@@ -666,7 +666,7 @@ export class Particle3DTranslator {
     /**
      * ASCENDING: Spiral upward in helical path
      */
-    _translateAscending(particle, corePosition, canvasSize) {
+    _translateAscending(particle, corePosition, _canvasSize) {
         const behaviorData = particle.behaviorData || {};
 
         // Helical motion parameters (scaled to core size)
@@ -715,7 +715,7 @@ export class Particle3DTranslator {
      * Particles orbit and scan like searchlights covering all angles
      * Uses same technique as zen/ambient for consistent 3D distribution
      */
-    _translateSurveillance(particle, corePosition, canvasSize) {
+    _translateSurveillance(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction (uses x,y as seeds but results in sphere distribution)
         const dir = this._getUniformDirection3D(particle);
 
@@ -870,7 +870,7 @@ export class Particle3DTranslator {
     /**
      * ZEN: Meditative slow drift
      */
-    _translateZen(particle, corePosition, canvasSize) {
+    _translateZen(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction for orbital plane
         const dir = this._getUniformDirection3D(particle);
 
@@ -921,14 +921,15 @@ export class Particle3DTranslator {
      * @param {Object} canvasSize - Canvas dimensions (unused for black hole)
      * @returns {THREE.Vector3} 3D position in accretion disk
      */
-    _translateGravitationalAccretion(particle, corePosition, canvasSize) {
+    _translateGravitationalAccretion(particle, corePosition, _canvasSize) {
         const behaviorData = particle.behaviorData || {};
         const SCHWARZSCHILD_RADIUS = 0.25; // Base radius from BlackHole.js
 
         // Initialize orbital parameters on first call
         if (!behaviorData.orbitRadius) {
             // Spawn particles between ISCO (2.5x) and outer disk (8x)
-            const seed = particle.x * 0.1 + particle.y * 0.2;
+            // eslint-disable-next-line no-unused-vars
+            const _seed = particle.x * 0.1 + particle.y * 0.2; // Reserved for future seeded randomness
             behaviorData.orbitRadius = SCHWARZSCHILD_RADIUS * (2.5 + Math.random() * 5.5);
 
             // Only spawn particles in back hemisphere (away from camera on +Z axis)

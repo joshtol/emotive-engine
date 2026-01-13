@@ -692,7 +692,7 @@ export class SolarEclipse {
                 shadowCoverage = this.startShadowCoverage + (this.targetShadowCoverage - this.startShadowCoverage) * easedProgress;
             } else {
                 // Use target config coverage (constant size during in/out transitions)
-                shadowCoverage = config.shadowCoverage;
+                ({ shadowCoverage } = config);
             }
             const shadowRadius = scaledSunRadius * shadowCoverage;
             const baseShadowScale = shadowRadius / this.sunRadius;

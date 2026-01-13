@@ -150,7 +150,8 @@ export default {
     '3d': {
         evaluate(progress, motion) {
             const config = { ...this.config, ...motion };
-            const strength = motion.strength || 1.0;
+            // eslint-disable-next-line no-unused-vars
+            const _strength = motion.strength || 1.0; // Reserved for future intensity scaling
 
             // Quick flash intensity spike then fade (normalized to ±40% max)
             const normalizedGlowPeak = 0.4; // Max 40% brighter

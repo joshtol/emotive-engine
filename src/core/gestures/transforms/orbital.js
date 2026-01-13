@@ -202,7 +202,8 @@ export default {
             }
 
             const data = particle.gestureData.orbital;
-            const config = motion.config || {};
+            // eslint-disable-next-line no-unused-vars
+            const _config = motion.config || {}; // Reserved for future configuration options
 
             // Smooth entry/exit envelope - starts from 0, peaks at 1, returns to 0
             let envelope = 1.0;

@@ -50,7 +50,7 @@ export function applyOrbit(particle, progress, motion, dt, centerX, centerY) {
     if (!particle.gestureData) {
         particle.gestureData = {};
     }
-    const gestureData = particle.gestureData;
+    const {gestureData} = particle;
 
     // Extract config and strength from motion
     // motion contains the merged config from default + rhythm modulation

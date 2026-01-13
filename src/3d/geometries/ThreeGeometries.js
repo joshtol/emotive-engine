@@ -10,7 +10,8 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createMoon } from './Moon.js';
-import { createSunGeometry } from './Sun.js';
+// eslint-disable-next-line no-unused-vars
+import { createSunGeometry as _createSunGeometry } from './Sun.js'; // Re-exported via index
 import { loadHeartGeometry } from './Heart.js';
 import { loadStarGeometry } from './Star.js';
 
@@ -57,7 +58,7 @@ export function setCrystalSmoothNormals(smooth) {
  * @returns {Promise<THREE.BufferGeometry>} Crystal geometry
  */
 function loadCrystalGeometry(assetBasePath = '/assets') {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         const loader = new OBJLoader();
         loader.load(
             `${assetBasePath}/models/Crystal/crystal.obj`,
@@ -136,7 +137,8 @@ function loadCrystalGeometry(assetBasePath = '/assets') {
                     resolve(fallback);
                 }
             },
-            progress => {
+            _progress => {
+                // Progress callback - intentionally empty
             },
             error => {
                 console.warn('💎 [CRYSTAL] OBJ load FAILED:', error);

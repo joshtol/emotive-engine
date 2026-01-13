@@ -89,10 +89,10 @@ export default {
      * @param {Object} config - Gesture configuration
      * @param {number} progress - Gesture progress (0-1)
      * @param {number} strength - Gesture strength multiplier
-     * @param {number} centerX - Orb center X (unused for wiggle)
-     * @param {number} centerY - Orb center Y (unused for wiggle)
+     * @param {number} _centerX - Orb center X (unused for wiggle)
+     * @param {number} _centerY - Orb center Y (unused for wiggle)
      */
-    apply(particle, gestureData, config, progress, strength, centerX, centerY) {
+    apply(particle, gestureData, config, progress, strength, _centerX, _centerY) {
         const amplitude = (config.amplitude || this.config.amplitude) * strength;
         const frequency = config.frequency || this.config.frequency;
         const damping = config.damping || this.config.damping;

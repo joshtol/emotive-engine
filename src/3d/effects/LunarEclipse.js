@@ -112,9 +112,9 @@ export class LunarEclipse {
 
     /**
      * Update eclipse animation
-     * @param {number} deltaTime - Time since last frame (ms)
+     * @param {number} _deltaTime - Time since last frame (ms) - unused, uses performance.now()
      */
-    update(deltaTime) {
+    update(_deltaTime) {
         if (!this.animating) return;
 
         // Calculate animation progress

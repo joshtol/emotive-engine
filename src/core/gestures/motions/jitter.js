@@ -130,7 +130,8 @@ export default {
             const jitterScale = intensity * strength * PIXEL_TO_3D * fadeOut;
 
             // High-frequency random jitter in all three axes
-            const time = progress * 100; // High frequency
+            // eslint-disable-next-line no-unused-vars
+            const _time = progress * 100; // High frequency (reserved for deterministic seeding)
             const jitterX = (Math.random() - 0.5) * jitterScale;
             const jitterY = (Math.random() - 0.5) * jitterScale;
             const jitterZ = (Math.random() - 0.5) * jitterScale;

@@ -226,20 +226,20 @@ export class Rhythm3DAdapter {
      */
     _applyEasing(value, easingType) {
         switch (easingType) {
-            case 'bounce':
-                // Sharper attack, slower decay - snappier, more rhythmic feel
-                // Uses power curve to create punch on peaks
-                return Math.sign(value) * Math.pow(Math.abs(value), 0.6);
+        case 'bounce':
+            // Sharper attack, slower decay - snappier, more rhythmic feel
+            // Uses power curve to create punch on peaks
+            return Math.sign(value) * Math.pow(Math.abs(value), 0.6);
 
-            case 'elastic':
-                // Playful overshoot with subtle wobble
-                // Good for excited/energetic moods
-                return value * (1 + 0.15 * Math.sin(Math.abs(value) * Math.PI * 2));
+        case 'elastic':
+            // Playful overshoot with subtle wobble
+            // Good for excited/energetic moods
+            return value * (1 + 0.15 * Math.sin(Math.abs(value) * Math.PI * 2));
 
-            case 'sine':
-            default:
-                // Smooth sine wave - current behavior, elegant and flowing
-                return value;
+        case 'sine':
+        default:
+            // Smooth sine wave - current behavior, elegant and flowing
+            return value;
         }
     }
 

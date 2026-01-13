@@ -312,7 +312,8 @@ export default {
             const config = motion.config || {};
             const strength = motion.strength || 0.7;
             const flickerRate = config.flickerRate || 15;
-            const minOpacity = config.minOpacity || 0.3;
+            // eslint-disable-next-line no-unused-vars
+            const _minOpacity = config.minOpacity || 0.3; // Reserved for future opacity floor
 
             // Create rapid, random flickering effect
             // Use a combination of fast oscillation and random jumps

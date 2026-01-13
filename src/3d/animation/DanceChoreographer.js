@@ -54,8 +54,13 @@ import { setMoonPhase } from '../geometries/Moon.js';
  *
  * Accent gestures use scaleBoost, rotationBoost, positionBoost instead
  * of absolute position/rotation/scale, so they layer on top of groove.
+ *
+ * @type {Object} Available accent gesture categories
+ * @property {string[]} punctuation - Beat punctuation gestures
+ * @property {string[]} movement - Subtle movement accents
+ * @property {string[]} dynamics - Build/release gestures
  */
-const ACCENT_GESTURES = {
+const _ACCENT_GESTURES = {
     // Beat punctuation - quick accents on the beat
     punctuation: ['pop', 'bob', 'flare', 'dip'],
     // Movement accents - subtle position/rotation boosts
@@ -68,8 +73,13 @@ const ACCENT_GESTURES = {
  * Motion-based gestures (ABSOLUTE - use sparingly during dance)
  * These create their own motion and compete with groove.
  * Best for special moments like drops, breakdowns, or climactic points.
+ *
+ * @type {Object} Available motion gesture categories
+ * @property {string[]} rhythmic - Beat-synced gestures
+ * @property {string[]} expressive - Special moment gestures
+ * @property {string[]} accent - Subtle emphasis gestures
  */
-const MOTION_GESTURES = {
+const _MOTION_GESTURES = {
     // Rhythmic - beat-synced (can fight groove)
     rhythmic: ['wiggle', 'headBob', 'nod', 'sway'],
     // Expressive - for special moments only
@@ -77,6 +87,9 @@ const MOTION_GESTURES = {
     // Accent - subtle emphasis
     accent: ['twitch', 'lean', 'tilt']
 };
+
+// Export for potential external use
+export { _ACCENT_GESTURES as ACCENT_GESTURES, _MOTION_GESTURES as MOTION_GESTURES };
 
 /**
  * Glow-based gestures (USE SPARINGLY - brightness changes)
@@ -361,9 +374,9 @@ export class DanceChoreographer {
      * @param {number} deltaTime - Time since last frame in seconds
      * @param {Object} audioData - Audio analysis data (bass, vocal, flux)
      */
-    update(deltaTime, audioData = null) {
+    update(_deltaTime, audioData = null) {
         if (!this.rhythmAdapter) {
-            console.log('[DanceChoreographer] No rhythmAdapter!');
+            console.warn('[DanceChoreographer] No rhythmAdapter!');
             return;
         }
 
@@ -376,7 +389,7 @@ export class DanceChoreographer {
                 if (status?.finalized) {
                     this.enable();
                     this.setIntensity(1.0); // Full intensity when auto-enabled
-                    console.log('[DanceChoreographer] Auto-enabled at full intensity - BPM locked!');
+                    // Debug: console.warn('[DanceChoreographer] Auto-enabled at full intensity - BPM locked!');
                 }
             }
         }
@@ -384,14 +397,14 @@ export class DanceChoreographer {
         // Skip rest of update if not enabled
         if (!this.enabled) return;
 
-        // Debug: Log barProgress periodically (every ~2 seconds)
-        if (!this._lastBarProgressLog || performance.now() - this._lastBarProgressLog > 2000) {
-            const barProg = this.rhythmAdapter?.barProgress ?? 'N/A';
-            const beatProg = this.rhythmAdapter?.beatProgress ?? 'N/A';
-            const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
-            console.log(`[DanceChoreographer] barProgress=${typeof barProg === 'number' ? barProg.toFixed(3) : barProg}, beatProgress=${typeof beatProg === 'number' ? beatProg.toFixed(3) : beatProg}, isPlaying=${isPlaying}, barCount=${this.barCount}`);
-            this._lastBarProgressLog = performance.now();
-        }
+        // Debug: Log barProgress periodically (every ~2 seconds) - disabled in production
+        // if (!this._lastBarProgressLog || performance.now() - this._lastBarProgressLog > 2000) {
+        //     const barProg = this.rhythmAdapter?.barProgress ?? 'N/A';
+        //     const beatProg = this.rhythmAdapter?.beatProgress ?? 'N/A';
+        //     const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
+        //     console.warn(`[DanceChoreographer] barProgress=${typeof barProg === 'number' ? barProg.toFixed(3) : barProg}, beatProgress=${typeof beatProg === 'number' ? beatProg.toFixed(3) : beatProg}, isPlaying=${isPlaying}, barCount=${this.barCount}`);
+        //     this._lastBarProgressLog = performance.now();
+        // }
 
         // Get audio data from deformer if not provided
         const audio = audioData || this._getAudioData();
@@ -488,7 +501,7 @@ export class DanceChoreographer {
         if (wrapped) {
             this.barCount++;
             this._gesturesThisBar = 0;
-            console.log(`[DanceChoreographer] Bar transition! barCount=${this.barCount} (${this.lastBarProgress.toFixed(2)} → ${currentBarProgress.toFixed(2)})`);
+            // Debug: console.warn(`[DanceChoreographer] Bar transition! barCount=${this.barCount} (${this.lastBarProgress.toFixed(2)} → ${currentBarProgress.toFixed(2)})`);
         }
 
         this.lastBarProgress = currentBarProgress;
@@ -573,7 +586,7 @@ export class DanceChoreographer {
      */
     _triggerGestures(audio) {
         if (!this.mascot) {
-            console.log('[DanceChoreographer] _triggerGestures: No mascot reference!');
+            console.warn('[DanceChoreographer] _triggerGestures: No mascot reference!');
             return;
         }
 
@@ -600,11 +613,11 @@ export class DanceChoreographer {
 
         // Check if it's time for a gesture (bar-aligned)
         if (this.barCount % gestureFrequency !== 0) {
-            // Only log occasionally to avoid spam
-            if (this.barCount > 0 && this.barCount % 8 === 0 && this._lastLoggedBar !== this.barCount) {
-                console.log(`[DanceChoreographer] Waiting... barCount=${this.barCount}, freq=${gestureFrequency}, mod=${this.barCount % gestureFrequency}`);
-                this._lastLoggedBar = this.barCount;
-            }
+            // Debug logging disabled in production
+            // if (this.barCount > 0 && this.barCount % 8 === 0 && this._lastLoggedBar !== this.barCount) {
+            //     console.warn(`[DanceChoreographer] Waiting... barCount=${this.barCount}, freq=${gestureFrequency}, mod=${this.barCount % gestureFrequency}`);
+            //     this._lastLoggedBar = this.barCount;
+            // }
             return;
         }
         if (this._lastGestureBar === this.barCount) return;
@@ -614,7 +627,7 @@ export class DanceChoreographer {
         const gesture = this._selectGesture(gestureType, audio);
 
         if (gesture) {
-            console.log(`[DanceChoreographer] Triggering gesture: ${Array.isArray(gesture) ? gesture.join('+') : gesture} at bar ${this.barCount}`);
+            // Debug: console.warn(`[DanceChoreographer] Triggering gesture: ${Array.isArray(gesture) ? gesture.join('+') : gesture} at bar ${this.barCount}`);
             this._executeGesture(gesture);
             this._lastGestureBar = this.barCount;
             this.lastGestureTime = now;
@@ -655,11 +668,11 @@ export class DanceChoreographer {
      * Select gesture(s) based on energy level
      * Single gestures are the norm; combos are rare and reserved for high energy moments
      * @private
-     * @param {string} type - Gesture type (unused, kept for API compatibility)
-     * @param {Object} audio - Current audio data
+     * @param {string} _type - Gesture type (unused, kept for API compatibility)
+     * @param {Object} _audio - Current audio data (unused, kept for API compatibility)
      * @returns {string|string[]} Single gesture name or array of gesture names
      */
-    _selectGesture(type, audio) {
+    _selectGesture(_type, _audio) {
         // Determine energy level
         let level = 'subtle';
         if (this.intensity > 0.7 || this.currentGroove === 'groove2') {
@@ -765,9 +778,9 @@ export class DanceChoreographer {
      * Consider triggering a geometry morph on significant energy changes
      * Morphs are rare and intentional - like the mascot "deciding" to transform
      * @private
-     * @param {Object} audio - Current audio data
+     * @param {Object} _audio - Current audio data (unused, kept for API compatibility)
      */
-    _considerMorph(audio) {
+    _considerMorph(_audio) {
         if (!this.config.morphEnabled || !this.mascot) return;
 
         // Only consider morphs when rhythm is actually playing
@@ -781,7 +794,8 @@ export class DanceChoreographer {
 
         // Get current energy levels
         const avgBass = this._getSmoothedEnergy(this._bassHistory);
-        const avgVocal = this._getSmoothedEnergy(this._vocalHistory);
+        // eslint-disable-next-line no-unused-vars
+        const _avgVocal = this._getSmoothedEnergy(this._vocalHistory); // Reserved for vocal-reactive morphs
 
         // Morph triggers:
         // 1. Groove change (section change) - most natural trigger
@@ -857,7 +871,7 @@ export class DanceChoreographer {
      * @private
      * @param {string} reason - Why the morph was triggered (for logging)
      */
-    _triggerMorph(reason) {
+    _triggerMorph(_reason) {
         if (!this.mascot) return;
 
         // Clear any pending return morph
@@ -887,10 +901,10 @@ export class DanceChoreographer {
         if (finalCandidates.length === 0) return;
 
         const newTarget = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
-        const targetLabel = this._getTargetLabel(newTarget);
-        const currentLabel = this._getTargetLabel(this._currentTarget);
-
-        console.log(`[DanceChoreographer] 🎭 Morphing: ${currentLabel} → ${targetLabel} (reason: ${reason}) at bar ${this.barCount}`);
+        // Debug labels - uncomment for debugging:
+        // const targetLabel = this._getTargetLabel(newTarget);
+        // const currentLabel = this._getTargetLabel(this._currentTarget);
+        // console.warn(`[DanceChoreographer] Morphing: ${currentLabel} → ${targetLabel} (reason: ${_reason}) at bar ${this.barCount}`);
 
         // Apply the morph target
         this._applyMorphTarget(newTarget);
@@ -928,10 +942,10 @@ export class DanceChoreographer {
         // Only return if we're not already at base
         if (targetsEqual(this._currentTarget, this._baseTarget)) return;
 
-        const currentLabel = this._getTargetLabel(this._currentTarget);
-        const baseLabel = this._getTargetLabel(this._baseTarget);
-
-        console.log(`[DanceChoreographer] 🔄 Returning: ${currentLabel} → ${baseLabel} at bar ${this.barCount}`);
+        // Debug labels - uncomment for debugging:
+        // const currentLabel = this._getTargetLabel(this._currentTarget);
+        // const baseLabel = this._getTargetLabel(this._baseTarget);
+        // console.warn(`[DanceChoreographer] Returning: ${currentLabel} → ${baseLabel} at bar ${this.barCount}`);
 
         // Apply the base target
         this._applyMorphTarget(this._baseTarget);
@@ -1075,9 +1089,9 @@ export class DanceChoreographer {
      * Consider triggering an emotion change based on audio energy
      * Emotions change more frequently than morphs, adding life to the dance
      * @private
-     * @param {Object} audio - Current audio data
+     * @param {Object} _audio - Current audio data (unused, kept for API compatibility)
      */
-    _considerEmotion(audio) {
+    _considerEmotion(_audio) {
         if (!this.config.emotionEnabled || !this.mascot) return;
 
         // Only consider emotion changes when rhythm is actually playing
@@ -1164,7 +1178,7 @@ export class DanceChoreographer {
      * @param {string} reason - Why the emotion was triggered
      * @param {number} energy - Current combined energy level (0-1)
      */
-    _triggerEmotion(reason, energy) {
+    _triggerEmotion(_reason, energy) {
         if (!this.mascot) return;
 
         // Clear any pending return
@@ -1198,7 +1212,7 @@ export class DanceChoreographer {
 
         const newEmotion = candidates[Math.floor(Math.random() * candidates.length)];
 
-        console.log(`[DanceChoreographer] 😊 Emotion: ${this._currentEmotion} → ${newEmotion} (reason: ${reason}, energy: ${energy.toFixed(2)}) at bar ${this.barCount}`);
+        // Debug: console.warn(`[DanceChoreographer] Emotion: ${this._currentEmotion} → ${newEmotion} (reason: ${_reason}, energy: ${energy.toFixed(2)}) at bar ${this.barCount}`);
 
         // Apply emotion via mascot
         if (typeof this.mascot.setEmotion === 'function') {
@@ -1232,7 +1246,7 @@ export class DanceChoreographer {
         // Only return if we're not already at base
         if (this._currentEmotion === this._baseEmotion) return;
 
-        console.log(`[DanceChoreographer] 🔄 Emotion return: ${this._currentEmotion} → ${this._baseEmotion} at bar ${this.barCount}`);
+        // Debug: console.warn(`[DanceChoreographer] Emotion return: ${this._currentEmotion} → ${this._baseEmotion} at bar ${this.barCount}`);
 
         // Apply base emotion via mascot
         if (typeof this.mascot.setEmotion === 'function') {
@@ -1284,8 +1298,8 @@ export class DanceChoreographer {
             barCount: this.barCount,
             avgBass: this._getSmoothedEnergy(this._bassHistory).toFixed(3),
             avgVocal: this._getSmoothedEnergy(this._vocalHistory).toFixed(3),
-            lastGestureAgo: Math.round((performance.now() - this.lastGestureTime) / 1000) + 's',
-            lastGlowAgo: Math.round((performance.now() - this.lastGlowTime) / 1000) + 's',
+            lastGestureAgo: `${Math.round((performance.now() - this.lastGestureTime) / 1000)}s`,
+            lastGlowAgo: `${Math.round((performance.now() - this.lastGlowTime) / 1000)}s`,
             lastMorphBar: this._lastMorphBar,
             barsSinceLastMorph: this.barCount - this._lastMorphBar,
             lastEmotionBar: this._lastEmotionBar,
