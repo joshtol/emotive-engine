@@ -51,6 +51,7 @@
     "build:docs": "node scripts/build-docs.js",
     "optimize": "node scripts/optimize-bundle.js",
     "docs": "jsdoc -c jsdoc.json",
+    "docs:api": "typedoc",
     "test": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run",
     "test:watch": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs",
     "test:coverage": "node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run --coverage",
@@ -151,6 +152,8 @@
     "rollup-plugin-glsl": "^1.3.0",
     "rollup-plugin-visualizer": "^6.0.3",
     "terser": "^5.44.0",
+    "typedoc": "^0.28.16",
+    "typedoc-plugin-markdown": "^4.9.0",
     "vitest": "^3.2.4"
   },
   "lint-staged": {

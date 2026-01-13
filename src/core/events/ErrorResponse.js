@@ -90,51 +90,71 @@ export class ErrorResponse {
    * @returns {Array} Array of recovery suggestions
    */
     generateRecoveryActions(type, _context) {
+        const docsUrl = 'https://github.com/joshtol/emotive-engine/blob/main/docs';
+
         const recoveryMap = {
             'INVALID_EMOTION': [
                 'Check if emotion is one of: joy, sadness, anger, fear, surprise, disgust, contempt, neutral',
-                'Use EmotiveMascot.getAvailableEmotions() to see valid options'
+                'Use mascot.getAvailableEmotions() to see valid options',
+                `Docs: ${docsUrl}/QUICK_REFERENCE.md#emotions`
             ],
             'INVALID_GESTURE': [
                 'Verify gesture name matches available gestures',
-                'Use EmotiveMascot.getAvailableGestures() to see valid options'
+                'Use mascot.getAvailableGestures() to see valid options',
+                `Docs: ${docsUrl}/QUICK_REFERENCE.md#gestures`
             ],
             'CANVAS_CONTEXT_LOST': [
                 'Canvas context will attempt automatic recovery',
                 'Reduce canvas size if problem persists',
-                'Check for memory pressure or GPU issues'
+                'Check for memory pressure or GPU issues',
+                `Docs: ${docsUrl}/TROUBLESHOOTING.md#canvas-issues`
             ],
             'AUDIO_CONTEXT_FAILED': [
                 'Audio features will be disabled, visual features continue',
                 'Check browser audio permissions',
-                'Ensure user interaction occurred before audio initialization'
+                'Ensure user interaction occurred before audio initialization',
+                `Docs: ${docsUrl}/TROUBLESHOOTING.md#audio-issues`
             ],
             'PERFORMANCE_DEGRADED': [
                 'Particle count has been automatically reduced',
                 'Consider reducing canvas size or complexity',
-                'Monitor performance metrics for recovery'
+                'Monitor performance metrics for recovery',
+                `Docs: ${docsUrl}/PERFORMANCE.md`
             ],
             'MEMORY_LIMIT_EXCEEDED': [
                 'System has automatically reduced resource usage',
                 'Consider destroying unused mascot instances',
-                'Monitor memory usage patterns'
+                'Monitor memory usage patterns',
+                `Docs: ${docsUrl}/PERFORMANCE.md#memory-management`
             ],
             'VALIDATION_ERROR': [
                 'Check parameter types and ranges',
                 'Refer to API documentation for valid values',
-                'Use default values if unsure'
+                'Use default values if unsure',
+                `Docs: ${docsUrl}/QUICK_REFERENCE.md`
             ],
             'INITIALIZATION_ERROR': [
                 'Ensure canvas element exists and is accessible',
                 'Check browser compatibility',
-                'Verify all required dependencies are loaded'
+                'Verify all required dependencies are loaded',
+                `Docs: ${docsUrl}/TROUBLESHOOTING.md#initialization`
+            ],
+            'RESOURCE_LOAD_FAILED': [
+                'Check network connectivity',
+                'Verify resource URLs are correct',
+                `Docs: ${docsUrl}/TROUBLESHOOTING.md#resource-loading`
+            ],
+            'FEATURE_NOT_SUPPORTED': [
+                'Check browser compatibility requirements',
+                'Consider using fallback features',
+                `Docs: ${docsUrl}/TROUBLESHOOTING.md#browser-compatibility`
             ]
         };
 
         return recoveryMap[type] || [
             'Check console for additional error details',
-            'Refer to troubleshooting documentation',
-            'Consider reporting this issue if it persists'
+            `Docs: ${docsUrl}/TROUBLESHOOTING.md`,
+            'Report issues: https://github.com/joshtol/emotive-engine/issues'
         ];
     }
 

@@ -8,9 +8,36 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 
+</div>
+
+## 30-Second Quick Start
+
+```javascript
+import { EmotiveMascot } from '@joshtol/emotive-engine';
+
+const mascot = new EmotiveMascot();
+await mascot.init(document.getElementById('app'));
+mascot.start();
+mascot.feel('happy, bouncing'); // Natural language control!
+```
+
+```bash
+npm install @joshtol/emotive-engine
+```
+
+[Live Demos](https://joshtol.github.io/emotive-engine) |
+[Full Documentation](#api-reference) |
+[LLM Integration](./docs/LLM_INTEGRATION.md)
+
+<!-- TODO: Create CodeSandbox template and update this link -->
+<!-- [![Edit on CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/emotive-engine-starter) -->
+
+<div align="center">
+
 <img src="assets/previews/3d-demo.gif" alt="Emotive Engine 3D Demo" width="100%" />
 
-Real-time character animation engine with **Canvas 2D** and **WebGL 3D** rendering.
+Real-time character animation engine with **Canvas 2D** and **WebGL 3D**
+rendering.
 
 [Live Demos](https://joshtol.github.io/emotive-engine) |
 [Documentation](#api-reference) |
@@ -27,6 +54,7 @@ Real-time character animation engine with **Canvas 2D** and **WebGL 3D** renderi
 <td width="50%">
 
 ### 3D WebGL Rendering
+
 - Custom GLSL shaders with subsurface scattering
 - Physically-based materials and bloom effects
 - 8 moon phases with tidal lock camera
@@ -37,6 +65,7 @@ Real-time character animation engine with **Canvas 2D** and **WebGL 3D** renderi
 <td width="50%">
 
 ### 2D Canvas Rendering
+
 - Lightweight pure Canvas 2D
 - Dynamic particle effects
 - Shape morphing animations
@@ -48,6 +77,7 @@ Real-time character animation engine with **Canvas 2D** and **WebGL 3D** renderi
 </table>
 
 **Shared across both modes:**
+
 - 15 emotional states with smooth transitions
 - 40+ expressive gestures
 - **Natural language `feel()` API** for LLM integration
@@ -154,9 +184,9 @@ Or via CDN:
 import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
 
 const mascot = new EmotiveMascot3D({
-  coreGeometry: 'crystal',  // crystal, moon, sun, heart, sphere
-  enableParticles: true,
-  enablePostProcessing: true,
+    coreGeometry: 'crystal', // crystal, moon, sun, heart, sphere
+    enableParticles: true,
+    enablePostProcessing: true,
 });
 
 mascot.init(document.getElementById('container'));
@@ -174,8 +204,8 @@ mascot.morphTo('heart');
 import { EmotiveMascot } from '@joshtol/emotive-engine';
 
 const mascot = new EmotiveMascot({
-  canvasId: 'mascot',
-  defaultEmotion: 'neutral',
+    canvasId: 'mascot',
+    defaultEmotion: 'neutral',
 });
 
 await mascot.init(document.getElementById('container'));
@@ -194,22 +224,23 @@ The `feel()` method lets LLMs control the mascot using natural language:
 
 ```javascript
 // Simple emotion
-mascot.feel('happy')
+mascot.feel('happy');
 
 // Emotion with gesture
-mascot.feel('curious, leaning in')
+mascot.feel('curious, leaning in');
 
 // With undertone modifier
-mascot.feel('happy but nervous')
+mascot.feel('happy but nervous');
 
 // With shape morph
-mascot.feel('loving, heart shape, sparkle')
+mascot.feel('loving, heart shape, sparkle');
 
 // With intensity
-mascot.feel('very angry, shaking')
+mascot.feel('very angry, shaking');
 ```
 
-The engine parses ~1400 synonyms to understand natural expressions. For full documentation, see [LLM Integration Guide](./docs/LLM_INTEGRATION.md).
+The engine parses ~1400 synonyms to understand natural expressions. For full
+documentation, see [LLM Integration Guide](./docs/LLM_INTEGRATION.md).
 
 ### LLM System Prompt Example
 
@@ -228,20 +259,20 @@ Examples:
 
 15 built-in emotional states with unique visual characteristics:
 
-| Emotion | Description | Emotion | Description |
-|---------|-------------|---------|-------------|
-| `neutral` | Default calm | `joy` | Happy, upbeat |
-| `calm` | Peaceful | `love` | Affectionate |
-| `excited` | High energy | `euphoria` | Peak happiness |
-| `sadness` | Melancholy | `anger` | Frustrated |
-| `fear` | Anxious | `surprise` | Startled |
-| `disgust` | Repulsed | `focused` | Concentrated |
-| `suspicion` | Wary | `resting` | Idle/sleep |
-| `glitch` | Digital artifact | | |
+| Emotion     | Description      | Emotion    | Description    |
+| ----------- | ---------------- | ---------- | -------------- |
+| `neutral`   | Default calm     | `joy`      | Happy, upbeat  |
+| `calm`      | Peaceful         | `love`     | Affectionate   |
+| `excited`   | High energy      | `euphoria` | Peak happiness |
+| `sadness`   | Melancholy       | `anger`    | Frustrated     |
+| `fear`      | Anxious          | `surprise` | Startled       |
+| `disgust`   | Repulsed         | `focused`  | Concentrated   |
+| `suspicion` | Wary             | `resting`  | Idle/sleep     |
+| `glitch`    | Digital artifact |            |                |
 
 ```javascript
 mascot.setEmotion('joy');
-mascot.setEmotion('calm', 'peaceful');  // with undertone
+mascot.setEmotion('calm', 'peaceful'); // with undertone
 ```
 
 ---
@@ -258,24 +289,24 @@ mascot.setEmotion('calm', 'peaceful');  // with undertone
 
 ```javascript
 mascot.express('bounce');
-mascot.chain('bounce > spin > pulse');    // sequential
-mascot.chain('sway+breathe+float');       // simultaneous
+mascot.chain('bounce > spin > pulse'); // sequential
+mascot.chain('sway+breathe+float'); // simultaneous
 ```
 
 ---
 
 ## 3D Geometries
 
-| Geometry | Description | Shader |
-|----------|-------------|--------|
-| `crystal` | Faceted hexagonal crystal | Subsurface scattering |
-| `moon` | Realistic lunar surface | Custom phase shader |
-| `sun` | Solar sphere with corona | Emissive + corona layers |
-| `heart` | Heart-shaped crystal | Subsurface scattering |
-| `sphere` | Smooth sphere | Standard PBR |
+| Geometry  | Description               | Shader                   |
+| --------- | ------------------------- | ------------------------ |
+| `crystal` | Faceted hexagonal crystal | Subsurface scattering    |
+| `moon`    | Realistic lunar surface   | Custom phase shader      |
+| `sun`     | Solar sphere with corona  | Emissive + corona layers |
+| `heart`   | Heart-shaped crystal      | Subsurface scattering    |
+| `sphere`  | Smooth sphere             | Standard PBR             |
 
 ```javascript
-mascot.morphTo('heart');  // Runtime geometry morphing
+mascot.morphTo('heart'); // Runtime geometry morphing
 ```
 
 ### Moon Phase Control
@@ -294,10 +325,10 @@ setMoonPhase(mascot.core3D, MOON_PHASES.CRESCENT_WAXING);
 
 ```javascript
 // Solar eclipse with corona
-mascot.core3D.setSolarEclipse(0.8);  // 0-1 coverage
+mascot.core3D.setSolarEclipse(0.8); // 0-1 coverage
 
 // Lunar eclipse (blood moon)
-mascot.core3D.setLunarEclipse(1.0);  // Full umbra
+mascot.core3D.setLunarEclipse(1.0); // Full umbra
 ```
 
 ---
@@ -308,23 +339,23 @@ mascot.core3D.setLunarEclipse(1.0);  // Full umbra
 
 ```javascript
 new EmotiveMascot3D({
-  // Geometry
-  coreGeometry: 'crystal',
+    // Geometry
+    coreGeometry: 'crystal',
 
-  // Rendering
-  enableParticles: true,
-  enablePostProcessing: true,  // Bloom effects
-  enableShadows: false,
+    // Rendering
+    enableParticles: true,
+    enablePostProcessing: true, // Bloom effects
+    enableShadows: false,
 
-  // Camera
-  enableControls: true,        // Orbit controls
-  autoRotate: true,
-  cameraDistance: 3,
+    // Camera
+    enableControls: true, // Orbit controls
+    autoRotate: true,
+    cameraDistance: 3,
 
-  // Animation
-  enableBlinking: true,
-  enableBreathing: true,
-  targetFPS: 60,
+    // Animation
+    enableBlinking: true,
+    enableBreathing: true,
+    targetFPS: 60,
 });
 ```
 
@@ -332,11 +363,11 @@ new EmotiveMascot3D({
 
 ```javascript
 new EmotiveMascot({
-  canvasId: 'mascot',
-  targetFPS: 60,
-  enableParticles: true,
-  maxParticles: 300,
-  adaptive: true,  // Auto quality adjustment
+    canvasId: 'mascot',
+    targetFPS: 60,
+    enableParticles: true,
+    maxParticles: 300,
+    adaptive: true, // Auto quality adjustment
 });
 ```
 
@@ -379,12 +410,12 @@ mascot.enableAutoRotate();
 mascot.disableAutoRotate();
 
 // Camera
-mascot.setCameraPreset('front');  // front, side, top, angle
+mascot.setCameraPreset('front'); // front, side, top, angle
 
 // Ambient Groove (rhythm-synced idle animation)
-mascot.setGroove('groove1');              // Subtle, elegant (default)
-mascot.setGroove('groove2');              // Energetic, bouncy
-mascot.setGroove('groove3');              // Smooth, flowing
+mascot.setGroove('groove1'); // Subtle, elegant (default)
+mascot.setGroove('groove2'); // Energetic, bouncy
+mascot.setGroove('groove3'); // Smooth, flowing
 mascot.setGroove('groove2', { bars: 2 }); // Morph over 2 bars
 mascot.enableGroove();
 mascot.disableGroove();
@@ -410,13 +441,13 @@ Or view the [live demo gallery](https://joshtol.github.io/emotive-engine).
 
 ## Browser Support
 
-| Browser | Version |
-|---------|---------|
-| Chrome/Edge | 90+ |
-| Firefox | 88+ |
-| Safari | 14+ |
-| iOS Safari | 14+ |
-| Chrome Android | 90+ |
+| Browser        | Version |
+| -------------- | ------- |
+| Chrome/Edge    | 90+     |
+| Firefox        | 88+     |
+| Safari         | 14+     |
+| iOS Safari     | 14+     |
+| Chrome Android | 90+     |
 
 3D mode requires WebGL 2.0 support.
 
@@ -424,7 +455,8 @@ Or view the [live demo gallery](https://joshtol.github.io/emotive-engine).
 
 ## Multi-Instance Support
 
-Multiple mascots can run independently on the same page. Each instance has its own animation loop, emotion state, and resources.
+Multiple mascots can run independently on the same page. Each instance has its
+own animation loop, emotion state, and resources.
 
 ```javascript
 import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
@@ -445,16 +477,19 @@ mascot2.setEmotion('calm');
 
 // Stop one without affecting the other
 mascot1.stop();
-mascot2.express('bounce');  // Still running
+mascot2.express('bounce'); // Still running
 ```
 
-See the [dual mascot demo](https://joshtol.github.io/emotive-engine/examples/3d/dual-mascot-test.html) for a live example.
+See the
+[dual mascot demo](https://joshtol.github.io/emotive-engine/examples/3d/dual-mascot-test.html)
+for a live example.
 
 ---
 
 ## Server-Side Rendering (SSR)
 
-The engine requires a browser environment. For SSR frameworks, use dynamic imports:
+The engine requires a browser environment. For SSR frameworks, use dynamic
+imports:
 
 ### Next.js
 
@@ -462,12 +497,13 @@ The engine requires a browser environment. For SSR frameworks, use dynamic impor
 import dynamic from 'next/dynamic';
 
 const MascotComponent = dynamic(
-  () => import('@joshtol/emotive-engine/3d').then(mod => {
-    // Initialize after dynamic import
-    const mascot = new mod.EmotiveMascot3D({ coreGeometry: 'crystal' });
-    return { default: () => <div ref={el => el && mascot.init(el)} /> };
-  }),
-  { ssr: false }
+    () =>
+        import('@joshtol/emotive-engine/3d').then(mod => {
+            // Initialize after dynamic import
+            const mascot = new mod.EmotiveMascot3D({ coreGeometry: 'crystal' });
+            return { default: () => <div ref={el => el && mascot.init(el)} /> };
+        }),
+    { ssr: false }
 );
 ```
 
@@ -475,19 +511,19 @@ const MascotComponent = dynamic(
 
 ```vue
 <template>
-  <ClientOnly>
-    <div ref="container" />
-  </ClientOnly>
+    <ClientOnly>
+        <div ref="container" />
+    </ClientOnly>
 </template>
 
 <script setup>
 const container = ref(null);
 
 onMounted(async () => {
-  const { EmotiveMascot3D } = await import('@joshtol/emotive-engine/3d');
-  const mascot = new EmotiveMascot3D({ coreGeometry: 'crystal' });
-  mascot.init(container.value);
-  mascot.start();
+    const { EmotiveMascot3D } = await import('@joshtol/emotive-engine/3d');
+    const mascot = new EmotiveMascot3D({ coreGeometry: 'crystal' });
+    mascot.init(container.value);
+    mascot.start();
 });
 </script>
 ```
@@ -498,7 +534,7 @@ onMounted(async () => {
 import { isSSR } from '@joshtol/emotive-engine/3d';
 
 if (!isSSR()) {
-  // Safe to initialize mascot
+    // Safe to initialize mascot
 }
 ```
 

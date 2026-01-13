@@ -35,6 +35,7 @@
  */
 
 import { ErrorResponse, ErrorTypes } from '../core/ErrorResponse.js';
+import { formatSuggestionMessage } from './suggestions.js';
 
 /**
  * Validation utility class
@@ -47,10 +48,10 @@ export class Validator {
    */
     static validateEmotion(emotion) {
         const validEmotions = [
-            'joy', 'sadness', 'anger', 'fear', 'surprise', 
+            'joy', 'sadness', 'anger', 'fear', 'surprise',
             'disgust', 'contempt', 'neutral'
         ];
-    
+
         if (typeof emotion !== 'string') {
             return ErrorResponse.failure(
                 ErrorTypes.INVALID_EMOTION,
@@ -58,17 +59,19 @@ export class Validator {
                 { received: emotion, validEmotions }
             );
         }
-    
+
         const normalizedEmotion = emotion.toLowerCase().trim();
-    
+
         if (!validEmotions.includes(normalizedEmotion)) {
+            // Use suggestion system for helpful error messages
+            const message = formatSuggestionMessage('emotion', emotion, validEmotions);
             return ErrorResponse.failure(
                 ErrorTypes.INVALID_EMOTION,
-                `Unknown emotion: ${emotion}`,
+                message,
                 { received: emotion, validEmotions }
             );
         }
-    
+
         return ErrorResponse.success(normalizedEmotion);
     }
 
@@ -79,10 +82,10 @@ export class Validator {
    */
     static validateGesture(gesture) {
         const validGestures = [
-            'wave', 'nod', 'shake', 'bounce', 'spin', 'pulse', 
+            'wave', 'nod', 'shake', 'bounce', 'spin', 'pulse',
             'float', 'dance', 'celebrate', 'think'
         ];
-    
+
         if (typeof gesture !== 'string') {
             return ErrorResponse.failure(
                 ErrorTypes.INVALID_GESTURE,
@@ -90,17 +93,19 @@ export class Validator {
                 { received: gesture, validGestures }
             );
         }
-    
+
         const normalizedGesture = gesture.toLowerCase().trim();
-    
+
         if (!validGestures.includes(normalizedGesture)) {
+            // Use suggestion system for helpful error messages
+            const message = formatSuggestionMessage('gesture', gesture, validGestures);
             return ErrorResponse.failure(
                 ErrorTypes.INVALID_GESTURE,
-                `Unknown gesture: ${gesture}`,
+                message,
                 { received: gesture, validGestures }
             );
         }
-    
+
         return ErrorResponse.success(normalizedGesture);
     }
 

@@ -4,11 +4,11 @@
 
 We provide security updates for the following versions of Emotive Engine:
 
-| Version | Supported        |
-| ------- | ---------------- |
-| 2.5.x   | ✅ Yes (Current) |
-| 2.4.x   | ✅ Yes           |
-| < 2.4   | ❌ No            |
+| Version | Supported              |
+| ------- | ---------------------- |
+| 3.x.x   | ✅ Yes (Current)       |
+| 2.5.x   | ⚠️ Security fixes only |
+| < 2.5   | ❌ No                  |
 
 ---
 
