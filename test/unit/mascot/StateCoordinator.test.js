@@ -46,8 +46,8 @@ describe('StateCoordinator', () => {
     });
 
     describe('Constructor', () => {
-        it('should initialize with mascot reference', () => {
-            expect(stateCoordinator.mascot).toBe(mockMascot);
+        it('should initialize in legacy mode when passed mascot', () => {
+            expect(stateCoordinator._legacyMode).toBe(true);
         });
 
         it('should initialize currentEmotion as neutral', () => {
@@ -269,14 +269,14 @@ describe('StateCoordinator', () => {
 
         it('should throw when renderer is null in classic mode (known bug)', () => {
             // TODO: Fix this bug - should check if renderer exists before accessing setEmotionalState
-            mockMascot.renderer = null;
+            stateCoordinator.renderer = null;
 
             expect(() => stateCoordinator.setEmotion('joy')).toThrow();
         });
 
         it('should handle missing renderer in non-classic mode', () => {
-            mockMascot.config.renderingStyle = 'advanced';
-            mockMascot.renderer = null;
+            stateCoordinator.config.renderingStyle = 'advanced';
+            stateCoordinator.renderer = null;
 
             expect(() => stateCoordinator.setEmotion('joy')).not.toThrow();
         });

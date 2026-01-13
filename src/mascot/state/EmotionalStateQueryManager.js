@@ -38,10 +38,40 @@ import ShapeMorpher from '../../core/ShapeMorpher.js';
 export class EmotionalStateQueryManager {
     /**
      * Create EmotionalStateQueryManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} [deps.contextManager] - Context manager instance
+     * @param {Object} [deps.performanceSystem] - Performance system instance
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new EmotionalStateQueryManager({ errorBoundary, stateMachine, contextManager })
+     *
+     * // Legacy style:
+     * new EmotionalStateQueryManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        if (deps && deps.stateMachine && deps.errorBoundary) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.stateMachine = deps.stateMachine;
+            this.contextManager = deps.contextManager || null;
+            this.performanceSystem = deps.performanceSystem || null;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.mascot = mascot;
+            this.errorBoundary = mascot.errorBoundary;
+            this.stateMachine = mascot.stateMachine;
+            this.contextManager = mascot.contextManager;
+            this.performanceSystem = mascot.performanceSystem;
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -53,7 +83,7 @@ export class EmotionalStateQueryManager {
      * console.log('Current color:', color); // '#FF5733'
      */
     getEmotionalColor() {
-        const properties = this.mascot.stateMachine.getCurrentEmotionalProperties();
+        const properties = this.stateMachine.getCurrentEmotionalProperties();
         // Fallback to neutral gray if properties are undefined
         return properties?.primaryColor || '#B0B0B0';
     }
@@ -68,7 +98,7 @@ export class EmotionalStateQueryManager {
      * console.log('Undertone:', state.undertone);
      */
     getCurrentState() {
-        return this.mascot.stateMachine.getCurrentState();
+        return this.stateMachine.getCurrentState();
     }
 
     /**
@@ -80,7 +110,7 @@ export class EmotionalStateQueryManager {
      * console.log('Available:', emotions); // ['joy', 'sadness', 'anger', ...]
      */
     getAvailableEmotions() {
-        return this.mascot.stateMachine.getAvailableEmotions();
+        return this.stateMachine.getAvailableEmotions();
     }
 
     /**
@@ -92,7 +122,7 @@ export class EmotionalStateQueryManager {
      * console.log('Available:', undertones); // ['calm', 'energetic', ...]
      */
     getAvailableUndertones() {
-        return this.mascot.stateMachine.getAvailableUndertones();
+        return this.stateMachine.getAvailableUndertones();
     }
 
     /**
@@ -122,12 +152,12 @@ export class EmotionalStateQueryManager {
      * console.log('Available:', performances); // ['celebration', 'thinking', ...]
      */
     getAvailablePerformances() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.performanceSystem) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.performanceSystem) {
                 return [];
             }
-            return this.mascot.performanceSystem.getAllPerformanceNames();
-        }, 'available-performances', this.mascot)();
+            return this.performanceSystem.getAllPerformanceNames();
+        }, 'available-performances', this._chainTarget)();
     }
 
     /**
@@ -152,12 +182,12 @@ export class EmotionalStateQueryManager {
      * console.log('Urgency:', context.urgency);
      */
     getContext() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.contextManager) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
                 return null;
             }
-            return this.mascot.contextManager.getContext();
-        }, 'context-get', this.mascot)();
+            return this.contextManager.getContext();
+        }, 'context-get', this._chainTarget)();
     }
 
     /**
@@ -170,11 +200,11 @@ export class EmotionalStateQueryManager {
      * console.log('Peak urgency:', analytics.peakUrgency);
      */
     getContextAnalytics() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.contextManager) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.contextManager) {
                 return null;
             }
-            return this.mascot.contextManager.getAnalytics();
-        }, 'context-analytics', this.mascot)();
+            return this.contextManager.getAnalytics();
+        }, 'context-analytics', this._chainTarget)();
     }
 }

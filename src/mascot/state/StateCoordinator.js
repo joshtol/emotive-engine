@@ -9,8 +9,52 @@ import { getEmotion, getEmotionVisualParams } from '../../core/emotions/index.js
 import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
 
 export class StateCoordinator {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create StateCoordinator
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} [deps.particleSystem] - Particle system instance
+     * @param {Object} [deps.canvasManager] - Canvas manager instance
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} [deps.soundSystem] - Sound system instance
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new StateCoordinator({ stateMachine, particleSystem, canvasManager, renderer, config, emit })
+     *
+     * // Legacy style:
+     * new StateCoordinator(mascot)
+     */
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.stateMachine = deps.stateMachine;
+            this.particleSystem = deps.particleSystem || null;
+            this.canvasManager = deps.canvasManager || null;
+            this.renderer = deps.renderer || null;
+            this.config = deps.config;
+            this.soundSystem = deps.soundSystem || null;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.mascot = mascot;
+            this.stateMachine = mascot.stateMachine;
+            this.particleSystem = mascot.particleSystem;
+            this.canvasManager = mascot.canvasManager;
+            this.renderer = mascot.renderer;
+            this.config = mascot.config;
+            this.soundSystem = mascot.soundSystem;
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
         this.currentEmotion = 'neutral';
         this.emotionIntensity = 1.0;
     }
@@ -26,7 +70,7 @@ export class StateCoordinator {
      * Sets the emotional state with optional undertone
      * @param {string} emotion - The emotion to set
      * @param {Object|string|null} options - Options object or undertone string for backward compatibility
-     * @returns {Object} The mascot instance for chaining
+     * @returns {Object} Chain target for method chaining
      */
     setEmotion(emotion, options = null) {
         // Map common aliases to actual emotion states
@@ -36,24 +80,24 @@ export class StateCoordinator {
             'frustrated': 'anger',
             'sad': 'sadness'
         };
-        
+
         // Use mapped emotion or original if not an alias
         const mappedEmotion = emotionMapping[emotion] || emotion;
-        
+
         // Handle backward compatibility - if options is a string, treat as undertone
         let undertone = null;
         let duration = 500;
-        
+
         if (typeof options === 'string') {
             undertone = options;
         } else if (options && typeof options === 'object') {
             undertone = options.undertone || null;
             duration = options.duration || 500;
         }
-        
+
         // Set emotional state in state machine
-        const success = this.mascot.stateMachine.setEmotion(mappedEmotion, undertone, duration);
-        
+        const success = this.stateMachine.setEmotion(mappedEmotion, undertone, duration);
+
         if (success) {
             // Register emotion's rhythm configuration
             const emotionConfig = getEmotion(mappedEmotion);
@@ -61,13 +105,13 @@ export class StateCoordinator {
                 rhythmIntegration.registerConfig('emotion', mappedEmotion, emotionConfig);
             }
             // Clear and reset particles when changing emotional states
-            if (this.mascot.particleSystem) {
+            if (this.particleSystem) {
                 // Clear all existing particles
-                this.mascot.particleSystem.clear();
-                
+                this.particleSystem.clear();
+
                 // Get the new emotional properties
-                const emotionalProps = this.mascot.stateMachine.getCurrentEmotionalProperties();
-                
+                const emotionalProps = this.stateMachine.getCurrentEmotionalProperties();
+
                 // Spawn initial particles for the new state
                 // Use burst to immediately populate with a few particles
                 // DECIMATED neutral
@@ -79,21 +123,21 @@ export class StateCoordinator {
                 } else {
                     initialCount = Math.min(3, Math.floor(emotionalProps.particleRate / 4));
                 }
-                
+
                 if (initialCount > 0) {
                     // Use effective center (includes position offsets) instead of raw canvas center
                     let centerX, centerY;
-                    if (this.mascot.renderer && typeof this.mascot.renderer.getEffectiveCenter === 'function') {
-                        const effectiveCenter = this.mascot.renderer.getEffectiveCenter();
+                    if (this.renderer && typeof this.renderer.getEffectiveCenter === 'function') {
+                        const effectiveCenter = this.renderer.getEffectiveCenter();
                         centerX = effectiveCenter.x;
                         centerY = effectiveCenter.y;
                     } else {
                         // Fallback to canvas center if renderer not available
-                        centerX = this.mascot.canvasManager.width / 2;
-                        centerY = this.mascot.canvasManager.height / 2;
+                        centerX = this.canvasManager.width / 2;
+                        centerY = this.canvasManager.height / 2;
                     }
 
-                    this.mascot.particleSystem.burst(
+                    this.particleSystem.burst(
                         initialCount,
                         emotionalProps.particleBehavior,
                         centerX,
@@ -101,25 +145,25 @@ export class StateCoordinator {
                     );
                 }
             }
-            
+
             // Update sound system ambient tone - DISABLED (annoying)
-            // if (this.mascot.soundSystem.isAvailable()) {
-            //     this.mascot.soundSystem.setAmbientTone(mappedEmotion, duration);
+            // if (this.soundSystem.isAvailable()) {
+            //     this.soundSystem.setAmbientTone(mappedEmotion, duration);
             // }
-            
+
             // Update Emotive renderer if in classic mode
-            if (this.mascot.config.renderingStyle === 'classic' && this.mascot.renderer.setEmotionalState) {
+            if (this.config.renderingStyle === 'classic' && this.renderer.setEmotionalState) {
                 const emotionParams = getEmotionVisualParams(mappedEmotion);
-                this.mascot.renderer.setEmotionalState(mappedEmotion, emotionParams, undertone);
+                this.renderer.setEmotionalState(mappedEmotion, emotionParams, undertone);
             }
-            
+
             // Emit emotion change event
-            this.mascot.emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
-            
+            this._emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
+
         }
-        
+
         this.currentEmotion = mappedEmotion;
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**

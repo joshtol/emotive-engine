@@ -9,28 +9,72 @@
  * - Idle behavior synchronization
  * - Sleep state tracking
  * - Event emission
+ *
+ * @module SleepWakeManager
  */
 export class SleepWakeManager {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create SleepWakeManager
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Function} deps.express - Express emotion/gesture function
+     * @param {Object} [deps.idleBehavior] - Idle behavior controller
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.state - Shared state with sleeping property
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new SleepWakeManager({ errorBoundary, express, idleBehavior, renderer, state, emit })
+     *
+     * // Legacy style:
+     * new SleepWakeManager(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.errorBoundary && deps.express && deps.state !== undefined && deps.emit) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this._express = deps.express;
+            this.idleBehavior = deps.idleBehavior || null;
+            this.renderer = deps.renderer || null;
+            this._state = deps.state;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this._express = gesture => mascot.express(gesture);
+            this.idleBehavior = mascot.idleBehavior;
+            this.renderer = mascot.renderer;
+            this._state = {
+                get sleeping() { return mascot.sleeping; },
+                set sleeping(v) { mascot.sleeping = v; }
+            };
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
      * Enter sleep state with animation sequence
-     * @returns {Promise<EmotiveMascot>} Mascot instance for chaining
+     * @returns {Promise<Object>} Chain target for method chaining
      */
     sleep() {
-        return this.mascot.errorBoundary.wrap(async () => {
-            if (this.mascot.sleeping) {
+        return this.errorBoundary.wrap(async () => {
+            if (this._state.sleeping) {
                 // Already sleeping
-                return this.mascot;
+                return this._chainTarget;
             }
 
             await this.performSleepSequence();
             this.enterSleepState();
 
-            return this.mascot;
-        }, 'sleep', this.mascot)();
+            return this._chainTarget;
+        }, 'sleep', this._chainTarget)();
     }
 
     /**
@@ -39,11 +83,11 @@ export class SleepWakeManager {
      */
     async performSleepSequence() {
         // First: Yawn
-        this.mascot.express('yawn');
+        this._express('yawn');
         await this.delay(1000);
 
         // Second: Drowsy sway
-        this.mascot.express('sway');
+        this._express('sway');
         await this.delay(1000);
     }
 
@@ -52,38 +96,38 @@ export class SleepWakeManager {
      */
     enterSleepState() {
         // Set sleep flag
-        this.mascot.sleeping = true;
+        this._state.sleeping = true;
 
         // Update renderer
-        if (this.mascot.renderer && this.mascot.renderer.enterSleepMode) {
-            this.mascot.renderer.enterSleepMode();
+        if (this.renderer && this.renderer.enterSleepMode) {
+            this.renderer.enterSleepMode();
         }
 
         // Update idle behavior
-        if (this.mascot.idleBehavior && this.mascot.idleBehavior.enterSleep) {
-            this.mascot.idleBehavior.enterSleep();
+        if (this.idleBehavior && this.idleBehavior.enterSleep) {
+            this.idleBehavior.enterSleep();
         }
 
         // Emit sleep event
-        this.mascot.emit('sleep');
+        this._emit('sleep');
     }
 
     /**
      * Wake up from sleep state with animation sequence
-     * @returns {Promise<EmotiveMascot>} Mascot instance for chaining
+     * @returns {Promise<Object>} Chain target for method chaining
      */
     wake() {
-        return this.mascot.errorBoundary.wrap(async () => {
-            if (!this.mascot.sleeping) {
+        return this.errorBoundary.wrap(async () => {
+            if (!this._state.sleeping) {
                 // Not currently sleeping
-                return this.mascot;
+                return this._chainTarget;
             }
 
             this.exitSleepState();
             await this.performWakeSequence();
 
-            return this.mascot;
-        }, 'wake', this.mascot)();
+            return this._chainTarget;
+        }, 'wake', this._chainTarget)();
     }
 
     /**
@@ -91,16 +135,16 @@ export class SleepWakeManager {
      */
     exitSleepState() {
         // Clear sleep flag first
-        this.mascot.sleeping = false;
+        this._state.sleeping = false;
 
         // Update renderer
-        if (this.mascot.renderer && this.mascot.renderer.wakeUp) {
-            this.mascot.renderer.wakeUp();
+        if (this.renderer && this.renderer.wakeUp) {
+            this.renderer.wakeUp();
         }
 
         // Update idle behavior
-        if (this.mascot.idleBehavior && this.mascot.idleBehavior.wakeUp) {
-            this.mascot.idleBehavior.wakeUp();
+        if (this.idleBehavior && this.idleBehavior.wakeUp) {
+            this.idleBehavior.wakeUp();
         }
     }
 
@@ -110,19 +154,19 @@ export class SleepWakeManager {
      */
     async performWakeSequence() {
         // First: Stretch
-        this.mascot.express('stretch');
+        this._express('stretch');
         await this.delay(1000);
 
         // Second: Slow blink
-        this.mascot.express('slowBlink');
+        this._express('slowBlink');
         await this.delay(1000);
 
         // Third: Small shake to fully wake
-        this.mascot.express('shake');
+        this._express('shake');
         await this.delay(500);
 
         // Emit wake event
-        this.mascot.emit('wake');
+        this._emit('wake');
     }
 
     /**
