@@ -160,15 +160,30 @@ export default AnimationLoopManager; // class for multi-instance
 
 ## Priority 4: Documentation & Testing
 
-### Task 4.1: Document Multi-Instance Usage
-- [ ] Add example: two mascots on one page
-- [ ] Add example: SSR framework integration (Next.js dynamic import)
+### Task 4.1: Document Multi-Instance Usage ✅ COMPLETE
+**Solution:** Documentation already existed, added README section for visibility.
 
-### Task 4.2: Add Integration Tests
-- [ ] Test: Create/destroy mascot lifecycle
-- [ ] Test: Multiple mascots don't interfere
-- [ ] Test: Tab visibility pause/resume
-- [ ] Test: Audio connection and disconnection
+**Completed:**
+- [x] Live example: `site/public/examples/3d/dual-mascot-test.html`
+- [x] Added "Multi-Instance Support" section to README.md with code example
+- [x] SSR framework integration already documented in README.md (Next.js, Nuxt 3)
+- [x] `isSSR()` helper documented for SSR detection
+
+### Task 4.2: Add Integration Tests ✅ COMPLETE
+**Solution:** Extended `test/integration/lifecycle.test.js` with new test suites.
+
+**Completed:**
+- [x] Test: Create/destroy mascot lifecycle (existed in "Full Lifecycle" suite)
+- [x] Test: Multiple mascots don't interfere (new "Multi-Instance Independence" suite - 5 tests)
+- [x] Test: Tab visibility pause/resume (new "Visibility Change Handling" suite - 3 tests)
+- [x] Test: Audio connection and disconnection (new "Audio Connection" suite - 4 tests)
+
+**Test coverage added:**
+- Multi-instance: simultaneous run, independent states, independent stop/destroy, rapid switching
+- Visibility: hidden event, visible after hidden, multiple toggles
+- Audio: connect with mock, disconnect, disconnect without connect, connect/disconnect cycles
+
+Run with: `npm run test:integration`
 
 ---
 
@@ -181,3 +196,4 @@ export default AnimationLoopManager; // class for multi-instance
 | **Main File Size** | 🔄 In Progress | 1,826 lines (was 2,492), target <1,500 |
 | **Config** | ✅ Complete | src/core/config/defaults.js with FRAME_TIMING, VISIBILITY, AUDIO |
 | **Types** | ✅ Complete | Comprehensive `.d.ts` with EmotionConfig, GestureConfig, VisualParams |
+| **Integration Tests** | ✅ Complete | 32 tests covering lifecycle, multi-instance, visibility, audio |

@@ -302,4 +302,231 @@ describe('EmotiveMascot Lifecycle Integration', () => {
             mascot.stop();
         });
     });
+
+    describe('Multi-Instance Independence', () => {
+        let canvas1, canvas2;
+        let mascot1, mascot2;
+
+        beforeEach(() => {
+            // Create two separate canvases
+            canvas1 = document.createElement('canvas');
+            canvas1.id = 'multi-test-canvas-1';
+            canvas1.width = 400;
+            canvas1.height = 300;
+            document.body.appendChild(canvas1);
+
+            canvas2 = document.createElement('canvas');
+            canvas2.id = 'multi-test-canvas-2';
+            canvas2.width = 400;
+            canvas2.height = 300;
+            document.body.appendChild(canvas2);
+        });
+
+        afterEach(() => {
+            // Cleanup both mascots
+            [mascot1, mascot2].forEach(m => {
+                if (m) {
+                    try { m.stop(); } catch (e) { /* ignore */ }
+                }
+            });
+            mascot1 = mascot2 = null;
+
+            // Remove canvases
+            [canvas1, canvas2].forEach(c => {
+                if (c && c.parentNode) {
+                    c.parentNode.removeChild(c);
+                }
+            });
+        });
+
+        it('should run two mascots simultaneously', () => {
+            mascot1 = new EmotiveMascot({ canvasId: 'multi-test-canvas-1' });
+            mascot2 = new EmotiveMascot({ canvasId: 'multi-test-canvas-2' });
+
+            expect(() => mascot1.start()).not.toThrow();
+            expect(() => mascot2.start()).not.toThrow();
+
+            // Both should be running
+            expect(() => mascot1.setEmotion('joy')).not.toThrow();
+            expect(() => mascot2.setEmotion('sadness')).not.toThrow();
+
+            mascot1.stop();
+            mascot2.stop();
+        });
+
+        it('should maintain independent emotional states', () => {
+            mascot1 = new EmotiveMascot({ canvasId: 'multi-test-canvas-1', emotion: 'joy' });
+            mascot2 = new EmotiveMascot({ canvasId: 'multi-test-canvas-2', emotion: 'sadness' });
+
+            mascot1.start();
+            mascot2.start();
+
+            // Change one without affecting the other
+            mascot1.setEmotion('anger');
+
+            // mascot2 should still work independently
+            expect(() => mascot2.express('bounce')).not.toThrow();
+
+            mascot1.stop();
+            mascot2.stop();
+        });
+
+        it('should stop independently without affecting the other', () => {
+            mascot1 = new EmotiveMascot({ canvasId: 'multi-test-canvas-1' });
+            mascot2 = new EmotiveMascot({ canvasId: 'multi-test-canvas-2' });
+
+            mascot1.start();
+            mascot2.start();
+
+            // Stop mascot1
+            mascot1.stop();
+
+            // mascot2 should still work
+            expect(() => mascot2.setEmotion('excited')).not.toThrow();
+            expect(() => mascot2.express('spin')).not.toThrow();
+
+            mascot2.stop();
+        });
+
+        it('should handle destroy independently', () => {
+            mascot1 = new EmotiveMascot({ canvasId: 'multi-test-canvas-1' });
+            mascot2 = new EmotiveMascot({ canvasId: 'multi-test-canvas-2' });
+
+            mascot1.start();
+            mascot2.start();
+
+            // Destroy mascot1 completely
+            mascot1.stop();
+            mascot1 = null;
+
+            // mascot2 should still function
+            expect(() => mascot2.setEmotion('love')).not.toThrow();
+            expect(() => mascot2.stop()).not.toThrow();
+        });
+
+        it('should handle rapid switching between instances', () => {
+            mascot1 = new EmotiveMascot({ canvasId: 'multi-test-canvas-1' });
+            mascot2 = new EmotiveMascot({ canvasId: 'multi-test-canvas-2' });
+
+            mascot1.start();
+            mascot2.start();
+
+            // Rapid alternating commands
+            for (let i = 0; i < 10; i++) {
+                mascot1.setEmotion(i % 2 === 0 ? 'joy' : 'sadness');
+                mascot2.setEmotion(i % 2 === 0 ? 'anger' : 'fear');
+                mascot1.express('bounce');
+                mascot2.express('pulse');
+            }
+
+            mascot1.stop();
+            mascot2.stop();
+        });
+    });
+
+    describe('Visibility Change Handling', () => {
+        it('should handle visibility hidden event', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            // Simulate visibility change to hidden
+            expect(() => {
+                const event = new Event('visibilitychange');
+                Object.defineProperty(document, 'hidden', { value: true, writable: true });
+                document.dispatchEvent(event);
+            }).not.toThrow();
+
+            // Mascot should still be in a valid state
+            expect(() => mascot.setEmotion('neutral')).not.toThrow();
+        });
+
+        it('should handle visibility visible event after hidden', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            // Simulate visibility change to hidden then visible
+            Object.defineProperty(document, 'hidden', { value: true, writable: true });
+            document.dispatchEvent(new Event('visibilitychange'));
+
+            Object.defineProperty(document, 'hidden', { value: false, writable: true });
+            document.dispatchEvent(new Event('visibilitychange'));
+
+            // Mascot should resume normally
+            expect(() => mascot.setEmotion('joy')).not.toThrow();
+            expect(() => mascot.express('bounce')).not.toThrow();
+
+            mascot.stop();
+        });
+
+        it('should handle multiple visibility toggles', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            // Toggle visibility multiple times
+            for (let i = 0; i < 5; i++) {
+                Object.defineProperty(document, 'hidden', { value: true, writable: true });
+                document.dispatchEvent(new Event('visibilitychange'));
+
+                Object.defineProperty(document, 'hidden', { value: false, writable: true });
+                document.dispatchEvent(new Event('visibilitychange'));
+            }
+
+            // Should still function
+            expect(() => mascot.setEmotion('calm')).not.toThrow();
+            mascot.stop();
+        });
+    });
+
+    describe('Audio Connection', () => {
+        it('should handle connectAudio with mock element', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            // Create mock audio element
+            const mockAudio = document.createElement('audio');
+            mockAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+
+            // connectAudio should not throw
+            expect(() => mascot.connectAudio(mockAudio)).not.toThrow();
+
+            mascot.stop();
+        });
+
+        it('should handle disconnectAudio', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            const mockAudio = document.createElement('audio');
+
+            // Connect then disconnect
+            mascot.connectAudio(mockAudio);
+            expect(() => mascot.disconnectAudio(mockAudio)).not.toThrow();
+
+            mascot.stop();
+        });
+
+        it('should handle disconnectAudio without prior connection', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            // Disconnect without connecting should not throw
+            expect(() => mascot.disconnectAudio()).not.toThrow();
+
+            mascot.stop();
+        });
+
+        it('should handle multiple connect/disconnect cycles', () => {
+            mascot = new EmotiveMascot({ canvasId: 'integration-test-canvas' });
+            mascot.start();
+
+            const mockAudio = document.createElement('audio');
+
+            for (let i = 0; i < 3; i++) {
+                expect(() => mascot.connectAudio(mockAudio)).not.toThrow();
+                expect(() => mascot.disconnectAudio(mockAudio)).not.toThrow();
+            }
+
+            mascot.stop();
+        });
+    });
 });

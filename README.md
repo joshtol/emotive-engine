@@ -422,6 +422,36 @@ Or view the [live demo gallery](https://joshtol.github.io/emotive-engine).
 
 ---
 
+## Multi-Instance Support
+
+Multiple mascots can run independently on the same page. Each instance has its own animation loop, emotion state, and resources.
+
+```javascript
+import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
+
+// Create two independent mascots
+const mascot1 = new EmotiveMascot3D({ coreGeometry: 'crystal' });
+const mascot2 = new EmotiveMascot3D({ coreGeometry: 'moon' });
+
+mascot1.init(document.getElementById('container-1'));
+mascot2.init(document.getElementById('container-2'));
+
+mascot1.start();
+mascot2.start();
+
+// Control independently
+mascot1.setEmotion('joy');
+mascot2.setEmotion('calm');
+
+// Stop one without affecting the other
+mascot1.stop();
+mascot2.express('bounce');  // Still running
+```
+
+See the [dual mascot demo](https://joshtol.github.io/emotive-engine/examples/3d/dual-mascot-test.html) for a live example.
+
+---
+
 ## Server-Side Rendering (SSR)
 
 The engine requires a browser environment. For SSR frameworks, use dynamic imports:
