@@ -561,6 +561,249 @@ declare namespace EmotiveEngine {
 
     export type EmotiveEventHandler = (event: EmotiveEvent) => void;
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EMOTION & GESTURE MODULE DEFINITIONS
+    // For developers creating custom emotions/gestures
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Visual parameters for emotion rendering
+     */
+    export interface VisualParams {
+        /** Primary glow color (hex string) */
+        glowColor: string;
+        /** Particles spawned per second */
+        particleRate: number;
+        /** Minimum particle count */
+        minParticles?: number;
+        /** Maximum particle count */
+        maxParticles?: number;
+        /** Particle behavior type */
+        particleBehavior?: 'float' | 'popcorn' | 'rain' | 'orbit' | 'spiral' | 'drift' | 'pulse';
+        /** Breathing animation rate (1.0 = normal) */
+        breathRate?: number;
+        /** Breathing amplitude (0-1) */
+        breathDepth?: number;
+        /** Enable core position jitter */
+        coreJitter?: boolean;
+        /** Blink frequency multiplier */
+        blinkRate?: number;
+        /** Blink animation speed */
+        blinkSpeed?: number;
+        /** Weighted particle color distribution */
+        particleColors?: Array<{ color: string; weight: number }>;
+    }
+
+    /**
+     * Gesture modifiers applied to base gestures
+     */
+    export interface GestureModifiers {
+        /** Speed multiplier for gestures */
+        speed?: number;
+        /** Movement amplitude multiplier */
+        amplitude?: number;
+        /** Overall intensity multiplier */
+        intensity?: number;
+        /** Motion smoothness (higher = more fluid) */
+        smoothness?: number;
+        /** Motion regularity (lower = more variation) */
+        regularity?: number;
+        /** Add bounce to movements */
+        addBounce?: boolean;
+    }
+
+    /**
+     * Transition configuration for emotion changes
+     */
+    export interface TransitionConfig {
+        /** Transition duration in milliseconds */
+        duration?: number;
+        /** Easing function name */
+        easing?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'easeOutBack' | 'easeOutBounce';
+        /** Emotion priority (higher = harder to interrupt) */
+        priority?: number;
+        /** Emit particle burst on entry */
+        burstOnEntry?: boolean;
+    }
+
+    /**
+     * 3D-specific emotion configuration
+     */
+    export interface Emotion3DConfig {
+        rotation?: {
+            /** Rotation animation type */
+            type?: 'rhythmic' | 'constant' | 'idle';
+            /** Rotation speed multiplier */
+            speed?: number;
+            /** Rotation rates per axis [X, Y, Z] in rad/sec */
+            axes?: [number, number, number];
+            /** Sync rotation to music BPM */
+            musicSync?: boolean;
+        };
+        glow?: {
+            /** Glow color (hex string) */
+            color?: string;
+            /** Glow intensity multiplier */
+            intensity?: number;
+            pulse?: {
+                /** Pulse speed multiplier */
+                speed?: number;
+                /** Intensity range [min, max] */
+                range?: [number, number];
+            };
+        };
+        scale?: {
+            /** Base scale factor */
+            base?: number;
+            breathe?: {
+                enabled?: boolean;
+                /** Breathing depth (scale variation) */
+                depth?: number;
+                /** Breathing rate multiplier */
+                rate?: number;
+            };
+        };
+    }
+
+    /**
+     * Soul/energy animation parameters (geometry-agnostic)
+     */
+    export interface SoulAnimationConfig {
+        /** Energy movement speed */
+        driftSpeed?: number;
+        /** Vertical pulse/shimmer speed */
+        shimmerSpeed?: number;
+        /** Chaos/randomness factor (0-1) */
+        turbulence?: number;
+    }
+
+    /**
+     * Core parameters returned by getCoreParams()
+     */
+    export interface CoreParams {
+        scaleX?: number;
+        scaleY?: number;
+        eyeOpenness?: number;
+        eyeExpression?: 'normal' | 'happy' | 'sad' | 'angry' | 'surprised' | 'focused';
+        pupilOffset?: { x: number; y: number };
+        sparkle?: boolean;
+    }
+
+    /**
+     * Emotion module configuration
+     * Used to define custom emotions in src/core/emotions/
+     */
+    export interface EmotionConfig {
+        /** Emotion identifier */
+        name: string;
+        /** Display emoji */
+        emoji?: string;
+        /** Human-readable description */
+        description?: string;
+        /** Visual rendering parameters */
+        visual: VisualParams;
+        /** Gesture modifiers for this emotion */
+        modifiers?: GestureModifiers;
+        /** Typical gestures associated with this emotion */
+        typicalGestures?: string[];
+        /** Transition configuration */
+        transitions?: TransitionConfig;
+        /** 3D-specific configuration */
+        '3d'?: Emotion3DConfig;
+        /** Soul animation parameters */
+        soulAnimation?: SoulAnimationConfig;
+        /** Get core rendering parameters */
+        getCoreParams?(state: any): CoreParams;
+    }
+
+    /**
+     * Gesture rhythm configuration for beat-synced animations
+     */
+    export interface GestureRhythmConfig {
+        /** Enable rhythm sync */
+        enabled?: boolean;
+        /** Sync mode: 'beat', 'bar', 'phrase' */
+        syncMode?: 'beat' | 'bar' | 'phrase';
+        /** When to start: 'nextBeat', 'immediately', 'nextBar' */
+        timingSync?: 'nextBeat' | 'immediately' | 'nextBar';
+        /** Can be interrupted mid-animation */
+        interruptible?: boolean;
+        /** Gesture priority (lower = higher priority) */
+        priority?: number;
+        /** Can blend with other gestures */
+        blendable?: boolean;
+        /** When gesture can transition out */
+        crossfadePoint?: 'anyBeat' | 'downbeat' | 'end';
+        /** Pattern-specific overrides */
+        patternOverrides?: Record<string, any>;
+    }
+
+    /**
+     * 3D gesture evaluation result
+     */
+    export interface Gesture3DResult {
+        /** Position offset [x, y, z] */
+        position?: [number, number, number];
+        /** Rotation [x, y, z] in radians */
+        rotation?: [number, number, number];
+        /** Scale factor (uniform) or [x, y, z] */
+        scale?: number | [number, number, number];
+    }
+
+    /**
+     * Gesture module configuration
+     * Used to define custom gestures in src/core/gestures/
+     */
+    export interface GestureConfig {
+        /** Gesture identifier */
+        name: string;
+        /** Display emoji */
+        emoji?: string;
+        /** Gesture type: 'blending' adds to motion, 'replacing' overrides */
+        type?: 'blending' | 'replacing';
+        /** Human-readable description */
+        description?: string;
+        /** Default configuration */
+        config: {
+            /** Animation duration in ms */
+            duration?: number;
+            /** Musical duration specification */
+            musicalDuration?: { musical: boolean; beats: number };
+            /** Movement amplitude */
+            amplitude?: number;
+            /** Oscillation frequency */
+            frequency?: number;
+            /** Movement axis */
+            axis?: 'vertical' | 'horizontal' | 'both';
+            /** Reduce amplitude over time */
+            damping?: boolean;
+            /** Animation easing type */
+            easing?: string;
+            /** Overall motion intensity */
+            strength?: number;
+            /** Particle motion configuration */
+            particleMotion?: {
+                type: string;
+                axis?: string;
+                strength?: number;
+                frequency?: number;
+            };
+        };
+        /** Rhythm sync configuration */
+        rhythm?: GestureRhythmConfig;
+        /** 3D gesture evaluation */
+        '3d'?: {
+            /** Evaluate 3D properties at progress */
+            evaluate(progress: number, motion?: any): Gesture3DResult;
+        };
+        /** Initialize gesture data for particle */
+        initialize?(particle: any, motion: any): void;
+        /** Apply gesture motion to particle */
+        apply?(particle: any, progress: number, motion: any, dt: number, centerX: number, centerY: number): void;
+        /** Clean up gesture data */
+        cleanup?(particle: any): void;
+    }
+
     // Module exports
     export function createMascot(config?: EmotiveMascotConfig): EmotiveMascot;
     export function createParticleSystem(config?: ParticleConfig): ParticleSystem;

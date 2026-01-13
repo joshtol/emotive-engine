@@ -138,18 +138,23 @@ export default AnimationLoopManager; // class for multi-instance
 
 ---
 
-### Task 3.2: Improve Type Safety
+### Task 3.2: Improve Type Safety ✅ COMPLETE
 **Severity:** Low
-**Current:** JSDoc only
+**Current:** Comprehensive `.d.ts` declarations
 
-**Tasks:**
-- [ ] Create `src/types/index.d.ts` with interfaces:
-  - `EmotionConfig`
-  - `GestureConfig`
-  - `VisualParams`
-  - `MascotConfig`
-- [ ] Add `"types": "./dist/types/index.d.ts"` to package.json
+**Solution:** Type definitions already exist at `types/index.d.ts` and `types/3d.d.ts` with comprehensive coverage. Added missing module definition interfaces.
+
+**Completed:**
+- [x] `types/index.d.ts` already exists with `EmotiveMascotConfig`, `EmotiveMascot3DConfig` (covers MascotConfig)
+- [x] `types/3d.d.ts` already exists with `EmotionName`, `GestureName`, geometry types
+- [x] `package.json` already configured with `"types": "types/index.d.ts"`
+- [x] Added `EmotionConfig` interface for custom emotion module definitions
+- [x] Added `GestureConfig` interface for custom gesture module definitions
+- [x] Added `VisualParams`, `GestureModifiers`, `TransitionConfig` supporting interfaces
+- [x] Added `Emotion3DConfig`, `SoulAnimationConfig`, `GestureRhythmConfig` for advanced usage
 - [ ] Full TypeScript migration deferred (large effort, low ROI currently)
+
+**Note:** The original task predated the existing type definitions. Types are now comprehensive for both library consumers and developers creating custom emotions/gestures.
 
 ---
 
@@ -175,4 +180,4 @@ export default AnimationLoopManager; // class for multi-instance
 | **Multi-Instance** | ✅ Complete | Fully isolated instances |
 | **Main File Size** | 🔄 In Progress | 1,826 lines (was 2,492), target <1,500 |
 | **Config** | ✅ Complete | src/core/config/defaults.js with FRAME_TIMING, VISIBILITY, AUDIO |
-| **Types** | ⏳ Pending | JSDoc → `.d.ts` declarations |
+| **Types** | ✅ Complete | Comprehensive `.d.ts` with EmotionConfig, GestureConfig, VisualParams |
