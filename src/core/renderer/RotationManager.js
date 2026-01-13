@@ -114,6 +114,33 @@ export class RotationManager {
     }
 
     /**
+     * Apply rotation transform to canvas for rendering
+     * Updates rotation state, calculates total rotation, and applies canvas transform
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} coreX - Core X position (rotation center)
+     * @param {number} coreY - Core Y position (rotation center)
+     * @param {number} rotationAngle - Base rotation angle from gestures
+     * @returns {number} Total rotation applied (in radians)
+     */
+    applyRotationTransform(ctx, coreX, coreY, rotationAngle) {
+        // Update rotation state (handles brake and normal rotation)
+        this.updateRotation(performance.now());
+
+        // Calculate total rotation (gestures + manual rotation)
+        const totalRotation = this.calculateTotalRotation(rotationAngle);
+
+        // Apply rotation if present
+        if (totalRotation !== 0) {
+            ctx.save();
+            ctx.translate(coreX, coreY);
+            this.applyRotation(ctx, totalRotation);
+            ctx.translate(-coreX, -coreY);
+        }
+
+        return totalRotation;
+    }
+
+    /**
      * Reset rotation state to default values
      */
     reset() {

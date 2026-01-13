@@ -114,7 +114,6 @@ import { StateUpdateManager } from './renderer/StateUpdateManager.js';
 import { DimensionCalculator } from './renderer/DimensionCalculator.js';
 import { RadiusCalculator } from './renderer/RadiusCalculator.js';
 import { PositionJitterManager } from './renderer/PositionJitterManager.js';
-import { RotationRenderManager } from './renderer/RotationRenderManager.js';
 import { EffectsRenderManager } from './renderer/EffectsRenderManager.js';
 import { CoreShapeRenderManager } from './renderer/CoreShapeRenderManager.js';
 import { RenderFinalizationManager } from './renderer/RenderFinalizationManager.js';
@@ -165,7 +164,6 @@ class EmotiveRenderer {
         this.dimensionCalculator = new DimensionCalculator(this);
         this.radiusCalculator = new RadiusCalculator(this);
         this.positionJitterManager = new PositionJitterManager(this);
-        this.rotationRenderManager = new RotationRenderManager(this);
         this.effectsRenderManager = new EffectsRenderManager(this);
         this.coreShapeRenderManager = new CoreShapeRenderManager(this);
         this.renderFinalizationManager = new RenderFinalizationManager(this);
@@ -713,8 +711,8 @@ class EmotiveRenderer {
         const { coreX, coreY } = posData;
         ({ rotationAngle, coreRadius, glowRadius } = posData);
 
-        // Apply rotation transform to canvas (delegated to RotationRenderManager)
-        const totalRotation = this.rotationRenderManager.applyRotationTransform(coreX, coreY, rotationAngle);
+        // Apply rotation transform to canvas
+        const totalRotation = this.rotationManager.applyRotationTransform(this.ctx, coreX, coreY, rotationAngle);
 
         // Render all effects: glow, flash wave, speaking pulse (delegated to EffectsRenderManager)
         this.effectsRenderManager.renderAllEffects({

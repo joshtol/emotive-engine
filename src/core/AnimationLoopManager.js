@@ -227,14 +227,6 @@ export class AnimationLoopManager {
             }
         }
 
-        // Performance marker end
-        const frameTime = performance.now() - frameStartTime;
-
-        // Warn if frame took too long
-        if (frameTime > this.frameBudget * 1.5) {
-            console.warn(`Frame took ${frameTime.toFixed(2)}ms (target: ${this.frameBudget}ms)`);
-        }
-
         // Schedule next frame
         this.frameId = requestAnimationFrame(this.loop);
     }

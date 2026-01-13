@@ -70,104 +70,6 @@ import { RecordingStateManager } from './mascot/state/RecordingStateManager.js';
 import { BreathingPatternManager } from './mascot/animation/BreathingPatternManager.js';
 import { DegradationEventHandler } from './mascot/performance/DegradationEventHandler.js';
 
-// NOTE: The following imports are not directly used in this file but are loaded to ensure
-// they're available for InitializationManager, which dynamically references them.
-// They're kept here for bundle inclusion and future refactoring.
-// eslint-disable-next-line no-unused-vars
-import _CanvasManager from './core/canvas/CanvasManager.js';
-// eslint-disable-next-line no-unused-vars
-import _EmotiveStateMachine from './core/state/EmotiveStateMachine.js';
-// eslint-disable-next-line no-unused-vars
-import _ParticleSystem from './core/ParticleSystem.js';
-// eslint-disable-next-line no-unused-vars
-import _EmotiveRenderer from './core/EmotiveRenderer.js';
-// eslint-disable-next-line no-unused-vars
-import _GazeTracker from './core/behavior/GazeTracker.js';
-// eslint-disable-next-line no-unused-vars
-import _IdleBehavior from './core/behavior/IdleBehavior.js';
-// eslint-disable-next-line no-unused-vars
-import _PositionController from './utils/PositionController.js';
-// eslint-disable-next-line no-unused-vars
-import { SoundSystem as _SoundSystem } from './core/audio/SoundSystem.js';
-// eslint-disable-next-line no-unused-vars
-import _AnimationController from './core/AnimationController.js';
-// eslint-disable-next-line no-unused-vars
-import _AudioLevelProcessor from './core/audio/AudioLevelProcessor.js';
-// eslint-disable-next-line no-unused-vars
-import _AccessibilityManager from './core/optimization/AccessibilityManager.js';
-// eslint-disable-next-line no-unused-vars
-import _MobileOptimization from './core/optimization/MobileOptimization.js';
-// eslint-disable-next-line no-unused-vars
-import _PluginSystem from './core/plugins/PluginSystem.js';
-// eslint-disable-next-line no-unused-vars
-import _ShapeMorpher from './core/ShapeMorpher.js';
-// eslint-disable-next-line no-unused-vars
-import _gestureCompatibility from './core/GestureCompatibility.js';
-// eslint-disable-next-line no-unused-vars
-import _GrooveTemplates from './core/audio/GrooveTemplates.js';
-// eslint-disable-next-line no-unused-vars
-import _rhythmIntegration from './core/audio/rhythmIntegration.js';
-// eslint-disable-next-line no-unused-vars
-import { AudioAnalyzer as _AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
-// eslint-disable-next-line no-unused-vars
-import { browserCompatibility as _browserCompatibility, CanvasContextRecovery as _CanvasContextRecovery } from './utils/browserCompatibility.js';
-// Note: runtimeCapabilities from './utils/debugger.js' intentionally not imported (duplicated)
-// Note: getEmotion from './core/emotions/index.js' intentionally not imported (duplicated)
-// eslint-disable-next-line no-unused-vars
-import { AudioHandler as _AudioHandler } from './mascot/audio/AudioHandler.js';
-// eslint-disable-next-line no-unused-vars
-import { GestureController as _GestureController } from './mascot/control/GestureController.js';
-// eslint-disable-next-line no-unused-vars
-import { StateCoordinator as _StateCoordinator } from './mascot/state/StateCoordinator.js';
-// eslint-disable-next-line no-unused-vars
-import { VisualizationRunner as _VisualizationRunner } from './mascot/control/VisualizationRunner.js';
-// eslint-disable-next-line no-unused-vars
-import { ExecutionLifecycleManager as _ExecutionLifecycleManager } from './mascot/control/ExecutionLifecycleManager.js';
-// eslint-disable-next-line no-unused-vars
-import { AnimationFrameController as _AnimationFrameController } from './mascot/control/AnimationFrameController.js';
-// eslint-disable-next-line no-unused-vars
-import { ConfigurationManager as _ConfigurationManager } from './mascot/system/ConfigurationManager.js';
-// eslint-disable-next-line no-unused-vars
-import { DiagnosticsManager as _DiagnosticsManager } from './mascot/system/DiagnosticsManager.js';
-// eslint-disable-next-line no-unused-vars
-import { ShapeTransformManager as _ShapeTransformManager } from './mascot/rendering/ShapeTransformManager.js';
-// eslint-disable-next-line no-unused-vars
-import { EventListenerManager as _EventListenerManager } from './mascot/events/EventListenerManager.js';
-// eslint-disable-next-line no-unused-vars
-import { EmotionalStateQueryManager as _EmotionalStateQueryManager } from './mascot/state/EmotionalStateQueryManager.js';
-// eslint-disable-next-line no-unused-vars
-import { TTSManager as _TTSManager } from './mascot/audio/TTSManager.js';
-// eslint-disable-next-line no-unused-vars
-import { SpeechReactivityManager as _SpeechReactivityManager } from './mascot/audio/SpeechReactivityManager.js';
-// eslint-disable-next-line no-unused-vars
-import { CanvasResizeManager as _CanvasResizeManager } from './mascot/rendering/CanvasResizeManager.js';
-// eslint-disable-next-line no-unused-vars
-import { OffsetPositionManager as _OffsetPositionManager } from './mascot/rendering/OffsetPositionManager.js';
-// eslint-disable-next-line no-unused-vars
-import { RotationController as _RotationController } from './mascot/rendering/RotationController.js';
-// eslint-disable-next-line no-unused-vars
-import { VisualTransformationManager as _VisualTransformationManager } from './mascot/rendering/VisualTransformationManager.js';
-// eslint-disable-next-line no-unused-vars
-import { FrustrationContextManager as _FrustrationContextManager } from './mascot/state/FrustrationContextManager.js';
-// eslint-disable-next-line no-unused-vars
-import { PerformanceBehaviorManager as _PerformanceBehaviorManager } from './mascot/performance/PerformanceBehaviorManager.js';
-// eslint-disable-next-line no-unused-vars
-import { PerformanceMonitoringManager as _PerformanceMonitoringManager } from './mascot/performance/PerformanceMonitoringManager.js';
-// eslint-disable-next-line no-unused-vars
-import { DebugProfilingManager as _DebugProfilingManager } from './mascot/debug/DebugProfilingManager.js';
-// eslint-disable-next-line no-unused-vars
-import { HealthCheckManager as _HealthCheckManager } from './mascot/system/HealthCheckManager.js';
-// eslint-disable-next-line no-unused-vars
-import { PerformanceSystem as _PerformanceSystem } from './core/plugins/PerformanceSystem.js';
-// eslint-disable-next-line no-unused-vars
-import { ContextManager as _ContextManager } from './core/state/ContextManager.js';
-// eslint-disable-next-line no-unused-vars
-import { SequenceExecutor as _SequenceExecutor } from './core/plugins/SequenceExecutor.js';
-// eslint-disable-next-line no-unused-vars
-import _LLMResponseHandler from './core/integration/LLMResponseHandler.js';
-// eslint-disable-next-line no-unused-vars
-import { generateSystemPrompt as _generateSystemPrompt } from './core/integration/llm-templates.js';
-
 class EmotiveMascot {
     constructor(config = {}) {
         // Initialize error boundary first
@@ -322,7 +224,12 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setBPM(bpm) {
-        return this.rotationController.setBPM(bpm);
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer?.setBPM) {
+                this.renderer.setBPM(bpm);
+            }
+            return this;
+        }, 'bpm-update', this)();
     }
 
     /**
@@ -332,7 +239,12 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationSpeed(speed) {
-        return this.rotationController.setRotationSpeed(speed);
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer?.setRotationSpeed) {
+                this.renderer.setRotationSpeed(speed);
+            }
+            return this;
+        }, 'rotation-speed-update', this)();
     }
 
     /**
@@ -341,7 +253,12 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationAngle(angle) {
-        return this.rotationController.setRotationAngle(angle);
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer?.setRotationAngle) {
+                this.renderer.setRotationAngle(angle);
+            }
+            return this;
+        }, 'rotation-angle-update', this)();
     }
 
     /**

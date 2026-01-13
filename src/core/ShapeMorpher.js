@@ -241,15 +241,8 @@ class ShapeMorpher {
             const audioData = this.audioAnalyzer.getShapeMorpherData();
             if (audioData && audioData.frequencies) {
                 // Copy frequency data for visualization
-                let hasNonZero = false;
                 for (let i = 0; i < Math.min(audioData.frequencies.length, this.frequencyData.length); i++) {
                     this.frequencyData[i] = audioData.frequencies[i];
-                    if (audioData.frequencies[i] > 0) hasNonZero = true;
-                }
-                // Log once if we start getting data
-                if (hasNonZero && !this._loggedAudioData) {
-                    console.warn('ShapeMorpher: Receiving audio frequency data');
-                    this._loggedAudioData = true;
                 }
             }
         }

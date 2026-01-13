@@ -382,11 +382,6 @@ class AnimationController {
 
                 // Finally unpause
                 this.isPaused = false;
-
-                // Log for debugging
-                if (this.performanceMonitor) {
-                    console.warn(`TAB FOCUS FIX: Resumed after ${(gap/1000).toFixed(1)}s pause. Particles kept: ${this.subsystems?.particleSystem?.particles?.length || 0}/${this.pausedParticleCount || 0}`);
-                }
             }
         }
     }

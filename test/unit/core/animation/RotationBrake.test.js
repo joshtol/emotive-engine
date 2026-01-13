@@ -363,22 +363,6 @@ describe('RotationBrake', () => {
             expect(brake.brakeStartTime).toBeGreaterThanOrEqual(beforeTime);
         });
 
-        it('should log brake information', () => {
-            mockRenderer.state.rotationSpeed = 50;
-            mockRenderer.state.manualRotation = 100;
-
-            brake.brakeToTarget(0);
-
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                'Brake started:',
-                expect.objectContaining({
-                    from: expect.any(String),
-                    to: expect.any(String),
-                    velocity: 50,
-                    duration: expect.any(String)
-                })
-            );
-        });
     });
 
     describe('updateBrake Method - Progress Calculation', () => {
@@ -493,21 +477,6 @@ describe('RotationBrake', () => {
             brake.updateBrake(completeTime);
 
             expect(brake.brakeStartTime).toBeNull();
-        });
-
-        it('should log completion message', () => {
-            brake.brakeToTarget(0);
-            const completeTime = brake.brakeStartTime + brake.brakeDuration + 1;
-
-            brake.updateBrake(completeTime);
-
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                'Brake complete:',
-                expect.objectContaining({
-                    target: expect.any(String),
-                    duration: expect.any(String)
-                })
-            );
         });
 
         it('should call onComplete callback on completion', () => {
