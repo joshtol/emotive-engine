@@ -37,10 +37,46 @@
 export class HealthCheckManager {
     /**
      * Create HealthCheckManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.systemStatusReporter] - System status reporter instance
+     * @param {Object} deps.diagnosticsManager - Diagnostics manager instance
+     * @param {Object} deps.mobileOptimization - Mobile optimization instance
+     * @param {Object} deps.accessibilityManager - Accessibility manager instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new HealthCheckManager({ errorBoundary, systemStatusReporter, diagnosticsManager, ... })
+     *
+     * // Legacy style:
+     * new HealthCheckManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.systemStatusReporter = deps.systemStatusReporter || null;
+            this.diagnosticsManager = deps.diagnosticsManager;
+            this.mobileOptimization = deps.mobileOptimization;
+            this.accessibilityManager = deps.accessibilityManager;
+            this.config = deps.config;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.systemStatusReporter = mascot.systemStatusReporter;
+            this.diagnosticsManager = mascot.diagnosticsManager;
+            this.mobileOptimization = mascot.mobileOptimization;
+            this.accessibilityManager = mascot.accessibilityManager;
+            this.config = mascot.config;
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -54,7 +90,7 @@ export class HealthCheckManager {
      * console.log('Performance:', status.performance);
      */
     getSystemStatus() {
-        return this.mascot.systemStatusReporter ? this.mascot.systemStatusReporter.getSystemStatus() : {};
+        return this.systemStatusReporter ? this.systemStatusReporter.getSystemStatus() : {};
     }
 
     /**
@@ -67,8 +103,8 @@ export class HealthCheckManager {
      * mascot.setDebugMode(false); // Disable debug overlay
      */
     setDebugMode(enabled) {
-        this.mascot.config.showDebug = !!enabled;
-        this.mascot.config.showFPS = !!enabled;
+        this.config.showDebug = !!enabled;
+        this.config.showFPS = !!enabled;
 
         if (enabled) {
             // Debug mode enabled - performance and state info will be displayed
@@ -76,7 +112,7 @@ export class HealthCheckManager {
             // Debug mode disabled
         }
 
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
@@ -89,9 +125,9 @@ export class HealthCheckManager {
      * // This will trigger error boundary without crashing the app
      */
     triggerTestError(context = 'manual-test') {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             throw new Error(`Test error triggered in context: ${context}`);
-        }, context, this.mascot)();
+        }, context, this._chainTarget)();
     }
 
     /**
@@ -104,7 +140,7 @@ export class HealthCheckManager {
      * console.log('Frame time:', metrics.frameTime);
      */
     getPerformanceMetrics() {
-        return this.mascot.diagnosticsManager.getPerformanceMetrics();
+        return this.diagnosticsManager.getPerformanceMetrics();
     }
 
     /**
@@ -117,7 +153,7 @@ export class HealthCheckManager {
      * console.log('Touch enabled:', mobile.touchEnabled);
      */
     getMobileStatus() {
-        return this.mascot.mobileOptimization.getStatus();
+        return this.mobileOptimization.getStatus();
     }
 
     /**
@@ -130,6 +166,6 @@ export class HealthCheckManager {
      * console.log('High contrast:', a11y.highContrast);
      */
     getAccessibilityStatus() {
-        return this.mascot.accessibilityManager.getStatus();
+        return this.accessibilityManager.getStatus();
     }
 }

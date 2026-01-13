@@ -39,10 +39,49 @@ import { browserCompatibility } from '../../utils/browserCompatibility.js';
 export class PerformanceMonitoringManager {
     /**
      * Create PerformanceMonitoringManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.diagnosticsManager - Diagnostics manager instance
+     * @param {Object} deps.degradationManager - Degradation manager instance
+     * @param {Object} deps.animationFrameController - Animation frame controller instance
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.particleSystem - Particle system instance
+     * @param {Object} deps.healthCheckManager - Health check manager instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new PerformanceMonitoringManager({ diagnosticsManager, degradationManager, animationFrameController, ... })
+     *
+     * // Legacy style:
+     * new PerformanceMonitoringManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.diagnosticsManager = deps.diagnosticsManager;
+            this.degradationManager = deps.degradationManager || null;
+            this.animationFrameController = deps.animationFrameController;
+            this.animationController = deps.animationController;
+            this.particleSystem = deps.particleSystem;
+            this.healthCheckManager = deps.healthCheckManager;
+            this.config = deps.config;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.diagnosticsManager = mascot.diagnosticsManager;
+            this.degradationManager = mascot.degradationManager;
+            this.animationFrameController = mascot.animationFrameController;
+            this.animationController = mascot.animationController;
+            this.particleSystem = mascot.particleSystem;
+            this.healthCheckManager = mascot.healthCheckManager;
+            this.config = mascot.config;
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -55,7 +94,7 @@ export class PerformanceMonitoringManager {
      * console.log('Active features:', status.features);
      */
     getDegradationStatus() {
-        return this.mascot.diagnosticsManager.getDegradationStatus();
+        return this.diagnosticsManager.getDegradationStatus();
     }
 
     /**
@@ -72,7 +111,7 @@ export class PerformanceMonitoringManager {
      * mascot.setDegradationLevel(3);
      */
     setDegradationLevel(level) {
-        return this.mascot.diagnosticsManager.setDegradationLevel(level);
+        return this.diagnosticsManager.setDegradationLevel(level);
     }
 
     /**
@@ -94,13 +133,13 @@ export class PerformanceMonitoringManager {
      * }
      */
     isFeatureAvailable(feature) {
-        if (!this.mascot.degradationManager) {
+        if (!this.degradationManager) {
             // Fallback to basic feature detection
             const features = browserCompatibility.featureDetection.getFeatures();
             return features[feature] || false;
         }
 
-        return this.mascot.degradationManager.isFeatureAvailable(feature);
+        return this.degradationManager.isFeatureAvailable(feature);
     }
 
     /**
@@ -121,7 +160,7 @@ export class PerformanceMonitoringManager {
      * mascot.setTargetFPS(60);
      */
     setTargetFPS(targetFPS) {
-        return this.mascot.animationFrameController.setTargetFPS(targetFPS);
+        return this.animationFrameController.setTargetFPS(targetFPS);
     }
 
     /**
@@ -133,7 +172,7 @@ export class PerformanceMonitoringManager {
      * console.log(`Animation running at ${currentFPS} FPS target`);
      */
     getTargetFPS() {
-        return this.mascot.animationFrameController.getTargetFPS();
+        return this.animationFrameController.getTargetFPS();
     }
 
     /**
@@ -164,21 +203,21 @@ export class PerformanceMonitoringManager {
      * }, 5000);
      */
     setPerformanceDegradation(enabled) {
-        const metrics = this.mascot.animationController.getPerformanceMetrics();
+        const metrics = this.animationController.getPerformanceMetrics();
 
         if (enabled && !metrics.performanceDegradation) {
-            const currentMax = this.mascot.particleSystem.maxParticles;
+            const currentMax = this.particleSystem.maxParticles;
             const newMax = Math.max(5, Math.floor(currentMax * 0.5));
-            this.mascot.particleSystem.setMaxParticles(newMax);
+            this.particleSystem.setMaxParticles(newMax);
 
             // Forced performance degradation
         } else if (!enabled && metrics.performanceDegradation) {
-            this.mascot.particleSystem.setMaxParticles(this.mascot.config.maxParticles);
+            this.particleSystem.setMaxParticles(this.config.maxParticles);
 
             // Disabled performance degradation
         }
 
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
@@ -192,6 +231,6 @@ export class PerformanceMonitoringManager {
      * console.log('Degradation:', metrics.performanceDegradation);
      */
     getPerformanceMetrics() {
-        return this.mascot.healthCheckManager.getPerformanceMetrics();
+        return this.healthCheckManager.getPerformanceMetrics();
     }
 }

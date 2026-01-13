@@ -40,10 +40,62 @@ import { emotiveDebugger, runtimeCapabilities } from '../../utils/debugger.js';
 export class DiagnosticsManager {
     /**
      * Create DiagnosticsManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.degradationManager] - Degradation manager instance
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} [deps.performanceSystem] - Performance system instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.state - Shared state with isRunning, speaking, debugMode properties
+     * @param {Function} deps.getCurrentState - Function to get current state
+     * @param {Function} deps.getAudioStats - Function to get audio stats
+     * @param {Function} deps.getEventStats - Function to get event stats
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new DiagnosticsManager({ errorBoundary, degradationManager, animationController, ... })
+     *
+     * // Legacy style:
+     * new DiagnosticsManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.degradationManager = deps.degradationManager || null;
+            this.animationController = deps.animationController;
+            this.stateMachine = deps.stateMachine;
+            this.performanceSystem = deps.performanceSystem || null;
+            this.config = deps.config;
+            this._state = deps.state;
+            this._getCurrentState = deps.getCurrentState;
+            this._getAudioStats = deps.getAudioStats;
+            this._getEventStats = deps.getEventStats;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.degradationManager = mascot.degradationManager;
+            this.animationController = mascot.animationController;
+            this.stateMachine = mascot.stateMachine;
+            this.performanceSystem = mascot.performanceSystem;
+            this.config = mascot.config;
+            this._state = {
+                get isRunning() { return mascot.isRunning; },
+                get speaking() { return mascot.speaking; },
+                get debugMode() { return mascot.debugMode; }
+            };
+            this._getCurrentState = () => mascot.getCurrentState();
+            this._getAudioStats = () => mascot.getAudioStats();
+            this._getEventStats = () => mascot.getEventStats();
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -65,16 +117,16 @@ export class DiagnosticsManager {
      * @returns {Object|null} Degradation manager information or null if disabled
      */
     getDegradationStatus() {
-        if (!this.mascot.degradationManager) {
+        if (!this.degradationManager) {
             return null;
         }
 
         return {
-            currentLevel: this.mascot.degradationManager.getCurrentLevel(),
-            availableFeatures: this.mascot.degradationManager.getAvailableFeatures(),
-            recommendedSettings: this.mascot.degradationManager.getRecommendedSettings(),
-            performanceStats: this.mascot.degradationManager.getPerformanceStats(),
-            allLevels: this.mascot.degradationManager.getAllLevels()
+            currentLevel: this.degradationManager.getCurrentLevel(),
+            availableFeatures: this.degradationManager.getAvailableFeatures(),
+            recommendedSettings: this.degradationManager.getRecommendedSettings(),
+            performanceStats: this.degradationManager.getPerformanceStats(),
+            allLevels: this.degradationManager.getAllLevels()
         };
     }
 
@@ -84,12 +136,12 @@ export class DiagnosticsManager {
      * @returns {boolean} True if level was set successfully
      */
     setDegradationLevel(level) {
-        if (!this.mascot.degradationManager) {
+        if (!this.degradationManager) {
             // Degradation manager is not enabled
             return false;
         }
 
-        return this.mascot.degradationManager.setLevel(level);
+        return this.degradationManager.setLevel(level);
     }
 
     /**
@@ -100,17 +152,17 @@ export class DiagnosticsManager {
         const report = {
             timestamp: Date.now(),
             mascot: {
-                isRunning: this.mascot.isRunning,
-                speaking: this.mascot.speaking,
-                debugMode: this.mascot.debugMode,
-                config: this.mascot.config
+                isRunning: this._state.isRunning,
+                speaking: this._state.speaking,
+                debugMode: this._state.debugMode,
+                config: this.config
             },
 
             // System states
-            currentState: this.mascot.getCurrentState(),
+            currentState: this._getCurrentState(),
             performanceMetrics: this.getPerformanceMetrics(),
-            audioStats: this.mascot.getAudioStats(),
-            eventStats: this.mascot.getEventStats(),
+            audioStats: this._getAudioStats(),
+            eventStats: this._getEventStats(),
 
             // Browser compatibility
             browserCompatibility: this.getBrowserCompatibility(),
@@ -123,7 +175,7 @@ export class DiagnosticsManager {
             debuggerReport: emotiveDebugger.getDebugReport()
         };
 
-        if (this.mascot.debugMode) {
+        if (this._state.debugMode) {
             emotiveDebugger.log('DEBUG', 'Generated debug report', {
                 reportSize: JSON.stringify(report).length,
                 sections: Object.keys(report)
@@ -147,10 +199,10 @@ export class DiagnosticsManager {
             },
 
             mascotState: {
-                config: this.mascot.config,
-                currentState: this.mascot.getCurrentState(),
-                isRunning: this.mascot.isRunning,
-                speaking: this.mascot.speaking
+                config: this.config,
+                currentState: this._getCurrentState(),
+                isRunning: this._state.isRunning,
+                speaking: this._state.speaking
             },
 
             performance: {
@@ -167,7 +219,7 @@ export class DiagnosticsManager {
             debuggerData: emotiveDebugger.exportDebugData()
         };
 
-        if (this.mascot.debugMode) {
+        if (this._state.debugMode) {
             emotiveDebugger.log('INFO', 'Exported debug data', {
                 dataSize: JSON.stringify(data).length
             });
@@ -181,15 +233,15 @@ export class DiagnosticsManager {
      * @returns {Object} Aggregated performance metrics
      */
     getPerformanceMetrics() {
-        const animationMetrics = this.mascot.animationController.getPerformanceMetrics();
-        const state = this.mascot.stateMachine.getCurrentState();
+        const animationMetrics = this.animationController.getPerformanceMetrics();
+        const state = this.stateMachine.getCurrentState();
 
         return {
             ...animationMetrics,
             currentEmotion: state.emotion,
             currentUndertone: state.undertone,
             isTransitioning: state.isTransitioning,
-            errorStats: this.mascot.errorBoundary.getErrorStats()
+            errorStats: this.errorBoundary.getErrorStats()
         };
     }
 
@@ -198,11 +250,11 @@ export class DiagnosticsManager {
      * @returns {Object|null} Performance analytics data
      */
     getPerformanceAnalytics() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.performanceSystem) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.performanceSystem) {
                 return null;
             }
-            return this.mascot.performanceSystem.getAnalytics();
-        }, 'performance-analytics', this.mascot)();
+            return this.performanceSystem.getAnalytics();
+        }, 'performance-analytics', this._chainTarget)();
     }
 }

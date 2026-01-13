@@ -35,10 +35,43 @@
 export class PerformanceBehaviorManager {
     /**
      * Create PerformanceBehaviorManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.performanceSystem] - Performance system instance
+     * @param {Object} deps.frustrationContextManager - Frustration context manager instance
+     * @param {Object} deps.emotionalStateQueryManager - Emotional state query manager instance
+     * @param {Object} deps.diagnosticsManager - Diagnostics manager instance
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new PerformanceBehaviorManager({ errorBoundary, performanceSystem, frustrationContextManager, ... })
+     *
+     * // Legacy style:
+     * new PerformanceBehaviorManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.performanceSystem = deps.performanceSystem || null;
+            this.frustrationContextManager = deps.frustrationContextManager;
+            this.emotionalStateQueryManager = deps.emotionalStateQueryManager;
+            this.diagnosticsManager = deps.diagnosticsManager;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.performanceSystem = mascot.performanceSystem;
+            this.frustrationContextManager = mascot.frustrationContextManager;
+            this.emotionalStateQueryManager = mascot.emotionalStateQueryManager;
+            this.diagnosticsManager = mascot.diagnosticsManager;
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -65,25 +98,25 @@ export class PerformanceBehaviorManager {
      * });
      */
     perform(semanticAction, options = {}) {
-        return this.mascot.errorBoundary.wrap(async () => {
-            if (!this.mascot.performanceSystem) {
+        return this.errorBoundary.wrap(async () => {
+            if (!this.performanceSystem) {
                 console.warn('[EmotiveMascot] PerformanceSystem not initialized');
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Update context if provided
             if (options.context) {
-                this.mascot.frustrationContextManager.updateContext(options.context);
+                this.frustrationContextManager.updateContext(options.context);
             }
 
             // Execute the performance
-            await this.mascot.performanceSystem.perform(semanticAction, {
+            await this.performanceSystem.perform(semanticAction, {
                 ...options,
-                mascot: this.mascot
+                mascot: this._chainTarget
             });
 
-            return this.mascot;
-        }, 'semantic-performance', this.mascot)();
+            return this._chainTarget;
+        }, 'semantic-performance', this._chainTarget)();
     }
 
     /**
@@ -102,15 +135,15 @@ export class PerformanceBehaviorManager {
      * });
      */
     registerPerformance(name, definition) {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.performanceSystem) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.performanceSystem) {
                 console.warn('[EmotiveMascot] PerformanceSystem not initialized');
-                return this.mascot;
+                return this._chainTarget;
             }
 
-            this.mascot.performanceSystem.registerPerformance(name, definition);
-            return this.mascot;
-        }, 'performance-register', this.mascot)();
+            this.performanceSystem.registerPerformance(name, definition);
+            return this._chainTarget;
+        }, 'performance-register', this._chainTarget)();
     }
 
     /**
@@ -123,7 +156,7 @@ export class PerformanceBehaviorManager {
      * // ['celebrating', 'empathizing', 'thinking', 'success_major', ...]
      */
     getAvailablePerformances() {
-        return this.mascot.emotionalStateQueryManager.getAvailablePerformances();
+        return this.emotionalStateQueryManager.getAvailablePerformances();
     }
 
     /**
@@ -136,7 +169,7 @@ export class PerformanceBehaviorManager {
      * console.log('Average duration:', analytics.averageDuration);
      */
     getPerformanceAnalytics() {
-        return this.mascot.diagnosticsManager.getPerformanceAnalytics();
+        return this.diagnosticsManager.getPerformanceAnalytics();
     }
 
     /**
@@ -149,6 +182,6 @@ export class PerformanceBehaviorManager {
      * console.log('Peak urgency:', analytics.peakUrgency);
      */
     getContextAnalytics() {
-        return this.mascot.emotionalStateQueryManager.getContextAnalytics();
+        return this.emotionalStateQueryManager.getContextAnalytics();
     }
 }

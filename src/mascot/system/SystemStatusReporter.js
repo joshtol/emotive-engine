@@ -13,8 +13,57 @@
  * - Error boundary statistics
  */
 export class SystemStatusReporter {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create SystemStatusReporter
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} deps.particleSystem - Particle system instance
+     * @param {Object} deps.soundSystem - Sound system instance
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.state - Shared state with speaking, audioLevel properties
+     * @param {Function} deps.getEventNames - Function to get event names
+     *
+     * @example
+     * // New DI style:
+     * new SystemStatusReporter({ errorBoundary, animationController, stateMachine, ... })
+     *
+     * // Legacy style:
+     * new SystemStatusReporter(mascot)
+     */
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.animationController = deps.animationController;
+            this.stateMachine = deps.stateMachine;
+            this.particleSystem = deps.particleSystem;
+            this.soundSystem = deps.soundSystem;
+            this.renderer = deps.renderer || null;
+            this.config = deps.config;
+            this._state = deps.state;
+            this._getEventNames = deps.getEventNames;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.animationController = mascot.animationController;
+            this.stateMachine = mascot.stateMachine;
+            this.particleSystem = mascot.particleSystem;
+            this.soundSystem = mascot.soundSystem;
+            this.renderer = mascot.renderer;
+            this.config = mascot.config;
+            this._state = {
+                get speaking() { return mascot.speaking; },
+                get audioLevel() { return mascot.audioLevel; }
+            };
+            this._getEventNames = () => mascot.getEventNames();
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -22,7 +71,7 @@ export class SystemStatusReporter {
      * @returns {Object} System status with all subsystem metrics
      */
     getSystemStatus() {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             return {
                 ...this.getCoreStatus(),
                 ...this.getEmotionalStatus(),
@@ -41,7 +90,7 @@ export class SystemStatusReporter {
      * @returns {Object} Core status with FPS and degradation
      */
     getCoreStatus() {
-        const animationMetrics = this.mascot.animationController.getPerformanceMetrics();
+        const animationMetrics = this.animationController.getPerformanceMetrics();
 
         return {
             isRunning: animationMetrics.isRunning,
@@ -56,7 +105,7 @@ export class SystemStatusReporter {
      * @returns {Object} Emotional state with transitions
      */
     getEmotionalStatus() {
-        const state = this.mascot.stateMachine.getCurrentState();
+        const state = this.stateMachine.getCurrentState();
 
         return {
             emotion: state.emotion,
@@ -72,8 +121,8 @@ export class SystemStatusReporter {
      */
     getGestureStatus() {
         return {
-            currentGesture: this.mascot.renderer?.currentGesture || null,
-            gestureActive: this.mascot.renderer?.isGestureActive() || false
+            currentGesture: this.renderer?.currentGesture || null,
+            gestureActive: this.renderer?.isGestureActive() || false
         };
     }
 
@@ -82,7 +131,7 @@ export class SystemStatusReporter {
      * @returns {Object} Particle metrics
      */
     getParticleStatus() {
-        const particleStats = this.mascot.particleSystem.getStats();
+        const particleStats = this.particleSystem.getStats();
 
         return {
             active: particleStats.activeParticles,
@@ -97,11 +146,11 @@ export class SystemStatusReporter {
      */
     getAudioStatus() {
         return {
-            audioEnabled: this.mascot.config.enableAudio,
-            soundSystemAvailable: this.mascot.soundSystem.isAvailable(),
-            speaking: this.mascot.speaking,
-            audioLevel: this.mascot.audioLevel,
-            masterVolume: this.mascot.config.masterVolume
+            audioEnabled: this.config.enableAudio,
+            soundSystemAvailable: this.soundSystem.isAvailable(),
+            speaking: this._state.speaking,
+            audioLevel: this._state.audioLevel,
+            masterVolume: this.config.masterVolume
         };
     }
 
@@ -110,7 +159,7 @@ export class SystemStatusReporter {
      * @returns {Object} Renderer statistics
      */
     getRendererStatus() {
-        const rendererStats = this.mascot.renderer.getStats();
+        const rendererStats = this.renderer.getStats();
 
         return {
             gradientCacheSize: rendererStats.gradientCacheSize,
@@ -124,7 +173,7 @@ export class SystemStatusReporter {
      * @returns {number} Number of registered event listeners
      */
     getEventListenerCount() {
-        return this.mascot.getEventNames().length;
+        return this._getEventNames().length;
     }
 
     /**
@@ -132,6 +181,6 @@ export class SystemStatusReporter {
      * @returns {Object} Error boundary statistics
      */
     getErrorStats() {
-        return this.mascot.errorBoundary.getErrorStats();
+        return this.errorBoundary.getErrorStats();
     }
 }
