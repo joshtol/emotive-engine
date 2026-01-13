@@ -8,10 +8,42 @@
  * - Particle rate and count limits
  * - Undertone modifier overrides
  * - Special emotion behaviors (zen mixing)
+ *
+ * @module ParticleConfigCalculator
  */
 export class ParticleConfigCalculator {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create ParticleConfigCalculator
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.renderer - Renderer instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} deps.canvasManager - Canvas manager instance
+     * @param {Object} deps.config - Configuration object
+     *
+     * @example
+     * // New DI style:
+     * new ParticleConfigCalculator({ renderer, stateMachine, canvasManager, config })
+     *
+     * // Legacy style:
+     * new ParticleConfigCalculator(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.renderer && deps.stateMachine && deps.canvasManager && deps.config) {
+            // New DI style
+            this.renderer = deps.renderer;
+            this.stateMachine = deps.stateMachine;
+            this.canvasManager = deps.canvasManager;
+            this.config = deps.config;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.renderer = mascot.renderer;
+            this.stateMachine = mascot.stateMachine;
+            this.canvasManager = mascot.canvasManager;
+            this.config = mascot.config;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -39,17 +71,17 @@ export class ParticleConfigCalculator {
      */
     calculateOrbPosition(_renderState) {
         // Always use effective center for particle spawning (with position offsets applied)
-        const effectiveCenter = this.mascot.renderer.getEffectiveCenter();
+        const effectiveCenter = this.renderer.getEffectiveCenter();
         const orbX = effectiveCenter.x;
-        let orbY = effectiveCenter.y - this.mascot.config.topOffset;
+        let orbY = effectiveCenter.y - this.config.topOffset;
 
         // Get min/max from state machine
-        const stateProps = this.mascot.stateMachine.getCurrentEmotionalProperties();
+        const stateProps = this.stateMachine.getCurrentEmotionalProperties();
 
         // Apply vertical offset for certain emotions (like excited for exclamation mark)
         if (stateProps.verticalOffset) {
-            orbY = effectiveCenter.y - this.mascot.config.topOffset +
-                   (this.mascot.canvasManager.height * stateProps.verticalOffset);
+            orbY = effectiveCenter.y - this.config.topOffset +
+                   (this.canvasManager.height * stateProps.verticalOffset);
         }
 
         return { orbX, orbY };
@@ -67,7 +99,7 @@ export class ParticleConfigCalculator {
         let particleRate = emotionParams.particleRate || 15;
 
         // Get state properties
-        const stateProps = this.mascot.stateMachine.getCurrentEmotionalProperties();
+        const stateProps = this.stateMachine.getCurrentEmotionalProperties();
 
         // Use emotionParams min/max if available, otherwise fall back to stateProps
         const minParticles = emotionParams.minParticles !== undefined ?
@@ -105,13 +137,13 @@ export class ParticleConfigCalculator {
      */
     applyRendererOverrides(particleBehavior, particleRate, maxParticles) {
         // Check if renderer has undertone overrides
-        if (this.mascot.renderer.state && this.mascot.renderer.state.particleBehaviorOverride) {
-            particleBehavior = this.mascot.renderer.state.particleBehaviorOverride;
+        if (this.renderer.state && this.renderer.state.particleBehaviorOverride) {
+            particleBehavior = this.renderer.state.particleBehaviorOverride;
         }
 
-        if (this.mascot.renderer.state && this.mascot.renderer.state.particleRateMult) {
-            particleRate = Math.floor(particleRate * this.mascot.renderer.state.particleRateMult);
-            maxParticles = Math.floor(maxParticles * this.mascot.renderer.state.particleRateMult);
+        if (this.renderer.state && this.renderer.state.particleRateMult) {
+            particleRate = Math.floor(particleRate * this.renderer.state.particleRateMult);
+            maxParticles = Math.floor(maxParticles * this.renderer.state.particleRateMult);
         }
 
         return { particleBehavior, particleRate, maxParticles };
@@ -124,14 +156,14 @@ export class ParticleConfigCalculator {
      */
     getParticleModifier(renderState) {
         // Get undertone modifier from renderer if present
-        const undertoneModifier = this.mascot.renderer.getUndertoneModifier ?
-            this.mascot.renderer.getUndertoneModifier() : null;
+        const undertoneModifier = this.renderer.getUndertoneModifier ?
+            this.renderer.getUndertoneModifier() : null;
 
         // Add zen vortex intensity to undertone modifier if in zen state
-        if (renderState.emotion === 'zen' && this.mascot.renderer.state.zenVortexIntensity) {
+        if (renderState.emotion === 'zen' && this.renderer.state.zenVortexIntensity) {
             return {
                 ...(undertoneModifier || {}),
-                zenVortexIntensity: this.mascot.renderer.state.zenVortexIntensity
+                zenVortexIntensity: this.renderer.state.zenVortexIntensity
             };
         }
 

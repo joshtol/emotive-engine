@@ -6,12 +6,41 @@
  * - Distance calculation from mouse to orb center
  * - Threat level computation (closer = higher threat)
  * - Suspicion emotion visual property updates
+ *
+ * @module ThreatLevelCalculator
  */
 import { getEmotion } from '../../core/emotions/index.js';
 
 export class ThreatLevelCalculator {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create ThreatLevelCalculator
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.canvasManager - Canvas manager instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} [deps.gazeTracker] - Gaze tracker instance
+     *
+     * @example
+     * // New DI style:
+     * new ThreatLevelCalculator({ canvasManager, config, gazeTracker })
+     *
+     * // Legacy style:
+     * new ThreatLevelCalculator(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.canvasManager && deps.config && !deps.stateMachine) {
+            // New DI style
+            this.canvasManager = deps.canvasManager;
+            this.config = deps.config;
+            this.gazeTracker = deps.gazeTracker || null;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.canvasManager = mascot.canvasManager;
+            this.config = mascot.config;
+            this.gazeTracker = mascot.gazeTracker;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -19,7 +48,7 @@ export class ThreatLevelCalculator {
      * @param {Object} renderState - Current render state
      */
     updateThreatLevel(renderState) {
-        if (renderState.emotion !== 'suspicion' || !this.mascot.gazeTracker) {
+        if (renderState.emotion !== 'suspicion' || !this.gazeTracker) {
             return;
         }
 
@@ -38,20 +67,20 @@ export class ThreatLevelCalculator {
      */
     calculateThreatLevel() {
         // Get gaze state
-        this.mascot.gazeTracker.getState();
-        const {mousePos} = this.mascot.gazeTracker;
+        this.gazeTracker.getState();
+        const { mousePos } = this.gazeTracker;
 
         // Calculate orb center position
-        const centerX = this.mascot.canvasManager.width / 2;
-        const centerY = this.mascot.canvasManager.height / 2 - this.mascot.config.topOffset;
+        const centerX = this.canvasManager.width / 2;
+        const centerY = this.canvasManager.height / 2 - this.config.topOffset;
 
         // Calculate distance from mouse to center
         const distance = this.calculateDistance(mousePos, { x: centerX, y: centerY });
 
         // Maximum distance for threat calculation (canvas diagonal / 3)
         const maxDist = Math.min(
-            this.mascot.canvasManager.width,
-            this.mascot.canvasManager.height
+            this.canvasManager.width,
+            this.canvasManager.height
         ) / 2;
 
         // Closer = higher threat (inverted distance)

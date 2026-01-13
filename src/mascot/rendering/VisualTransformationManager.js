@@ -46,10 +46,36 @@
 export class VisualTransformationManager {
     /**
      * Create VisualTransformationManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.canvasResizeManager - Canvas resize manager instance
+     * @param {Object} deps.offsetPositionManager - Offset position manager instance
+     * @param {Object} deps.shapeTransformManager - Shape transform manager instance
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new VisualTransformationManager({ canvasResizeManager, offsetPositionManager, shapeTransformManager })
+     *
+     * // Legacy style:
+     * new VisualTransformationManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        if (deps && deps.canvasResizeManager && deps.offsetPositionManager && deps.shapeTransformManager) {
+            // New DI style
+            this.canvasResizeManager = deps.canvasResizeManager;
+            this.offsetPositionManager = deps.offsetPositionManager;
+            this.shapeTransformManager = deps.shapeTransformManager;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.canvasResizeManager = mascot.canvasResizeManager;
+            this.offsetPositionManager = mascot.offsetPositionManager;
+            this.shapeTransformManager = mascot.shapeTransformManager;
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -68,7 +94,7 @@ export class VisualTransformationManager {
      * mascot.setOffset(0, 0, 1.5); // 1.5x scale
      */
     setOffset(x, y, z = 0) {
-        return this.mascot.offsetPositionManager.setOffset(x, y, z);
+        return this.offsetPositionManager.setOffset(x, y, z);
     }
 
     /**
@@ -80,7 +106,7 @@ export class VisualTransformationManager {
      * console.log(`Position: (${offset.x}, ${offset.y}), Scale: ${offset.z}`);
      */
     getOffset() {
-        return this.mascot.offsetPositionManager.getOffset();
+        return this.offsetPositionManager.getOffset();
     }
 
     /**
@@ -101,7 +127,7 @@ export class VisualTransformationManager {
      * mascot.animateOffset(0, -100, 0, 500, 'easeOutBounce');
      */
     animateOffset(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        return this.mascot.offsetPositionManager.animateOffset(x, y, z, duration, easing);
+        return this.offsetPositionManager.animateOffset(x, y, z, duration, easing);
     }
 
     /**
@@ -119,7 +145,7 @@ export class VisualTransformationManager {
      * mascot.morphTo('star', { duration: 2000 });
      */
     morphTo(shape, config = {}) {
-        return this.mascot.shapeTransformManager.morphTo(shape, config);
+        return this.shapeTransformManager.morphTo(shape, config);
     }
 
     /**
@@ -151,7 +177,7 @@ export class VisualTransformationManager {
      * mascot.setBackdrop({ enabled: false });
      */
     setBackdrop(options = {}) {
-        return this.mascot.shapeTransformManager.setBackdrop(options);
+        return this.shapeTransformManager.setBackdrop(options);
     }
 
     /**
@@ -163,7 +189,7 @@ export class VisualTransformationManager {
      * console.log('Backdrop enabled:', backdrop.enabled);
      */
     getBackdrop() {
-        return this.mascot.shapeTransformManager.getBackdrop();
+        return this.shapeTransformManager.getBackdrop();
     }
 
     /**
@@ -181,7 +207,7 @@ export class VisualTransformationManager {
      * });
      */
     handleResize(width, height, dpr) {
-        this.mascot.canvasResizeManager.handleResize(width, height, dpr);
+        this.canvasResizeManager.handleResize(width, height, dpr);
     }
 
     /**
@@ -195,7 +221,7 @@ export class VisualTransformationManager {
      * mascot.setOffset(500, 0);
      */
     clearParticles() {
-        return this.mascot.canvasResizeManager.clearParticles();
+        return this.canvasResizeManager.clearParticles();
     }
 
     /**
@@ -211,6 +237,6 @@ export class VisualTransformationManager {
      * mascot.setParticleSystemCanvasDimensions(800, 600);
      */
     setParticleSystemCanvasDimensions(width, height) {
-        return this.mascot.canvasResizeManager.setParticleSystemCanvasDimensions(width, height);
+        return this.canvasResizeManager.setParticleSystemCanvasDimensions(width, height);
     }
 }

@@ -37,10 +37,39 @@
 export class CanvasResizeManager {
     /**
      * Create CanvasResizeManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} [deps.stateMachine] - State machine instance
+     * @param {Object} [deps.particleSystem] - Particle system instance
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new CanvasResizeManager({ renderer, stateMachine, particleSystem, emit })
+     *
+     * // Legacy style:
+     * new CanvasResizeManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        if (deps && deps.emit && deps._diStyle !== undefined) {
+            // New DI style (requires explicit marker to distinguish from mascot with emit)
+            this.renderer = deps.renderer || null;
+            this.stateMachine = deps.stateMachine || null;
+            this.particleSystem = deps.particleSystem || null;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.renderer = mascot.renderer;
+            this.stateMachine = mascot.stateMachine;
+            this.particleSystem = mascot.particleSystem;
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -60,28 +89,28 @@ export class CanvasResizeManager {
      */
     handleResize(width, height, dpr) {
         // Force a re-initialization of the offscreen canvas in renderer
-        if (this.mascot.renderer && this.mascot.renderer.initOffscreenCanvas) {
-            this.mascot.renderer.initOffscreenCanvas();
+        if (this.renderer && this.renderer.initOffscreenCanvas) {
+            this.renderer.initOffscreenCanvas();
         }
 
         // Trigger a state update to recalculate all visual parameters
-        if (this.mascot.stateMachine) {
-            const {currentEmotion} = this.mascot.stateMachine;
-            const {currentUndertone} = this.mascot.stateMachine;
+        if (this.stateMachine) {
+            const { currentEmotion } = this.stateMachine;
+            const { currentUndertone } = this.stateMachine;
 
             // Re-apply current emotion to trigger fresh calculations
             if (currentEmotion) {
-                this.mascot.stateMachine.setEmotion(currentEmotion);
+                this.stateMachine.setEmotion(currentEmotion);
             }
 
             // Re-apply current undertone if any
             if (currentUndertone && currentUndertone !== 'none') {
-                this.mascot.stateMachine.setUndertone(currentUndertone);
+                this.stateMachine.setUndertone(currentUndertone);
             }
         }
 
         // Emit resize event for any listeners
-        this.mascot.emit('resize', { width, height, dpr });
+        this._emit('resize', { width, height, dpr });
     }
 
     /**
@@ -94,10 +123,10 @@ export class CanvasResizeManager {
      * mascot.clearParticles(); // Remove particles from old position
      */
     clearParticles() {
-        if (this.mascot.particleSystem) {
-            this.mascot.particleSystem.clear();
+        if (this.particleSystem) {
+            this.particleSystem.clear();
         }
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
@@ -112,10 +141,10 @@ export class CanvasResizeManager {
      * mascot.setPosition(100, 100); // Particles will spawn correctly with offset
      */
     setParticleSystemCanvasDimensions(width, height) {
-        if (this.mascot.particleSystem) {
-            this.mascot.particleSystem.canvasWidth = width;
-            this.mascot.particleSystem.canvasHeight = height;
+        if (this.particleSystem) {
+            this.particleSystem.canvasWidth = width;
+            this.particleSystem.canvasHeight = height;
         }
-        return this.mascot;
+        return this._chainTarget;
     }
 }

@@ -34,10 +34,39 @@
 export class ShapeTransformManager {
     /**
      * Create ShapeTransformManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} [deps.shapeMorpher] - Shape morpher instance
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new ShapeTransformManager({ errorBoundary, renderer, shapeMorpher, emit })
+     *
+     * // Legacy style:
+     * new ShapeTransformManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        if (deps && deps.errorBoundary && deps.emit && deps._diStyle === true) {
+            // New DI style (requires explicit marker)
+            this.errorBoundary = deps.errorBoundary;
+            this.renderer = deps.renderer || null;
+            this.shapeMorpher = deps.shapeMorpher || null;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.renderer = mascot.renderer;
+            this.shapeMorpher = mascot.shapeMorpher;
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -47,26 +76,26 @@ export class ShapeTransformManager {
      * @returns {EmotiveMascot} Parent mascot instance for chaining
      */
     morphTo(shape, config = {}) {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.shapeMorpher) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.shapeMorpher) {
                 // ShapeMorpher not initialized
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Start the morph
-            this.mascot.shapeMorpher.morphTo(shape, config);
+            this.shapeMorpher.morphTo(shape, config);
 
             // Pass shape morpher to renderer
-            if (this.mascot.renderer) {
-                this.mascot.renderer.shapeMorpher = this.mascot.shapeMorpher;
+            if (this.renderer) {
+                this.renderer.shapeMorpher = this.shapeMorpher;
             }
 
             // Emit event
-            this.mascot.emit('shapeMorphStarted', { from: this.mascot.shapeMorpher.currentShape, to: shape });
+            this._emit('shapeMorphStarted', { from: this.shapeMorpher.currentShape, to: shape });
 
             // Morphing to new shape
-            return this.mascot;
-        }, 'morphTo', this.mascot)();
+            return this._chainTarget;
+        }, 'morphTo', this._chainTarget)();
     }
 
     /**
@@ -83,12 +112,12 @@ export class ShapeTransformManager {
      * mascot.setBackdrop({ enabled: true, intensity: 0.8, radius: 2 });
      */
     setBackdrop(options = {}) {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (this.mascot.renderer && this.mascot.renderer.backdropRenderer) {
-                this.mascot.renderer.backdropRenderer.setConfig(options);
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.backdropRenderer) {
+                this.renderer.backdropRenderer.setConfig(options);
             }
-            return this.mascot;
-        }, 'setBackdrop', this.mascot)();
+            return this._chainTarget;
+        }, 'setBackdrop', this._chainTarget)();
     }
 
     /**
@@ -96,11 +125,11 @@ export class ShapeTransformManager {
      * @returns {Object} Current backdrop config
      */
     getBackdrop() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (this.mascot.renderer && this.mascot.renderer.backdropRenderer) {
-                return this.mascot.renderer.backdropRenderer.getConfig();
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer && this.renderer.backdropRenderer) {
+                return this.renderer.backdropRenderer.getConfig();
             }
             return null;
-        }, 'getBackdrop', this.mascot)();
+        }, 'getBackdrop', this._chainTarget)();
     }
 }
