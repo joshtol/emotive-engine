@@ -503,6 +503,34 @@ class ParticleSystem {
     }
 
     /**
+     * Handle visibility resume after tab was hidden
+     * Manages particle count based on how long the tab was hidden
+     * @param {number} gapMs - Time in milliseconds the tab was hidden
+     * @param {number} [pausedCount] - Optional: particle count when paused (for gradual reduction)
+     */
+    onVisibilityResume(gapMs, pausedCount = null) {
+        // Reset spawn accumulator to prevent particle burst on resume
+        this.resetAccumulator();
+
+        // Determine action based on gap duration
+        if (gapMs > 30000) {
+            // Very long gap (30+ seconds): clear all particles for clean slate
+            this.clear();
+        } else if (gapMs > 10000) {
+            // Medium gap (10-30 seconds): reduce particle count gradually
+            const currentCount = this.particles.length;
+            const referenceCount = pausedCount ?? currentCount;
+            const targetCount = Math.max(10, Math.floor(referenceCount * 0.5));
+
+            // Remove oldest particles until we reach target
+            while (this.particles.length > targetCount) {
+                this.removeParticle(0); // Remove oldest (first in array)
+            }
+        }
+        // Short gaps (<10 seconds): keep all particles, just reset accumulator
+    }
+
+    /**
      * Clears all particles and returns them to the pool
      */
     clear() {

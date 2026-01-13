@@ -90,17 +90,23 @@ export default AnimationLoopManager; // class for multi-instance
 
 ---
 
-### Task 2.3: Refactor Visibility Change Handling
-**Severity:** Medium (Leaky abstraction)
-**File:** `src/core/AnimationController.js` lines 298-396
+### Task 2.3: Refactor Visibility Change Handling ✅ COMPLETE
+**Severity:** Medium (Was leaky abstraction)
+**File:** `src/core/AnimationController.js`
 
-**Problem:** Controller directly manipulates `particleSystem.particles` array (lines 347-355).
+**Problem:** Controller directly manipulated `particleSystem.particles` array.
 
-**Tasks:**
-- [ ] Add `ParticleSystem.onVisibilityResume(gapMs)` method
-- [ ] Move particle reduction logic into ParticleSystem
-- [ ] Controller calls `subsystem.onVisibilityResume()` instead of reaching into internals
-- [ ] Apply same pattern to other subsystems (renderer, stateMachine)
+**Solution:** Added `ParticleSystem.onVisibilityResume(gapMs, pausedCount)` method that encapsulates:
+- Accumulator reset
+- Gap-based particle management (clear all >30s, reduce 50% 10-30s, keep all <10s)
+
+**Completed:**
+- [x] Add `ParticleSystem.onVisibilityResume(gapMs, pausedCount)` method
+- [x] Move particle reduction logic into ParticleSystem
+- [x] Update AnimationController to call `particleSystem.onVisibilityResume()`
+- [x] Reduced AnimationController by ~10 lines
+
+**Note:** Renderer and StateMachine already use proper APIs (gap-based conditionals).
 
 ---
 

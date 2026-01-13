@@ -341,22 +341,9 @@ class AnimationController {
                     this.fpsCounter.reset();
                 }
 
-                // TAB FOCUS FIX: Gradual particle recovery instead of clearing all
+                // TAB FOCUS FIX: Let ParticleSystem handle visibility resume logic
                 if (this.subsystems?.particleSystem) {
-                    // Clear accumulator again to be safe
-                    this.subsystems.particleSystem.resetAccumulator();
-                    
-                    // Only clear particles if gap was VERY long (30+ seconds)
-                    if (gap > 30000) {
-                        this.subsystems.particleSystem.particles = [];
-                    } else if (gap > 10000) {
-                        // For medium gaps (10-30s), reduce particle count gradually
-                        const targetCount = Math.max(10, Math.floor(this.pausedParticleCount * 0.5));
-                        while (this.subsystems.particleSystem.particles.length > targetCount) {
-                            this.subsystems.particleSystem.removeParticle(0);
-                        }
-                    }
-                    // For short gaps (<10s), keep all particles
+                    this.subsystems.particleSystem.onVisibilityResume(gap, this.pausedParticleCount);
                 }
 
                 // TAB FOCUS FIX: Don't reset canvas context aggressively
