@@ -53,8 +53,8 @@ describe('VisualizationRunner', () => {
     });
 
     describe('Constructor', () => {
-        it('should initialize with mascot reference', () => {
-            expect(visualizationRunner.mascot).toBe(mockMascot);
+        it('should initialize in legacy mode with mascot reference', () => {
+            expect(visualizationRunner._legacyMode).toBe(true);
         });
 
         it('should initialize animationId as null', () => {

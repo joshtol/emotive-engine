@@ -36,10 +36,43 @@
 export class AnimationFrameController {
     /**
      * Create AnimationFrameController
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.positionController - Position controller instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new AnimationFrameController({ errorBoundary, animationController, positionController, config, emit })
+     *
+     * // Legacy style:
+     * new AnimationFrameController(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.animationController = deps.animationController;
+            this.positionController = deps.positionController || null;
+            this.config = deps.config;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.animationController = mascot.animationController;
+            this.positionController = mascot.positionController;
+            this.config = mascot.config;
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -49,13 +82,13 @@ export class AnimationFrameController {
      */
     setTargetFPS(targetFPS) {
         const clampedFPS = Math.max(15, Math.min(120, targetFPS)); // Clamp between 15-120 FPS
-        this.mascot.config.targetFPS = clampedFPS;
-        this.mascot.animationController.setTargetFPS(clampedFPS);
+        this.config.targetFPS = clampedFPS;
+        this.animationController.setTargetFPS(clampedFPS);
 
         // Target FPS set
-        this.mascot.emit('targetFPSChanged', { targetFPS: clampedFPS });
+        this._emit('targetFPSChanged', { targetFPS: clampedFPS });
 
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
@@ -63,7 +96,7 @@ export class AnimationFrameController {
      * @returns {number} Target frames per second
      */
     getTargetFPS() {
-        return this.mascot.animationController.targetFPS;
+        return this.animationController.targetFPS;
     }
 
     /**
@@ -74,14 +107,14 @@ export class AnimationFrameController {
      * @returns {EmotiveMascot} Parent mascot instance for chaining
      */
     setPosition(x, y, z = 0) {
-        if (this.mascot.positionController) {
+        if (this.positionController) {
             // Ensure onUpdate callback exists
-            if (!this.mascot.positionController.onUpdate) {
-                this.mascot.positionController.onUpdate = () => {};
+            if (!this.positionController.onUpdate) {
+                this.positionController.onUpdate = () => {};
             }
-            this.mascot.positionController.setOffset(x, y, z);
+            this.positionController.setOffset(x, y, z);
         }
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
@@ -94,14 +127,14 @@ export class AnimationFrameController {
      * @returns {EmotiveMascot} Parent mascot instance for chaining
      */
     animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        if (this.mascot.positionController) {
+        if (this.positionController) {
             // Ensure onUpdate callback exists
-            if (!this.mascot.positionController.onUpdate) {
-                this.mascot.positionController.onUpdate = () => {};
+            if (!this.positionController.onUpdate) {
+                this.positionController.onUpdate = () => {};
             }
-            this.mascot.positionController.animateOffset(x, y, z, duration, easing);
+            this.positionController.animateOffset(x, y, z, duration, easing);
         }
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
@@ -109,8 +142,8 @@ export class AnimationFrameController {
      * @returns {Object|null} Current position metadata or null if not available
      */
     getPosition() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.positionController || typeof this.mascot.positionController.getPosition !== 'function') {
+        return this.errorBoundary.wrap(() => {
+            if (!this.positionController || typeof this.positionController.getPosition !== 'function') {
                 return null;
             }
 
@@ -118,7 +151,7 @@ export class AnimationFrameController {
             const centerX = hasWindow ? window.innerWidth / 2 : 0;
             const centerY = hasWindow ? window.innerHeight / 2 : 0;
 
-            return this.mascot.positionController.getPosition(centerX, centerY);
-        }, 'get-position', this.mascot)();
+            return this.positionController.getPosition(centerX, centerY);
+        }, 'get-position', this._chainTarget)();
     }
 }

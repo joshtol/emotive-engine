@@ -6,8 +6,80 @@
 import { getEmotionVisualParams, getEmotion } from '../../core/emotions/index.js';
 
 export class VisualizationRunner {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create VisualizationRunner
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.stateMachine - State machine instance
+     * @param {Object} [deps.particleSystem] - Particle system instance
+     * @param {Object} [deps.canvasManager] - Canvas manager instance
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} [deps.audioHandler] - Audio handler instance
+     * @param {Object} [deps.audioLevelProcessor] - Audio level processor instance
+     * @param {Object} [deps.gazeTracker] - Gaze tracker instance
+     * @param {Object} [deps.idleBehavior] - Idle behavior instance
+     * @param {Object} [deps.degradationManager] - Degradation manager instance
+     * @param {Object} [deps.pluginSystem] - Plugin system instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.canvas - Canvas element
+     * @param {Object} deps.state - Shared state with isRunning, speaking properties
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new VisualizationRunner({ animationController, stateMachine, particleSystem, ... })
+     *
+     * // Legacy style:
+     * new VisualizationRunner(mascot)
+     */
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.animationController = deps.animationController;
+            this.stateMachine = deps.stateMachine;
+            this.particleSystem = deps.particleSystem || null;
+            this.canvasManager = deps.canvasManager || null;
+            this.renderer = deps.renderer || null;
+            this.audioHandler = deps.audioHandler || null;
+            this.audioLevelProcessor = deps.audioLevelProcessor || null;
+            this.gazeTracker = deps.gazeTracker || null;
+            this.idleBehavior = deps.idleBehavior || null;
+            this.degradationManager = deps.degradationManager || null;
+            this.pluginSystem = deps.pluginSystem || null;
+            this.config = deps.config;
+            this.canvas = deps.canvas || null;
+            this._state = deps.state;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.animationController = mascot.animationController;
+            this.stateMachine = mascot.stateMachine;
+            this.particleSystem = mascot.particleSystem;
+            this.canvasManager = mascot.canvasManager;
+            this.renderer = mascot.renderer;
+            this.audioHandler = mascot.audioHandler;
+            this.audioLevelProcessor = mascot.audioLevelProcessor;
+            this.gazeTracker = mascot.gazeTracker;
+            this.idleBehavior = mascot.idleBehavior;
+            this.degradationManager = mascot.degradationManager;
+            this.pluginSystem = mascot.pluginSystem;
+            this.config = mascot.config;
+            this.canvas = mascot.canvas;
+            this._state = {
+                get isRunning() { return mascot.isRunning; },
+                set isRunning(v) { mascot.isRunning = v; },
+                get speaking() { return mascot.speaking; }
+            };
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
+
         this.animationId = null;
         this.isRunning = false;
         this.lastTime = 0;
@@ -25,46 +97,46 @@ export class VisualizationRunner {
      * @returns {Object} The mascot instance for chaining
      */
     start() {
-        if (this.mascot.animationController.isAnimating()) {
-            return this.mascot;
+        if (this.animationController.isAnimating()) {
+            return this._chainTarget;
         }
-        
+
         // Start the animation controller
-        const success = this.mascot.animationController.start();
-        
+        const success = this.animationController.start();
+
         if (success) {
-            this.mascot.isRunning = true;
+            this._state.isRunning = true;
             this.isRunning = true;
-            
+
             // Spawn initial particles for classic mode
-            if (this.mascot.config.renderingStyle === 'classic' && this.mascot.particleSystem) {
-                const currentState = this.mascot.stateMachine.getCurrentState();
+            if (this.config.renderingStyle === 'classic' && this.particleSystem) {
+                const currentState = this.stateMachine.getCurrentState();
                 const {emotion} = currentState;
                 // undertone not used for classic rendering
                 const emotionParams = getEmotionVisualParams(emotion);
-                
+
                 // Get the actual orb position from the renderer (includes gaze offset)
                 let orbX, orbY;
-                if (this.mascot.renderer && this.mascot.renderer.getCurrentOrbPosition) {
-                    const orbPos = this.mascot.renderer.getCurrentOrbPosition();
+                if (this.renderer && this.renderer.getCurrentOrbPosition) {
+                    const orbPos = this.renderer.getCurrentOrbPosition();
                     orbX = orbPos.x;
                     orbY = orbPos.y;
                 } else {
                     // Fallback to center if method doesn't exist
-                    orbX = this.mascot.canvasManager.width / 2;
-                    orbY = this.mascot.canvasManager.height / 2;
+                    orbX = this.canvasManager.width / 2;
+                    orbY = this.canvasManager.height / 2;
                 }
-                
+
                 // Clear any existing particles first
-                this.mascot.particleSystem.clear();
-                
+                this.particleSystem.clear();
+
                 // Check if emotion has specific particle configuration
                 if (emotionParams.particleRate > 0) {
                     // Spawn initial burst of particles
                     const initialCount = Math.min(3, Math.floor(emotionParams.particleRate / 4));
-                    
+
                     if (initialCount > 0) {
-                        this.mascot.particleSystem.burst(
+                        this.particleSystem.burst(
                             initialCount,
                             emotionParams.particleBehavior,
                             orbX,
@@ -73,17 +145,17 @@ export class VisualizationRunner {
                     }
                 }
             }
-            
+
             // Start degradation monitoring
-            if (this.mascot.degradationManager) {
-                this.mascot.degradationManager.startMonitoring();
+            if (this.degradationManager) {
+                this.degradationManager.startMonitoring();
             }
-            
+
             // Emit start event
-            this.mascot.emit('started');
+            this._emit('started');
         }
-        
-        return this.mascot;
+
+        return this._chainTarget;
     }
 
     /**
@@ -91,32 +163,32 @@ export class VisualizationRunner {
      * @returns {Object} The mascot instance for chaining
      */
     stop() {
-        if (!this.mascot.animationController.isAnimating()) {
-            return this.mascot;
+        if (!this.animationController.isAnimating()) {
+            return this._chainTarget;
         }
-        
+
         // Stop speech reactivity if active
-        if (this.mascot.speaking) {
-            this.mascot.audioHandler.stopSpeaking();
+        if (this._state.speaking && this.audioHandler) {
+            this.audioHandler.stopSpeaking();
         }
-        
+
         // Stop the animation controller
-        const success = this.mascot.animationController.stop();
-        
+        const success = this.animationController.stop();
+
         if (success) {
-            this.mascot.isRunning = false;
+            this._state.isRunning = false;
             this.isRunning = false;
-            
+
             // Stop degradation monitoring
-            if (this.mascot.degradationManager) {
-                this.mascot.degradationManager.stopMonitoring();
+            if (this.degradationManager) {
+                this.degradationManager.stopMonitoring();
             }
-            
+
             // Emit stop event
-            this.mascot.emit('stopped');
+            this._emit('stopped');
         }
-        
-        return this.mascot;
+
+        return this._chainTarget;
     }
 
     /**
@@ -125,28 +197,28 @@ export class VisualizationRunner {
      */
     update(deltaTime) {
         // Update audio level monitoring if speaking
-        if (this.mascot.speaking && this.mascot.audioLevelProcessor.isProcessingActive()) {
-            this.mascot.audioLevelProcessor.updateAudioLevel(deltaTime);
+        if (this._state.speaking && this.audioLevelProcessor && this.audioLevelProcessor.isProcessingActive()) {
+            this.audioLevelProcessor.updateAudioLevel(deltaTime);
         }
-        
+
         // Update classic mode components
-        if (this.mascot.config.renderingStyle === 'classic') {
+        if (this.config.renderingStyle === 'classic') {
             // Update gaze tracker
-            if (this.mascot.gazeTracker) {
-                this.mascot.gazeTracker.update(deltaTime);
-                
+            if (this.gazeTracker) {
+                this.gazeTracker.update(deltaTime);
+
                 // Update threat level for suspicion emotion
-                const currentEmotion = this.mascot.stateMachine.getCurrentState().emotion;
+                const currentEmotion = this.stateMachine.getCurrentState().emotion;
                 if (currentEmotion === 'suspicion') {
                     // Get mouse position and calculate distance to center
-                    const {mousePos} = this.mascot.gazeTracker;
-                    const centerX = this.mascot.canvas.width / 2;
-                    const centerY = this.mascot.canvas.height / 2;
+                    const {mousePos} = this.gazeTracker;
+                    const centerX = this.canvas.width / 2;
+                    const centerY = this.canvas.height / 2;
                     const distance = Math.sqrt(
-                        Math.pow(mousePos.x - centerX, 2) + 
+                        Math.pow(mousePos.x - centerX, 2) +
                         Math.pow(mousePos.y - centerY, 2)
                     );
-                    
+
                     // Get emotion configuration
                     const suspicionEmotion = getEmotion('suspicion');
                     if (suspicionEmotion && suspicionEmotion.visual) {
@@ -156,20 +228,20 @@ export class VisualizationRunner {
                     }
                 }
             }
-            
+
             // Update idle behaviors
-            if (this.mascot.idleBehavior) {
-                this.mascot.idleBehavior.update(deltaTime);
+            if (this.idleBehavior) {
+                this.idleBehavior.update(deltaTime);
             }
-            
+
             // Combine gaze and sway offsets
-            if (this.mascot.gazeTracker && this.mascot.idleBehavior) {
-                const gazeOffset = this.mascot.gazeTracker.getGazeOffset();
-                const swayOffset = this.mascot.idleBehavior.getSwayOffset();
-                
+            if (this.gazeTracker && this.idleBehavior) {
+                const gazeOffset = this.gazeTracker.getGazeOffset();
+                const swayOffset = this.idleBehavior.getSwayOffset();
+
                 // Get full gaze state including proximity for eye narrowing
-                const gazeState = this.mascot.gazeTracker.getState();
-                
+                const gazeState = this.gazeTracker.getState();
+
                 // Combine the offsets and include proximity data
                 const gazeData = {
                     offset: {
@@ -179,18 +251,18 @@ export class VisualizationRunner {
                     proximity: gazeState.proximity,
                     isFocused: gazeState.isFocused
                 };
-                
+
                 // Pass to renderer
-                if (this.mascot.renderer.setGazeData) {
-                    this.mascot.renderer.setGazeData(gazeData);
+                if (this.renderer && this.renderer.setGazeData) {
+                    this.renderer.setGazeData(gazeData);
                 }
             }
         }
 
         // Update plugins
-        if (this.mascot.pluginSystem) {
-            const state = this.mascot.stateMachine.getCurrentState();
-            this.mascot.pluginSystem.update(deltaTime, state);
+        if (this.pluginSystem) {
+            const state = this.stateMachine.getCurrentState();
+            this.pluginSystem.update(deltaTime, state);
         }
     }
 

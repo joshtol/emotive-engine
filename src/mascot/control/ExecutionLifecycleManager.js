@@ -24,10 +24,50 @@
 
 export class ExecutionLifecycleManager {
     /**
-     * @param {Object} mascot - Reference to parent EmotiveMascot instance
+     * Create ExecutionLifecycleManager
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} deps.animationController - Animation controller instance
+     * @param {Object} deps.visualizationRunner - Visualization runner instance
+     * @param {Object} [deps.soundSystem] - Sound system instance
+     * @param {Object} deps.state - Shared state with isRunning property
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new ExecutionLifecycleManager({ errorBoundary, animationController, visualizationRunner, soundSystem, state, emit })
+     *
+     * // Legacy style:
+     * new ExecutionLifecycleManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.animationController = deps.animationController;
+            this.visualizationRunner = deps.visualizationRunner;
+            this.soundSystem = deps.soundSystem || null;
+            this._state = deps.state;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.animationController = mascot.animationController;
+            this.visualizationRunner = mascot.visualizationRunner;
+            this.soundSystem = mascot.soundSystem;
+            this._state = {
+                get isRunning() { return mascot.isRunning; },
+                set isRunning(v) { mascot.isRunning = v; }
+            };
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -35,9 +75,9 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     start() {
-        return this.mascot.errorBoundary.wrap(() => {
-            return this.mascot.visualizationRunner.start();
-        }, 'start', this.mascot)();
+        return this.errorBoundary.wrap(() => {
+            return this.visualizationRunner.start();
+        }, 'start', this._chainTarget)();
     }
 
     /**
@@ -45,9 +85,9 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     stop() {
-        return this.mascot.errorBoundary.wrap(() => {
-            return this.mascot.visualizationRunner.stop();
-        }, 'stop', this.mascot)();
+        return this.errorBoundary.wrap(() => {
+            return this.visualizationRunner.stop();
+        }, 'stop', this._chainTarget)();
     }
 
     /**
@@ -55,25 +95,25 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     pause() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.animationController.isAnimating()) {
+        return this.errorBoundary.wrap(() => {
+            if (!this.animationController.isAnimating()) {
                 // EmotiveMascot is not running
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Stop animation controller
-            this.mascot.animationController.stop();
-            this.mascot.isRunning = false;
+            this.animationController.stop();
+            this._state.isRunning = false;
 
             // Pause ambient audio
-            if (this.mascot.soundSystem.isAvailable()) {
-                this.mascot.soundSystem.stopAmbientTone(200); // Quick fade out
+            if (this.soundSystem && this.soundSystem.isAvailable()) {
+                this.soundSystem.stopAmbientTone(200); // Quick fade out
             }
 
-            this.mascot.emit('paused');
+            this._emit('paused');
             // EmotiveMascot paused
-            return this.mascot;
-        }, 'pause', this.mascot)();
+            return this._chainTarget;
+        }, 'pause', this._chainTarget)();
     }
 
     /**
@@ -81,27 +121,27 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     resume() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (this.mascot.animationController.isAnimating()) {
+        return this.errorBoundary.wrap(() => {
+            if (this.animationController.isAnimating()) {
                 // EmotiveMascot is already running
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Start animation controller
-            this.mascot.animationController.start();
-            this.mascot.isRunning = true;
+            this.animationController.start();
+            this._state.isRunning = true;
 
             // Resume ambient audio
             // Update ambient tone based on emotional state - DISABLED (annoying)
-            // if (this.mascot.soundSystem.isAvailable()) {
-            //     const currentEmotion = this.mascot.stateMachine.getCurrentState().emotion;
-            //     this.mascot.soundSystem.setAmbientTone(currentEmotion, 200);
+            // if (this.soundSystem && this.soundSystem.isAvailable()) {
+            //     const currentEmotion = this.stateMachine.getCurrentState().emotion;
+            //     this.soundSystem.setAmbientTone(currentEmotion, 200);
             // }
 
-            this.mascot.emit('resumed');
+            this._emit('resumed');
             // EmotiveMascot resumed
-            return this.mascot;
-        }, 'resume', this.mascot)();
+            return this._chainTarget;
+        }, 'resume', this._chainTarget)();
     }
 
     /**
@@ -109,6 +149,6 @@ export class ExecutionLifecycleManager {
      * @returns {boolean} True if animation loop is active
      */
     isActive() {
-        return this.mascot.animationController.isAnimating();
+        return this.animationController.isAnimating();
     }
 }

@@ -47,8 +47,8 @@ describe('GestureController', () => {
     });
 
     describe('Constructor', () => {
-        it('should initialize with mascot reference', () => {
-            expect(gestureController.mascot).toBe(mockMascot);
+        it('should initialize in legacy mode with mascot reference', () => {
+            expect(gestureController._legacyMode).toBe(true);
         });
 
         it('should initialize currentGesture as null', () => {

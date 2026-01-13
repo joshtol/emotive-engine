@@ -9,8 +9,55 @@ import { getGesture } from '../../core/gestures/index.js';
 import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
 
 export class GestureController {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create GestureController
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} [deps.performanceMonitor] - Performance monitor instance
+     * @param {Object} [deps.soundSystem] - Sound system instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.state - Shared state with currentModularGesture property
+     * @param {Function} deps.throttledWarn - Throttled warning function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new GestureController({ errorBoundary, renderer, performanceMonitor, soundSystem, config, state, throttledWarn })
+     *
+     * // Legacy style:
+     * new GestureController(mascot)
+     */
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.renderer = deps.renderer || null;
+            this.performanceMonitor = deps.performanceMonitor || null;
+            this.soundSystem = deps.soundSystem || null;
+            this.config = deps.config;
+            this._state = deps.state;
+            this._throttledWarn = deps.throttledWarn;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.renderer = mascot.renderer;
+            this.performanceMonitor = mascot.performanceMonitor;
+            this.soundSystem = mascot.soundSystem;
+            this.config = mascot.config;
+            this._state = {
+                get currentModularGesture() { return mascot.currentModularGesture; },
+                set currentModularGesture(v) { mascot.currentModularGesture = v; }
+            };
+            this._throttledWarn = (msg, key) => mascot.throttledWarn(msg, key);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
+
         this.currentGesture = null;
         this.gestureCompatibility = null;
 
@@ -89,10 +136,10 @@ export class GestureController {
      * @returns {EmotiveMascot} The mascot instance for chaining
      */
     express(gesture, options = {}) {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             // Check for no gesture first
             if (!gesture) {
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Performance marker: Gesture start
@@ -101,8 +148,8 @@ export class GestureController {
                 (typeof gesture === 'object' && gesture.type === 'chord') ? 'chord' :
                     gesture;
 
-            if (this.mascot.performanceMonitor) {
-                this.mascot.performanceMonitor.markGestureStart(gestureName);
+            if (this.performanceMonitor) {
+                this.performanceMonitor.markGestureStart(gestureName);
             }
 
             // Handle chord (multiple simultaneous gestures)
@@ -121,23 +168,23 @@ export class GestureController {
 
             // Check if this gesture has a direct renderer method
             const methodName = this.rendererMethods[gesture];
-            if (methodName && this.mascot.renderer && this.mascot.renderer[methodName]) {
+            if (methodName && this.renderer && this.renderer[methodName]) {
                 // Call the renderer method directly
-                this.mascot.renderer[methodName](options);
+                this.renderer[methodName](options);
 
                 // Play gesture sound effect if available and enabled
-                if (this.mascot.config.soundEnabled && this.mascot.soundSystem.isAvailable()) {
-                    this.mascot.soundSystem.playGestureSound(gesture);
+                if (this.config.soundEnabled && this.soundSystem && this.soundSystem.isAvailable()) {
+                    this.soundSystem.playGestureSound(gesture);
                 }
 
                 // Performance marker: Gesture end
-                if (this.mascot.performanceMonitor) {
+                if (this.performanceMonitor) {
                     const gestureEndTime = performance.now();
-                    this.mascot.performanceMonitor.markGestureEnd(gestureName);
-                    this.mascot.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
+                    this.performanceMonitor.markGestureEnd(gestureName);
+                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
                 }
 
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Try to execute gesture through the particle system
@@ -150,7 +197,7 @@ export class GestureController {
                 rhythmIntegration.registerConfig('gesture', gesture, gestureConfig);
 
                 // Store the current gesture info for the particle system to use
-                this.mascot.currentModularGesture = {
+                this._state.currentModularGesture = {
                     type: gesture,
                     config: gestureConfig,
                     startTime: performance.now(),
@@ -161,30 +208,30 @@ export class GestureController {
                 // Executed gesture through particle system
 
                 // Play gesture sound effect if available and enabled
-                if (this.mascot.config.soundEnabled && this.mascot.soundSystem.isAvailable()) {
-                    this.mascot.soundSystem.playGestureSound(gesture);
+                if (this.config.soundEnabled && this.soundSystem && this.soundSystem.isAvailable()) {
+                    this.soundSystem.playGestureSound(gesture);
                 }
 
                 // Performance marker: Gesture end
-                if (this.mascot.performanceMonitor) {
+                if (this.performanceMonitor) {
                     const gestureEndTime = performance.now();
-                    this.mascot.performanceMonitor.markGestureEnd(gestureName);
-                    this.mascot.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
+                    this.performanceMonitor.markGestureEnd(gestureName);
+                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
                 }
 
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Unknown gesture - throttled warning
-            this.mascot.throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
+            this._throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
 
             // Performance marker: Gesture end (failed)
-            if (this.mascot.performanceMonitor) {
-                this.mascot.performanceMonitor.markGestureEnd(gestureName);
+            if (this.performanceMonitor) {
+                this.performanceMonitor.markGestureEnd(gestureName);
             }
 
-            return this.mascot;
-        }, 'gesture-express', this.mascot)();
+            return this._chainTarget;
+        }, 'gesture-express', this._chainTarget)();
     }
 
     /**
@@ -194,9 +241,9 @@ export class GestureController {
      * @returns {EmotiveMascot} The mascot instance for chaining
      */
     expressChord(gestures, options = {}) {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             if (!gestures || !Array.isArray(gestures) || gestures.length === 0) {
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Import gesture compatibility if not loaded
@@ -226,11 +273,11 @@ export class GestureController {
             // Check for enhancing combination
             if (this.gestureCompatibility?.isEnhancingCombination?.(compatibleGestures)) {
                 // Add extra visual flair
-                this.mascot.renderer?.specialEffects?.addSparkle?.();
+                this.renderer?.specialEffects?.addSparkle?.();
             }
 
-            return this.mascot;
-        }, 'gesture-chord', this.mascot)();
+            return this._chainTarget;
+        }, 'gesture-chord', this._chainTarget)();
     }
 
     /**
@@ -241,8 +288,8 @@ export class GestureController {
      */
     executeGestureDirectly(gesture, options = {}) {
         const methodName = this.rendererMethods[gesture];
-        if (methodName && this.mascot.renderer && typeof this.mascot.renderer[methodName] === 'function') {
-            this.mascot.renderer[methodName](options);
+        if (methodName && this.renderer && typeof this.renderer[methodName] === 'function') {
+            this.renderer[methodName](options);
         }
     }
 
@@ -266,7 +313,7 @@ export class GestureController {
                 this.express(gestures[0]);
             }
         }
-        return this.mascot;
+        return this._chainTarget;
     }
 
     /**
