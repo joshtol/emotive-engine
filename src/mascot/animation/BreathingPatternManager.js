@@ -7,10 +7,50 @@
  * - Preset breathing patterns (calm, anxious, meditative, deep, sleep)
  * - Breathing animation lifecycle
  * - Pattern validation and state management
+ *
+ * @module BreathingPatternManager
  */
 export class BreathingPatternManager {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create BreathingPatternManager
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.state - Shared state with breathePattern, breathingAnimationId
+     * @param {Function} deps.startBreathingAnimation - Function to start breathing animation
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new BreathingPatternManager({ errorBoundary, renderer, state, startBreathingAnimation })
+     *
+     * // Legacy style:
+     * new BreathingPatternManager(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.errorBoundary && deps.state !== undefined && deps.startBreathingAnimation) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.renderer = deps.renderer || null;
+            this._state = deps.state;
+            this._startBreathingAnimation = deps.startBreathingAnimation;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.renderer = mascot.renderer;
+            this._state = {
+                get breathePattern() { return mascot.breathePattern; },
+                set breathePattern(v) { mascot.breathePattern = v; },
+                get breathingAnimationId() { return mascot.breathingAnimationId; },
+                set breathingAnimationId(v) { mascot.breathingAnimationId = v; }
+            };
+            this._startBreathingAnimation = () => mascot.startBreathingAnimation();
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -36,12 +76,12 @@ export class BreathingPatternManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     setBreathePattern(inhale, hold1, exhale, hold2) {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             // Calculate total cycle time
             const totalCycle = inhale + hold1 + exhale + hold2;
 
             // Store pattern for custom animation
-            this.mascot.breathePattern = {
+            this._state.breathePattern = {
                 inhale,
                 hold1,
                 exhale,
@@ -53,10 +93,10 @@ export class BreathingPatternManager {
             };
 
             // Start custom breathing animation
-            this.mascot.startBreathingAnimation();
+            this._startBreathingAnimation();
 
-            return this.mascot;
-        }, 'setBreathePattern', this.mascot)();
+            return this._chainTarget;
+        }, 'setBreathePattern', this._chainTarget)();
     }
 
     /**
@@ -65,11 +105,11 @@ export class BreathingPatternManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     breathe(type = 'calm') {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             const presets = BreathingPatternManager.getPresets();
             const pattern = presets[type] || presets.calm;
             return this.setBreathePattern(pattern.inhale, pattern.hold1, pattern.exhale, pattern.hold2);
-        }, 'breathe', this.mascot)();
+        }, 'breathe', this._chainTarget)();
     }
 
     /**
@@ -77,20 +117,20 @@ export class BreathingPatternManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     stopBreathing() {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (this.mascot.breathingAnimationId) {
-                cancelAnimationFrame(this.mascot.breathingAnimationId);
-                this.mascot.breathingAnimationId = null;
+        return this.errorBoundary.wrap(() => {
+            if (this._state.breathingAnimationId) {
+                cancelAnimationFrame(this._state.breathingAnimationId);
+                this._state.breathingAnimationId = null;
             }
 
-            this.mascot.breathePattern = null;
+            this._state.breathePattern = null;
 
             // Reset scale
-            if (this.mascot.renderer && this.mascot.renderer.setCustomScale) {
-                this.mascot.renderer.setCustomScale(1.0);
+            if (this.renderer && this.renderer.setCustomScale) {
+                this.renderer.setCustomScale(1.0);
             }
 
-            return this.mascot;
-        }, 'stopBreathing', this.mascot)();
+            return this._chainTarget;
+        }, 'stopBreathing', this._chainTarget)();
     }
 }

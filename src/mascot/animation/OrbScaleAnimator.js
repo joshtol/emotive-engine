@@ -7,10 +7,46 @@
  * - Multiple easing functions (linear, easeIn, easeOut, easeInOut)
  * - Smooth interpolation between scale values
  * - Animation frame management
+ *
+ * @module OrbScaleAnimator
  */
 export class OrbScaleAnimator {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create OrbScaleAnimator
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.state - Shared state with currentOrbScale and isRunning
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new OrbScaleAnimator({ errorBoundary, renderer, state })
+     *
+     * // Legacy style:
+     * new OrbScaleAnimator(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.errorBoundary && deps.state !== undefined && !deps.stateMachine) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.renderer = deps.renderer || null;
+            this._state = deps.state;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.renderer = mascot.renderer;
+            this._state = {
+                get currentOrbScale() { return mascot.currentOrbScale; },
+                set currentOrbScale(v) { mascot.currentOrbScale = v; },
+                get isRunning() { return mascot.isRunning; }
+            };
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
         this.animationId = null;
     }
 
@@ -22,13 +58,13 @@ export class OrbScaleAnimator {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     setOrbScale(scale, duration = 1000, easing = 'easeInOut') {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (this.mascot.renderer) {
+        return this.errorBoundary.wrap(() => {
+            if (this.renderer) {
                 this.startScaleAnimation(scale, duration, easing);
             }
 
-            return this.mascot;
-        }, 'setOrbScale', this.mascot)();
+            return this._chainTarget;
+        }, 'setOrbScale', this._chainTarget)();
     }
 
     /**
@@ -38,7 +74,7 @@ export class OrbScaleAnimator {
      * @param {string} easing - Easing function
      */
     startScaleAnimation(targetScale, duration, easing) {
-        const startScale = this.mascot.currentOrbScale || 1.0;
+        const startScale = this._state.currentOrbScale || 1.0;
         const startTime = Date.now();
 
         const animate = () => {
@@ -49,15 +85,15 @@ export class OrbScaleAnimator {
             const easedProgress = this.applyEasing(progress, easing);
 
             // Calculate current scale
-            this.mascot.currentOrbScale = startScale + (targetScale - startScale) * easedProgress;
+            this._state.currentOrbScale = startScale + (targetScale - startScale) * easedProgress;
 
             // Apply to renderer
-            if (this.mascot.renderer.setCustomScale) {
-                this.mascot.renderer.setCustomScale(this.mascot.currentOrbScale);
+            if (this.renderer && this.renderer.setCustomScale) {
+                this.renderer.setCustomScale(this._state.currentOrbScale);
             }
 
             // Continue animation
-            if (progress < 1 && this.mascot.isRunning) {
+            if (progress < 1 && this._state.isRunning) {
                 this.animationId = requestAnimationFrame(animate);
             }
         };
@@ -126,7 +162,8 @@ export class OrbScaleAnimator {
             this.animationId = null;
         }
 
-        // Null mascot reference
-        this.mascot = null;
+        // Null references
+        this.renderer = null;
+        this._state = null;
     }
 }

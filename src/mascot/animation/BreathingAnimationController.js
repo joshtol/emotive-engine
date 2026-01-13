@@ -8,10 +8,44 @@
  * - Phase timing and transitions
  * - Animation event emission
  * - Renderer scale application
+ *
+ * @module BreathingAnimationController
  */
 export class BreathingAnimationController {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create BreathingAnimationController
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.state - Shared state with breathePattern, breathingAnimationId, isRunning
+     * @param {Function} deps.emit - Event emission function
+     *
+     * @example
+     * // New DI style:
+     * new BreathingAnimationController({ renderer, state, emit })
+     *
+     * // Legacy style:
+     * new BreathingAnimationController(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.emit && deps.state !== undefined && !deps.errorBoundary) {
+            // New DI style
+            this.renderer = deps.renderer || null;
+            this._state = deps.state;
+            this._emit = deps.emit;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.renderer = mascot.renderer;
+            this._state = {
+                get breathePattern() { return mascot.breathePattern; },
+                get breathingAnimationId() { return mascot.breathingAnimationId; },
+                set breathingAnimationId(v) { mascot.breathingAnimationId = v; },
+                get isRunning() { return mascot.isRunning; }
+            };
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -19,14 +53,14 @@ export class BreathingAnimationController {
      */
     startBreathingAnimation() {
         // Cancel any existing breathing animation
-        if (this.mascot.breathingAnimationId) {
-            cancelAnimationFrame(this.mascot.breathingAnimationId);
+        if (this._state.breathingAnimationId) {
+            cancelAnimationFrame(this._state.breathingAnimationId);
         }
 
         const animate = () => {
-            if (!this.mascot.breathePattern || !this.mascot.isRunning) return;
+            if (!this._state.breathePattern || !this._state.isRunning) return;
 
-            const pattern = this.mascot.breathePattern;
+            const pattern = this._state.breathePattern;
             const now = Date.now();
             const phaseElapsed = (now - pattern.phaseStartTime) / 1000; // Convert to seconds
 
@@ -41,13 +75,13 @@ export class BreathingAnimationController {
             this.applyScale(scale);
 
             // Continue animation
-            this.mascot.breathingAnimationId = requestAnimationFrame(animate);
+            this._state.breathingAnimationId = requestAnimationFrame(animate);
         };
 
         // Start with inhale
-        this.mascot.breathePattern.currentPhase = 'inhale';
-        this.mascot.breathePattern.phaseStartTime = Date.now();
-        this.mascot.emit('inhale-start');
+        this._state.breathePattern.currentPhase = 'inhale';
+        this._state.breathePattern.phaseStartTime = Date.now();
+        this._emit('inhale-start');
         animate();
     }
 
@@ -97,7 +131,7 @@ export class BreathingAnimationController {
         if (phaseElapsed >= pattern.inhale) {
             nextPhase = 'hold1';
             pattern.phaseStartTime = now;
-            this.mascot.emit('hold-start', { type: 'post-inhale' });
+            this._emit('hold-start', { type: 'post-inhale' });
         } else {
             // Scale up during inhale
             const progress = phaseElapsed / pattern.inhale;
@@ -121,7 +155,7 @@ export class BreathingAnimationController {
         if (phaseElapsed >= pattern.hold1) {
             nextPhase = 'exhale';
             pattern.phaseStartTime = now;
-            this.mascot.emit('exhale-start');
+            this._emit('exhale-start');
         }
 
         return { scale, nextPhase };
@@ -141,7 +175,7 @@ export class BreathingAnimationController {
         if (phaseElapsed >= pattern.exhale) {
             nextPhase = 'hold2';
             pattern.phaseStartTime = now;
-            this.mascot.emit('hold-start', { type: 'post-exhale' });
+            this._emit('hold-start', { type: 'post-exhale' });
         } else {
             // Scale down during exhale
             const progress = phaseElapsed / pattern.exhale;
@@ -165,7 +199,7 @@ export class BreathingAnimationController {
         if (phaseElapsed >= pattern.hold2) {
             nextPhase = 'inhale';
             pattern.phaseStartTime = now;
-            this.mascot.emit('inhale-start');
+            this._emit('inhale-start');
         }
 
         return { scale, nextPhase };
@@ -176,8 +210,8 @@ export class BreathingAnimationController {
      * @param {number} scale - Scale factor to apply
      */
     applyScale(scale) {
-        if (this.mascot.renderer && this.mascot.renderer.setCustomScale) {
-            this.mascot.renderer.setCustomScale(scale);
+        if (this.renderer && this.renderer.setCustomScale) {
+            this.renderer.setCustomScale(scale);
         }
     }
 }
