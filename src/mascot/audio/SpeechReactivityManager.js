@@ -36,10 +36,44 @@
 export class SpeechReactivityManager {
     /**
      * Create SpeechReactivityManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} deps.audioLevelProcessor - Audio level processor instance
+     * @param {Object} deps.state - Shared state with speaking, audioLevel, audioAnalyser properties
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new SpeechReactivityManager({ errorBoundary, audioLevelProcessor, state, emit })
+     *
+     * // Legacy style:
+     * new SpeechReactivityManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.audioLevelProcessor = deps.audioLevelProcessor;
+            this._state = deps.state;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.audioLevelProcessor = mascot.audioLevelProcessor;
+            this._state = {
+                get speaking() { return mascot.speaking; },
+                get audioLevel() { return mascot.audioLevel; },
+                get audioAnalyser() { return mascot.audioAnalyser; }
+            };
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -53,25 +87,25 @@ export class SpeechReactivityManager {
      * mascot.connectAudioSource(source);
      */
     connectAudioSource(audioSource) {
-        return this.mascot.errorBoundary.wrap(() => {
-            if (!this.mascot.audioAnalyser) {
+        return this.errorBoundary.wrap(() => {
+            if (!this._state.audioAnalyser) {
                 // Speech reactivity not started. Call startSpeaking() first.
-                return this.mascot;
+                return this._chainTarget;
             }
 
             if (!audioSource || typeof audioSource.connect !== 'function') {
                 // Invalid audio source provided to connectAudioSource()
-                return this.mascot;
+                return this._chainTarget;
             }
 
             // Connect the audio source to our analyser
-            audioSource.connect(this.mascot.audioAnalyser);
+            audioSource.connect(this._state.audioAnalyser);
 
             // Audio source connected to speech analyser
-            this.mascot.emit('audioSourceConnected', { audioSource });
+            this._emit('audioSourceConnected', { audioSource });
 
-            return this.mascot;
-        }, 'audio-source-connection', this.mascot)();
+            return this._chainTarget;
+        }, 'audio-source-connection', this._chainTarget)();
     }
 
     /**
@@ -83,7 +117,7 @@ export class SpeechReactivityManager {
      * console.log(`Current audio level: ${(level * 100).toFixed(0)}%`);
      */
     getAudioLevel() {
-        return this.mascot.speaking ? this.mascot.audioLevel : 0;
+        return this._state.speaking ? this._state.audioLevel : 0;
     }
 
     /**
@@ -96,7 +130,7 @@ export class SpeechReactivityManager {
      * }
      */
     isSpeaking() {
-        return this.mascot.speaking;
+        return this._state.speaking;
     }
 
     /**
@@ -109,16 +143,16 @@ export class SpeechReactivityManager {
      * mascot.setAudioSmoothing(0.3); // Less smoothing, more responsive
      */
     setAudioSmoothing(smoothing) {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             const clampedSmoothing = Math.max(0, Math.min(1, smoothing));
 
-            if (this.mascot.audioAnalyser) {
-                this.mascot.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
+            if (this._state.audioAnalyser) {
+                this._state.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
                 // Audio smoothing set
             }
 
-            return this.mascot;
-        }, 'audio-smoothing', this.mascot)();
+            return this._chainTarget;
+        }, 'audio-smoothing', this._chainTarget)();
     }
 
     /**
@@ -131,7 +165,7 @@ export class SpeechReactivityManager {
      * console.log('Average level:', stats.averageLevel);
      */
     getAudioStats() {
-        return this.mascot.audioLevelProcessor.getStats();
+        return this.audioLevelProcessor.getStats();
     }
 
     /**
@@ -147,6 +181,6 @@ export class SpeechReactivityManager {
      * });
      */
     updateAudioConfig(config) {
-        this.mascot.audioLevelProcessor.updateConfig(config);
+        this.audioLevelProcessor.updateConfig(config);
     }
 }

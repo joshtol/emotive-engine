@@ -62,8 +62,8 @@ describe('AudioHandler', () => {
     });
 
     describe('Constructor', () => {
-        it('should initialize with mascot reference', () => {
-            expect(audioHandler.mascot).toBe(mockMascot);
+        it('should initialize in legacy mode with mascot reference', () => {
+            expect(audioHandler._legacyMode).toBe(true);
         });
 
         it('should initialize vocalUpdateInterval as null', () => {

@@ -36,10 +36,45 @@
 export class TTSManager {
     /**
      * Create TTSManager
-     * @param {EmotiveMascot} mascot - Parent mascot instance
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} [deps.speechManager] - Speech manager instance
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.tts - TTS state object with available, speaking properties
+     * @param {Object} deps.state - Shared state with ttsSpeaking, speaking properties
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new TTSManager({ speechManager, renderer, tts, state })
+     *
+     * // Legacy style:
+     * new TTSManager(mascot)
      */
-    constructor(mascot) {
-        this.mascot = mascot;
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.speechManager = deps.speechManager || null;
+            this.renderer = deps.renderer || null;
+            this.tts = deps.tts;
+            this._state = deps.state;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.speechManager = mascot.speechManager;
+            this.renderer = mascot.renderer;
+            this.tts = mascot.tts;
+            this._state = {
+                get ttsSpeaking() { return mascot.ttsSpeaking; },
+                set ttsSpeaking(v) { mascot.ttsSpeaking = v; },
+                get speaking() { return mascot.speaking; },
+                set speaking(v) { mascot.speaking = v; }
+            };
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -53,7 +88,7 @@ export class TTSManager {
      * });
      */
     getTTSVoices() {
-        if (!this.mascot.tts.available) {
+        if (!this.tts.available) {
             return [];
         }
 
@@ -70,7 +105,7 @@ export class TTSManager {
      * }
      */
     isTTSSpeaking() {
-        return this.mascot.tts.speaking;
+        return this.tts.speaking;
     }
 
     /**
@@ -87,7 +122,7 @@ export class TTSManager {
      * });
      */
     speak(text, options = {}) {
-        return this.mascot.speechManager ? this.mascot.speechManager.speak(text, options) : this.mascot;
+        return this.speechManager ? this.speechManager.speak(text, options) : this._chainTarget;
     }
 
     /**
@@ -100,19 +135,19 @@ export class TTSManager {
      * mascot.setTTSSpeaking(false); // Stop visual feedback
      */
     setTTSSpeaking(speaking) {
-        this.mascot.ttsSpeaking = speaking;
+        this._state.ttsSpeaking = speaking;
 
         // Update renderer if using Emotive style
-        if (this.mascot.renderer && this.mascot.renderer.startSpeaking) {
+        if (this.renderer && this.renderer.startSpeaking) {
             if (speaking) {
-                this.mascot.renderer.startSpeaking();
+                this.renderer.startSpeaking();
             } else {
-                this.mascot.renderer.stopSpeaking();
+                this.renderer.stopSpeaking();
             }
         }
 
         // Also update the speaking flag for compatibility
-        this.mascot.speaking = speaking;
+        this._state.speaking = speaking;
     }
 
     /**

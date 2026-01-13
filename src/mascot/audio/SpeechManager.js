@@ -8,10 +8,61 @@
  * - Speech event emission
  * - TTS event handlers (start, end, error, boundary)
  * - Audio level processor integration
+ *
+ * @module SpeechManager
  */
 export class SpeechManager {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create SpeechManager
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.errorBoundary - Error handling wrapper
+     * @param {Object} deps.audioLevelProcessor - Audio level processor instance
+     * @param {Object} deps.audioHandler - Audio handler instance
+     * @param {Object} [deps.renderer] - Renderer instance
+     * @param {Object} deps.config - Configuration object
+     * @param {Object} deps.state - Shared state with speaking property
+     * @param {Function} deps.setTTSSpeaking - Function to set TTS speaking state
+     * @param {Function} deps.emit - Event emission function
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
+     *
+     * @example
+     * // New DI style:
+     * new SpeechManager({ errorBoundary, audioLevelProcessor, audioHandler, renderer, config, state, setTTSSpeaking, emit })
+     *
+     * // Legacy style:
+     * new SpeechManager(mascot)
+     */
+    constructor(deps) {
+        // Check for explicit DI style (has _diStyle marker property)
+        if (deps && deps._diStyle === true) {
+            // New DI style
+            this.errorBoundary = deps.errorBoundary;
+            this.audioLevelProcessor = deps.audioLevelProcessor;
+            this.audioHandler = deps.audioHandler || null;
+            this.renderer = deps.renderer || null;
+            this.config = deps.config;
+            this._state = deps.state;
+            this._setTTSSpeaking = deps.setTTSSpeaking;
+            this._emit = deps.emit;
+            this._chainTarget = deps.chainTarget || this;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.errorBoundary = mascot.errorBoundary;
+            this.audioLevelProcessor = mascot.audioLevelProcessor;
+            this.audioHandler = mascot.audioHandler;
+            this.renderer = mascot.renderer;
+            this.config = mascot.config;
+            this._state = {
+                get speaking() { return mascot.speaking; },
+                set speaking(v) { mascot.speaking = v; }
+            };
+            this._setTTSSpeaking = v => mascot.setTTSSpeaking(v);
+            this._emit = (event, data) => mascot.emit(event, data);
+            this._chainTarget = mascot;
+            this._legacyMode = true;
+        }
     }
 
     /**
@@ -62,23 +113,23 @@ export class SpeechManager {
      */
     setupUtteranceHandlers(utterance, text) {
         utterance.onstart = () => {
-            this.mascot.setTTSSpeaking(true);
-            this.mascot.emit('tts:start', { text });
+            this._setTTSSpeaking(true);
+            this._emit('tts:start', { text });
         };
 
         utterance.onend = () => {
-            this.mascot.setTTSSpeaking(false);
-            this.mascot.emit('tts:end');
+            this._setTTSSpeaking(false);
+            this._emit('tts:end');
         };
 
         utterance.onerror = event => {
-            this.mascot.setTTSSpeaking(false);
-            this.mascot.emit('tts:error', { error: event });
+            this._setTTSSpeaking(false);
+            this._emit('tts:error', { error: event });
         };
 
         utterance.onboundary = event => {
             // Word/sentence boundaries for potential lip-sync
-            this.mascot.emit('tts:boundary', {
+            this._emit('tts:boundary', {
                 name: event.name,
                 charIndex: event.charIndex,
                 charLength: event.charLength
@@ -92,19 +143,19 @@ export class SpeechManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     startSpeaking(audioContext) {
-        return this.mascot.errorBoundary.wrap(() => {
+        return this.errorBoundary.wrap(() => {
             if (!this.validateAudioContext(audioContext)) {
-                return this.mascot;
+                return this._chainTarget;
             }
 
             if (!this.initializeAudioProcessor(audioContext)) {
-                return this.mascot;
+                return this._chainTarget;
             }
 
             this.activateSpeechMode(audioContext);
 
-            return this.mascot;
-        }, 'speech-start', this.mascot)();
+            return this._chainTarget;
+        }, 'speech-start', this._chainTarget)();
     }
 
     /**
@@ -117,12 +168,12 @@ export class SpeechManager {
             throw new Error('AudioContext is required for speech reactivity');
         }
 
-        if (!this.mascot.config.enableAudio) {
+        if (!this.config.enableAudio) {
             // Audio is disabled, cannot start speech reactivity
             return false;
         }
 
-        if (this.mascot.speaking) {
+        if (this._state.speaking) {
             // Speech reactivity is already active
             return false;
         }
@@ -136,7 +187,7 @@ export class SpeechManager {
      * @returns {boolean} True if successful
      */
     initializeAudioProcessor(audioContext) {
-        const success = this.mascot.audioLevelProcessor.initialize(audioContext);
+        const success = this.audioLevelProcessor.initialize(audioContext);
 
         if (!success) {
             // Failed to initialize audio level processor
@@ -152,16 +203,18 @@ export class SpeechManager {
      */
     activateSpeechMode(audioContext) {
         // Update speech state
-        this.mascot.speaking = true;
+        this._state.speaking = true;
 
         // Notify renderer about speech start
-        this.mascot.renderer.onSpeechStart(audioContext);
+        if (this.renderer) {
+            this.renderer.onSpeechStart(audioContext);
+        }
 
         // Emit speech start event with analyser for external connection
-        this.mascot.emit('speechStarted', {
+        this._emit('speechStarted', {
             audioContext,
-            analyser: this.mascot.audioLevelProcessor.getAnalyser(),
-            mascot: this.mascot
+            analyser: this.audioLevelProcessor.getAnalyser(),
+            chainTarget: this._chainTarget
         });
     }
 
@@ -170,8 +223,11 @@ export class SpeechManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     stopSpeaking() {
-        return this.mascot.errorBoundary.wrap(() => {
-            return this.mascot.audioHandler.stopSpeaking();
-        }, 'speech-stop', this.mascot)();
+        return this.errorBoundary.wrap(() => {
+            if (this.audioHandler) {
+                return this.audioHandler.stopSpeaking();
+            }
+            return this._chainTarget;
+        }, 'speech-stop', this._chainTarget)();
     }
 }
