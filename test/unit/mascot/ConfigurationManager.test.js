@@ -17,10 +17,10 @@ describe('ConfigurationManager', () => {
     });
 
     describe('Constructor', () => {
-        it('should initialize with mascot reference', () => {
+        it('should initialize in legacy mode when passed mascot', () => {
             configManager = new ConfigurationManager(mockMascot);
 
-            expect(configManager.mascot).toBe(mockMascot);
+            expect(configManager._legacyMode).toBe(true);
         });
 
         it('should validate and store config', () => {

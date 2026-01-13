@@ -1,18 +1,38 @@
 /**
  * ConfigurationManager - Manages settings and configuration
  * @module mascot/ConfigurationManager
- * @complexity ⭐⭐ Intermediate
- * @audience Modify this when adding new configuration options
  */
 
 export class ConfigurationManager {
-    constructor(mascot, config = {}) {
-        this.mascot = mascot;
-        this.config = this.validateConfig(config);
+    /**
+     * Create ConfigurationManager
+     *
+     * @param {Object} deps - Dependencies or mascot instance
+     * @param {Object} [config] - Configuration object (legacy style)
+     *
+     * @example
+     * // New DI style:
+     * new ConfigurationManager({ config: { canvasId: 'my-canvas' } })
+     *
+     * // Legacy style:
+     * new ConfigurationManager(mascot, { canvasId: 'my-canvas' })
+     */
+    constructor(deps, config) {
+        // Support both new DI style and legacy mascot style
+        if (deps && deps.config !== undefined && config === undefined) {
+            // New DI style - deps contains config directly
+            this.config = this.validateConfig(deps.config || {});
+        } else {
+            // Legacy: deps is mascot, config is second arg
+            this.config = this.validateConfig(config || {});
+            this._legacyMode = true;
+        }
     }
 
     /**
      * Validate and set defaults for configuration
+     * @param {Object} config - Raw configuration
+     * @returns {Object} Validated configuration with defaults
      */
     validateConfig(config) {
         return {
@@ -31,14 +51,8 @@ export class ConfigurationManager {
     }
 
     /**
-     * Methods to be moved here:
-     * - getConfig()
-     * - updateConfig()
-     * - Configuration validation
-     */
-
-    /**
      * Get current configuration
+     * @returns {Object} Copy of current configuration
      */
     getConfig() {
         return { ...this.config };
@@ -46,6 +60,8 @@ export class ConfigurationManager {
 
     /**
      * Update configuration
+     * @param {Object} updates - Configuration updates
+     * @returns {Object} Updated configuration
      */
     updateConfig(updates) {
         this.config = { ...this.config, ...updates };

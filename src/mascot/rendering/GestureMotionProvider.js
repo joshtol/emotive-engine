@@ -1,32 +1,56 @@
 /**
- * GestureMotionProvider
- *
- * Provides gesture motion data for particle system and renderer.
- * Handles:
- * - Modular gesture progress tracking
- * - Renderer gesture fallback
- * - Gesture cleanup timing
- * - Gesture transform extraction
+ * GestureMotionProvider - Provides gesture motion data for particle system and renderer
+ * @module GestureMotionProvider
  */
+
 export class GestureMotionProvider {
-    constructor(mascot) {
-        this.mascot = mascot;
+    /**
+     * Create GestureMotionProvider
+     *
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.renderer - Renderer instance
+     * @param {Object} deps.state - Shared state with currentModularGesture
+     *
+     * @example
+     * // New DI style:
+     * new GestureMotionProvider({ renderer, state: sharedState })
+     *
+     * // Legacy style:
+     * new GestureMotionProvider(mascot)
+     */
+    constructor(deps) {
+        if (deps && deps.renderer !== undefined && deps.state !== undefined) {
+            // New DI style
+            this.renderer = deps.renderer;
+            this._state = deps.state;
+        } else {
+            // Legacy: deps is mascot
+            const mascot = deps;
+            this.renderer = mascot.renderer;
+            this._state = {
+                get currentModularGesture() { return mascot.currentModularGesture; },
+                set currentModularGesture(v) { mascot.currentModularGesture = v; }
+            };
+            this._legacyMode = true;
+        }
     }
 
     /**
      * Get current gesture motion and progress
-     * @returns {Object} Gesture motion data with type, amplitude, frequency, intensity, and progress
+     * @returns {Object} Gesture motion data
      */
     getGestureMotion() {
         let gestureMotion = null;
         let gestureProgress = 0;
 
+        const currentGesture = this._state.currentModularGesture;
+
         // First check for modular gesture
-        if (this.mascot.currentModularGesture) {
-            ({ gestureMotion, gestureProgress } = this.processModularGesture());
+        if (currentGesture) {
+            ({ gestureMotion, gestureProgress } = this.processModularGesture(currentGesture));
         }
         // Fallback to renderer gesture
-        else if (this.mascot.renderer && this.mascot.renderer.getCurrentGesture) {
+        else if (this.renderer && this.renderer.getCurrentGesture) {
             ({ gestureMotion, gestureProgress } = this.processRendererGesture());
         }
 
@@ -35,21 +59,22 @@ export class GestureMotionProvider {
 
     /**
      * Process modular gesture data
+     * @param {Object} gesture - Current modular gesture
      * @returns {Object} Gesture motion and progress
      */
-    processModularGesture() {
-        const elapsed = performance.now() - this.mascot.currentModularGesture.startTime;
-        const gestureProgress = Math.min(elapsed / this.mascot.currentModularGesture.duration, 1);
+    processModularGesture(gesture) {
+        const elapsed = performance.now() - gesture.startTime;
+        const gestureProgress = Math.min(elapsed / gesture.duration, 1);
 
         const gestureMotion = {
-            type: this.mascot.currentModularGesture.type,
+            type: gesture.type,
             amplitude: 1.0,
             frequency: 1.0,
             intensity: 1.0
         };
 
         if (gestureProgress >= 1) {
-            this.handleGestureCleanup();
+            this.handleGestureCleanup(gesture);
         }
 
         return { gestureMotion, gestureProgress };
@@ -57,15 +82,13 @@ export class GestureMotionProvider {
 
     /**
      * Handle gesture cleanup when complete
+     * @param {Object} gesture - Current gesture
      */
-    handleGestureCleanup() {
-        // Pass progress = 1 to trigger cleanup
-        // Clear gesture on next frame after cleanup
-        if (!this.mascot.currentModularGesture.cleanupPending) {
-            this.mascot.currentModularGesture.cleanupPending = true;
+    handleGestureCleanup(gesture) {
+        if (!gesture.cleanupPending) {
+            gesture.cleanupPending = true;
         } else {
-            // Cleanup was called last frame, now clear the gesture
-            this.mascot.currentModularGesture = null;
+            this._state.currentModularGesture = null;
         }
     }
 
@@ -74,7 +97,7 @@ export class GestureMotionProvider {
      * @returns {Object} Gesture motion and progress
      */
     processRendererGesture() {
-        const currentGesture = this.mascot.renderer.getCurrentGesture();
+        const currentGesture = this.renderer.getCurrentGesture();
 
         if (currentGesture && currentGesture.particleMotion) {
             return {
@@ -91,8 +114,6 @@ export class GestureMotionProvider {
      * @returns {Object|null} Gesture transform for visual animations
      */
     getGestureTransform() {
-        return this.mascot.renderer.gestureAnimator ?
-            this.mascot.renderer.gestureAnimator.applyGestureAnimations() :
-            null;
+        return this.renderer?.gestureAnimator?.applyGestureAnimations() ?? null;
     }
 }
