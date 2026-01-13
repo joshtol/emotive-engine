@@ -112,7 +112,7 @@ export default AnimationLoopManager; // class for multi-instance
 
 ## Priority 3: Developer Experience
 
-### Task 3.1: Centralize Magic Numbers 🔄 IN PROGRESS
+### Task 3.1: Centralize Magic Numbers ✅ COMPLETE
 **Severity:** Medium
 **Scattered across:** Multiple files
 
@@ -121,7 +121,7 @@ export default AnimationLoopManager; // class for multi-instance
 - `VISIBILITY` — LONG_PAUSE_THRESHOLD (30000), MEDIUM_PAUSE_THRESHOLD (10000), reduction factors
 - `AUDIO` — FFT_SIZE (256), SMOOTHING_TIME_CONSTANT (0.8), BPM_LOCK_TIMEOUT (10000)
 - `MONITORING` — Health check, feature flags, context decay intervals
-- `DEFAULT_CONFIG` — Combined object for constructor overrides
+- `DEFAULT_CONFIG` — Combined object for easy source modification
 
 **Completed:**
 - [x] Create `src/core/config/defaults.js` with all timing/threshold constants
@@ -130,10 +130,9 @@ export default AnimationLoopManager; // class for multi-instance
 - [x] Update ParticleSystem.js to use VISIBILITY constants
 - [x] Update AudioBridge.js to use AUDIO constants
 
-**Remaining:**
-- [ ] Allow override via constructor: `new EmotiveMascot3D({ timing: { deltaTimeCap: 25 } })`
+**Future consideration:** Other deltaTime caps exist in the codebase (50ms in Particle.js, ParticleSpawner.js, Rhythm3DAdapter.js; 100ms in 3D index.js). These serve different purposes (physics stability vs render tolerance) but could be unified into the config file for consistency if desired.
 
-**Note:** Constructor override support deferred - current implementation provides central config for easy modification without runtime overhead.
+**Note:** Runtime constructor override not implemented — these are internal physics/stability guards, not user preferences. Editing `defaults.js` is the intended modification path.
 
 ---
 
@@ -173,5 +172,5 @@ export default AnimationLoopManager; // class for multi-instance
 | **SSR Safety** | ✅ Complete | Safe import, clear error on `init()` |
 | **Multi-Instance** | ✅ Complete | Fully isolated instances |
 | **Main File Size** | 🔄 In Progress | 1,826 lines (was 2,492), target <1,500 |
-| **Config** | 🔄 In Progress | src/core/config/defaults.js created, key files updated |
+| **Config** | ✅ Complete | src/core/config/defaults.js with FRAME_TIMING, VISIBILITY, AUDIO |
 | **Types** | ⏳ Pending | JSDoc → `.d.ts` declarations |
