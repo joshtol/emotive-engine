@@ -8,6 +8,11 @@
  * @fileoverview Bridges RhythmEngine with the 3D animation system
  * @author Emotive Engine Team
  * @module 3d/animation/Rhythm3DAdapter
+ */
+
+import { FRAME_TIMING } from '../../core/config/defaults.js';
+
+/**
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║ CONCEPT
@@ -175,7 +180,8 @@ export class Rhythm3DAdapter {
         };
 
         // Maximum deltaTime to prevent smoothing overshoot during frame drops
-        this._maxDeltaTime = 0.05; // 50ms cap (~20 FPS minimum)
+        // Convert from ms to seconds (PARTICLE_DELTA_CAP is 50ms = 0.05s)
+        this._maxDeltaTime = FRAME_TIMING.PARTICLE_DELTA_CAP / 1000;
 
         // Pending groove change (for quantized transitions)
         this._pendingGroove = null;

@@ -130,7 +130,9 @@ export default AnimationLoopManager; // class for multi-instance
 - [x] Update ParticleSystem.js to use VISIBILITY constants
 - [x] Update AudioBridge.js to use AUDIO constants
 
-**Future consideration:** Other deltaTime caps exist in the codebase (50ms in Particle.js, ParticleSpawner.js, Rhythm3DAdapter.js; 100ms in 3D index.js). These serve different purposes (physics stability vs render tolerance) but could be unified into the config file for consistency if desired.
+**Additional constants unified:**
+- [x] `PARTICLE_DELTA_CAP` (50ms) - Used in Particle.js, ParticleSpawner.js, Rhythm3DAdapter.js
+- [x] `RENDER_DELTA_CAP` (100ms) - Used in 3D index.js for render loop tolerance
 
 **Note:** Runtime constructor override not implemented — these are internal physics/stability guards, not user preferences. Editing `defaults.js` is the intended modification path.
 

@@ -2,12 +2,17 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Modular Particle System with 3D Depth
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Orchestrator for the modular particle system with z-coordinate depth
  * @author Emotive Engine Team
  * @module core/Particle-modular
+ */
+
+import { FRAME_TIMING } from './config/defaults.js';
+
+/**
  * 
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                               MODULAR ARCHITECTURE                                
@@ -144,9 +149,9 @@ class Particle {
      */
     update(deltaTime, centerX, centerY, _undertoneModifier = null, gestureMotion = null, gestureProgress = 0, containmentBounds = null) {
         // Cap deltaTime to prevent huge jumps
-        const cappedDeltaTime = Math.min(deltaTime, 50);
+        const cappedDeltaTime = Math.min(deltaTime, FRAME_TIMING.PARTICLE_DELTA_CAP);
         // Normalize to 60 FPS equivalent for consistent physics
-        const dt = cappedDeltaTime / 16.67; // 16.67ms = 60 FPS frame time
+        const dt = cappedDeltaTime / FRAME_TIMING.TARGET_FRAME_TIME;
         
         // Universal law: Gestures override state behavior based on their motion type
         // Use the modular gesture system to determine gesture behavior

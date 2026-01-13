@@ -46,6 +46,7 @@ import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
 import { DanceChoreographer } from './animation/DanceChoreographer.js';
+import { FRAME_TIMING } from '../core/config/defaults.js';
 
 /**
  * EmotiveMascot3D - 3D rendering variant
@@ -311,9 +312,9 @@ export class EmotiveMascot3D {
         }
 
         // Calculate deltaTime and cap it to prevent huge jumps when tab is inactive
-        // Max 100ms prevents rotation explosions when tabbing back in
+        // Max cap prevents rotation explosions when tabbing back in
         const rawDeltaTime = currentTime - this.lastFrameTime;
-        const deltaTime = Math.min(rawDeltaTime, 100); // deltaTime in milliseconds
+        const deltaTime = Math.min(rawDeltaTime, FRAME_TIMING.RENDER_DELTA_CAP);
 
         this.lastFrameTime = currentTime;
 

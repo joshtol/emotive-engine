@@ -14,8 +14,14 @@ export const FRAME_TIMING = {
     /** Target frame time for 60 FPS (ms) */
     TARGET_FRAME_TIME: 16.67,
 
-    /** Maximum allowed delta time to prevent physics explosions (ms) */
+    /** Maximum allowed delta time for main 2D loop - aggressive cap for smooth tab recovery (ms) */
     DELTA_TIME_CAP: 20,
+
+    /** Maximum delta time for particle physics - prevents position explosions (ms) */
+    PARTICLE_DELTA_CAP: 50,
+
+    /** Maximum delta time for 3D render loop - more tolerant for frame drops (ms) */
+    RENDER_DELTA_CAP: 100,
 
     /** Frame budget for performance monitoring (ms) */
     FRAME_BUDGET: 16.67
@@ -87,6 +93,8 @@ export const DEFAULT_CONFIG = {
     timing: {
         targetFrameTime: FRAME_TIMING.TARGET_FRAME_TIME,
         deltaTimeCap: FRAME_TIMING.DELTA_TIME_CAP,
+        particleDeltaCap: FRAME_TIMING.PARTICLE_DELTA_CAP,
+        renderDeltaCap: FRAME_TIMING.RENDER_DELTA_CAP,
         frameBudget: FRAME_TIMING.FRAME_BUDGET
     },
     visibility: {

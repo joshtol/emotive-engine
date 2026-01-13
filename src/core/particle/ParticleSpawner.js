@@ -8,6 +8,11 @@
  * @fileoverview Particle Spawner - Manages particle spawning logic
  * @author Emotive Engine Team
  * @module core/particle/ParticleSpawner
+ */
+
+import { FRAME_TIMING } from '../config/defaults.js';
+
+/**
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE
@@ -213,7 +218,7 @@ class ParticleSpawner {
         // particleRate represents desired particles per second
         // deltaTime is in milliseconds
         // Cap deltaTime to prevent huge accumulation spikes
-        const cappedDeltaTime = Math.min(deltaTime, 50);
+        const cappedDeltaTime = Math.min(deltaTime, FRAME_TIMING.PARTICLE_DELTA_CAP);
         const particlesPerSecond = particleRate;
         const particlesPerMs = particlesPerSecond / 1000;
 
