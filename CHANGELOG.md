@@ -7,23 +7,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.4] - 2025-01-14
+
+### ⚡ Performance Optimizations
+
+- **OPTIMIZED** Render pass skipping for non-crystal geometries
+    - Soul render pass (layer 2) now skipped when geometry doesn't have a soul
+    - Particle passes (depth + render + bloom) skipped when particles disabled
+    - Added `hasSoul` and `hasParticles` flags to render() method
+    - Expected savings: 15-25ms per frame for moon/sun/sphere geometries
+
+- **OPTIMIZED** CrystalSoul shader noise calculations
+    - Reduced noise function calls from 4 to 2 per fragment
+    - Adjusted threshold values to maintain visual quality
+    - Expected savings: 8-12ms per frame when crystal active
+
+- **OPTIMIZED** Core3DManager now passes optimization flags to renderer
+    - Automatically detects when soul and particles are active
+    - No API changes required - optimizations are automatic
+
+## [3.3.3] - 2025-01-14
+
+### 🐛 Shader Fixes
+
+- **FIXED** WebGL shader warnings for division by zero in blend modes
+    - RGB to HSL conversion now uses safe division with epsilon guard
+    - Color Burn, Color Dodge, and Vivid Light blend modes use
+      `max(divisor, 0.0001)`
+    - Eliminates GPU driver warnings about floating-point division by zero
+
+## [3.3.2] - 2025-01-14
+
+### 📦 Build Changes
+
+- **FIXED** Three.js was still being bundled into dist files despite
+  peerDependencies change
+    - Added `external: ['three']` to rollup config for 3D build
+    - 3D bundle size reduced from ~1.3MB to ~615KB
+    - Eliminates "Multiple instances of Three.js" warning for consumers
+
+## [3.3.1] - 2025-01-14
+
+### 📦 Dependency Changes
+
+- **CHANGED** Three.js moved from `dependencies` to `peerDependencies`
+    - Prevents duplicate Three.js instances when consumers have their own
+      version
+    - Consumers using 3D mode must now install `three` separately:
+      `npm install three`
+    - Supports Three.js versions `^0.181.0 || ^0.182.0`
+
+### 🐛 Bug Fixes
+
+- **FIXED** Race condition in 3D demo toggle handlers (wobble, particles, visual
+  controls)
+    - Toggle setup functions now support deferred mascot initialization
+    - Handlers check mascot availability at click time instead of setup time
+
 ## [Unreleased]
 
 ### 🎵 Groove Preset System
 
 #### Frame-Rate Independent Timing
-- **FIXED** Groove animation desync on frame drops by removing `grooveTime` accumulator
-- **CHANGED** Groove now computed from absolute `beatProgress`/`barProgress` (performance.now() based)
-- **ADDED** deltaTime clamping (50ms max) to prevent smoothing overshoot during frame drops
+
+- **FIXED** Groove animation desync on frame drops by removing `grooveTime`
+  accumulator
+- **CHANGED** Groove now computed from absolute `beatProgress`/`barProgress`
+  (performance.now() based)
+- **ADDED** deltaTime clamping (50ms max) to prevent smoothing overshoot during
+  frame drops
 - **INCREASED** `grooveSmoothingSpeed` to 12.0 for tighter beat sync
 
 #### Groove Presets
+
 - **ADDED** `groove1`: Subtle, elegant - gentle bounce and sway (default)
 - **ADDED** `groove2`: Energetic, bouncy - pronounced vertical motion, playful
 - **ADDED** `groove3`: Smooth, flowing - emphasis on rotation and sway, languid
 - **ADDED** Seamless morphing between groove presets during transitions
 
 #### API
+
 - **ADDED** `mascot.setGroove(name)` - Immediate switch to groove preset
 - **ADDED** `mascot.setGroove(name, { bars: N })` - Morph over N bars
 - **ADDED** `mascot.setGroove(name, { duration: N })` - Morph over N seconds

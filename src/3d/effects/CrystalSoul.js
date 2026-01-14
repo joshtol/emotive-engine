@@ -95,18 +95,14 @@ const soulFragmentShader = `
 
         if (driftEnabled > 0.5) {
             float t = time * driftSpeed;
-            // Primary drift - moving in one direction
+            // OPTIMIZED: Reduced from 4 noise calls to 2 for better performance
+            // Primary drift - single noise call with combined coordinates
             float drift1 = noise3D(vPosition * 2.0 + vec3(t, t * 0.7, t * 0.3));
-            float drift2 = noise3D(vPosition * 3.0 - vec3(t * 0.5, t, t * 0.8));
-            // Use max instead of multiply to avoid near-zero products
-            primaryDrift = max(drift1, drift2);
-            primaryDrift = max(0.0, primaryDrift - 0.4) * 2.0; // Rescale after threshold
+            primaryDrift = max(0.0, drift1 - 0.3) * 1.5; // Adjusted threshold for single noise
 
-            // Secondary drift - offset in opposite direction to fill gaps
-            float drift3 = noise3D(vPosition * 2.5 - vec3(t * 0.8, t * 0.4, t));
-            float drift4 = noise3D(vPosition * 1.8 + vec3(t * 0.6, t * 0.9, t * 0.2));
-            secondaryDrift = max(drift3, drift4);
-            secondaryDrift = max(0.0, secondaryDrift - 0.4) * 2.0;
+            // Secondary drift - offset phase to fill gaps
+            float drift2 = noise3D(vPosition * 2.5 - vec3(t * 0.6, t * 0.4, t));
+            secondaryDrift = max(0.0, drift2 - 0.3) * 1.5;
 
             driftEnergy = primaryDrift + secondaryDrift;
         }

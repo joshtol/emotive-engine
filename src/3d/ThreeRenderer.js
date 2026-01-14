@@ -1270,6 +1270,8 @@ export class ThreeRenderer {
      * @param {number} [params.cameraRoll=0] - Camera-space roll rotation
      * @param {SolarEclipse} [params.solarEclipse=null] - Solar eclipse manager for synchronized updates
      * @param {number} [params.deltaTime=0] - Delta time for eclipse animation (seconds)
+     * @param {boolean} [params.hasSoul=false] - Whether this geometry has a soul layer (optimization)
+     * @param {boolean} [params.hasParticles=true] - Whether particles are enabled (optimization)
      */
     render(params = {}) {
         // Guard against calls after destroy
@@ -1347,7 +1349,9 @@ export class ThreeRenderer {
             cameraRoll = 0,  // Camera-space roll rotation applied after all other rotations
             solarEclipse = null,  // Solar eclipse manager for synchronized updates
             deltaTime = 0,  // Delta time for eclipse animation
-            morphProgress = null  // Morph progress for corona fade-in (null = no morph, 0-1 = morphing)
+            morphProgress = null,  // Morph progress for corona fade-in (null = no morph, 0-1 = morphing)
+            hasSoul = false,  // Whether this geometry has a soul layer (skip soul pass if false)
+            hasParticles = true  // Whether particles are enabled (skip particle pass if false)
         } = params;
 
         // Update camera controls FIRST before any rendering
@@ -1488,7 +1492,8 @@ export class ThreeRenderer {
         // Render with post-processing if enabled, otherwise direct render
         if (this.composer) {
             // === STEP 0: Render soul (layer 2) to texture for refraction sampling ===
-            if (this.soulRenderTarget) {
+            // OPTIMIZATION: Skip soul pass entirely if geometry doesn't have a soul
+            if (this.soulRenderTarget && hasSoul) {
                 // Find soul mesh in scene (needed for screen center calculation)
                 let soulMesh = null;
                 this.scene.traverse(obj => {
@@ -1533,7 +1538,8 @@ export class ThreeRenderer {
             this.composer.render();
 
             // === STEP 2: Render particles (layer 1) to separate render target ===
-            if (this.particleRenderTarget && this.particleBloomPass) {
+            // OPTIMIZATION: Skip particle pass entirely if particles are disabled
+            if (hasParticles && this.particleRenderTarget && this.particleBloomPass) {
                 // Clear particle render target with WHITE (non-black) to prevent dark halos
                 this.renderer.setRenderTarget(this.particleRenderTarget);
                 this.renderer.setClearColor(0xffffff, 0); // White RGB, but 0 alpha
@@ -1565,7 +1571,7 @@ export class ThreeRenderer {
                 // Reset clear color
                 this.renderer.setClearColor(0x000000, 0);
                 this.renderer.setRenderTarget(null);
-            } else {
+            } else if (hasParticles) {
                 // Fallback: Render particles directly (no bloom)
                 this.camera.layers.set(1);
                 this.renderer.render(this.scene, this.camera);

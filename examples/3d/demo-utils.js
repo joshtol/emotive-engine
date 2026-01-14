@@ -57,14 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Setup wobble toggle (typically in Emotions header)
- * @param {Object} mascot - EmotiveMascot3D instance
+ * @param {Function|Object} mascotGetter - Function returning mascot instance, or mascot instance directly
  */
-export function setupWobbleToggle(mascot) {
+export function setupWobbleToggle(mascotGetter) {
     const wobbleToggle = document.getElementById('wobble-toggle');
     if (!wobbleToggle) return;
 
+    // Support both direct reference and getter function for deferred initialization
+    const getMascot = typeof mascotGetter === 'function' ? mascotGetter : () => mascotGetter;
+
     wobbleToggle.addEventListener('click', e => {
         e.stopPropagation(); // Prevent collapsing the section
+        const mascot = getMascot();
+        if (!mascot) return;
         wobbleToggle.classList.toggle('active');
         const enabled = wobbleToggle.classList.contains('active');
         if (enabled) {
@@ -77,14 +82,19 @@ export function setupWobbleToggle(mascot) {
 
 /**
  * Setup particles toggle (typically in Visuals header)
- * @param {Object} mascot - EmotiveMascot3D instance
+ * @param {Function|Object} mascotGetter - Function returning mascot instance, or mascot instance directly
  */
-export function setupParticlesToggle(mascot) {
+export function setupParticlesToggle(mascotGetter) {
     const particlesToggle = document.getElementById('particles-toggle');
     if (!particlesToggle) return;
 
+    // Support both direct reference and getter function for deferred initialization
+    const getMascot = typeof mascotGetter === 'function' ? mascotGetter : () => mascotGetter;
+
     particlesToggle.addEventListener('click', e => {
         e.stopPropagation(); // Prevent collapsing the section
+        const mascot = getMascot();
+        if (!mascot) return;
         particlesToggle.classList.toggle('active');
         const enabled = particlesToggle.classList.contains('active');
         if (enabled) {
@@ -98,9 +108,12 @@ export function setupParticlesToggle(mascot) {
 /**
  * Setup standard visual toggle switches (Core Glow, Breathing, Auto-Rotate, Blinking)
  * Works with both button and toggle-switch elements
- * @param {Object} mascot - EmotiveMascot3D instance
+ * @param {Function|Object} mascotGetter - Function returning mascot instance, or mascot instance directly
  */
-export function setupVisualToggles(mascot) {
+export function setupVisualToggles(mascotGetter) {
+    // Support both direct reference and getter function for deferred initialization
+    const getMascot = typeof mascotGetter === 'function' ? mascotGetter : () => mascotGetter;
+
     document.querySelectorAll('[data-action]').forEach(el => {
         const {action} = el.dataset;
 
@@ -110,6 +123,9 @@ export function setupVisualToggles(mascot) {
         }
 
         el.addEventListener('click', () => {
+            const mascot = getMascot();
+            if (!mascot) return;
+
             switch (action) {
             case 'toggle-glow':
                 if (mascot.core3D?.coreGlowEnabled !== false) {

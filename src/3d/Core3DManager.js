@@ -1878,7 +1878,10 @@ export class Core3DManager {
             calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
             solarEclipse: this.effectManager.getSolarEclipse(),  // Pass eclipse manager for synchronized updates
             deltaTime,  // Pass deltaTime for eclipse animation
-            morphProgress: morphState.isTransitioning ? morphState.visualProgress : null  // For corona fade-in
+            morphProgress: morphState.isTransitioning ? morphState.visualProgress : null,  // For corona fade-in
+            // OPTIMIZATION FLAGS: Skip render passes when not needed
+            hasSoul: this.customMaterialType === 'crystal' && this.crystalSoul !== null,
+            hasParticles: this.particleVisibility && this.particleOrchestrator !== null
         });
 
         // Update lunar eclipse animation (Blood Moon)

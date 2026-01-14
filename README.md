@@ -164,13 +164,20 @@ rendering.
 npm install @joshtol/emotive-engine
 ```
 
+**3D mode requires Three.js** as a peer dependency:
+
+```bash
+npm install three
+```
+
 Or via CDN:
 
 ```html
 <!-- 2D Engine -->
 <script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot.umd.js"></script>
 
-<!-- 3D Engine (includes Three.js) -->
+<!-- 3D Engine (requires Three.js to be loaded first) -->
+<script src="https://unpkg.com/three/build/three.min.js"></script>
 <script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d.umd.js"></script>
 ```
 

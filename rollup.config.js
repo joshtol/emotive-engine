@@ -156,7 +156,7 @@ builds.push({
 });
 
 // 3D build (WebGL variant with procedural geometries)
-// Experimental: Custom 3D rendering without Three.js dependency
+// Three.js is a peer dependency - not bundled
 builds.push({
     input: 'src/3d/index.js',
     output: [
@@ -176,9 +176,13 @@ builds.push({
             exports: 'named',
             sourcemap: true,
             inlineDynamicImports: true,  // Inline dynamic imports (EXRLoader, RGBELoader)
-            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`,
+            globals: {
+                three: 'THREE'
+            }
         }
     ],
+    external: ['three'],  // Don't bundle Three.js - use as peer dependency
     plugins: [
         ...threeDPlugins,
         ...(isProduction ? [terser({

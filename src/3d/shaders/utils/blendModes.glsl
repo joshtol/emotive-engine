@@ -39,7 +39,7 @@ vec3 rgbToHsl(vec3 rgb) {
     float l = (maxC + minC) / 2.0;
 
     if (delta > 0.0001) {
-        s = l < 0.5 ? delta / (maxC + minC) : delta / (2.0 - maxC - minC);
+        s = l < 0.5 ? delta / max(maxC + minC, 0.0001) : delta / max(2.0 - maxC - minC, 0.0001);
 
         // Use tolerance-based comparison instead of exact equality
         float eps = 0.0001;
@@ -135,18 +135,20 @@ vec3 applyBlendMode(vec3 base, vec3 blend, int mode) {
     } else if (mode == 2) {
         // COLOR BURN: (blend==0.0) ? 0.0 : max((1.0-((1.0-base)/blend)), 0.0)
         // Darkens base color to reflect blend color by increasing contrast
+        // Use safe division with epsilon to avoid division by zero
         return vec3(
-            blend.r == 0.0 ? 0.0 : max(1.0 - ((1.0 - base.r) / blend.r), 0.0),
-            blend.g == 0.0 ? 0.0 : max(1.0 - ((1.0 - base.g) / blend.g), 0.0),
-            blend.b == 0.0 ? 0.0 : max(1.0 - ((1.0 - base.b) / blend.b), 0.0)
+            max(1.0 - ((1.0 - base.r) / max(blend.r, 0.0001)), 0.0),
+            max(1.0 - ((1.0 - base.g) / max(blend.g, 0.0001)), 0.0),
+            max(1.0 - ((1.0 - base.b) / max(blend.b, 0.0001)), 0.0)
         );
     } else if (mode == 3) {
         // COLOR DODGE: (blend==1.0) ? 1.0 : min(base/(1.0-blend), 1.0)
         // Brightens base color to reflect blend color by decreasing contrast
+        // Use safe division with epsilon to avoid division by zero
         return vec3(
-            blend.r == 1.0 ? 1.0 : min(base.r / (1.0 - blend.r), 1.0),
-            blend.g == 1.0 ? 1.0 : min(base.g / (1.0 - blend.g), 1.0),
-            blend.b == 1.0 ? 1.0 : min(base.b / (1.0 - blend.b), 1.0)
+            min(base.r / max(1.0 - blend.r, 0.0001), 1.0),
+            min(base.g / max(1.0 - blend.g, 0.0001), 1.0),
+            min(base.b / max(1.0 - blend.b, 0.0001), 1.0)
         );
     } else if (mode == 4) {
         // SCREEN: 1 - (1 - base) * (1 - blend)
@@ -183,10 +185,11 @@ vec3 applyBlendMode(vec3 base, vec3 blend, int mode) {
     } else if (mode == 9) {
         // VIVID LIGHT: blend < 0.5 ? ColorBurn(base, 2*blend) : ColorDodge(base, 2*(blend-0.5))
         // Burns or dodges by increasing/decreasing contrast - extreme saturation boost
+        // Use safe division with epsilon to avoid division by zero
         return vec3(
-            blend.r < 0.5 ? (blend.r == 0.0 ? 0.0 : max(1.0 - ((1.0 - base.r) / (2.0 * blend.r)), 0.0)) : (blend.r == 1.0 ? 1.0 : min(base.r / (2.0 * (1.0 - blend.r)), 1.0)),
-            blend.g < 0.5 ? (blend.g == 0.0 ? 0.0 : max(1.0 - ((1.0 - base.g) / (2.0 * blend.g)), 0.0)) : (blend.g == 1.0 ? 1.0 : min(base.g / (2.0 * (1.0 - blend.g)), 1.0)),
-            blend.b < 0.5 ? (blend.b == 0.0 ? 0.0 : max(1.0 - ((1.0 - base.b) / (2.0 * blend.b)), 0.0)) : (blend.b == 1.0 ? 1.0 : min(base.b / (2.0 * (1.0 - blend.b)), 1.0))
+            blend.r < 0.5 ? max(1.0 - ((1.0 - base.r) / max(2.0 * blend.r, 0.0001)), 0.0) : min(base.r / max(2.0 * (1.0 - blend.r), 0.0001), 1.0),
+            blend.g < 0.5 ? max(1.0 - ((1.0 - base.g) / max(2.0 * blend.g, 0.0001)), 0.0) : min(base.g / max(2.0 * (1.0 - blend.g), 0.0001), 1.0),
+            blend.b < 0.5 ? max(1.0 - ((1.0 - base.b) / max(2.0 * blend.b, 0.0001)), 0.0) : min(base.b / max(2.0 * (1.0 - blend.b), 0.0001), 1.0)
         );
     } else if (mode == 10) {
         // LINEAR LIGHT: blend < 0.5 ? LinearBurn(base, 2*blend) : LinearDodge(base, 2*(blend-0.5))
