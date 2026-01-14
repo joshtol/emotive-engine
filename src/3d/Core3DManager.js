@@ -291,6 +291,8 @@ export class Core3DManager {
         this.glowColor = [1.0, 1.0, 1.0]; // RGB
         this.glowColorHex = '#FFFFFF'; // Hex color for luminance normalization
         this.glowIntensity = 1.0;
+        // OPTIMIZATION: Cache normalized color to avoid recalculating every frame
+        this._normalizedGlowColor = null;
         this.coreGlowEnabled = true; // Toggle to enable/disable core glow
         this.glowIntensityOverride = null; // Manual override for testing
         this.intensityCalibrationOffset = 0; // Universal filter calibration offset
@@ -419,6 +421,9 @@ export class Core3DManager {
                 this.glowColor = rgb;
                 // Store hex color for bloom luminance normalization
                 this.glowColorHex = emotionData.visual.glowColor;
+                // OPTIMIZATION: Pre-compute normalized color (avoids recalculating every frame)
+                const normalized = normalizeRGBLuminance(rgb, 0.30);
+                this._normalizedGlowColor = [normalized.r, normalized.g, normalized.b];
 
                 // Calculate intensity using universal filter based on color luminance
                 // This ensures consistent visibility across all emotions regardless of color brightness
@@ -1832,11 +1837,9 @@ export class Core3DManager {
                     this.customMaterial.uniforms.glowIntensity.value = effectiveGlowIntensity;
                 }
 
-                // Normalize emotion color for consistent perceived brightness across all emotions
+                // OPTIMIZATION: Use pre-computed normalized color (calculated when emotion changes)
                 // This ensures yellow (joy) doesn't wash out the soul while blue (sadness) stays visible
-                // IMPORTANT: Use glowColor (RGB), not glowColorHex - glowColor has undertone saturation applied
-                const normalized = normalizeRGBLuminance(this.glowColor, 0.30);
-                const normalizedColor = [normalized.r, normalized.g, normalized.b];
+                const normalizedColor = this._normalizedGlowColor || [1, 1, 1];
 
                 // Update emotion color on outer shell (luminance-normalized)
                 this.customMaterial.uniforms.emotionColor.value.setRGB(
@@ -1848,12 +1851,10 @@ export class Core3DManager {
                     this.customMaterial.uniforms.blinkIntensity.value = blinkPulse;
                 }
             }
-            // Update inner core color and animation (also use normalized color)
+            // Update inner core color and animation (also use cached normalized color)
             // Only update if core glow is enabled
-            // IMPORTANT: Use glowColor (RGB), not glowColorHex - glowColor has undertone saturation applied
             if (this.coreGlowEnabled) {
-                const normalizedCore = normalizeRGBLuminance(this.glowColor, 0.30);
-                const normalizedCoreColor = [normalizedCore.r, normalizedCore.g, normalizedCore.b];
+                const normalizedCoreColor = this._normalizedGlowColor || [1, 1, 1];
                 this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
             }
         }

@@ -291,7 +291,7 @@ export class CrystalSoul {
             uniforms: {
                 time: { value: 0 },
                 emotionColor: { value: new THREE.Color(1, 1, 1) },
-                energyIntensity: { value: 1.5 },
+                energyIntensity: { value: 0.8 },  // Fixed value - no per-frame update needed
                 driftEnabled: { value: 1.0 },
                 driftSpeed: { value: 0.5 },
                 crossWaveEnabled: { value: 1.0 },
@@ -420,17 +420,15 @@ export class CrystalSoul {
             uniforms.time.value += deltaTime / 1000;
         }
 
-        // Update emotion color
+        // Update emotion color only if changed (avoid unnecessary GPU uniform sync)
         if (uniforms.emotionColor && glowColor) {
-            uniforms.emotionColor.value.setRGB(
-                glowColor[0], glowColor[1], glowColor[2]
-            );
+            const current = uniforms.emotionColor.value;
+            if (current.r !== glowColor[0] || current.g !== glowColor[1] || current.b !== glowColor[2]) {
+                current.setRGB(glowColor[0], glowColor[1], glowColor[2]);
+            }
         }
 
-        // Fixed intensity matching original implementation
-        if (uniforms.energyIntensity) {
-            uniforms.energyIntensity.value = 0.8;
-        }
+        // Note: energyIntensity is fixed at 0.8 (set in constructor, no per-frame update needed)
 
         // Apply breathing scale
         if (this.mesh) {

@@ -143,6 +143,13 @@ export class ThreeRenderer {
         this._zAxis = new THREE.Vector3(0, 0, 1);
         this._cameraToMesh = new THREE.Vector3();
         this._cameraDir = new THREE.Vector3();
+
+        // OPTIMIZATION: Reusable temp vector for soul position projection (avoids allocation per frame)
+        this._soulPosTemp = new THREE.Vector3();
+        // OPTIMIZATION: Cached soul mesh reference (avoids scene.traverse every frame)
+        this._cachedSoulMesh = null;
+        // OPTIMIZATION: Reusable Vector2 for drawing buffer size queries
+        this._drawingBufferSize = new THREE.Vector2();
     }
 
     /**
@@ -1494,14 +1501,15 @@ export class ThreeRenderer {
             // === STEP 0: Render soul (layer 2) to texture for refraction sampling ===
             // OPTIMIZATION: Skip soul pass entirely if geometry doesn't have a soul
             if (this.soulRenderTarget && hasSoul) {
-                // Find soul mesh in scene (needed for screen center calculation)
-                let soulMesh = null;
-                this.scene.traverse(obj => {
-                    if (obj.name === 'crystalSoul') soulMesh = obj;
-                });
+                // OPTIMIZATION: Use cached soul mesh reference instead of traversing every frame
+                if (!this._cachedSoulMesh) {
+                    this.scene.traverse(obj => {
+                        if (obj.name === 'crystalSoul') this._cachedSoulMesh = obj;
+                    });
+                }
+                const soulMesh = this._cachedSoulMesh;
 
                 this.renderer.setRenderTarget(this.soulRenderTarget);
-                this.renderer.setClearColor(0x000000, 0);
                 this.renderer.clear();
 
                 // Render only soul layer (layer 2)
@@ -1520,17 +1528,17 @@ export class ThreeRenderer {
                     }
                     // Compute soul's screen center position for refraction sampling
                     if (this.coreMesh.material.uniforms.soulScreenCenter && soulMesh) {
-                        const soulWorldPos = soulMesh.position.clone();
-                        const soulNDC = soulWorldPos.project(this.camera);
+                        // OPTIMIZATION: Reuse pooled vector instead of cloning every frame
+                        this._soulPosTemp.copy(soulMesh.position);
+                        this._soulPosTemp.project(this.camera);
                         // Convert from NDC (-1 to 1) to UV (0 to 1)
-                        const soulScreenU = (soulNDC.x + 1.0) * 0.5;
-                        const soulScreenV = (soulNDC.y + 1.0) * 0.5;
+                        const soulScreenU = (this._soulPosTemp.x + 1.0) * 0.5;
+                        const soulScreenV = (this._soulPosTemp.y + 1.0) * 0.5;
                         this.coreMesh.material.uniforms.soulScreenCenter.value.set(soulScreenU, soulScreenV);
                     }
                 }
 
                 this.renderer.setRenderTarget(null);
-                this.renderer.setClearColor(0x000000, 0);
             }
 
             // === STEP 1: Render main scene (layer 0) through bloom to screen ===

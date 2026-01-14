@@ -7,6 +7,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.5] - 2025-01-14
+
+### ⚡ Performance Optimizations (Render Loop)
+
+- **OPTIMIZED** Soul mesh caching in ThreeRenderer
+    - Soul mesh reference now cached instead of traversing scene every frame
+    - Eliminates `scene.traverse()` overhead during soul render pass
+
+- **OPTIMIZED** Vector3 pooling in soul pass
+    - Reuses pre-allocated `_soulPosTemp` vector for position projection
+    - Eliminates `position.clone()` allocation every frame
+
+- **OPTIMIZED** CrystalSoul uniform updates
+    - `energyIntensity` now set once in constructor (was setting 0.8 every
+      frame)
+    - `emotionColor` only updates when RGB values actually change
+    - Reduces unnecessary GPU uniform syncs
+
+- **OPTIMIZED** Core3DManager normalized color caching
+    - `normalizeRGBLuminance()` now computed once when emotion changes
+    - Was being called twice per frame in render loop
+    - Eliminates redundant color calculations and array allocations
+
 ## [3.3.4] - 2025-01-14
 
 ### ⚡ Performance Optimizations
