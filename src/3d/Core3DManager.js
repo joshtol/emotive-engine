@@ -73,6 +73,18 @@ export class Core3DManager {
      * @param {string} [options.assetBasePath='/assets'] - Base path for loading assets (textures, models)
      */
     constructor(canvas, options = {}) {
+        // Validate required dependencies
+        if (!canvas) {
+            throw new Error('Core3DManager: canvas element is required');
+        }
+        // eslint-disable-next-line no-undef
+        if (!(canvas instanceof HTMLCanvasElement)) {
+            throw new Error('Core3DManager: canvas must be an HTMLCanvasElement');
+        }
+        if (typeof THREE === 'undefined') {
+            throw new Error('Core3DManager: Three.js library is not loaded. Import three.js before using Core3DManager');
+        }
+
         this._instanceId = Math.random().toString(36).substr(2, 6);
 
         this.canvas = canvas;

@@ -47,15 +47,51 @@ import { ErrorResponse, ErrorTypes } from '../events/ErrorResponse.js';
 import { getErrorLogger } from '../events/ErrorLogger.js';
 
 export class DegradationManager {
+    /**
+     * Create a DegradationManager instance
+     *
+     * @param {Object} [config={}] - Configuration options
+     * @param {boolean} [config.enableAutoOptimization=false] - Enable automatic quality degradation based on performance
+     * @param {number} [config.performanceThreshold=30] - FPS threshold below which degradation occurs
+     * @param {number} [config.memoryThreshold=50] - Memory usage threshold in MB
+     * @param {number} [config.degradationSteps=4] - Number of degradation steps (quality levels)
+     * @param {number} [config.recoveryDelay=1000] - Delay in ms before attempting quality recovery
+     * @param {boolean} [config.enableManualControls=true] - Allow manual quality level control
+     * @param {boolean} [config.enableProgressiveEnhancement=true] - Enable progressive feature enhancement
+     * @param {number} [config.warningFPS=50] - FPS below which to emit warning (no degradation)
+     * @param {number} [config.criticalFPS=30] - FPS below which to trigger degradation
+     * @param {number} [config.requiredGoodFrames=30] - Consecutive good frames needed before recovery
+     *
+     * @example
+     * // Custom thresholds for high-performance applications
+     * const degradationManager = new DegradationManager({
+     *     performanceThreshold: 45,  // Degrade if FPS drops below 45
+     *     memoryThreshold: 100,      // Higher memory allowance
+     *     recoveryDelay: 2000,       // Wait longer before recovering
+     *     enableAutoOptimization: true
+     * });
+     *
+     * @example
+     * // Mobile-optimized configuration
+     * const mobileManager = new DegradationManager({
+     *     performanceThreshold: 25,  // Lower threshold for mobile
+     *     memoryThreshold: 30,       // Lower memory threshold
+     *     recoveryDelay: 500,        // Quick recovery
+     *     enableAutoOptimization: true
+     * });
+     */
     constructor(config = {}) {
         this.config = {
-            enableAutoOptimization: false, // TEMPORARILY DISABLED
-            performanceThreshold: config.performanceThreshold || 30, // FPS
+            enableAutoOptimization: config.enableAutoOptimization || false,
+            performanceThreshold: config.performanceThreshold ?? config.criticalFPS ?? 30, // FPS
             memoryThreshold: config.memoryThreshold || 50, // MB
             degradationSteps: config.degradationSteps || 4,
             recoveryDelay: config.recoveryDelay || 1000, // ms - faster recovery
             enableManualControls: config.enableManualControls !== false,
             enableProgressiveEnhancement: config.enableProgressiveEnhancement !== false,
+            warningFPS: config.warningFPS || 50, // FPS warning threshold (no degradation)
+            criticalFPS: config.criticalFPS ?? config.performanceThreshold ?? 30, // FPS critical threshold
+            requiredGoodFrames: config.requiredGoodFrames || 30, // Frames for recovery
             ...config
         };
 
@@ -129,7 +165,7 @@ export class DegradationManager {
         // Recovery management
         this.recoveryTimeout = null;
         this.consecutiveGoodFrames = 0;
-        this.requiredGoodFrames = 30; // 0.5 seconds at 60fps - faster recovery
+        this.requiredGoodFrames = this.config.requiredGoodFrames; // Configurable frames for recovery
         
         // Manual degradation controls
         this.manualOverride = null;

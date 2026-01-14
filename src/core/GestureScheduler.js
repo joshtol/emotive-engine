@@ -24,6 +24,50 @@ import rhythmEngine from './audio/rhythm.js';
 import rhythmIntegration from './audio/rhythmIntegration.js';
 import musicalDuration from './audio/MusicalDuration.js';
 
+/**
+ * GestureScheduler - Rhythm-aware gesture scheduling system
+ *
+ * Manages gesture queuing and timing to synchronize gestures with musical beats.
+ * Implements per-gesture queue limits to prevent gesture flooding.
+ *
+ * ## Queue Limits
+ *
+ * Each gesture has a configurable `maxQueue` property in its rhythm configuration.
+ * When a gesture is requested while it's already playing:
+ *
+ * - If `gesture.rhythm.maxQueue` is set, that value is used as the limit
+ * - Default queue limit is 1 (only one queued instance allowed)
+ * - Requests beyond the queue limit are silently dropped (returns null)
+ *
+ * ### Example Gesture with Queue Config:
+ * ```javascript
+ * {
+ *   name: 'bounce',
+ *   rhythm: {
+ *     maxQueue: 2,        // Allow up to 2 queued instances
+ *     timingSync: 'nextBeat',
+ *     interruptible: true
+ *   }
+ * }
+ * ```
+ *
+ * ### Why Gestures May Be Dropped:
+ *
+ * 1. **Queue limit reached**: The gesture already has maxQueue pending instances
+ * 2. **Gesture not found**: Invalid gesture name provided
+ * 3. **Already at capacity**: Per-gesture queue is full
+ *
+ * To check if a gesture was queued successfully:
+ * ```javascript
+ * const queueItem = scheduler.requestGesture('bounce');
+ * if (queueItem === null) {
+ *   console.log('Gesture was dropped or played immediately');
+ * }
+ * ```
+ *
+ * @class GestureScheduler
+ * @param {Object} mascot - The mascot instance to control
+ */
 class GestureScheduler {
     constructor(mascot) {
         this.mascot = mascot;
@@ -70,9 +114,37 @@ class GestureScheduler {
     
     /**
      * Request a gesture to be played
-     * @param {string} gestureName - Name of the gesture
-     * @param {Object} options - Additional options
-     * @returns {Object} Queue item reference
+     *
+     * Queues a gesture for playback, synchronized with the current rhythm if enabled.
+     * The gesture may be played immediately if rhythm is disabled, or queued for
+     * the next appropriate musical beat.
+     *
+     * **Important**: This method returns `null` in several cases:
+     * - Gesture was played immediately (rhythm disabled or `options.immediate` set)
+     * - Gesture not found (invalid gestureName)
+     * - Queue limit reached (gesture.rhythm.maxQueue exceeded)
+     *
+     * @param {string} gestureName - Name of the gesture to play
+     * @param {Object} [options={}] - Additional options
+     * @param {boolean} [options.immediate=false] - Play immediately, bypassing rhythm sync
+     * @param {number} [options.priority=0] - Priority for queue ordering (higher = first)
+     * @param {string} [options.timing] - Override timing mode ('immediate', 'nextBeat', 'nextBar', etc.)
+     * @returns {Object|null} Queue item reference if queued, null if played immediately or dropped
+     *
+     * @example
+     * // Request with rhythm sync (default)
+     * const item = scheduler.requestGesture('bounce');
+     * if (item) {
+     *   console.log(`Gesture queued, will trigger at ${item.triggerTime}`);
+     * }
+     *
+     * @example
+     * // Force immediate playback
+     * scheduler.requestGesture('flash', { immediate: true });
+     *
+     * @example
+     * // High priority gesture
+     * scheduler.requestGesture('important', { priority: 10 });
      */
     requestGesture(gestureName, options = {}) {
         // Use cached gesture if available for better performance

@@ -30,6 +30,13 @@ export class DestructionManager {
      * @param {Object} [deps.pluginSystem] - Plugin system instance
      * @param {Object} [deps.audioAnalyzer] - Audio analyzer instance
      * @param {Object} [deps.shapeMorpher] - Shape morpher instance
+     * @param {Object} [deps.gestureController] - Gesture controller instance
+     * @param {Object} [deps.stateCoordinator] - State coordinator instance
+     * @param {Object} [deps.visualizationRunner] - Visualization runner instance
+     * @param {Object} [deps.orbScaleAnimator] - Orb scale animator instance
+     * @param {Object} [deps.audioHandler] - Audio handler instance
+     * @param {Object} [deps.degradationManager] - Degradation manager instance
+     * @param {Object} [deps.stateMachine] - State machine instance
      * @param {Object} deps.state - Shared state with speaking, llmHandler properties
      * @param {Function} deps.stop - Function to stop animation
      * @param {Function} deps.stopSpeaking - Function to stop speaking
@@ -58,6 +65,13 @@ export class DestructionManager {
         this.pluginSystem = deps.pluginSystem || null;
         this.audioAnalyzer = deps.audioAnalyzer || null;
         this.shapeMorpher = deps.shapeMorpher || null;
+        this.gestureController = deps.gestureController || null;
+        this.stateCoordinator = deps.stateCoordinator || null;
+        this.visualizationRunner = deps.visualizationRunner || null;
+        this.orbScaleAnimator = deps.orbScaleAnimator || null;
+        this.audioHandler = deps.audioHandler || null;
+        this.degradationManager = deps.degradationManager || null;
+        this.stateMachine = deps.stateMachine || null;
         this._state = deps.state;
         this._stop = deps.stop;
         this._stopSpeaking = deps.stopSpeaking;
@@ -115,6 +129,47 @@ export class DestructionManager {
         this.cleanupParticles();
         this.cleanupRenderer();
         this.cleanupCanvas();
+        this.cleanupManagers();
+    }
+
+    /**
+     * Clean up manager instances that have destroy methods
+     */
+    cleanupManagers() {
+        // Clean up gesture controller (clears pending gesture timeouts)
+        if (this.gestureController && typeof this.gestureController.destroy === 'function') {
+            this.gestureController.destroy();
+        }
+
+        // Clean up state coordinator (clears state tracking)
+        if (this.stateCoordinator && typeof this.stateCoordinator.destroy === 'function') {
+            this.stateCoordinator.destroy();
+        }
+
+        // Clean up visualization runner (stops render loop)
+        if (this.visualizationRunner && typeof this.visualizationRunner.destroy === 'function') {
+            this.visualizationRunner.destroy();
+        }
+
+        // Clean up orb scale animator (clears animation state)
+        if (this.orbScaleAnimator && typeof this.orbScaleAnimator.destroy === 'function') {
+            this.orbScaleAnimator.destroy();
+        }
+
+        // Clean up audio handler (clears intervals)
+        if (this.audioHandler && typeof this.audioHandler.destroy === 'function') {
+            this.audioHandler.destroy();
+        }
+
+        // Clean up degradation manager (stops monitoring interval)
+        if (this.degradationManager && typeof this.degradationManager.destroy === 'function') {
+            this.degradationManager.destroy();
+        }
+
+        // Clean up state machine (clears state and transitions)
+        if (this.stateMachine && typeof this.stateMachine.destroy === 'function') {
+            this.stateMachine.destroy();
+        }
     }
 
     /**
@@ -237,5 +292,40 @@ export class DestructionManager {
     clearErrorBoundary() {
         // Clear error boundary
         this.errorBoundary.clearErrors();
+
+        // Nullify all references to prevent memory leaks from circular references
+        this.nullifyReferences();
+    }
+
+    /**
+     * Nullify all references to allow garbage collection
+     * This prevents memory leaks from circular references
+     */
+    nullifyReferences() {
+        this.errorBoundary = null;
+        this.animationController = null;
+        this.positionController = null;
+        this.soundSystem = null;
+        this.audioLevelProcessor = null;
+        this.particleSystem = null;
+        this.renderer = null;
+        this.canvasManager = null;
+        this.eventManager = null;
+        this.accessibilityManager = null;
+        this.mobileOptimization = null;
+        this.pluginSystem = null;
+        this.audioAnalyzer = null;
+        this.shapeMorpher = null;
+        this.gestureController = null;
+        this.stateCoordinator = null;
+        this.visualizationRunner = null;
+        this.orbScaleAnimator = null;
+        this.audioHandler = null;
+        this.degradationManager = null;
+        this.stateMachine = null;
+        this._state = null;
+        this._stop = null;
+        this._stopSpeaking = null;
+        this._disconnectAudio = null;
     }
 }

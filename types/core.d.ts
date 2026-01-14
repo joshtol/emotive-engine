@@ -306,6 +306,32 @@ export interface AnimationControllerConfig {
 }
 
 /**
+ * Degradation manager configuration
+ */
+export interface DegradationManagerConfig {
+  /** Enable automatic quality degradation based on performance (default: false) */
+  enableAutoOptimization?: boolean;
+  /** FPS threshold below which degradation occurs (default: 30) */
+  performanceThreshold?: number;
+  /** Memory usage threshold in MB (default: 50) */
+  memoryThreshold?: number;
+  /** Number of degradation steps/quality levels (default: 4) */
+  degradationSteps?: number;
+  /** Delay in ms before attempting quality recovery (default: 1000) */
+  recoveryDelay?: number;
+  /** Allow manual quality level control (default: true) */
+  enableManualControls?: boolean;
+  /** Enable progressive feature enhancement (default: true) */
+  enableProgressiveEnhancement?: boolean;
+  /** FPS below which to emit warning without degradation (default: 50) */
+  warningFPS?: number;
+  /** FPS below which to trigger degradation (default: 30) */
+  criticalFPS?: number;
+  /** Consecutive good frames needed before recovery (default: 30) */
+  requiredGoodFrames?: number;
+}
+
+/**
  * Performance monitor configuration
  */
 export interface PerformanceMonitorConfig {
