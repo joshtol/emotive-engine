@@ -189,17 +189,67 @@ patterns instead of EventManager.
 
 ---
 
-## 5. Priority Action Items
+## 5. Action Plan (Ordered)
 
-| Priority     | Item                                        | Effort    |
-| ------------ | ------------------------------------------- | --------- |
-| **Critical** | Expand test suite for untested managers     | 40-60 hrs |
-| High         | Refactor EmotiveMascot into smaller classes | 20-30 hrs |
-| High         | Add dependency validation to constructors   | 8-10 hrs  |
-| Medium       | Split InitializationManager into phases     | 15-20 hrs |
-| Medium       | Break down large 3D files                   | 30-40 hrs |
-| Low          | Fix post-init cross-reference               | 2-4 hrs   |
-| Low          | Standardize event patterns                  | 1-2 hrs   |
+**Rationale:** Refactor BEFORE expanding tests. Tests written for refactored
+code don't need rewriting, and smaller units are easier to test.
+
+| Order | Task                                      | Status      |
+| ----- | ----------------------------------------- | ----------- |
+| 1     | Add dependency validation to constructors | ✅ Complete |
+| 2     | Fix post-init cross-reference (line 735)  | ✅ Complete |
+| 3     | Refactor EmotiveMascot god object         | Not Started |
+| 4     | Split InitializationManager into phases   | Not Started |
+| 5     | Expand test suite for managers            | Not Started |
+| 6     | Break down large 3D files                 | Not Started |
+| 7     | Standardize event patterns                | Not Started |
+
+### Task 1: Dependency Validation ✅ Complete
+
+Added required dependency checks to all 23 manager constructors plus related
+managers (SpeechManager, AudioLevelCallbackManager, RecordingStateManager,
+DestructionManager). All tests pass (413 tests).
+
+**Managers updated:**
+
+- [x] AudioHandler
+- [x] StateCoordinator
+- [x] VisualizationRunner
+- [x] ExecutionLifecycleManager
+- [x] AnimationFrameController
+- [x] ShapeTransformManager
+- [x] EventListenerManager
+- [x] TTSManager
+- [x] SpeechReactivityManager
+- [x] CanvasResizeManager
+- [x] OffsetPositionManager
+- [x] VisualTransformationManager
+- [x] FrustrationContextManager
+- [x] LLMIntegrationBridge
+- [x] DiagnosticsManager
+- [x] EmotionalStateQueryManager
+- [x] DebugProfilingManager
+- [x] PerformanceBehaviorManager
+- [x] PerformanceMonitoringManager
+- [x] HealthCheckManager
+- [x] ConfigurationManager
+- [x] GestureController
+- [x] SleepWakeManager
+- [x] SpeechManager
+- [x] AudioLevelCallbackManager
+- [x] RecordingStateManager
+- [x] DestructionManager
+
+### Task 2: Fix Post-Init Cross-Reference ✅ Complete
+
+Reordered manager creation in InitializationManager so `HealthCheckManager` is
+created BEFORE `PerformanceMonitoringManager`. This eliminates the post-init
+cross-reference assignment and ensures all dependencies are passed via
+constructor. All 413 tests pass.
+
+### Task 3-7: Deferred
+
+Details to be added when tasks 1-2 are complete.
 
 ---
 
@@ -210,5 +260,5 @@ scaling further**. The DI refactoring completed in recent sessions has
 significantly improved the architecture - all managers now use pure DI
 constructors with no legacy mode branches.
 
-**Next recommended focus:** Test coverage expansion, starting with
-InitializationManager validation tests.
+**Current focus:** Tasks 1-2 complete. Next: Refactor EmotiveMascot god object
+(Task 3) or expand test suite (Task 5).

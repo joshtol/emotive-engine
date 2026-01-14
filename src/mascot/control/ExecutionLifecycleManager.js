@@ -36,6 +36,13 @@ export class ExecutionLifecycleManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('ExecutionLifecycleManager: errorBoundary required');
+        if (!deps.animationController) throw new Error('ExecutionLifecycleManager: animationController required');
+        if (!deps.visualizationRunner) throw new Error('ExecutionLifecycleManager: visualizationRunner required');
+        if (!deps.state) throw new Error('ExecutionLifecycleManager: state required');
+        if (!deps.emit) throw new Error('ExecutionLifecycleManager: emit required');
+
         this.errorBoundary = deps.errorBoundary;
         this.animationController = deps.animationController;
         this.visualizationRunner = deps.visualizationRunner;

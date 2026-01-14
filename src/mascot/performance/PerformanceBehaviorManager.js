@@ -45,6 +45,12 @@ export class PerformanceBehaviorManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('PerformanceBehaviorManager: errorBoundary required');
+        if (!deps.frustrationContextManager) throw new Error('PerformanceBehaviorManager: frustrationContextManager required');
+        if (!deps.emotionalStateQueryManager) throw new Error('PerformanceBehaviorManager: emotionalStateQueryManager required');
+        if (!deps.diagnosticsManager) throw new Error('PerformanceBehaviorManager: diagnosticsManager required');
+
         this.errorBoundary = deps.errorBoundary;
         this.performanceSystem = deps.performanceSystem || null;
         this.frustrationContextManager = deps.frustrationContextManager;

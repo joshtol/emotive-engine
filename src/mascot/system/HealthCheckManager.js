@@ -48,6 +48,13 @@ export class HealthCheckManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('HealthCheckManager: errorBoundary required');
+        if (!deps.diagnosticsManager) throw new Error('HealthCheckManager: diagnosticsManager required');
+        if (!deps.mobileOptimization) throw new Error('HealthCheckManager: mobileOptimization required');
+        if (!deps.accessibilityManager) throw new Error('HealthCheckManager: accessibilityManager required');
+        if (!deps.config) throw new Error('HealthCheckManager: config required');
+
         this.errorBoundary = deps.errorBoundary;
         this.systemStatusReporter = deps.systemStatusReporter || null;
         this.diagnosticsManager = deps.diagnosticsManager;

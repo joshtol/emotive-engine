@@ -28,6 +28,13 @@ export class VisualizationRunner {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.animationController) throw new Error('VisualizationRunner: animationController required');
+        if (!deps.stateMachine) throw new Error('VisualizationRunner: stateMachine required');
+        if (!deps.config) throw new Error('VisualizationRunner: config required');
+        if (!deps.state) throw new Error('VisualizationRunner: state required');
+        if (!deps.emit) throw new Error('VisualizationRunner: emit required');
+
         this.animationController = deps.animationController;
         this.stateMachine = deps.stateMachine;
         this.particleSystem = deps.particleSystem || null;

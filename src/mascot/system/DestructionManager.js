@@ -36,6 +36,14 @@ export class DestructionManager {
      * @param {Function} deps.disconnectAudio - Function to disconnect audio
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('DestructionManager: errorBoundary required');
+        if (!deps.animationController) throw new Error('DestructionManager: animationController required');
+        if (!deps.state) throw new Error('DestructionManager: state required');
+        if (!deps.stop) throw new Error('DestructionManager: stop required');
+        if (!deps.stopSpeaking) throw new Error('DestructionManager: stopSpeaking required');
+        if (!deps.disconnectAudio) throw new Error('DestructionManager: disconnectAudio required');
+
         this.errorBoundary = deps.errorBoundary;
         this.animationController = deps.animationController;
         this.positionController = deps.positionController || null;

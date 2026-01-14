@@ -45,6 +45,10 @@ export class TTSManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.tts) throw new Error('TTSManager: tts required');
+        if (!deps.state) throw new Error('TTSManager: state required');
+
         this.speechManager = deps.speechManager || null;
         this.renderer = deps.renderer || null;
         this.tts = deps.tts;

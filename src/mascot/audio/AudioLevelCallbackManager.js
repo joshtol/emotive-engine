@@ -22,10 +22,13 @@ export class AudioLevelCallbackManager {
      * @param {Function} deps.emit - Event emission function
      */
     constructor(deps) {
-        this.audioLevelProcessor = deps.audioLevelProcessor;
+        // Required dependency validation (emit only - others set post-init)
+        if (!deps.emit) throw new Error('AudioLevelCallbackManager: emit required');
+
+        this.audioLevelProcessor = deps.audioLevelProcessor || null;
         this.renderer = deps.renderer || null;
         this.particleSystem = deps.particleSystem || null;
-        this._express = deps.express;
+        this._express = deps.express || (() => {});
         this._emit = deps.emit;
     }
 
@@ -42,6 +45,7 @@ export class AudioLevelCallbackManager {
      * Setup audio level update callback
      */
     setupLevelUpdateCallback() {
+        if (!this.audioLevelProcessor) return;
         this.audioLevelProcessor.onLevelUpdate(data => {
             // Update renderer with current audio level
             if (this.renderer) {
@@ -61,6 +65,7 @@ export class AudioLevelCallbackManager {
      * Setup volume spike callback for gesture triggering
      */
     setupVolumeSpikeCallback() {
+        if (!this.audioLevelProcessor) return;
         this.audioLevelProcessor.onVolumeSpike(spikeData => {
             const gestureTriggered = this.handleVolumeSpike();
 
@@ -99,6 +104,7 @@ export class AudioLevelCallbackManager {
      * Setup audio processing error callback
      */
     setupErrorCallback() {
+        if (!this.audioLevelProcessor) return;
         this.audioLevelProcessor.onError(errorData => {
             // AudioLevelProcessor error
             this._emit('audioProcessingError', errorData);

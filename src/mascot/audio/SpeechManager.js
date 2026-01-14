@@ -27,13 +27,17 @@ export class SpeechManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation (core deps only - others set post-init)
+        if (!deps.errorBoundary) throw new Error('SpeechManager: errorBoundary required');
+        if (!deps.emit) throw new Error('SpeechManager: emit required');
+
         this.errorBoundary = deps.errorBoundary;
-        this.audioLevelProcessor = deps.audioLevelProcessor;
+        this.audioLevelProcessor = deps.audioLevelProcessor || null;
         this.audioHandler = deps.audioHandler || null;
         this.renderer = deps.renderer || null;
-        this.config = deps.config;
-        this._state = deps.state;
-        this._setTTSSpeaking = deps.setTTSSpeaking;
+        this.config = deps.config || {};
+        this._state = deps.state || { speaking: false };
+        this._setTTSSpeaking = deps.setTTSSpeaking || (() => {});
         this._emit = deps.emit;
         this._chainTarget = deps.chainTarget || this;
     }

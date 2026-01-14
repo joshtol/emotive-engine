@@ -17,6 +17,9 @@ export class DebugProfilingManager {
      * @param {Object} deps.state - Shared state with debugMode
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.diagnosticsManager) throw new Error('DebugProfilingManager: diagnosticsManager required');
+
         this.diagnosticsManager = deps.diagnosticsManager;
         this._state = deps.state || { debugMode: false };
     }

@@ -20,6 +20,9 @@ export class LLMIntegrationBridge {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('LLMIntegrationBridge: errorBoundary required');
+
         this.errorBoundary = deps.errorBoundary;
         this._mascotRef = deps.mascotRef;
         this._chainTarget = deps.chainTarget || this;

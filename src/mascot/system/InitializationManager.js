@@ -280,13 +280,32 @@ export class InitializationManager {
         this.mascot.renderer.shapeMorpher = this.mascot.shapeMorpher;
         this.mascot.renderer.audioAnalyzer = this.mascot.audioAnalyzer;
 
-        // Initialize gesture controller early
-        this.mascot.gestureController = new GestureController(this.mascot);
+        // Sound system (before gesture controller so it's available)
+        this.mascot.soundSystem = new SoundSystem();
+
+        // Initialize TTS state (before TTSManager is created in Phase 9)
+        this.mascot.tts = {
+            available: typeof window !== 'undefined' && 'speechSynthesis' in window,
+            speaking: false,
+            currentUtterance: null
+        };
+
+        // Initialize gesture controller
+        const m = this.mascot;
+        this.mascot.gestureController = new GestureController({
+            errorBoundary: m.errorBoundary,
+            renderer: m.renderer,
+            soundSystem: m.soundSystem,
+            config: m.config,
+            state: {
+                get currentModularGesture() { return m.currentModularGesture; },
+                set currentModularGesture(v) { m.currentModularGesture = v; }
+            },
+            throttledWarn: m.throttledWarn,
+            chainTarget: m
+        });
         this.mascot.gestureController.gestureCompatibility = gestureCompatibility;
         this.mascot.gestureController.init();
-
-        // Sound system
-        this.mascot.soundSystem = new SoundSystem();
 
         // Audio level processor for speech reactivity
         this.mascot.audioLevelProcessor = new AudioLevelProcessor({
@@ -510,23 +529,44 @@ export class InitializationManager {
         // StateCoordinator - depends on state machine, renderer
         m.stateCoordinator = new StateCoordinator({
             stateMachine: m.stateMachine,
+            particleSystem: m.particleSystem,
+            canvasManager: m.canvasManager,
             renderer: m.renderer,
-            errorBoundary: m.errorBoundary,
+            soundSystem: m.soundSystem,
+            config: m.config,
             emit: (event, data) => m.emit(event, data),
             chainTarget: m
         });
 
-        // VisualizationRunner - depends on renderer, particle system
+        // VisualizationRunner - depends on animation controller, state machine, renderer
         m.visualizationRunner = new VisualizationRunner({
-            renderer: m.renderer,
+            animationController: m.animationController,
+            stateMachine: m.stateMachine,
             particleSystem: m.particleSystem,
-            errorBoundary: m.errorBoundary,
+            canvasManager: m.canvasManager,
+            renderer: m.renderer,
+            audioHandler: m.audioHandler,
+            audioLevelProcessor: m.audioLevelProcessor,
+            gazeTracker: m.gazeTracker,
+            idleBehavior: m.idleBehavior,
+            degradationManager: m.degradationManager,
+            pluginSystem: m.pluginSystem,
+            config: m.config,
+            canvas: m.canvas,
+            state: {
+                get speaking() { return m.speaking; },
+                set speaking(v) { m.speaking = v; },
+                get isRunning() { return m.isRunning; },
+                set isRunning(v) { m.isRunning = v; }
+            },
+            emit: (event, data) => m.emit(event, data),
             chainTarget: m
         });
 
-        // ExecutionLifecycleManager - depends on animation controller, idle behavior
+        // ExecutionLifecycleManager - depends on animation controller, idle behavior, visualization runner
         m.executionLifecycleManager = new ExecutionLifecycleManager({
             animationController: m.animationController,
+            visualizationRunner: m.visualizationRunner,
             idleBehavior: m.idleBehavior,
             gazeTracker: m.gazeTracker,
             renderer: m.renderer,
@@ -554,6 +594,7 @@ export class InitializationManager {
             shapeMorpher: m.shapeMorpher,
             renderer: m.renderer,
             errorBoundary: m.errorBoundary,
+            emit: (event, data) => m.emit(event, data),
             chainTarget: m
         });
 
@@ -569,9 +610,8 @@ export class InitializationManager {
             soundSystem: m.soundSystem,
             errorBoundary: m.errorBoundary,
             config: m.config,
+            tts: m.tts,
             state: {
-                get tts() { return m.tts; },
-                set tts(v) { m.tts = v; },
                 get speaking() { return m.speaking; },
                 set speaking(v) { m.speaking = v; }
             },
@@ -669,10 +709,9 @@ export class InitializationManager {
             chainTarget: m
         });
 
-        // DebugProfilingManager - depends on animation controller, config
+        // DebugProfilingManager - depends on diagnostics manager
         m.debugProfilingManager = new DebugProfilingManager({
-            animationController: m.animationController,
-            config: m.config,
+            diagnosticsManager: m.diagnosticsManager,
             errorBoundary: m.errorBoundary,
             state: {
                 get debugMode() { return m.debugMode; },
@@ -693,19 +732,7 @@ export class InitializationManager {
             chainTarget: m
         });
 
-        // PerformanceMonitoringManager - depends on diagnostics manager, animation controller
-        m.performanceMonitoringManager = new PerformanceMonitoringManager({
-            diagnosticsManager: m.diagnosticsManager,
-            degradationManager: m.degradationManager,
-            animationFrameController: m.animationFrameController,
-            animationController: m.animationController,
-            particleSystem: m.particleSystem,
-            healthCheckManager: null, // Will be set after healthCheckManager is created
-            config: m.config,
-            chainTarget: m
-        });
-
-        // HealthCheckManager - depends on diagnostics manager
+        // HealthCheckManager - depends on diagnostics manager (must be before PerformanceMonitoringManager)
         m.healthCheckManager = new HealthCheckManager({
             errorBoundary: m.errorBoundary,
             systemStatusReporter: m.systemStatusReporter,
@@ -716,8 +743,17 @@ export class InitializationManager {
             chainTarget: m
         });
 
-        // Update cross-reference
-        m.performanceMonitoringManager.healthCheckManager = m.healthCheckManager;
+        // PerformanceMonitoringManager - depends on diagnostics manager, health check manager
+        m.performanceMonitoringManager = new PerformanceMonitoringManager({
+            diagnosticsManager: m.diagnosticsManager,
+            degradationManager: m.degradationManager,
+            animationFrameController: m.animationFrameController,
+            animationController: m.animationController,
+            particleSystem: m.particleSystem,
+            healthCheckManager: m.healthCheckManager,
+            config: m.config,
+            chainTarget: m
+        });
 
         // ConfigurationManager - depends on config, multiple systems
         m.configurationManager = new ConfigurationManager({
@@ -766,13 +802,6 @@ export class InitializationManager {
         // Initialize rhythm integration
         rhythmIntegration.initialize();
         this.mascot.rhythmIntegration = rhythmIntegration;
-
-        // Initialize TTS state
-        this.mascot.tts = {
-            available: typeof window !== 'undefined' && 'speechSynthesis' in window,
-            speaking: false,
-            currentUtterance: null
-        };
 
         // Expose modules for plugin access (these should already be imported in EmotiveMascot.js)
         // The mascot will set these itself from its imports

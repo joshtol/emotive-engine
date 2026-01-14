@@ -46,6 +46,12 @@ export class AnimationFrameController {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('AnimationFrameController: errorBoundary required');
+        if (!deps.animationController) throw new Error('AnimationFrameController: animationController required');
+        if (!deps.config) throw new Error('AnimationFrameController: config required');
+        if (!deps.emit) throw new Error('AnimationFrameController: emit required');
+
         this.errorBoundary = deps.errorBoundary;
         this.animationController = deps.animationController;
         this.positionController = deps.positionController || null;

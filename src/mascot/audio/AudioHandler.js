@@ -22,6 +22,11 @@ export class AudioHandler {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.config) throw new Error('AudioHandler: config required');
+        if (!deps.state) throw new Error('AudioHandler: state required');
+        if (!deps.emit) throw new Error('AudioHandler: emit required');
+
         this.audioAnalyzer = deps.audioAnalyzer || null;
         this.audioLevelProcessor = deps.audioLevelProcessor || null;
         this.shapeMorpher = deps.shapeMorpher || null;

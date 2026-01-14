@@ -23,6 +23,11 @@ export class StateCoordinator {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.stateMachine) throw new Error('StateCoordinator: stateMachine required');
+        if (!deps.config) throw new Error('StateCoordinator: config required');
+        if (!deps.emit) throw new Error('StateCoordinator: emit required');
+
         this.stateMachine = deps.stateMachine;
         this.particleSystem = deps.particleSystem || null;
         this.canvasManager = deps.canvasManager || null;

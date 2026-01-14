@@ -16,6 +16,10 @@ export class OffsetPositionManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('OffsetPositionManager: errorBoundary required');
+        if (!deps.positionController) throw new Error('OffsetPositionManager: positionController required');
+
         this.errorBoundary = deps.errorBoundary;
         this.positionController = deps.positionController;
         this._chainTarget = deps.chainTarget || this;

@@ -54,6 +54,11 @@ export class VisualTransformationManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.canvasResizeManager) throw new Error('VisualTransformationManager: canvasResizeManager required');
+        if (!deps.offsetPositionManager) throw new Error('VisualTransformationManager: offsetPositionManager required');
+        if (!deps.shapeTransformManager) throw new Error('VisualTransformationManager: shapeTransformManager required');
+
         this.canvasResizeManager = deps.canvasResizeManager;
         this.offsetPositionManager = deps.offsetPositionManager;
         this.shapeTransformManager = deps.shapeTransformManager;

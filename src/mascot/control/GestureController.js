@@ -23,6 +23,12 @@ export class GestureController {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('GestureController: errorBoundary required');
+        if (!deps.config) throw new Error('GestureController: config required');
+        if (!deps.state) throw new Error('GestureController: state required');
+        if (!deps.throttledWarn) throw new Error('GestureController: throttledWarn required');
+
         this.errorBoundary = deps.errorBoundary;
         this.renderer = deps.renderer || null;
         this.performanceMonitor = deps.performanceMonitor || null;

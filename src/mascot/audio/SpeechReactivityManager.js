@@ -45,6 +45,12 @@ export class SpeechReactivityManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('SpeechReactivityManager: errorBoundary required');
+        if (!deps.audioLevelProcessor) throw new Error('SpeechReactivityManager: audioLevelProcessor required');
+        if (!deps.state) throw new Error('SpeechReactivityManager: state required');
+        if (!deps.emit) throw new Error('SpeechReactivityManager: emit required');
+
         this.errorBoundary = deps.errorBoundary;
         this.audioLevelProcessor = deps.audioLevelProcessor;
         this._state = deps.state;

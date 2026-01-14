@@ -131,10 +131,19 @@ class EmotiveMascot {
         // Initialize managers BEFORE calling initManager.initialize()
         // This is critical because InitializationManager calls setupAudioLevelProcessorCallbacks()
         // which needs audioLevelCallbackManager to be instantiated
-        this.speechManager = new SpeechManager(this);
-        this.audioLevelCallbackManager = new AudioLevelCallbackManager(this);
+        // Note: These pass minimal deps - full deps set by InitializationManager
+        this.speechManager = new SpeechManager({
+            errorBoundary: this.errorBoundary,
+            emit: (event, data) => this.emit(event, data)
+        });
+        this.audioLevelCallbackManager = new AudioLevelCallbackManager({
+            emit: (event, data) => this.emit(event, data)
+        });
         this.orbScaleAnimator = new OrbScaleAnimator(this);
-        this.recordingStateManager = new RecordingStateManager(this);
+        this.recordingStateManager = new RecordingStateManager({
+            errorBoundary: this.errorBoundary,
+            emit: (event, data) => this.emit(event, data)
+        });
         this.breathingPatternManager = new BreathingPatternManager(this);
 
         // Delegate initialization to InitializationManager
@@ -148,10 +157,56 @@ class EmotiveMascot {
         this.gestureMotionProvider = new GestureMotionProvider(this);
         this.renderLayerOrchestrator = new RenderLayerOrchestrator(this);
         this.debugInfoRenderer = new DebugInfoRenderer(this);
-        this.destructionManager = new DestructionManager(this);
+        this.destructionManager = new DestructionManager({
+            errorBoundary: this.errorBoundary,
+            animationController: this.animationController,
+            positionController: this.positionController,
+            soundSystem: this.soundSystem,
+            audioLevelProcessor: this.audioLevelProcessor,
+            particleSystem: this.particleSystem,
+            renderer: this.renderer,
+            canvasManager: this.canvasManager,
+            eventManager: this.eventManager,
+            accessibilityManager: this.accessibilityManager,
+            mobileOptimization: this.mobileOptimization,
+            pluginSystem: this.pluginSystem,
+            audioAnalyzer: this.audioAnalyzer,
+            shapeMorpher: this.shapeMorpher,
+            state: {
+                get speaking() { return this.speaking; },
+                get llmHandler() { return this.llmHandler; }
+            },
+            stop: () => this.stop(),
+            stopSpeaking: () => this.stopSpeaking(),
+            disconnectAudio: () => this.disconnectAudio()
+        });
         this.breathingAnimationController = new BreathingAnimationController(this);
-        this.systemStatusReporter = new SystemStatusReporter(this);
-        this.sleepWakeManager = new SleepWakeManager(this);
+        this.systemStatusReporter = new SystemStatusReporter({
+            errorBoundary: this.errorBoundary,
+            animationController: this.animationController,
+            stateMachine: this.stateMachine,
+            particleSystem: this.particleSystem,
+            soundSystem: this.soundSystem,
+            renderer: this.renderer,
+            config: this.config,
+            state: {
+                get speaking() { return this.speaking; },
+                get audioLevel() { return this.audioLevel; }
+            },
+            getEventNames: () => this.getEventNames()
+        });
+        this.sleepWakeManager = new SleepWakeManager({
+            errorBoundary: this.errorBoundary,
+            express: (gesture, options) => this.express(gesture, options),
+            idleBehavior: this.idleBehavior,
+            renderer: this.renderer,
+            state: {
+                get sleeping() { return this.sleeping; },
+                set sleeping(v) { this.sleeping = v; }
+            },
+            emit: (event, data) => this.emit(event, data),
+            chainTarget: this
+        });
         this.degradationEventHandler = new DegradationEventHandler(
             () => ({
                 particleSystem: this.particleSystem,

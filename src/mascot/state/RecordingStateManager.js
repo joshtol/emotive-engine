@@ -22,9 +22,13 @@ export class RecordingStateManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation (core deps only - others set post-init)
+        if (!deps.errorBoundary) throw new Error('RecordingStateManager: errorBoundary required');
+        if (!deps.emit) throw new Error('RecordingStateManager: emit required');
+
         this.errorBoundary = deps.errorBoundary;
-        this.renderer = deps.renderer;
-        this._state = deps.state;
+        this.renderer = deps.renderer || null;
+        this._state = deps.state || { recording: false };
         this._emit = deps.emit;
         this._chainTarget = deps.chainTarget || this;
     }

@@ -43,6 +43,10 @@ export class ShapeTransformManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('ShapeTransformManager: errorBoundary required');
+        if (!deps.emit) throw new Error('ShapeTransformManager: emit required');
+
         this.errorBoundary = deps.errorBoundary;
         this.renderer = deps.renderer || null;
         this.shapeMorpher = deps.shapeMorpher || null;

@@ -55,6 +55,16 @@ export class DiagnosticsManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('DiagnosticsManager: errorBoundary required');
+        if (!deps.animationController) throw new Error('DiagnosticsManager: animationController required');
+        if (!deps.stateMachine) throw new Error('DiagnosticsManager: stateMachine required');
+        if (!deps.config) throw new Error('DiagnosticsManager: config required');
+        if (!deps.state) throw new Error('DiagnosticsManager: state required');
+        if (!deps.getCurrentState) throw new Error('DiagnosticsManager: getCurrentState required');
+        if (!deps.getAudioStats) throw new Error('DiagnosticsManager: getAudioStats required');
+        if (!deps.getEventStats) throw new Error('DiagnosticsManager: getEventStats required');
+
         this.errorBoundary = deps.errorBoundary;
         this.degradationManager = deps.degradationManager || null;
         this.animationController = deps.animationController;

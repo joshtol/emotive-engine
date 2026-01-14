@@ -16,6 +16,10 @@ export class FrustrationContextManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('FrustrationContextManager: errorBoundary required');
+        if (!deps.contextManager) throw new Error('FrustrationContextManager: contextManager required');
+
         this.errorBoundary = deps.errorBoundary;
         this.contextManager = deps.contextManager;
         this._chainTarget = deps.chainTarget || this;

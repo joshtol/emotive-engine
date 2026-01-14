@@ -47,6 +47,10 @@ export class EmotionalStateQueryManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('EmotionalStateQueryManager: errorBoundary required');
+        if (!deps.stateMachine) throw new Error('EmotionalStateQueryManager: stateMachine required');
+
         this.errorBoundary = deps.errorBoundary;
         this.stateMachine = deps.stateMachine;
         this.contextManager = deps.contextManager || null;

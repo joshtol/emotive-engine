@@ -46,6 +46,9 @@ export class CanvasResizeManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.emit) throw new Error('CanvasResizeManager: emit required');
+
         this.renderer = deps.renderer || null;
         this.stateMachine = deps.stateMachine || null;
         this.particleSystem = deps.particleSystem || null;

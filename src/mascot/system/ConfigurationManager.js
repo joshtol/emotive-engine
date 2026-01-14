@@ -11,6 +11,7 @@ export class ConfigurationManager {
      * @param {Object} deps.config - Configuration object
      */
     constructor(deps) {
+        // Note: config is not strictly required - defaults are applied
         this.config = this.validateConfig(deps.config || {});
     }
 

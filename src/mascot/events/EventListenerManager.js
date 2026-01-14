@@ -17,6 +17,10 @@ export class EventListenerManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('EventListenerManager: errorBoundary required');
+        if (!deps.eventManager) throw new Error('EventListenerManager: eventManager required');
+
         this.errorBoundary = deps.errorBoundary;
         this.eventManager = deps.eventManager;
         this._chainTarget = deps.chainTarget || this;

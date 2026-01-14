@@ -26,6 +26,12 @@ export class SleepWakeManager {
      * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
+        // Required dependency validation
+        if (!deps.errorBoundary) throw new Error('SleepWakeManager: errorBoundary required');
+        if (!deps.express) throw new Error('SleepWakeManager: express required');
+        if (!deps.state) throw new Error('SleepWakeManager: state required');
+        if (!deps.emit) throw new Error('SleepWakeManager: emit required');
+
         this.errorBoundary = deps.errorBoundary;
         this._express = deps.express;
         this.idleBehavior = deps.idleBehavior || null;
