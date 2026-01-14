@@ -22,37 +22,14 @@ export class RenderStateBuilder {
      * @param {Object} deps.particleSystem - Particle system instance
      * @param {Object} deps.stateMachine - State machine instance
      * @param {Object} deps.state - Shared state with debugMode and speaking properties
-     *
-     * @example
-     * // New DI style:
-     * new RenderStateBuilder({ animationController, audioLevelProcessor, gazeTracker, particleSystem, stateMachine, state })
-     *
-     * // Legacy style:
-     * new RenderStateBuilder(mascot)
      */
     constructor(deps) {
-        if (deps && deps.stateMachine && deps.particleSystem && !deps.errorBoundary) {
-            // New DI style
-            this.animationController = deps.animationController || null;
-            this.audioLevelProcessor = deps.audioLevelProcessor || null;
-            this.gazeTracker = deps.gazeTracker || null;
-            this.particleSystem = deps.particleSystem;
-            this.stateMachine = deps.stateMachine;
-            this._state = deps.state || { debugMode: false, speaking: false };
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.animationController = mascot.animationController;
-            this.audioLevelProcessor = mascot.audioLevelProcessor;
-            this.gazeTracker = mascot.gazeTracker;
-            this.particleSystem = mascot.particleSystem;
-            this.stateMachine = mascot.stateMachine;
-            this._state = {
-                get debugMode() { return mascot.debugMode; },
-                get speaking() { return mascot.speaking; }
-            };
-            this._legacyMode = true;
-        }
+        this.animationController = deps.animationController || null;
+        this.audioLevelProcessor = deps.audioLevelProcessor || null;
+        this.gazeTracker = deps.gazeTracker || null;
+        this.particleSystem = deps.particleSystem;
+        this.stateMachine = deps.stateMachine;
+        this._state = deps.state || { debugMode: false, speaking: false };
     }
 
     /**

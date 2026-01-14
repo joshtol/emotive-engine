@@ -14,33 +14,12 @@ export class EventListenerManager {
      * @param {Object} deps - Dependencies
      * @param {Object} deps.errorBoundary - Error handling wrapper
      * @param {Object} deps.eventManager - Internal event emitter
-     *
-     * @example
-     * // New style (dependency injection):
-     * const manager = new EventListenerManager({
-     *     errorBoundary,
-     *     eventManager
-     * });
-     *
-     * // Legacy style (mascot instance) - deprecated:
-     * const manager = new EventListenerManager(mascot);
+     * @param {Object} [deps.chainTarget] - Return value for method chaining
      */
     constructor(deps) {
-        // Support both new DI style and legacy mascot style
-        if (deps && deps.errorBoundary && deps.eventManager) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.eventManager = deps.eventManager;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is actually the mascot instance
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.eventManager = mascot.eventManager;
-            this._chainTarget = mascot;
-            // Mark as legacy for future deprecation warnings
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.eventManager = deps.eventManager;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

@@ -14,29 +14,11 @@ export class OffsetPositionManager {
      * @param {Object} deps.errorBoundary - Error handling wrapper
      * @param {Object} deps.positionController - Position controller instance
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new OffsetPositionManager({ errorBoundary, positionController })
-     *
-     * // Legacy style:
-     * new OffsetPositionManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.positionController = deps.positionController;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.positionController = mascot.positionController;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.positionController = deps.positionController;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

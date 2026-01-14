@@ -41,32 +41,13 @@ export class ShapeTransformManager {
      * @param {Object} [deps.shapeMorpher] - Shape morpher instance
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new ShapeTransformManager({ errorBoundary, renderer, shapeMorpher, emit })
-     *
-     * // Legacy style:
-     * new ShapeTransformManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.emit && deps._diStyle === true) {
-            // New DI style (requires explicit marker)
-            this.errorBoundary = deps.errorBoundary;
-            this.renderer = deps.renderer || null;
-            this.shapeMorpher = deps.shapeMorpher || null;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.renderer = mascot.renderer;
-            this.shapeMorpher = mascot.shapeMorpher;
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.renderer = deps.renderer || null;
+        this.shapeMorpher = deps.shapeMorpher || null;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

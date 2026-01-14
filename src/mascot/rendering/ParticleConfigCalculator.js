@@ -20,30 +20,12 @@ export class ParticleConfigCalculator {
      * @param {Object} deps.stateMachine - State machine instance
      * @param {Object} deps.canvasManager - Canvas manager instance
      * @param {Object} deps.config - Configuration object
-     *
-     * @example
-     * // New DI style:
-     * new ParticleConfigCalculator({ renderer, stateMachine, canvasManager, config })
-     *
-     * // Legacy style:
-     * new ParticleConfigCalculator(mascot)
      */
     constructor(deps) {
-        if (deps && deps.renderer && deps.stateMachine && deps.canvasManager && deps.config) {
-            // New DI style
-            this.renderer = deps.renderer;
-            this.stateMachine = deps.stateMachine;
-            this.canvasManager = deps.canvasManager;
-            this.config = deps.config;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.renderer = mascot.renderer;
-            this.stateMachine = mascot.stateMachine;
-            this.canvasManager = mascot.canvasManager;
-            this.config = mascot.config;
-            this._legacyMode = true;
-        }
+        this.renderer = deps.renderer;
+        this.stateMachine = deps.stateMachine;
+        this.canvasManager = deps.canvasManager;
+        this.config = deps.config;
     }
 
     /**

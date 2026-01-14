@@ -24,38 +24,14 @@ export class DebugInfoRenderer {
      * @param {Object} deps.particleSystem - Particle system instance
      * @param {Object} deps.stateMachine - State machine instance
      * @param {Object} deps.state - Shared state with audioLevel, currentModularGesture, speaking
-     *
-     * @example
-     * // New DI style:
-     * new DebugInfoRenderer({ animationController, canvasManager, config, particleSystem, stateMachine, state })
-     *
-     * // Legacy style:
-     * new DebugInfoRenderer(mascot)
      */
     constructor(deps) {
-        if (deps && deps.canvasManager && deps.config && deps.particleSystem && deps.stateMachine && !deps.errorBoundary) {
-            // New DI style
-            this.animationController = deps.animationController;
-            this.canvasManager = deps.canvasManager;
-            this.config = deps.config;
-            this.particleSystem = deps.particleSystem;
-            this.stateMachine = deps.stateMachine;
-            this._state = deps.state || { audioLevel: 0, currentModularGesture: null, speaking: false };
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.animationController = mascot.animationController;
-            this.canvasManager = mascot.canvasManager;
-            this.config = mascot.config;
-            this.particleSystem = mascot.particleSystem;
-            this.stateMachine = mascot.stateMachine;
-            this._state = {
-                get audioLevel() { return mascot.audioLevel; },
-                get currentModularGesture() { return mascot.currentModularGesture; },
-                get speaking() { return mascot.speaking; }
-            };
-            this._legacyMode = true;
-        }
+        this.animationController = deps.animationController;
+        this.canvasManager = deps.canvasManager;
+        this.config = deps.config;
+        this.particleSystem = deps.particleSystem;
+        this.stateMachine = deps.stateMachine;
+        this._state = deps.state || { audioLevel: 0, currentModularGesture: null, speaking: false };
     }
 
     /**

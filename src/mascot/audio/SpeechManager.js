@@ -25,44 +25,17 @@ export class SpeechManager {
      * @param {Function} deps.setTTSSpeaking - Function to set TTS speaking state
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new SpeechManager({ errorBoundary, audioLevelProcessor, audioHandler, renderer, config, state, setTTSSpeaking, emit })
-     *
-     * // Legacy style:
-     * new SpeechManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.audioLevelProcessor = deps.audioLevelProcessor;
-            this.audioHandler = deps.audioHandler || null;
-            this.renderer = deps.renderer || null;
-            this.config = deps.config;
-            this._state = deps.state;
-            this._setTTSSpeaking = deps.setTTSSpeaking;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.audioLevelProcessor = mascot.audioLevelProcessor;
-            this.audioHandler = mascot.audioHandler;
-            this.renderer = mascot.renderer;
-            this.config = mascot.config;
-            this._state = {
-                get speaking() { return mascot.speaking; },
-                set speaking(v) { mascot.speaking = v; }
-            };
-            this._setTTSSpeaking = v => mascot.setTTSSpeaking(v);
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.audioLevelProcessor = deps.audioLevelProcessor;
+        this.audioHandler = deps.audioHandler || null;
+        this.renderer = deps.renderer || null;
+        this.config = deps.config;
+        this._state = deps.state;
+        this._setTTSSpeaking = deps.setTTSSpeaking;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

@@ -27,40 +27,16 @@ export class RenderLayerOrchestrator {
      * @param {Object} deps.stateMachine - State machine instance
      * @param {Object} deps.state - Shared state with debugMode property
      * @param {Function} deps.renderDebugInfo - Debug info render function
-     *
-     * @example
-     * // New DI style:
-     * new RenderLayerOrchestrator({ canvasManager, config, particleSystem, renderer, stateMachine, state, renderDebugInfo })
-     *
-     * // Legacy style:
-     * new RenderLayerOrchestrator(mascot)
      */
     constructor(deps) {
-        if (deps && deps.canvasManager && deps.particleSystem && deps.renderer && deps.stateMachine && !deps.errorBoundary) {
-            // New DI style
-            this.canvasManager = deps.canvasManager;
-            this.config = deps.config;
-            this.particleSystem = deps.particleSystem;
-            this.pluginSystem = deps.pluginSystem || null;
-            this.renderer = deps.renderer;
-            this.stateMachine = deps.stateMachine;
-            this._state = deps.state || { debugMode: false };
-            this._renderDebugInfo = deps.renderDebugInfo || (() => {});
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.canvasManager = mascot.canvasManager;
-            this.config = mascot.config;
-            this.particleSystem = mascot.particleSystem;
-            this.pluginSystem = mascot.pluginSystem;
-            this.renderer = mascot.renderer;
-            this.stateMachine = mascot.stateMachine;
-            this._state = {
-                get debugMode() { return mascot.debugMode; }
-            };
-            this._renderDebugInfo = dt => mascot.renderDebugInfo(dt);
-            this._legacyMode = true;
-        }
+        this.canvasManager = deps.canvasManager;
+        this.config = deps.config;
+        this.particleSystem = deps.particleSystem;
+        this.pluginSystem = deps.pluginSystem || null;
+        this.renderer = deps.renderer;
+        this.stateMachine = deps.stateMachine;
+        this._state = deps.state || { debugMode: false };
+        this._renderDebugInfo = deps.renderDebugInfo || (() => {});
     }
 
     /**

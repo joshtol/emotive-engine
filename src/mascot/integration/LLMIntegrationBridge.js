@@ -18,31 +18,12 @@ export class LLMIntegrationBridge {
      * @param {Object} deps.errorBoundary - Error handling wrapper
      * @param {Object} [deps.mascotRef] - Reference to mascot for LLMResponseHandler
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new LLMIntegrationBridge({ errorBoundary, mascotRef: mascot })
-     *
-     * // Legacy style:
-     * new LLMIntegrationBridge(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has mascotRef property)
-        if (deps && deps.mascotRef !== undefined) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this._mascotRef = deps.mascotRef;
-            this._chainTarget = deps.chainTarget || this;
-            this._llmHandler = null;
-        } else {
-            // Legacy: deps is mascot instance
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this._mascotRef = mascot;
-            this._chainTarget = mascot;
-            this._llmHandler = null;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this._mascotRef = deps.mascotRef;
+        this._chainTarget = deps.chainTarget || this;
+        this._llmHandler = null;
     }
 
     /**

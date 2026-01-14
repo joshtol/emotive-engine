@@ -19,34 +19,12 @@ export class OrbScaleAnimator {
      * @param {Object} [deps.renderer] - Renderer instance
      * @param {Object} deps.state - Shared state with currentOrbScale and isRunning
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new OrbScaleAnimator({ errorBoundary, renderer, state })
-     *
-     * // Legacy style:
-     * new OrbScaleAnimator(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.state !== undefined && !deps.stateMachine) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.renderer = deps.renderer || null;
-            this._state = deps.state;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.renderer = mascot.renderer;
-            this._state = {
-                get currentOrbScale() { return mascot.currentOrbScale; },
-                set currentOrbScale(v) { mascot.currentOrbScale = v; },
-                get isRunning() { return mascot.isRunning; }
-            };
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.renderer = deps.renderer || null;
+        this._state = deps.state;
+        this._chainTarget = deps.chainTarget || this;
         this.animationId = null;
     }
 

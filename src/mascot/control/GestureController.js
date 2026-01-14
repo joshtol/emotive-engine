@@ -21,42 +21,16 @@ export class GestureController {
      * @param {Object} deps.state - Shared state with currentModularGesture property
      * @param {Function} deps.throttledWarn - Throttled warning function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new GestureController({ errorBoundary, renderer, performanceMonitor, soundSystem, config, state, throttledWarn })
-     *
-     * // Legacy style:
-     * new GestureController(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.renderer = deps.renderer || null;
-            this.performanceMonitor = deps.performanceMonitor || null;
-            this.soundSystem = deps.soundSystem || null;
-            this.config = deps.config;
-            this._state = deps.state;
-            this._throttledWarn = deps.throttledWarn;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.renderer = mascot.renderer;
-            this.performanceMonitor = mascot.performanceMonitor;
-            this.soundSystem = mascot.soundSystem;
-            this.config = mascot.config;
-            this._state = {
-                get currentModularGesture() { return mascot.currentModularGesture; },
-                set currentModularGesture(v) { mascot.currentModularGesture = v; }
-            };
-            this._throttledWarn = (msg, key) => mascot.throttledWarn(msg, key);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.renderer = deps.renderer || null;
+        this.performanceMonitor = deps.performanceMonitor || null;
+        this.soundSystem = deps.soundSystem || null;
+        this.config = deps.config;
+        this._state = deps.state;
+        this._throttledWarn = deps.throttledWarn;
+        this._chainTarget = deps.chainTarget || this;
 
         this.currentGesture = null;
         this.gestureCompatibility = null;

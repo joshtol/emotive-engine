@@ -19,33 +19,11 @@ export class BreathingAnimationController {
      * @param {Object} [deps.renderer] - Renderer instance
      * @param {Object} deps.state - Shared state with breathePattern, breathingAnimationId, isRunning
      * @param {Function} deps.emit - Event emission function
-     *
-     * @example
-     * // New DI style:
-     * new BreathingAnimationController({ renderer, state, emit })
-     *
-     * // Legacy style:
-     * new BreathingAnimationController(mascot)
      */
     constructor(deps) {
-        if (deps && deps.emit && deps.state !== undefined && !deps.errorBoundary) {
-            // New DI style
-            this.renderer = deps.renderer || null;
-            this._state = deps.state;
-            this._emit = deps.emit;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.renderer = mascot.renderer;
-            this._state = {
-                get breathePattern() { return mascot.breathePattern; },
-                get breathingAnimationId() { return mascot.breathingAnimationId; },
-                set breathingAnimationId(v) { mascot.breathingAnimationId = v; },
-                get isRunning() { return mascot.isRunning; }
-            };
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._legacyMode = true;
-        }
+        this.renderer = deps.renderer || null;
+        this._state = deps.state;
+        this._emit = deps.emit;
     }
 
     /**

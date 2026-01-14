@@ -20,46 +20,18 @@ export class AudioHandler {
      * @param {Object} deps.state - Shared state with speaking property
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new AudioHandler({ audioAnalyzer, audioLevelProcessor, shapeMorpher, renderer, soundSystem, stateMachine, config, state, emit })
-     *
-     * // Legacy style:
-     * new AudioHandler(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.audioAnalyzer = deps.audioAnalyzer || null;
-            this.audioLevelProcessor = deps.audioLevelProcessor || null;
-            this.shapeMorpher = deps.shapeMorpher || null;
-            this.renderer = deps.renderer || null;
-            this.soundSystem = deps.soundSystem || null;
-            this.stateMachine = deps.stateMachine || null;
-            this.config = deps.config;
-            this._state = deps.state;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.audioAnalyzer = mascot.audioAnalyzer;
-            this.audioLevelProcessor = mascot.audioLevelProcessor;
-            this.shapeMorpher = mascot.shapeMorpher;
-            this.renderer = mascot.renderer;
-            this.soundSystem = mascot.soundSystem;
-            this.stateMachine = mascot.stateMachine;
-            this.config = mascot.config;
-            this._state = {
-                get speaking() { return mascot.speaking; },
-                set speaking(v) { mascot.speaking = v; }
-            };
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.audioAnalyzer = deps.audioAnalyzer || null;
+        this.audioLevelProcessor = deps.audioLevelProcessor || null;
+        this.shapeMorpher = deps.shapeMorpher || null;
+        this.renderer = deps.renderer || null;
+        this.soundSystem = deps.soundSystem || null;
+        this.stateMachine = deps.stateMachine || null;
+        this.config = deps.config;
+        this._state = deps.state;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
         this.vocalUpdateInterval = null;
     }
 

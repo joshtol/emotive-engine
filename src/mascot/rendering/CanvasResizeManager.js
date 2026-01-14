@@ -44,32 +44,13 @@ export class CanvasResizeManager {
      * @param {Object} [deps.particleSystem] - Particle system instance
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new CanvasResizeManager({ renderer, stateMachine, particleSystem, emit })
-     *
-     * // Legacy style:
-     * new CanvasResizeManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.emit && deps._diStyle !== undefined) {
-            // New DI style (requires explicit marker to distinguish from mascot with emit)
-            this.renderer = deps.renderer || null;
-            this.stateMachine = deps.stateMachine || null;
-            this.particleSystem = deps.particleSystem || null;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.renderer = mascot.renderer;
-            this.stateMachine = mascot.stateMachine;
-            this.particleSystem = mascot.particleSystem;
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.renderer = deps.renderer || null;
+        this.stateMachine = deps.stateMachine || null;
+        this.particleSystem = deps.particleSystem || null;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

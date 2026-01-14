@@ -14,28 +14,11 @@ export class FrustrationContextManager {
      * @param {Object} deps.errorBoundary - Error handling wrapper
      * @param {Object} deps.contextManager - Context manager instance
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new FrustrationContextManager({ errorBoundary, contextManager })
-     *
-     * // Legacy style:
-     * new FrustrationContextManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.contextManager !== undefined) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.contextManager = deps.contextManager;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.contextManager = mascot.contextManager;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.contextManager = deps.contextManager;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

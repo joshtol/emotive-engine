@@ -96,7 +96,7 @@ This project demonstrates senior-level engineering practices:
 *   **Memory Management:**
     *   **Object Pooling:** `ParticlePool.js` recycles particle instances to prevent Garbage Collection (GC) pauses during high-load animations.
     *   **Reference Counting:** Geometries and materials are cached and disposed of deterministically.
-*   **Testing:** 300+ unit tests using Vitest, covering physics accuracy, memory leaks, and state transitions.
+*   **Testing:** 400+ focused unit tests using Vitest, covering state management, audio handling, gesture control, and visualization.
 *   **Performance:**
     *   **Offscreen Canvas:** Expensive gradient generation happens once on an offscreen canvas.
     *   **Frustum Culling:** 3D particles outside the camera view are skipped.

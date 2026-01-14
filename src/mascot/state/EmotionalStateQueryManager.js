@@ -45,33 +45,13 @@ export class EmotionalStateQueryManager {
      * @param {Object} [deps.contextManager] - Context manager instance
      * @param {Object} [deps.performanceSystem] - Performance system instance
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new EmotionalStateQueryManager({ errorBoundary, stateMachine, contextManager })
-     *
-     * // Legacy style:
-     * new EmotionalStateQueryManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.stateMachine && deps.errorBoundary) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.stateMachine = deps.stateMachine;
-            this.contextManager = deps.contextManager || null;
-            this.performanceSystem = deps.performanceSystem || null;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.mascot = mascot;
-            this.errorBoundary = mascot.errorBoundary;
-            this.stateMachine = mascot.stateMachine;
-            this.contextManager = mascot.contextManager;
-            this.performanceSystem = mascot.performanceSystem;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.stateMachine = deps.stateMachine;
+        this.contextManager = deps.contextManager || null;
+        this.performanceSystem = deps.performanceSystem || null;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

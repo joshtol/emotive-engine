@@ -26,44 +26,17 @@ export class SystemStatusReporter {
      * @param {Object} deps.config - Configuration object
      * @param {Object} deps.state - Shared state with speaking, audioLevel properties
      * @param {Function} deps.getEventNames - Function to get event names
-     *
-     * @example
-     * // New DI style:
-     * new SystemStatusReporter({ errorBoundary, animationController, stateMachine, ... })
-     *
-     * // Legacy style:
-     * new SystemStatusReporter(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.animationController = deps.animationController;
-            this.stateMachine = deps.stateMachine;
-            this.particleSystem = deps.particleSystem;
-            this.soundSystem = deps.soundSystem;
-            this.renderer = deps.renderer || null;
-            this.config = deps.config;
-            this._state = deps.state;
-            this._getEventNames = deps.getEventNames;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.animationController = mascot.animationController;
-            this.stateMachine = mascot.stateMachine;
-            this.particleSystem = mascot.particleSystem;
-            this.soundSystem = mascot.soundSystem;
-            this.renderer = mascot.renderer;
-            this.config = mascot.config;
-            this._state = {
-                get speaking() { return mascot.speaking; },
-                get audioLevel() { return mascot.audioLevel; }
-            };
-            this._getEventNames = () => mascot.getEventNames();
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.animationController = deps.animationController;
+        this.stateMachine = deps.stateMachine;
+        this.particleSystem = deps.particleSystem;
+        this.soundSystem = deps.soundSystem;
+        this.renderer = deps.renderer || null;
+        this.config = deps.config;
+        this._state = deps.state;
+        this._getEventNames = deps.getEventNames;
     }
 
     /**

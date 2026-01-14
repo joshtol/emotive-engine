@@ -21,40 +21,16 @@ export class StateCoordinator {
      * @param {Object} [deps.soundSystem] - Sound system instance
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new StateCoordinator({ stateMachine, particleSystem, canvasManager, renderer, config, emit })
-     *
-     * // Legacy style:
-     * new StateCoordinator(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.stateMachine = deps.stateMachine;
-            this.particleSystem = deps.particleSystem || null;
-            this.canvasManager = deps.canvasManager || null;
-            this.renderer = deps.renderer || null;
-            this.config = deps.config;
-            this.soundSystem = deps.soundSystem || null;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.mascot = mascot;
-            this.stateMachine = mascot.stateMachine;
-            this.particleSystem = mascot.particleSystem;
-            this.canvasManager = mascot.canvasManager;
-            this.renderer = mascot.renderer;
-            this.config = mascot.config;
-            this.soundSystem = mascot.soundSystem;
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.stateMachine = deps.stateMachine;
+        this.particleSystem = deps.particleSystem || null;
+        this.canvasManager = deps.canvasManager || null;
+        this.renderer = deps.renderer || null;
+        this.config = deps.config;
+        this.soundSystem = deps.soundSystem || null;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
         this.currentEmotion = 'neutral';
         this.emotionIntensity = 1.0;
     }

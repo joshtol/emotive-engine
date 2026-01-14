@@ -34,63 +34,26 @@ export class DestructionManager {
      * @param {Function} deps.stop - Function to stop animation
      * @param {Function} deps.stopSpeaking - Function to stop speaking
      * @param {Function} deps.disconnectAudio - Function to disconnect audio
-     *
-     * @example
-     * // New DI style:
-     * new DestructionManager({ errorBoundary, animationController, positionController, ... })
-     *
-     * // Legacy style:
-     * new DestructionManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.animationController = deps.animationController;
-            this.positionController = deps.positionController || null;
-            this.soundSystem = deps.soundSystem || null;
-            this.audioLevelProcessor = deps.audioLevelProcessor || null;
-            this.particleSystem = deps.particleSystem || null;
-            this.renderer = deps.renderer || null;
-            this.canvasManager = deps.canvasManager || null;
-            this.eventManager = deps.eventManager || null;
-            this.accessibilityManager = deps.accessibilityManager || null;
-            this.mobileOptimization = deps.mobileOptimization || null;
-            this.pluginSystem = deps.pluginSystem || null;
-            this.audioAnalyzer = deps.audioAnalyzer || null;
-            this.shapeMorpher = deps.shapeMorpher || null;
-            this._state = deps.state;
-            this._stop = deps.stop;
-            this._stopSpeaking = deps.stopSpeaking;
-            this._disconnectAudio = deps.disconnectAudio;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.animationController = mascot.animationController;
-            this.positionController = mascot.positionController;
-            this.soundSystem = mascot.soundSystem;
-            this.audioLevelProcessor = mascot.audioLevelProcessor;
-            this.particleSystem = mascot.particleSystem;
-            this.renderer = mascot.renderer;
-            this.canvasManager = mascot.canvasManager;
-            this.eventManager = mascot.eventManager;
-            this.accessibilityManager = mascot.accessibilityManager;
-            this.mobileOptimization = mascot.mobileOptimization;
-            this.pluginSystem = mascot.pluginSystem;
-            this.audioAnalyzer = mascot.audioAnalyzer;
-            this.shapeMorpher = mascot.shapeMorpher;
-            this._state = {
-                get speaking() { return mascot.speaking; },
-                get llmHandler() { return mascot.llmHandler; },
-                set llmHandler(v) { mascot.llmHandler = v; }
-            };
-            this._stop = () => mascot.stop();
-            this._stopSpeaking = () => mascot.stopSpeaking();
-            this._disconnectAudio = () => mascot.disconnectAudio();
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.animationController = deps.animationController;
+        this.positionController = deps.positionController || null;
+        this.soundSystem = deps.soundSystem || null;
+        this.audioLevelProcessor = deps.audioLevelProcessor || null;
+        this.particleSystem = deps.particleSystem || null;
+        this.renderer = deps.renderer || null;
+        this.canvasManager = deps.canvasManager || null;
+        this.eventManager = deps.eventManager || null;
+        this.accessibilityManager = deps.accessibilityManager || null;
+        this.mobileOptimization = deps.mobileOptimization || null;
+        this.pluginSystem = deps.pluginSystem || null;
+        this.audioAnalyzer = deps.audioAnalyzer || null;
+        this.shapeMorpher = deps.shapeMorpher || null;
+        this._state = deps.state;
+        this._stop = deps.stop;
+        this._stopSpeaking = deps.stopSpeaking;
+        this._disconnectAudio = deps.disconnectAudio;
     }
 
     /**

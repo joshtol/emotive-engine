@@ -44,35 +44,14 @@ export class AnimationFrameController {
      * @param {Object} deps.config - Configuration object
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new AnimationFrameController({ errorBoundary, animationController, positionController, config, emit })
-     *
-     * // Legacy style:
-     * new AnimationFrameController(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.animationController = deps.animationController;
-            this.positionController = deps.positionController || null;
-            this.config = deps.config;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.animationController = mascot.animationController;
-            this.positionController = mascot.positionController;
-            this.config = mascot.config;
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.animationController = deps.animationController;
+        this.positionController = deps.positionController || null;
+        this.config = deps.config;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

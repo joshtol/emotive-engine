@@ -8,10 +8,12 @@ import { GestureController } from '../../../src/mascot/control/GestureController
 
 describe('GestureController', () => {
     let gestureController;
-    let mockMascot;
+    let mockDeps;
+    let mockChainTarget;
 
     beforeEach(() => {
-        mockMascot = {
+        mockChainTarget = { _isChainTarget: true };
+        mockDeps = {
             errorBoundary: {
                 wrap: fn => fn
             },
@@ -39,16 +41,19 @@ describe('GestureController', () => {
             config: {
                 soundEnabled: true
             },
-            currentModularGesture: null,
-            throttledWarn: vi.fn()
+            state: {
+                currentModularGesture: null
+            },
+            throttledWarn: vi.fn(),
+            chainTarget: mockChainTarget
         };
 
-        gestureController = new GestureController(mockMascot);
+        gestureController = new GestureController(mockDeps);
     });
 
     describe('Constructor', () => {
-        it('should initialize in legacy mode with mascot reference', () => {
-            expect(gestureController._legacyMode).toBe(true);
+        it('should initialize with DI dependencies', () => {
+            expect(gestureController.renderer).toBe(mockDeps.renderer);
         });
 
         it('should initialize currentGesture as null', () => {
@@ -81,30 +86,30 @@ describe('GestureController', () => {
     });
 
     describe('express()', () => {
-        it('should return mascot for chaining', () => {
+        it('should return chain target for chaining', () => {
             const result = gestureController.express('bounce');
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should return early if no gesture provided', () => {
             const result = gestureController.express(null);
-            expect(result).toBe(mockMascot);
-            expect(mockMascot.renderer.startBounce).not.toHaveBeenCalled();
+            expect(result).toBe(mockChainTarget);
+            expect(mockDeps.renderer.startBounce).not.toHaveBeenCalled();
         });
 
         it('should mark gesture start in performance monitor', () => {
             gestureController.express('bounce');
-            expect(mockMascot.performanceMonitor.markGestureStart).toHaveBeenCalledWith('bounce');
+            expect(mockDeps.performanceMonitor.markGestureStart).toHaveBeenCalledWith('bounce');
         });
 
         it('should mark gesture end in performance monitor', () => {
             gestureController.express('bounce');
-            expect(mockMascot.performanceMonitor.markGestureEnd).toHaveBeenCalledWith('bounce');
+            expect(mockDeps.performanceMonitor.markGestureEnd).toHaveBeenCalledWith('bounce');
         });
 
         it('should record gesture time', () => {
             gestureController.express('bounce');
-            expect(mockMascot.performanceMonitor.recordGestureTime).toHaveBeenCalledWith(
+            expect(mockDeps.performanceMonitor.recordGestureTime).toHaveBeenCalledWith(
                 'bounce',
                 expect.any(Number)
             );
@@ -112,24 +117,24 @@ describe('GestureController', () => {
 
         it('should execute renderer method for known gesture', () => {
             gestureController.express('bounce', { intensity: 1.5 });
-            expect(mockMascot.renderer.startBounce).toHaveBeenCalledWith({ intensity: 1.5 });
+            expect(mockDeps.renderer.startBounce).toHaveBeenCalledWith({ intensity: 1.5 });
         });
 
         it('should play sound for gesture if enabled', () => {
             gestureController.express('bounce');
-            expect(mockMascot.soundSystem.playGestureSound).toHaveBeenCalledWith('bounce');
+            expect(mockDeps.soundSystem.playGestureSound).toHaveBeenCalledWith('bounce');
         });
 
         it('should not play sound if soundEnabled is false', () => {
-            mockMascot.config.soundEnabled = false;
+            mockDeps.config.soundEnabled = false;
             gestureController.express('bounce');
-            expect(mockMascot.soundSystem.playGestureSound).not.toHaveBeenCalled();
+            expect(mockDeps.soundSystem.playGestureSound).not.toHaveBeenCalled();
         });
 
         it('should not play sound if soundSystem unavailable', () => {
-            mockMascot.soundSystem.isAvailable.mockReturnValue(false);
+            mockDeps.soundSystem.isAvailable.mockReturnValue(false);
             gestureController.express('bounce');
-            expect(mockMascot.soundSystem.playGestureSound).not.toHaveBeenCalled();
+            expect(mockDeps.soundSystem.playGestureSound).not.toHaveBeenCalled();
         });
 
         it('should handle array of gestures as chord', () => {
@@ -146,37 +151,37 @@ describe('GestureController', () => {
 
         it('should warn for unknown gesture', () => {
             gestureController.express('unknownGesture');
-            expect(mockMascot.throttledWarn).toHaveBeenCalledWith(
+            expect(mockDeps.throttledWarn).toHaveBeenCalledWith(
                 'Unknown gesture: unknownGesture',
                 'gesture_unknownGesture'
             );
         });
 
         it('should handle missing renderer gracefully', () => {
-            mockMascot.renderer = null;
+            gestureController.renderer = null;
             expect(() => gestureController.express('bounce')).not.toThrow();
         });
 
         it('should handle missing performanceMonitor gracefully', () => {
-            mockMascot.performanceMonitor = null;
+            gestureController.performanceMonitor = null;
             expect(() => gestureController.express('bounce')).not.toThrow();
         });
     });
 
     describe('expressChord()', () => {
-        it('should return mascot for chaining', () => {
+        it('should return chain target for chaining', () => {
             const result = gestureController.expressChord(['bounce', 'pulse']);
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should return early if gestures is null', () => {
             const result = gestureController.expressChord(null);
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should return early if gestures is empty array', () => {
             const result = gestureController.expressChord([]);
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should execute multiple gestures', () => {
@@ -203,14 +208,14 @@ describe('GestureController', () => {
             };
 
             gestureController.expressChord(['bounce', 'pulse']);
-            expect(mockMascot.renderer.specialEffects.addSparkle).toHaveBeenCalled();
+            expect(mockDeps.renderer.specialEffects.addSparkle).toHaveBeenCalled();
         });
     });
 
     describe('executeGestureDirectly()', () => {
         it('should call renderer method for known gesture', () => {
             gestureController.executeGestureDirectly('bounce', { intensity: 2 });
-            expect(mockMascot.renderer.startBounce).toHaveBeenCalledWith({ intensity: 2 });
+            expect(mockDeps.renderer.startBounce).toHaveBeenCalledWith({ intensity: 2 });
         });
 
         it('should not throw for unknown gesture', () => {
@@ -218,20 +223,20 @@ describe('GestureController', () => {
         });
 
         it('should not throw if renderer is null', () => {
-            mockMascot.renderer = null;
+            gestureController.renderer = null;
             expect(() => gestureController.executeGestureDirectly('bounce')).not.toThrow();
         });
 
         it('should not throw if renderer method does not exist', () => {
-            delete mockMascot.renderer.startBounce;
+            delete mockDeps.renderer.startBounce;
             expect(() => gestureController.executeGestureDirectly('bounce')).not.toThrow();
         });
     });
 
     describe('chain()', () => {
-        it('should return mascot for chaining', () => {
+        it('should return chain target for chaining', () => {
             const result = gestureController.chain('bounce', 'pulse', 'shake');
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should execute first gesture as fallback if no gestureCompatibility', () => {

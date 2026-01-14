@@ -43,35 +43,14 @@ export class PerformanceBehaviorManager {
      * @param {Object} deps.emotionalStateQueryManager - Emotional state query manager instance
      * @param {Object} deps.diagnosticsManager - Diagnostics manager instance
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new PerformanceBehaviorManager({ errorBoundary, performanceSystem, frustrationContextManager, ... })
-     *
-     * // Legacy style:
-     * new PerformanceBehaviorManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.performanceSystem = deps.performanceSystem || null;
-            this.frustrationContextManager = deps.frustrationContextManager;
-            this.emotionalStateQueryManager = deps.emotionalStateQueryManager;
-            this.diagnosticsManager = deps.diagnosticsManager;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.performanceSystem = mascot.performanceSystem;
-            this.frustrationContextManager = mascot.frustrationContextManager;
-            this.emotionalStateQueryManager = mascot.emotionalStateQueryManager;
-            this.diagnosticsManager = mascot.diagnosticsManager;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.performanceSystem = deps.performanceSystem || null;
+        this.frustrationContextManager = deps.frustrationContextManager;
+        this.emotionalStateQueryManager = deps.emotionalStateQueryManager;
+        this.diagnosticsManager = deps.diagnosticsManager;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

@@ -8,19 +8,12 @@ import { ConfigurationManager } from '../../../src/mascot/system/ConfigurationMa
 
 describe('ConfigurationManager', () => {
     let configManager;
-    let mockMascot;
-
-    beforeEach(() => {
-        mockMascot = {
-            // Mock mascot properties
-        };
-    });
 
     describe('Constructor', () => {
-        it('should initialize in legacy mode when passed mascot', () => {
-            configManager = new ConfigurationManager(mockMascot);
+        it('should initialize with DI style config', () => {
+            configManager = new ConfigurationManager({ config: { canvasId: 'my-canvas' } });
 
-            expect(configManager._legacyMode).toBe(true);
+            expect(configManager.config.canvasId).toBe('my-canvas');
         });
 
         it('should validate and store config', () => {
@@ -29,14 +22,14 @@ describe('ConfigurationManager', () => {
                 startingEmotion: 'joy'
             };
 
-            configManager = new ConfigurationManager(mockMascot, customConfig);
+            configManager = new ConfigurationManager({ config: customConfig });
 
             expect(configManager.config.canvasId).toBe('my-canvas');
             expect(configManager.config.startingEmotion).toBe('joy');
         });
 
         it('should handle empty config', () => {
-            configManager = new ConfigurationManager(mockMascot);
+            configManager = new ConfigurationManager({ config: {} });
 
             expect(configManager.config).toBeDefined();
         });
@@ -44,7 +37,7 @@ describe('ConfigurationManager', () => {
 
     describe('validateConfig()', () => {
         beforeEach(() => {
-            configManager = new ConfigurationManager(mockMascot);
+            configManager = new ConfigurationManager({ config: {} });
         });
 
         it('should set default canvasId', () => {
@@ -180,8 +173,7 @@ describe('ConfigurationManager', () => {
 
     describe('getConfig()', () => {
         it('should return a copy of the configuration', () => {
-            const customConfig = { canvasId: 'test-canvas' };
-            configManager = new ConfigurationManager(mockMascot, customConfig);
+            configManager = new ConfigurationManager({ config: { canvasId: 'test-canvas' } });
 
             const retrieved = configManager.getConfig();
 
@@ -189,7 +181,7 @@ describe('ConfigurationManager', () => {
         });
 
         it('should return a copy, not the original object', () => {
-            configManager = new ConfigurationManager(mockMascot);
+            configManager = new ConfigurationManager({ config: {} });
 
             const retrieved = configManager.getConfig();
             retrieved.canvasId = 'modified';
@@ -198,9 +190,7 @@ describe('ConfigurationManager', () => {
         });
 
         it('should include all configuration properties', () => {
-            configManager = new ConfigurationManager(mockMascot, {
-                customProp: 'value'
-            });
+            configManager = new ConfigurationManager({ config: { customProp: 'value' } });
 
             const retrieved = configManager.getConfig();
 
@@ -212,7 +202,7 @@ describe('ConfigurationManager', () => {
 
     describe('updateConfig()', () => {
         beforeEach(() => {
-            configManager = new ConfigurationManager(mockMascot);
+            configManager = new ConfigurationManager({ config: {} });
         });
 
         it('should update single property', () => {

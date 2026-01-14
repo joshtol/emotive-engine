@@ -20,35 +20,13 @@ export class RecordingStateManager {
      * @param {Object} deps.state - Shared state with recording property
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new RecordingStateManager({ errorBoundary, renderer, state, emit })
-     *
-     * // Legacy style:
-     * new RecordingStateManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.state !== undefined && deps.emit) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.renderer = deps.renderer;
-            this._state = deps.state;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.renderer = mascot.renderer;
-            this._state = {
-                get recording() { return mascot.recording; },
-                set recording(v) { mascot.recording = v; }
-            };
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.renderer = deps.renderer;
+        this._state = deps.state;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

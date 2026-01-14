@@ -26,59 +26,24 @@ export class VisualizationRunner {
      * @param {Object} deps.state - Shared state with isRunning, speaking properties
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new VisualizationRunner({ animationController, stateMachine, particleSystem, ... })
-     *
-     * // Legacy style:
-     * new VisualizationRunner(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.animationController = deps.animationController;
-            this.stateMachine = deps.stateMachine;
-            this.particleSystem = deps.particleSystem || null;
-            this.canvasManager = deps.canvasManager || null;
-            this.renderer = deps.renderer || null;
-            this.audioHandler = deps.audioHandler || null;
-            this.audioLevelProcessor = deps.audioLevelProcessor || null;
-            this.gazeTracker = deps.gazeTracker || null;
-            this.idleBehavior = deps.idleBehavior || null;
-            this.degradationManager = deps.degradationManager || null;
-            this.pluginSystem = deps.pluginSystem || null;
-            this.config = deps.config;
-            this.canvas = deps.canvas || null;
-            this._state = deps.state;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.animationController = mascot.animationController;
-            this.stateMachine = mascot.stateMachine;
-            this.particleSystem = mascot.particleSystem;
-            this.canvasManager = mascot.canvasManager;
-            this.renderer = mascot.renderer;
-            this.audioHandler = mascot.audioHandler;
-            this.audioLevelProcessor = mascot.audioLevelProcessor;
-            this.gazeTracker = mascot.gazeTracker;
-            this.idleBehavior = mascot.idleBehavior;
-            this.degradationManager = mascot.degradationManager;
-            this.pluginSystem = mascot.pluginSystem;
-            this.config = mascot.config;
-            this.canvas = mascot.canvas;
-            this._state = {
-                get isRunning() { return mascot.isRunning; },
-                set isRunning(v) { mascot.isRunning = v; },
-                get speaking() { return mascot.speaking; }
-            };
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.animationController = deps.animationController;
+        this.stateMachine = deps.stateMachine;
+        this.particleSystem = deps.particleSystem || null;
+        this.canvasManager = deps.canvasManager || null;
+        this.renderer = deps.renderer || null;
+        this.audioHandler = deps.audioHandler || null;
+        this.audioLevelProcessor = deps.audioLevelProcessor || null;
+        this.gazeTracker = deps.gazeTracker || null;
+        this.idleBehavior = deps.idleBehavior || null;
+        this.degradationManager = deps.degradationManager || null;
+        this.pluginSystem = deps.pluginSystem || null;
+        this.config = deps.config;
+        this.canvas = deps.canvas || null;
+        this._state = deps.state;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
 
         this.animationId = null;
         this.isRunning = false;

@@ -15,28 +15,10 @@ export class DebugProfilingManager {
      * @param {Object} deps - Dependencies
      * @param {Object} deps.diagnosticsManager - Diagnostics manager instance
      * @param {Object} deps.state - Shared state with debugMode
-     *
-     * @example
-     * // New DI style:
-     * new DebugProfilingManager({ diagnosticsManager, state: sharedState })
-     *
-     * // Legacy style:
-     * new DebugProfilingManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.diagnosticsManager !== undefined) {
-            // New DI style
-            this.diagnosticsManager = deps.diagnosticsManager;
-            this._state = deps.state || { debugMode: false };
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.diagnosticsManager = mascot.diagnosticsManager;
-            this._state = {
-                get debugMode() { return mascot.debugMode; }
-            };
-            this._legacyMode = true;
-        }
+        this.diagnosticsManager = deps.diagnosticsManager;
+        this._state = deps.state || { debugMode: false };
     }
 
     /**

@@ -52,31 +52,12 @@ export class VisualTransformationManager {
      * @param {Object} deps.offsetPositionManager - Offset position manager instance
      * @param {Object} deps.shapeTransformManager - Shape transform manager instance
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new VisualTransformationManager({ canvasResizeManager, offsetPositionManager, shapeTransformManager })
-     *
-     * // Legacy style:
-     * new VisualTransformationManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.canvasResizeManager = deps.canvasResizeManager;
-            this.offsetPositionManager = deps.offsetPositionManager;
-            this.shapeTransformManager = deps.shapeTransformManager;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.canvasResizeManager = mascot.canvasResizeManager;
-            this.offsetPositionManager = mascot.offsetPositionManager;
-            this.shapeTransformManager = mascot.shapeTransformManager;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.canvasResizeManager = deps.canvasResizeManager;
+        this.offsetPositionManager = deps.offsetPositionManager;
+        this.shapeTransformManager = deps.shapeTransformManager;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

@@ -8,10 +8,12 @@ import { VisualizationRunner } from '../../../src/mascot/control/VisualizationRu
 
 describe('VisualizationRunner', () => {
     let visualizationRunner;
-    let mockMascot;
+    let mockDeps;
+    let mockChainTarget;
 
     beforeEach(() => {
-        mockMascot = {
+        mockChainTarget = { _isChainTarget: true };
+        mockDeps = {
             animationController: {
                 isAnimating: vi.fn().mockReturnValue(false),
                 start: vi.fn().mockReturnValue(true),
@@ -41,20 +43,23 @@ describe('VisualizationRunner', () => {
             config: {
                 renderingStyle: 'classic'
             },
-            speaking: false,
-            isRunning: false,
+            state: {
+                speaking: false,
+                isRunning: false
+            },
             emit: vi.fn(),
             audioHandler: {
                 stopSpeaking: vi.fn()
-            }
+            },
+            chainTarget: mockChainTarget
         };
 
-        visualizationRunner = new VisualizationRunner(mockMascot);
+        visualizationRunner = new VisualizationRunner(mockDeps);
     });
 
     describe('Constructor', () => {
-        it('should initialize in legacy mode with mascot reference', () => {
-            expect(visualizationRunner._legacyMode).toBe(true);
+        it('should initialize with DI dependencies', () => {
+            expect(visualizationRunner.animationController).toBe(mockDeps.animationController);
         });
 
         it('should initialize animationId as null', () => {
@@ -82,68 +87,70 @@ describe('VisualizationRunner', () => {
 
     describe('start()', () => {
         it('should return early if already animating', () => {
-            mockMascot.animationController.isAnimating.mockReturnValue(true);
+            mockDeps.animationController.isAnimating.mockReturnValue(true);
 
             const result = visualizationRunner.start();
 
-            expect(mockMascot.animationController.start).not.toHaveBeenCalled();
-            expect(result).toBe(mockMascot);
+            expect(mockDeps.animationController.start).not.toHaveBeenCalled();
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should start animation controller', () => {
             visualizationRunner.start();
 
-            expect(mockMascot.animationController.start).toHaveBeenCalled();
+            expect(mockDeps.animationController.start).toHaveBeenCalled();
         });
 
         it('should set running flags on success', () => {
             visualizationRunner.start();
 
-            expect(mockMascot.isRunning).toBe(true);
+            expect(mockDeps.state.isRunning).toBe(true);
             expect(visualizationRunner.isRunning).toBe(true);
         });
 
         it('should clear particles in classic mode', () => {
-            mockMascot.config.renderingStyle = 'classic';
+            mockDeps.config.renderingStyle = 'classic';
 
             visualizationRunner.start();
 
-            expect(mockMascot.particleSystem.clear).toHaveBeenCalled();
+            expect(mockDeps.particleSystem.clear).toHaveBeenCalled();
             // Note: burst is only called if emotion params have particleRate > 0
             // which may not be the case for 'neutral' emotion used in test
         });
 
         it('should not spawn particles in non-classic mode', () => {
-            mockMascot.config.renderingStyle = 'advanced';
+            mockDeps.config.renderingStyle = 'advanced';
 
             visualizationRunner.start();
 
-            expect(mockMascot.particleSystem.clear).not.toHaveBeenCalled();
-            expect(mockMascot.particleSystem.burst).not.toHaveBeenCalled();
+            expect(mockDeps.particleSystem.clear).not.toHaveBeenCalled();
+            expect(mockDeps.particleSystem.burst).not.toHaveBeenCalled();
         });
 
         it('should have orb position logic available', () => {
             // The visualization runner has logic to use orb position from renderer
             // This is tested in integration tests with actual emotions that spawn particles
-            expect(mockMascot.renderer.getCurrentOrbPosition).toBeDefined();
+            expect(mockDeps.renderer.getCurrentOrbPosition).toBeDefined();
         });
 
         it('should start degradation monitoring', () => {
             visualizationRunner.start();
 
-            expect(mockMascot.degradationManager.startMonitoring).toHaveBeenCalled();
+            expect(mockDeps.degradationManager.startMonitoring).toHaveBeenCalled();
         });
 
         it('should handle missing degradation manager', () => {
-            mockMascot.degradationManager = null;
+            // Create new runner with null degradation manager
+            const noDegDeps = { ...mockDeps, degradationManager: null };
+            const runner = new VisualizationRunner(noDegDeps);
 
-            expect(() => visualizationRunner.start()).not.toThrow();
+            expect(() => runner.start()).not.toThrow();
         });
 
-        it('should return mascot instance for chaining', () => {
+        it('should return chain target for chaining', () => {
             const result = visualizationRunner.start();
 
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
     });
 
@@ -151,65 +158,69 @@ describe('VisualizationRunner', () => {
         beforeEach(() => {
             // Start first
             visualizationRunner.start();
-            mockMascot.animationController.isAnimating.mockReturnValue(true);
+            mockDeps.animationController.isAnimating.mockReturnValue(true);
         });
 
         it('should return early if not animating', () => {
-            mockMascot.animationController.isAnimating.mockReturnValue(false);
+            mockDeps.animationController.isAnimating.mockReturnValue(false);
 
             const result = visualizationRunner.stop();
 
-            expect(mockMascot.animationController.stop).not.toHaveBeenCalled();
-            expect(result).toBe(mockMascot);
+            expect(mockDeps.animationController.stop).not.toHaveBeenCalled();
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should handle speaking state gracefully', () => {
-            mockMascot.speaking = true;
+            mockDeps.state.speaking = true;
 
             const result = visualizationRunner.stop();
 
-            // Should still return mascot for chaining
-            expect(result).toBe(mockMascot);
+            // Should still return chain target for chaining
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should stop animation controller', () => {
-            mockMascot.speaking = false;
+            mockDeps.state.speaking = false;
 
             visualizationRunner.stop();
 
-            expect(mockMascot.animationController.stop).toHaveBeenCalled();
+            expect(mockDeps.animationController.stop).toHaveBeenCalled();
         });
 
         it('should set running flags on success', () => {
-            mockMascot.speaking = false;
+            mockDeps.state.speaking = false;
 
             visualizationRunner.stop();
 
-            expect(mockMascot.isRunning).toBe(false);
+            expect(mockDeps.state.isRunning).toBe(false);
             expect(visualizationRunner.isRunning).toBe(false);
         });
 
         it('should stop degradation monitoring', () => {
-            mockMascot.speaking = false;
+            mockDeps.state.speaking = false;
 
             visualizationRunner.stop();
 
-            expect(mockMascot.degradationManager.stopMonitoring).toHaveBeenCalled();
+            expect(mockDeps.degradationManager.stopMonitoring).toHaveBeenCalled();
         });
 
         it('should handle missing degradation manager', () => {
-            mockMascot.speaking = false;
-            mockMascot.degradationManager = null;
+            mockDeps.state.speaking = false;
+            // Create new runner with null degradation manager
+            const noDegDeps = { ...mockDeps, degradationManager: null, state: { speaking: false, isRunning: true } };
+            const runner = new VisualizationRunner(noDegDeps);
+            runner.isRunning = true;
+            noDegDeps.animationController.isAnimating.mockReturnValue(true);
 
-            expect(() => visualizationRunner.stop()).not.toThrow();
+            expect(() => runner.stop()).not.toThrow();
         });
 
-        it('should return mascot instance for chaining', () => {
-            mockMascot.speaking = false;
+        it('should return chain target for chaining', () => {
+            mockDeps.state.speaking = false;
 
             const result = visualizationRunner.stop();
 
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
     });
 

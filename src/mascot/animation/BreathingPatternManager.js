@@ -20,37 +20,13 @@ export class BreathingPatternManager {
      * @param {Object} deps.state - Shared state with breathePattern, breathingAnimationId
      * @param {Function} deps.startBreathingAnimation - Function to start breathing animation
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new BreathingPatternManager({ errorBoundary, renderer, state, startBreathingAnimation })
-     *
-     * // Legacy style:
-     * new BreathingPatternManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.state !== undefined && deps.startBreathingAnimation) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.renderer = deps.renderer || null;
-            this._state = deps.state;
-            this._startBreathingAnimation = deps.startBreathingAnimation;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.renderer = mascot.renderer;
-            this._state = {
-                get breathePattern() { return mascot.breathePattern; },
-                set breathePattern(v) { mascot.breathePattern = v; },
-                get breathingAnimationId() { return mascot.breathingAnimationId; },
-                set breathingAnimationId(v) { mascot.breathingAnimationId = v; }
-            };
-            this._startBreathingAnimation = () => mascot.startBreathingAnimation();
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.renderer = deps.renderer || null;
+        this._state = deps.state;
+        this._startBreathingAnimation = deps.startBreathingAnimation;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

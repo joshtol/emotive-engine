@@ -10,29 +10,10 @@ export class GestureMotionProvider {
      * @param {Object} deps - Dependencies
      * @param {Object} deps.renderer - Renderer instance
      * @param {Object} deps.state - Shared state with currentModularGesture
-     *
-     * @example
-     * // New DI style:
-     * new GestureMotionProvider({ renderer, state: sharedState })
-     *
-     * // Legacy style:
-     * new GestureMotionProvider(mascot)
      */
     constructor(deps) {
-        if (deps && deps.renderer !== undefined && deps.state !== undefined) {
-            // New DI style
-            this.renderer = deps.renderer;
-            this._state = deps.state;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.renderer = mascot.renderer;
-            this._state = {
-                get currentModularGesture() { return mascot.currentModularGesture; },
-                set currentModularGesture(v) { mascot.currentModularGesture = v; }
-            };
-            this._legacyMode = true;
-        }
+        this.renderer = deps.renderer;
+        this._state = deps.state;
     }
 
     /**

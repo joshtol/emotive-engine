@@ -8,11 +8,13 @@ import { StateCoordinator } from '../../../src/mascot/state/StateCoordinator.js'
 
 describe('StateCoordinator', () => {
     let stateCoordinator;
-    let mockMascot;
+    let mockDeps;
+    let mockChainTarget;
 
     beforeEach(() => {
-        // Create mock mascot with required properties
-        mockMascot = {
+        mockChainTarget = { _isChainTarget: true };
+        // Create mock dependencies
+        mockDeps = {
             stateMachine: {
                 setEmotion: vi.fn().mockReturnValue(true),
                 getCurrentEmotionalProperties: vi.fn().mockReturnValue({
@@ -39,15 +41,16 @@ describe('StateCoordinator', () => {
             config: {
                 renderingStyle: 'classic'
             },
-            emit: vi.fn()
+            emit: vi.fn(),
+            chainTarget: mockChainTarget
         };
 
-        stateCoordinator = new StateCoordinator(mockMascot);
+        stateCoordinator = new StateCoordinator(mockDeps);
     });
 
     describe('Constructor', () => {
-        it('should initialize in legacy mode when passed mascot', () => {
-            expect(stateCoordinator._legacyMode).toBe(true);
+        it('should initialize with DI dependencies', () => {
+            expect(stateCoordinator.stateMachine).toBe(mockDeps.stateMachine);
         });
 
         it('should initialize currentEmotion as neutral', () => {
@@ -73,7 +76,7 @@ describe('StateCoordinator', () => {
         it('should map emotion aliases to actual emotions', () => {
             stateCoordinator.setEmotion('happy');
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
                 null,
                 500
@@ -83,7 +86,7 @@ describe('StateCoordinator', () => {
         it('should map "curious" to "surprise"', () => {
             stateCoordinator.setEmotion('curious');
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'surprise',
                 null,
                 500
@@ -93,7 +96,7 @@ describe('StateCoordinator', () => {
         it('should map "frustrated" to "anger"', () => {
             stateCoordinator.setEmotion('frustrated');
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'anger',
                 null,
                 500
@@ -103,7 +106,7 @@ describe('StateCoordinator', () => {
         it('should map "sad" to "sadness"', () => {
             stateCoordinator.setEmotion('sad');
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'sadness',
                 null,
                 500
@@ -113,7 +116,7 @@ describe('StateCoordinator', () => {
         it('should accept direct emotion names', () => {
             stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
                 null,
                 500
@@ -123,7 +126,7 @@ describe('StateCoordinator', () => {
         it('should handle string undertone for backward compatibility', () => {
             stateCoordinator.setEmotion('joy', 'intense');
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
                 'intense',
                 500
@@ -133,7 +136,7 @@ describe('StateCoordinator', () => {
         it('should handle object options with undertone', () => {
             stateCoordinator.setEmotion('joy', { undertone: 'subdued' });
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
                 'subdued',
                 500
@@ -143,7 +146,7 @@ describe('StateCoordinator', () => {
         it('should handle custom duration in options', () => {
             stateCoordinator.setEmotion('joy', { undertone: 'clear', duration: 1000 });
 
-            expect(mockMascot.stateMachine.setEmotion).toHaveBeenCalledWith(
+            expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
                 'clear',
                 1000
@@ -153,19 +156,19 @@ describe('StateCoordinator', () => {
         it('should clear particle system on emotion change', () => {
             stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.particleSystem.clear).toHaveBeenCalled();
+            expect(mockDeps.particleSystem.clear).toHaveBeenCalled();
         });
 
         it('should spawn initial particles for new emotion', () => {
             stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.particleSystem.burst).toHaveBeenCalled();
+            expect(mockDeps.particleSystem.burst).toHaveBeenCalled();
         });
 
         it('should spawn only 1 particle for neutral emotion', () => {
             stateCoordinator.setEmotion('neutral');
 
-            expect(mockMascot.particleSystem.burst).toHaveBeenCalledWith(
+            expect(mockDeps.particleSystem.burst).toHaveBeenCalledWith(
                 1,
                 'ambient',
                 400,
@@ -176,7 +179,7 @@ describe('StateCoordinator', () => {
         it('should spawn 4 particles for resting emotion', () => {
             stateCoordinator.setEmotion('resting');
 
-            expect(mockMascot.particleSystem.burst).toHaveBeenCalledWith(
+            expect(mockDeps.particleSystem.burst).toHaveBeenCalledWith(
                 4,
                 'ambient',
                 400,
@@ -185,11 +188,11 @@ describe('StateCoordinator', () => {
         });
 
         it('should use effective center from renderer', () => {
-            mockMascot.renderer.getEffectiveCenter.mockReturnValue({ x: 500, y: 400 });
+            mockDeps.renderer.getEffectiveCenter.mockReturnValue({ x: 500, y: 400 });
 
             stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.particleSystem.burst).toHaveBeenCalledWith(
+            expect(mockDeps.particleSystem.burst).toHaveBeenCalledWith(
                 expect.any(Number),
                 'ambient',
                 500,
@@ -198,11 +201,11 @@ describe('StateCoordinator', () => {
         });
 
         it('should fallback to canvas center if renderer unavailable', () => {
-            delete mockMascot.renderer.getEffectiveCenter;
+            delete mockDeps.renderer.getEffectiveCenter;
 
             stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.particleSystem.burst).toHaveBeenCalledWith(
+            expect(mockDeps.particleSystem.burst).toHaveBeenCalledWith(
                 expect.any(Number),
                 'ambient',
                 400,
@@ -211,11 +214,11 @@ describe('StateCoordinator', () => {
         });
 
         it('should update renderer in classic rendering mode', () => {
-            mockMascot.config.renderingStyle = 'classic';
+            mockDeps.config.renderingStyle = 'classic';
 
             stateCoordinator.setEmotion('joy', { undertone: 'intense' });
 
-            expect(mockMascot.renderer.setEmotionalState).toHaveBeenCalledWith(
+            expect(mockDeps.renderer.setEmotionalState).toHaveBeenCalledWith(
                 'joy',
                 expect.any(Object),
                 'intense'
@@ -223,17 +226,17 @@ describe('StateCoordinator', () => {
         });
 
         it('should not update renderer in non-classic mode', () => {
-            mockMascot.config.renderingStyle = 'advanced';
+            mockDeps.config.renderingStyle = 'advanced';
 
             stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.renderer.setEmotionalState).not.toHaveBeenCalled();
+            expect(mockDeps.renderer.setEmotionalState).not.toHaveBeenCalled();
         });
 
         it('should emit emotionChanged event', () => {
             stateCoordinator.setEmotion('joy', { undertone: 'confident', duration: 750 });
 
-            expect(mockMascot.emit).toHaveBeenCalledWith('emotionChanged', {
+            expect(mockDeps.emit).toHaveBeenCalledWith('emotionChanged', {
                 emotion: 'joy',
                 undertone: 'confident',
                 duration: 750
@@ -246,25 +249,26 @@ describe('StateCoordinator', () => {
             expect(stateCoordinator.currentEmotion).toBe('anger');
         });
 
-        it('should return mascot instance for chaining', () => {
+        it('should return chain target for chaining', () => {
             const result = stateCoordinator.setEmotion('joy');
 
-            expect(result).toBe(mockMascot);
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should handle stateMachine.setEmotion failure gracefully', () => {
-            mockMascot.stateMachine.setEmotion.mockReturnValue(false);
+            mockDeps.stateMachine.setEmotion.mockReturnValue(false);
 
             const result = stateCoordinator.setEmotion('joy');
 
-            expect(mockMascot.particleSystem.clear).not.toHaveBeenCalled();
-            expect(result).toBe(mockMascot);
+            expect(mockDeps.particleSystem.clear).not.toHaveBeenCalled();
+            expect(result).toBe(mockChainTarget);
         });
 
         it('should handle missing particle system gracefully', () => {
-            mockMascot.particleSystem = null;
+            const noPsDeps = { ...mockDeps, particleSystem: null };
+            const runner = new StateCoordinator(noPsDeps);
 
-            expect(() => stateCoordinator.setEmotion('joy')).not.toThrow();
+            expect(() => runner.setEmotion('joy')).not.toThrow();
         });
 
         it('should throw when renderer is null in classic mode (known bug)', () => {

@@ -43,38 +43,13 @@ export class TTSManager {
      * @param {Object} deps.tts - TTS state object with available, speaking properties
      * @param {Object} deps.state - Shared state with ttsSpeaking, speaking properties
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new TTSManager({ speechManager, renderer, tts, state })
-     *
-     * // Legacy style:
-     * new TTSManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.speechManager = deps.speechManager || null;
-            this.renderer = deps.renderer || null;
-            this.tts = deps.tts;
-            this._state = deps.state;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.speechManager = mascot.speechManager;
-            this.renderer = mascot.renderer;
-            this.tts = mascot.tts;
-            this._state = {
-                get ttsSpeaking() { return mascot.ttsSpeaking; },
-                set ttsSpeaking(v) { mascot.ttsSpeaking = v; },
-                get speaking() { return mascot.speaking; },
-                set speaking(v) { mascot.speaking = v; }
-            };
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.speechManager = deps.speechManager || null;
+        this.renderer = deps.renderer || null;
+        this.tts = deps.tts;
+        this._state = deps.state;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

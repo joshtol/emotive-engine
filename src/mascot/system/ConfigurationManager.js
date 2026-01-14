@@ -7,26 +7,11 @@ export class ConfigurationManager {
     /**
      * Create ConfigurationManager
      *
-     * @param {Object} deps - Dependencies or mascot instance
-     * @param {Object} [config] - Configuration object (legacy style)
-     *
-     * @example
-     * // New DI style:
-     * new ConfigurationManager({ config: { canvasId: 'my-canvas' } })
-     *
-     * // Legacy style:
-     * new ConfigurationManager(mascot, { canvasId: 'my-canvas' })
+     * @param {Object} deps - Dependencies
+     * @param {Object} deps.config - Configuration object
      */
-    constructor(deps, config) {
-        // Support both new DI style and legacy mascot style
-        if (deps && deps.config !== undefined && config === undefined) {
-            // New DI style - deps contains config directly
-            this.config = this.validateConfig(deps.config || {});
-        } else {
-            // Legacy: deps is mascot, config is second arg
-            this.config = this.validateConfig(config || {});
-            this._legacyMode = true;
-        }
+    constructor(deps) {
+        this.config = this.validateConfig(deps.config || {});
     }
 
     /**

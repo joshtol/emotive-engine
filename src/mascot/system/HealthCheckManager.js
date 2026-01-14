@@ -46,37 +46,15 @@ export class HealthCheckManager {
      * @param {Object} deps.accessibilityManager - Accessibility manager instance
      * @param {Object} deps.config - Configuration object
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new HealthCheckManager({ errorBoundary, systemStatusReporter, diagnosticsManager, ... })
-     *
-     * // Legacy style:
-     * new HealthCheckManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.systemStatusReporter = deps.systemStatusReporter || null;
-            this.diagnosticsManager = deps.diagnosticsManager;
-            this.mobileOptimization = deps.mobileOptimization;
-            this.accessibilityManager = deps.accessibilityManager;
-            this.config = deps.config;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.systemStatusReporter = mascot.systemStatusReporter;
-            this.diagnosticsManager = mascot.diagnosticsManager;
-            this.mobileOptimization = mascot.mobileOptimization;
-            this.accessibilityManager = mascot.accessibilityManager;
-            this.config = mascot.config;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.systemStatusReporter = deps.systemStatusReporter || null;
+        this.diagnosticsManager = deps.diagnosticsManager;
+        this.mobileOptimization = deps.mobileOptimization;
+        this.accessibilityManager = deps.accessibilityManager;
+        this.config = deps.config;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

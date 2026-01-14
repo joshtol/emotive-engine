@@ -580,29 +580,26 @@ applyMethodName(anim, progress)
 
 ### Testing
 
-Each animator has comprehensive test coverage:
+The test suite focuses on essential functionality with comprehensive coverage of the DI-based manager architecture:
 
 ```
-test/unit/core/renderer/
-├── PhysicalGestureAnimator.test.js      (23 tests)
-├── VisualEffectAnimator.test.js         (21 tests)
-├── BreathGestureAnimator.test.js        (18 tests)
-├── MovementGestureAnimator.test.js      (21 tests)
-├── ShapeTransformAnimator.test.js       (22 tests)
-├── ExpressionGestureAnimator.test.js    (26 tests)
-├── DirectionalGestureAnimator.test.js   (25 tests)
-└── ComplexAnimationAnimator.test.js     (31 tests)
+test/unit/mascot/
+├── GestureController.test.js       (43 tests)  # Gesture management
+├── AudioHandler.test.js            (40 tests)  # Audio connectivity
+├── StateCoordinator.test.js        (30 tests)  # Emotion state
+├── VisualizationRunner.test.js     (23 tests)  # Animation loop
+└── ConfigurationManager.test.js    (26 tests)  # Settings
 ```
 
-**Total**: 187 tests, 100% passing
+**Total**: 413 tests, 100% passing
 
 ### Benefits
 
-1. **43% size reduction** in GestureAnimator (1,472 → 832 lines)
-2. **100% test coverage** with 187 new unit tests
-3. **Single Responsibility** - each animator has one purpose
-4. **Extensibility** - easy to add new gesture types
-5. **Maintainability** - smaller, focused files
+1. **Clean DI architecture** - managers receive dependencies via constructor
+2. **Testable in isolation** - no coupling to monolithic mascot object
+3. **Single Responsibility** - each manager has one purpose
+4. **Extensibility** - easy to add new managers
+5. **Maintainability** - smaller, focused modules
 
 ---
 

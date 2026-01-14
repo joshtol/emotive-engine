@@ -24,39 +24,15 @@ export class SleepWakeManager {
      * @param {Object} deps.state - Shared state with sleeping property
      * @param {Function} deps.emit - Event emission function
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new SleepWakeManager({ errorBoundary, express, idleBehavior, renderer, state, emit })
-     *
-     * // Legacy style:
-     * new SleepWakeManager(mascot)
      */
     constructor(deps) {
-        if (deps && deps.errorBoundary && deps.express && deps.state !== undefined && deps.emit) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this._express = deps.express;
-            this.idleBehavior = deps.idleBehavior || null;
-            this.renderer = deps.renderer || null;
-            this._state = deps.state;
-            this._emit = deps.emit;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this._express = gesture => mascot.express(gesture);
-            this.idleBehavior = mascot.idleBehavior;
-            this.renderer = mascot.renderer;
-            this._state = {
-                get sleeping() { return mascot.sleeping; },
-                set sleeping(v) { mascot.sleeping = v; }
-            };
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this._express = deps.express;
+        this.idleBehavior = deps.idleBehavior || null;
+        this.renderer = deps.renderer || null;
+        this._state = deps.state;
+        this._emit = deps.emit;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

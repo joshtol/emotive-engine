@@ -53,49 +53,19 @@ export class DiagnosticsManager {
      * @param {Function} deps.getAudioStats - Function to get audio stats
      * @param {Function} deps.getEventStats - Function to get event stats
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new DiagnosticsManager({ errorBoundary, degradationManager, animationController, ... })
-     *
-     * // Legacy style:
-     * new DiagnosticsManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.errorBoundary = deps.errorBoundary;
-            this.degradationManager = deps.degradationManager || null;
-            this.animationController = deps.animationController;
-            this.stateMachine = deps.stateMachine;
-            this.performanceSystem = deps.performanceSystem || null;
-            this.config = deps.config;
-            this._state = deps.state;
-            this._getCurrentState = deps.getCurrentState;
-            this._getAudioStats = deps.getAudioStats;
-            this._getEventStats = deps.getEventStats;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.errorBoundary = mascot.errorBoundary;
-            this.degradationManager = mascot.degradationManager;
-            this.animationController = mascot.animationController;
-            this.stateMachine = mascot.stateMachine;
-            this.performanceSystem = mascot.performanceSystem;
-            this.config = mascot.config;
-            this._state = {
-                get isRunning() { return mascot.isRunning; },
-                get speaking() { return mascot.speaking; },
-                get debugMode() { return mascot.debugMode; }
-            };
-            this._getCurrentState = () => mascot.getCurrentState();
-            this._getAudioStats = () => mascot.getAudioStats();
-            this._getEventStats = () => mascot.getEventStats();
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.errorBoundary = deps.errorBoundary;
+        this.degradationManager = deps.degradationManager || null;
+        this.animationController = deps.animationController;
+        this.stateMachine = deps.stateMachine;
+        this.performanceSystem = deps.performanceSystem || null;
+        this.config = deps.config;
+        this._state = deps.state;
+        this._getCurrentState = deps.getCurrentState;
+        this._getAudioStats = deps.getAudioStats;
+        this._getEventStats = deps.getEventStats;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**

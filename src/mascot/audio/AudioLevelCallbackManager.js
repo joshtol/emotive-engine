@@ -20,33 +20,13 @@ export class AudioLevelCallbackManager {
      * @param {Object} deps.particleSystem - Particle system instance
      * @param {Function} deps.express - Express gesture function
      * @param {Function} deps.emit - Event emission function
-     *
-     * @example
-     * // New DI style:
-     * new AudioLevelCallbackManager({ audioLevelProcessor, renderer, particleSystem, express, emit })
-     *
-     * // Legacy style:
-     * new AudioLevelCallbackManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.audioLevelProcessor = deps.audioLevelProcessor;
-            this.renderer = deps.renderer || null;
-            this.particleSystem = deps.particleSystem || null;
-            this._express = deps.express;
-            this._emit = deps.emit;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.audioLevelProcessor = mascot.audioLevelProcessor;
-            this.renderer = mascot.renderer;
-            this.particleSystem = mascot.particleSystem;
-            this._express = gesture => mascot.express(gesture);
-            this._emit = (event, data) => mascot.emit(event, data);
-            this._legacyMode = true;
-        }
+        this.audioLevelProcessor = deps.audioLevelProcessor;
+        this.renderer = deps.renderer || null;
+        this.particleSystem = deps.particleSystem || null;
+        this._express = deps.express;
+        this._emit = deps.emit;
     }
 
     /**

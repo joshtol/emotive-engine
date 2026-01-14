@@ -19,28 +19,11 @@ export class ThreatLevelCalculator {
      * @param {Object} deps.canvasManager - Canvas manager instance
      * @param {Object} deps.config - Configuration object
      * @param {Object} [deps.gazeTracker] - Gaze tracker instance
-     *
-     * @example
-     * // New DI style:
-     * new ThreatLevelCalculator({ canvasManager, config, gazeTracker })
-     *
-     * // Legacy style:
-     * new ThreatLevelCalculator(mascot)
      */
     constructor(deps) {
-        if (deps && deps.canvasManager && deps.config && !deps.stateMachine) {
-            // New DI style
-            this.canvasManager = deps.canvasManager;
-            this.config = deps.config;
-            this.gazeTracker = deps.gazeTracker || null;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.canvasManager = mascot.canvasManager;
-            this.config = mascot.config;
-            this.gazeTracker = mascot.gazeTracker;
-            this._legacyMode = true;
-        }
+        this.canvasManager = deps.canvasManager;
+        this.config = deps.config;
+        this.gazeTracker = deps.gazeTracker || null;
     }
 
     /**

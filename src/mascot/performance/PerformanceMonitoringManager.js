@@ -49,39 +49,16 @@ export class PerformanceMonitoringManager {
      * @param {Object} deps.healthCheckManager - Health check manager instance
      * @param {Object} deps.config - Configuration object
      * @param {Object} [deps.chainTarget] - Return value for method chaining
-     *
-     * @example
-     * // New DI style:
-     * new PerformanceMonitoringManager({ diagnosticsManager, degradationManager, animationFrameController, ... })
-     *
-     * // Legacy style:
-     * new PerformanceMonitoringManager(mascot)
      */
     constructor(deps) {
-        // Check for explicit DI style (has _diStyle marker property)
-        if (deps && deps._diStyle === true) {
-            // New DI style
-            this.diagnosticsManager = deps.diagnosticsManager;
-            this.degradationManager = deps.degradationManager || null;
-            this.animationFrameController = deps.animationFrameController;
-            this.animationController = deps.animationController;
-            this.particleSystem = deps.particleSystem;
-            this.healthCheckManager = deps.healthCheckManager;
-            this.config = deps.config;
-            this._chainTarget = deps.chainTarget || this;
-        } else {
-            // Legacy: deps is mascot
-            const mascot = deps;
-            this.diagnosticsManager = mascot.diagnosticsManager;
-            this.degradationManager = mascot.degradationManager;
-            this.animationFrameController = mascot.animationFrameController;
-            this.animationController = mascot.animationController;
-            this.particleSystem = mascot.particleSystem;
-            this.healthCheckManager = mascot.healthCheckManager;
-            this.config = mascot.config;
-            this._chainTarget = mascot;
-            this._legacyMode = true;
-        }
+        this.diagnosticsManager = deps.diagnosticsManager;
+        this.degradationManager = deps.degradationManager || null;
+        this.animationFrameController = deps.animationFrameController;
+        this.animationController = deps.animationController;
+        this.particleSystem = deps.particleSystem;
+        this.healthCheckManager = deps.healthCheckManager;
+        this.config = deps.config;
+        this._chainTarget = deps.chainTarget || this;
     }
 
     /**
