@@ -200,7 +200,7 @@ code don't need rewriting, and smaller units are easier to test.
 | 2     | Fix post-init cross-reference (line 735)  | ✅ Complete |
 | 3     | Refactor EmotiveMascot god object         | ✅ Complete |
 | 4     | Split InitializationManager into phases   | ✅ Complete |
-| 5     | Expand test suite for managers            | Not Started |
+| 5     | Expand test suite for managers            | ✅ Complete |
 | 6     | Break down large 3D files                 | Not Started |
 | 7     | Standardize event patterns                | Not Started |
 
@@ -282,9 +282,26 @@ class to reduce InitializationManager complexity.
 
 All 413 tests pass.
 
-### Task 5-7: Deferred
+### Task 5: Expand Test Suite for Managers ✅ Complete
 
-Details to be added when task 4 is complete.
+Added comprehensive tests for 3 priority managers:
+
+**New test files:**
+- `test/unit/mascot/MascotStateManager.test.js` (46 tests)
+- `test/unit/mascot/ExecutionLifecycleManager.test.js` (34 tests)
+- `test/unit/mascot/HealthCheckManager.test.js` (25 tests)
+
+**Test coverage:**
+- Constructor validation and dependency injection
+- All public methods and edge cases
+- Event emission behavior
+- Method chaining via chainTarget
+
+All 518 tests pass (up from 413).
+
+### Task 6-7: Deferred
+
+Details to be added when task 5 is complete.
 
 ---
 
