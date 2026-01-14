@@ -38,7 +38,6 @@ export { default as ContextStateManager } from './core/renderer/ContextStateMana
 export { PerformanceMonitor, performanceMonitor } from './core/system/PerformanceMonitor.js';
 export { ErrorTracker, errorTracker } from './core/events/ErrorTracker.js';
 export { LazyLoader, lazyLoader, lazyLoad, preloadModules, prefetchModules } from './core/optimization/LazyLoader.js';
-export { SecurityManager, securityManager } from './core/system/SecurityManager.js';
 export { HealthCheck, healthCheck } from './core/system/HealthCheck.js';
 export { FeatureFlags, featureFlags, isFeatureEnabled, getFeatureVariant } from './core/system/FeatureFlags.js';
 
