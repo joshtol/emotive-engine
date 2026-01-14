@@ -4,7 +4,7 @@
  * No audio features - optimized for smallest bundle size
  *
  * @module emotive-engine/minimal
- * @version 3.2.0
+ * @version 3.3.0
  */
 
 // ============================================================================
@@ -71,7 +71,7 @@ export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '3.2.0-minimal';
+export const VERSION = '3.3.0-minimal';
 export const ENGINE_NAME = 'Emotive Engine Minimal';
 export const BUILD_TYPE = 'minimal';
 

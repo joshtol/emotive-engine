@@ -4,7 +4,7 @@
  * Optimized for music-reactive applications
  *
  * @module emotive-engine/audio
- * @version 3.2.0
+ * @version 3.3.0
  */
 
 // ============================================================================
@@ -100,7 +100,7 @@ export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '3.2.0-audio';
+export const VERSION = '3.3.0-audio';
 export const ENGINE_NAME = 'Emotive Engine Audio';
 export const BUILD_TYPE = 'audio';
 
