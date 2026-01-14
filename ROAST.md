@@ -199,7 +199,7 @@ code don't need rewriting, and smaller units are easier to test.
 | 1     | Add dependency validation to constructors | ✅ Complete |
 | 2     | Fix post-init cross-reference (line 735)  | ✅ Complete |
 | 3     | Refactor EmotiveMascot god object         | ✅ Complete |
-| 4     | Split InitializationManager into phases   | Not Started |
+| 4     | Split InitializationManager into phases   | ✅ Complete |
 | 5     | Expand test suite for managers            | Not Started |
 | 6     | Break down large 3D files                 | Not Started |
 | 7     | Standardize event patterns                | Not Started |
@@ -269,9 +269,22 @@ scattered across EmotiveMascot:
 
 All 413 tests pass.
 
-### Task 4-7: Deferred
+### Task 4: Split InitializationManager into Phases ✅ Complete
 
-Details to be added when task 3 is complete.
+Extracted Phase 9 (modular handlers) into separate `ModularHandlersInitializer`
+class to reduce InitializationManager complexity.
+
+**Changes:**
+- Created `src/mascot/system/ModularHandlersInitializer.js` (347 lines)
+- Reduced InitializationManager from 945 → 655 lines (-290 lines)
+- Organized handlers into 3 layers with clear dependencies
+- InitializationManager now delegates Phase 9 to ModularHandlersInitializer
+
+All 413 tests pass.
+
+### Task 5-7: Deferred
+
+Details to be added when task 4 is complete.
 
 ---
 
@@ -282,5 +295,4 @@ scaling further**. The DI refactoring completed in recent sessions has
 significantly improved the architecture - all managers now use pure DI
 constructors with no legacy mode branches.
 
-**Current focus:** Tasks 1-3 complete. Next: Split InitializationManager into
-phases (Task 4) or expand test suite (Task 5).
+**Current focus:** Tasks 1-4 complete. Next: Expand test suite (Task 5).
