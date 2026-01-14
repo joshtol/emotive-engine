@@ -490,7 +490,6 @@ export class InitializationManager {
 
         // AudioHandler - depends on audio systems
         m.audioHandler = new AudioHandler({
-            _diStyle: true,
             audioAnalyzer: m.audioAnalyzer,
             audioLevelProcessor: m.audioLevelProcessor,
             shapeMorpher: m.shapeMorpher,
@@ -510,7 +509,6 @@ export class InitializationManager {
 
         // StateCoordinator - depends on state machine, renderer
         m.stateCoordinator = new StateCoordinator({
-            _diStyle: true,
             stateMachine: m.stateMachine,
             renderer: m.renderer,
             errorBoundary: m.errorBoundary,
@@ -520,7 +518,6 @@ export class InitializationManager {
 
         // VisualizationRunner - depends on renderer, particle system
         m.visualizationRunner = new VisualizationRunner({
-            _diStyle: true,
             renderer: m.renderer,
             particleSystem: m.particleSystem,
             errorBoundary: m.errorBoundary,
@@ -529,7 +526,6 @@ export class InitializationManager {
 
         // ExecutionLifecycleManager - depends on animation controller, idle behavior
         m.executionLifecycleManager = new ExecutionLifecycleManager({
-            _diStyle: true,
             animationController: m.animationController,
             idleBehavior: m.idleBehavior,
             gazeTracker: m.gazeTracker,
@@ -545,7 +541,6 @@ export class InitializationManager {
 
         // AnimationFrameController - depends on animation controller, position controller
         m.animationFrameController = new AnimationFrameController({
-            _diStyle: true,
             animationController: m.animationController,
             positionController: m.positionController,
             config: m.config,
@@ -556,7 +551,6 @@ export class InitializationManager {
 
         // ShapeTransformManager - depends on shape morpher, renderer
         m.shapeTransformManager = new ShapeTransformManager({
-            _diStyle: true,
             shapeMorpher: m.shapeMorpher,
             renderer: m.renderer,
             errorBoundary: m.errorBoundary,
@@ -565,7 +559,6 @@ export class InitializationManager {
 
         // EventListenerManager - depends on event manager
         m.eventListenerManager = new EventListenerManager({
-            _diStyle: true,
             eventManager: m.eventManager,
             errorBoundary: m.errorBoundary,
             chainTarget: m
@@ -573,7 +566,6 @@ export class InitializationManager {
 
         // TTSManager - depends on TTS state, sound system
         m.ttsManager = new TTSManager({
-            _diStyle: true,
             soundSystem: m.soundSystem,
             errorBoundary: m.errorBoundary,
             config: m.config,
@@ -589,7 +581,6 @@ export class InitializationManager {
 
         // SpeechReactivityManager - depends on audio level processor
         m.speechReactivityManager = new SpeechReactivityManager({
-            _diStyle: true,
             audioLevelProcessor: m.audioLevelProcessor,
             renderer: m.renderer,
             errorBoundary: m.errorBoundary,
@@ -606,7 +597,6 @@ export class InitializationManager {
 
         // CanvasResizeManager - depends on renderer, state machine, particle system
         m.canvasResizeManager = new CanvasResizeManager({
-            _diStyle: true,
             renderer: m.renderer,
             stateMachine: m.stateMachine,
             particleSystem: m.particleSystem,
@@ -616,7 +606,6 @@ export class InitializationManager {
 
         // OffsetPositionManager - depends on position controller, error boundary
         m.offsetPositionManager = new OffsetPositionManager({
-            _diStyle: true,
             positionController: m.positionController,
             errorBoundary: m.errorBoundary,
             chainTarget: m
@@ -624,7 +613,6 @@ export class InitializationManager {
 
         // VisualTransformationManager - depends on canvas resize, offset position, shape transform managers
         m.visualTransformationManager = new VisualTransformationManager({
-            _diStyle: true,
             canvasResizeManager: m.canvasResizeManager,
             offsetPositionManager: m.offsetPositionManager,
             shapeTransformManager: m.shapeTransformManager,
@@ -633,7 +621,6 @@ export class InitializationManager {
 
         // FrustrationContextManager - depends on context manager
         m.frustrationContextManager = new FrustrationContextManager({
-            _diStyle: true,
             contextManager: m.contextManager,
             errorBoundary: m.errorBoundary,
             chainTarget: m
@@ -641,7 +628,6 @@ export class InitializationManager {
 
         // LLMIntegrationBridge - depends on state machine, gesture controller
         m.llmIntegrationBridge = new LLMIntegrationBridge({
-            _diStyle: true,
             stateMachine: m.stateMachine,
             gestureController: m.gestureController,
             errorBoundary: m.errorBoundary,
@@ -657,7 +643,6 @@ export class InitializationManager {
 
         // DiagnosticsManager - depends on animation controller, state machine, performance system
         m.diagnosticsManager = new DiagnosticsManager({
-            _diStyle: true,
             errorBoundary: m.errorBoundary,
             degradationManager: m.degradationManager,
             animationController: m.animationController,
@@ -677,7 +662,6 @@ export class InitializationManager {
 
         // EmotionalStateQueryManager - depends on state machine, performance system, context manager
         m.emotionalStateQueryManager = new EmotionalStateQueryManager({
-            _diStyle: true,
             stateMachine: m.stateMachine,
             performanceSystem: m.performanceSystem,
             contextManager: m.contextManager,
@@ -687,7 +671,6 @@ export class InitializationManager {
 
         // DebugProfilingManager - depends on animation controller, config
         m.debugProfilingManager = new DebugProfilingManager({
-            _diStyle: true,
             animationController: m.animationController,
             config: m.config,
             errorBoundary: m.errorBoundary,
@@ -702,7 +685,6 @@ export class InitializationManager {
 
         // PerformanceBehaviorManager - depends on performance system, frustration context manager
         m.performanceBehaviorManager = new PerformanceBehaviorManager({
-            _diStyle: true,
             errorBoundary: m.errorBoundary,
             performanceSystem: m.performanceSystem,
             frustrationContextManager: m.frustrationContextManager,
@@ -713,7 +695,6 @@ export class InitializationManager {
 
         // PerformanceMonitoringManager - depends on diagnostics manager, animation controller
         m.performanceMonitoringManager = new PerformanceMonitoringManager({
-            _diStyle: true,
             diagnosticsManager: m.diagnosticsManager,
             degradationManager: m.degradationManager,
             animationFrameController: m.animationFrameController,
@@ -726,7 +707,6 @@ export class InitializationManager {
 
         // HealthCheckManager - depends on diagnostics manager
         m.healthCheckManager = new HealthCheckManager({
-            _diStyle: true,
             errorBoundary: m.errorBoundary,
             systemStatusReporter: m.systemStatusReporter,
             diagnosticsManager: m.diagnosticsManager,
@@ -741,7 +721,6 @@ export class InitializationManager {
 
         // ConfigurationManager - depends on config, multiple systems
         m.configurationManager = new ConfigurationManager({
-            _diStyle: true,
             config: m.config,
             userConfig: config,
             animationController: m.animationController,
