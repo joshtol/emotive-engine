@@ -85,6 +85,7 @@ import { PerformanceBehaviorManager } from '../performance/PerformanceBehaviorMa
 import { PerformanceMonitoringManager } from '../performance/PerformanceMonitoringManager.js';
 import { DebugProfilingManager } from '../debug/DebugProfilingManager.js';
 import { HealthCheckManager } from './HealthCheckManager.js';
+import { MascotStateManager } from '../state/MascotStateManager.js';
 
 /**
  * InitializationManager - Orchestrates EmotiveMascot initialization
@@ -104,6 +105,9 @@ export class InitializationManager {
      * @returns {Object} Initialized configuration
      */
     initialize() {
+        // Phase 0: Create MascotStateManager FIRST (before any other systems reference state)
+        this.initializeStateManager();
+
         // Phase 1: Configuration and browser compatibility
         const config = this.initializeConfiguration();
 
@@ -135,6 +139,25 @@ export class InitializationManager {
         this.finalizeInitialization(config);
 
         return config;
+    }
+
+    /**
+     * Phase 0: Initialize MascotStateManager before any other systems
+     * This MUST run first so state is available for all other phases
+     * @private
+     */
+    initializeStateManager() {
+        // Create MascotStateManager - centralized state management
+        this.mascot.stateManager = new MascotStateManager({
+            initialState: {
+                debugMode: this.userConfig.enableDebug || false
+            },
+            emit: (event, data) => this.mascot.emit(event, data)
+        });
+
+        // Create property aliases on mascot for backward compatibility
+        // These delegate to stateManager while maintaining the same external API
+        this._createStateAliases();
     }
 
     /**
@@ -791,14 +814,6 @@ export class InitializationManager {
             });
         }
 
-        // Initialize state properties
-        this.mascot.speaking = false;
-        this.mascot.recording = false;
-        this.mascot.sleeping = false;
-        this.mascot.warningTimestamps = {};
-        this.mascot.rhythmEnabled = false;
-        this.mascot.warningThrottle = 5000;
-
         // Initialize rhythm integration
         rhythmIntegration.initialize();
         this.mascot.rhythmIntegration = rhythmIntegration;
@@ -807,7 +822,6 @@ export class InitializationManager {
         // The mascot will set these itself from its imports
 
         // Initialize debugging if enabled
-        this.mascot.debugMode = config.enableDebug || false;
         if (this.mascot.debugMode) {
             emotiveDebugger.log('INFO', 'Debug mode enabled for EmotiveMascot', {
                 config,
@@ -831,9 +845,101 @@ export class InitializationManager {
         });
 
         // Complete initialization profiling
-        if (this.mascot.debugMode) {
+        if (this.mascot.stateManager.debugMode) {
             emotiveDebugger.endProfile('mascot-initialization');
             emotiveDebugger.takeMemorySnapshot('post-initialization');
         }
+    }
+
+    /**
+     * Create property aliases on mascot that delegate to stateManager
+     * This maintains backward compatibility with code that accesses mascot.speaking, etc.
+     * @private
+     */
+    _createStateAliases() {
+        const m = this.mascot;
+        const sm = m.stateManager;
+
+        // Define getters/setters that delegate to stateManager
+        Object.defineProperties(m, {
+            speaking: {
+                get() { return sm.speaking; },
+                set(v) { sm.speaking = v; },
+                enumerable: true,
+                configurable: true
+            },
+            recording: {
+                get() { return sm.recording; },
+                set(v) { sm.recording = v; },
+                enumerable: true,
+                configurable: true
+            },
+            sleeping: {
+                get() { return sm.sleeping; },
+                set(v) { sm.sleeping = v; },
+                enumerable: true,
+                configurable: true
+            },
+            isRunning: {
+                get() { return sm.isRunning; },
+                set(v) { sm.isRunning = v; },
+                enumerable: true,
+                configurable: true
+            },
+            debugMode: {
+                get() { return sm.debugMode; },
+                set(v) { sm.debugMode = v; },
+                enumerable: true,
+                configurable: true
+            },
+            audioLevel: {
+                get() { return sm.audioLevel; },
+                set(v) { sm.audioLevel = v; },
+                enumerable: true,
+                configurable: true
+            },
+            rhythmEnabled: {
+                get() { return sm.rhythmEnabled; },
+                set(v) { sm.rhythmEnabled = v; },
+                enumerable: true,
+                configurable: true
+            },
+            currentModularGesture: {
+                get() { return sm.currentModularGesture; },
+                set(v) { sm.currentModularGesture = v; },
+                enumerable: true,
+                configurable: true
+            },
+            breathePhase: {
+                get() { return sm.breathePhase; },
+                set(v) { sm.breathePhase = v; },
+                enumerable: true,
+                configurable: true
+            },
+            breatheStartTime: {
+                get() { return sm.breatheStartTime; },
+                set(v) { sm.breatheStartTime = v; },
+                enumerable: true,
+                configurable: true
+            },
+            orbScale: {
+                get() { return sm.orbScale; },
+                set(v) { sm.orbScale = v; },
+                enumerable: true,
+                configurable: true
+            },
+            warningTimestamps: {
+                get() { return sm.warningTimestamps; },
+                set(v) { sm.warningTimestamps = v; },
+                enumerable: true,
+                configurable: true
+            },
+            warningThrottle: {
+                get() { return sm.warningThrottle; },
+                set(v) { sm.warningThrottle = v; },
+                enumerable: true,
+                configurable: true
+            }
+        });
     }
 }

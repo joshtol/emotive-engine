@@ -198,7 +198,7 @@ code don't need rewriting, and smaller units are easier to test.
 | ----- | ----------------------------------------- | ----------- |
 | 1     | Add dependency validation to constructors | ✅ Complete |
 | 2     | Fix post-init cross-reference (line 735)  | ✅ Complete |
-| 3     | Refactor EmotiveMascot god object         | Not Started |
+| 3     | Refactor EmotiveMascot god object         | ✅ Complete |
 | 4     | Split InitializationManager into phases   | Not Started |
 | 5     | Expand test suite for managers            | Not Started |
 | 6     | Break down large 3D files                 | Not Started |
@@ -247,9 +247,31 @@ created BEFORE `PerformanceMonitoringManager`. This eliminates the post-init
 cross-reference assignment and ensures all dependencies are passed via
 constructor. All 413 tests pass.
 
-### Task 3-7: Deferred
+### Task 3: Refactor EmotiveMascot God Object ✅ Complete
 
-Details to be added when tasks 1-2 are complete.
+Created `MascotStateManager` class to centralize all mutable state that was
+scattered across EmotiveMascot:
+
+**State properties extracted:**
+- Operational: `isRunning`, `debugMode`
+- Speech/Audio: `speaking`, `recording`, `audioLevel`
+- Behavioral: `sleeping`, `rhythmEnabled`
+- Gesture: `currentModularGesture`
+- Breathing: `breathePhase`, `breatheStartTime`, `orbScale`
+- Utility: `warningTimestamps`, `warningThrottle`
+
+**Implementation:**
+- Created `src/mascot/state/MascotStateManager.js` with getters/setters
+- Added Phase 0 in InitializationManager to create stateManager first
+- Property aliases on mascot delegate to stateManager (backward compatible)
+- State changes emit `stateChange` events for observability
+- Added `getSnapshot()` and `reset()` methods for debugging
+
+All 413 tests pass.
+
+### Task 4-7: Deferred
+
+Details to be added when task 3 is complete.
 
 ---
 
@@ -260,5 +282,5 @@ scaling further**. The DI refactoring completed in recent sessions has
 significantly improved the architecture - all managers now use pure DI
 constructors with no legacy mode branches.
 
-**Current focus:** Tasks 1-2 complete. Next: Refactor EmotiveMascot god object
-(Task 3) or expand test suite (Task 5).
+**Current focus:** Tasks 1-3 complete. Next: Split InitializationManager into
+phases (Task 4) or expand test suite (Task 5).
