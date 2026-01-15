@@ -7,6 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.8] - 2025-01-14
+
+### 🎭 Dance Choreographer Gesture Registration
+
+- **ADDED** Accent gestures to core gesture registry for DanceChoreographer
+  support
+    - `pop` - Quick scale pulse accent for beat hits
+    - `bob` - Forward tilt accent (head nod feel) for groove emphasis
+    - `swell` - Glow build with scale for transitions and builds
+    - `swagger` - Side lean with drift for confident movement feel
+    - `dip` - Downward bob with squish for rhythmic drops
+    - `flare` - Scale + glow burst for drops and big accents
+
+- **DESIGN** Accent gestures use boost multipliers (`scaleBoost`,
+  `rotationBoost`, `positionBoost`, `glowBoost`) instead of absolute values
+    - Works WITH existing groove animation instead of fighting it
+    - All marked with `isAccent: true` in 3D config
+    - Resolves "Unknown gesture" warnings when dance mode enabled
+
 ## [3.3.7] - 2025-01-14
 
 ### 🐛 Bug Fixes

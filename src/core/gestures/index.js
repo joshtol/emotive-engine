@@ -44,6 +44,13 @@ import headBob from './motions/headBob.js';
 import lean from './motions/lean.js';
 import point from './motions/point.js';
 import reach from './motions/reach.js';
+// Accent gestures (dance-friendly - boost groove, don't compete)
+import pop from './motions/pop.js';
+import bob from './motions/bob.js';
+import swell from './motions/swell.js';
+import swagger from './motions/swagger.js';
+import dip from './motions/dip.js';
+import flare from './motions/flare.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -281,7 +288,14 @@ const MOTION_GESTURES = [
     lean,
     reach,
     headBob,
-    rain
+    rain,
+    // Accent gestures (dance-friendly - boost groove, don't compete)
+    pop,
+    bob,
+    swell,
+    swagger,
+    dip,
+    flare
 ];
 
 const TRANSFORM_GESTURES = [
