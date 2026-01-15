@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.7] - 2025-01-14
+
+### 🐛 Bug Fixes
+
+- **FIXED** `setBPMMultiplier()` not actually affecting animation speed
+    - Was incorrectly scaling the progress value instead of the frequency
+    - Now correctly applies multiplier to phase calculation so 0.5 = half speed
+    - Accent response still syncs to actual beats for proper feel
+
 ## [3.3.6] - 2025-01-14
 
 ### 🎵 Groove Animation Speed Control

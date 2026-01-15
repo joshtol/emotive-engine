@@ -539,26 +539,27 @@ export class Rhythm3DAdapter {
         // This is frame-rate independent because beatProgress/barProgress come from
         // RhythmEngine which uses performance.now(), not accumulated frame deltas
         //
-        // Apply BPM multiplier to scale animation speed:
-        // - multiplier 0.5 = animations run at half speed (for high BPM songs)
-        // - multiplier 2.0 = animations run at double speed (for slow songs)
-        const effectiveBeatProgress = (this.beatProgress * this.bpmMultiplier) % 1;
-        const effectiveBarProgress = (this.barProgress * this.bpmMultiplier) % 1;
+        // BPM multiplier scales animation FREQUENCY (not progress value):
+        // - multiplier 0.5 = animations take 2 beats to complete one cycle (half speed)
+        // - multiplier 2.0 = animations complete 2 cycles per beat (double speed)
+        // Applied directly to the phase calculation, not the progress value
 
         // Vertical bounce: synced to beat with configurable frequency
-        const bouncePhase = (effectiveBeatProgress * bounceFreq * Math.PI * 2) + phaseOffset;
+        // bpmMultiplier scales the frequency so 0.5 = half as many bounces per beat
+        const bouncePhase = (this.beatProgress * bounceFreq * this.bpmMultiplier * Math.PI * 2) + phaseOffset;
         const rawBounce = Math.sin(bouncePhase);
         const easedBounce = this._applyEasing(rawBounce, easing);
 
         // Horizontal sway: synced to bar with configurable frequency
-        const swayPhase = (effectiveBarProgress * swayFreq * Math.PI * 2) + phaseOffset;
+        const swayPhase = (this.barProgress * swayFreq * this.bpmMultiplier * Math.PI * 2) + phaseOffset;
         const rawSway = Math.sin(swayPhase);
         const easedSway = this._applyEasing(rawSway, easing);
 
         // Accent response: smooth curve that peaks at beat start, scaled by accent level
         // Uses cosine curve centered on beat boundaries (0 and 1) for smooth falloff
         // beatProgress 0.0 → peak, 0.5 → minimum, 1.0 → peak again
-        const beatProximity = (Math.cos(effectiveBeatProgress * Math.PI * 2) + 1) * 0.5; // 0-1, peaks at beat
+        // Note: accent response uses raw beatProgress (not multiplied) to still sync with actual beats
+        const beatProximity = (Math.cos(this.beatProgress * Math.PI * 2) + 1) * 0.5; // 0-1, peaks at beat
         const accentStrength = Math.max(0, this.accent - 0.4) / 0.6; // 0-1, normalized above 0.4 threshold
         const accentBoost = beatProximity * accentStrength * 0.25; // Smooth accent curve
 
