@@ -58,6 +58,15 @@ const PUBLIC_FILES_TO_COPY = [
     {
         src: 'emotive-mascot-3d.umd.js.map',
         dest: 'emotive-mascot-3d.umd.js.map'
+    },
+    // 3D Engine BUNDLED (includes Three.js - for static HTML examples)
+    {
+        src: 'emotive-mascot-3d.bundled.js',
+        dest: 'emotive-engine-3d.bundled.js'  // 3D WebGL engine with Three.js bundled
+    },
+    {
+        src: 'emotive-mascot-3d.bundled.js.map',
+        dest: 'emotive-engine-3d.bundled.js.map'
     }
 ];
 

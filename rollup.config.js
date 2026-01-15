@@ -156,33 +156,68 @@ builds.push({
 });
 
 // 3D build (WebGL variant with procedural geometries)
-// Three.js is a peer dependency - not bundled
+// Three.js is a peer dependency - not bundled (for npm consumers with bundlers)
 builds.push({
     input: 'src/3d/index.js',
     output: [
         {
-            // ES Module
+            // ES Module - three.js external (for bundlers like Webpack, Vite)
             file: 'dist/emotive-mascot-3d.js',
             format: 'es',
             sourcemap: true,
-            inlineDynamicImports: true,  // Inline dynamic imports (EXRLoader, RGBELoader)
+            inlineDynamicImports: true,
             banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
         },
         {
-            // UMD for CDN/browser usage
+            // UMD - three.js external (expects global THREE)
             file: 'dist/emotive-mascot-3d.umd.js',
             format: 'umd',
             name: 'EmotiveMascot3D',
             exports: 'named',
             sourcemap: true,
-            inlineDynamicImports: true,  // Inline dynamic imports (EXRLoader, RGBELoader)
+            inlineDynamicImports: true,
             banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`,
             globals: {
                 three: 'THREE'
             }
         }
     ],
-    external: ['three'],  // Don't bundle Three.js - use as peer dependency
+    external: ['three'],
+    plugins: [
+        ...threeDPlugins,
+        ...(isProduction ? [terser({
+            compress: {
+                drop_console: false,
+                drop_debugger: true,
+                passes: 2
+            },
+            mangle: {
+                properties: false
+            },
+            format: {
+                comments: false
+            }
+        })] : [])
+    ],
+    treeshake: {
+        moduleSideEffects: false
+    }
+});
+
+// 3D build BUNDLED (for static HTML examples - includes Three.js)
+builds.push({
+    input: 'src/3d/index.js',
+    output: [
+        {
+            // ES Module with Three.js bundled - for static HTML demos
+            file: 'dist/emotive-mascot-3d.bundled.js',
+            format: 'es',
+            sourcemap: true,
+            inlineDynamicImports: true,
+            banner: `/*! Emotive Engine 3D (bundled) v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+        }
+    ],
+    // No external - bundle everything including Three.js
     plugins: [
         ...threeDPlugins,
         ...(isProduction ? [terser({

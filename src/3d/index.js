@@ -2041,5 +2041,8 @@ export { rhythm3DAdapter, Rhythm3DAdapter, GROOVE_PRESETS } from './animation/Rh
 // Export CrystalSoul for geometry preloading
 export { CrystalSoul } from './effects/CrystalSoul.js';
 
+// Export AudioInterpreter for LLM-based audio semantic interpretation
+export { AudioInterpreter, audioInterpreter, ENGINE_VOCABULARY, LLM_ENDPOINTS } from '../core/audio/AudioInterpreter.js';
+
 // SSR detection helper for framework integration
 export const isSSR = () => typeof window === 'undefined';

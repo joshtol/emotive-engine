@@ -740,6 +740,140 @@
         }
 
         /* ═══════════════════════════════════════════════════════════════════════════
+           LLM INTERPRETER PANEL
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .llm-input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .llm-input-row input[type="text"],
+        .llm-input-row input[type="password"] {
+            flex: 1;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .llm-input-row input::placeholder {
+            color: #606060;
+        }
+
+        .llm-test-area {
+            margin-top: 0.75rem;
+        }
+
+        .llm-test-input {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .llm-test-input::placeholder {
+            color: #606060;
+        }
+
+        .llm-action-log {
+            font-size: 0.7rem;
+            color: #808080;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.5rem;
+            border-radius: 4px;
+            max-height: 100px;
+            overflow-y: auto;
+            margin-top: 0.5rem;
+        }
+
+        .llm-action {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .llm-action:last-child {
+            border-bottom: none;
+        }
+
+        .llm-action .action-time {
+            color: #505050;
+            margin-right: 0.5rem;
+        }
+
+        .llm-action .action-type {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .llm-status {
+            font-size: 0.65rem;
+            color: #606060;
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .llm-status.active {
+            color: #10b981;
+        }
+
+        .llm-status.error {
+            color: #ef4444;
+        }
+
+        .llm-lyrics-area {
+            margin-top: 0.5rem;
+        }
+
+        .llm-lyrics-area textarea {
+            width: 100%;
+            min-height: 80px;
+            max-height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0.5rem;
+            color: #e0e0e0;
+            font-size: 0.75rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            resize: vertical;
+        }
+
+        .llm-lyrics-area textarea::placeholder {
+            color: #505050;
+        }
+
+        .llm-lyrics-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .llm-lyrics-controls button {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.7rem;
+        }
+
+        .llm-current-line {
+            font-size: 0.7rem;
+            color: var(--accent);
+            padding: 0.25rem 0.5rem;
+            background: rgba(124, 58, 237, 0.1);
+            border-radius: 4px;
+            margin-top: 0.25rem;
+            min-height: 1.5em;
+            font-style: italic;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
            MOBILE RESPONSIVE
            ═══════════════════════════════════════════════════════════════════════════ */
         @media (max-width: 1000px) {
@@ -1096,6 +1230,54 @@
             </div>
         </div>
 
+        <!-- LLM Audio Interpreter Panel -->
+        <div class="section">
+            <h2 class="has-toggle">
+                <span>LLM Interpreter</span>
+                <div class="toggle-switch" id="llm-toggle">Off</div>
+            </h2>
+            <div class="section-content">
+                <div class="llm-input-row">
+                    <select id="llmProvider" style="flex: 0 0 auto; min-width: 100px;">
+                        <option value="anthropic">Claude</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="grok">Grok</option>
+                    </select>
+                    <input type="password" id="llmApiKey" placeholder="API Key" style="flex: 1;">
+                </div>
+                <div class="llm-input-row">
+                    <input type="text" id="llmModel" placeholder="Model (optional)">
+                </div>
+                <!-- Lyrics textarea for timed interpretation -->
+                <div class="llm-lyrics-area">
+                    <label style="font-size: 0.75rem; color: #888; display: block; margin-bottom: 4px;">
+                        Lyrics (paste with timestamps or plain text)
+                    </label>
+                    <textarea id="llmLyrics" placeholder="[00:15] First line of lyrics
+[00:20] Second line
+[00:25] Third line...
+
+Or just paste plain lyrics and they'll be fed line by line every few seconds."></textarea>
+                    <div class="llm-lyrics-controls">
+                        <button id="llmParseLyrics" title="Parse and prepare lyrics">Parse</button>
+                        <span id="llmLyricsStatus" style="font-size: 0.7rem; color: #666;">No lyrics loaded</span>
+                    </div>
+                </div>
+                <!-- Manual test input -->
+                <div class="llm-test-area">
+                    <input type="text" class="llm-test-input" id="llmTestInput" placeholder="Or type manually to test...">
+                    <button id="llmTestBtn" style="width: 100%;">Interpret</button>
+                </div>
+                <div class="llm-action-log" id="llmActionLog">
+                    <div style="color: #505050; text-align: center;">Actions will appear here...</div>
+                </div>
+                <div class="llm-status" id="llmStatus">
+                    <span>Status: Disabled</span>
+                    <span id="llmRequestCount">0 requests</span>
+                </div>
+            </div>
+        </div>
+
         <div class="section visual-controls">
             <h2 class="has-toggle">
                 <span>Visuals</span>
@@ -1154,7 +1336,7 @@
          * EmotiveMascot3D: Main 3D mascot class with audio-reactive features
          * demo-utils: Shared utilities for toggle controls and visual settings
          */
-        import EmotiveMascot3D from '/emotive-engine-3d.js';
+        import EmotiveMascot3D, { AudioInterpreter, LLM_ENDPOINTS } from '/emotive-engine-3d.bundled.js';
         import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
 
         /**
@@ -1231,6 +1413,8 @@
         let frameCount = 0;          // Frame counter for FPS
         let currentTrack = 'female'; // Currently selected demo track
         let currentFile = null;      // Custom file object (if user imported one)
+        let audioInterpreter = null; // LLM Audio Interpreter instance
+        let llmRequestCount = 0;     // Count of LLM requests made
 
         /**
          * ═══════════════════════════════════════════════════════════════════════════
@@ -1292,6 +1476,25 @@
 
         // Track active gestures for visual feedback (gesture name -> timeout ID)
         const activeGestures = new Map();
+
+        // LLM Interpreter panel elements
+        const llmToggle = document.getElementById('llm-toggle');
+        const llmProviderSelect = document.getElementById('llmProvider');
+        const llmApiKeyInput = document.getElementById('llmApiKey');
+        const llmModelInput = document.getElementById('llmModel');
+        const llmTestInput = document.getElementById('llmTestInput');
+        const llmTestBtn = document.getElementById('llmTestBtn');
+        const llmActionLog = document.getElementById('llmActionLog');
+        const llmStatus = document.getElementById('llmStatus');
+        const llmRequestCountEl = document.getElementById('llmRequestCount');
+        const llmLyricsTextarea = document.getElementById('llmLyrics');
+        const llmParseLyricsBtn = document.getElementById('llmParseLyrics');
+        const llmLyricsStatusEl = document.getElementById('llmLyricsStatus');
+
+        // Lyrics timing system
+        let parsedLyrics = [];        // Array of { time: seconds, text: string }
+        let currentLyricIndex = -1;   // Current line being played
+        let lyricsUpdateInterval = null;
 
         /**
          * ═══════════════════════════════════════════════════════════════════════════
@@ -1609,11 +1812,18 @@
                 // Start monitoring BPM detection status
                 startBPMMonitor();
 
+                // Start lyrics tracking if lyrics are loaded
+                if (parsedLyrics.length > 0) {
+                    startLyricsTracking();
+                    log(`Lyrics tracking started (${parsedLyrics.length} lines)`, 'groove');
+                }
+
                 // Handle end of track
                 audioElement.onended = () => {
                     isPlaying = false;
                     playBtn.disabled = false;
                     stopBtn.disabled = true;
+                    stopLyricsTracking();
                     log('Playback ended', 'info');
                 };
 
@@ -1640,6 +1850,9 @@
 
             // Compact BPM display when stopped
             bpmDisplay.classList.add('compact');
+
+            // Stop lyrics tracking
+            stopLyricsTracking();
 
             mascot.stopRhythm();
             log('Stopped', 'info');
@@ -2292,6 +2505,305 @@
 
         /**
          * ═══════════════════════════════════════════════════════════════════════════
+         * LLM AUDIO INTERPRETER
+         * ═══════════════════════════════════════════════════════════════════════════
+         *
+         * The AudioInterpreter uses a BYOK (Bring Your Own Key) LLM to interpret
+         * semantic content from audio (lyrics, mood) and map it to engine actions.
+         *
+         * WORKFLOW:
+         * 1. User enters OpenAI API key
+         * 2. Type lyrics/mood text or feed from transcription
+         * 3. LLM interprets and returns { geometry, sss, emotion, gesture }
+         * 4. Actions are applied to the mascot
+         */
+
+        /**
+         * Initialize the LLM Audio Interpreter
+         */
+        function initAudioInterpreter() {
+            audioInterpreter = new AudioInterpreter({
+                onAction: handleLLMAction,
+                onError: handleLLMError
+            });
+        }
+
+        /**
+         * Parse lyrics text into timed entries
+         * Supports formats:
+         * - [MM:SS] lyrics text
+         * - [MM:SS.ms] lyrics text
+         * - Plain text (will be auto-timed every 5 seconds)
+         */
+        function parseLyrics(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const result = [];
+            let autoTime = 0;
+            const autoInterval = 5; // seconds between auto-timed lines
+
+            // Timestamp regex: [00:15] or [00:15.500] or [0:15]
+            const timestampRegex = /^\[(\d{1,2}):(\d{2})(?:\.(\d+))?\]\s*(.+)/;
+
+            for (const line of lines) {
+                const match = line.match(timestampRegex);
+                if (match) {
+                    const minutes = parseInt(match[1], 10);
+                    const seconds = parseInt(match[2], 10);
+                    const ms = match[3] ? parseInt(match[3].padEnd(3, '0').slice(0, 3), 10) : 0;
+                    const text = match[4].trim();
+
+                    if (text) {
+                        result.push({
+                            time: minutes * 60 + seconds + ms / 1000,
+                            text
+                        });
+                    }
+                } else if (line.trim()) {
+                    // No timestamp - auto-time it
+                    result.push({
+                        time: autoTime,
+                        text: line.trim()
+                    });
+                    autoTime += autoInterval;
+                }
+            }
+
+            // Sort by time
+            result.sort((a, b) => a.time - b.time);
+            return result;
+        }
+
+        /**
+         * Start tracking lyrics with audio playback
+         */
+        function startLyricsTracking() {
+            if (lyricsUpdateInterval) {
+                clearInterval(lyricsUpdateInterval);
+            }
+
+            currentLyricIndex = -1;
+
+            // Check every 250ms for next lyric line
+            lyricsUpdateInterval = setInterval(() => {
+                if (!audioElement || !isPlaying || parsedLyrics.length === 0) return;
+                if (!audioInterpreter?.enabled) return;
+
+                const currentTime = audioElement.currentTime;
+
+                // Find the current lyric line based on audio time
+                let newIndex = -1;
+                for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+                    if (currentTime >= parsedLyrics[i].time) {
+                        newIndex = i;
+                        break;
+                    }
+                }
+
+                // If we moved to a new line, feed it to the interpreter
+                if (newIndex !== currentLyricIndex && newIndex >= 0) {
+                    currentLyricIndex = newIndex;
+                    const lyric = parsedLyrics[newIndex];
+                    log(`Lyric: "${lyric.text}"`, 'info');
+                    audioInterpreter.feedText(lyric.text);
+                }
+            }, 250);
+        }
+
+        /**
+         * Stop lyrics tracking
+         */
+        function stopLyricsTracking() {
+            if (lyricsUpdateInterval) {
+                clearInterval(lyricsUpdateInterval);
+                lyricsUpdateInterval = null;
+            }
+            currentLyricIndex = -1;
+        }
+
+        /**
+         * Handle action from LLM interpreter
+         * @param {Object} action - { geometry, sss, emotion, gesture }
+         */
+        function handleLLMAction(action) {
+            if (!mascot || !action) return;
+
+            llmRequestCount++;
+            llmRequestCountEl.textContent = `${llmRequestCount} requests`;
+
+            // Log the action
+            const time = new Date().toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const actionParts = [];
+            if (action.geometry) actionParts.push(`geo:${action.geometry}`);
+            if (action.sss) actionParts.push(`sss:${action.sss}`);
+            if (action.emotion) actionParts.push(`emo:${action.emotion}`);
+            if (action.gesture) {
+                const gesStr = Array.isArray(action.gesture) ? action.gesture.join('+') : action.gesture;
+                actionParts.push(`ges:${gesStr}`);
+            }
+            if (action.then) {
+                const thenStr = Array.isArray(action.then) ? action.then.join('+') : action.then;
+                actionParts.push(`→${thenStr}`);
+            }
+
+            const entry = document.createElement('div');
+            entry.className = 'llm-action';
+            entry.innerHTML = `<span class="action-time">${time}</span><span class="action-type">${actionParts.join(' ')}</span>`;
+            llmActionLog.insertBefore(entry, llmActionLog.firstChild);
+
+            // Limit log size
+            while (llmActionLog.children.length > 20) {
+                llmActionLog.removeChild(llmActionLog.lastChild);
+            }
+
+            // Apply actions to mascot
+            if (action.geometry) {
+                mascot.morphTo(action.geometry);
+                log(`LLM → Geometry: ${action.geometry}`, 'groove');
+            }
+
+            if (action.sss) {
+                mascot.setSSSPreset(action.sss);
+                log(`LLM → SSS: ${action.sss}`, 'groove');
+            }
+
+            if (action.emotion) {
+                mascot.setEmotion(action.emotion);
+                log(`LLM → Emotion: ${action.emotion}`, 'groove');
+            }
+
+            // Handle gesture - supports single, array (layered), and sequential (then)
+            if (action.gesture) {
+                const gestures = Array.isArray(action.gesture) ? action.gesture : [action.gesture];
+
+                // Execute all gestures (layered/simultaneous)
+                for (const g of gestures) {
+                    mascot.express(g);
+                }
+
+                const gestureStr = gestures.join('+');
+                log(`LLM → Gesture: ${gestureStr}`, 'gesture');
+
+                // Handle sequential "then" gesture after a delay
+                if (action.then) {
+                    const thenGestures = Array.isArray(action.then) ? action.then : [action.then];
+                    setTimeout(() => {
+                        for (const g of thenGestures) {
+                            mascot.express(g);
+                        }
+                        log(`LLM → Then: ${thenGestures.join('+')}`, 'gesture');
+                    }, 400); // Delay for accent to land before settling
+                }
+            }
+        }
+
+        /**
+         * Handle LLM error
+         * @param {Error} err - Error object
+         */
+        function handleLLMError(err) {
+            log(`LLM Error: ${err.message}`, 'error');
+            llmStatus.classList.remove('active');
+            llmStatus.classList.add('error');
+            llmStatus.querySelector('span').textContent = `Error: ${err.message}`;
+        }
+
+        // LLM Toggle - enable/disable interpreter
+        llmToggle.addEventListener('click', () => {
+            const isActive = llmToggle.classList.toggle('active');
+            llmToggle.textContent = isActive ? 'On' : 'Off';
+
+            if (isActive) {
+                const apiKey = llmApiKeyInput.value.trim();
+                if (!apiKey) {
+                    log('LLM: Enter API key first', 'error');
+                    llmToggle.classList.remove('active');
+                    llmToggle.textContent = 'Off';
+                    return;
+                }
+
+                const provider = llmProviderSelect.value;
+                const endpoint = LLM_ENDPOINTS[provider];
+                const model = llmModelInput.value.trim() || null; // Let AudioInterpreter use defaults
+
+                audioInterpreter.configure({
+                    apiKey,
+                    endpoint,
+                    model
+                });
+
+                // Update current mascot state
+                audioInterpreter.updateCurrentState({
+                    geometry: mascot?.core3D?.geometryType || 'crystal',
+                    emotion: 'calm'
+                });
+
+                if (audioInterpreter.enable()) {
+                    llmStatus.classList.remove('error');
+                    llmStatus.classList.add('active');
+                    llmStatus.querySelector('span').textContent = `Active (${provider})`;
+                    log(`LLM Interpreter enabled: ${provider}`, 'groove');
+                }
+            } else {
+                audioInterpreter.disable();
+                llmStatus.classList.remove('active', 'error');
+                llmStatus.querySelector('span').textContent = 'Status: Disabled';
+                log('LLM Interpreter disabled', 'info');
+            }
+        });
+
+        // LLM Test button - interpret text input
+        llmTestBtn.addEventListener('click', async () => {
+            const text = llmTestInput.value.trim();
+            if (!text) return;
+
+            if (!audioInterpreter.enabled) {
+                log('LLM: Enable interpreter first', 'error');
+                return;
+            }
+
+            llmTestBtn.disabled = true;
+            llmTestBtn.textContent = 'Interpreting...';
+
+            try {
+                await audioInterpreter.interpret(text);
+            } finally {
+                llmTestBtn.disabled = false;
+                llmTestBtn.textContent = 'Interpret';
+            }
+        });
+
+        // Allow Enter key to trigger interpretation
+        llmTestInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                llmTestBtn.click();
+            }
+        });
+
+        // Parse lyrics button
+        llmParseLyricsBtn.addEventListener('click', () => {
+            const text = llmLyricsTextarea.value.trim();
+            if (!text) {
+                parsedLyrics = [];
+                llmLyricsStatusEl.textContent = 'No lyrics loaded';
+                log('Lyrics cleared', 'info');
+                return;
+            }
+
+            parsedLyrics = parseLyrics(text);
+            const hasTimestamps = parsedLyrics.some((l, i) => i > 0 && l.time !== i * 5);
+            const mode = hasTimestamps ? 'timed' : 'auto (5s intervals)';
+            llmLyricsStatusEl.textContent = `${parsedLyrics.length} lines (${mode})`;
+            log(`Parsed ${parsedLyrics.length} lyrics lines (${mode})`, 'groove');
+        });
+
+        /**
+         * ═══════════════════════════════════════════════════════════════════════════
          * INITIALIZATION
          * ═══════════════════════════════════════════════════════════════════════════
          *
@@ -2318,6 +2830,10 @@
                 mascot?.setDanceIntensity?.(1.0);
 
                 log('Dance choreographer ready (will activate on BPM lock)', 'groove');
+
+                // Initialize LLM Audio Interpreter
+                initAudioInterpreter();
+                log('LLM Interpreter ready (enter API key to enable)', 'info');
             })
             .catch(err => {
                 log(`Init error: ${err.message}`, 'error');
