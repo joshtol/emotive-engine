@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.6] - 2025-01-14
+
+### 🎵 Groove Animation Speed Control
+
+- **ADDED** `setBPMMultiplier(multiplier)` API for controlling groove animation
+  speed
+    - Scales effective BPM used for animations without affecting BPM detection
+    - Set to 0.5 to halve animation speed (useful for high BPM songs > 90)
+    - Set to 2.0 to double animation speed (useful for very slow songs)
+    - Range: 0.25 to 4.0, default 1.0
+    - Available on both `EmotiveMascot3D` and `Rhythm3DAdapter`
+
+- **ADDED** `getBPMMultiplier()` API to retrieve current multiplier value
+
 ## [3.3.5] - 2025-01-14
 
 ### ⚡ Performance Optimizations (Render Loop)

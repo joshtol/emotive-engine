@@ -1246,6 +1246,43 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Set BPM multiplier for groove animation speed control
+     *
+     * This scales the effective BPM used for groove animations without affecting
+     * the actual BPM detection or rhythm engine. Useful for controlling how fast
+     * the mascot dances regardless of the detected song tempo.
+     *
+     * Common use cases:
+     * - Set to 0.5 to halve animation speed for high BPM songs (>90 BPM)
+     * - Set to 2.0 to double animation speed for very slow songs
+     * - Set to 1.0 (default) to use detected BPM as-is
+     *
+     * @example
+     * // Halve animation speed for fast songs
+     * const status = mascot.getBPMStatus();
+     * if (status.bpm > 90) {
+     *     mascot.setBPMMultiplier(0.5);
+     * } else {
+     *     mascot.setBPMMultiplier(1.0);
+     * }
+     *
+     * @param {number} multiplier - BPM multiplier (0.25 to 4.0, default 1.0)
+     */
+    setBPMMultiplier(multiplier) {
+        if (this.core3D?.rhythm3DAdapter) {
+            this.core3D.rhythm3DAdapter.setBPMMultiplier(multiplier);
+        }
+    }
+
+    /**
+     * Get current BPM multiplier
+     * @returns {number} Current BPM multiplier (default 1.0)
+     */
+    getBPMMultiplier() {
+        return this.core3D?.rhythm3DAdapter?.getBPMMultiplier() ?? 1.0;
+    }
+
+    /**
      * Set groove configuration for idle animations (advanced tuning)
      * @param {Object} config - Groove settings
      * @param {number} config.grooveBounceAmount - Vertical bounce amplitude (default: 0.02)

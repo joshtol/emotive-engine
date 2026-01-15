@@ -142,6 +142,12 @@ export class Rhythm3DAdapter {
         // Ranges from 0.15 (tentative) to 1.0 (fully locked), provided by BPM detector
         this.grooveConfidence = 1.0;      // Default to full when not using BPM detection
 
+        // BPM multiplier: scales the effective BPM used for animations
+        // Default 1.0 = use detected BPM as-is
+        // Set to 0.5 to halve animation speed (e.g., for high BPM songs)
+        // Set to 2.0 to double animation speed (e.g., for slow songs)
+        this.bpmMultiplier = 1.0;
+
         // Modulation output (computed each frame) - these are the SMOOTHED values
         this.modulation = {
             scaleMultiplier: 1.0,      // Applied to gesture scale output
@@ -532,21 +538,27 @@ export class Rhythm3DAdapter {
         // Compute groove motions from ABSOLUTE beat/bar progress
         // This is frame-rate independent because beatProgress/barProgress come from
         // RhythmEngine which uses performance.now(), not accumulated frame deltas
+        //
+        // Apply BPM multiplier to scale animation speed:
+        // - multiplier 0.5 = animations run at half speed (for high BPM songs)
+        // - multiplier 2.0 = animations run at double speed (for slow songs)
+        const effectiveBeatProgress = (this.beatProgress * this.bpmMultiplier) % 1;
+        const effectiveBarProgress = (this.barProgress * this.bpmMultiplier) % 1;
 
         // Vertical bounce: synced to beat with configurable frequency
-        const bouncePhase = (this.beatProgress * bounceFreq * Math.PI * 2) + phaseOffset;
+        const bouncePhase = (effectiveBeatProgress * bounceFreq * Math.PI * 2) + phaseOffset;
         const rawBounce = Math.sin(bouncePhase);
         const easedBounce = this._applyEasing(rawBounce, easing);
 
         // Horizontal sway: synced to bar with configurable frequency
-        const swayPhase = (this.barProgress * swayFreq * Math.PI * 2) + phaseOffset;
+        const swayPhase = (effectiveBarProgress * swayFreq * Math.PI * 2) + phaseOffset;
         const rawSway = Math.sin(swayPhase);
         const easedSway = this._applyEasing(rawSway, easing);
 
         // Accent response: smooth curve that peaks at beat start, scaled by accent level
         // Uses cosine curve centered on beat boundaries (0 and 1) for smooth falloff
         // beatProgress 0.0 → peak, 0.5 → minimum, 1.0 → peak again
-        const beatProximity = (Math.cos(this.beatProgress * Math.PI * 2) + 1) * 0.5; // 0-1, peaks at beat
+        const beatProximity = (Math.cos(effectiveBeatProgress * Math.PI * 2) + 1) * 0.5; // 0-1, peaks at beat
         const accentStrength = Math.max(0, this.accent - 0.4) / 0.6; // 0-1, normalized above 0.4 threshold
         const accentBoost = beatProximity * accentStrength * 0.25; // Smooth accent curve
 
@@ -772,6 +784,35 @@ export class Rhythm3DAdapter {
      */
     setGrooveConfidence(confidence) {
         this.grooveConfidence = Math.max(0, Math.min(1, confidence));
+    }
+
+    /**
+     * Set BPM multiplier for animation speed control
+     *
+     * This scales the effective BPM used for groove animations without affecting
+     * the actual BPM detection or rhythm engine. Useful for:
+     * - Halving animation speed for high BPM songs (set to 0.5)
+     * - Doubling animation speed for slow songs (set to 2.0)
+     *
+     * @example
+     * // Halve animation speed for songs > 90 BPM
+     * const status = mascot.getBPMStatus();
+     * if (status.bpm > 90) {
+     *     mascot.setBPMMultiplier(0.5);
+     * }
+     *
+     * @param {number} multiplier - BPM multiplier (0.25 to 4.0, default 1.0)
+     */
+    setBPMMultiplier(multiplier) {
+        this.bpmMultiplier = Math.max(0.25, Math.min(4.0, multiplier));
+    }
+
+    /**
+     * Get current BPM multiplier
+     * @returns {number} Current BPM multiplier (default 1.0)
+     */
+    getBPMMultiplier() {
+        return this.bpmMultiplier;
     }
 
     /**
