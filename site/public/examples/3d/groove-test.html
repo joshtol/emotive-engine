@@ -1366,6 +1366,12 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
             'click-120-hihat': '/assets/tracks/test/click-120-hihat.wav'
         };
 
+        // LRC lyrics files for demo tracks (optional sidecar files)
+        const TRACK_LYRICS = {
+            female: '/assets/tracks/music/electric-glow.lrc',
+            male: '/assets/tracks/music/electric-glow.lrc'  // Same lyrics for both versions
+        };
+
         // Mascot configuration - these match EmotiveMascot3D constructor options
         const MASCOT_CONFIG = {
             coreGeometry: 'crystal',      // Starting geometry (crystal, moon, sun)
@@ -1689,9 +1695,50 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
 
                 log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
 
+                // Try to auto-load lyrics if available
+                await loadTrackLyrics(trackId);
+
             } catch (err) {
                 log(`Error loading track: ${err.message}`, 'error');
                 console.error('Track load error:', err);
+            }
+        }
+
+        /**
+         * Load LRC lyrics file for a track if available
+         * @param {string} trackId - Key from DEMO_TRACKS object
+         */
+        async function loadTrackLyrics(trackId) {
+            const lrcUrl = TRACK_LYRICS[trackId];
+            if (!lrcUrl) {
+                // No lyrics for this track - clear any existing
+                parsedLyrics = [];
+                llmLyricsTextarea.value = '';
+                llmLyricsStatusEl.textContent = 'No lyrics available';
+                return;
+            }
+
+            try {
+                const response = await fetch(lrcUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const lrcText = await response.text();
+                llmLyricsTextarea.value = lrcText;
+
+                // Auto-parse the lyrics
+                parsedLyrics = parseLyrics(lrcText);
+                const hasTimestamps = parsedLyrics.some((l, i) => i > 0 && l.time !== i * 5);
+                const mode = hasTimestamps ? 'timed' : 'auto';
+                llmLyricsStatusEl.textContent = `${parsedLyrics.length} lines (${mode})`;
+                log(`Lyrics loaded: ${parsedLyrics.length} lines`, 'info');
+
+            } catch (err) {
+                // Lyrics file not found - that's OK, not all tracks have lyrics
+                parsedLyrics = [];
+                llmLyricsTextarea.value = '';
+                llmLyricsStatusEl.textContent = 'No lyrics available';
             }
         }
 
@@ -1755,6 +1802,11 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
                 log(`Loaded: ${(audioElement.duration / 60).toFixed(1)} min`, 'info');
                 currentTrack = 'custom';
                 currentFile = file;
+
+                // Clear lyrics for custom files (user can paste their own)
+                parsedLyrics = [];
+                llmLyricsTextarea.value = '';
+                llmLyricsStatusEl.textContent = 'Paste lyrics for custom file';
 
                 // Update UI to show file info
                 showFileLoaded(file, audioElement.duration);
@@ -2582,6 +2634,7 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
             }
 
             currentLyricIndex = -1;
+            console.log('[LyricsTracker] Started - tracking', parsedLyrics.length, 'lines');
 
             // Check every 250ms for next lyric line
             lyricsUpdateInterval = setInterval(() => {
@@ -2603,10 +2656,22 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
                 if (newIndex !== currentLyricIndex && newIndex >= 0) {
                     currentLyricIndex = newIndex;
                     const lyric = parsedLyrics[newIndex];
-                    log(`Lyric: "${lyric.text}"`, 'info');
+                    const audioTime = formatTimestamp(currentTime);
+                    const lyricTime = formatTimestamp(lyric.time);
+                    console.log(`[LyricsTracker] ${audioTime} | Line ${newIndex + 1}/${parsedLyrics.length} @ ${lyricTime}: "${lyric.text}"`);
+                    log(`[${lyricTime}] "${lyric.text}"`, 'info');
                     audioInterpreter.feedText(lyric.text);
                 }
             }, 250);
+        }
+
+        /**
+         * Format seconds to MM:SS timestamp
+         */
+        function formatTimestamp(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
         /**
@@ -2629,6 +2694,12 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
 
             llmRequestCount++;
             llmRequestCountEl.textContent = `${llmRequestCount} requests`;
+
+            // Get audio time for logging
+            const audioTime = audioElement ? formatTimestamp(audioElement.currentTime) : '--:--';
+
+            // Detailed console logging
+            console.log(`[LLM Action] @ ${audioTime}`, JSON.stringify(action, null, 2));
 
             // Log the action
             const time = new Date().toLocaleTimeString('en-US', {
@@ -2653,7 +2724,7 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
 
             const entry = document.createElement('div');
             entry.className = 'llm-action';
-            entry.innerHTML = `<span class="action-time">${time}</span><span class="action-type">${actionParts.join(' ')}</span>`;
+            entry.innerHTML = `<span class="action-time">${audioTime}</span><span class="action-type">${actionParts.join(' ')}</span>`;
             llmActionLog.insertBefore(entry, llmActionLog.firstChild);
 
             // Limit log size
@@ -2661,18 +2732,21 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
                 llmActionLog.removeChild(llmActionLog.lastChild);
             }
 
-            // Apply actions to mascot
+            // Apply actions to mascot with detailed logging
             if (action.geometry) {
+                console.log(`  → morphTo('${action.geometry}')`);
                 mascot.morphTo(action.geometry);
                 log(`LLM → Geometry: ${action.geometry}`, 'groove');
             }
 
             if (action.sss) {
+                console.log(`  → setSSSPreset('${action.sss}')`);
                 mascot.setSSSPreset(action.sss);
                 log(`LLM → SSS: ${action.sss}`, 'groove');
             }
 
             if (action.emotion) {
+                console.log(`  → setEmotion('${action.emotion}')`);
                 mascot.setEmotion(action.emotion);
                 log(`LLM → Emotion: ${action.emotion}`, 'groove');
             }
@@ -2683,6 +2757,7 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
 
                 // Execute all gestures (layered/simultaneous)
                 for (const g of gestures) {
+                    console.log(`  → express('${g}')`);
                     mascot.express(g);
                 }
 
