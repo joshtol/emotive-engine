@@ -51,6 +51,13 @@ import swell from './motions/swell.js';
 import swagger from './motions/swagger.js';
 import dip from './motions/dip.js';
 import flare from './motions/flare.js';
+// Directional dance gestures (beat-synced steps and slides)
+import stepLeft from './motions/stepLeft.js';
+import stepRight from './motions/stepRight.js';
+import stepUp from './motions/stepUp.js';
+import stepDown from './motions/stepDown.js';
+import slideLeft from './motions/slideLeft.js';
+import slideRight from './motions/slideRight.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
@@ -295,7 +302,14 @@ const MOTION_GESTURES = [
     swell,
     swagger,
     dip,
-    flare
+    flare,
+    // Directional dance gestures
+    stepLeft,
+    stepRight,
+    stepUp,
+    stepDown,
+    slideLeft,
+    slideRight
 ];
 
 const TRANSFORM_GESTURES = [

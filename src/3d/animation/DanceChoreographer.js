@@ -109,13 +109,16 @@ const GESTURE_POOLS = {
     },
     // Medium energy: moderate variety (rare combos)
     moderate: {
-        single: ['pop', 'bob', 'dip', 'swagger', 'bounce', 'wiggle', 'headBob', 'lean'],
-        combo: [['pop', 'bob'], ['dip', 'swell']]  // 10% chance
+        single: ['pop', 'bob', 'dip', 'swagger', 'bounce', 'wiggle', 'headBob', 'lean',
+            'stepLeft', 'stepRight', 'slideLeft', 'slideRight'],
+        combo: [['pop', 'bob'], ['dip', 'swell'], ['stepLeft', 'stepRight']]  // 10% chance
     },
     // High energy: full variety (occasional combos)
     energetic: {
-        single: ['flare', 'swagger', 'dip', 'spin', 'jump', 'twist', 'hula'],
-        combo: [['flare', 'bob'], ['pop', 'dip'], ['swagger', 'flare']]  // 15% chance
+        single: ['flare', 'swagger', 'dip', 'spin', 'jump', 'twist', 'hula',
+            'stepLeft', 'stepRight', 'stepUp', 'stepDown', 'slideLeft', 'slideRight'],
+        combo: [['flare', 'bob'], ['pop', 'dip'], ['swagger', 'flare'],
+            ['stepLeft', 'stepRight'], ['slideLeft', 'slideRight']]  // 15% chance
     }
 };
 
