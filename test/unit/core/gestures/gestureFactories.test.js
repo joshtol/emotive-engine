@@ -54,9 +54,9 @@ describe('Gesture Factories', () => {
             const leftResult = leftGesture['3d'].evaluate(0.5, {});
             const rightResult = rightGesture['3d'].evaluate(0.5, {});
 
-            // Left should have negative X, right should have positive X
-            expect(leftResult.position[0]).toBeLessThan(0);
-            expect(rightResult.position[0]).toBeGreaterThan(0);
+            // Left should have negative X, right should have positive X (camera-relative)
+            expect(leftResult.cameraRelativePosition[0]).toBeLessThan(0);
+            expect(rightResult.cameraRelativePosition[0]).toBeGreaterThan(0);
         });
     });
 
@@ -159,14 +159,14 @@ describe('Gesture Factories', () => {
             const gesture = createFloatGesture('up');
             const result = gesture['3d'].evaluate(0.5, {});
 
-            expect(result.position[1]).toBeGreaterThan(0);
+            expect(result.cameraRelativePosition[1]).toBeGreaterThan(0);
         });
 
         it('should move downward for floatDown', () => {
             const gesture = createFloatGesture('down');
             const result = gesture['3d'].evaluate(0.5, {});
 
-            expect(result.position[1]).toBeLessThan(0);
+            expect(result.cameraRelativePosition[1]).toBeLessThan(0);
         });
 
         it('should have scale change during float', () => {
@@ -243,16 +243,17 @@ describe('Gesture Factories', () => {
             const floatLeft = createFloatGesture('left');
             const pointLeft = createPointGesture('left');
 
-            // All should move in negative X direction
+            // All should move in negative X direction (using cameraRelativePosition for screen-space)
             const stepResult = stepLeft['3d'].evaluate(0.5, {});
             const leanResult = leanLeft['3d'].evaluate(0.5, {});
             const floatResult = floatLeft['3d'].evaluate(0.5, {});
             const pointResult = pointLeft['3d'].evaluate(0.5, {});
 
-            expect(stepResult.position[0]).toBeLessThan(0);
-            expect(leanResult.position[0]).toBeLessThan(0);
-            expect(floatResult.position[0]).toBeLessThan(0);
-            expect(pointResult.position[0]).toBeLessThan(0);
+            // Check cameraRelativePosition for tidally-locked gestures
+            expect(stepResult.cameraRelativePosition[0]).toBeLessThan(0);
+            expect(leanResult.cameraRelativePosition[0]).toBeLessThan(0);
+            expect(floatResult.cameraRelativePosition[0]).toBeLessThan(0);
+            expect(pointResult.cameraRelativePosition[0]).toBeLessThan(0);
         });
 
         it('all blending gestures should have rhythm config', () => {

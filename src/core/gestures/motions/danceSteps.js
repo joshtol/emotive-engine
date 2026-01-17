@@ -132,8 +132,10 @@ export function createStepGesture(direction) {
                 const rotZ = -dir.x * leanAmount;  // Lean opposite to movement
                 const rotX = dir.y * leanAmount * 0.5;
 
+                // Use cameraRelativePosition for screen-space movement
+                // X = screen right, Y = screen up (tidally locked to camera)
                 return {
-                    position: [posX, posY, 0],
+                    cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, 0, rotZ],
                     scale: 1.0
                 };
@@ -235,8 +237,9 @@ export function createSlideGesture(direction) {
                 // Subtle depth movement
                 const posZ = Math.sin(progress * Math.PI * 2) * 0.02 * strength;
 
+                // Use cameraRelativePosition for screen-space movement
                 return {
-                    position: [posX, posY, posZ],
+                    cameraRelativePosition: [posX, posY, posZ],
                     rotation: [0, rotY, rotZ],
                     scale: 1.0 + displacement * 0.03  // Slight expansion during slide
                 };

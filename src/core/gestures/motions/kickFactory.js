@@ -140,8 +140,9 @@ export function createKickGesture(direction) {
                 // Slight forward rotation for dynamic feel
                 const rotX = displacement * 0.08 * strength;
 
+                // Use cameraRelativePosition for screen-space movement
                 return {
-                    position: [posX, posY, 0],
+                    cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, 0, rotZ],
                     scale: 1.0 + displacement * 0.05 // Slight expansion on kick
                 };

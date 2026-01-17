@@ -146,8 +146,9 @@ export function createLeanGesture(direction) {
                 // X position shift
                 const xPosition = leanCurve * amplitude * dir.x;
 
+                // Use cameraRelativePosition for screen-space movement
                 return {
-                    position: [xPosition, 0, 0],
+                    cameraRelativePosition: [xPosition, 0, 0],
                     rotation: [0, 0, rollRotation],
                     scale: 1.0
                 };

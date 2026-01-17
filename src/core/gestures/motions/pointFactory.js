@@ -158,8 +158,9 @@ export function createPointGesture(direction) {
                     rotZ = -dir.x * pointCurve * 0.1; // Slight lean
                 }
 
+                // Use cameraRelativePosition for screen-space movement
                 return {
-                    position: [posX, posY, 0],
+                    cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, rotY, rotZ],
                     scale: 1.0
                 };

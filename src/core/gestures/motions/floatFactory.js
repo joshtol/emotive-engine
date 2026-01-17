@@ -178,8 +178,9 @@ export function createFloatGesture(direction) {
                     posY = wobble;
                 }
 
+                // Use cameraRelativePosition for screen-space movement
                 return {
-                    position: [posX, posY, posZ],
+                    cameraRelativePosition: [posX, posY, posZ],
                     rotation: [tiltX, spinRotation, tiltZ],
                     scale
                 };

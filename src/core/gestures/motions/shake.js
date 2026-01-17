@@ -208,12 +208,14 @@ export default {
          */
         evaluate(progress, motion) {
             const config = motion || {};
-            const amplitude = (config.amplitude || 15) * 0.015;
+            // Reduced amplitude multiplier from 0.015 to 0.003 for less extreme movement
+            const amplitude = (config.amplitude || 15) * 0.003;
             const frequency = config.frequency || 15;
-            const strength = config.strength || 1.0;
+            // Reduced default strength from 1.0 to 0.5
+            const strength = (config.strength || 1.0) * 0.5;
             const decay = config.decay ? (1 - progress) : 1;
 
-            // High-frequency shake
+            // High-frequency shake (toned down)
             const shake = Math.sin(progress * Math.PI * frequency) * amplitude * decay * strength;
 
             // Random seed for consistent randomness per frame
@@ -228,7 +230,8 @@ export default {
                     0,
                     shake * (randomZ - 0.5) * 2
                 ],
-                rotation: [0, 0, shake * (randomRoll - 0.5) * 0.5],
+                // Reduced rotation intensity from 0.5 to 0.2
+                rotation: [0, 0, shake * (randomRoll - 0.5) * 0.2],
                 scale: 1.0
             };
         }
