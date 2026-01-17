@@ -42,7 +42,8 @@ export default {
 
     // Default configuration
     config: {
-        duration: 1200,      // Animation duration
+        duration: 1200,      // Legacy fallback
+        musicalDuration: { musical: true, beats: 3 }, // 3 beats (~1200ms @ 150 BPM)
         rotationAngle: 45,   // Max rotation angle in degrees
         contractionFactor: 0.8, // How much to contract during twist
         twistFrequency: 2,   // Number of twist cycles
@@ -61,6 +62,7 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'beat',
+        durationSync: { mode: 'beats', beats: 3 }, // 3 beats duration
         timingSync: 'nextBeat',
         interruptible: true,
         priority: 4,

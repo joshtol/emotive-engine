@@ -31,7 +31,8 @@ export default {
         zPhaseOffset: Math.PI / 4, // Ring tilt angle
         verticalOscillation: 0.3,  // Vertical wave amount
         wobbleAmount: 0.15,        // Ring wobble intensity
-        duration: 2500,            // Animation duration
+        duration: 2500,            // Legacy fallback
+        musicalDuration: { musical: true, bars: 1.5 }, // 1.5 bars (6 beats)
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'hula',
@@ -44,7 +45,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'bar',  // Full rotation per bar
-        
+        durationSync: { mode: 'bars', bars: 1.5 }, // 1.5 bars duration
+
         // Speed syncs to tempo for consistent rotation
         speedSync: {
             mode: 'tempo',

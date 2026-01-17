@@ -29,7 +29,8 @@ export default {
     config: {
         intensity: 8,           // Twitch strength
         frequency: 0.08,        // Chance of twitching per frame
-        duration: 100,          // How long each twitch lasts (ms)
+        duration: 100,          // Legacy fallback (per twitch)
+        musicalDuration: { musical: true, beats: 0.5 }, // 0.5 beats per twitch cycle
         recovery: 200,          // Recovery time between twitches
         maxOffset: 15,          // Maximum twitch distance
         sharpness: 0.9         // How sudden the movements are
@@ -39,7 +40,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'subdivision',
-        
+        durationSync: { mode: 'beats', beats: 0.5 }, // 0.5 beats duration
+
         // Twitch probability increases on beat
         probabilitySync: {
             subdivision: 'sixteenth',
@@ -178,7 +180,8 @@ export default {
     '3d': {
         evaluate(progress, motion) {
             const config = motion.config || {};
-            let intensity = config.intensity || 8;
+            // Reduced intensity by 40% (was 8, now effectively 4.8)
+            let intensity = (config.intensity || 8) * 0.6;
             const maxOffset = config.maxOffset || 15;
             const frequency = config.frequency || 0.08;
 
@@ -202,22 +205,22 @@ export default {
             const isTwitching = random(0) < frequency * 3;
 
             if (isTwitching) {
-                // Random direction for position
+                // Random direction for position - reduced by 40%
                 const angle = random(1) * Math.PI * 2;
-                const PIXEL_TO_3D = 0.005; // 15px max = 0.075 units
+                const PIXEL_TO_3D = 0.003; // Reduced from 0.005
                 const distance = maxOffset * intensity / 8 * PIXEL_TO_3D;
 
                 const posX = Math.cos(angle) * distance * random(2);
                 const posY = Math.sin(angle) * distance * random(3);
                 const posZ = (random(4) - 0.5) * distance;
 
-                // Random rotation twitch
-                const rotX = (random(5) - 0.5) * 0.2;
-                const rotY = (random(6) - 0.5) * 0.2;
-                const rotZ = (random(7) - 0.5) * 0.2;
+                // Random rotation twitch - reduced by 40%
+                const rotX = (random(5) - 0.5) * 0.12;
+                const rotY = (random(6) - 0.5) * 0.12;
+                const rotZ = (random(7) - 0.5) * 0.12;
 
-                // Sharp scale variation
-                const scale = 1.0 + (random(8) - 0.5) * 0.1;
+                // Sharp scale variation - reduced by 40%
+                const scale = 1.0 + (random(8) - 0.5) * 0.06;
 
                 return {
                     position: [posX, posY, posZ],
@@ -225,8 +228,8 @@ export default {
                     scale
                 };
             } else {
-                // Return to neutral with micro-jitter
-                const microJitter = 0.5;
+                // Return to neutral with reduced micro-jitter (40% less)
+                const microJitter = 0.3;
                 return {
                     position: [
                         (random(10) - 0.5) * microJitter,
@@ -234,9 +237,9 @@ export default {
                         (random(12) - 0.5) * microJitter
                     ],
                     rotation: [
-                        (random(13) - 0.5) * 0.01,
-                        (random(14) - 0.5) * 0.01,
-                        (random(15) - 0.5) * 0.01
+                        (random(13) - 0.5) * 0.006,
+                        (random(14) - 0.5) * 0.006,
+                        (random(15) - 0.5) * 0.006
                     ],
                     scale: 1.0
                 };

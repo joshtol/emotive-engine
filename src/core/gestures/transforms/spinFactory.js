@@ -171,20 +171,11 @@ export function createSpinGesture(direction) {
 
         '3d': {
             evaluate(progress, motion) {
-                const { particle } = motion;
-                if (!particle || !particle.gestureData?.spin) {
-                    return {
-                        position: [0, 0, 0],
-                        rotation: [0, 0, 0],
-                        scale: 1.0
-                    };
-                }
-
-                const config = motion.config || {};
-                const strength = motion.strength || 1.0;
+                const config = motion?.config || motion || {};
+                const strength = motion?.strength || 1.0;
 
                 let speedProgress = progress;
-                if (config.accelerate) {
+                if (config.accelerate !== false) {
                     if (progress < 0.5) {
                         speedProgress = (progress * progress * 4) * 0.5;
                     } else {
@@ -195,14 +186,14 @@ export function createSpinGesture(direction) {
                 const rotations = config.rotations || 1;
                 const rotationAmount = rotations * Math.PI * 2 * strength;
 
-                // Sin curve for smooth return to origin
-                const rotationCurve = Math.sin(speedProgress * Math.PI);
-                const yRotation = rotationAmount * rotationCurve * directionMult;
+                // Full rotation during gesture (mascot spins in place)
+                const yRotation = rotationAmount * speedProgress * directionMult;
 
                 const scaleAmount = config.scaleAmount || 0.1;
                 const scaleCurve = Math.sin(progress * Math.PI);
                 const scale = 1.0 + (scaleAmount * scaleCurve * strength);
 
+                // Mascot stays in place - only rotates on Y axis
                 return {
                     position: [0, 0, 0],
                     rotation: [0, yRotation, 0],

@@ -61,9 +61,11 @@ export class GestureBlender {
             glowIntensity: 1.0,                                // Multiplicative channel
             glowBoost: 0.0,                                    // Additive channel (for glow layer)
 
-            // CAMERA-RELATIVE position (transformed in Core3DManager)
-            // Z = toward camera, Y = up, X = right (in view space)
+            // CAMERA-RELATIVE channels (transformed in Core3DManager)
+            // Position: Z = toward camera, Y = up, X = right (in view space)
             cameraRelativePosition: [0, 0, 0],
+            // Rotation: Roll around view axis (Z = roll left/right as seen by camera)
+            cameraRelativeRotation: [0, 0, 0],
 
             // ACCENT/BOOST channels (enhance groove without replacing it)
             positionBoost: [0, 0, 0],                          // Additive boost to groove position
@@ -179,7 +181,7 @@ export class GestureBlender {
                     }
 
                     // ═══════════════════════════════════════════════════════════════
-                    // CAMERA-RELATIVE POSITION (tidally locked gestures)
+                    // CAMERA-RELATIVE CHANNELS (tidally locked gestures)
                     // ═══════════════════════════════════════════════════════════════
                     // Position in view space: Z = toward camera, Y = up, X = right
                     // Transformed to world-space in Core3DManager using camera direction
@@ -188,6 +190,15 @@ export class GestureBlender {
                         accumulated.cameraRelativePosition[0] += output.cameraRelativePosition[0] * fadeEnvelope;
                         accumulated.cameraRelativePosition[1] += output.cameraRelativePosition[1] * fadeEnvelope;
                         accumulated.cameraRelativePosition[2] += output.cameraRelativePosition[2] * fadeEnvelope;
+                        accumulated.hasCameraRelativeGestures = true;
+                    }
+
+                    // Rotation in view space: Z = roll (tilt left/right as seen by camera)
+                    // Transformed to world-space rotation in Core3DManager
+                    if (output.cameraRelativeRotation) {
+                        accumulated.cameraRelativeRotation[0] += output.cameraRelativeRotation[0] * fadeEnvelope;
+                        accumulated.cameraRelativeRotation[1] += output.cameraRelativeRotation[1] * fadeEnvelope;
+                        accumulated.cameraRelativeRotation[2] += output.cameraRelativeRotation[2] * fadeEnvelope;
                         accumulated.hasCameraRelativeGestures = true;
                     }
                 }
@@ -251,8 +262,9 @@ export class GestureBlender {
             glowIntensity: finalGlowIntensity,
             glowBoost: accumulated.glowBoost,
 
-            // Camera-relative position (view-space, transformed in Core3DManager)
+            // Camera-relative channels (view-space, transformed in Core3DManager)
             cameraRelativePosition: accumulated.cameraRelativePosition,
+            cameraRelativeRotation: accumulated.cameraRelativeRotation,
 
             // Accent gesture outputs (for groove enhancement)
             positionBoost: accumulated.positionBoost,

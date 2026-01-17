@@ -1,323 +1,226 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Orbit Gesture Motion
- *  └─○═╝                                                                             
+ *    ●●  ENGINE - Orbit Gesture with 3D Depth
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview 3D orbital motion where particles circle around the orb
+ * @fileoverview 3D orbital gesture - particles orbit with dynamic z-depth changes
  * @author Emotive Engine Team
  * @module gestures/motions/orbit
- * @complexity ⭐⭐ Intermediate
- * @audience Motion patterns for particle animations
- * 
- * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
- * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a mesmerizing 3D orbit effect where particles circle around the orb,      
- * ║ dynamically transitioning between foreground and background layers using the      
- * ║ z-coordinate system. Like planets orbiting a star or a hula-hoop in motion.       
- * ╚═══════════════════════════════════════════════════════════════════════════════════
+ * @complexity ⭐⭐⭐ Intermediate-Advanced
+ * @audience Transform patterns for complex animations
  *
- * VISUAL DIAGRAM (Top View):
- *     · → · → ·
- *   ↓           ↑
- *   ·    ⭐    ·   ← particles orbit around center
- *   ↑           ↓  
- *     · ← · ← ·
- * 
- * VISUAL DIAGRAM (Side View):
- *   front  ·····   back
- *         /     \
- *        ·   ⭐  ·  ← z-coordinate changes as particles orbit
- *         \     /
- *   back   ·····   front
+ * GESTURE TYPE:
+ * type: 'override' - Takes complete control of particle motion
+ *
+ * VISUAL EFFECT:
+ * Particles orbit around the center while transitioning between foreground and
+ * background layers, creating a true 3D effect where particles pass behind and
+ * in front of the orb.
  */
 
-/**
- * Apply orbital motion to a particle
- * Particles orbit around the center with dynamic z-depth changes
- *
- * @param {Object} particle - The particle to animate
- * @param {number} progress - Gesture progress (0-1)
- * @param {Object} motion - Gesture motion configuration
- * @param {number} dt - Delta time (unused for orbit)
- * @param {number} centerX - Orb center X
- * @param {number} centerY - Orb center Y
- */
-export function applyOrbit(particle, progress, motion, dt, centerX, centerY) {
-    // Get or initialize gesture data
-    if (!particle.gestureData) {
-        particle.gestureData = {};
-    }
-    const {gestureData} = particle;
-
-    // Extract config and strength from motion
-    // motion contains the merged config from default + rhythm modulation
-    const config = motion;
-    const strength = motion.amplitude || 1.0;
-
-    // Initialize gesture data if needed
-    if (!gestureData.initialized) {
-        // Store original position and velocity
-        gestureData.originalX = particle.x;
-        gestureData.originalY = particle.y;
-        gestureData.originalZ = particle.z || 0;
-        gestureData.originalVx = particle.vx || 0;
-        gestureData.originalVy = particle.vy || 0;
-        
-        // Calculate initial angle and radius from center
-        const dx = particle.x - centerX;
-        const dy = particle.y - centerY;
-        gestureData.radius = Math.sqrt(dx * dx + dy * dy);
-        
-        // Ensure minimum radius to prevent clustering at center
-        if (gestureData.radius < 50) {
-            gestureData.radius = 50 + Math.random() * 100;
-        }
-        
-        gestureData.initialAngle = Math.atan2(dy, dx);
-        
-        // Random orbit parameters for variety
-        gestureData.orbitSpeed = config.speed * (0.8 + Math.random() * 0.4); // Speed variation
-        gestureData.orbitTilt = Math.random() * 0.3; // Slight tilt for realism
-        
-        gestureData.initialized = true;
-    }
-    
-    // Apply rhythm modulation if present
-    let {rotations} = config;
-    let radiusPulseAmount = 0.05;
-    if (config.rhythmModulation) {
-        if (config.rhythmModulation.speedMultiplier) {
-            gestureData.orbitSpeed *= config.rhythmModulation.speedMultiplier;
-        }
-        if (config.rhythmModulation.rotationMultiplier) {
-            rotations *= config.rhythmModulation.rotationMultiplier;
-        }
-        if (config.rhythmModulation.radiusPulse) {
-            radiusPulseAmount = config.rhythmModulation.radiusPulse;
-        }
-    }
-    
-    // Smooth entry/exit transitions
-    let transitionFactor = 1.0;
-    let velocityTransition = 1.0;
-    
-    if (progress < 0.15) {
-        // Smooth entry (first 15%)
-        transitionFactor = progress / 0.15;
-        transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor); // Smooth step
-        velocityTransition = transitionFactor;
-    } else if (progress > 0.85) {
-        // Smooth exit (last 15%)
-        transitionFactor = (1 - progress) / 0.15;
-        transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor); // Smooth step
-        velocityTransition = transitionFactor;
-    }
-    
-    // Calculate current angle based on progress with smooth acceleration
-    const angle = gestureData.initialAngle + (progress * Math.PI * 2 * rotations * transitionFactor);
-    
-    // Calculate orbital radius (can pulse slightly) with transition
-    const radiusPulse = 1 + Math.sin(progress * Math.PI * 4) * radiusPulseAmount * transitionFactor;
-    const currentRadius = gestureData.radius * strength * radiusPulse * transitionFactor;
-    
-    // Calculate new position in orbit
-    const targetX = centerX + Math.cos(angle) * currentRadius;
-    const targetY = centerY + Math.sin(angle) * currentRadius;
-    
-    // CRITICAL: Update z-coordinate for 3D effect with smooth transition
-    // Particles in front (positive z) when at top of orbit, behind (negative z) at bottom
-    const zAngle = angle * config.zRotations; // Can rotate in z-plane at different rate
-    particle.z = Math.sin(zAngle) * 0.8 * transitionFactor + gestureData.originalZ * (1 - transitionFactor);
-    
-    // During entry, smoothly transition from original position
-    if (progress < 0.15) {
-        const entryLerp = transitionFactor * 0.3; // Slower entry
-        particle.x = gestureData.originalX + (targetX - gestureData.originalX) * entryLerp;
-        particle.y = gestureData.originalY + (targetY - gestureData.originalY) * entryLerp;
-        
-        // Smooth velocity transition
-        const orbitalVx = -Math.sin(angle) * currentRadius * gestureData.orbitSpeed;
-        const orbitalVy = Math.cos(angle) * currentRadius * gestureData.orbitSpeed;
-        particle.vx = gestureData.originalVx + (orbitalVx - gestureData.originalVx) * velocityTransition;
-        particle.vy = gestureData.originalVy + (orbitalVy - gestureData.originalVy) * velocityTransition;
-    } 
-    // During exit, smoothly return to original
-    else if (progress > 0.85) {
-        particle.x = targetX + (gestureData.originalX - targetX) * (1 - transitionFactor);
-        particle.y = targetY + (gestureData.originalY - targetY) * (1 - transitionFactor);
-        
-        // Smooth velocity transition back
-        const orbitalVx = -Math.sin(angle) * currentRadius * gestureData.orbitSpeed;
-        const orbitalVy = Math.cos(angle) * currentRadius * gestureData.orbitSpeed;
-        particle.vx = orbitalVx * velocityTransition + gestureData.originalVx * (1 - velocityTransition);
-        particle.vy = orbitalVy * velocityTransition + gestureData.originalVy * (1 - velocityTransition);
-    }
-    // Normal orbit
-    else {
-        // Add vertical oscillation for hula-hoop effect if enabled
-        if (config.verticalOscillation > 0) {
-            const verticalOffset = Math.sin(angle * 2) * config.verticalOscillation * strength;
-            particle.y = targetY + verticalOffset;
-            particle.x = targetX;
-        } else {
-            // Smooth interpolation to target position
-            const lerpFactor = config.smoothness || 0.1;
-            particle.x += (targetX - particle.x) * lerpFactor;
-            particle.y += (targetY - particle.y) * lerpFactor;
-        }
-        
-        // Set orbital velocity
-        particle.vx = -Math.sin(angle) * currentRadius * gestureData.orbitSpeed;
-        particle.vy = Math.cos(angle) * currentRadius * gestureData.orbitSpeed;
-    }
-    
-    // Apply centripetal acContinceleration effect (particles speed up when closer)
-    if (config.centripetal) {
-        const speed = 1 + (1 - Math.abs(particle.z)) * 0.3; // Speed varies with z-position
-        const speedAngle = gestureData.initialAngle + (progress * Math.PI * 2 * config.rotations * speed);
-        particle.x = centerX + Math.cos(speedAngle) * currentRadius;
-        particle.y = centerY + Math.sin(speedAngle) * currentRadius;
-    }
-}
-
-// Export gesture configuration
 export default {
     name: 'orbit',
     emoji: '🪐',
-    description: '3D orbital motion around center',
-    type: 'override', // Takes full control of particle position
-    
+    type: 'override',
+    description: 'Orbital motion around center',
+
     // Default configuration
     config: {
-        speed: 1.0,              // Base orbital speed
-        rotations: 1,            // Number of full rotations per gesture
-        zRotations: 1,           // Z-plane rotation ratio (1 = same as xy, 2 = twice as fast)
-        smoothness: 0.15,        // Position interpolation factor
-        verticalOscillation: 0,  // Hula-hoop vertical movement (0 = flat orbit)
-        centripetal: false,      // Enable speed variation based on position
-    },
-    
-    // Rhythm configuration - orbital motion syncs to musical cycles
-    rhythm: {
-        enabled: true,
-        syncMode: 'bar',  // Complete orbit per bar
-        
-        // Orbital speed syncs to tempo
-        speedSync: {
-            mode: 'tempo',
-            baseSpeed: 1.0,
-            scaling: 'linear'  // Speed scales with BPM
-        },
-        
-        // Rotations per musical period
-        rotationSync: {
-            mode: 'bars',
-            rotationsPerBar: 1,  // One full orbit per bar
-            zSync: true  // Z-rotation also syncs
-        },
-        
-        // Radius pulses with beat
-        radiusSync: {
-            subdivision: 'quarter',
-            pulsAmount: 0.1,  // 10% radius variation
-            curve: 'ease'
-        },
-        
-        // Pattern-specific orbital styles
-        patternOverrides: {
-            'waltz': {
-                // Elegant 3-step orbit
-                rotationSync: { rotationsPerBar: 0.75 },
-                radiusSync: { pulsAmount: 0.15 }
-            },
-            'swing': {
-                // Jazzy elliptical orbit
-                speedSync: { mode: 'swing', ratio: 0.67 },
-                verticalOscillation: 0.2
-            },
-            'dubstep': {
-                // Wobbling orbit with drops
-                radiusSync: { 
-                    subdivision: 'eighth',
-                    pulsAmount: 0.3,
-                    dropMultiplier: 2.0
-                }
-            },
-            'breakbeat': {
-                // Chaotic orbital patterns
-                speedSync: { mode: 'random', range: [0.5, 2.0] },
-                centripetal: true
-            }
+        speed: 0.02,              // Orbital rotation speed
+        maintainRadius: true,     // Keep constant orbit radius
+        elliptical: false,        // Use circular orbit
+        use3D: true,              // Enable z-coordinate animation
+        zPhaseOffset: 0,          // Phase offset for z-oscillation
+        verticalOscillation: 0,   // Vertical movement for hula-hoop effect
+        duration: 3000,           // Legacy fallback
+        musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
+        // Particle motion configuration for AnimationController
+        particleMotion: {
+            type: 'orbit',
+            strength: 1.0
         }
     },
-    
-    // Apply function
-    apply: applyOrbit,
-    
-    // Supported emotions (great for mystical/energetic states)
-    emotions: ['zen', 'love', 'excited', 'surprise'],
-    
-    // Gesture-specific features
-    features: {
-        uses3D: true,           // Uses z-coordinate system
-        smooth: true,           // Smooth continuous motion
-        looping: true,          // Natural looping animation
-        dramatic: true          // Visually impressive effect
+
+    // Rhythm configuration - orbital paths sync to harmony
+    rhythm: {
+        enabled: true,
+        syncMode: 'harmonic',  // Orbit follows harmonic intervals
+        durationSync: { mode: 'bars', bars: 2 }, // 2 bars duration
+
+        // Speed based on harmonic ratios
+        speedSync: {
+            tonic: 0.02,              // Base orbit speed
+            fifth: 0.03,              // 3:2 ratio (perfect fifth)
+            octave: 0.04,             // 2:1 ratio (octave)
+            third: 0.025,             // 5:4 ratio (major third)
+            curve: 'smooth'           // Smooth transitions
+        },
+
+        // Orbital layers by pitch
+        radiusSync: {
+            bass: 150,                // Outer orbit for low notes
+            mid: 100,                 // Middle orbit for mids
+            treble: 50,               // Inner orbit for highs
+            scaling: 'logarithmic'    // Natural pitch scaling
+        },
+
+        // 3D depth syncs to chord progression
+        depthSync: {
+            major: { z: 1.0, phase: 0 },        // Front-facing for major
+            minor: { z: -1.0, phase: Math.PI }, // Back-facing for minor
+            diminished: { z: 0.5, phase: Math.PI/2 }, // Side angle
+            augmented: { z: 0.8, phase: -Math.PI/2 }  // Other side
+        },
+
+        // Phase relationships
+        phaseSync: {
+            mode: 'harmonic',         // Particles phase-lock harmonically
+            intervals: [1, 1.5, 2],   // Unison, fifth, octave
+            drift: 0.05               // Slight phase drift for organic feel
+        },
+
+        // Musical dynamics
+        dynamics: {
+            forte: { speed: 0.04, maintainRadius: false }, // Chaotic orbits
+            piano: { speed: 0.01, maintainRadius: true }   // Stable orbits
+        }
+    },
+
+    initialize(particle, motion, centerX, centerY) {
+        if (!particle.gestureData) {
+            particle.gestureData = {};
+        }
+
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const calculatedRadius = Math.sqrt(dx * dx + dy * dy);
+
+        // Random direction for orbit
+        const direction = Math.random() < 0.5 ? 1 : -1;
+
+        // Set minimum radius to prevent center clustering
+        const MIN_RADIUS = 100;
+        const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180);
+
+        const initialAngle = calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
+        particle.gestureData.orbit = {
+            radius,
+            targetRadius: radius,
+            angle: initialAngle,
+            initialAngle,
+            originalVx: particle.vx,
+            originalVy: particle.vy,
+            originalZ: particle.z || 0,
+            zPhase: Math.random() * Math.PI * 2,
+            direction
+        };
+    },
+
+    apply(particle, progress, motion, dt, centerX, centerY) {
+        if (!particle.gestureData?.orbit) {
+            this.initialize(particle, motion, centerX, centerY);
+        }
+
+        const data = particle.gestureData.orbit;
+        const speed = (motion.speed || this.config.speed) * (motion.strength || 1);
+
+        // Update angle with direction (dt is already normalized to 60fps)
+        data.angle += speed * dt * data.direction;
+
+        // Use the stored radius (which has minimum enforced)
+        let {radius} = data;
+
+        if (!motion.maintainRadius) {
+            // Allow radius to vary slightly for organic motion
+            radius = data.radius * (1 + Math.sin(progress * Math.PI * 2) * 0.1);
+        }
+
+        particle.x = centerX + Math.cos(data.angle) * radius;
+        particle.y = centerY + Math.sin(data.angle) * radius;
+
+        // 3D DEPTH: Animate z-coordinate for particles passing behind/in front
+        if (motion.use3D !== false) {
+            const zAngle = data.angle + data.zPhase + (motion.zPhaseOffset || 0);
+            particle.z = Math.sin(zAngle) * 0.8;
+
+            // Add vertical oscillation for hula-hoop effect
+            if (motion.verticalOscillation) {
+                const verticalOffset = Math.cos(zAngle) * motion.verticalOscillation * radius * 0.1;
+                particle.y += verticalOffset;
+            }
+        }
+
+        // Set velocity to match motion
+        particle.vx = -Math.sin(data.angle) * radius * speed;
+        particle.vy = Math.cos(data.angle) * radius * speed;
+
+        // Restore original velocity at end
+        if (progress > 0.9) {
+            const blendFactor = (1 - progress) * 10;
+            particle.vx = particle.vx * blendFactor + data.originalVx * (1 - blendFactor);
+            particle.vy = particle.vy * blendFactor + data.originalVy * (1 - blendFactor);
+        }
+    },
+
+    cleanup(particle) {
+        if (particle.gestureData?.orbit) {
+            const data = particle.gestureData.orbit;
+            particle.vx = data.originalVx;
+            particle.vy = data.originalVy;
+            particle.z = data.originalZ;
+            delete particle.gestureData.orbit;
+        }
     },
 
     /**
-     * 3D translation for orbit gesture
-     * Note: Orbit is a motion BLENDING gesture, not to be confused with orbital
-     * This creates subtle 3D rotation to enhance the blended motion feel
-     * @param {number} progress - Gesture progress (0-1)
-     * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transform { position: [x,y,z], rotation: [x,y,z], scale: number }
+     * 3D translation for WebGL rendering
+     * Circular XY motion with Z-depth oscillation
      */
     '3d': {
         evaluate(progress, motion) {
-            const config = { ...this.config, ...motion };
-            let {rotations} = config;
-            const {zRotations} = config;
-
-            // Apply rhythm modulation if present
-            if (motion.rhythmModulation) {
-                if (motion.rhythmModulation.rotationMultiplier) {
-                    rotations *= motion.rhythmModulation.rotationMultiplier;
-                }
+            const particle = motion?.particle;
+            if (!particle || !particle.gestureData?.orbit) {
+                return {
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    scale: 1.0
+                };
             }
 
-            // Smooth entry/exit transitions
-            let transitionFactor = 1.0;
+            const data = particle.gestureData.orbit;
+
+            // Smooth entry/exit envelope
+            let envelope = 1.0;
             if (progress < 0.15) {
-                transitionFactor = progress / 0.15;
-                transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor);
+                envelope = Math.sin((progress / 0.15) * Math.PI * 0.5);
             } else if (progress > 0.85) {
-                transitionFactor = (1 - progress) / 0.15;
-                transitionFactor = transitionFactor * transitionFactor * (3 - 2 * transitionFactor);
+                envelope = Math.sin(((1 - progress) / 0.15) * Math.PI * 0.5);
             }
 
-            // Circular motion creates gentle rotation effect
-            const angle = progress * Math.PI * 2 * rotations * transitionFactor;
-            const zAngle = angle * zRotations;
+            // Orbital motion in XZ plane
+            const orbitRadius = 0.3;
+            const angle = data.initialAngle + (progress * Math.PI * 2 * data.direction);
 
-            // Subtle rotation around all axes for blended orbital feel
-            const yRotation = Math.sin(angle) * 0.1 * transitionFactor;
-            const xRotation = Math.cos(angle) * 0.05 * transitionFactor;
-            const zRotation = Math.sin(zAngle) * 0.05 * transitionFactor;
+            const xOffset = Math.cos(angle) * orbitRadius * envelope;
+            const zOffset = Math.sin(angle) * orbitRadius * envelope;
 
-            // Minimal z-depth variation
-            const zPosition = Math.sin(zAngle) * 0.2 * transitionFactor;
+            // Rotation to face direction of motion
+            const tangentAngle = angle + Math.PI / 2;
+            const yRotation = (tangentAngle - (data.initialAngle + Math.PI / 2)) * envelope;
 
-            // Slight scale pulsing
-            const scalePulse = 1 + Math.sin(angle * 2) * 0.03 * transitionFactor;
+            // Depth variation from particle.z
+            const depthZ = particle.z || 0;
+            const finalZ = zOffset + (depthZ * 0.1 * envelope);
+
+            // Scale based on depth
+            const depthScale = 1.0 + depthZ * 0.15 * envelope;
 
             return {
-                position: [0, 0, zPosition],
-                rotation: [xRotation, yRotation, zRotation],
-                scale: scalePulse
+                position: [xOffset, 0, finalZ],
+                rotation: [0, yRotation, 0],
+                scale: depthScale
             };
         }
     }

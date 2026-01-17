@@ -35,9 +35,26 @@ import rhythmIntegration from '../audio/rhythmIntegration.js';
 export function applyGestureMotion(particle, dt, motion, progress, centerX, centerY) {
     // Validate inputs
     if (!motion || !motion.type || progress >= 1) {
+        if (motion?.type === 'rain') {
+            console.log('[GESTURE_MOTION] applyGestureMotion() SKIPPED - validation failed:', {
+                hasMotion: !!motion,
+                motionType: motion?.type,
+                progress,
+                progressCheck: progress >= 1
+            });
+        }
         return;
     }
-    
+
+    if (motion.type === 'rain') {
+        console.log('[GESTURE_MOTION] applyGestureMotion() CALLED for RAIN:', {
+            motionType: motion.type,
+            progress: progress.toFixed(3),
+            dt: dt?.toFixed(2),
+            particleY: particle.y?.toFixed(1)
+        });
+    }
+
     // Initialize gesture data if needed
     if (!particle.gestureData) {
         particle.gestureData = {
@@ -50,19 +67,26 @@ export function applyGestureMotion(particle, dt, motion, progress, centerX, cent
             startRadius: Math.sqrt(Math.pow(particle.x - centerX, 2) + Math.pow(particle.y - centerY, 2))
         };
     }
-    
+
     // Look up the gesture from registry
     const gesture = getGesture(motion.type);
-    
+
     if (!gesture) {
+        if (motion.type === 'rain') {
+            console.log('[GESTURE_MOTION] ERROR - gesture not found for type:', motion.type);
+        }
         return;
     }
-    
+
+    if (motion.type === 'rain') {
+        console.log('[GESTURE_MOTION] Found gesture:', gesture.name, 'hasApply:', !!gesture.apply);
+    }
+
     // Apply rhythm modulation if enabled
     let rhythmModifiedMotion = motion;
     if (rhythmIntegration.isEnabled() && gesture.rhythm?.enabled) {
         const modulation = rhythmIntegration.applyGestureRhythm(gesture, particle, progress, dt);
-        
+
         // Create modified motion with rhythm adjustments
         rhythmModifiedMotion = {
             ...motion,
@@ -72,12 +96,16 @@ export function applyGestureMotion(particle, dt, motion, progress, centerX, cent
             rhythmModulation: modulation
         };
     }
-    
+
     // Apply the gesture using its modular implementation
     if (gesture.apply) {
+        const beforeY = particle.y;
         gesture.apply(particle, progress, rhythmModifiedMotion, dt, centerX, centerY);
+        if (motion.type === 'rain') {
+            console.log('[GESTURE_MOTION] After gesture.apply() - Y changed:', beforeY?.toFixed(1), '->', particle.y?.toFixed(1));
+        }
     }
-    
+
     // Handle cleanup when gesture completes
     if (progress >= 0.99 && gesture.cleanup) {
         gesture.cleanup(particle);

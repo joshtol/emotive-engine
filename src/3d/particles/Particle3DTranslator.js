@@ -132,6 +132,12 @@ export class Particle3DTranslator {
      * @returns {THREE.Vector3} 3D world position
      */
     translate2DTo3D(particle, corePosition, canvasSize) {
+        // Check if rain gesture is active on this particle
+        // Rain gesture takes priority over normal behavior translation
+        if (particle.gestureData?.rain?.initialized) {
+            return this._translateRainGesture(particle, corePosition, canvasSize);
+        }
+
         // Get behavior-specific translation (normal emotional state position)
         const translator = this.behaviorTranslators[particle.behavior] || this._translateDefault.bind(this);
         const basePosition = translator(particle, corePosition, canvasSize);
@@ -144,6 +150,43 @@ export class Particle3DTranslator {
         // For other gestures (like scan), the 2D particle system handles the positioning
         // We just translate those 2D positions to 3D without additional transforms
         return basePosition;
+    }
+
+    /**
+     * Translate a particle that has the rain gesture active
+     * The rain gesture controls the 2D Y position, we translate that to 3D
+     */
+    _translateRainGesture(particle, corePosition, canvasSize) {
+        const centerX = canvasSize.width / 2;
+        const centerY = canvasSize.height / 2;
+        const rainData = particle.gestureData.rain;
+
+        // Get the fall offset from the original position (set by rain.js apply())
+        const fallOffset = particle.y - rainData.originalY;
+
+        // Convert 2D fall to 3D fall (scale appropriately)
+        const PIXEL_TO_3D = 0.004; // Same scale used elsewhere
+        const fallDistance3D = fallOffset * PIXEL_TO_3D;
+
+        // Use same uniform 3D direction as ambient
+        const dir = this._getUniformDirection3D(particle);
+
+        // Calculate base position using ORIGINAL position (before rain started)
+        const dx = rainData.originalX - centerX;
+        const dy = rainData.originalY - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const normalizedDistance = distance2D / centerX;
+
+        const minOrbit = this.coreRadius3D * 0.6;
+        const maxOrbit = this.coreRadius3D * 1.2;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
+
+        // Apply the rain gesture's fall in 3D (negative Y is down)
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance,
+            corePosition.y + dir.y * worldDistance * this.verticalScale - fallDistance3D,
+            corePosition.z + dir.z * worldDistance
+        );
     }
 
     /**
@@ -418,14 +461,51 @@ export class Particle3DTranslator {
 
     /**
      * FALLING: Rain-like tears falling downward (Sadness)
-     * Positioned EXACTLY like ambient, but falls straight down over time
+     * When rain gesture is active, respects the 2D particle's Y position
+     * Otherwise falls based on age for ambient sad emotion
      */
     _translateFalling(particle, corePosition, canvasSize) {
-        // Use same uniform 3D direction as ambient (cached in behaviorData.direction3D)
-        const dir = this._getUniformDirection3D(particle);
-
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
+
+        // Check if rain gesture is controlling this particle's position
+        const hasRainGestureData = particle.gestureData?.rain?.initialized;
+
+        if (hasRainGestureData) {
+            // Rain gesture is active - use the 2D particle's Y position directly
+            // The rain gesture has already calculated the fall, so translate that to 3D
+            const rainData = particle.gestureData.rain;
+
+            // Get the fall offset from the original position (set by rain.js apply())
+            const fallOffset = particle.y - rainData.originalY;
+
+            // Convert 2D fall to 3D fall (scale appropriately)
+            const PIXEL_TO_3D = 0.004; // Same scale used elsewhere
+            const fallDistance3D = fallOffset * PIXEL_TO_3D;
+
+            // Use same uniform 3D direction as ambient
+            const dir = this._getUniformDirection3D(particle);
+
+            // Calculate base position like ambient
+            const dx = rainData.originalX - centerX;
+            const dy = rainData.originalY - centerY;
+            const distance2D = Math.sqrt(dx * dx + dy * dy);
+            const normalizedDistance = distance2D / centerX;
+
+            const minOrbit = this.coreRadius3D * 0.6;
+            const maxOrbit = this.coreRadius3D * 1.2;
+            const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
+
+            // Apply the rain gesture's fall in 3D (negative Y is down)
+            return this.tempVec3.set(
+                corePosition.x + dir.x * worldDistance,
+                corePosition.y + dir.y * worldDistance * this.verticalScale - fallDistance3D,
+                corePosition.z + dir.z * worldDistance
+            );
+        }
+
+        // No rain gesture - use age-based falling for ambient sadness
+        const dir = this._getUniformDirection3D(particle);
 
         // Calculate normalized distance (0-1) from center in 2D - SAME AS AMBIENT
         const dx = particle.x - centerX;

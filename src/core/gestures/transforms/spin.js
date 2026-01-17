@@ -266,7 +266,8 @@ export default {
 
     /**
      * 3D translation for WebGL rendering
-     * Maps the 2D spin motion to 3D space with Y-axis rotation
+     * Mascot stays in place and spins on Y-axis
+     * Particles orbit around the mascot (handled by particle apply function)
      */
     '3d': {
         /**
@@ -276,22 +277,21 @@ export default {
          * @returns {Object} Transform with position, rotation, scale
          */
         evaluate(progress, motion) {
-            const {particle} = motion;
-            if (!particle || !particle.gestureData?.spin) {
-                return {
-                    position: [0, 0, 0],
-                    rotation: [0, 0, 0],
-                    scale: 1.0
-                };
-            }
+            const config = motion?.config || motion || {};
+            const strength = motion?.strength || 1.0;
 
-            const data = particle.gestureData.spin;
-            const config = motion.config || {};
-            const strength = motion.strength || 1.0;
+            // Determine direction - check particle data or config
+            const particle = motion?.particle;
+            let directionSign = 1;
+            if (particle?.gestureData?.spin) {
+                directionSign = particle.gestureData.spin.direction === 'counter-clockwise' ? -1 : 1;
+            } else if (config.direction === 'counter-clockwise' || config.direction === 'left') {
+                directionSign = -1;
+            }
 
             // Apply acceleration curve if enabled
             let speedProgress = progress;
-            if (config.accelerate) {
+            if (config.accelerate !== false) {
                 if (progress < 0.5) {
                     speedProgress = (progress * progress * 4) * 0.5; // easeInQuad
                 } else {
@@ -300,24 +300,21 @@ export default {
             }
 
             // Calculate Y-axis rotation (spinning around vertical axis)
-            // Use sin curve so rotation returns to 0 at end for smooth landing
             const rotations = config.rotations || 1;
             const rotationAmount = rotations * Math.PI * 2 * strength;
-            const direction = data.direction === 'counter-clockwise' ? -1 : 1;
 
-            // Sin curve: 0 → peak → 0 (smooth return to origin for ambient rotation blending)
-            const rotationCurve = Math.sin(speedProgress * Math.PI);
-            const yRotation = rotationAmount * rotationCurve * direction;
+            // Full rotation during gesture (mascot spins in place)
+            const yRotation = rotationAmount * speedProgress * directionSign;
 
             // Scale changes during spin
             const scaleAmount = config.scaleAmount || 0.1;
             const scaleCurve = Math.sin(progress * Math.PI); // Peak at middle
             const scale = 1.0 + (scaleAmount * scaleCurve * strength);
 
-            // Spin happens via rotation, not position movement
+            // Mascot stays in place - only rotates on Y axis
             return {
-                position: [0, 0, 0], // Stay centered - spin via rotation
-                rotation: [0, yRotation, 0], // Y-axis rotation
+                position: [0, 0, 0], // Stay in place
+                rotation: [0, yRotation, 0], // Y-axis rotation only
                 scale
             };
         }

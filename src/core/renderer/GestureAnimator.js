@@ -82,9 +82,11 @@ export class GestureAnimator {
      * @param {string} gestureName - Name of the gesture to start
      */
     startGesture(gestureName) {
-        
+        console.log('[GESTURE_ANIMATOR] startGesture() called:', gestureName);
+
         // Get the gesture configuration (uses cache if available)
         const gesture = getGesture(gestureName);
+        console.log('[GESTURE_ANIMATOR] gesture found:', gesture?.name, 'type:', gesture?.type, 'hasApply:', !!gesture?.apply);
         
         // Use cached properties for better performance
         // const cachedProperties = getGestureProperties(gestureName);
@@ -481,59 +483,93 @@ export class GestureAnimator {
     
     /**
      * Get current active gesture information for particle system
+     * Calculates progress in real-time to ensure accurate values during update phase
      * @returns {Object|null} Current gesture with particleMotion and progress, or null
      */
     getCurrentGesture() {
+        const now = performance.now();
+
+        // Check if rain is active first for logging
+        const rainAnim = this.gestureAnimations.rain;
+        if (rainAnim?.active) {
+            const elapsed = now - rainAnim.startTime;
+            const duration = rainAnim.duration || 3000;
+            const progress = Math.min(elapsed / duration, 1);
+            console.log('[GESTURE_ANIMATOR] getCurrentGesture() - RAIN is active:', {
+                elapsed: elapsed.toFixed(0),
+                duration,
+                progress: progress.toFixed(3)
+            });
+        }
+
         // Priority: Find override gestures first (like orbital, hula), then other gestures
         const overrideGestures = ['orbital', 'hula', 'wave', 'spin'];
-        
+
         // Check override gestures first
         for (const gestureName of overrideGestures) {
             const anim = this.gestureAnimations[gestureName];
             if (anim && anim.active) {
                 // Get the actual gesture configuration (uses cache if available)
                 const gesture = getGesture(gestureName);
-                
+
+                // Calculate progress in real-time (same logic as applyGestureAnimations)
+                const elapsed = now - anim.startTime;
+                const duration = anim.duration || (anim.params ? anim.params.duration : 1000);
+                const progress = Math.min(elapsed / duration, 1);
+
                 // Use the gesture's config for particleMotion, or create one from gesture type
                 const particleMotion = gesture?.config?.particleMotion || {
                     type: gestureName,  // This ensures the modular gesture system will find it
                     strength: anim.params?.strength || 1.0
                 };
-                
+
                 const gestureInfo = {
                     name: gestureName,
                     particleMotion,
-                    progress: anim.progress || 0,
+                    progress,
                     params: anim.params
                 };
-                
+
                 return gestureInfo;
             }
         }
-        
+
         // Then check all other gestures
         for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
             if (anim.active) {
                 // Get the actual gesture configuration (uses cache if available)
                 const gesture = getGesture(gestureName);
-                
+
+                // Calculate progress in real-time (same logic as applyGestureAnimations)
+                const elapsed = now - anim.startTime;
+                const duration = anim.duration || (anim.params ? anim.params.duration : 1000);
+                const progress = Math.min(elapsed / duration, 1);
+
                 // Use the gesture's config for particleMotion, or params if available
-                const particleMotion = gesture?.config?.particleMotion || 
-                                      anim.params?.particleMotion || 
+                const particleMotion = gesture?.config?.particleMotion ||
+                                      anim.params?.particleMotion ||
                                       { type: gestureName, strength: anim.params?.strength || 1.0 };
-                
+
                 const gestureInfo = {
                     name: gestureName,
                     particleMotion,
-                    progress: anim.progress || 0,
+                    progress,
                     params: anim.params
                 };
-                
+
                 // Include breathPhase for breathe gesture
                 if (gestureName === 'breathe' && anim.breathPhase !== undefined) {
                     gestureInfo.breathPhase = anim.breathPhase;
                 }
-                
+
+                if (gestureName === 'rain') {
+                    console.log('[GESTURE_ANIMATOR] getCurrentGesture() returning RAIN:', {
+                        particleMotionType: particleMotion?.type,
+                        progress: progress.toFixed(3),
+                        hasGestureConfig: !!gesture?.config?.particleMotion
+                    });
+                }
+
                 return gestureInfo;
             }
         }

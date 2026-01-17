@@ -44,7 +44,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 800,         // Animation duration
+        duration: 800,         // Legacy fallback
+        musicalDuration: { musical: true, beats: 2 }, // 2 beats
         flickerRate: 15,       // Flicker speed
         frequency: 6,          // Flicker count
         minOpacity: 0.3,       // Minimum visibility
@@ -68,7 +69,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'subdivision',  // Flicker on subdivisions
-        
+        durationSync: { mode: 'beats', beats: 2 }, // 2 beats duration
+
         // Flicker rate syncs to tempo
         rateSync: {
             subdivision: 'sixteenth',  // Flicker on 16th notes

@@ -45,7 +45,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2000,        // Animation duration
+        duration: 2000,        // Legacy fallback
+        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
         scaleX: 1.3,           // Horizontal scale factor
         scaleY: 0.9,           // Vertical scale factor
         alternate: false,      // Alternate between X and Y stretch
@@ -69,7 +70,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'beat',  // Stretch on beats
-        
+        durationSync: { mode: 'bars', bars: 1 }, // 1 bar duration
+
         // Scale modulation with rhythm
         scaleSync: {
             onBeat: { x: 1.5, y: 0.7 },     // Stretch wide on beat

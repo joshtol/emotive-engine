@@ -140,16 +140,17 @@ export function createLeanGesture(direction) {
                 // Lean curve
                 const leanCurve = Math.sin(easeProgress * Math.PI * frequency);
 
-                // Z-axis roll rotation (body tilt)
+                // Z-axis roll rotation (body tilt) - camera-relative
                 const rollRotation = leanCurve * 0.35 * dir.x;
 
-                // X position shift
+                // X position shift - camera-relative (screen left/right)
                 const xPosition = leanCurve * amplitude * dir.x;
 
-                // Use cameraRelativePosition for screen-space movement
+                // Use cameraRelativePosition AND cameraRelativeRotation for full tidal lock
+                // Roll rotation should also be relative to camera view
                 return {
                     cameraRelativePosition: [xPosition, 0, 0],
-                    rotation: [0, 0, rollRotation],
+                    cameraRelativeRotation: [0, 0, rollRotation],
                     scale: 1.0
                 };
             }

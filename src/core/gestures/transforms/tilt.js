@@ -44,7 +44,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 500,         // Animation duration
+        duration: 500,         // Legacy fallback
+        musicalDuration: { musical: true, beats: 1 }, // 1 beat
         gatherPhase: 0.2,      // Gathering phase ratio
         tiltAngle: 45,         // Maximum tilt angle in degrees
         swayAmount: 80,        // Horizontal sway distance
@@ -68,7 +69,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'swing',  // Tilt with swing feel
-        
+        durationSync: { mode: 'beats', beats: 1 }, // 1 beat duration
+
         // Tilt angle syncs to beat pattern
         angleSync: {
             onBeat: 45,                      // Full tilt on beat

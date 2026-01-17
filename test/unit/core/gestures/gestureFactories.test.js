@@ -97,12 +97,12 @@ describe('Gesture Factories', () => {
             expect(gesture.rhythm.durationSync.beats).toBe(2);
         });
 
-        it('should have rotation in 3D evaluation', () => {
+        it('should have camera-relative rotation in 3D evaluation', () => {
             const gesture = createLeanGesture('right');
             const result = gesture['3d'].evaluate(0.5, {});
 
-            // Lean should have Z-axis rotation
-            expect(result.rotation[2]).not.toBe(0);
+            // Lean should have camera-relative Z-axis rotation (roll)
+            expect(result.cameraRelativeRotation[2]).not.toBe(0);
         });
 
         it('should throw for invalid direction', () => {

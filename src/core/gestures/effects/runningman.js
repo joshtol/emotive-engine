@@ -20,7 +20,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2000,        // Animation duration
+        duration: 2000,        // Legacy fallback
+        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
         slideDistance: 30,     // Horizontal slide distance
         stepHeight: 15,        // Vertical step height
         speed: 1.2,            // Animation speed multiplier
@@ -36,6 +37,7 @@ export default {
     rhythm: {
         enabled: true,
         syncToBeat: true,      // Snap to beat grid
+        durationSync: { mode: 'bars', bars: 1 }, // 1 bar duration
         beatMultiplier: 1,     // Steps per beat
         accentBeats: [1, 3]    // Emphasized steps
     },

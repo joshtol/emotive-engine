@@ -152,14 +152,34 @@ class Particle {
         const cappedDeltaTime = Math.min(deltaTime, FRAME_TIMING.PARTICLE_DELTA_CAP);
         // Normalize to 60 FPS equivalent for consistent physics
         const dt = cappedDeltaTime / FRAME_TIMING.TARGET_FRAME_TIME;
-        
+
+        // RAIN LOGGING
+        const isRainGesture = gestureMotion?.type === 'rain';
+        if (isRainGesture) {
+            console.log('[PARTICLE] update() - RAIN gesture detected:', {
+                gestureMotionType: gestureMotion?.type,
+                gestureProgress: gestureProgress?.toFixed(3),
+                particleY: this.y?.toFixed(1)
+            });
+        }
+
         // Universal law: Gestures override state behavior based on their motion type
         // Use the modular gesture system to determine gesture behavior
-        const gestureIsOverriding = gestureMotion && gestureMotion.type && gestureProgress > 0 && 
+        const gestureIsOverriding = gestureMotion && gestureMotion.type && gestureProgress > 0 &&
             isGestureOverriding(gestureMotion.type);
-        
+
+        if (isRainGesture) {
+            console.log('[PARTICLE] update() - gestureIsOverriding:', gestureIsOverriding,
+                'isGestureOverriding(rain):', isGestureOverriding('rain'));
+        }
+
+        const beforeApplyY = this.y;
+
         if (gestureIsOverriding) {
             // Gesture completely controls particle - skip normal behavior
+            if (isRainGesture) {
+                console.log('[PARTICLE] update() - Calling applyGestureMotion for RAIN');
+            }
             this.applyGestureMotion(gestureMotion, gestureProgress, dt, centerX, centerY);
         } else if (this.gestureBehavior === 'falling') {
             // Rain gesture is active - use falling behavior instead of normal behavior
@@ -170,59 +190,89 @@ class Particle {
         } else {
             // Normal behavior update
             updateBehavior(this, this.behavior, dt, centerX, centerY);
-            
+
             // Don't apply undertone modifications to particle motion
             // Undertones only affect color saturation and core behaviors
-            
+
             // Apply non-overriding gesture motion if present
             if (gestureMotion && gestureProgress > 0) {
                 this.applyGestureMotion(gestureMotion, gestureProgress, dt, centerX, centerY);
             }
         }
-        
-        // Apply velocity to position (unless gesture is directly controlling position)
-        if (!gestureIsOverriding) {
+
+        if (isRainGesture) {
+            console.log('[PARTICLE] update() - After applyGestureMotion, Y:', beforeApplyY?.toFixed(1), '->', this.y?.toFixed(1));
+        }
+
+        // Check if rain/falling is active or gesture is directly controlling position
+        const isRaining = this.rainData || this.gestureBehavior === 'falling' || this.fallingData || this.gestureData?.rain;
+
+        // Skip velocity and boundary constraints when gesture is overriding OR rain is active
+        const skipPhysics = gestureIsOverriding || isRaining;
+
+        if (isRainGesture) {
+            console.log('[PARTICLE] update() - Physics check:', {
+                isRaining,
+                gestureIsOverriding,
+                skipPhysics,
+                hasRainData: !!this.rainData,
+                hasGestureDataRain: !!this.gestureData?.rain,
+                gestureBehavior: this.gestureBehavior
+            });
+        }
+
+        // Apply velocity to position (unless gesture or rain is directly controlling position)
+        if (!skipPhysics) {
             this.x += this.vx * dt;
             this.y += this.vy * dt;
+            if (isRainGesture) {
+                console.log('[PARTICLE] update() - APPLIED velocity (skipPhysics was false)');
+            }
+        } else if (isRainGesture) {
+            console.log('[PARTICLE] update() - SKIPPED velocity (skipPhysics was true)');
         }
-        
+
         // HARD BOUNDARY CONSTRAINTS - particles NEVER leave bounds
-        // Use containment bounds if provided, otherwise use full canvas
-        let boundsWidth, boundsHeight;
-        if (containmentBounds) {
-            // Use containment bounds (element dimensions)
-            boundsWidth = containmentBounds.width;
-            boundsHeight = containmentBounds.height;
-        } else {
-            // Get actual canvas dimensions from the DOM
-            const canvas = document.getElementById('card-mascot') ||
-                          document.getElementById('cherokee-guide-mascot') ||
-                          document.querySelector('canvas');
-            boundsWidth = canvas ? canvas.width : centerX * 2;
-            boundsHeight = canvas ? canvas.height : centerY * 2;
-        }
-        const margin = 20;
+        // EXCEPT during rain gesture or when gesture is overriding (controls position directly)
 
-        // Bounce off boundaries (relative to center)
-        const leftBound = centerX - boundsWidth / 2 + margin;
-        const rightBound = centerX + boundsWidth / 2 - margin;
-        const topBound = centerY - boundsHeight / 2 + margin;
-        const bottomBound = centerY + boundsHeight / 2 - margin;
+        if (!skipPhysics) {
+            // Use containment bounds if provided, otherwise use full canvas
+            let boundsWidth, boundsHeight;
+            if (containmentBounds) {
+                // Use containment bounds (element dimensions)
+                boundsWidth = containmentBounds.width;
+                boundsHeight = containmentBounds.height;
+            } else {
+                // Get actual canvas dimensions from the DOM
+                const canvas = document.getElementById('card-mascot') ||
+                              document.getElementById('cherokee-guide-mascot') ||
+                              document.querySelector('canvas');
+                boundsWidth = canvas ? canvas.width : centerX * 2;
+                boundsHeight = canvas ? canvas.height : centerY * 2;
+            }
+            const margin = 20;
 
-        if (this.x - this.size < leftBound) {
-            this.x = leftBound + this.size;
-            this.vx = Math.abs(this.vx) * 0.5;
-        } else if (this.x + this.size > rightBound) {
-            this.x = rightBound - this.size;
-            this.vx = -Math.abs(this.vx) * 0.5;
-        }
+            // Bounce off boundaries (relative to center)
+            const leftBound = centerX - boundsWidth / 2 + margin;
+            const rightBound = centerX + boundsWidth / 2 + margin;
+            const topBound = centerY - boundsHeight / 2 + margin;
+            const bottomBound = centerY + boundsHeight / 2 - margin;
 
-        if (this.y - this.size < topBound) {
-            this.y = topBound + this.size;
-            this.vy = Math.abs(this.vy) * 0.5;
-        } else if (this.y + this.size > bottomBound) {
-            this.y = bottomBound - this.size;
-            this.vy = -Math.abs(this.vy) * 0.5;
+            if (this.x - this.size < leftBound) {
+                this.x = leftBound + this.size;
+                this.vx = Math.abs(this.vx) * 0.5;
+            } else if (this.x + this.size > rightBound) {
+                this.x = rightBound - this.size;
+                this.vx = -Math.abs(this.vx) * 0.5;
+            }
+
+            if (this.y - this.size < topBound) {
+                this.y = topBound + this.size;
+                this.vy = Math.abs(this.vy) * 0.5;
+            } else if (this.y + this.size > bottomBound) {
+                this.y = bottomBound - this.size;
+                this.vy = -Math.abs(this.vy) * 0.5;
+            }
         }
         
         // Update age and life (EXACT COPY FROM ORIGINAL)

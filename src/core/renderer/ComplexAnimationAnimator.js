@@ -51,34 +51,21 @@ export class ComplexAnimationAnimator {
     }
 
     /**
-     * Apply rain animation - falling particle behavior with gentle drift
-     * @param {Object} anim - Animation state object
-     * @param {number} progress - Animation progress (0-1)
-     * @returns {Object} Transform with offsetX, offsetY, and particleEffect
+     * Apply rain animation - mascot transform only
+     * Particle motion is handled by the gesture system (rain.js)
+     * @param {Object} _anim - Animation state object (unused - particles handled by gesture system)
+     * @param {number} _progress - Animation progress (unused)
+     * @returns {Object} Transform with offsetX, offsetY (mascot stays still)
      */
-    applyRain(anim, progress) {
-        // Rain effect - triggers falling particle behavior
-        // The actual particle motion is handled by the particle system
-        // This just adds a subtle downward drift to the core
+    applyRain(_anim, _progress) {
+        // Rain particle motion is now handled by the gesture system in rain.js
+        // This method only returns the mascot transform (which is neutral - no movement)
 
-        const rainIntensity = anim.params?.intensity || 1.0;
-
-        // Gentle downward drift
-        const driftY = progress * 10 * this.scaleFactor * rainIntensity;
-
-        // Slight sway as if affected by wind
-        const swayX = Math.sin(progress * Math.PI * 4) * 5 * this.scaleFactor;
-
-        // Trigger particle falling effect through the renderer
-        if (this.renderer && this.renderer.particleSystem) {
-            // Enable falling behavior for particles during rain
-            this.renderer.particleSystem.setGestureBehavior('falling', progress > 0 && progress < 1);
-        }
-
+        // Mascot stays completely still during rain
         return {
-            offsetX: swayX,
-            offsetY: driftY,
-            particleEffect: 'falling'  // Signal to particle system
+            offsetX: 0,
+            offsetY: 0,
+            particleEffect: 'rain'
         };
     }
 

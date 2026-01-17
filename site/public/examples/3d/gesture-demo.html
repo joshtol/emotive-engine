@@ -164,6 +164,92 @@
             margin-left: 6px;
         }
 
+        /* Hide collapsed sections properly - completely remove from layout */
+        .section-content.collapsed {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        /* CRITICAL: Ensure right-menu sections are block-level, not flex/grid */
+        .right-menu {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Each section is a self-contained block */
+        .right-menu > .section {
+            display: block;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* Section content wrapper - block layout */
+        .right-menu .section-content {
+            display: block;
+        }
+
+        /* Section headers - clearly NOT buttons */
+        .right-menu .section > h2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            min-height: auto !important;
+            font-size: clamp(11px, 1vw, 13px);
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            cursor: pointer;
+        }
+
+        /* Button grid is ONLY for gesture buttons - scrollable for large collections */
+        .right-menu .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* Custom scrollbar for button grids */
+        .right-menu .button-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .right-menu .button-grid::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+        }
+
+        .right-menu .button-grid::-webkit-scrollbar-thumb {
+            background: rgba(var(--accent-rgb), 0.4);
+            border-radius: 2px;
+        }
+
+        .right-menu .button-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--accent-rgb), 0.6);
+        }
+
+        /* Gesture buttons have column layout for emoji + name */
+        .right-menu .button-grid > .gesture-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Loading/empty states span full grid width */
+        .button-grid > .loading-state,
+        .button-grid > .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
         /* Empty state */
         .empty-state {
             text-align: center;

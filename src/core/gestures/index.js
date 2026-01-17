@@ -83,10 +83,24 @@ import spin from './transforms/spin.js';
 import spinLeft from './transforms/spinLeft.js';
 import spinRight from './transforms/spinRight.js';
 import jump from './transforms/jump.js';
+// Directional jump gestures
+import jumpUp from './transforms/jumpUp.js';
+import jumpDown from './transforms/jumpDown.js';
+import jumpLeft from './transforms/jumpLeft.js';
+import jumpRight from './transforms/jumpRight.js';
 import morph from './transforms/morph.js';
 import stretch from './transforms/stretch.js';
 import tilt from './transforms/tilt.js';
-import orbital from './transforms/orbital.js';
+// Directional tilt gestures
+import tiltUp from './transforms/tiltUp.js';
+import tiltDown from './transforms/tiltDown.js';
+import tiltLeft from './transforms/tiltLeft.js';
+import tiltRight from './transforms/tiltRight.js';
+// Directional orbit gestures (simple orbiting motion)
+import orbitLeft from './transforms/orbitLeft.js';
+import orbitRight from './transforms/orbitRight.js';
+import orbitUp from './transforms/orbitUp.js';
+import orbitDown from './transforms/orbitDown.js';
 import hula from './transforms/hula.js';
 import twist from './transforms/twist.js';
 
@@ -95,6 +109,11 @@ import twist from './transforms/twist.js';
 // └─────────────────────────────────────────────────────────────────────────────────────
 import wave from './effects/wave.js';
 import drift from './effects/drift.js';
+// Directional drift gestures
+import driftUp from './effects/driftUp.js';
+import driftDown from './effects/driftDown.js';
+import driftLeft from './effects/driftLeft.js';
+import driftRight from './effects/driftRight.js';
 import flicker from './effects/flicker.js';
 import burst from './effects/burst.js';
 import directional from './effects/directional.js';
@@ -109,6 +128,7 @@ import glow from './effects/glow.js';
 import peek from './effects/peek.js';
 import runningman from './effects/runningman.js';
 import charleston from './effects/charleston.js';
+import rain from './effects/rain.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ PLACEHOLDER GESTURES FOR NEW ANIMATIONS
@@ -261,36 +281,6 @@ const shimmer = {
 };
 const groove = createPlaceholderGesture('groove', '🎵');
 
-// Rain gesture - applies doppler effect to particles
-const rain = {
-    name: 'rain',
-    emoji: '🌧️',
-    type: 'particle',  // Particle type to affect particle behavior
-    description: 'Rain effect with falling particles',
-    config: {
-        duration: 3000,  // Legacy fallback
-        musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
-        particleMotion: 'falling'  // Use the falling particle behavior
-    },
-    rhythm: {
-        enabled: true,
-        syncType: 'off-beat',
-        durationSync: { mode: 'bars', bars: 2 }, // Musical: 2 bars
-        intensity: 0.8
-    },
-    apply: (particle, progress, _params) => {
-        // The doppler behavior is handled by the particle system
-        // This just marks particles as being affected by rain
-        particle.rainEffect = true;
-        particle.rainProgress = progress;
-        return true;
-    },
-    blend: (_particle, _progress, _params) => {
-        // Blend with other gestures
-        return false;
-    }
-};
-
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE COLLECTIONS
 // └─────────────────────────────────────────────────────────────────────────────────────
@@ -314,7 +304,6 @@ const MOTION_GESTURES = [
     lean,
     reach,
     headBob,
-    rain,
     // Accent gestures (dance-friendly - boost groove, don't compete)
     pop,
     bob,
@@ -352,10 +341,24 @@ const TRANSFORM_GESTURES = [
     spinLeft,
     spinRight,
     jump,
+    // Directional jump gestures
+    jumpUp,
+    jumpDown,
+    jumpLeft,
+    jumpRight,
     morph,
     stretch,
     tilt,
-    orbital,
+    // Directional tilt gestures
+    tiltUp,
+    tiltDown,
+    tiltLeft,
+    tiltRight,
+    // Directional orbit gestures
+    orbitLeft,
+    orbitRight,
+    orbitUp,
+    orbitDown,
     hula,
     twist
 ];
@@ -363,6 +366,11 @@ const TRANSFORM_GESTURES = [
 const EFFECT_GESTURES = [
     wave,
     drift,
+    // Directional drift gestures
+    driftUp,
+    driftDown,
+    driftLeft,
+    driftRight,
     flicker,
     burst,
     directional,
@@ -376,7 +384,8 @@ const EFFECT_GESTURES = [
     glow,
     peek,
     runningman,
-    charleston
+    charleston,
+    rain
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────

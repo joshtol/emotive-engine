@@ -20,7 +20,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2000,     // 2 second duration (longer for lerping to catch up)
+        duration: 2000,     // Legacy fallback
+        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
         fadeIn: true,       // Enable fade in effect (for fade-out-and-back)
         fadeOut: true,      // Enable fade out effect
         minOpacity: 0,      // Minimum opacity level
@@ -31,7 +32,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'dynamic',  // Fade with volume/intensity changes
-        
+        durationSync: { mode: 'bars', bars: 1 }, // 1 bar duration
+
         // Opacity modulation with beat
         opacitySync: {
             onBeat: 0.9,              // Nearly visible on beat
@@ -128,40 +130,46 @@ export default {
 
     /**
      * 3D core transformation for fade gesture
-     * Opacity fade translates to glowIntensity multiplier
+     * Controls opacity/visibility through multiple channels for better effect
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     * @returns {Object} 3D transformation with opacity and glow controls
      */
     '3d': {
         evaluate(progress, motion) {
-            const config = { ...this.config, ...motion };
+            const config = { ...(this?.config || {}), ...motion };
 
-            let glowIntensity;
             const minOpacity = config.minOpacity ?? 0.0;
             const maxOpacity = config.maxOpacity ?? 1.0;
+            const fadeIn = config.fadeIn ?? true;
+            const fadeOut = config.fadeOut ?? true;
 
-            if (config.fadeIn && !config.fadeOut) {
-                // Fade in only - glow increases from minOpacity to maxOpacity
-                glowIntensity = minOpacity + (maxOpacity - minOpacity) * progress;
-            } else if (config.fadeOut && !config.fadeIn) {
-                // Fade out only - glow decreases from maxOpacity to minOpacity
-                glowIntensity = maxOpacity - (maxOpacity - minOpacity) * progress;
+            let opacity;
+            if (fadeIn && !fadeOut) {
+                // Fade in only - opacity increases
+                opacity = minOpacity + (maxOpacity - minOpacity) * progress;
+            } else if (fadeOut && !fadeIn) {
+                // Fade out only - opacity decreases
+                opacity = maxOpacity - (maxOpacity - minOpacity) * progress;
             } else {
-                // Fade out then back in: maxOpacity → minOpacity → maxOpacity
-                // This creates the classic "fade" effect (bright → dark → bright)
-                if (progress < 0.5) {
-                    glowIntensity = maxOpacity - (maxOpacity - minOpacity) * (progress * 2);
-                } else {
-                    glowIntensity = minOpacity + (maxOpacity - minOpacity) * ((progress - 0.5) * 2);
-                }
+                // Default: Fade out then back in (ghostly pulse)
+                // Uses smooth sine curve for natural feel
+                const curve = Math.cos(progress * Math.PI * 2) * 0.5 + 0.5;
+                opacity = minOpacity + (maxOpacity - minOpacity) * curve;
             }
+
+            // Apply easing for smoother visual
+            const easedOpacity = opacity * opacity * (3 - 2 * opacity); // smoothstep
 
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0,
-                glowIntensity
+                // Control multiple visibility channels
+                opacity: easedOpacity,
+                glowIntensity: easedOpacity,
+                // Slight scale reduction when fading for depth
+                scaleMultiplier: 0.95 + easedOpacity * 0.05
             };
         }
     }

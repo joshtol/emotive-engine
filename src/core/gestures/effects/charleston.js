@@ -20,7 +20,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 2500,        // Animation duration
+        duration: 2500,        // Legacy fallback
+        musicalDuration: { musical: true, bars: 1.5 }, // 1.5 bars (6 beats)
         kickDistance: 35,      // Kick extension distance
         swivelRange: 40,       // Hip swivel range
         bounceHeight: 12,      // Vertical bounce
@@ -36,6 +37,7 @@ export default {
     rhythm: {
         enabled: true,
         syncToBeat: true,      // Lock to beat grid
+        durationSync: { mode: 'bars', bars: 1.5 }, // 1.5 bars duration
         beatMultiplier: 2,     // Double-time feel
         accentBeats: [1, 2.5, 3, 4.5]  // Syncopated accents
     },

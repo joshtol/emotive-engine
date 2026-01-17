@@ -142,8 +142,15 @@ export class AnimationManager {
 
                 // All gestures now have native 3D implementations
                 // Apply gesture to virtual particle if needed
+                // Signature: apply(particle, progress, motion, dt, centerX, centerY)
+                // t is progress (0-1), we pass 1/60 as approximate dt since 3D runs at ~60fps
                 if (gesture2D.apply) {
-                    gesture2D.apply(virtualParticle, gestureData, config, t, 1.0, 0, 0);
+                    // Initialize gesture data on first frame
+                    if (!gestureData.initialized && gesture2D.initialize) {
+                        gesture2D.initialize(virtualParticle, config, 0, 0);
+                        gestureData.initialized = true;
+                    }
+                    gesture2D.apply(virtualParticle, t, config, 1/60, 0, 0);
                 }
 
                 // Call gesture's 3D evaluate function with particle data

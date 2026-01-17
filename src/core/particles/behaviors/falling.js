@@ -39,15 +39,22 @@ import { selectWeightedColor } from '../utils/colorUtils.js';
 
 /**
  * Initialize falling behavior for a particle
- * Sets up slow, heavy downward movement
- * 
+ * Sets up DRAMATIC downward movement for rain effect
+ *
  * @param {Particle} particle - The particle to initialize
  */
 export function initializeFalling(particle) {
-    // Exact copy of ambient but falling DOWN instead of up
-    particle.vx = 0;  // NO horizontal drift
-    particle.vy = 0.04 + Math.random() * 0.02;  // Same speed as ambient but downward (positive = down)
-    particle.lifeDecay = 0.002;  // Same as ambient
+    // Store original position for rain effect - CAPTURE WHERE PARTICLE IS NOW
+    if (!particle.fallingData) {
+        particle.fallingData = {
+            originalX: particle.x,
+            originalY: particle.y,
+            originalOpacity: particle.opacity ?? particle.life ?? 1,
+            wobblePhase: Math.random() * Math.PI * 2,
+            wobbleSpeed: 0.3 + Math.random() * 0.4,
+            fallProgress: 0
+        };
+    }
 
     // Use emotion colors if provided
     if (particle.emotionColors && particle.emotionColors.length > 0) {
@@ -55,7 +62,6 @@ export function initializeFalling(particle) {
     }
 
     // Generate random 3D direction for uniform sphere distribution
-    // This is used by the 3D translator for positioning
     const u1 = Math.random();
     const u2 = Math.random();
     const theta = u1 * Math.PI * 2;
@@ -63,22 +69,21 @@ export function initializeFalling(particle) {
     const sinPhi = Math.sqrt(1.0 - cosPhi * cosPhi);
 
     particle.behaviorData = {
-        downwardSpeed: 0.0005,  // Same as ambient's upwardSpeed
-        friction: 0.998,        // Same as ambient
-        // 3D direction for translator (uniform sphere distribution)
+        fallSpeed: 8.0,         // DRAMATIC fall speed
+        fallDistance: 400,      // Total fall distance
+        wobbleAmount: 1.5,      // Wind wobble
         fallingDir: {
             x: sinPhi * Math.cos(theta),
             y: cosPhi,
             z: sinPhi * Math.sin(theta)
         },
-        // Random orbit distance (0.7x to 1.1x core radius, actual value set by translator)
         orbitDistanceRatio: 0.7 + Math.random() * 0.4
     };
 }
 
 /**
  * Update falling behavior each frame
- * Mirror of ambient but falling DOWN instead of rising up
+ * DRAMATIC falling like rain - particles fall from their captured positions
  *
  * @param {Particle} particle - The particle to update
  * @param {number} dt - Delta time (frame time)
@@ -87,16 +92,42 @@ export function initializeFalling(particle) {
  */
 export function updateFalling(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
+    let fallData = particle.fallingData;
 
-    // Apply friction to y velocity only (frame-rate independent)
-    // Use exponential decay: friction^dt where dt is normalized to 60fps
-    particle.vy *= Math.pow(data.friction, dt);
+    // Initialize if not done yet
+    if (!fallData) {
+        initializeFalling(particle);
+        fallData = particle.fallingData;
+    }
 
-    // Add continuous downward drift (opposite of ambient's upward)
-    particle.vy += data.downwardSpeed * dt;
+    // Increment fall progress
+    fallData.fallProgress += dt * 0.02; // Progress per frame
+    const progress = Math.min(fallData.fallProgress, 1.0);
 
-    // NO horizontal movement (zen-like straight down, like ambient goes straight up)
-    particle.vx = 0;
+    // Calculate total fall based on progress
+    const totalFall = data.fallDistance * progress;
+
+    // Wind wobble
+    fallData.wobblePhase += fallData.wobbleSpeed * dt * 0.1;
+    const wobble = Math.sin(fallData.wobblePhase) * data.wobbleAmount;
+
+    // DIRECTLY set particle position - fall from original captured position
+    particle.x = fallData.originalX + wobble;
+    particle.y = fallData.originalY + totalFall;
+
+    // Set velocity for trail effects (doesn't affect position since we set it directly)
+    particle.vx = wobble * 0.3;
+    particle.vy = data.fallSpeed * 10;
+
+    // Fade out as particles fall
+    const fadeStart = 0.6;
+    if (progress > fadeStart) {
+        const fadeProgress = (progress - fadeStart) / (1 - fadeStart);
+        particle.opacity = fallData.originalOpacity * (1 - fadeProgress);
+        if (particle.life !== undefined) {
+            particle.life = fallData.originalOpacity * (1 - fadeProgress);
+        }
+    }
 }
 
 // Export behavior definition for registry

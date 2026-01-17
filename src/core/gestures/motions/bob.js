@@ -36,11 +36,12 @@ export default {
             const strength = motion?.strength || 1.0;
             const envelope = Math.sin(progress * Math.PI);
 
+            // Increased amplitude by 20% (0.025 -> 0.03)
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0,
-                rotationBoost: [envelope * 0.025 * strength, 0, 0]
+                rotationBoost: [envelope * 0.03 * strength, 0, 0]
             };
         }
     }

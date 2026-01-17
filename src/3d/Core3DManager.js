@@ -1640,11 +1640,12 @@ export class Core3DManager {
         const scaleBoost = this._smoothedBoost.scale;
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // CAMERA-RELATIVE POSITION: Transform view-space to world-space
+        // CAMERA-RELATIVE TRANSFORMS: View-space position & rotation to world-space
         // ═══════════════════════════════════════════════════════════════════════════
         // This enables "tidally locked" gestures that move toward/away from camera
         // regardless of camera angle. View-space: Z = toward camera, Y = up, X = right
         let camRelWorldX = 0, camRelWorldY = 0, camRelWorldZ = 0;
+        this._cameraRoll = 0;  // Reset camera roll each frame
 
         if (blended.hasCameraRelativeGestures && this.renderer.camera) {
             const cam = this.renderer.camera;
@@ -1680,6 +1681,15 @@ export class Core3DManager {
             camRelWorldY = this._camRight.y * camRelPos[0] + this._camUp.y * camRelPos[1] - this._camForward.y * camRelPos[2];
             camRelWorldZ = this._camRight.z * camRelPos[0] + this._camUp.z * camRelPos[1] - this._camForward.z * camRelPos[2];
 
+            // Camera-relative rotation: use the cameraRoll parameter in renderer
+            // This rotates around the camera's forward vector, giving true "lean left/right as seen"
+            const camRelRot = blended.cameraRelativeRotation;
+            if (camRelRot && camRelRot[2] !== 0) {
+                // Z roll in view space = rotation around camera forward = cameraRoll
+                this._cameraRoll = camRelRot[2];
+            } else {
+                this._cameraRoll = 0;
+            }
         }
 
         if (rhythmMod) {
@@ -1702,7 +1712,8 @@ export class Core3DManager {
             ];
 
             // ═══════════════════════════════════════════════════════════════════════
-            // ROTATION: Groove sway + Absolute gestures + Accent boosts (smoothed)
+            // ROTATION: Groove sway + Absolute gestures + Accent boosts
+            // (Camera-relative rotation is applied via cameraRoll in renderer)
             // ═══════════════════════════════════════════════════════════════════════
             this.rotation = [
                 blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend + rotBoost[0],
@@ -1720,6 +1731,7 @@ export class Core3DManager {
             this.scale = blended.scale * grooveScaleEffect * scaleMult * scaleBoost;
         } else {
             // No rhythm - apply gestures + camera-relative with smoothed boosts
+            // (Camera-relative rotation is applied via cameraRoll in renderer)
             this.position = [
                 blended.position[0] + camRelWorldX + posBoost[0],
                 blended.position[1] + camRelWorldY + posBoost[1],
@@ -2009,6 +2021,7 @@ export class Core3DManager {
             glowIntensity: effectiveGlowIntensity,
             hasActiveGesture: this.animationManager.hasActiveAnimations(),  // Faster lerp during gestures
             calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
+            cameraRoll: this._cameraRoll || 0,  // Camera-relative roll for tidal-locked lean gestures
             solarEclipse: this.effectManager.getSolarEclipse(),  // Pass eclipse manager for synchronized updates
             deltaTime,  // Pass deltaTime for eclipse animation
             morphProgress: morphState.isTransitioning ? morphState.visualProgress : null,  // For corona fade-in

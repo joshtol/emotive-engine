@@ -13,7 +13,8 @@ export default {
     description: 'Gentle floating upward motion',
     
     config: {
-        duration: 2000,
+        duration: 2000,  // Legacy fallback
+        musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
         amplitude: 80,  // Increased for more visible effect
         wobbleAmount: 20,  // More wobble
         strength: 1.0  // Full strength

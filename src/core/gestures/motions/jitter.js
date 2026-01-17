@@ -13,7 +13,8 @@ export default {
     description: 'Nervous jittery movement',
     
     config: {
-        duration: 1000,
+        duration: 1000,  // Legacy fallback
+        musicalDuration: { musical: true, beats: 2 }, // 2 beats
         intensity: 15,  // Increased for more visible jitter
         frequency: 30,  // Higher frequency
         strength: 1.0  // Full strength
@@ -23,7 +24,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'beat',
-        
+        durationSync: { mode: 'beats', beats: 2 }, // 2 beats duration
+
         // Jitter intensity syncs to beat
         amplitudeSync: {
             onBeat: 2.0,      // Double jitter on beat

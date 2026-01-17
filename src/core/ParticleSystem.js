@@ -371,6 +371,15 @@ class ParticleSystem {
      * Internal update implementation
      */
     _update(deltaTime, centerX, centerY, gestureMotion = null, gestureProgress = 0, undertoneModifier = null) {
+        // RAIN LOGGING
+        if (gestureMotion?.type === 'rain') {
+            console.log('[PARTICLE_SYSTEM] _update() with RAIN:', {
+                gestureMotionType: gestureMotion.type,
+                gestureProgress: gestureProgress?.toFixed(3),
+                particleCount: this.particles.length
+            });
+        }
+
         // PERFORMANCE OPTIMIZATION: Skip cleanup for small particle counts
         // 50 particles don't need periodic cleanup overhead
         // Cleanup is unnecessary for such small numbers
@@ -381,7 +390,12 @@ class ParticleSystem {
 
         // PERFORMANCE OPTIMIZATION: Use simple filter instead of complex loop
         // More efficient for small particle counts
+        let loggedFirst = false;
         this.particles = this.particles.filter(particle => {
+            if (gestureMotion?.type === 'rain' && !loggedFirst) {
+                console.log('[PARTICLE_SYSTEM] Calling particle.update() for first particle with RAIN');
+                loggedFirst = true;
+            }
             particle.update(deltaTime, centerX, centerY, undertoneModifier, gestureMotion, gestureProgress, this.containmentBounds);
             return particle.isAlive();
         });

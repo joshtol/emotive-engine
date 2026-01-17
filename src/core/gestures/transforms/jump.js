@@ -43,7 +43,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 800,         // Animation duration
+        duration: 800,         // Legacy fallback
+        musicalDuration: { musical: true, beats: 2 }, // 2 beats
         jumpHeight: 60,        // Maximum vertical leap distance
         squashAmount: 0.8,     // Compression ratio during squash
         stretchAmount: 1.2,    // Extension ratio during stretch
@@ -66,7 +67,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'beat',  // Jump timing syncs to beat
-        
+        durationSync: { mode: 'beats', beats: 2 }, // 2 beats duration
+
         // Jump phases sync to rhythm
         phaseSync: {
             anticipation: 'eighth',    // Squash on 8th note before beat

@@ -44,7 +44,8 @@ export default {
     
     // Default configuration
     config: {
-        duration: 800,         // Animation duration
+        duration: 800,         // Legacy fallback
+        musicalDuration: { musical: true, beats: 2 }, // 2 beats
         distance: 50,          // Maximum drift distance
         angle: 45,             // Primary drift direction
         returnToOrigin: true,  // Return to starting position
@@ -67,7 +68,8 @@ export default {
     rhythm: {
         enabled: true,
         syncMode: 'ambient',  // Sync to ambient musical textures
-        
+        durationSync: { mode: 'beats', beats: 2 }, // 2 beats duration
+
         // Distance varies with musical dynamics
         distanceSync: {
             quiet: 30,            // Small drift in quiet sections

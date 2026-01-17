@@ -13,7 +13,8 @@ export default {
     description: 'Gentle side-to-side swaying motion',
     
     config: {
-        duration: 2000,
+        duration: 2000,  // Legacy fallback
+        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
         amplitude: 20,
         frequency: 1,
         strength: 0.5
