@@ -108,9 +108,19 @@ export class AnimationManager {
 
         // Get gesture config for duration
         const config = gesture2D.config || {};
-        const duration = config.musicalDuration?.musical
-            ? (config.musicalDuration.beats || 2) * 500  // Assume 120 BPM (500ms per beat)
-            : (config.duration || 800);
+        // Calculate duration from musical timing (assume 120 BPM = 500ms per beat, 2000ms per bar)
+        let duration;
+        if (config.musicalDuration?.musical) {
+            if (config.musicalDuration.bars) {
+                // 1 bar = 4 beats at 120 BPM = 2000ms
+                duration = config.musicalDuration.bars * 2000;
+            } else {
+                // beats specified directly
+                duration = (config.musicalDuration.beats || 2) * 500;
+            }
+        } else {
+            duration = config.duration || 800;
+        }
 
         // Start time-based animation
         const startTime = this.animator.time;
