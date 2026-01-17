@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<!--
+  GESTURE EXPLORER - Emotive Engine 3D
+
+  Dynamic gesture demo that automatically discovers and displays all available gestures.
+  When new gestures are added to the engine, they automatically appear here.
+
+  Features:
+  - Dynamically loads all gestures from mascot.getAvailableGestures()
+  - Groups by type: Motion (blending), Transform (override), Effects
+  - Search filtering
+  - Type filtering via checkboxes
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesture Explorer - Emotive Engine</title>
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        /* Theme: Amber/Gold for gesture explorer */
+        :root {
+            --accent: #f59e0b;
+            --accent-rgb: 245, 158, 11;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        /* Search box styling */
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Filter checkboxes */
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .filter-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .filter-item label {
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-count {
+            font-size: 11px;
+            opacity: 0.6;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* Stats display */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Gesture button enhancements */
+        .gesture-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 10px 8px;
+            min-height: 60px;
+            font-size: 11px;
+            line-height: 1.2;
+        }
+
+        .gesture-btn .emoji {
+            font-size: 18px;
+        }
+
+        .gesture-btn .name {
+            word-break: break-word;
+            text-align: center;
+        }
+
+        .gesture-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .gesture-btn.hidden {
+            display: none;
+        }
+
+        /* Section headers with counts */
+        .section h2 .gesture-count {
+            font-size: 11px;
+            font-weight: normal;
+            opacity: 0.6;
+            margin-left: 6px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.5;
+            font-size: 13px;
+        }
+
+        /* Loading state */
+        .loading-state {
+            text-align: center;
+            padding: 30px;
+            opacity: 0.6;
+        }
+
+        .loading-state .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Recently used gestures */
+        .recent-gestures {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .recent-btn {
+            padding: 4px 10px;
+            font-size: 12px;
+            background: rgba(var(--accent-rgb), 0.2);
+            border: 1px solid rgba(var(--accent-rgb), 0.3);
+        }
+
+        .recent-btn:hover {
+            background: rgba(var(--accent-rgb), 0.3);
+        }
+
+        /* Gesture description tooltip */
+        .gesture-tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(var(--accent-rgb), 0.5);
+            border-radius: 8px;
+            padding: 10px 14px;
+            max-width: 250px;
+            font-size: 12px;
+            line-height: 1.4;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .gesture-tooltip.visible {
+            opacity: 1;
+        }
+
+        .gesture-tooltip .tooltip-name {
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .gesture-tooltip .tooltip-type {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Search</h2>
+            <div class="section-content">
+                <div class="search-box">
+                    <input type="text" id="gesture-search" placeholder="Filter gestures...">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Filter by Type</h2>
+            <div class="section-content">
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-motion" checked>
+                        <label for="filter-motion">
+                            Motion
+                            <span class="filter-count" id="count-motion">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-transform" checked>
+                        <label for="filter-transform">
+                            Transform
+                            <span class="filter-count" id="count-transform">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-effect" checked>
+                        <label for="filter-effect">
+                            Effects
+                            <span class="filter-count" id="count-effect">0</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Statistics</h2>
+            <div class="section-content">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-total">-</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-visible">-</div>
+                        <div class="stat-label">Visible</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="collapsed">Recent</h2>
+            <div class="section-content collapsed">
+                <div class="recent-gestures" id="recent-gestures">
+                    <span class="empty-state">No gestures used yet</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>Gesture Explorer</strong><br>
+                Dynamically loaded from the engine. Add new gestures to the codebase and they appear here automatically!
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER ANIMATION -->
+    <div class="center-content">
+        <div id="animation-container"></div>
+        <div class="camera-hint">Drag to rotate | Scroll to zoom | Click gestures to preview</div>
+    </div>
+
+    <!-- RIGHT MENU -->
+    <div class="right-menu">
+        <div class="section" id="section-motion">
+            <h2>Motion Gestures <span class="gesture-count" id="header-count-motion"></span></h2>
+            <div class="section-content">
+                <div class="button-grid" id="grid-motion">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading gestures...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-transform">
+            <h2 class="collapsed">Transform Gestures <span class="gesture-count" id="header-count-transform"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-transform">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-effect">
+            <h2 class="collapsed">Effect Gestures <span class="gesture-count" id="header-count-effect"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-effect">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section visual-controls">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip element -->
+    <div class="gesture-tooltip" id="gesture-tooltip">
+        <div class="tooltip-name"></div>
+        <div class="tooltip-type"></div>
+        <div class="tooltip-desc"></div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INITIALIZE MASCOT
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const container = document.getElementById('animation-container');
+        const mascot = new EmotiveMascot3D({
+            coreGeometry: 'crystal',
+            enableParticles: true,
+            enablePostProcessing: true,
+            enableShadows: false,
+            enableControls: true,
+            autoRotate: true,
+            cameraDistance: 1.2,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0,
+            materialVariant: 'multiplexer',
+            assetBasePath: '/assets'
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Setup shared toggles
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GESTURE DISCOVERY & UI GENERATION
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Storage for gesture data
+        let allGestures = [];
+        const recentGestures = [];
+        const MAX_RECENT = 8;
+
+        // Type mapping (API type -> display category)
+        const typeMapping = {
+            'blending': 'motion',
+            'override': 'transform',
+            'effect': 'effect'
+        };
+
+        // Elements
+        const grids = {
+            motion: document.getElementById('grid-motion'),
+            transform: document.getElementById('grid-transform'),
+            effect: document.getElementById('grid-effect')
+        };
+
+        const sections = {
+            motion: document.getElementById('section-motion'),
+            transform: document.getElementById('section-transform'),
+            effect: document.getElementById('section-effect')
+        };
+
+        const filters = {
+            motion: document.getElementById('filter-motion'),
+            transform: document.getElementById('filter-transform'),
+            effect: document.getElementById('filter-effect')
+        };
+
+        const counts = {
+            motion: document.getElementById('count-motion'),
+            transform: document.getElementById('count-transform'),
+            effect: document.getElementById('count-effect')
+        };
+
+        const headerCounts = {
+            motion: document.getElementById('header-count-motion'),
+            transform: document.getElementById('header-count-transform'),
+            effect: document.getElementById('header-count-effect')
+        };
+
+        const searchInput = document.getElementById('gesture-search');
+        const statTotal = document.getElementById('stat-total');
+        const statVisible = document.getElementById('stat-visible');
+        const recentContainer = document.getElementById('recent-gestures');
+        const tooltip = document.getElementById('gesture-tooltip');
+
+        /**
+         * Create a gesture button element
+         */
+        function createGestureButton(gesture) {
+            const btn = document.createElement('button');
+            btn.className = 'gesture-btn';
+            btn.dataset.gesture = gesture.name;
+            btn.dataset.type = typeMapping[gesture.type] || gesture.type;
+            btn.dataset.description = gesture.description || '';
+
+            btn.innerHTML = `
+                <span class="emoji">${gesture.emoji || '✨'}</span>
+                <span class="name">${gesture.name}</span>
+            `;
+
+            return btn;
+        }
+
+        /**
+         * Populate gesture grids from API
+         */
+        function populateGestures() {
+            // Get all available gestures from the mascot
+            allGestures = mascot.getAvailableGestures();
+
+            // Clear loading states
+            Object.values(grids).forEach(grid => {
+                grid.innerHTML = '';
+            });
+
+            // Group gestures by type
+            const grouped = {
+                motion: [],
+                transform: [],
+                effect: []
+            };
+
+            allGestures.forEach(gesture => {
+                const category = typeMapping[gesture.type] || 'effect';
+                if (grouped[category]) {
+                    grouped[category].push(gesture);
+                }
+            });
+
+            // Sort each group alphabetically
+            Object.keys(grouped).forEach(category => {
+                grouped[category].sort((a, b) => a.name.localeCompare(b.name));
+            });
+
+            // Populate grids
+            Object.entries(grouped).forEach(([category, gestures]) => {
+                const grid = grids[category];
+                if (!grid) return;
+
+                if (gestures.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No gestures in this category</div>';
+                    return;
+                }
+
+                gestures.forEach(gesture => {
+                    grid.appendChild(createGestureButton(gesture));
+                });
+
+                // Update counts
+                counts[category].textContent = gestures.length;
+                headerCounts[category].textContent = `(${gestures.length})`;
+            });
+
+            // Update stats
+            statTotal.textContent = allGestures.length;
+            updateVisibleCount();
+        }
+
+        /**
+         * Filter gestures based on search and type filters
+         */
+        function filterGestures() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            // Check which types are enabled
+            const enabledTypes = {
+                motion: filters.motion.checked,
+                transform: filters.transform.checked,
+                effect: filters.effect.checked
+            };
+
+            // Show/hide sections based on type filters
+            Object.entries(sections).forEach(([type, section]) => {
+                section.style.display = enabledTypes[type] ? '' : 'none';
+            });
+
+            // Filter individual buttons
+            document.querySelectorAll('.gesture-btn').forEach(btn => {
+                const name = btn.dataset.gesture.toLowerCase();
+                const type = btn.dataset.type;
+
+                const matchesSearch = !searchTerm || name.includes(searchTerm);
+                const matchesType = enabledTypes[type];
+
+                btn.classList.toggle('hidden', !matchesSearch || !matchesType);
+            });
+
+            updateVisibleCount();
+        }
+
+        /**
+         * Update visible gesture count
+         */
+        function updateVisibleCount() {
+            const visible = document.querySelectorAll('.gesture-btn:not(.hidden)').length;
+            statVisible.textContent = visible;
+        }
+
+        /**
+         * Add gesture to recent list
+         */
+        function addToRecent(gestureName) {
+            // Remove if already exists
+            const existingIndex = recentGestures.indexOf(gestureName);
+            if (existingIndex !== -1) {
+                recentGestures.splice(existingIndex, 1);
+            }
+
+            // Add to front
+            recentGestures.unshift(gestureName);
+
+            // Trim to max
+            while (recentGestures.length > MAX_RECENT) {
+                recentGestures.pop();
+            }
+
+            // Update UI
+            updateRecentUI();
+        }
+
+        /**
+         * Update recent gestures UI
+         */
+        function updateRecentUI() {
+            if (recentGestures.length === 0) {
+                recentContainer.innerHTML = '<span class="empty-state">No gestures used yet</span>';
+                return;
+            }
+
+            recentContainer.innerHTML = recentGestures.map(name => {
+                const gesture = allGestures.find(g => g.name === name);
+                const emoji = gesture?.emoji || '✨';
+                return `<button class="recent-btn" data-gesture="${name}">${emoji} ${name}</button>`;
+            }).join('');
+        }
+
+        /**
+         * Show tooltip for gesture
+         */
+        function showTooltip(btn, x, y) {
+            const name = btn.dataset.gesture;
+            const gesture = allGestures.find(g => g.name === name);
+            if (!gesture) return;
+
+            tooltip.querySelector('.tooltip-name').textContent = `${gesture.emoji || '✨'} ${gesture.name}`;
+            tooltip.querySelector('.tooltip-type').textContent = gesture.type;
+            tooltip.querySelector('.tooltip-desc').textContent = gesture.description || 'No description available';
+
+            // Position tooltip
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = x + 15;
+            let top = y + 15;
+
+            // Keep in viewport
+            if (left + 260 > window.innerWidth) {
+                left = x - 260;
+            }
+            if (top + 100 > window.innerHeight) {
+                top = y - 100;
+            }
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // EVENT HANDLERS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Gesture button clicks (event delegation)
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-gesture]');
+            if (!btn) return;
+
+            const gestureName = btn.dataset.gesture;
+            mascot.express(gestureName);
+            addToRecent(gestureName);
+        });
+
+        // Search input
+        searchInput.addEventListener('input', filterGestures);
+
+        // Filter checkboxes
+        Object.values(filters).forEach(checkbox => {
+            checkbox.addEventListener('change', filterGestures);
+        });
+
+        // Tooltip on hover (desktop only)
+        let tooltipTimeout;
+        document.addEventListener('mouseover', e => {
+            const btn = e.target.closest('.gesture-btn');
+            if (btn) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = setTimeout(() => {
+                    showTooltip(btn, e.clientX, e.clientY);
+                }, 400);
+            }
+        });
+
+        document.addEventListener('mouseout', e => {
+            const btn = e.target.closest('.gesture-btn');
+            if (btn) {
+                clearTimeout(tooltipTimeout);
+                hideTooltip();
+            }
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (tooltip.classList.contains('visible')) {
+                const btn = e.target.closest('.gesture-btn');
+                if (btn) {
+                    showTooltip(btn, e.clientX, e.clientY);
+                }
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INITIALIZE
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Wait a tick for mascot to fully initialize, then populate gestures
+        setTimeout(() => {
+            populateGestures();
+
+            // Fire an initial gesture to show the mascot is alive
+            mascot.express('sway');
+        }, 100);
+    </script>
+</body>
+</html>

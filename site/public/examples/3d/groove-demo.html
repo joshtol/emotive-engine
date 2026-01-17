@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groove Demo - Emotive Engine</title>
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        :root {
+            --accent: #7c3aed;
+            --accent-rgb: 124, 58, 237;
+        }
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Audio</h2>
+            <div class="section-content">
+                <select id="trackSelect" style="width:100%; margin-bottom:0.5rem;">
+                    <option value="female">Electric Glow (F)</option>
+                    <option value="male">Electric Glow (M)</option>
+                    <option value="click-120">Click 120 BPM</option>
+                </select>
+                <div class="button-grid">
+                    <button id="playBtn">Play</button>
+                    <button id="stopBtn" disabled>Stop</button>
+                    <button id="tapBtn">Tap</button>
+                    <button id="browseBtn">...</button>
+                </div>
+                <input type="file" id="audioFile" accept="audio/*" style="display:none;">
+                <div class="info-box" style="margin-top:0.5rem;">
+                    <span id="bpmValue" style="font-size:1.5rem;font-weight:700;color:var(--accent);">--</span> BPM
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Groove</h2>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button class="active" data-groove="groove1">Subtle</button>
+                    <button data-groove="groove2">Energy</button>
+                    <button data-groove="groove3">Flow</button>
+                </div>
+                <div class="slider-control" style="margin-top:0.5rem;">
+                    <div class="slider-label">
+                        <span>Dance Intensity</span>
+                        <span class="slider-value" id="intensityValue">100%</span>
+                    </div>
+                    <input type="range" id="danceIntensity" min="0" max="100" value="100">
+                </div>
+            </div>
+        </div>
+
+        <div class="section visual-controls">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER ANIMATION -->
+    <div class="center-content">
+        <div id="animation-container"></div>
+        <div class="camera-hint">Space=play | T=tap | 1/2/3=groove</div>
+    </div>
+
+    <!-- RIGHT MENU -->
+    <div class="right-menu">
+        <div class="section">
+            <h2>LLM Interpreter</h2>
+            <div class="section-content">
+                <div id="llmStatus" style="font-size:0.7rem;padding:0.25rem 0.5rem;border-radius:4px;margin-bottom:0.5rem;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);">Not configured</div>
+                <select id="llmProvider" style="width:100%;margin-bottom:0.5rem;">
+                    <option value="anthropic">Claude</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="grok">Grok</option>
+                </select>
+                <input type="password" id="llmApiKey" placeholder="API Key" style="width:100%;margin-bottom:0.25rem;">
+                <div class="button-grid" style="margin-bottom:0.5rem;">
+                    <button id="saveKeyBtn">Save Key</button>
+                    <button id="clearKeyBtn">Clear</button>
+                </div>
+                <textarea id="llmLyrics" placeholder="Lyrics auto-load with tracks..." style="width:100%;height:60px;margin-bottom:0.5rem;"></textarea>
+                <div class="button-grid">
+                    <button id="llmParseLyrics">Parse</button>
+                </div>
+                <input type="text" id="llmTestInput" placeholder="Test input (Enter to send)" style="width:100%;margin-top:0.5rem;">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="info-box">
+                <strong>How it works:</strong><br>
+                Dance Choreographer reacts to audio energy. LLM Interpreter understands lyrics semantically. Both can run together!
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D, { AudioInterpreter, LLM_ENDPOINTS } from '/emotive-engine-3d.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+
+        const STORAGE_KEY = 'groove-demo-api-key';
+        const PROVIDER_KEY = 'groove-demo-provider';
+
+        const DEMO_TRACKS = {
+            female: '/assets/tracks/music/electric-glow-f.wav',
+            male: '/assets/tracks/music/electric-glow-m.wav',
+            'click-120': '/assets/tracks/test/click-120.wav'
+        };
+        const TRACK_LYRICS = {
+            female: '/assets/tracks/music/electric-glow.lrc',
+            male: '/assets/tracks/music/electric-glow.lrc'
+        };
+
+        let mascot = null;
+        let audioElement = null;
+        let isPlaying = false;
+        let tapTimes = [];
+        let audioInterpreter = null;
+        let parsedLyrics = [];
+        let currentLyricIndex = -1;
+        let lyricsInterval = null;
+
+        const container = document.getElementById('animation-container');
+        const llmStatusEl = document.getElementById('llmStatus');
+        const llmApiKeyInput = document.getElementById('llmApiKey');
+        const llmProviderSelect = document.getElementById('llmProvider');
+
+        function updateLLMStatus(active, message) {
+            llmStatusEl.textContent = message;
+            llmStatusEl.style.background = active ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.05)';
+            llmStatusEl.style.color = active ? '#4ade80' : 'rgba(255,255,255,0.5)';
+        }
+
+        async function init() {
+            mascot = new EmotiveMascot3D({
+                coreGeometry: 'crystal',
+                enableParticles: true,
+                enablePostProcessing: true,
+                enableBlinking: true,
+                enableBreathing: true,
+                autoRotate: true,
+                autoRotateSpeed: 0.3,
+                enableControls: true,
+                cameraDistance: 1.2,
+                fov: 30,
+                minZoom: 0.9,
+                maxZoom: 2.0,
+                materialVariant: 'multiplexer',
+                assetBasePath: '/assets'
+            });
+
+            await mascot.init(container);
+            mascot.start();
+            mascot.setEmotion('calm');
+            mascot.enableGroove();
+            mascot.enableDance();
+            mascot.setDanceIntensity(1.0);
+
+            setupParticlesToggle(mascot);
+            setupVisualToggles(mascot);
+
+            await loadTrack('female');
+            initAudioInterpreter();
+
+            // Restore saved API key and provider
+            const savedKey = localStorage.getItem(STORAGE_KEY);
+            const savedProvider = localStorage.getItem(PROVIDER_KEY);
+
+            if (savedProvider) {
+                llmProviderSelect.value = savedProvider;
+            }
+
+            if (savedKey) {
+                llmApiKeyInput.value = savedKey;
+                // Auto-enable LLM interpreter if we have a saved key
+                enableLLMInterpreter(savedKey, llmProviderSelect.value);
+            }
+        }
+
+        function enableLLMInterpreter(apiKey, provider) {
+            if (!apiKey || !audioInterpreter) return false;
+
+            const endpoint = LLM_ENDPOINTS[provider];
+            audioInterpreter.configure({ apiKey, endpoint });
+
+            if (audioInterpreter.enable()) {
+                updateLLMStatus(true, `Active (${provider})`);
+                return true;
+            }
+            return false;
+        }
+
+        function disableLLMInterpreter() {
+            if (audioInterpreter) {
+                audioInterpreter.disable();
+            }
+            updateLLMStatus(false, 'Disabled');
+        }
+
+        async function loadTrack(id) {
+            const url = DEMO_TRACKS[id];
+            if (!url) return;
+
+            if (audioElement) {
+                audioElement.pause();
+                if (audioElement.src.startsWith('blob:')) URL.revokeObjectURL(audioElement.src);
+                mascot.disconnectAudio();
+            }
+
+            audioElement = new Audio();
+            audioElement.crossOrigin = 'anonymous';
+            audioElement.src = url;
+
+            await new Promise((res, rej) => {
+                audioElement.onloadedmetadata = res;
+                audioElement.onerror = () => rej(new Error('Load failed'));
+            });
+
+            // Load lyrics if available
+            const lrcUrl = TRACK_LYRICS[id];
+            if (lrcUrl) {
+                try {
+                    const r = await fetch(lrcUrl);
+                    if (r.ok) {
+                        const text = await r.text();
+                        document.getElementById('llmLyrics').value = text;
+                        parsedLyrics = parseLyrics(text);
+                    }
+                } catch {}
+            } else {
+                document.getElementById('llmLyrics').value = '';
+                parsedLyrics = [];
+            }
+        }
+
+        async function loadAudioFile(file) {
+            if (audioElement) {
+                audioElement.pause();
+                if (audioElement.src.startsWith('blob:')) URL.revokeObjectURL(audioElement.src);
+                mascot.disconnectAudio();
+            }
+
+            audioElement = new Audio();
+            audioElement.crossOrigin = 'anonymous';
+            audioElement.src = URL.createObjectURL(file);
+
+            await new Promise((res, rej) => {
+                audioElement.onloadedmetadata = res;
+                audioElement.onerror = () => rej(new Error('Decode failed'));
+            });
+
+            parsedLyrics = [];
+            document.getElementById('llmLyrics').value = '';
+        }
+
+        async function playAudio() {
+            if (!audioElement) return;
+
+            await mascot.connectAudio(audioElement);
+            await audioElement.play();
+            isPlaying = true;
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            startBPMMonitor();
+            if (parsedLyrics.length > 0 && audioInterpreter?.enabled) {
+                startLyricsTracking();
+            }
+
+            audioElement.onended = () => {
+                isPlaying = false;
+                document.getElementById('playBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                stopLyricsTracking();
+            };
+        }
+
+        function stopAudio() {
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+            }
+            isPlaying = false;
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            stopLyricsTracking();
+            mascot.stopRhythm();
+        }
+
+        function startBPMMonitor() {
+            const update = () => {
+                if (!isPlaying) return;
+                const status = mascot.getBPMStatus?.() || { bpm: 0 };
+                const bpm = Math.round(status.bpm);
+                document.getElementById('bpmValue').textContent = bpm > 0 ? bpm : '--';
+                requestAnimationFrame(update);
+            };
+            requestAnimationFrame(update);
+        }
+
+        function handleTapTempo() {
+            const now = performance.now();
+            tapTimes.push(now);
+            if (tapTimes.length > 8) tapTimes.shift();
+            if (tapTimes.length < 2) return;
+
+            let total = 0;
+            for (let i = 1; i < tapTimes.length; i++) {
+                total += tapTimes[i] - tapTimes[i - 1];
+            }
+            const avg = total / (tapTimes.length - 1);
+            const bpm = Math.max(60, Math.min(200, Math.round(60000 / avg)));
+
+            document.getElementById('bpmValue').textContent = bpm;
+            mascot.setRhythmBPM(bpm);
+            if (!isPlaying) mascot.startRhythm(bpm);
+
+            setTimeout(() => {
+                if (performance.now() - tapTimes[tapTimes.length - 1] > 2000) tapTimes = [];
+            }, 2100);
+        }
+
+        function setGroove(name) {
+            document.querySelectorAll('[data-groove]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.groove === name);
+            });
+            mascot.setGroove(name);
+        }
+
+        // LLM Interpreter
+        function initAudioInterpreter() {
+            audioInterpreter = new AudioInterpreter({
+                onAction: handleLLMAction,
+                onError: (e) => console.error('LLM Error:', e)
+            });
+        }
+
+        function parseLyrics(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            const result = [];
+            let autoTime = 0;
+            const re = /^\[(\d{1,2}):(\d{2})(?:\.(\d+))?\]\s*(.+)/;
+
+            for (const line of lines) {
+                const m = line.match(re);
+                if (m) {
+                    const t = parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (m[3] ? parseInt(m[3].padEnd(3, '0').slice(0, 3), 10) / 1000 : 0);
+                    if (m[4].trim()) result.push({ time: t, text: m[4].trim() });
+                } else if (line.trim()) {
+                    result.push({ time: autoTime, text: line.trim() });
+                    autoTime += 5;
+                }
+            }
+            return result.sort((a, b) => a.time - b.time);
+        }
+
+        function startLyricsTracking() {
+            if (lyricsInterval) clearInterval(lyricsInterval);
+            currentLyricIndex = -1;
+
+            lyricsInterval = setInterval(() => {
+                if (!audioElement || !isPlaying || !parsedLyrics.length || !audioInterpreter?.enabled) return;
+
+                const t = audioElement.currentTime;
+                let idx = -1;
+                for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+                    if (t >= parsedLyrics[i].time) { idx = i; break; }
+                }
+
+                if (idx !== currentLyricIndex && idx >= 0) {
+                    currentLyricIndex = idx;
+                    audioInterpreter.feedText(parsedLyrics[idx].text);
+                }
+            }, 250);
+        }
+
+        function stopLyricsTracking() {
+            if (lyricsInterval) { clearInterval(lyricsInterval); lyricsInterval = null; }
+            currentLyricIndex = -1;
+        }
+
+        function handleLLMAction(action) {
+            if (!mascot || !action) return;
+
+            if (action.geometry) mascot.morphTo(action.geometry);
+            if (action.sss) mascot.setSSSPreset?.(action.sss);
+            if (action.emotion) mascot.setEmotion(action.emotion);
+            if (action.gesture) {
+                const g = Array.isArray(action.gesture) ? action.gesture : [action.gesture];
+                let chainStr = g.join('+');
+                if (action.then) {
+                    const t = Array.isArray(action.then) ? action.then : [action.then];
+                    chainStr += ' > ' + t.join('+');
+                }
+                mascot.chain(chainStr);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('trackSelect').addEventListener('change', e => {
+            if (isPlaying) stopAudio();
+            loadTrack(e.target.value);
+        });
+
+        document.getElementById('browseBtn').addEventListener('click', () => {
+            document.getElementById('audioFile').click();
+        });
+
+        document.getElementById('audioFile').addEventListener('change', e => {
+            if (e.target.files.length > 0) {
+                if (isPlaying) stopAudio();
+                loadAudioFile(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('playBtn').addEventListener('click', playAudio);
+        document.getElementById('stopBtn').addEventListener('click', stopAudio);
+        document.getElementById('tapBtn').addEventListener('click', handleTapTempo);
+
+        document.querySelectorAll('[data-groove]').forEach(btn => {
+            btn.addEventListener('click', () => setGroove(btn.dataset.groove));
+        });
+
+        document.getElementById('danceIntensity').addEventListener('input', e => {
+            const v = parseInt(e.target.value, 10);
+            document.getElementById('intensityValue').textContent = `${v}%`;
+            mascot?.setDanceIntensity?.(v / 100);
+        });
+
+        // API Key management
+        document.getElementById('saveKeyBtn').addEventListener('click', () => {
+            const key = llmApiKeyInput.value.trim();
+            const provider = llmProviderSelect.value;
+
+            if (key) {
+                localStorage.setItem(STORAGE_KEY, key);
+                localStorage.setItem(PROVIDER_KEY, provider);
+                enableLLMInterpreter(key, provider);
+            }
+        });
+
+        document.getElementById('clearKeyBtn').addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_KEY);
+            llmApiKeyInput.value = '';
+            disableLLMInterpreter();
+            updateLLMStatus(false, 'Key cleared');
+        });
+
+        llmProviderSelect.addEventListener('change', () => {
+            const key = llmApiKeyInput.value.trim();
+            const provider = llmProviderSelect.value;
+            localStorage.setItem(PROVIDER_KEY, provider);
+
+            if (key && audioInterpreter?.enabled) {
+                enableLLMInterpreter(key, provider);
+            }
+        });
+
+        document.getElementById('llmParseLyrics').addEventListener('click', () => {
+            const text = document.getElementById('llmLyrics').value.trim();
+            if (!text) { parsedLyrics = []; return; }
+            parsedLyrics = parseLyrics(text);
+            console.log(`Parsed ${parsedLyrics.length} lyric lines`);
+        });
+
+        document.getElementById('llmTestInput').addEventListener('keydown', async e => {
+            if (e.key === 'Enter') {
+                const text = e.target.value.trim();
+                if (!text || !audioInterpreter?.enabled) return;
+
+                e.target.disabled = true;
+                try { await audioInterpreter.interpret(text); }
+                finally { e.target.disabled = false; }
+                e.target.value = '';
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+            switch (e.key) {
+                case ' ': e.preventDefault(); isPlaying ? stopAudio() : playAudio(); break;
+                case 't': case 'T': handleTapTempo(); break;
+                case '1': setGroove('groove1'); break;
+                case '2': setGroove('groove2'); break;
+                case '3': setGroove('groove3'); break;
+            }
+        });
+
+        // Drag and drop
+        let dragCounter = 0;
+        document.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; });
+        document.addEventListener('dragleave', e => { e.preventDefault(); dragCounter--; });
+        document.addEventListener('dragover', e => e.preventDefault());
+        document.addEventListener('drop', async e => {
+            e.preventDefault();
+            dragCounter = 0;
+            const f = e.dataTransfer.files;
+            if (f.length > 0 && (f[0].type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a)$/i.test(f[0].name))) {
+                if (isPlaying) stopAudio();
+                await loadAudioFile(f[0]);
+            }
+        });
+
+        // Initialize
+        init().catch(console.error);
+    </script>
+</body>
+</html>

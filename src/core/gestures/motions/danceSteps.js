@@ -16,15 +16,7 @@
  * SLIDE: Smooth glide (2 beats) - flowing, graceful
  */
 
-/**
- * Direction vectors for movement
- */
-const DIRECTIONS = {
-    left:  { x: -1, y:  0 },
-    right: { x:  1, y:  0 },
-    up:    { x:  0, y:  1 },
-    down:  { x:  0, y: -1 }
-};
+import { DIRECTIONS, capitalize } from './directions.js';
 
 /**
  * Create a step gesture - quick weight shift in a direction
@@ -36,7 +28,7 @@ export function createStepGesture(direction) {
     if (!dir) throw new Error(`Invalid step direction: ${direction}`);
 
     return {
-        name: `step${direction.charAt(0).toUpperCase() + direction.slice(1)}`,
+        name: `step${capitalize(direction)}`,
         emoji: direction === 'left' ? '👈' : direction === 'right' ? '👉' : direction === 'up' ? '👆' : '👇',
         type: 'blending',
         description: `Quick step ${direction} and return`,
@@ -160,7 +152,7 @@ export function createSlideGesture(direction) {
     if (!dir) throw new Error(`Invalid slide direction: ${direction}`);
 
     return {
-        name: `slide${direction.charAt(0).toUpperCase() + direction.slice(1)}`,
+        name: `slide${capitalize(direction)}`,
         emoji: direction === 'left' ? '⬅️' : '➡️',
         type: 'blending',
         description: `Smooth slide ${direction} and return`,

@@ -26,6 +26,10 @@ export class GestureBlender {
         this.tempQuat = new THREE.Quaternion();
         this.accumulatedRotationQuat = new THREE.Quaternion();
         this.finalQuaternion = new THREE.Quaternion();
+
+        // Rotation smoothing state (prevents sudden jumps)
+        this.prevRotation = [0, 0, 0];
+        this.hasValidPrevRotation = false;
     }
 
     /**
@@ -39,12 +43,12 @@ export class GestureBlender {
      *
      * @param {Array} animations - Array of active animations from ProceduralAnimator
      * @param {number} currentTime - Current animator time in milliseconds
-     * @param {THREE.Quaternion} baseQuaternion - Base rotation quaternion
+     * @param {Array<number>} baseEuler - Base rotation as Euler angles [X, Y, Z] in radians
      * @param {number} baseScale - Base scale value
      * @param {number} baseGlowIntensity - Base glow intensity
      * @returns {Object} Blended gesture output
      */
-    blend(animations, currentTime, baseQuaternion, baseScale, baseGlowIntensity) {
+    blend(animations, currentTime, baseEuler, baseScale, baseGlowIntensity) {
         // Reset accumulated rotation quaternion to identity (reuse instead of allocate)
         this.accumulatedRotationQuat.identity();
 
@@ -81,6 +85,24 @@ export class GestureBlender {
                 const output = animation.evaluate(progress);
 
                 if (output) {
+                    // ═══════════════════════════════════════════════════════════════
+                    // GESTURE FADE ENVELOPE - Smooth transition into/out of gestures
+                    // ═══════════════════════════════════════════════════════════════
+                    // Prevents jarring rotation jumps when gestures start/end
+                    // Fade duration is 15% of gesture duration on each end
+                    const fadeInEnd = 0.15;
+                    const fadeOutStart = 0.85;
+                    let fadeEnvelope = 1.0;
+
+                    if (progress < fadeInEnd) {
+                        // Ease-in: smooth start using cubic curve
+                        const t = progress / fadeInEnd;
+                        fadeEnvelope = t * t * (3 - 2 * t); // smoothstep
+                    } else if (progress > fadeOutStart) {
+                        // Ease-out: smooth end using cubic curve
+                        const t = (progress - fadeOutStart) / (1 - fadeOutStart);
+                        fadeEnvelope = 1 - t * t * (3 - 2 * t); // inverse smoothstep
+                    }
                     // Track gesture type for groove blending decisions
                     const isAccent = animation.isAccent === true;
                     if (isAccent) {
@@ -91,30 +113,35 @@ export class GestureBlender {
 
                     // ═══════════════════════════════════════════════════════════════
                     // ABSOLUTE CHANNELS (create their own motion)
+                    // Apply fadeEnvelope to smooth gesture transitions
                     // ═══════════════════════════════════════════════════════════════
 
-                    // POSITION: Additive blending (bounce + sway)
+                    // POSITION: Additive blending with fade envelope
                     if (output.position) {
-                        accumulated.position[0] += output.position[0];
-                        accumulated.position[1] += output.position[1];
-                        accumulated.position[2] += output.position[2];
+                        accumulated.position[0] += output.position[0] * fadeEnvelope;
+                        accumulated.position[1] += output.position[1] * fadeEnvelope;
+                        accumulated.position[2] += output.position[2] * fadeEnvelope;
                     }
 
-                    // ROTATION: Quaternion multiplication (orbital * twist)
+                    // ROTATION: Quaternion slerp with fade envelope
+                    // Instead of direct multiply, scale the rotation by fadeEnvelope
                     if (output.rotation) {
                         this.tempEuler.set(
-                            output.rotation[0],
-                            output.rotation[1],
-                            output.rotation[2],
+                            output.rotation[0] * fadeEnvelope,
+                            output.rotation[1] * fadeEnvelope,
+                            output.rotation[2] * fadeEnvelope,
                             'XYZ'
                         );
                         this.tempQuat.setFromEuler(this.tempEuler);
                         accumulated.rotationQuat.multiply(this.tempQuat);
                     }
 
-                    // SCALE: Multiplicative blending (expand × shrink)
+                    // SCALE: Blend toward 1.0 based on fadeEnvelope
+                    // At fadeEnvelope=0, scale contribution is 1.0 (no change)
+                    // At fadeEnvelope=1, full gesture scale is applied
                     if (output.scale !== undefined) {
-                        accumulated.scale *= output.scale;
+                        const scaledValue = 1.0 + (output.scale - 1.0) * fadeEnvelope;
+                        accumulated.scale *= scaledValue;
                     }
 
                     // GLOW: Multiplicative blending (glow × pulse)
@@ -156,10 +183,11 @@ export class GestureBlender {
                     // ═══════════════════════════════════════════════════════════════
                     // Position in view space: Z = toward camera, Y = up, X = right
                     // Transformed to world-space in Core3DManager using camera direction
+                    // Apply fadeEnvelope for smooth transitions
                     if (output.cameraRelativePosition) {
-                        accumulated.cameraRelativePosition[0] += output.cameraRelativePosition[0];
-                        accumulated.cameraRelativePosition[1] += output.cameraRelativePosition[1];
-                        accumulated.cameraRelativePosition[2] += output.cameraRelativePosition[2];
+                        accumulated.cameraRelativePosition[0] += output.cameraRelativePosition[0] * fadeEnvelope;
+                        accumulated.cameraRelativePosition[1] += output.cameraRelativePosition[1] * fadeEnvelope;
+                        accumulated.cameraRelativePosition[2] += output.cameraRelativePosition[2] * fadeEnvelope;
                         accumulated.hasCameraRelativeGestures = true;
                     }
                 }
@@ -183,17 +211,32 @@ export class GestureBlender {
             accumulated.rotationBoost[i] = Math.max(-0.1, Math.min(0.1, accumulated.rotationBoost[i]));
         }
 
-        // Combine base quaternion with accumulated gesture rotation
-        // finalQuaternion = baseQuaternion * gestureQuaternion
-        // This applies gesture rotation in the local space of the base rotation
-        this.finalQuaternion.copy(baseQuaternion).multiply(accumulated.rotationQuat);
+        // ═══════════════════════════════════════════════════════════════
+        // GIMBAL-LOCK-FREE ROTATION COMPOSITION
+        // ═══════════════════════════════════════════════════════════════
+        // Solution: Use raw Euler angles from Core3DManager directly.
+        // The baseEuler is passed in as [X, Y, Z] and never goes through
+        // quaternion conversion, completely avoiding gimbal lock.
+        //
+        // Gesture rotations are small deltas accumulated in a quaternion
+        // (to handle multiple simultaneous gestures), but since they're
+        // small, converting them to Euler is safe.
 
-        // Convert final quaternion back to Euler angles
-        this.tempEuler.setFromQuaternion(this.finalQuaternion, 'XYZ');
+        // Extract gesture rotation (small rotations, safe to convert)
+        this.tempEuler.setFromQuaternion(accumulated.rotationQuat, 'XYZ');
+        const gestureX = this.tempEuler.x;
+        const gestureY = this.tempEuler.y;
+        const gestureZ = this.tempEuler.z;
+
+        // Combine as simple Euler addition
+        // Base rotation comes directly as Euler - no quaternion conversion = no gimbal lock
+        // X and Z from base are clamped to ±20° in Core3DManager
+        // Y from base can be any value (showcase spin, freely rotates)
+        // Gestures add small deltas to all axes
         const finalRotation = [
-            this.tempEuler.x,
-            this.tempEuler.y,
-            this.tempEuler.z
+            baseEuler[0] + gestureX,
+            baseEuler[1] + gestureY,
+            baseEuler[2] + gestureZ
         ];
 
         // Apply base values to accumulated results
@@ -226,6 +269,19 @@ export class GestureBlender {
     }
 
     /**
+     * Reset the rotation smoothing state (call when rotation tracking should restart)
+     * Useful after teleporting the mascot or resetting to a new pose
+     */
+    resetSmoothing() {
+        this.hasValidPrevRotation = false;
+        if (this.prevRotation) {
+            this.prevRotation[0] = 0;
+            this.prevRotation[1] = 0;
+            this.prevRotation[2] = 0;
+        }
+    }
+
+    /**
      * Cleanup all resources
      */
     destroy() {
@@ -233,6 +289,7 @@ export class GestureBlender {
         this.tempQuat = null;
         this.accumulatedRotationQuat = null;
         this.finalQuaternion = null;
+        this.prevRotation = null;
     }
 }
 

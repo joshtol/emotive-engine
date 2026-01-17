@@ -107,7 +107,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '/emotive-engine-3d.js';
+        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
         import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
 
         // Initialize mascot
@@ -123,7 +123,7 @@
             fov: 30,
             minZoom: 0.9,
             maxZoom: 2.0,
-            materialVariant: 'multiplexer',
+            materialVariant: 'multiplexer', // Required for moon/sun textures and eclipse effects
             assetBasePath: '/assets'
         });
 

@@ -52,6 +52,12 @@ export class LunarEclipse {
         this.targetShadowX = -2.0;
         this.shadowSpeed = 1.0; // Shadow movement speed multiplier
 
+        // Visual parameters for eclipse appearance
+        this.emissiveStrength = 0.0; // Blood moon glow intensity
+        this.targetEmissive = 0.0;
+        this.shadowDarkness = 1.0; // How dark the shadowed area is (1.0 = full dark)
+        this.targetDarkness = 1.0;
+
         // Initialize shader uniforms if not present
         if (!this.material.uniforms.eclipseProgress) {
             this.material.uniforms.eclipseProgress = { value: 0.0 };
@@ -81,23 +87,32 @@ export class LunarEclipse {
             this.material.uniforms.eclipseShadowPos.value = [this.shadowX, this.shadowY];
         }
 
-        // Set target progress and shadow position based on type
+        // Set target progress, shadow position, and visual parameters based on type
+        // Each eclipse type has specific emissive (glow) and darkness settings
         switch (type) {
         case 'off':
             this.targetProgress = 0.0;
             this.targetShadowX = 2.0; // Move shadow off-screen right (continue east, realistic exit)
+            this.targetEmissive = 0.0;
+            this.targetDarkness = 1.0;
             break;
         case 'penumbral':
             this.targetProgress = 0.3; // 30% coverage (subtle darkening)
             this.targetShadowX = -1.0; // Shadow edge just touching moon
+            this.targetEmissive = 0.05; // Very subtle glow
+            this.targetDarkness = 0.85; // Mild darkening
             break;
         case 'partial':
             this.targetProgress = 0.65; // 65% coverage (edge of umbra)
-            this.targetShadowX = -0.6; // Shadow partially covering moon (between edge and center)
+            this.targetShadowX = -0.4; // Shadow covering ~half of moon
+            this.targetEmissive = 0.20; // Moderate glow on shadowed portion
+            this.targetDarkness = 0.70; // Moderate darkening
             break;
         case 'total':
             this.targetProgress = 1.0; // 100% coverage (full blood moon)
             this.targetShadowX = 0.0;  // Shadow centered on moon
+            this.targetEmissive = 0.39; // Strong blood moon glow
+            this.targetDarkness = 0.53; // Less darkening so glow is visible
             break;
         default:
             console.warn(`Unknown lunar eclipse type: ${type}`);
@@ -130,9 +145,21 @@ export class LunarEclipse {
         // Interpolate shadow position (animate shadow sweep)
         this.shadowX = this.shadowX + (this.targetShadowX - this.shadowX) * eased * this.shadowSpeed;
 
+        // Interpolate visual parameters
+        this.emissiveStrength = this.emissiveStrength + (this.targetEmissive - this.emissiveStrength) * eased;
+        this.shadowDarkness = this.shadowDarkness + (this.targetDarkness - this.shadowDarkness) * eased;
+
         // Update shader uniforms
         this.material.uniforms.eclipseProgress.value = this.progress;
         this.material.uniforms.eclipseShadowPos.value = [this.shadowX, this.shadowY];
+
+        // Update emissive and darkness uniforms (critical for visual appearance)
+        if (this.material.uniforms.emissiveStrength) {
+            this.material.uniforms.emissiveStrength.value = this.emissiveStrength;
+        }
+        if (this.material.uniforms.shadowDarkness) {
+            this.material.uniforms.shadowDarkness.value = this.shadowDarkness;
+        }
 
         // Eclipse intensity affects darkening (separate from color shift)
         // Total eclipse: strong darkening + red color
@@ -171,6 +198,10 @@ export class LunarEclipse {
         this.targetProgress = 0.0;
         this.shadowX = -2.0;
         this.targetShadowX = -2.0;
+        this.emissiveStrength = 0.0;
+        this.targetEmissive = 0.0;
+        this.shadowDarkness = 1.0;
+        this.targetDarkness = 1.0;
         this.animating = false;
         this.eclipseType = 'off';
 
@@ -178,6 +209,12 @@ export class LunarEclipse {
             this.material.uniforms.eclipseProgress.value = 0.0;
             this.material.uniforms.eclipseIntensity.value = 0.0;
             this.material.uniforms.eclipseShadowPos.value = [this.shadowX, this.shadowY];
+        }
+        if (this.material.uniforms.emissiveStrength) {
+            this.material.uniforms.emissiveStrength.value = 0.0;
+        }
+        if (this.material.uniforms.shadowDarkness) {
+            this.material.uniforms.shadowDarkness.value = 1.0;
         }
     }
 

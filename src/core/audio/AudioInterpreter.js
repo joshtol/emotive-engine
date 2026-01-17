@@ -39,10 +39,17 @@ const ENGINE_VOCABULARY = {
         'headBob', 'lean', 'point', 'reach',
         // Directional dance gestures (beat-synced)
         'stepLeft', 'stepRight', 'stepUp', 'stepDown',
-        'slideLeft', 'slideRight'
+        'slideLeft', 'slideRight',
+        // Directional lean/kick gestures
+        'leanLeft', 'leanRight', 'kickLeft', 'kickRight',
+        // Directional float gestures (storytelling)
+        'floatUp', 'floatDown', 'floatLeft', 'floatRight',
+        // Directional point gestures (storytelling)
+        'pointUp', 'pointDown', 'pointLeft', 'pointRight'
     ],
     transformGestures: [
-        'spin', 'jump', 'morph', 'stretch', 'tilt', 'orbital', 'hula', 'twist'
+        'spin', 'spinLeft', 'spinRight',
+        'jump', 'morph', 'stretch', 'tilt', 'orbital', 'hula', 'twist'
     ],
     effectGestures: [
         'wave', 'drift', 'flicker', 'burst', 'fade', 'breathe',
@@ -95,8 +102,10 @@ DO NOT use SSS for: abstract emotions, actions, or phrases without color/nature 
 - Base (ongoing): sway, float, bounce, swagger, pulse
 - Accent (momentary hit): pop, bob, swell, dip, flare, burst
 - Texture (layer on top): shimmer, sparkle, glow, breathe
-- Transform (dramatic): spin, jump, shake, twist
+- Transform (dramatic): spin, spinLeft, spinRight, jump, shake, twist
 - Directional (beat-synced moves): stepLeft, stepRight, stepUp, stepDown, slideLeft, slideRight
+- Directional (lean/kick): leanLeft, leanRight, kickLeft, kickRight
+- Directional (storytelling): floatUp, floatDown, floatLeft, floatRight, pointUp, pointDown, pointLeft, pointRight
 
 ## GESTURE CHAINING
 
@@ -138,8 +147,16 @@ Patterns:
 "To the left, to the left" → {"gesture":["stepLeft","stepLeft"]}
 "Hands up high" → {"gesture":"stepUp","emotion":"joy"}
 "Drop it low" → {"gesture":"stepDown","emotion":"excited"}
-"[Intro]" → {"gesture":["float","breathe"],"emotion":"calm"}
-"[Bridge/Outro]" → {"gesture":["float","breathe"],"emotion":"calm","geometry":"crystal"}
+"Lean back" → {"gesture":"leanRight"}
+"Kick it out" → {"gesture":"kickLeft","emotion":"excited"}
+"Spin around" → {"gesture":"spinRight"}
+"Turn the other way" → {"gesture":"spinLeft"}
+"Look to the stars" → {"gesture":"pointUp","emotion":"anticipation"}
+"He sank into despair" → {"gesture":"floatDown","emotion":"sadness"}
+"She drifted away" → {"gesture":"floatRight","emotion":"calm"}
+"Point to the future" → {"gesture":"pointUp","emotion":"joy"}
+"[Intro]" → {"gesture":["floatUp","breathe"],"emotion":"calm"}
+"[Bridge/Outro]" → {"gesture":["floatUp","breathe"],"emotion":"calm","geometry":"crystal"}
 
 RULES:
 1. Always include gesture

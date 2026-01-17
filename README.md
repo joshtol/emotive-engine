@@ -79,7 +79,7 @@ rendering.
 **Shared across both modes:**
 
 - 15 emotional states with smooth transitions
-- 40+ expressive gestures
+- 60+ expressive gestures including directional movements
 - **Natural language `feel()` API** for LLM integration
 - TypeScript definitions
 - Unified API
@@ -286,18 +286,33 @@ mascot.setEmotion('calm', 'peaceful'); // with undertone
 
 ## Gestures
 
-40+ expressive gestures in three categories:
+60+ expressive gestures in multiple categories:
 
 **Motion:** `bounce`, `pulse`, `shake`, `nod`, `sway`, `float`, `wiggle`, `lean`
 
-**Transform:** `spin`, `jump`, `morph`, `stretch`, `tilt`, `orbital`, `twist`
+**Transform:** `spin`, `spinLeft`, `spinRight`, `jump`, `morph`, `stretch`,
+`tilt`, `twist`
 
 **Effects:** `wave`, `flicker`, `burst`, `flash`, `glow`, `breathe`, `expand`
 
+**Directional (Dance):**
+
+- `stepLeft`, `stepRight`, `stepUp`, `stepDown` - Quick 1-beat weight shifts
+- `slideLeft`, `slideRight` - Smooth 2-beat glides
+- `leanLeft`, `leanRight` - Body tilts
+- `kickLeft`, `kickRight` - Side kicks
+
+**Directional (Storytelling):**
+
+- `floatUp`, `floatDown`, `floatLeft`, `floatRight` - Ethereal drift
+- `pointUp`, `pointDown`, `pointLeft`, `pointRight` - Indication
+
 ```javascript
 mascot.express('bounce');
-mascot.chain('bounce > spin > pulse'); // sequential
-mascot.chain('sway+breathe+float'); // simultaneous
+mascot.express('stepLeft'); // Directional dance move
+mascot.chain('bounce > spin > pulse'); // Sequential
+mascot.chain('sway+breathe+float'); // Simultaneous
+mascot.feel('look to the stars'); // Natural language → pointUp
 ```
 
 ---

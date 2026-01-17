@@ -45,33 +45,74 @@ mascot.setEmotion('neutral', 'curiosity');  // Curious neutral
 ### Movement Gestures
 | Gesture | Description | Duration |
 |---------|-------------|----------|
-| `bounce` | Playful up-down | ~400ms |
-| `wiggle` | Side-to-side shake | ~300ms |
+| `bounce` | Playful up-down | 4 beats |
+| `sway` | Gentle side-to-side | 1 bar |
+| `float` | Dreamy floating motion | ~2000ms |
+| `wiggle` | Side-to-side shake | 2 beats |
 | `nod` | Vertical acknowledgment | ~350ms |
 | `shake` | Horizontal "no" | ~400ms |
-| `hop` | Quick jump | ~250ms |
+
+### Directional Gestures (Beat-Synced)
+| Gesture | Description | Duration |
+|---------|-------------|----------|
+| `stepLeft` | Quick weight shift left | 1 beat |
+| `stepRight` | Quick weight shift right | 1 beat |
+| `stepUp` | Quick weight shift up | 1 beat |
+| `stepDown` | Quick weight shift down | 1 beat |
+| `slideLeft` | Smooth glide left | 2 beats |
+| `slideRight` | Smooth glide right | 2 beats |
+| `leanLeft` | Body tilt left | 2 beats |
+| `leanRight` | Body tilt right | 2 beats |
+| `kickLeft` | Quick kick left | 1 beat |
+| `kickRight` | Quick kick right | 1 beat |
+| `spinLeft` | Rotate counter-clockwise | ~600ms |
+| `spinRight` | Rotate clockwise | ~600ms |
+
+### Directional Gestures (Storytelling)
+| Gesture | Description | Duration |
+|---------|-------------|----------|
+| `floatUp` | Ethereal rise | ~2000ms |
+| `floatDown` | Gentle sink | ~2000ms |
+| `floatLeft` | Drift left | ~2000ms |
+| `floatRight` | Drift right | ~2000ms |
+| `pointUp` | Point upward | ~500ms |
+| `pointDown` | Point downward | ~500ms |
+| `pointLeft` | Point left | ~500ms |
+| `pointRight` | Point right | ~500ms |
+
+### Accent Gestures (Dance-Friendly)
+| Gesture | Description | Duration |
+|---------|-------------|----------|
+| `pop` | Quick scale burst | ~200ms |
+| `bob` | Head bob accent | ~300ms |
+| `dip` | Quick dip motion | ~400ms |
+| `flare` | Energetic burst | ~300ms |
+| `swell` | Gradual expansion | ~500ms |
+| `swagger` | Confident movement | ~600ms |
 
 ### Effect Gestures
 | Gesture | Description | Duration |
 |---------|-------------|----------|
-| `pop` | Quick scale burst | ~200ms |
 | `pulse` | Rhythmic throb | ~500ms |
 | `spin` | Full rotation | ~600ms |
 | `flash` | Brief brightness burst | ~150ms |
 | `glow` | Sustained luminance | ~800ms |
+| `sparkle` | Twinkling bursts | 2 beats |
+| `shimmer` | Wave-like sparkle | 1 bar |
 
-### Expressive Gestures
+### Transform Gestures
 | Gesture | Description | Duration |
 |---------|-------------|----------|
-| `celebrate` | Victory animation | ~700ms |
-| `think` | Contemplative pause | ~600ms |
-| `wave` | Greeting motion | ~500ms |
-| `shrink` | Shy/modest shrink | ~400ms |
+| `jump` | Vertical leap | ~400ms |
+| `twist` | Rotational twist | ~500ms |
+| `hula` | Hip-swaying motion | ~800ms |
 | `expand` | Confident growth | ~400ms |
+| `contract` | Modest shrink | ~400ms |
 
 ```javascript
-mascot.express('bounce');
-mascot.chain(['bounce', 'wiggle', 'pop']);  // Sequence
+mascot.gesture('bounce');
+mascot.gesture('stepLeft');  // Directional dance move
+mascot.gesture(['sway', 'shimmer']);  // Layered gestures
 ```
 
 ---

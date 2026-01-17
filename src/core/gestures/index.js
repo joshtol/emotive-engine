@@ -58,11 +58,30 @@ import stepUp from './motions/stepUp.js';
 import stepDown from './motions/stepDown.js';
 import slideLeft from './motions/slideLeft.js';
 import slideRight from './motions/slideRight.js';
+// Directional lean gestures
+import leanLeft from './motions/leanLeft.js';
+import leanRight from './motions/leanRight.js';
+// Directional kick gestures (new)
+import kickLeft from './motions/kickLeft.js';
+import kickRight from './motions/kickRight.js';
+// Directional float gestures (storytelling)
+import floatUp from './motions/floatUp.js';
+import floatDown from './motions/floatDown.js';
+import floatLeft from './motions/floatLeft.js';
+import floatRight from './motions/floatRight.js';
+// Directional point gestures (storytelling)
+import pointUp from './motions/pointUp.js';
+import pointDown from './motions/pointDown.js';
+import pointLeft from './motions/pointLeft.js';
+import pointRight from './motions/pointRight.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
 // └─────────────────────────────────────────────────────────────────────────────────────
 import spin from './transforms/spin.js';
+// Directional spin gestures
+import spinLeft from './transforms/spinLeft.js';
+import spinRight from './transforms/spinRight.js';
 import jump from './transforms/jump.js';
 import morph from './transforms/morph.js';
 import stretch from './transforms/stretch.js';
@@ -309,11 +328,29 @@ const MOTION_GESTURES = [
     stepUp,
     stepDown,
     slideLeft,
-    slideRight
+    slideRight,
+    // Directional lean gestures
+    leanLeft,
+    leanRight,
+    // Directional kick gestures
+    kickLeft,
+    kickRight,
+    // Directional float gestures (storytelling)
+    floatUp,
+    floatDown,
+    floatLeft,
+    floatRight,
+    // Directional point gestures (storytelling)
+    pointUp,
+    pointDown,
+    pointLeft,
+    pointRight
 ];
 
 const TRANSFORM_GESTURES = [
     spin,
+    spinLeft,
+    spinRight,
     jump,
     morph,
     stretch,

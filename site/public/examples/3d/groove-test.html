@@ -877,6 +877,13 @@
            MOBILE RESPONSIVE
            ═══════════════════════════════════════════════════════════════════════════ */
         @media (max-width: 1000px) {
+            /* Fix centering for groove page */
+            .center-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             /* Groove buttons - horizontal on tablet */
             .groove-buttons {
                 flex-direction: row;
@@ -1237,17 +1244,20 @@
                 <div class="toggle-switch" id="llm-toggle">Off</div>
             </h2>
             <div class="section-content">
-                <div class="llm-input-row">
-                    <select id="llmProvider" style="flex: 0 0 auto; min-width: 100px;">
-                        <option value="anthropic">Claude</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="grok">Grok</option>
-                    </select>
-                    <input type="password" id="llmApiKey" placeholder="API Key" style="flex: 1;">
-                </div>
-                <div class="llm-input-row">
-                    <input type="text" id="llmModel" placeholder="Model (optional)">
-                </div>
+                <form autocomplete="off" onsubmit="return false;">
+                    <div class="llm-input-row">
+                        <select id="llmProvider" style="flex: 0 0 auto; min-width: 100px;">
+                            <option value="anthropic">Claude</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="grok">Grok</option>
+                        </select>
+                        <input type="password" id="llmApiKey" placeholder="API Key" style="flex: 1;" autocomplete="off">
+                        <button id="llmClearKey" type="button" title="Clear saved API key" style="flex: 0 0 auto; padding: 4px 8px; font-size: 0.7rem;">✕</button>
+                    </div>
+                    <div class="llm-input-row">
+                        <input type="text" id="llmModel" placeholder="Model (optional)" autocomplete="off">
+                    </div>
+                </form>
                 <!-- Lyrics textarea for timed interpretation -->
                 <div class="llm-lyrics-area">
                     <label style="font-size: 0.75rem; color: #888; display: block; margin-bottom: 4px;">
@@ -1487,6 +1497,7 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
         const llmToggle = document.getElementById('llm-toggle');
         const llmProviderSelect = document.getElementById('llmProvider');
         const llmApiKeyInput = document.getElementById('llmApiKey');
+        const llmClearKeyBtn = document.getElementById('llmClearKey');
         const llmModelInput = document.getElementById('llmModel');
         const llmTestInput = document.getElementById('llmTestInput');
         const llmTestBtn = document.getElementById('llmTestBtn');
@@ -1496,6 +1507,43 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
         const llmLyricsTextarea = document.getElementById('llmLyrics');
         const llmParseLyricsBtn = document.getElementById('llmParseLyrics');
         const llmLyricsStatusEl = document.getElementById('llmLyricsStatus');
+
+        // localStorage keys for API key persistence
+        const LLM_STORAGE_KEY = 'emotive_llm_api_key';
+        const LLM_PROVIDER_KEY = 'emotive_llm_provider';
+
+        // Load saved API key and provider from localStorage
+        const savedApiKey = localStorage.getItem(LLM_STORAGE_KEY);
+        const savedProvider = localStorage.getItem(LLM_PROVIDER_KEY);
+        if (savedApiKey) {
+            llmApiKeyInput.value = savedApiKey;
+            llmApiKeyInput.placeholder = 'API Key (saved)';
+        }
+        if (savedProvider && llmProviderSelect) {
+            llmProviderSelect.value = savedProvider;
+        }
+
+        // Save API key to localStorage when it changes
+        llmApiKeyInput.addEventListener('change', () => {
+            const key = llmApiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem(LLM_STORAGE_KEY, key);
+                llmApiKeyInput.placeholder = 'API Key (saved)';
+            }
+        });
+
+        // Save provider to localStorage when it changes
+        llmProviderSelect.addEventListener('change', () => {
+            localStorage.setItem(LLM_PROVIDER_KEY, llmProviderSelect.value);
+        });
+
+        // Clear API key button
+        llmClearKeyBtn.addEventListener('click', () => {
+            localStorage.removeItem(LLM_STORAGE_KEY);
+            llmApiKeyInput.value = '';
+            llmApiKeyInput.placeholder = 'API Key';
+            log('API key cleared from storage', 'info');
+        });
 
         // Lyrics timing system
         let parsedLyrics = [];        // Array of { time: seconds, text: string }
@@ -2751,29 +2799,22 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
                 log(`LLM → Emotion: ${action.emotion}`, 'groove');
             }
 
-            // Handle gesture - supports single, array (layered), and sequential (then)
+            // Handle gesture - use chain() for smooth transitions
             if (action.gesture) {
                 const gestures = Array.isArray(action.gesture) ? action.gesture : [action.gesture];
-
-                // Execute all gestures (layered/simultaneous)
-                for (const g of gestures) {
-                    console.log(`  → express('${g}')`);
-                    mascot.express(g);
-                }
-
                 const gestureStr = gestures.join('+');
-                log(`LLM → Gesture: ${gestureStr}`, 'gesture');
 
-                // Handle sequential "then" gesture after a delay
+                // Build chain string: simultaneous gestures joined with +, sequential with >
+                let chainStr = gestureStr;
                 if (action.then) {
                     const thenGestures = Array.isArray(action.then) ? action.then : [action.then];
-                    setTimeout(() => {
-                        for (const g of thenGestures) {
-                            mascot.express(g);
-                        }
-                        log(`LLM → Then: ${thenGestures.join('+')}`, 'gesture');
-                    }, 400); // Delay for accent to land before settling
+                    const thenStr = thenGestures.join('+');
+                    chainStr = `${gestureStr} > ${thenStr}`;
                 }
+
+                console.log(`  → chain('${chainStr}')`);
+                mascot.chain(chainStr);
+                log(`LLM → Chain: ${chainStr}`, 'gesture');
             }
         }
 
@@ -2819,6 +2860,15 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
                 });
 
                 if (audioInterpreter.enable()) {
+                    // Disable DanceChoreographer to prevent competing gestures
+                    mascot?.disableDance?.();
+                    log('Auto-disabled Dance Choreographer (LLM takes over)', 'info');
+
+                    // Enable motion debug logging for LLM interpreter debugging
+                    if (mascot?.core3D) {
+                        mascot.core3D.debugMotionLogging = true;
+                    }
+
                     llmStatus.classList.remove('error');
                     llmStatus.classList.add('active');
                     llmStatus.querySelector('span').textContent = `Active (${provider})`;
@@ -2826,6 +2876,15 @@ Or just paste plain lyrics and they'll be fed line by line every few seconds."><
                 }
             } else {
                 audioInterpreter.disable();
+                // Re-enable DanceChoreographer when LLM is disabled
+                mascot?.enableDance?.();
+                log('Re-enabled Dance Choreographer', 'info');
+
+                // Disable motion debug logging
+                if (mascot?.core3D) {
+                    mascot.core3D.debugMotionLogging = false;
+                }
+
                 llmStatus.classList.remove('active', 'error');
                 llmStatus.querySelector('span').textContent = 'Status: Disabled';
                 log('LLM Interpreter disabled', 'info');

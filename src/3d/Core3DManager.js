@@ -93,6 +93,9 @@ export class Core3DManager {
         this._ready = false;  // Flag indicating all async loading is complete
         this._readyPromise = null;  // Promise that resolves when ready
 
+        // Debug logging flags (set externally to enable motion debug logging)
+        this.debugMotionLogging = false;  // Set to true to enable motion debug logs
+
         // Asset base path for textures and models (configurable for GitHub Pages, etc.)
         // Empty string triggers auto-detection in ThreeRenderer
         this.assetBasePath = options.assetBasePath !== undefined ? options.assetBasePath : '';
@@ -421,9 +424,19 @@ export class Core3DManager {
                 this.glowColor = rgb;
                 // Store hex color for bloom luminance normalization
                 this.glowColorHex = emotionData.visual.glowColor;
-                // OPTIMIZATION: Pre-compute normalized color (avoids recalculating every frame)
+
+                // Compute TARGET normalized color for smooth transition
                 const normalized = normalizeRGBLuminance(rgb, 0.30);
-                this._normalizedGlowColor = [normalized.r, normalized.g, normalized.b];
+                this._targetGlowColor = [normalized.r, normalized.g, normalized.b];
+
+                // Initialize current color if not set (first emotion)
+                if (!this._normalizedGlowColor) {
+                    this._normalizedGlowColor = [...this._targetGlowColor];
+                }
+
+                // Start color transition
+                this._colorTransitionProgress = 0;
+                this._colorTransitionStart = [...this._normalizedGlowColor];
 
                 // Calculate intensity using universal filter based on color luminance
                 // This ensures consistent visibility across all emotions regardless of color brightness
@@ -1557,7 +1570,7 @@ export class Core3DManager {
         // GESTURE BLENDING SYSTEM - Blend multiple simultaneous gestures
         // ═══════════════════════════════════════════════════════════════════════════
         const blended = this.animationManager.blend(
-            this.baseQuaternion,
+            this.baseEuler,  // Pass raw Euler angles to avoid gimbal lock
             this.baseScale,
             this.baseGlowIntensity
         );
@@ -1734,6 +1747,42 @@ export class Core3DManager {
         this.gestureQuaternion = blended.gestureQuaternion;
         this.glowBoost = blended.glowBoost || 0; // For isolated glow layer
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MOTION DEBUG LOGGING - Track all sources of movement
+        // Only logs when debugMotionLogging is enabled (e.g., when LLM interpreter is active)
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (this.debugMotionLogging) {
+            if (!this._motionLogInterval) this._motionLogInterval = 0;
+            this._motionLogInterval += deltaTime;
+            if (this._motionLogInterval >= 200) { // Log every 200ms
+                this._motionLogInterval = 0;
+
+                const hasGestures = blended.hasAbsoluteGestures || blended.hasAccentGestures;
+                const gesturePos = blended.position;
+                const gestureRot = blended.rotation;
+                const gestureScale = blended.scale;
+
+                // Only log when something interesting is happening
+                const significantMotion =
+                    Math.abs(gesturePos[0]) > 0.001 || Math.abs(gesturePos[1]) > 0.001 || Math.abs(gesturePos[2]) > 0.001 ||
+                    Math.abs(gestureRot[0]) > 0.001 || Math.abs(gestureRot[1]) > 0.001 || Math.abs(gestureRot[2]) > 0.001 ||
+                    Math.abs(gestureScale - 1.0) > 0.001 ||
+                    (rhythmMod && (Math.abs(rhythmMod.grooveOffset[1]) > 0.001 || Math.abs(rhythmMod.grooveScale - 1.0) > 0.001));
+
+                if (significantMotion || hasGestures) {
+                    console.log('[Motion] ═══════════════════════════════════════');
+                    console.log(`[Motion] GESTURE: pos=[${gesturePos.map(p => p.toFixed(3)).join(', ')}] rot=[${gestureRot.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${gestureScale.toFixed(3)} hasAbs=${hasAbsolute}`);
+
+                    if (rhythmMod) {
+                        console.log(`[Motion] GROOVE: offset=[${rhythmMod.grooveOffset.map(o => o.toFixed(3)).join(', ')}] rot=[${rhythmMod.grooveRotation.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${rhythmMod.grooveScale.toFixed(3)} blend=${grooveBlend.toFixed(2)}`);
+                    }
+
+                    console.log(`[Motion] BOOST: pos=[${posBoost.map(p => p.toFixed(3)).join(', ')}] rot=[${rotBoost.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${scaleBoost.toFixed(3)}`);
+                    console.log(`[Motion] FINAL: pos=[${this.position.map(p => p.toFixed(3)).join(', ')}] rot=[${this.rotation.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${this.scale.toFixed(3)}`);
+                }
+            }
+        }
+
         // Apply blink effects (AFTER gestures, blending with other animations)
         if (blinkState.isBlinking) {
             // Apply blink rotation (additive to gesture rotation)
@@ -1837,7 +1886,90 @@ export class Core3DManager {
                     this.customMaterial.uniforms.glowIntensity.value = effectiveGlowIntensity;
                 }
 
-                // OPTIMIZATION: Use pre-computed normalized color (calculated when emotion changes)
+                // Smooth color transition between emotions
+                // Lerp from start color to target over ~500ms (configurable via colorTransitionDuration)
+                if (this._targetGlowColor && this._colorTransitionProgress < 1) {
+                    const transitionDuration = this.colorTransitionDuration || 500; // ms
+                    this._colorTransitionProgress += deltaTime / transitionDuration;
+                    this._colorTransitionProgress = Math.min(this._colorTransitionProgress, 1);
+
+                    // Ease-out curve for smooth deceleration
+                    const t = 1 - Math.pow(1 - this._colorTransitionProgress, 2);
+
+                    // Lerp each channel
+                    const start = this._colorTransitionStart || this._normalizedGlowColor || [1, 1, 1];
+                    const target = this._targetGlowColor;
+                    this._normalizedGlowColor = [
+                        start[0] + (target[0] - start[0]) * t,
+                        start[1] + (target[1] - start[1]) * t,
+                        start[2] + (target[2] - start[2]) * t
+                    ];
+                }
+
+                // Smooth SSS preset transition
+                // Lerp SSS uniforms from current to target over configurable duration
+                if (this._targetSSSValues && this._sssTransitionProgress < 1) {
+                    const sssTransitionDuration = this.sssTransitionDuration || 500; // ms
+                    this._sssTransitionProgress += deltaTime / sssTransitionDuration;
+                    this._sssTransitionProgress = Math.min(this._sssTransitionProgress, 1);
+
+                    // Ease-out curve for smooth deceleration
+                    const sssT = 1 - Math.pow(1 - this._sssTransitionProgress, 2);
+
+                    const u = this.customMaterial.uniforms;
+                    const start = this._sssTransitionStart;
+                    const target = this._targetSSSValues;
+
+                    // Lerp scalar values
+                    if (u.sssStrength && start.sssStrength !== undefined) {
+                        u.sssStrength.value = start.sssStrength + (target.sssStrength - start.sssStrength) * sssT;
+                    }
+                    if (u.sssThicknessBias && start.sssThicknessBias !== undefined) {
+                        u.sssThicknessBias.value = start.sssThicknessBias + (target.sssThicknessBias - start.sssThicknessBias) * sssT;
+                    }
+                    if (u.sssThicknessScale && start.sssThicknessScale !== undefined) {
+                        u.sssThicknessScale.value = start.sssThicknessScale + (target.sssThicknessScale - start.sssThicknessScale) * sssT;
+                    }
+                    if (u.sssCurvatureScale && start.sssCurvatureScale !== undefined) {
+                        u.sssCurvatureScale.value = start.sssCurvatureScale + (target.sssCurvatureScale - start.sssCurvatureScale) * sssT;
+                    }
+                    if (u.sssAmbient && start.sssAmbient !== undefined) {
+                        u.sssAmbient.value = start.sssAmbient + (target.sssAmbient - start.sssAmbient) * sssT;
+                    }
+                    if (u.frostiness && start.frostiness !== undefined) {
+                        u.frostiness.value = start.frostiness + (target.frostiness - start.frostiness) * sssT;
+                    }
+                    if (u.innerGlowStrength && start.innerGlowStrength !== undefined) {
+                        u.innerGlowStrength.value = start.innerGlowStrength + (target.innerGlowStrength - start.innerGlowStrength) * sssT;
+                    }
+                    if (u.fresnelIntensity && start.fresnelIntensity !== undefined) {
+                        u.fresnelIntensity.value = start.fresnelIntensity + (target.fresnelIntensity - start.fresnelIntensity) * sssT;
+                    }
+                    if (u.causticIntensity && start.causticIntensity !== undefined) {
+                        u.causticIntensity.value = start.causticIntensity + (target.causticIntensity - start.causticIntensity) * sssT;
+                    }
+                    if (u.emotionColorBleed && start.emotionColorBleed !== undefined) {
+                        u.emotionColorBleed.value = start.emotionColorBleed + (target.emotionColorBleed - start.emotionColorBleed) * sssT;
+                    }
+
+                    // Lerp vector values (absorption, scatter distance)
+                    if (u.sssAbsorption && start.sssAbsorption) {
+                        u.sssAbsorption.value.set(
+                            start.sssAbsorption[0] + (target.sssAbsorption[0] - start.sssAbsorption[0]) * sssT,
+                            start.sssAbsorption[1] + (target.sssAbsorption[1] - start.sssAbsorption[1]) * sssT,
+                            start.sssAbsorption[2] + (target.sssAbsorption[2] - start.sssAbsorption[2]) * sssT
+                        );
+                    }
+                    if (u.sssScatterDistance && start.sssScatterDistance) {
+                        u.sssScatterDistance.value.set(
+                            start.sssScatterDistance[0] + (target.sssScatterDistance[0] - start.sssScatterDistance[0]) * sssT,
+                            start.sssScatterDistance[1] + (target.sssScatterDistance[1] - start.sssScatterDistance[1]) * sssT,
+                            start.sssScatterDistance[2] + (target.sssScatterDistance[2] - start.sssScatterDistance[2]) * sssT
+                        );
+                    }
+                }
+
+                // Use current (lerped) normalized color
                 // This ensures yellow (joy) doesn't wash out the soul while blue (sadness) stays visible
                 const normalizedColor = this._normalizedGlowColor || [1, 1, 1];
 

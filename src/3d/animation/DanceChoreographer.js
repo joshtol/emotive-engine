@@ -104,21 +104,25 @@ const GLOW_GESTURES = ['flash', 'glow', 'burst', 'flicker'];
 const GESTURE_POOLS = {
     // Low energy: gentle accents + subtle absolutes (no combos)
     subtle: {
-        single: ['pop', 'bob', 'swell', 'nod', 'sway', 'tilt'],
+        single: ['pop', 'bob', 'swell', 'nod', 'sway', 'tilt', 'floatUp'],
         combo: []  // No combos at low energy
     },
     // Medium energy: moderate variety (rare combos)
     moderate: {
         single: ['pop', 'bob', 'dip', 'swagger', 'bounce', 'wiggle', 'headBob', 'lean',
-            'stepLeft', 'stepRight', 'slideLeft', 'slideRight'],
-        combo: [['pop', 'bob'], ['dip', 'swell'], ['stepLeft', 'stepRight']]  // 10% chance
+            'stepLeft', 'stepRight', 'slideLeft', 'slideRight',
+            'leanLeft', 'leanRight', 'kickLeft', 'kickRight'],
+        combo: [['pop', 'bob'], ['dip', 'swell'], ['stepLeft', 'stepRight'],
+            ['leanLeft', 'leanRight'], ['kickLeft', 'kickRight']]  // 10% chance
     },
     // High energy: full variety (occasional combos)
     energetic: {
-        single: ['flare', 'swagger', 'dip', 'spin', 'jump', 'twist', 'hula',
-            'stepLeft', 'stepRight', 'stepUp', 'stepDown', 'slideLeft', 'slideRight'],
+        single: ['flare', 'swagger', 'dip', 'spin', 'spinLeft', 'spinRight', 'jump', 'twist', 'hula',
+            'stepLeft', 'stepRight', 'stepUp', 'stepDown', 'slideLeft', 'slideRight',
+            'leanLeft', 'leanRight', 'kickLeft', 'kickRight'],
         combo: [['flare', 'bob'], ['pop', 'dip'], ['swagger', 'flare'],
-            ['stepLeft', 'stepRight'], ['slideLeft', 'slideRight']]  // 15% chance
+            ['stepLeft', 'stepRight'], ['slideLeft', 'slideRight'],
+            ['spinLeft', 'spinRight'], ['kickLeft', 'kickRight']]  // 15% chance
     }
 };
 

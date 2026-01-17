@@ -109,6 +109,9 @@ Examples:
 - Excited: FEEL: excited, bouncing, sparkle
 - Empathetic: FEEL: sad but caring, nod
 - Celebrating: FEEL: euphoric, star shape, sparkle
+- Directional: FEEL: step left
+- Dance move: FEEL: slide right, excited
+- Upward: FEEL: hands up, stepUp, joy
 
 Use natural language - the engine understands synonyms like
 "nervous", "anxious", "worried" → fear.
@@ -171,14 +174,28 @@ Undertones modify the primary emotion:
 | `subdued` | Softens expression | "joy, subdued" |
 | `clear` | No modification (default) | "happy" |
 
-### Gestures (40+)
+### Gestures (60+)
 
-**Motion:**
+**Motion (Base/Ongoing):**
 - `bounce`, `pulse`, `shake`, `nod`, `vibrate`, `sway`, `float`, `orbit`
 - `lean` (leaning in), `reach`, `point`, `wave`, `wiggle`, `groove`
 
+**Directional (Beat-Synced Dance Moves):**
+- `stepLeft`, `stepRight`, `stepUp`, `stepDown` - Quick 1-beat weight shifts
+- `slideLeft`, `slideRight` - Smooth 2-beat glides
+- `leanLeft`, `leanRight` - Body tilt (2 beats)
+- `kickLeft`, `kickRight` - Quick side kicks (1 beat)
+- `spinLeft`, `spinRight` - Rotation direction
+
+**Directional (Storytelling):**
+- `floatUp`, `floatDown`, `floatLeft`, `floatRight` - Ethereal drift (~2000ms)
+- `pointUp`, `pointDown`, `pointLeft`, `pointRight` - Indication (~500ms)
+
+**Accent (Dance-Friendly Punctuation):**
+- `pop`, `bob`, `dip`, `flare`, `swell`, `swagger`
+
 **Transform:**
-- `spin`, `jump`, `stretch`, `expand`, `contract`, `twist`, `tilt`, `hula`
+- `spin`, `spinLeft`, `spinRight`, `jump`, `stretch`, `expand`, `contract`, `twist`, `tilt`, `hula`
 
 **Effects:**
 - `sparkle`, `shimmer`, `glow`, `flash`, `flicker`, `burst`, `fade`

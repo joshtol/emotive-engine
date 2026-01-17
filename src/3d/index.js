@@ -42,7 +42,7 @@ import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion, listEmotions, hasEmotion } from '../core/emotions/index.js';
 import { getGesture, listGestures } from '../core/gestures/index.js';
-import { applySSSPreset as applySSS } from './presets/SSSPresets.js';
+import { applySSSPreset as applySSS, SSSPresets } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
 import { DanceChoreographer } from './animation/DanceChoreographer.js';
@@ -1838,9 +1838,11 @@ export class EmotiveMascot3D {
      * Apply an SSS (Subsurface Scattering) preset to the crystal material
      * Available presets: quartz, emerald, ruby, sapphire, amethyst, topaz, citrine, diamond
      * @param {string} presetName - Name of the SSS preset to apply
+     * @param {Object} [options] - Optional configuration
+     * @param {boolean} [options.immediate=false] - Skip smooth transition, apply immediately
      * @returns {boolean} True if preset was applied successfully
      */
-    setSSSPreset(presetName) {
+    setSSSPreset(presetName, options = {}) {
         // Store preset name so it can be re-applied after geometry morph (material swap)
         this._currentSSSPreset = presetName;
 
@@ -1851,6 +1853,7 @@ export class EmotiveMascot3D {
                 // Re-apply SSS preset after material is swapped during morph
                 if (this._currentSSSPreset) {
                     // Small delay to ensure material uniforms are fully initialized
+                    // Apply immediately after morph (no transition needed)
                     setTimeout(() => {
                         applySSS(this, this._currentSSSPreset);
                     }, 50);
@@ -1858,11 +1861,63 @@ export class EmotiveMascot3D {
             };
         }
 
-        const success = applySSS(this, presetName);
-        if (success) {
-            this.eventManager.emit('sss:presetChanged', { preset: presetName });
+        // Get preset values
+        const preset = SSSPresets[presetName];
+        if (!preset || !this.core3D?.customMaterial?.uniforms) {
+            return false;
         }
-        return success;
+
+        const u = this.core3D.customMaterial.uniforms;
+
+        // For immediate application or first-time setup, skip transition
+        if (options.immediate || !this.core3D._targetSSSValues) {
+            const success = applySSS(this, presetName);
+            if (success) {
+                // Initialize current values for future transitions
+                this.core3D._targetSSSValues = { ...preset };
+                this.core3D._sssTransitionProgress = 1; // Mark as complete
+                this.eventManager.emit('sss:presetChanged', { preset: presetName });
+            }
+            return success;
+        }
+
+        // Capture current values as transition start
+        this.core3D._sssTransitionStart = {
+            sssStrength: u.sssStrength?.value ?? preset.sssStrength,
+            sssAbsorption: u.sssAbsorption?.value ? [u.sssAbsorption.value.x, u.sssAbsorption.value.y, u.sssAbsorption.value.z] : [...preset.sssAbsorption],
+            sssScatterDistance: u.sssScatterDistance?.value ? [u.sssScatterDistance.value.x, u.sssScatterDistance.value.y, u.sssScatterDistance.value.z] : [...preset.sssScatterDistance],
+            sssThicknessBias: u.sssThicknessBias?.value ?? preset.sssThicknessBias,
+            sssThicknessScale: u.sssThicknessScale?.value ?? preset.sssThicknessScale,
+            sssCurvatureScale: u.sssCurvatureScale?.value ?? preset.sssCurvatureScale,
+            sssAmbient: u.sssAmbient?.value ?? preset.sssAmbient,
+            frostiness: u.frostiness?.value ?? preset.frostiness,
+            innerGlowStrength: u.innerGlowStrength?.value ?? preset.innerGlowStrength,
+            fresnelIntensity: u.fresnelIntensity?.value ?? preset.fresnelIntensity,
+            causticIntensity: u.causticIntensity?.value ?? preset.causticIntensity,
+            emotionColorBleed: u.emotionColorBleed?.value ?? preset.emotionColorBleed
+        };
+
+        // Set target values (the preset we're transitioning to)
+        this.core3D._targetSSSValues = {
+            sssStrength: preset.sssStrength,
+            sssAbsorption: [...preset.sssAbsorption],
+            sssScatterDistance: [...preset.sssScatterDistance],
+            sssThicknessBias: preset.sssThicknessBias,
+            sssThicknessScale: preset.sssThicknessScale,
+            sssCurvatureScale: preset.sssCurvatureScale,
+            sssAmbient: preset.sssAmbient,
+            frostiness: preset.frostiness,
+            innerGlowStrength: preset.innerGlowStrength,
+            fresnelIntensity: preset.fresnelIntensity,
+            causticIntensity: preset.causticIntensity,
+            emotionColorBleed: preset.emotionColorBleed
+        };
+
+        // Start transition
+        this.core3D._sssTransitionProgress = 0;
+
+        this.eventManager.emit('sss:presetChanged', { preset: presetName, transitioning: true });
+        return true;
     }
 
     /**
@@ -1908,6 +1963,30 @@ export class EmotiveMascot3D {
             this.morphTo('moon');
             this.eventManager.emit('eclipse:lunar:start', { type: options.type || 'total' });
         }
+    }
+
+    /**
+     * Set the duration for smooth emotion color transitions
+     * @param {number} durationMs - Transition duration in milliseconds (default: 500)
+     * @returns {EmotiveMascot3D} this instance for chaining
+     */
+    setColorTransitionDuration(durationMs) {
+        if (this.core3D) {
+            this.core3D.colorTransitionDuration = durationMs;
+        }
+        return this;
+    }
+
+    /**
+     * Set the duration for smooth SSS preset transitions
+     * @param {number} durationMs - Transition duration in milliseconds (default: 500)
+     * @returns {EmotiveMascot3D} this instance for chaining
+     */
+    setSSSTransitionDuration(durationMs) {
+        if (this.core3D) {
+            this.core3D.sssTransitionDuration = durationMs;
+        }
+        return this;
     }
 
     /**

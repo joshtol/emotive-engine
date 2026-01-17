@@ -234,16 +234,16 @@ export class AnimationManager {
 
     /**
      * Blend all active animations
-     * @param {THREE.Quaternion} baseQuaternion - Base rotation quaternion
+     * @param {Array<number>} baseEuler - Base rotation as Euler angles [X, Y, Z] in radians
      * @param {number} baseScale - Base scale value
      * @param {number} baseGlowIntensity - Base glow intensity
      * @returns {Object} Blended animation state
      */
-    blend(baseQuaternion, baseScale, baseGlowIntensity) {
+    blend(baseEuler, baseScale, baseGlowIntensity) {
         return this.gestureBlender.blend(
             this.animator.animations,
             this.animator.time,
-            baseQuaternion,
+            baseEuler,
             baseScale,
             baseGlowIntensity
         );
