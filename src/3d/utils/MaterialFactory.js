@@ -176,7 +176,17 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             sssLayer1Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.sssLayer1Enabled },
             sssLayer2Mode: { value: CRYSTAL_DEFAULT_UNIFORMS.sssLayer2Mode },
             sssLayer2Strength: { value: CRYSTAL_DEFAULT_UNIFORMS.sssLayer2Strength },
-            sssLayer2Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.sssLayer2Enabled }
+            sssLayer2Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.sssLayer2Enabled },
+            // ═══════════════════════════════════════════════════════════════
+            // DEFORMATION UNIFORMS - Localized vertex displacement
+            // ═══════════════════════════════════════════════════════════════
+            // Type: 0=none, 1=shockwave, 2=ripple, 3=directional, 4=elastic
+            deformationType: { value: 0 },
+            deformationStrength: { value: 0.0 },
+            deformationPhase: { value: 0.0 },
+            deformationDirection: { value: new THREE.Vector3(0, 0, 1) },
+            impactPoint: { value: new THREE.Vector3(0, 0, 0) },
+            deformationFalloff: { value: 0.5 }  // Radius of influence (0-1 normalized)
         },
         vertexShader,
         fragmentShader,

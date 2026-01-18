@@ -32,12 +32,161 @@ varying vec3 vNormal;
 varying vec3 vViewPosition;
 varying vec2 vUv;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// DEFORMATION UNIFORMS - Localized vertex displacement for impacts
+// ═══════════════════════════════════════════════════════════════════════════
+uniform float deformationType;      // 0=none, 1=shockwave, 2=ripple, 3=directional, 4=elastic
+uniform float deformationStrength;  // 0-1
+uniform float deformationPhase;     // 0-1 animation progress
+uniform vec3 deformationDirection;  // Impact direction (normalized)
+uniform vec3 impactPoint;           // Where impact occurred (local space)
+uniform float deformationFalloff;   // Radius of influence
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEFORMATION FUNCTIONS - Localized vertex displacement
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Smooth falloff from impact point
+float calculateFalloff(vec3 pos, vec3 impact, float radius) {
+    float dist = length(pos - impact);
+    float normalizedDist = dist / max(radius, 0.001);
+    // Smooth cubic falloff: 1 at center, 0 at radius
+    return clamp(1.0 - normalizedDist * normalizedDist * (3.0 - 2.0 * normalizedDist), 0.0, 1.0);
+}
+
+// Type 1: SHOCKWAVE - Wave radiates outward from impact
+vec3 deformShockwave(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
+    float falloff = calculateFalloff(pos, impact, radius);
+
+    // Wave travels outward over time
+    float dist = length(pos - impact);
+    float wavePosition = phase * radius * 2.0;  // Wave expands
+    float waveWidth = radius * 0.3;
+
+    // Gaussian wave shape
+    float waveFactor = exp(-pow(dist - wavePosition, 2.0) / (2.0 * waveWidth * waveWidth));
+
+    // Displacement perpendicular to surface (approximate with position direction)
+    vec3 outward = normalize(pos - impact + vec3(0.001));
+
+    // Wave pushes out then in
+    float waveDisplacement = sin(phase * 6.28318) * waveFactor * strength * 0.15;
+
+    return outward * waveDisplacement * falloff;
+}
+
+// Type 2: RIPPLE - Concentric rings oscillating
+vec3 deformRipple(vec3 pos, vec3 impact, float strength, float phase, float radius) {
+    float falloff = calculateFalloff(pos, impact, radius);
+    float dist = length(pos - impact);
+
+    // Multiple ripple rings
+    float rippleFreq = 4.0;
+    float ripple = sin((dist / radius) * rippleFreq * 3.14159 - phase * 6.28318 * 2.0);
+
+    // Damping over time
+    float damping = exp(-phase * 3.0);
+
+    // Perpendicular displacement
+    vec3 outward = normalize(pos - impact + vec3(0.001));
+
+    return outward * ripple * strength * 0.1 * damping * falloff;
+}
+
+// Type 3: DIRECTIONAL - Squeeze along impact axis, bulge perpendicular
+vec3 deformDirectional(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
+    float falloff = calculateFalloff(pos, impact, radius);
+
+    // Distance along impact direction
+    vec3 toPos = pos - impact;
+    float alongDir = dot(toPos, dir);
+
+    // Perpendicular component
+    vec3 perpendicular = toPos - dir * alongDir;
+    float perpDist = length(perpendicular);
+    vec3 perpDir = perpDist > 0.001 ? perpendicular / perpDist : vec3(0.0);
+
+    // Compression along direction, bulge perpendicular
+    // Phase controls animation: fast compress, slow recover
+    float compressPhase = phase < 0.15 ? phase / 0.15 : 1.0 - (phase - 0.15) / 0.85;
+    compressPhase = compressPhase * compressPhase * (3.0 - 2.0 * compressPhase); // smoothstep
+
+    // Overshoot and bounce
+    float bouncePhase = phase > 0.15 && phase < 0.65
+        ? sin((phase - 0.15) / 0.5 * 3.14159 * 3.5) * exp(-(phase - 0.15) * 3.0) * 0.3
+        : 0.0;
+
+    float effectiveStrength = (compressPhase + bouncePhase) * strength;
+
+    // Compress inward along direction
+    vec3 compression = -dir * alongDir * effectiveStrength * 0.25;
+
+    // Bulge outward perpendicular (volume preservation)
+    vec3 bulge = perpDir * effectiveStrength * 0.12;
+
+    return (compression + bulge) * falloff;
+}
+
+// Type 4: ELASTIC - Jello-like underdamped oscillation
+vec3 deformElastic(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
+    // Combine directional with additional wobble
+    vec3 baseDeform = deformDirectional(pos, impact, dir, strength, phase, radius);
+
+    // Add jello wobble during recovery
+    if (phase > 0.3) {
+        float wobblePhase = (phase - 0.3) / 0.7;
+        float wobbleFreq = 5.0;
+        float wobbleDamp = exp(-wobblePhase * 4.0);
+
+        float wobbleX = sin(wobblePhase * 3.14159 * wobbleFreq) * wobbleDamp;
+        float wobbleY = sin(wobblePhase * 3.14159 * wobbleFreq * 1.3 + 1.0) * wobbleDamp;
+
+        float falloff = calculateFalloff(pos, impact, radius);
+        baseDeform += vec3(wobbleX, wobbleY, 0.0) * 0.02 * strength * falloff;
+    }
+
+    return baseDeform;
+}
+
+// Main deformation dispatcher
+vec3 calculateDeformation(vec3 pos) {
+    if (deformationType < 0.5 || deformationStrength < 0.001) {
+        return vec3(0.0);
+    }
+
+    vec3 displacement = vec3(0.0);
+
+    if (deformationType < 1.5) {
+        // Type 1: Shockwave
+        displacement = deformShockwave(pos, impactPoint, deformationDirection,
+                                        deformationStrength, deformationPhase, deformationFalloff);
+    } else if (deformationType < 2.5) {
+        // Type 2: Ripple
+        displacement = deformRipple(pos, impactPoint,
+                                    deformationStrength, deformationPhase, deformationFalloff);
+    } else if (deformationType < 3.5) {
+        // Type 3: Directional
+        displacement = deformDirectional(pos, impactPoint, deformationDirection,
+                                         deformationStrength, deformationPhase, deformationFalloff);
+    } else {
+        // Type 4: Elastic
+        displacement = deformElastic(pos, impactPoint, deformationDirection,
+                                     deformationStrength, deformationPhase, deformationFalloff);
+    }
+
+    return displacement;
+}
+
 void main() {
     vUv = uv;
-    vPosition = position;
+
+    // Apply deformation to position
+    vec3 deformedPosition = position + calculateDeformation(position);
+
+    vPosition = deformedPosition;
     vNormal = normalize(normalMatrix * normal);
 
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(deformedPosition, 1.0);
     vViewPosition = -mvPosition.xyz;
 
     gl_Position = projectionMatrix * mvPosition;

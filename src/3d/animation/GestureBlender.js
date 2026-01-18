@@ -82,7 +82,10 @@ export class GestureBlender {
             freezeRotation: 0,                                     // Stops rotation behavior
             freezeWobble: 0,                                       // Stops episodic wobble
             freezeGroove: 0,                                       // Stops rhythm groove
-            freezeParticles: 0                                     // Stops particle motion
+            freezeParticles: 0,                                    // Stops particle motion
+
+            // DEFORMATION channel - localized vertex displacement for impacts
+            deformation: null                                      // {enabled, type, strength, phase, direction, impactPoint, falloffRadius}
         };
 
         // Blend all active animations
@@ -237,6 +240,22 @@ export class GestureBlender {
                     if (output.freezeParticles !== undefined) {
                         accumulated.freezeParticles = Math.max(accumulated.freezeParticles, output.freezeParticles * fadeEnvelope);
                     }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // DEFORMATION CHANNEL (for localized vertex displacement)
+                    // ═══════════════════════════════════════════════════════════════
+                    // Use strongest deformation (don't blend - pick highest strength)
+                    if (output.deformation && output.deformation.enabled) {
+                        const d = output.deformation;
+                        const effectiveStrength = d.strength * fadeEnvelope;
+
+                        if (!accumulated.deformation || effectiveStrength > accumulated.deformation.strength) {
+                            accumulated.deformation = {
+                                ...d,
+                                strength: effectiveStrength
+                            };
+                        }
+                    }
                 }
             }
         }
@@ -329,6 +348,9 @@ export class GestureBlender {
             freezeWobble: accumulated.freezeWobble,
             freezeGroove: accumulated.freezeGroove,
             freezeParticles: accumulated.freezeParticles,
+
+            // Deformation channel for localized vertex displacement
+            deformation: accumulated.deformation,
 
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };

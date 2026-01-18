@@ -1808,6 +1808,9 @@ export class Core3DManager {
         this._pendingFreezeRotation = blended.freezeRotation || 0;
         this._pendingFreezeWobble = blended.freezeWobble || 0;
 
+        // Store deformation for shader-based vertex displacement
+        this._deformation = blended.deformation || null;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // MOTION DEBUG LOGGING - Track all sources of movement
         // Only logs when debugMotionLogging is enabled (e.g., when LLM interpreter is active)
@@ -2086,7 +2089,9 @@ export class Core3DManager {
             morphProgress: morphState.isTransitioning ? morphState.visualProgress : null,  // For corona fade-in
             // OPTIMIZATION FLAGS: Skip render passes when not needed
             hasSoul: this.customMaterialType === 'crystal' && this.crystalSoul !== null,
-            hasParticles: this.particleVisibility && this.particleOrchestrator !== null
+            hasParticles: this.particleVisibility && this.particleOrchestrator !== null,
+            // Shader-based localized vertex deformation for impacts
+            deformation: this._deformation
         });
 
         // Update lunar eclipse animation (Blood Moon)

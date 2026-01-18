@@ -1458,6 +1458,46 @@ export class ThreeRenderer {
                     const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
                     this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
                 }
+
+                // ═══════════════════════════════════════════════════════════════
+                // DEFORMATION UNIFORMS - Localized vertex displacement
+                // ═══════════════════════════════════════════════════════════════
+                if (this.coreMesh.material.uniforms.deformationType !== undefined) {
+                    const d = params.deformation;
+
+                    if (d && d.enabled) {
+                        // Map deformation type to integer for shader
+                        const typeMap = {
+                            none: 0,
+                            shockwave: 1,
+                            ripple: 2,
+                            directional: 3,
+                            elastic: 4
+                        };
+
+                        this.coreMesh.material.uniforms.deformationType.value = typeMap[d.type] || 0;
+                        this.coreMesh.material.uniforms.deformationStrength.value = d.strength;
+                        this.coreMesh.material.uniforms.deformationPhase.value = d.phase;
+
+                        if (d.direction && this.coreMesh.material.uniforms.deformationDirection) {
+                            this.coreMesh.material.uniforms.deformationDirection.value.set(
+                                d.direction[0], d.direction[1], d.direction[2]
+                            );
+                        }
+                        if (d.impactPoint && this.coreMesh.material.uniforms.impactPoint) {
+                            this.coreMesh.material.uniforms.impactPoint.value.set(
+                                d.impactPoint[0], d.impactPoint[1], d.impactPoint[2]
+                            );
+                        }
+                        if (d.falloffRadius !== undefined && this.coreMesh.material.uniforms.deformationFalloff) {
+                            this.coreMesh.material.uniforms.deformationFalloff.value = d.falloffRadius;
+                        }
+                    } else {
+                        // No deformation - reset
+                        this.coreMesh.material.uniforms.deformationType.value = 0;
+                        this.coreMesh.material.uniforms.deformationStrength.value = 0;
+                    }
+                }
             } else if (this.coreMesh.material && this.coreMesh.material.emissive) {
                 // MeshPhysicalMaterial (glass material) - update emissive properties
                 // BLOOM + COLOR SOLUTION:

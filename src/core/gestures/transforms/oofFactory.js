@@ -357,13 +357,36 @@ export function createOofGesture(direction) {
                     glowBoost = 0.25;
                 }
 
+                // Direction to normalized vector mapping for shader deformation
+                const directionVectors = {
+                    left:  [-1, 0, 0],
+                    right: [1, 0, 0],
+                    front: [0, 0, 1],
+                    back:  [0, 0, -1],
+                    up:    [0, 1, 0],
+                    down:  [0, -1, 0]
+                };
+
                 // Use camera-relative so directions work regardless of model rotation
                 return {
                     cameraRelativePosition: [posX, posY, posZ],
                     cameraRelativeRotation: [rotX, rotY, rotZ],
-                    scale,
+                    scale,  // Keep for overall squash effect (now supplemented by shader)
                     glowIntensity,
-                    glowBoost
+                    glowBoost,
+
+                    // Localized vertex deformation via shader
+                    // Creates realistic gut-punch where vertices near impact compress
+                    // while distant vertices remain unaffected
+                    deformation: {
+                        enabled: true,
+                        type: 'elastic',  // Jello-like wobble during recovery
+                        strength: Math.max(squishAmount * 0.7, 0) * intensity,  // Use squish for strength
+                        phase: progress,
+                        direction: directionVectors[dir] || [0, 0, 1],
+                        impactPoint: [0, 0, 0],  // Center of mesh
+                        falloffRadius: 0.6  // Affects 60% of mesh from center
+                    }
                 };
             }
         }
