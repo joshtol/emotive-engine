@@ -97,7 +97,7 @@ vec3 deformRipple(vec3 pos, vec3 impact, float strength, float phase, float radi
 vec3 deformDirectional(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
     float falloff = calculateFalloff(pos, impact, radius);
 
-    // Distance along impact direction
+    // Distance along impact direction from impact point
     vec3 toPos = pos - impact;
     float alongDir = dot(toPos, dir);
 
@@ -106,46 +106,47 @@ vec3 deformDirectional(vec3 pos, vec3 impact, vec3 dir, float strength, float ph
     float perpDist = length(perpendicular);
     vec3 perpDir = perpDist > 0.001 ? perpendicular / perpDist : vec3(0.0);
 
-    // Compression along direction, bulge perpendicular
-    // Phase controls animation: fast compress, slow recover
-    float compressPhase = phase < 0.15 ? phase / 0.15 : 1.0 - (phase - 0.15) / 0.85;
-    compressPhase = compressPhase * compressPhase * (3.0 - 2.0 * compressPhase); // smoothstep
+    // BRUTAL compression - strength drives it directly, phase just modulates
+    // Push vertices INWARD along the punch direction
+    vec3 compression = -dir * strength * 0.5 * falloff;
 
-    // Overshoot and bounce
-    float bouncePhase = phase > 0.15 && phase < 0.65
-        ? sin((phase - 0.15) / 0.5 * 3.14159 * 3.5) * exp(-(phase - 0.15) * 3.0) * 0.3
-        : 0.0;
+    // Bulge outward perpendicular (volume preservation) - more aggressive
+    vec3 bulge = perpDir * strength * 0.25 * falloff;
 
-    float effectiveStrength = (compressPhase + bouncePhase) * strength;
-
-    // Compress inward along direction
-    vec3 compression = -dir * alongDir * effectiveStrength * 0.25;
-
-    // Bulge outward perpendicular (volume preservation)
-    vec3 bulge = perpDir * effectiveStrength * 0.12;
-
-    return (compression + bulge) * falloff;
+    return compression + bulge;
 }
 
-// Type 4: ELASTIC - Jello-like underdamped oscillation
+// Type 4: ELASTIC - Punch impact with flesh ripple
 vec3 deformElastic(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
-    // Combine directional with additional wobble
-    vec3 baseDeform = deformDirectional(pos, impact, dir, strength, phase, radius);
+    float falloff = calculateFalloff(pos, impact, radius);
 
-    // Add jello wobble during recovery
-    if (phase > 0.3) {
-        float wobblePhase = (phase - 0.3) / 0.7;
-        float wobbleFreq = 5.0;
-        float wobbleDamp = exp(-wobblePhase * 4.0);
+    // Distance from impact
+    vec3 toPos = pos - impact;
+    float alongDir = dot(toPos, dir);
 
-        float wobbleX = sin(wobblePhase * 3.14159 * wobbleFreq) * wobbleDamp;
-        float wobbleY = sin(wobblePhase * 3.14159 * wobbleFreq * 1.3 + 1.0) * wobbleDamp;
+    // Perpendicular for bulge
+    vec3 perpendicular = toPos - dir * alongDir;
+    float perpDist = length(perpendicular);
+    vec3 perpDir = perpDist > 0.001 ? perpendicular / perpDist : vec3(0.0);
 
-        float falloff = calculateFalloff(pos, impact, radius);
-        baseDeform += vec3(wobbleX, wobbleY, 0.0) * 0.02 * strength * falloff;
-    }
+    // PUNCH CRATER - vertices near impact get pushed IN hard
+    // Strength controls depth, falloff localizes it
+    vec3 crater = -dir * strength * 0.6 * falloff;
 
-    return baseDeform;
+    // FLESH BULGE - displaced volume bulges outward perpendicular
+    vec3 bulge = perpDir * strength * 0.3 * falloff;
+
+    // RIPPLE - traveling wave from impact (only during early phase)
+    float dist = length(toPos);
+    float wavePos = phase * radius * 3.0;  // Wave travels outward
+    float waveWidth = radius * 0.25;
+    float wave = exp(-pow(dist - wavePos, 2.0) / (waveWidth * waveWidth));
+    wave *= sin(phase * 12.56637) * (1.0 - phase);  // Oscillates and dies
+
+    vec3 outward = length(toPos) > 0.001 ? normalize(toPos) : dir;
+    vec3 ripple = outward * wave * strength * 0.15;
+
+    return crater + bulge + ripple;
 }
 
 // Main deformation dispatcher
