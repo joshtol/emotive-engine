@@ -9,24 +9,22 @@
  * @author Emotive Engine Team
  * @module gestures/transforms/oofFactory
  *
- * Creates oof gestures for directional blow impacts.
- * Simulates taking a hit from a direction - bends away from impact.
+ * Creates BRUTAL punch impact gestures. The goal is to look like someone
+ * literally took their fist and knocked the shit out of the mascot's torso.
  *
- * OOF: Impact reaction (~700ms)
+ * PHYSICS MODEL:
+ * 1. INSTANT IMPACT - Fist connects, flesh caves in at impact site
+ * 2. SHOCKWAVE - Ripple propagates outward through jello-like flesh
+ * 3. KNOCKBACK - Kinetic energy transfers, body gets THROWN
+ * 4. ELASTIC RECOIL - Body bounces back as stored energy releases
  *
- * Use cases:
- * - oofLeft: Hit from left, bends right
- * - oofRight: Hit from right, bends left
- * - oofFront: Gut punch from front, doubles over
- * - oofBack: Hit from behind, arches back
- * - oofUp: Uppercut, head snaps back
- * - oofDown: Stomp, crumples down
+ * OOF: Brutal impact (~800ms)
  */
 
 import { capitalize } from '../motions/directions.js';
 
 /**
- * Create an oof gesture - directional blow impact
+ * Create an oof gesture - brutal punch impact
  * @param {string} direction - 'left', 'right', 'front', 'back', 'up', 'down'
  * @returns {Object} Gesture definition
  */
@@ -37,21 +35,21 @@ export function createOofGesture(direction) {
     }
 
     const emojis = {
-        left: '😵',
-        right: '😵',
-        front: '🤢',
+        left: '🤜',
+        right: '🤛',
+        front: '👊',
         back: '😫',
-        up: '🤕',
-        down: '😖'
+        up: '🥊',
+        down: '💥'
     };
 
     const descriptions = {
-        left: 'Hit from left - bends right',
-        right: 'Hit from right - bends left',
-        front: 'Gut punch - doubles over forward',
-        back: 'Hit from behind - arches back',
-        up: 'Uppercut - head snaps back',
-        down: 'Stomp - crumples down'
+        left: 'Brutal punch from left - knocked right',
+        right: 'Brutal punch from right - knocked left',
+        front: 'Gut punch - fist buries into torso',
+        back: 'Kidney shot from behind - arches forward',
+        up: 'Uppercut - head snaps back violently',
+        down: 'Hammer fist - crushed down'
     };
 
     return {
@@ -61,8 +59,8 @@ export function createOofGesture(direction) {
         description: descriptions[direction],
 
         config: {
-            duration: 700,
-            musicalDuration: { musical: true, beats: 1.5 },
+            duration: 800,  // Slightly longer for the full physics to play out
+            musicalDuration: { musical: true, beats: 2 },
             intensity: 1.0,
             strength: 1.0,
             direction,
@@ -76,7 +74,7 @@ export function createOofGesture(direction) {
         rhythm: {
             enabled: true,
             syncMode: 'beat',
-            durationSync: { mode: 'beats', beats: 1.5 },
+            durationSync: { mode: 'beats', beats: 2 },
             timingSync: 'onBeat',
 
             accentResponse: {
@@ -92,272 +90,267 @@ export function createOofGesture(direction) {
                 const intensity = config.intensity || 1.0;
                 const dir = config.direction || 'front';
 
-                // OOF PHASES - Strike FIRST, then movement:
-                // Phase 1 (0-0.1): IMPACT - instant compression, NO movement yet
-                // Phase 2 (0.1-0.35): PAIN REACTION - vibrate/shake while doubling over, still in place
-                // Phase 3 (0.35-0.65): PUSHED - NOW body moves from the accumulated force
-                // Phase 4 (0.65-1.0): RECOVERY - slow return to normal
+                // ═══════════════════════════════════════════════════════════════════
+                // BRUTAL PUNCH PHYSICS - 4 PHASES
+                // ═══════════════════════════════════════════════════════════════════
+                //
+                // Phase 1 (0-0.08): IMPACT - Fist connects. INSTANT crater forms.
+                //                   Flesh caves in at impact site. No translation yet.
+                //
+                // Phase 2 (0.08-0.25): SHOCKWAVE - Ripple travels outward through
+                //                      jello-like flesh. Body starts to move.
+                //
+                // Phase 3 (0.25-0.55): KNOCKBACK - Full kinetic transfer. Body gets
+                //                      THROWN by the accumulated force. Maximum displacement.
+                //
+                // Phase 4 (0.55-1.0): RECOIL - Elastic recovery. Body bounces back
+                //                     with decreasing oscillations like jello settling.
 
-                let impactCompress = 0;  // Initial hit compression
-                let painBend = 0;        // Doubling over from pain
-                let pushAmount = 0;      // Being pushed by the hit (DELAYED)
-                let shakeAmount = 0;
-
-                if (progress < 0.1) {
-                    // Phase 1: IMPACT - instant compression, mascot stays in place
-                    const hitT = progress / 0.1;
-                    impactCompress = 1 - Math.pow(1 - hitT, 3); // Very fast compression
-                    // NO push yet - the blow just landed
-                } else if (progress < 0.35) {
-                    // Phase 2: PAIN REACTION - shake while doubling over, still no translation
-                    const painT = (progress - 0.1) / 0.25;
-                    impactCompress = 1.0 - painT * 0.5; // Slowly decompress
-                    painBend = painT; // Build up the bend/doubling over
-                    // Intense shake during pain reaction
-                    shakeAmount = Math.sin(painT * Math.PI * 10) * (1 - painT * 0.5) * 0.06;
-                    // Still no push - absorbing the blow
-                } else if (progress < 0.65) {
-                    // Phase 3: PUSHED - NOW the force sends them flying
-                    const pushT = (progress - 0.35) / 0.3;
-                    const pushEase = 1 - Math.pow(1 - pushT, 2); // Fast start, slow end
-                    impactCompress = 0.5 - pushT * 0.4;
-                    painBend = 1.0 - pushT * 0.2; // Mostly maintain the bend
-                    pushAmount = pushEase; // Full push happens NOW
-                    shakeAmount = Math.sin(pushT * Math.PI * 5) * (1 - pushT) * 0.03;
+                // ─────────────────────────────────────────────────────────────────
+                // IMPACT CRATER - How deep the fist buries into the flesh
+                // ─────────────────────────────────────────────────────────────────
+                let craterDepth = 0;
+                if (progress < 0.08) {
+                    // INSTANT cave-in - exponential attack
+                    const t = progress / 0.08;
+                    craterDepth = 1 - Math.pow(1 - t, 4);  // Very fast, almost instant
+                } else if (progress < 0.25) {
+                    // Crater holds while shockwave propagates
+                    const t = (progress - 0.08) / 0.17;
+                    craterDepth = 1.0 - t * 0.3;  // Slowly releasing
+                } else if (progress < 0.55) {
+                    // Crater releasing as body moves
+                    const t = (progress - 0.25) / 0.3;
+                    craterDepth = 0.7 * (1 - t);
                 } else {
-                    // Phase 4: RECOVERY - slow return
-                    const recoverT = (progress - 0.65) / 0.35;
-                    const easeOut = recoverT < 0.5
-                        ? 2 * recoverT * recoverT
-                        : 1 - Math.pow(-2 * recoverT + 2, 2) / 2;
-                    pushAmount = 1.0 - easeOut;
-                    painBend = (1 - easeOut) * 0.8;
-                    shakeAmount = Math.sin(recoverT * Math.PI * 3) * (1 - easeOut) * 0.02;
+                    // Elastic bounce-back with oscillation
+                    const t = (progress - 0.55) / 0.45;
+                    const bounceFreq = 4;
+                    const bounceDamp = Math.exp(-t * 5);
+                    // Overshoot in opposite direction then settle
+                    craterDepth = -0.15 * Math.sin(t * Math.PI * bounceFreq) * bounceDamp;
                 }
 
-                let posX = 0, posY = 0, posZ = 0;
-                let rotX = 0;
-                const rotY = 0;
-                let rotZ = 0;
+                // ─────────────────────────────────────────────────────────────────
+                // SHOCKWAVE RIPPLE - Wave traveling through flesh
+                // ─────────────────────────────────────────────────────────────────
+                let rippleIntensity = 0;
+                let ripplePhase = 0;
+                if (progress > 0.02 && progress < 0.5) {
+                    // Shockwave starts slightly after impact
+                    const rippleT = (progress - 0.02) / 0.48;
+                    rippleIntensity = Math.sin(rippleT * Math.PI) * (1 - rippleT * 0.5);
+                    // Multiple waves at different frequencies
+                    ripplePhase = rippleT * Math.PI * 6;
+                }
+                const ripple1 = Math.sin(ripplePhase) * rippleIntensity * 0.08;
+                const ripple2 = Math.sin(ripplePhase * 1.7 + 0.5) * rippleIntensity * 0.05;
+                const ripple3 = Math.sin(ripplePhase * 2.3 + 1.0) * rippleIntensity * 0.03;
+                const combinedRipple = ripple1 + ripple2 + ripple3;
 
-                // Camera-relative coordinate system for consistent directions:
+                // ─────────────────────────────────────────────────────────────────
+                // KNOCKBACK - Body gets THROWN by the punch
+                // ─────────────────────────────────────────────────────────────────
+                let knockback = 0;
+                if (progress < 0.08) {
+                    // No movement during initial impact - force is being absorbed
+                    knockback = 0;
+                } else if (progress < 0.25) {
+                    // Starts moving - force transferring
+                    const t = (progress - 0.08) / 0.17;
+                    knockback = t * t * 0.4;  // Accelerating
+                } else if (progress < 0.55) {
+                    // MAXIMUM knockback - body flying
+                    const t = (progress - 0.25) / 0.3;
+                    const ease = 1 - Math.pow(1 - t, 2);
+                    knockback = 0.4 + ease * 0.6;  // Reaches 1.0 at peak
+                } else {
+                    // Elastic return with bounce
+                    const t = (progress - 0.55) / 0.45;
+                    const bounceFreq = 2.5;
+                    const bounceDamp = Math.exp(-t * 3);
+                    // Returns to center but overshoots slightly
+                    knockback = (1 - t) * 0.8 + Math.sin(t * Math.PI * bounceFreq) * 0.15 * bounceDamp;
+                }
+
+                // ─────────────────────────────────────────────────────────────────
+                // BODY ROTATION - Doubles over / bends from impact
+                // ─────────────────────────────────────────────────────────────────
+                let bendAmount = 0;
+                if (progress < 0.08) {
+                    // Instant reaction to impact
+                    const t = progress / 0.08;
+                    bendAmount = t * 0.3;
+                } else if (progress < 0.4) {
+                    // Full bend while absorbing/flying
+                    const t = (progress - 0.08) / 0.32;
+                    bendAmount = 0.3 + t * 0.7;  // Reaches 1.0
+                } else {
+                    // Recovery
+                    const t = (progress - 0.4) / 0.6;
+                    const ease = t * t * (3 - 2 * t);
+                    bendAmount = 1.0 - ease * 0.85;  // Doesn't fully recover (lingering pain)
+                }
+
+                // ─────────────────────────────────────────────────────────────────
+                // TRAUMA SHAKE - High frequency vibration during impact
+                // ─────────────────────────────────────────────────────────────────
+                let traumaShake = 0;
+                if (progress < 0.35) {
+                    // Intense shake at impact, fading
+                    const shakeEnv = progress < 0.1
+                        ? progress / 0.1
+                        : 1 - (progress - 0.1) / 0.25;
+                    const highFreq = Math.sin(progress * 180) * 0.4 +
+                                    Math.sin(progress * 230) * 0.3 +
+                                    Math.sin(progress * 170) * 0.3;
+                    traumaShake = highFreq * Math.max(0, shakeEnv) * 0.04;
+                }
+
+                // ─────────────────────────────────────────────────────────────────
+                // APPLY DIRECTION-SPECIFIC TRANSFORMS
+                // ─────────────────────────────────────────────────────────────────
+                let posX = 0, posY = 0, posZ = 0;
+                let rotX = 0, rotZ = 0;
+                const rotY = 0;
+                let scaleX = 1, scaleY = 1, scaleZ = 1;
+
+                // Impact point offset for shader (where fist hits)
+                let impactPointLocal = [0, 0, 0];
+
+                // Camera-relative coordinate system:
                 // X: positive = right, negative = left (from camera's view)
                 // Z: positive = toward camera, negative = away
+                // rotX: positive = bow forward, negative = arch back
                 // rotZ: positive = tilt top-left (CCW), negative = tilt top-right (CW)
 
-                switch (dir) {
-                case 'left':
-                    // Hit from LEFT - compress in place, bend right, THEN pushed right
-                    posX = pushAmount * 0.25 * strength; // Pushed right (only in phase 3+)
-                    rotZ = -painBend * 0.55 * strength * intensity; // Bend right (top goes right)
-                    posY = -impactCompress * 0.1 * strength; // Drop from impact
-                    rotX = painBend * 0.2 * strength; // Forward hunch from pain
-                    break;
-
-                case 'right':
-                    // Hit from RIGHT - compress in place, bend left, THEN pushed left
-                    posX = -pushAmount * 0.25 * strength; // Pushed left (only in phase 3+)
-                    rotZ = painBend * 0.55 * strength * intensity; // Bend left (top goes left)
-                    posY = -impactCompress * 0.1 * strength;
-                    rotX = painBend * 0.2 * strength;
-                    break;
-
-                case 'front':
-                    // GUT PUNCH - compress, double over hard, THEN pushed back
-                    posZ = -pushAmount * 0.2 * strength; // Pushed away (only in phase 3+)
-                    rotX = painBend * 0.85 * strength * intensity; // Doubles over HARD
-                    posY = -impactCompress * 0.15 * strength - painBend * 0.12 * strength;
-                    break;
-
-                case 'back':
-                    // Hit from BEHIND - compress, arch back, THEN pushed forward
-                    posZ = pushAmount * 0.25 * strength; // Pushed toward camera (only in phase 3+)
-                    rotX = -painBend * 0.6 * strength * intensity; // Arch back
-                    posY = impactCompress * 0.06 * strength;
-                    break;
-
-                case 'up':
-                    // UPPERCUT - compress, head snaps back, THEN lifted up
-                    posY = pushAmount * 0.28 * strength; // Lifted (only in phase 3+)
-                    rotX = -painBend * 0.7 * strength * intensity; // Head snaps back
-                    posZ = -pushAmount * 0.12 * strength; // Slight back
-                    break;
-
-                case 'down':
-                    // STOMP/SLAM - crushed DOWN, distinct from front
-                    posY = -pushAmount * 0.35 * strength * intensity; // Crushed (only in phase 3+)
-                    rotX = painBend * 0.12 * strength; // Minimal forward hunch
-                    // Heavy squash handled below
-                    break;
-                }
-
-                // Add shake to rotation (happens during pain phase, not movement)
-                rotZ += shakeAmount * strength;
-                posX += shakeAmount * 0.3 * strength;
-
-                // ═══════════════════════════════════════════════════════════════════
-                // COMPREHENSIVE DEFORMATION SYSTEM
-                // Combines 6 techniques for realistic gut-punch physics:
-                // 1. Shockwave ripple - wave travels from impact outward
-                // 2. Directional squish with bounce - overshoot then settle
-                // 3. Asymmetric deformation - hit side compresses more
-                // 4. Volume-preserving squash - scaleX × scaleY × scaleZ ≈ 1.0
-                // 5. Delayed elastic recovery - jello-like wobble back
-                // 6. Impact point offset + scale - position shift with compression
-                // ═══════════════════════════════════════════════════════════════════
-
-                let scaleX = 1.0, scaleY = 1.0, scaleZ = 1.0;
-
-                // Direction vectors for impact calculations
-                const impactVec = {
-                    left:  { primary: 'x', sign: -1, secondary: ['y', 'z'] },
-                    right: { primary: 'x', sign: 1, secondary: ['y', 'z'] },
-                    front: { primary: 'z', sign: 1, secondary: ['x', 'y'] },
-                    back:  { primary: 'z', sign: -1, secondary: ['x', 'y'] },
-                    up:    { primary: 'y', sign: 1, secondary: ['x', 'z'] },
-                    down:  { primary: 'y', sign: -1, secondary: ['x', 'z'] }
-                };
-                // impactVec lookup validates direction but isn't used directly
-                void (impactVec[dir] || impactVec.front);
-
-                // ─────────────────────────────────────────────────────────────────
-                // 1. SHOCKWAVE RIPPLE - Wave travels through mesh from impact point
-                // ─────────────────────────────────────────────────────────────────
-                // The wave starts at impact, travels outward, creating sequential
-                // compression/expansion as it passes through
-                const waveSpeed = 4.0; // How fast wave traverses the mesh
-                const wavePhase = progress * Math.PI * waveSpeed;
-                const waveDamping = Math.exp(-progress * 2.5); // Exponential decay
-                const rippleWave = Math.sin(wavePhase) * waveDamping * 0.08;
-
-                // ─────────────────────────────────────────────────────────────────
-                // 2. DIRECTIONAL SQUISH WITH BOUNCE - Overshoot then wobble-settle
-                // ─────────────────────────────────────────────────────────────────
-                // Like a stress ball: compresses past equilibrium, bounces back,
-                // overshoots the other way, settles with decreasing amplitude
-                let squishAmount = 0;
-                if (progress < 0.15) {
-                    // Initial compression - fast squish with slight overshoot
-                    const t = progress / 0.15;
-                    const overshoot = 1.2; // 20% overshoot
-                    squishAmount = t * overshoot * (1 - Math.pow(t - 1, 2) * 0.2);
-                } else if (progress < 0.65) {
-                    // Bounce phase - damped oscillation
-                    const t = (progress - 0.15) / 0.5;
-                    const bounceFreq = 3.5; // Number of bounces
-                    const bounceDamp = Math.exp(-t * 3); // Damping factor
-                    // Start from overshoot (1.2), oscillate toward 0
-                    squishAmount = 1.0 + Math.cos(t * Math.PI * bounceFreq) * 0.4 * bounceDamp;
-                } else {
-                    // Final settle - ease to rest
-                    const t = (progress - 0.65) / 0.35;
-                    const easeOut = 1 - Math.pow(1 - t, 3);
-                    squishAmount = (1 - easeOut) * 0.3;
-                }
-
-                // ─────────────────────────────────────────────────────────────────
-                // 3. ASYMMETRIC DEFORMATION - Hit side compresses MORE
-                // ─────────────────────────────────────────────────────────────────
-                // The side being hit compresses harder than the opposite side
-                // This creates a more realistic "dented" look
-                const asymmetry = 0.3; // 30% more compression on hit side
-                const hitSideExtra = squishAmount * asymmetry * intensity;
-
-                // ─────────────────────────────────────────────────────────────────
-                // 5. DELAYED ELASTIC RECOVERY - Jello wobble back to normal
-                // ─────────────────────────────────────────────────────────────────
-                // During recovery phase, add secondary wobble like jello settling
-                let elasticWobble = 0;
-                if (progress > 0.4) {
-                    const recoveryT = (progress - 0.4) / 0.6;
-                    const wobbleFreq = 5.0;
-                    const wobbleDamp = Math.exp(-recoveryT * 4);
-                    elasticWobble = Math.sin(recoveryT * Math.PI * wobbleFreq) * wobbleDamp * 0.06;
-                }
-
-                // ─────────────────────────────────────────────────────────────────
-                // 6. IMPACT POINT OFFSET - Position shift toward impact
-                // ─────────────────────────────────────────────────────────────────
-                // Already handled by posX/Y/Z above, but we add micro-offset
-                // that correlates with scale for cohesive deformation
-                const impactOffset = squishAmount * 0.02 * strength;
-
-                // Apply direction-specific deformation with all effects combined
-                const baseDeform = squishAmount * intensity * strength;
+                const knockbackDist = 0.35 * strength;  // Max knockback distance
+                const bendAngle = 0.7 * strength * intensity;  // Max bend angle
 
                 switch (dir) {
                 case 'left':
+                    // PUNCHED FROM LEFT - Knocked to the right
+                    posX = knockback * knockbackDist;
+                    posY = -craterDepth * 0.08 * strength;  // Slight drop
+                    rotZ = -bendAmount * bendAngle;  // Bend right (top goes right)
+                    rotX = bendAmount * 0.15 * strength;  // Slight forward hunch
+
+                    // Crater on left side - X compresses, Y/Z bulge
+                    scaleX = 1.0 - craterDepth * 0.25 * intensity;
+                    scaleY = 1.0 + craterDepth * 0.12 * intensity + combinedRipple;
+                    scaleZ = 1.0 + craterDepth * 0.10 * intensity - combinedRipple * 0.5;
+
+                    impactPointLocal = [-0.3, 0, 0];  // Left side of torso
+                    break;
+
                 case 'right':
-                    // Punched from side - X compresses, Y/Z bulge
-                    scaleX = 1.0 - baseDeform * 0.28 - hitSideExtra;
-                    scaleY = 1.0 + baseDeform * 0.12 + rippleWave + elasticWobble;
-                    scaleZ = 1.0 + baseDeform * 0.14 - rippleWave * 0.5;
-                    // Add asymmetric offset
-                    posX += (dir === 'left' ? -1 : 1) * impactOffset;
+                    // PUNCHED FROM RIGHT - Knocked to the left
+                    posX = -knockback * knockbackDist;
+                    posY = -craterDepth * 0.08 * strength;
+                    rotZ = bendAmount * bendAngle;  // Bend left (top goes left)
+                    rotX = bendAmount * 0.15 * strength;
+
+                    scaleX = 1.0 - craterDepth * 0.25 * intensity;
+                    scaleY = 1.0 + craterDepth * 0.12 * intensity + combinedRipple;
+                    scaleZ = 1.0 + craterDepth * 0.10 * intensity - combinedRipple * 0.5;
+
+                    impactPointLocal = [0.3, 0, 0];  // Right side of torso
                     break;
 
                 case 'front':
-                    // GUT PUNCH - Z compresses HARD, X bulges, Y slight compress
-                    scaleZ = 1.0 - baseDeform * 0.38 - hitSideExtra;
-                    scaleX = 1.0 + baseDeform * 0.22 + rippleWave;
-                    scaleY = 1.0 - baseDeform * 0.08 + elasticWobble;
-                    posZ += impactOffset;
+                    // GUT PUNCH - Fist buries deep, knocked backward
+                    posZ = -knockback * knockbackDist * 0.8;  // Pushed away from camera
+                    posY = -craterDepth * 0.15 * strength - bendAmount * 0.1 * strength;
+                    rotX = bendAmount * bendAngle * 1.2;  // Doubles over HARD
+
+                    // Deep crater in front - Z compresses hard, X bulges out
+                    scaleZ = 1.0 - craterDepth * 0.35 * intensity;
+                    scaleX = 1.0 + craterDepth * 0.20 * intensity + combinedRipple;
+                    scaleY = 1.0 - craterDepth * 0.05 * intensity + combinedRipple * 0.3;
+
+                    impactPointLocal = [0, 0, 0.3];  // Front of torso
                     break;
 
                 case 'back':
-                    // Hit from behind - Z compresses, X/Y bulge
-                    scaleZ = 1.0 - baseDeform * 0.32 - hitSideExtra;
-                    scaleX = 1.0 + baseDeform * 0.18 + rippleWave;
-                    scaleY = 1.0 + baseDeform * 0.12 + elasticWobble;
-                    posZ -= impactOffset;
+                    // KIDNEY SHOT - Arches forward from behind
+                    posZ = knockback * knockbackDist;  // Pushed toward camera
+                    posY = craterDepth * 0.05 * strength;
+                    rotX = -bendAmount * bendAngle * 0.8;  // Arches back/forward reaction
+
+                    scaleZ = 1.0 - craterDepth * 0.28 * intensity;
+                    scaleX = 1.0 + craterDepth * 0.15 * intensity + combinedRipple;
+                    scaleY = 1.0 + craterDepth * 0.10 * intensity;
+
+                    impactPointLocal = [0, 0, -0.3];  // Back of torso
                     break;
 
                 case 'up':
-                    // UPPERCUT - Y compresses from below, X/Z bulge
-                    scaleY = 1.0 - baseDeform * 0.22 - hitSideExtra;
-                    scaleX = 1.0 + baseDeform * 0.15 + rippleWave;
-                    scaleZ = 1.0 + baseDeform * 0.15 - rippleWave * 0.5 + elasticWobble;
-                    posY += impactOffset;
+                    // UPPERCUT - Head snaps back, lifted off ground
+                    posY = knockback * knockbackDist * 0.9;  // Lifted up
+                    posZ = -knockback * knockbackDist * 0.3;  // Slight backward
+                    rotX = -bendAmount * bendAngle;  // Head snaps back
+
+                    scaleY = 1.0 - craterDepth * 0.20 * intensity;
+                    scaleX = 1.0 + craterDepth * 0.12 * intensity + combinedRipple;
+                    scaleZ = 1.0 + craterDepth * 0.12 * intensity;
+
+                    impactPointLocal = [0, -0.2, 0.1];  // Under chin
                     break;
 
                 case 'down':
-                    // STOMP - Y compresses HARD (pancake), X/Z bulge wide
-                    scaleY = 1.0 - baseDeform * 0.48 - hitSideExtra;
-                    scaleX = 1.0 + baseDeform * 0.32 + rippleWave;
-                    scaleZ = 1.0 + baseDeform * 0.32 - rippleWave * 0.5 + elasticWobble;
-                    posY -= impactOffset;
+                    // HAMMER FIST / STOMP - Crushed downward
+                    posY = -knockback * knockbackDist * 1.1;  // Smashed down HARD
+                    rotX = bendAmount * 0.15 * strength;  // Minimal forward hunch
+
+                    // PANCAKE - Y compresses extremely, X/Z bulge wide
+                    scaleY = 1.0 - craterDepth * 0.45 * intensity;
+                    scaleX = 1.0 + craterDepth * 0.30 * intensity + combinedRipple;
+                    scaleZ = 1.0 + craterDepth * 0.30 * intensity - combinedRipple * 0.3;
+
+                    impactPointLocal = [0, 0.3, 0];  // Top of head/shoulders
                     break;
                 }
 
+                // Add trauma shake to position
+                posX += traumaShake * strength;
+                posZ += traumaShake * 0.5 * strength;
+                rotZ += traumaShake * 2 * strength;
+
                 // ─────────────────────────────────────────────────────────────────
-                // 4. VOLUME-PRESERVING SQUASH - Enforce scaleX × scaleY × scaleZ ≈ 1.0
+                // VOLUME PRESERVATION - Keep scaleX * scaleY * scaleZ ≈ 1.0
                 // ─────────────────────────────────────────────────────────────────
-                // Real objects conserve volume when deformed. If you compress one
-                // axis, the others must expand proportionally.
-                const currentVolume = scaleX * scaleY * scaleZ;
-                const volumeCorrection = Math.pow(1.0 / currentVolume, 1/3);
-                // Apply gentle correction (80% toward volume preservation)
-                const correctionStrength = 0.8;
-                const correction = 1 + (volumeCorrection - 1) * correctionStrength;
+                const volume = scaleX * scaleY * scaleZ;
+                const volumeCorrection = Math.pow(1.0 / volume, 1/3);
+                const correctionBlend = 0.75;  // 75% toward volume preservation
+                const correction = 1 + (volumeCorrection - 1) * correctionBlend;
                 scaleX *= correction;
                 scaleY *= correction;
                 scaleZ *= correction;
 
-                const scale = [scaleX, scaleY, scaleZ];
-
-                // Impact flash - bright at hit, sustained through pain
+                // ─────────────────────────────────────────────────────────────────
+                // GLOW EFFECTS - Impact flash
+                // ─────────────────────────────────────────────────────────────────
                 let glowIntensity = 1.0;
                 let glowBoost = 0;
-                if (progress < 0.15) {
-                    const flashT = progress / 0.15;
-                    glowIntensity = 1.0 + (1 - flashT) * 1.5;
-                    glowBoost = (1 - flashT) * 0.8;
-                } else if (progress < 0.4) {
-                    glowIntensity = 1.4;
-                    glowBoost = 0.25;
+                if (progress < 0.1) {
+                    // BRIGHT flash at impact
+                    const flashT = progress / 0.1;
+                    glowIntensity = 1.0 + (1 - flashT * flashT) * 2.0;
+                    glowBoost = (1 - flashT) * 1.0;
+                } else if (progress < 0.3) {
+                    // Sustained glow during trauma
+                    glowIntensity = 1.5 - (progress - 0.1) / 0.2 * 0.3;
+                    glowBoost = 0.3;
+                } else {
+                    // Fade
+                    const fadeT = (progress - 0.3) / 0.7;
+                    glowIntensity = 1.2 - fadeT * 0.2;
+                    glowBoost = 0.3 * (1 - fadeT);
                 }
 
-                // Direction to normalized vector mapping for shader deformation
+                // ─────────────────────────────────────────────────────────────────
+                // SHADER DEFORMATION - Localized vertex displacement
+                // ─────────────────────────────────────────────────────────────────
                 const directionVectors = {
                     left:  [-1, 0, 0],
                     right: [1, 0, 0],
@@ -367,25 +360,25 @@ export function createOofGesture(direction) {
                     down:  [0, -1, 0]
                 };
 
-                // Use camera-relative so directions work regardless of model rotation
+                // Deformation strength follows crater depth but with ripple overlay
+                const deformStrength = (craterDepth * 0.8 + rippleIntensity * 0.4) * intensity;
+
                 return {
                     cameraRelativePosition: [posX, posY, posZ],
                     cameraRelativeRotation: [rotX, rotY, rotZ],
-                    scale,  // Keep for overall squash effect (now supplemented by shader)
+                    scale: [scaleX, scaleY, scaleZ],
                     glowIntensity,
                     glowBoost,
 
-                    // Localized vertex deformation via shader
-                    // Creates realistic gut-punch where vertices near impact compress
-                    // while distant vertices remain unaffected
+                    // Shader-based vertex deformation for localized jello ripple
                     deformation: {
                         enabled: true,
-                        type: 'elastic',  // Jello-like wobble during recovery
-                        strength: Math.max(squishAmount * 0.7, 0) * intensity,  // Use squish for strength
+                        type: 'elastic',  // Jello-like ripple with wobble
+                        strength: Math.max(deformStrength, 0),
                         phase: progress,
                         direction: directionVectors[dir] || [0, 0, 1],
-                        impactPoint: [0, 0, 0],  // Center of mesh
-                        falloffRadius: 0.6  // Affects 60% of mesh from center
+                        impactPoint: impactPointLocal,
+                        falloffRadius: 0.7  // Affects 70% of mesh from impact
                     }
                 };
             }
