@@ -1545,7 +1545,27 @@ export class Core3DManager {
 
         // Update all behaviors (rotation, righting, facing) via controller
         // This handles: ambient spin, self-stabilization, and tidal lock for moon
-        this.behaviorController.update(deltaTime, this.baseEuler);
+        // Apply freeze from previous frame's hold gesture (reduces rotation speed)
+        const freezeRotation = this._pendingFreezeRotation || 0;
+        const freezeWobble = this._pendingFreezeWobble || 0;
+
+        // Temporarily reduce rotation speed if frozen
+        if (freezeRotation > 0) {
+            // Scale delta time by freeze amount (0 = normal, 1 = frozen)
+            const frozenDeltaTime = deltaTime * (1.0 - freezeRotation);
+            this.behaviorController.update(frozenDeltaTime, this.baseEuler);
+        } else {
+            this.behaviorController.update(deltaTime, this.baseEuler);
+        }
+
+        // Set wobble enabled based on freeze (temporarily disable during hold)
+        if (freezeWobble > 0.5 && this.wobbleEnabled) {
+            this.behaviorController.setWobbleEnabled(false);
+            this._wobbleWasFrozen = true;
+        } else if (this._wobbleWasFrozen && freezeWobble < 0.5) {
+            this.behaviorController.setWobbleEnabled(this.wobbleEnabled);
+            this._wobbleWasFrozen = false;
+        }
 
         // HARD LIMIT: Clamp pitch and roll to prevent lateral/dolphin tipping
         // No emotion should ever tip more than ~20 degrees from upright
@@ -1612,7 +1632,10 @@ export class Core3DManager {
         }
 
         // Target: 30% for absolute gestures, 100% for accent-only or no gestures
-        const grooveBlendTarget = hasAbsolute ? 0.3 : 1.0;
+        // Apply freeze modifier: freezeGroove reduces groove animation
+        const freezeGroove = blended.freezeGroove || 0;
+        const freezeMultiplier = 1.0 - freezeGroove; // 1 = normal, 0 = frozen
+        const grooveBlendTarget = (hasAbsolute ? 0.3 : 1.0) * freezeMultiplier;
 
         // Smooth transition (lerp toward target)
         // Use same smoothing speed as groove for consistent feel
@@ -1729,6 +1752,17 @@ export class Core3DManager {
             const scaleMult = hasAbsolute ? rhythmMod.scaleMultiplier : 1.0;
 
             this.scale = blended.scale * grooveScaleEffect * scaleMult * scaleBoost;
+            // Non-uniform scale (squash/stretch) - apply rhythm multipliers
+            if (blended.nonUniformScale) {
+                const totalMult = grooveScaleEffect * scaleMult * scaleBoost;
+                this.nonUniformScale = [
+                    blended.nonUniformScale[0] * totalMult,
+                    blended.nonUniformScale[1] * totalMult,
+                    blended.nonUniformScale[2] * totalMult
+                ];
+            } else {
+                this.nonUniformScale = null;
+            }
         } else {
             // No rhythm - apply gestures + camera-relative with smoothed boosts
             // (Camera-relative rotation is applied via cameraRoll in renderer)
@@ -1743,6 +1777,16 @@ export class Core3DManager {
                 blended.rotation[2] + rotBoost[2]
             ];
             this.scale = blended.scale * scaleBoost;
+            // Non-uniform scale (squash/stretch) - apply scale boost
+            if (blended.nonUniformScale) {
+                this.nonUniformScale = [
+                    blended.nonUniformScale[0] * scaleBoost,
+                    blended.nonUniformScale[1] * scaleBoost,
+                    blended.nonUniformScale[2] * scaleBoost
+                ];
+            } else {
+                this.nonUniformScale = null;
+            }
         }
 
         // Only apply blended glow if no manual override is active
@@ -1758,6 +1802,11 @@ export class Core3DManager {
         }
         this.gestureQuaternion = blended.gestureQuaternion;
         this.glowBoost = blended.glowBoost || 0; // For isolated glow layer
+
+        // Store freeze values for next frame's behavior controller update
+        // (Behavior controller runs before blending, so we use previous frame's freeze)
+        this._pendingFreezeRotation = blended.freezeRotation || 0;
+        this._pendingFreezeWobble = blended.freezeWobble || 0;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // MOTION DEBUG LOGGING - Track all sources of movement
@@ -1811,7 +1860,16 @@ export class Core3DManager {
         const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'rough';
         const blinkScale = (blinkState.isBlinking && shouldApplyBlinkScale) ? blinkState.scale[1] : 1.0;
         const crystalShellScale = this.crystalShellBaseScale || 2.0;  // Default shell size
-        const finalScale = this.scale * morphScale * breathScale * blinkScale * crystalShellScale;
+        const scaleMultipliers = morphScale * breathScale * blinkScale * crystalShellScale;
+        const finalScale = this.scale * scaleMultipliers;
+
+        // Calculate final non-uniform scale (for squash/stretch effects)
+        // Applies same multipliers to each axis of the non-uniform scale
+        const finalNonUniformScale = this.nonUniformScale ? [
+            this.nonUniformScale[0] * scaleMultipliers,
+            this.nonUniformScale[1] * scaleMultipliers,
+            this.nonUniformScale[2] * scaleMultipliers
+        ] : null;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // PARTICLE SYSTEM UPDATE & RENDERING (Orchestrated)
@@ -2016,6 +2074,7 @@ export class Core3DManager {
             position: this.position,
             rotation: this.rotation,
             scale: finalScale,
+            nonUniformScale: finalNonUniformScale,  // [x, y, z] for squash/stretch, null for uniform
             glowColor: this.glowColor,
             glowColorHex: this.glowColorHex,  // For bloom luminance normalization
             glowIntensity: effectiveGlowIntensity,

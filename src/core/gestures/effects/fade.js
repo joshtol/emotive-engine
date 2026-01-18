@@ -161,15 +161,18 @@ export default {
             // Apply easing for smoother visual
             const easedOpacity = opacity * opacity * (3 - 2 * opacity); // smoothstep
 
+            // FADE THE INNER GLOW:
+            // glowIntensity: 0 = glow completely off, 1 = full intensity
+            // This multiplies the base glow, so 0 turns it completely off
+            // Scale also shrinks slightly for visual effect
+            const scale = 0.85 + easedOpacity * 0.15; // Shrink to 85% when faded
+
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
-                scale: 1.0,
-                // Control multiple visibility channels
-                opacity: easedOpacity,
-                glowIntensity: easedOpacity,
-                // Slight scale reduction when fading for depth
-                scaleMultiplier: 0.95 + easedOpacity * 0.05
+                scale,
+                // Fade the inner glow to 0 and back
+                glowIntensity: easedOpacity
             };
         }
     }

@@ -7,7 +7,7 @@
  *
  * @fileoverview Contract gesture - particles move inward toward center
  * @author Emotive Engine Team
- * @module gestures/effects/contract
+ * @module gestures/motions/contract
  * @complexity ⭐⭐ Intermediate
  * @audience Good examples for creating custom gesture effects
  */

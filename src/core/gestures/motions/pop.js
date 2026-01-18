@@ -34,13 +34,28 @@ export default {
         isAccent: true,
         evaluate(progress, motion) {
             const strength = motion?.strength || 1.0;
-            const envelope = Math.sin(progress * Math.PI);
 
+            // Sharp attack, quick release - like a beat hit
+            let envelope;
+            if (progress < 0.15) {
+                // Fast attack
+                envelope = progress / 0.15;
+                envelope = 1 - Math.pow(1 - envelope, 3); // Ease out for punch
+            } else {
+                // Quick decay
+                envelope = 1 - ((progress - 0.15) / 0.85);
+                envelope = Math.pow(envelope, 2); // Ease in for snap back
+            }
+
+            // Pop: quick scale pulse with small bounce and glow
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0,
-                scaleBoost: 1.0 + envelope * 0.025 * strength
+                scaleBoost: 1.0 + envelope * 0.08 * strength,
+                glowBoost: envelope * 0.3 * strength,
+                // Slight upward pop
+                positionBoost: [0, envelope * 0.02 * strength, 0]
             };
         }
     }

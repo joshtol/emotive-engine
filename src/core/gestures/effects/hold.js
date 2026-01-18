@@ -20,8 +20,11 @@ export default {
     
     // Default configuration
     config: {
-        holdStrength: 0.95,  // Position retention strength
-        allowDrift: false    // Enable slight movement
+        duration: 2000,                                    // Legacy fallback (2 seconds)
+        musicalDuration: { musical: true, bars: 1 },       // 1 bar (4 beats)
+        holdStrength: 0.95,                                // Position retention strength
+        allowDrift: false,                                 // Enable slight movement
+        strength: 1.0                                      // Freeze strength (1 = full freeze)
     },
     
     // Rhythm configuration - synchronized pause effects following musical structure
@@ -151,19 +154,56 @@ export default {
 
     /**
      * 3D core transformation for hold gesture
-     * Static neutral state - no movement
+     * PAUSE BUTTON - freezes all rotation, wobble, and groove with smooth easing
      * @param {number} progress - Gesture progress (0-1)
      * @param {Object} motion - Gesture configuration
-     * @returns {Object} 3D transformation { position: [x,y,z], rotation: [x,y,z], scale: number, glowIntensity: number }
+     * @returns {Object} 3D transformation with freeze signal
      */
     '3d': {
-        evaluate(_progress, _motion) {
-            // Completely static - neutral position
+        evaluate(progress, motion) {
+            const config = motion.config || this.config || {};
+
+            // HOLD: Pause button effect - freeze all animation smoothly
+            // Phase 1 (0-0.15): Ease into freeze
+            // Phase 2 (0.15-0.85): Full freeze
+            // Phase 3 (0.85-1.0): Ease out of freeze
+
+            let freezeAmount = 0;
+            let glowDim = 1.0;
+
+            if (progress < 0.15) {
+                // Ease into freeze - smooth ramp up
+                const t = progress / 0.15;
+                // Smoothstep for musical easing
+                freezeAmount = t * t * (3 - 2 * t);
+                // Dim glow slightly as we freeze (like pausing playback)
+                glowDim = 1.0 - freezeAmount * 0.2;
+            } else if (progress < 0.85) {
+                // Full freeze - completely frozen
+                freezeAmount = 1.0;
+                glowDim = 0.8;
+            } else {
+                // Ease out of freeze - smooth return
+                const t = (progress - 0.85) / 0.15;
+                // Inverse smoothstep
+                freezeAmount = 1.0 - t * t * (3 - 2 * t);
+                glowDim = 0.8 + t * 0.2;
+            }
+
+            // Apply strength modifier
+            const strength = config.strength || 1.0;
+            freezeAmount *= strength;
+
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0,
-                glowIntensity: 1.0
+                glowIntensity: glowDim,
+                // New freeze signals - 0 = normal animation, 1 = fully frozen
+                freezeRotation: freezeAmount,      // Stops rotation behavior
+                freezeWobble: freezeAmount,        // Stops episodic wobble
+                freezeGroove: freezeAmount,        // Stops rhythm groove
+                freezeParticles: freezeAmount      // Stops particle motion
             };
         }
     }

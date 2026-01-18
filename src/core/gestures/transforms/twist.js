@@ -206,53 +206,44 @@ export default {
          * @returns {Object} Transform with position, rotation, scale
          */
         evaluate(progress, motion) {
-            const {particle} = motion;
-            if (!particle || !particle.gestureData?.twist) {
-                return {
-                    position: [0, 0, 0],
-                    rotation: [0, 0, 0],
-                    scale: 1.0
-                };
-            }
-
-            const data = particle.gestureData.twist;
-            const config = motion.config || {};
-            const strength = config.strength || 1.0;
+            const config = motion.config || this.config || {};
+            const strength = config.strength || 0.8;
 
             // Fade-out envelope to return to origin at end
-            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0; // Fade last 15%
+            const returnEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
 
-            // Calculate twist oscillation
-            const twistProgress = progress * (config.twistFrequency || 2) * Math.PI * 2;
+            // Calculate twist oscillation - 2 full twist cycles by default
+            const twistFrequency = config.twistFrequency || 2;
+            const twistProgress = progress * twistFrequency * Math.PI * 2;
             const twistAmount = Math.sin(twistProgress) * strength * returnEnvelope;
 
-            // Y-axis rotation (primary twist axis)
-            const rotationAngle = (config.rotationAngle || 45) * Math.PI / 180;
-            const yRotation = twistAmount * rotationAngle;
+            // Y-axis rotation (primary twist axis) - convert degrees to radians
+            const rotationAngleDeg = config.rotationAngle || 45;
+            const rotationAngleRad = rotationAngleDeg * Math.PI / 180;
+            const yRotation = twistAmount * rotationAngleRad;
 
-            // Helical motion: X and Z rotate around center as particle twists
-            const helixAngle = data.startAngle + yRotation;
-            const helixRadius = (config.contractionFactor || 0.8) * data.startDistance;
+            // Small X position offset for side-to-side sway during twist
+            const xOffset = Math.sin(twistProgress) * 0.05 * strength * returnEnvelope;
 
-            // Calculate helical XZ offset - fades to 0 at end
-            // PIXEL_TO_3D converts pixel distances to 3D world coordinates
-            const PIXEL_TO_3D = 0.01;
-            const xOffset = Math.cos(helixAngle) * helixRadius * 0.1 * returnEnvelope * PIXEL_TO_3D;
-            const zOffset = Math.sin(helixAngle) * helixRadius * 0.1 * returnEnvelope * PIXEL_TO_3D;
+            // Slight bounce on Y during twist
+            const yOffset = Math.abs(Math.sin(twistProgress * 2)) * 0.02 * strength * returnEnvelope;
 
-            // X and Z rotation for additional twist dynamics - fades to 0
-            const xRotation = Math.cos(twistProgress) * 0.1 * strength * returnEnvelope;
-            const zRotation = Math.sin(twistProgress * 0.5) * 0.15 * strength * returnEnvelope;
+            // X and Z rotation for additional twist dynamics
+            const xRotation = Math.cos(twistProgress) * 0.08 * strength * returnEnvelope;
+            const zRotation = Math.sin(twistProgress * 0.5) * 0.12 * strength * returnEnvelope;
 
-            // Scale contracts during twist - returns to 1.0 at end
+            // Scale contracts during twist peaks
             const contractionFactor = config.contractionFactor || 0.8;
             const currentContraction = 1 - ((1 - contractionFactor) * Math.abs(twistAmount));
-            const scale = currentContraction;
+
+            // Glow pulses with twist
+            const glowIntensity = 1.0 + Math.abs(twistAmount) * 0.3;
 
             return {
-                position: [xOffset, 0, zOffset], // Use offsets only for twist wobble, not particle pos
+                position: [xOffset, yOffset, 0],
                 rotation: [xRotation, yRotation, zRotation],
-                scale
+                scale: currentContraction,
+                glowIntensity
             };
         }
     }

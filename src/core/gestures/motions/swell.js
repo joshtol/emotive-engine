@@ -35,17 +35,29 @@ export default {
         evaluate(progress, motion) {
             const strength = motion?.strength || 1.0;
 
-            // Smooth bell curve envelope
-            const envelope = Math.sin(progress * Math.PI);
-            // Slight ease-out for organic feel
-            const eased = 1 - Math.pow(1 - envelope, 2);
+            // Swell: slow build to peak, then gradual release
+            // Like taking a deep breath and expanding
+            let envelope;
+            if (progress < 0.6) {
+                // Slow build (60% of time for rising)
+                const buildT = progress / 0.6;
+                envelope = buildT * buildT; // Ease in - gradual buildup
+            } else {
+                // Gradual release (40% of time for falling)
+                const releaseT = (progress - 0.6) / 0.4;
+                envelope = 1 - (releaseT * releaseT); // Ease out - gentle release
+            }
+
+            // Rise up slightly during swell
+            const rise = Math.sin(progress * Math.PI) * 0.03 * strength;
 
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0,
-                scaleBoost: 1.0 + eased * 0.02 * strength,
-                glowBoost: eased * 0.15 * strength
+                scaleBoost: 1.0 + envelope * 0.1 * strength,
+                glowBoost: envelope * 0.4 * strength,
+                positionBoost: [0, rise, 0]
             };
         }
     }

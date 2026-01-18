@@ -297,37 +297,96 @@
             background: rgba(var(--accent-rgb), 0.3);
         }
 
-        /* Gesture description tooltip */
+        /* Gesture description tooltip - positioned inside center-content like camera hint */
         .gesture-tooltip {
-            position: fixed;
-            background: rgba(0, 0, 0, 0.9);
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid rgba(var(--accent-rgb), 0.5);
             border-radius: 8px;
-            padding: 10px 14px;
-            max-width: 250px;
+            padding: 10px 16px;
             font-size: 12px;
             line-height: 1.4;
             pointer-events: none;
             z-index: 1000;
             opacity: 0;
             transition: opacity 0.15s;
+            text-align: center;
+            white-space: nowrap;
         }
 
         .gesture-tooltip.visible {
             opacity: 1;
         }
 
+        /* Hide camera hint when tooltip is visible */
+        body:has(.gesture-tooltip.visible) .camera-hint {
+            opacity: 0 !important;
+            animation: none !important;
+        }
+
         .gesture-tooltip .tooltip-name {
             font-weight: bold;
             color: var(--accent);
-            margin-bottom: 4px;
         }
 
         .gesture-tooltip .tooltip-type {
             font-size: 10px;
             text-transform: uppercase;
             opacity: 0.6;
-            margin-bottom: 6px;
+            margin-left: 8px;
+        }
+
+        .gesture-tooltip .tooltip-desc {
+            opacity: 0.8;
+            margin-left: 8px;
+        }
+
+        /* Info box gesture display - hidden by default, takes over permanently after first gesture */
+        .info-gesture {
+            display: none;
+        }
+
+        .info-box.showing-gesture .info-default {
+            display: none;
+        }
+
+        .info-box.showing-gesture .info-gesture {
+            display: block;
+        }
+
+        /* Color change when showing gesture info */
+        .info-box.showing-gesture {
+            background: rgba(var(--accent-rgb), 0.15);
+            border-color: rgba(var(--accent-rgb), 0.4);
+        }
+
+        .info-gesture .gesture-name {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .info-gesture .gesture-type {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-left: 6px;
+        }
+
+        .info-gesture .gesture-desc {
+            display: block;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        /* Mobile: use info-box for tooltip instead of overlay */
+        @media (max-width: 1000px) {
+            /* Hide the floating tooltip on mobile */
+            .gesture-tooltip {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -397,10 +456,13 @@
             </div>
         </div>
 
-        <div class="section">
-            <div class="info-box">
-                <strong>Gesture Explorer</strong><br>
-                Dynamically loaded from the engine. Add new gestures to the codebase and they appear here automatically!
+        <div class="section" id="info-section">
+            <div class="info-box" id="info-box">
+                <div class="info-default">
+                    <strong>Gesture Explorer</strong><br>
+                    Dynamically loaded from the engine. Add new gestures to the codebase and they appear here automatically!
+                </div>
+                <div class="info-gesture" id="info-gesture"></div>
             </div>
         </div>
     </div>
@@ -409,6 +471,12 @@
     <div class="center-content">
         <div id="animation-container"></div>
         <div class="camera-hint">Drag to rotate | Scroll to zoom | Click gestures to preview</div>
+        <!-- Tooltip element - shows at bottom center of animation frame -->
+        <div class="gesture-tooltip" id="gesture-tooltip">
+            <span class="tooltip-name"></span>
+            <span class="tooltip-type"></span>
+            <span class="tooltip-desc"></span>
+        </div>
     </div>
 
     <!-- RIGHT MENU -->
@@ -465,13 +533,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Tooltip element -->
-    <div class="gesture-tooltip" id="gesture-tooltip">
-        <div class="tooltip-name"></div>
-        <div class="tooltip-type"></div>
-        <div class="tooltip-desc"></div>
     </div>
 
     <script type="module">
@@ -557,6 +618,8 @@
         const statVisible = document.getElementById('stat-visible');
         const recentContainer = document.getElementById('recent-gestures');
         const tooltip = document.getElementById('gesture-tooltip');
+        const infoBox = document.getElementById('info-box');
+        const infoGesture = document.getElementById('info-gesture');
 
         /**
          * Create a gesture button element
@@ -596,7 +659,8 @@
             };
 
             allGestures.forEach(gesture => {
-                const category = typeMapping[gesture.type] || 'effect';
+                // Use category field (from array membership) instead of type (behavior)
+                const category = gesture.category || typeMapping[gesture.type] || 'effect';
                 if (grouped[category]) {
                     grouped[category].push(gesture);
                 }
@@ -710,36 +774,31 @@
         }
 
         /**
-         * Show tooltip for gesture
+         * Show tooltip for gesture - desktop: floating tooltip, mobile: info-box
          */
-        function showTooltip(btn, x, y) {
+        function showTooltip(btn) {
             const name = btn.dataset.gesture;
             const gesture = allGestures.find(g => g.name === name);
             if (!gesture) return;
 
+            // Desktop: floating tooltip
             tooltip.querySelector('.tooltip-name').textContent = `${gesture.emoji || '✨'} ${gesture.name}`;
-            tooltip.querySelector('.tooltip-type').textContent = gesture.type;
-            tooltip.querySelector('.tooltip-desc').textContent = gesture.description || 'No description available';
-
-            // Position tooltip
-            const tooltipRect = tooltip.getBoundingClientRect();
-            let left = x + 15;
-            let top = y + 15;
-
-            // Keep in viewport
-            if (left + 260 > window.innerWidth) {
-                left = x - 260;
-            }
-            if (top + 100 > window.innerHeight) {
-                top = y - 100;
-            }
-
-            tooltip.style.left = `${left}px`;
-            tooltip.style.top = `${top}px`;
+            tooltip.querySelector('.tooltip-type').textContent = `[${gesture.type}]`;
+            tooltip.querySelector('.tooltip-desc').textContent = `— ${gesture.description || 'No description'}`;
             tooltip.classList.add('visible');
+
+            // Mobile: info-box replacement
+            infoGesture.innerHTML = `
+                <span class="gesture-name">${gesture.emoji || '✨'} ${gesture.name}</span>
+                <span class="gesture-type">[${gesture.type}]</span>
+                <span class="gesture-desc">${gesture.description || 'No description'}</span>
+            `;
+            infoBox.classList.add('showing-gesture');
         }
 
         function hideTooltip() {
+            // Only hide the floating tooltip (desktop)
+            // Info-box keeps showing the last gesture permanently
             tooltip.classList.remove('visible');
         }
 
@@ -752,6 +811,10 @@
             const btn = e.target.closest('[data-gesture]');
             if (!btn) return;
 
+            // Update tooltip FIRST so user sees what they clicked
+            showTooltip(btn);
+
+            // Then fire the gesture
             const gestureName = btn.dataset.gesture;
             mascot.express(gestureName);
             addToRecent(gestureName);
@@ -765,14 +828,17 @@
             checkbox.addEventListener('change', filterGestures);
         });
 
-        // Tooltip on hover (desktop only)
+        // Tooltip on hover (desktop only) - anchored to button
         let tooltipTimeout;
+        let currentTooltipBtn = null;
+
         document.addEventListener('mouseover', e => {
             const btn = e.target.closest('.gesture-btn');
-            if (btn) {
+            if (btn && btn !== currentTooltipBtn) {
                 clearTimeout(tooltipTimeout);
+                currentTooltipBtn = btn;
                 tooltipTimeout = setTimeout(() => {
-                    showTooltip(btn, e.clientX, e.clientY);
+                    showTooltip(btn);
                 }, 400);
             }
         });
@@ -781,16 +847,8 @@
             const btn = e.target.closest('.gesture-btn');
             if (btn) {
                 clearTimeout(tooltipTimeout);
+                currentTooltipBtn = null;
                 hideTooltip();
-            }
-        });
-
-        document.addEventListener('mousemove', e => {
-            if (tooltip.classList.contains('visible')) {
-                const btn = e.target.closest('.gesture-btn');
-                if (btn) {
-                    showTooltip(btn, e.clientX, e.clientY);
-                }
             }
         });
 

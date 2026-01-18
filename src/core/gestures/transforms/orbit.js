@@ -7,7 +7,7 @@
  *
  * @fileoverview 3D orbital gesture - particles orbit with dynamic z-depth changes
  * @author Emotive Engine Team
- * @module gestures/motions/orbit
+ * @module gestures/transforms/orbit
  * @complexity ⭐⭐⭐ Intermediate-Advanced
  * @audience Transform patterns for complex animations
  *

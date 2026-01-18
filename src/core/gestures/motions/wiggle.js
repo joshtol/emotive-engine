@@ -128,21 +128,40 @@ export default {
             const strength = motion.strength || 1.0;
             const amplitude = config.amplitude || 15; // pixels
 
-            // Fast decay
-            const decay = Math.pow(1 - progress, 0.6);
-            // Rapid oscillation - left/right shimmy
-            const osc = Math.sin(progress * Math.PI * 12) * decay;
+            // WIGGLE: Playful rapid oscillation with rotation
+            // Quick wiggly motion that decays
 
-            // Scale amplitude: 15px default → 0.04 horizontal shimmy
+            // Decay envelope - starts strong, fades out
+            const decay = Math.pow(1 - progress, 0.5);
+
+            // Primary oscillation - rapid back and forth
+            const freq = 14; // Fast wiggle frequency
+            const osc = Math.sin(progress * Math.PI * freq) * decay;
+
+            // Secondary oscillation for natural feel
+            const osc2 = Math.cos(progress * Math.PI * freq * 0.7) * decay * 0.4;
+
+            // Scale amplitude
             const ampScale = (amplitude / 15) * strength;
-            const horizontal = osc * 0.04 * ampScale;
+
+            // Horizontal shimmy (more pronounced)
+            const horizontal = osc * 0.08 * ampScale;
+
+            // Z-rotation for wiggle body feel
+            const rotZ = osc * 0.15 * strength;
+
+            // Slight vertical bounce
+            const vertical = Math.abs(osc2) * 0.02 * ampScale;
+
+            // Playful scale pulse
+            const scaleOsc = 1.0 + Math.abs(osc) * 0.05;
 
             return {
-                // X in camera-relative = horizontal shimmy (always side-to-side in view)
-                cameraRelativePosition: [horizontal, 0, 0],
-                // Slight scale pulse
-                scale: 1.0 + Math.abs(osc) * 0.03,
-                glowIntensity: 1.0 + Math.abs(osc) * 0.1
+                // Horizontal shimmy in camera space
+                cameraRelativePosition: [horizontal, vertical, 0],
+                cameraRelativeRotation: [0, 0, rotZ],
+                scale: scaleOsc,
+                glowIntensity: 1.0 + Math.abs(osc) * 0.2
             };
         }
     }

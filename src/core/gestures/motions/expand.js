@@ -7,7 +7,7 @@
  *
  * @fileoverview Expand gesture - particles move outward from center
  * @author Emotive Engine Team
- * @module gestures/effects/expand
+ * @module gestures/motions/expand
  * @complexity ⭐⭐ Intermediate
  * @audience Good examples for creating custom gesture effects
  */

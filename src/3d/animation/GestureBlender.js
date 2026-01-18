@@ -57,7 +57,8 @@ export class GestureBlender {
             // ABSOLUTE channels (create motion)
             position: [0, 0, 0],                               // Additive channel (world-space)
             rotationQuat: this.accumulatedRotationQuat,        // Multiplicative channel (reused)
-            scale: 1.0,                                        // Multiplicative channel
+            scale: 1.0,                                        // Multiplicative channel (uniform)
+            nonUniformScale: [1.0, 1.0, 1.0],                  // Multiplicative channel [x, y, z] for squash/stretch
             glowIntensity: 1.0,                                // Multiplicative channel
             glowBoost: 0.0,                                    // Additive channel (for glow layer)
 
@@ -75,7 +76,13 @@ export class GestureBlender {
             // Track if we have any accent gestures (affects groove blending behavior)
             hasAccentGestures: false,
             hasAbsoluteGestures: false,
-            hasCameraRelativeGestures: false
+            hasCameraRelativeGestures: false,
+
+            // FREEZE channels (0 = normal, 1 = frozen) - for hold gesture "pause button"
+            freezeRotation: 0,                                     // Stops rotation behavior
+            freezeWobble: 0,                                       // Stops episodic wobble
+            freezeGroove: 0,                                       // Stops rhythm groove
+            freezeParticles: 0                                     // Stops particle motion
         };
 
         // Blend all active animations
@@ -141,9 +148,21 @@ export class GestureBlender {
                     // SCALE: Blend toward 1.0 based on fadeEnvelope
                     // At fadeEnvelope=0, scale contribution is 1.0 (no change)
                     // At fadeEnvelope=1, full gesture scale is applied
+                    // Supports both uniform scale (number) and non-uniform scale (array [x, y, z])
                     if (output.scale !== undefined) {
-                        const scaledValue = 1.0 + (output.scale - 1.0) * fadeEnvelope;
-                        accumulated.scale *= scaledValue;
+                        if (Array.isArray(output.scale)) {
+                            // Non-uniform scale (squash/stretch effects)
+                            const scaledX = 1.0 + (output.scale[0] - 1.0) * fadeEnvelope;
+                            const scaledY = 1.0 + (output.scale[1] - 1.0) * fadeEnvelope;
+                            const scaledZ = 1.0 + (output.scale[2] - 1.0) * fadeEnvelope;
+                            accumulated.nonUniformScale[0] *= scaledX;
+                            accumulated.nonUniformScale[1] *= scaledY;
+                            accumulated.nonUniformScale[2] *= scaledZ;
+                        } else {
+                            // Uniform scale
+                            const scaledValue = 1.0 + (output.scale - 1.0) * fadeEnvelope;
+                            accumulated.scale *= scaledValue;
+                        }
                     }
 
                     // GLOW: Multiplicative blending (glow × pulse)
@@ -201,6 +220,23 @@ export class GestureBlender {
                         accumulated.cameraRelativeRotation[2] += output.cameraRelativeRotation[2] * fadeEnvelope;
                         accumulated.hasCameraRelativeGestures = true;
                     }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // FREEZE CHANNELS (for hold gesture "pause button" effect)
+                    // ═══════════════════════════════════════════════════════════════
+                    // Use MAX blending - strongest freeze wins
+                    if (output.freezeRotation !== undefined) {
+                        accumulated.freezeRotation = Math.max(accumulated.freezeRotation, output.freezeRotation * fadeEnvelope);
+                    }
+                    if (output.freezeWobble !== undefined) {
+                        accumulated.freezeWobble = Math.max(accumulated.freezeWobble, output.freezeWobble * fadeEnvelope);
+                    }
+                    if (output.freezeGroove !== undefined) {
+                        accumulated.freezeGroove = Math.max(accumulated.freezeGroove, output.freezeGroove * fadeEnvelope);
+                    }
+                    if (output.freezeParticles !== undefined) {
+                        accumulated.freezeParticles = Math.max(accumulated.freezeParticles, output.freezeParticles * fadeEnvelope);
+                    }
                 }
             }
         }
@@ -254,11 +290,23 @@ export class GestureBlender {
         const finalScale = baseScale * accumulated.scale;
         const finalGlowIntensity = baseGlowIntensity * accumulated.glowIntensity;
 
+        // Combine uniform and non-uniform scale
+        // If non-uniform scale is used, apply it on top of uniform scale
+        const hasNonUniformScale = accumulated.nonUniformScale[0] !== 1.0 ||
+                                   accumulated.nonUniformScale[1] !== 1.0 ||
+                                   accumulated.nonUniformScale[2] !== 1.0;
+        const finalNonUniformScale = hasNonUniformScale ? [
+            finalScale * accumulated.nonUniformScale[0],
+            finalScale * accumulated.nonUniformScale[1],
+            finalScale * accumulated.nonUniformScale[2]
+        ] : null;
+
         return {
             // Absolute gesture outputs
             position: accumulated.position,
             rotation: finalRotation,
             scale: finalScale,
+            nonUniformScale: finalNonUniformScale,  // [x, y, z] or null for uniform
             glowIntensity: finalGlowIntensity,
             glowBoost: accumulated.glowBoost,
 
@@ -275,6 +323,12 @@ export class GestureBlender {
             hasAccentGestures: accumulated.hasAccentGestures,
             hasAbsoluteGestures: accumulated.hasAbsoluteGestures,
             hasCameraRelativeGestures: accumulated.hasCameraRelativeGestures,
+
+            // Freeze channels (0 = normal, 1 = frozen) - for hold gesture
+            freezeRotation: accumulated.freezeRotation,
+            freezeWobble: accumulated.freezeWobble,
+            freezeGroove: accumulated.freezeGroove,
+            freezeParticles: accumulated.freezeParticles,
 
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };

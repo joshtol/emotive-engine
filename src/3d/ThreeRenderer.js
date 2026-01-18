@@ -1268,7 +1268,8 @@ export class ThreeRenderer {
      * @param {Object} params - Render parameters
      * @param {Array<number>} [params.position=[0,0,0]] - Core mesh position [x, y, z]
      * @param {Array<number>} [params.rotation=[0,0,0]] - Core mesh rotation [x, y, z]
-     * @param {number} [params.scale=1.0] - Core mesh scale
+     * @param {number} [params.scale=1.0] - Core mesh scale (uniform)
+     * @param {Array<number>|null} [params.nonUniformScale=null] - Non-uniform scale [x, y, z] for squash/stretch
      * @param {Array<number>} [params.glowColor=[1,1,1]] - Glow color RGB [r, g, b]
      * @param {number} [params.glowIntensity=1.0] - Glow intensity
      * @param {string} [params.glowColorHex=null] - Hex color for luminance normalization
@@ -1348,6 +1349,7 @@ export class ThreeRenderer {
             position = [0, 0, 0],
             rotation = [0, 0, 0],
             scale = 1.0,
+            nonUniformScale = null,  // [x, y, z] for squash/stretch effects, null for uniform scale
             glowColor = [1, 1, 1],
             glowIntensity = 1.0,
             // glowColorHex - available for luminance normalization (currently unused)
@@ -1408,7 +1410,12 @@ export class ThreeRenderer {
                 this.coreMesh.rotation.setFromQuaternion(this._meshQuat);
             }
 
-            this.coreMesh.scale.setScalar(scale);
+            // Apply scale: use non-uniform scale for squash/stretch, otherwise uniform scale
+            if (nonUniformScale) {
+                this.coreMesh.scale.set(nonUniformScale[0], nonUniformScale[1], nonUniformScale[2]);
+            } else {
+                this.coreMesh.scale.setScalar(scale);
+            }
 
             // Update solar eclipse effects after transforms are applied (synchronized movement)
             // CRITICAL: Eclipse update must happen AFTER position/rotation/scale are applied to coreMesh
