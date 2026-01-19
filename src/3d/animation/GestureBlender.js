@@ -85,7 +85,10 @@ export class GestureBlender {
             freezeParticles: 0,                                    // Stops particle motion
 
             // DEFORMATION channel - localized vertex displacement for impacts
-            deformation: null                                      // {enabled, type, strength, phase, direction, impactPoint, falloffRadius}
+            deformation: null,                                     // {enabled, type, strength, phase, direction, impactPoint, falloffRadius}
+
+            // SHATTER channel - geometry fragmentation
+            shatter: null                                          // {enabled, impactPoint, intensity, variant}
         };
 
         // Blend all active animations
@@ -261,6 +264,18 @@ export class GestureBlender {
                             accumulated.deformation = { ...d };
                         }
                     }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // SHATTER CHANNEL (for geometry fragmentation)
+                    // ═══════════════════════════════════════════════════════════════
+                    // Shatter is a one-shot trigger, don't blend - first trigger wins.
+                    // impactPoint is in CAMERA-RELATIVE space (like deformation).
+                    // Transformed to mesh-local space in Core3DManager.
+                    if (output.shatter && output.shatter.enabled) {
+                        if (!accumulated.shatter) {
+                            accumulated.shatter = { ...output.shatter };
+                        }
+                    }
                 }
             }
         }
@@ -356,6 +371,9 @@ export class GestureBlender {
 
             // Deformation channel for localized vertex displacement
             deformation: accumulated.deformation,
+
+            // Shatter channel for geometry fragmentation
+            shatter: accumulated.shatter,
 
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };

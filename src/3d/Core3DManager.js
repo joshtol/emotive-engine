@@ -40,6 +40,7 @@ import { AnimationManager } from './managers/AnimationManager.js';
 import { EffectManager } from './managers/EffectManager.js';
 import { BehaviorController } from './managers/BehaviorController.js';
 import { BreathingPhaseManager } from './managers/BreathingPhaseManager.js';
+import { ShatterSystem } from './effects/shatter/ShatterSystem.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -384,6 +385,19 @@ export class Core3DManager {
             customMaterial: this.customMaterial,
             sunRadius
         });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SHATTER SYSTEM INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Runtime geometry fracturing for dramatic storytelling effects
+        this.shatterSystem = new ShatterSystem({
+            scene: this.renderer.scene,
+            maxShards: 50,
+            shardLifetime: 2000,
+            enableReassembly: true,
+            autoRestore: true
+        });
+        this._pendingShatter = null;
 
         // Note: Virtual particle pool is now managed by AnimationManager
 
@@ -1884,6 +1898,57 @@ export class Core3DManager {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // SHATTER CHANNEL HANDLING - Geometry fragmentation
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Transform impact point from camera-relative to mesh-local space (same as deformation)
+        // Then trigger the shatter system
+        if (blended.shatter && blended.shatter.enabled && this.shatterSystem.isIdle()) {
+            const s = blended.shatter;
+            const ip = s.impactPoint || [0, 0, 0.4];
+
+            // Transform impact point from camera-relative to world space
+            let impactPoint = new THREE.Vector3(ip[0], ip[1], ip[2]);
+
+            if (this.renderer?.camera && this.renderer?.coreMesh) {
+                const cam = this.renderer.camera;
+                const mesh = this.renderer.coreMesh;
+
+                // Get camera basis vectors
+                const camRight = new THREE.Vector3();
+                const camUp = new THREE.Vector3();
+                const camForward = new THREE.Vector3();
+                cam.getWorldDirection(camForward);
+                camRight.crossVectors(cam.up, camForward).normalize();
+                camUp.crossVectors(camForward, camRight).normalize();
+
+                // Transform to world space
+                impactPoint = new THREE.Vector3()
+                    .addScaledVector(camRight, ip[0])
+                    .addScaledVector(camUp, ip[1])
+                    .addScaledVector(camForward, -ip[2]); // Z toward camera = -forward
+
+                // Add mesh position
+                impactPoint.add(mesh.position);
+
+                // Set targets for the shatter system
+                this.shatterSystem.setTargets(mesh, this.crystalSoul?.soulMesh || null);
+            }
+
+            // Trigger shatter
+            this.shatterSystem.shatter(this.renderer.coreMesh, {
+                impactPoint,
+                impactDirection: new THREE.Vector3(0, 0, -1),
+                intensity: s.intensity || 1.0,
+                revealInner: true
+            });
+        }
+
+        // Update shatter system each frame
+        if (this.shatterSystem) {
+            this.shatterSystem.update(deltaTime);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // MOTION DEBUG LOGGING - Track all sources of movement
         // Only logs when debugMotionLogging is enabled (e.g., when LLM interpreter is active)
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2447,6 +2512,12 @@ export class Core3DManager {
             }
             this.particleOrchestrator.destroy();
             this.particleOrchestrator = null;
+        }
+
+        // Clean up shatter system
+        if (this.shatterSystem) {
+            this.shatterSystem.dispose();
+            this.shatterSystem = null;
         }
 
         // Clean up effect manager (handles eclipse and crystal soul disposal)

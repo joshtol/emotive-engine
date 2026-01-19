@@ -159,6 +159,11 @@ const oofFront = createOofGesture('front');
 const oofBack = createOofGesture('back');
 const oofUp = createOofGesture('up');
 const oofDown = createOofGesture('down');
+// Geometry shatter gestures (actual mesh fragmentation, 3D only)
+import { createShatterGesture } from './transforms/shatterFactory.js';
+const shatterMesh = createShatterGesture('default');
+const shatterExplosive = createShatterGesture('explosive');
+const shatterCrumble = createShatterGesture('crumble');
 // New transform gestures - intense emotions
 import rage from './transforms/rage.js';
 import fury from './transforms/fury.js';
@@ -535,7 +540,11 @@ const TRANSFORM_GESTURES = [
     rushUp,
     rushDown,
     // Extreme squash
-    pancake
+    pancake,
+    // Geometry shatter gestures (3D mesh fragmentation)
+    shatterMesh,
+    shatterExplosive,
+    shatterCrumble
 ];
 
 const EFFECT_GESTURES = [
