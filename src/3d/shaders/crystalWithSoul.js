@@ -18,10 +18,31 @@
  * - Strong fresnel effect at edges
  * - Inner glow diffuses through the crystal body
  * - Subtle surface texture variation
+ *
+ * ## Shader Utilities
+ *
+ * Uses modular GLSL utilities for:
+ * - **blendModes.js**: Photoshop-style blend modes for layer compositing
+ * - **subsurfaceScattering.js**: Physically-based SSS for light transmission
+ * - **deformation.js**: Localized vertex displacement for impact effects
+ *
+ * ## Deformation System
+ *
+ * The deformation module provides localized "dent" effects for punch impacts:
+ * - Vertex shader: `calculateDeformation(position)` displaces vertices inward
+ * - Fragment shader: `calculateImpactGlow(fragPos, color)` adds bright spot
+ *
+ * The impactPoint uniform is in MESH-LOCAL space (pre-transformed by
+ * Core3DManager for tidal locking). See deformation.js for details.
  */
 
 import { blendModesGLSL } from './utils/blendModes.js';
 import { sssGLSL } from './utils/subsurfaceScattering.js';
+import {
+    deformationUniformsGLSL,
+    deformationVertexGLSL,
+    deformationFragmentGLSL
+} from './utils/deformation.js';
 
 /**
  * Vertex shader for frosted crystal
@@ -32,156 +53,14 @@ varying vec3 vNormal;
 varying vec3 vViewPosition;
 varying vec2 vUv;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DEFORMATION UNIFORMS - Localized vertex displacement for impacts
-// ═══════════════════════════════════════════════════════════════════════════
-uniform float deformationType;      // 0=none, 1=shockwave, 2=ripple, 3=directional, 4=elastic
-uniform float deformationStrength;  // 0-1
-uniform float deformationPhase;     // 0-1 animation progress
-uniform vec3 deformationDirection;  // Impact direction (normalized)
-uniform vec3 impactPoint;           // Where impact occurred (local space)
-uniform float deformationFalloff;   // Radius of influence
+${deformationUniformsGLSL}
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DEFORMATION FUNCTIONS - Localized vertex displacement
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Smooth falloff from impact point
-float calculateFalloff(vec3 pos, vec3 impact, float radius) {
-    float dist = length(pos - impact);
-    float normalizedDist = dist / max(radius, 0.001);
-    // Smooth cubic falloff: 1 at center, 0 at radius
-    return clamp(1.0 - normalizedDist * normalizedDist * (3.0 - 2.0 * normalizedDist), 0.0, 1.0);
-}
-
-// Type 1: SHOCKWAVE - Wave radiates outward from impact
-vec3 deformShockwave(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
-    float falloff = calculateFalloff(pos, impact, radius);
-
-    // Wave travels outward over time
-    float dist = length(pos - impact);
-    float wavePosition = phase * radius * 2.0;  // Wave expands
-    float waveWidth = radius * 0.3;
-
-    // Gaussian wave shape
-    float waveFactor = exp(-pow(dist - wavePosition, 2.0) / (2.0 * waveWidth * waveWidth));
-
-    // Displacement perpendicular to surface (approximate with position direction)
-    vec3 outward = normalize(pos - impact + vec3(0.001));
-
-    // Wave pushes out then in
-    float waveDisplacement = sin(phase * 6.28318) * waveFactor * strength * 0.15;
-
-    return outward * waveDisplacement * falloff;
-}
-
-// Type 2: RIPPLE - Concentric rings oscillating
-vec3 deformRipple(vec3 pos, vec3 impact, float strength, float phase, float radius) {
-    float falloff = calculateFalloff(pos, impact, radius);
-    float dist = length(pos - impact);
-
-    // Multiple ripple rings
-    float rippleFreq = 4.0;
-    float ripple = sin((dist / radius) * rippleFreq * 3.14159 - phase * 6.28318 * 2.0);
-
-    // Damping over time
-    float damping = exp(-phase * 3.0);
-
-    // Perpendicular displacement
-    vec3 outward = normalize(pos - impact + vec3(0.001));
-
-    return outward * ripple * strength * 0.1 * damping * falloff;
-}
-
-// Type 3: DIRECTIONAL - Squeeze along impact axis, bulge perpendicular
-vec3 deformDirectional(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
-    float falloff = calculateFalloff(pos, impact, radius);
-
-    // Distance along impact direction from impact point
-    vec3 toPos = pos - impact;
-    float alongDir = dot(toPos, dir);
-
-    // Perpendicular component
-    vec3 perpendicular = toPos - dir * alongDir;
-    float perpDist = length(perpendicular);
-    vec3 perpDir = perpDist > 0.001 ? perpendicular / perpDist : vec3(0.0);
-
-    // BRUTAL compression - strength drives it directly, phase just modulates
-    // Push vertices INWARD along the punch direction
-    vec3 compression = -dir * strength * 0.5 * falloff;
-
-    // Bulge outward perpendicular (volume preservation) - more aggressive
-    vec3 bulge = perpDir * strength * 0.25 * falloff;
-
-    return compression + bulge;
-}
-
-// Type 4: ELASTIC - Punch impact with flesh ripple
-vec3 deformElastic(vec3 pos, vec3 impact, vec3 dir, float strength, float phase, float radius) {
-    float falloff = calculateFalloff(pos, impact, radius);
-
-    // Distance from impact
-    vec3 toPos = pos - impact;
-    float alongDir = dot(toPos, dir);
-
-    // Perpendicular for bulge
-    vec3 perpendicular = toPos - dir * alongDir;
-    float perpDist = length(perpendicular);
-    vec3 perpDir = perpDist > 0.001 ? perpendicular / perpDist : vec3(0.0);
-
-    // PUNCH CRATER - vertices near impact get pushed IN hard
-    // Strength controls depth, falloff localizes it
-    vec3 crater = -dir * strength * 0.6 * falloff;
-
-    // FLESH BULGE - displaced volume bulges outward perpendicular
-    vec3 bulge = perpDir * strength * 0.3 * falloff;
-
-    // RIPPLE - traveling wave from impact (only during early phase)
-    float dist = length(toPos);
-    float wavePos = phase * radius * 3.0;  // Wave travels outward
-    float waveWidth = radius * 0.25;
-    float wave = exp(-pow(dist - wavePos, 2.0) / (waveWidth * waveWidth));
-    wave *= sin(phase * 12.56637) * (1.0 - phase);  // Oscillates and dies
-
-    vec3 outward = length(toPos) > 0.001 ? normalize(toPos) : dir;
-    vec3 ripple = outward * wave * strength * 0.15;
-
-    return crater + bulge + ripple;
-}
-
-// Main deformation dispatcher
-vec3 calculateDeformation(vec3 pos) {
-    if (deformationType < 0.5 || deformationStrength < 0.001) {
-        return vec3(0.0);
-    }
-
-    vec3 displacement = vec3(0.0);
-
-    if (deformationType < 1.5) {
-        // Type 1: Shockwave
-        displacement = deformShockwave(pos, impactPoint, deformationDirection,
-                                        deformationStrength, deformationPhase, deformationFalloff);
-    } else if (deformationType < 2.5) {
-        // Type 2: Ripple
-        displacement = deformRipple(pos, impactPoint,
-                                    deformationStrength, deformationPhase, deformationFalloff);
-    } else if (deformationType < 3.5) {
-        // Type 3: Directional
-        displacement = deformDirectional(pos, impactPoint, deformationDirection,
-                                         deformationStrength, deformationPhase, deformationFalloff);
-    } else {
-        // Type 4: Elastic
-        displacement = deformElastic(pos, impactPoint, deformationDirection,
-                                     deformationStrength, deformationPhase, deformationFalloff);
-    }
-
-    return displacement;
-}
+${deformationVertexGLSL}
 
 void main() {
     vUv = uv;
 
-    // Apply deformation to position
+    // Apply deformation to position (impactPoint pre-transformed by JS for tidal locking)
     vec3 deformedPosition = position + calculateDeformation(position);
 
     vPosition = deformedPosition;
@@ -285,6 +164,8 @@ uniform float sssLayer1Enabled;
 uniform float sssLayer2Mode;
 uniform float sssLayer2Strength;
 uniform float sssLayer2Enabled;
+
+${deformationUniformsGLSL}
 
 varying vec3 vPosition;
 varying vec3 vNormal;
@@ -443,6 +324,11 @@ float calculateTransmission(vec3 position, vec3 normal, vec3 viewDir, float cont
 // PHYSICALLY-BASED SUBSURFACE SCATTERING
 // ═══════════════════════════════════════════════════════════════════════════
 ${sssGLSL}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEFORMATION IMPACT GLOW
+// ═══════════════════════════════════════════════════════════════════════════
+${deformationFragmentGLSL}
 
 void main() {
     vec3 normal = normalize(vNormal);
@@ -1000,6 +886,13 @@ void main() {
         // Add pure emotion color as inner light
         finalColor += emotionColor * innerGlow * 0.4;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // IMPACT GLOW - Localized bright spot at punch impact site
+    // Uses calculateImpactGlow() from deformation.js utility
+    // vPosition is in mesh-local space (impactPoint pre-transformed by JS)
+    // ═══════════════════════════════════════════════════════════════════════
+    finalColor += calculateImpactGlow(vPosition, emotionColor);
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }

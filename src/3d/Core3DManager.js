@@ -1808,8 +1808,80 @@ export class Core3DManager {
         this._pendingFreezeRotation = blended.freezeRotation || 0;
         this._pendingFreezeWobble = blended.freezeWobble || 0;
 
-        // Store deformation for shader-based vertex displacement
-        this._deformation = blended.deformation || null;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // DEFORMATION - Localized vertex displacement for impact effects
+        // ═══════════════════════════════════════════════════════════════════════════
+        //
+        // Transforms impactPoint from CAMERA-RELATIVE to MESH-LOCAL space.
+        // This enables "tidal locking" - the dent always appears on the camera-facing
+        // side regardless of mesh rotation.
+        //
+        // Coordinate transformation:
+        // 1. Gesture provides impactPoint in camera-relative coords (X=right, Y=up, Z=toward camera)
+        // 2. We convert to WORLD space using camera basis vectors (same as cameraRelativePosition)
+        // 3. We convert WORLD to MESH-LOCAL using inverse mesh quaternion (rotation only, not translation)
+        //
+        // Why quaternion instead of worldToLocal()?
+        // - worldToLocal() transforms POINTS (includes translation offset)
+        // - We need to transform a DIRECTION (rotation only)
+        // - Using inverse quaternion gives us pure rotational transformation
+        //
+        // See: deformation.js for shader code, oofFactory.js for gesture definitions
+        if (blended.deformation && blended.deformation.enabled && this.renderer?.camera && this.renderer?.coreMesh) {
+            const d = blended.deformation;
+            const ip = d.impactPoint;
+            const cam = this.renderer.camera;
+            const mesh = this.renderer.coreMesh;
+
+            // Ensure matrices are up to date
+            cam.updateMatrixWorld();
+            mesh.updateMatrixWorld();
+
+            // Get camera basis vectors (same as used for cameraRelativePosition)
+            if (!this._deformCamRight) {
+                this._deformCamRight = new THREE.Vector3();
+                this._deformCamUp = new THREE.Vector3();
+                this._deformCamForward = new THREE.Vector3();
+                this._deformWorldDir = new THREE.Vector3();
+                this._deformLocalDir = new THREE.Vector3();
+                this._deformInverseQuat = new THREE.Quaternion();
+            }
+
+            cam.getWorldDirection(this._deformCamForward);
+            this._deformCamRight.setFromMatrixColumn(cam.matrixWorld, 0);
+            this._deformCamUp.setFromMatrixColumn(cam.matrixWorld, 1);
+
+            // Transform impact DIRECTION from camera-relative to WORLD space
+            // Same math as cameraRelativePosition:
+            // X (right) -> camera right
+            // Y (up) -> camera up
+            // Z (toward camera) -> negative camera forward
+            this._deformWorldDir.set(
+                this._deformCamRight.x * ip[0] + this._deformCamUp.x * ip[1] - this._deformCamForward.x * ip[2],
+                this._deformCamRight.y * ip[0] + this._deformCamUp.y * ip[1] - this._deformCamForward.y * ip[2],
+                this._deformCamRight.z * ip[0] + this._deformCamUp.z * ip[1] - this._deformCamForward.z * ip[2]
+            );
+
+            // Transform DIRECTION from world space to mesh-local space
+            // We only want to apply the ROTATION, not translation
+            // Get the mesh's world quaternion and invert it
+            mesh.getWorldQuaternion(this._deformInverseQuat);
+            this._deformInverseQuat.invert();
+
+            // Apply inverse rotation to the world-space direction
+            this._deformLocalDir.copy(this._deformWorldDir);
+            this._deformLocalDir.applyQuaternion(this._deformInverseQuat);
+
+            this._deformation = {
+                ...d,
+                impactPoint: [this._deformLocalDir.x, this._deformLocalDir.y, this._deformLocalDir.z]
+            };
+        } else if (blended.deformation && blended.deformation.enabled) {
+            // Fallback if no camera/mesh available - use raw values
+            this._deformation = { ...blended.deformation };
+        } else {
+            this._deformation = blended.deformation || null;
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // MOTION DEBUG LOGGING - Track all sources of movement

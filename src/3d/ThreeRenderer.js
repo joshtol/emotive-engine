@@ -1462,28 +1462,19 @@ export class ThreeRenderer {
                 // ═══════════════════════════════════════════════════════════════
                 // DEFORMATION UNIFORMS - Localized vertex displacement
                 // ═══════════════════════════════════════════════════════════════
-                if (this.coreMesh.material.uniforms.deformationType !== undefined) {
+                if (this.coreMesh.material.uniforms.deformationStrength !== undefined) {
                     const d = params.deformation;
 
-                    if (d && d.enabled) {
-                        // Map deformation type to integer for shader
-                        const typeMap = {
-                            none: 0,
-                            shockwave: 1,
-                            ripple: 2,
-                            directional: 3,
-                            elastic: 4
-                        };
-
-                        this.coreMesh.material.uniforms.deformationType.value = typeMap[d.type] || 0;
-                        this.coreMesh.material.uniforms.deformationStrength.value = d.strength;
-                        this.coreMesh.material.uniforms.deformationPhase.value = d.phase;
-
-                        if (d.direction && this.coreMesh.material.uniforms.deformationDirection) {
-                            this.coreMesh.material.uniforms.deformationDirection.value.set(
-                                d.direction[0], d.direction[1], d.direction[2]
-                            );
+                    if (d && d.enabled && d.strength > 0.001) {
+                        // Log deformation data (throttled to once per second)
+                        if (!this._lastDeformLog || Date.now() - this._lastDeformLog > 1000) {
+                            const ip = d.impactPoint;
+                            console.log(`🥊 DEFORMATION: strength=${d.strength.toFixed(3)} impactPoint=[${ip[0].toFixed(3)}, ${ip[1].toFixed(3)}, ${ip[2].toFixed(3)}] falloff=${d.falloffRadius}`);
+                            this._lastDeformLog = Date.now();
                         }
+
+                        this.coreMesh.material.uniforms.deformationStrength.value = d.strength;
+
                         if (d.impactPoint && this.coreMesh.material.uniforms.impactPoint) {
                             this.coreMesh.material.uniforms.impactPoint.value.set(
                                 d.impactPoint[0], d.impactPoint[1], d.impactPoint[2]
@@ -1494,7 +1485,6 @@ export class ThreeRenderer {
                         }
                     } else {
                         // No deformation - reset
-                        this.coreMesh.material.uniforms.deformationType.value = 0;
                         this.coreMesh.material.uniforms.deformationStrength.value = 0;
                     }
                 }

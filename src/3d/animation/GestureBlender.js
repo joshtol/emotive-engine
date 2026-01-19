@@ -245,15 +245,20 @@ export class GestureBlender {
                     // DEFORMATION CHANNEL (for localized vertex displacement)
                     // ═══════════════════════════════════════════════════════════════
                     // Use strongest deformation (don't blend - pick highest strength)
+                    //
+                    // NOTE: Do NOT apply fadeEnvelope here - deformation gestures
+                    // have their own strength curves (e.g., oofFactory's dentStrength).
+                    // The gesture's evaluate() returns time-varying strength that creates
+                    // the dent animation (quick ramp up, hold, fade out).
+                    //
+                    // impactPoint is in CAMERA-RELATIVE space here; Core3DManager
+                    // transforms it to mesh-local space for tidal locking.
+                    // See: deformation.js, oofFactory.js, Core3DManager.js
                     if (output.deformation && output.deformation.enabled) {
                         const d = output.deformation;
-                        const effectiveStrength = d.strength * fadeEnvelope;
 
-                        if (!accumulated.deformation || effectiveStrength > accumulated.deformation.strength) {
-                            accumulated.deformation = {
-                                ...d,
-                                strength: effectiveStrength
-                            };
+                        if (!accumulated.deformation || d.strength > accumulated.deformation.strength) {
+                            accumulated.deformation = { ...d };
                         }
                     }
                 }

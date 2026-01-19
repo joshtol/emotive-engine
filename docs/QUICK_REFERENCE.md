@@ -109,10 +109,23 @@ mascot.setEmotion('neutral', 'curiosity');  // Curious neutral
 | `expand` | Confident growth | ~400ms |
 | `contract` | Modest shrink | ~400ms |
 
+### Impact Gestures (3D Only - Mesh Deformation)
+| Gesture | Description | Duration |
+|---------|-------------|----------|
+| `oofLeft` | Punched from left | 1 beat |
+| `oofRight` | Punched from right | 1 beat |
+| `oofFront` | Gut punch | 1 beat |
+| `oofBack` | Kidney shot | 1 beat |
+| `oofUp` | Uppercut | 1 beat |
+| `oofDown` | Hammer fist | 1 beat |
+
+**Note:** Oof gestures create localized dents on the mesh surface with impact glow. The deformation is "tidally locked" to the camera - the dent always appears on the camera-facing side regardless of mesh rotation.
+
 ```javascript
 mascot.gesture('bounce');
 mascot.gesture('stepLeft');  // Directional dance move
 mascot.gesture(['sway', 'shimmer']);  // Layered gestures
+mascot.gesture('oofFront');  // 3D impact with mesh deformation
 ```
 
 ---

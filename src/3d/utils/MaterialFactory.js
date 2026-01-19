@@ -7,6 +7,7 @@ import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geom
 import { createSunMaterial } from '../geometries/Sun.js';
 import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
 import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
+import { DEFORMATION_DEFAULT_UNIFORMS } from '../shaders/utils/deformation.js';
 
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
     const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null, assetBasePath = '/assets' } = options;
@@ -179,14 +180,11 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             sssLayer2Enabled: { value: CRYSTAL_DEFAULT_UNIFORMS.sssLayer2Enabled },
             // ═══════════════════════════════════════════════════════════════
             // DEFORMATION UNIFORMS - Localized vertex displacement
+            // Values from deformation.js utility module
             // ═══════════════════════════════════════════════════════════════
-            // Type: 0=none, 1=shockwave, 2=ripple, 3=directional, 4=elastic
-            deformationType: { value: 0 },
-            deformationStrength: { value: 0.0 },
-            deformationPhase: { value: 0.0 },
-            deformationDirection: { value: new THREE.Vector3(0, 0, 1) },
-            impactPoint: { value: new THREE.Vector3(0, 0, 0) },
-            deformationFalloff: { value: 0.5 }  // Radius of influence (0-1 normalized)
+            deformationStrength: { value: DEFORMATION_DEFAULT_UNIFORMS.deformationStrength },
+            impactPoint: { value: new THREE.Vector3(...DEFORMATION_DEFAULT_UNIFORMS.impactPoint) },
+            deformationFalloff: { value: DEFORMATION_DEFAULT_UNIFORMS.deformationFalloff }
         },
         vertexShader,
         fragmentShader,

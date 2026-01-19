@@ -86,6 +86,29 @@ The `src/3d` module contains advanced graphics programming implementations:
     2.  Render the outer "Shell" with a custom `MeshPhysicalMaterial`.
     3.  Sample the "Soul" buffer onto the shell's refraction map, distorting UVs based on surface normals to simulate varying thickness and index of refraction (IOR).
 
+### Mesh Deformation System (`deformation.js`)
+*   **Concept:** Localized vertex displacement for impact effects (punches, collisions).
+*   **Implementation:** A modular GLSL utility that creates "dents" on the mesh surface:
+    *   **Vertex Shader:** `calculateDeformation(position)` displaces vertices inward toward mesh center at the impact site, with squared falloff for sharp edges.
+    *   **Fragment Shader:** `calculateImpactGlow(fragPos, emotionColor)` adds a bright spot at the impact location for visual feedback.
+*   **Tidal Locking:** The deformation system is "tidally locked" to the camera view:
+    *   Gestures specify `impactPoint` in **camera-relative coordinates** (X=right, Y=up, Z=toward camera).
+    *   `Core3DManager` transforms this to **mesh-local space** using camera basis vectors and the inverse mesh quaternion.
+    *   **Result:** The dent always appears on the camera-facing side regardless of mesh rotation.
+*   **Why Quaternion?** Using `worldToLocal()` would transform a POINT (includes translation), but we need to transform a DIRECTION (rotation only). The inverse quaternion gives pure rotational transformation.
+*   **Data Flow:**
+    ```
+    oofFactory.js (camera-relative impactPoint)
+         ↓
+    GestureBlender.js (passes through, no fadeEnvelope)
+         ↓
+    Core3DManager.js (transforms to mesh-local space)
+         ↓
+    ThreeRenderer.js (sets shader uniforms)
+         ↓
+    crystalWithSoul.js (GLSL deformation + glow)
+    ```
+
 ---
 
 ## 🛠️ Code Quality Standards

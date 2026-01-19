@@ -9,18 +9,37 @@
  * @author Emotive Engine Team
  * @module gestures/transforms/oofFactory
  *
- * BRUTAL PUNCH - Fist buries into flesh, body gets THROWN.
+ * OOF: Getting punched hard. The mascot recoils from a blow.
  *
- * The shader handles the localized crater/bulge at impact site.
- * This gesture handles the violent knockback motion.
+ * ## Animation System
  *
- * OOF: Punch impact (~600ms)
+ * Transform-based animation with shader deformation:
+ * - Position: body flies away from the hit (cameraRelativePosition)
+ * - Rotation: body bends/twists from the force (cameraRelativeRotation)
+ * - Deformation: localized dent at impact site (shader vertex displacement)
+ *
+ * ## Deformation & Tidal Locking
+ *
+ * The impactPoint is specified in CAMERA-RELATIVE coordinates:
+ * - X = camera's right (positive = right side of screen)
+ * - Y = up (positive = top of screen)
+ * - Z = toward camera (positive = closer to viewer)
+ *
+ * Crystal dimensions used for impactPoint placement:
+ * - CRYSTAL_RADIUS (0.4): approximate radius in X/Z plane
+ * - CRYSTAL_HEIGHT (0.8): half-height in Y axis
+ *
+ * Core3DManager transforms these to mesh-local space using the camera basis
+ * vectors and inverse mesh quaternion. This ensures the dent always appears
+ * on the camera-facing side regardless of mesh rotation ("tidal locking").
+ *
+ * See: deformation.js for shader code, Core3DManager.js for coordinate transform
  */
 
 import { capitalize } from '../motions/directions.js';
 
 /**
- * Create an oof gesture - brutal punch
+ * Create an oof gesture - getting punched
  * @param {string} direction - 'left', 'right', 'front', 'back', 'up', 'down'
  * @returns {Object} Gesture definition
  */
@@ -55,8 +74,8 @@ export function createOofGesture(direction) {
         description: descriptions[direction],
 
         config: {
-            duration: 600,
-            musicalDuration: { musical: true, beats: 1.5 },
+            duration: 500,
+            musicalDuration: { musical: true, beats: 1 },
             intensity: 1.0,
             strength: 1.0,
             direction,
@@ -70,9 +89,8 @@ export function createOofGesture(direction) {
         rhythm: {
             enabled: true,
             syncMode: 'beat',
-            durationSync: { mode: 'beats', beats: 1.5 },
+            durationSync: { mode: 'beats', beats: 1 },
             timingSync: 'onBeat',
-
             accentResponse: {
                 enabled: true,
                 multiplier: 1.5
@@ -83,150 +101,120 @@ export function createOofGesture(direction) {
             evaluate(progress, motion) {
                 const config = motion.config || this.config || {};
                 const strength = config.strength || 1.0;
-                const intensity = config.intensity || 1.0;
                 const dir = config.direction || 'front';
 
-                // ═══════════════════════════════════════════════════════════════════
-                // SIMPLE BRUTAL PUNCH - 3 phases, no bullshit
-                // ═══════════════════════════════════════════════════════════════════
-                //
-                // Phase 1 (0-0.1): IMPACT - Instant. Crater forms (shader). Body reacts.
-                // Phase 2 (0.1-0.5): THROWN - Body flies from the hit. Fast.
-                // Phase 3 (0.5-1.0): RECOVER - Stumble back to position.
+                // ═══════════════════════════════════════════════════════════════
+                // PUNCH - Movement, rotation, and localized dent
+                // ═══════════════════════════════════════════════════════════════
 
-                // ─────────────────────────────────────────────────────────────────
-                // CRATER STRENGTH - How hard the punch lands (for shader)
-                // ─────────────────────────────────────────────────────────────────
-                let craterStrength = 0;
-                if (progress < 0.1) {
-                    // INSTANT crater
-                    craterStrength = progress / 0.1;
-                    craterStrength = 1 - Math.pow(1 - craterStrength, 3);  // Fast attack
-                } else if (progress < 0.3) {
-                    // Holds
-                    craterStrength = 1.0;
-                } else if (progress < 0.6) {
-                    // Releasing
-                    const t = (progress - 0.3) / 0.3;
-                    craterStrength = 1 - t;
+                // Recoil curve: fast out, slow back
+                let recoil;
+                if (progress < 0.25) {
+                    const t = progress / 0.25;
+                    recoil = t * (2 - t);
                 } else {
-                    craterStrength = 0;
+                    const t = (progress - 0.25) / 0.75;
+                    recoil = 1 - t * t;
                 }
 
-                // ─────────────────────────────────────────────────────────────────
-                // KNOCKBACK - How far body gets thrown
-                // ─────────────────────────────────────────────────────────────────
-                let knockback = 0;
+                // Dent curve: instant on, fade out
+                let dentStrength;
                 if (progress < 0.1) {
-                    // Absorbing hit
-                    knockback = 0;
-                } else if (progress < 0.5) {
-                    // THROWN - fast ease out
-                    const t = (progress - 0.1) / 0.4;
-                    knockback = 1 - Math.pow(1 - t, 2);
+                    dentStrength = progress / 0.1;  // Quick ramp up
+                } else if (progress < 0.4) {
+                    dentStrength = 1.0;  // Hold
                 } else {
-                    // Return
-                    const t = (progress - 0.5) / 0.5;
-                    knockback = 1 - t * t;
+                    dentStrength = 1 - (progress - 0.4) / 0.6;  // Fade out
                 }
 
-                // ─────────────────────────────────────────────────────────────────
-                // DIRECTION-SPECIFIC MOTION
-                // ─────────────────────────────────────────────────────────────────
+                const moveDist = 0.2 * strength;
+                const tiltAngle = 0.35 * strength;
+
                 let posX = 0, posY = 0, posZ = 0;
                 let rotX = 0, rotZ = 0;
                 const rotY = 0;
 
-                // Knockback distance - BIG movement
-                const dist = 0.4 * strength;
-                // Bend angle
-                const bend = 0.6 * strength * intensity;
-
-                // Impact point for shader (local mesh coordinates)
-                let impactPoint = [0, 0, 0];
-                // Direction vector for shader
-                let punchDir = [0, 0, 1];
+                // Impact point as VIEW SPACE offset from mesh center
+                // VIEW SPACE coordinates (from camera's perspective):
+                // - X = right (positive = camera's right)
+                // - Y = up (positive = up)
+                // - Z = toward camera (positive = closer to camera)
+                //
+                // Crystal dimensions in view space after typical transforms:
+                // approximately 0.4-0.5 radius in X/Z, 0.8 in Y
+                const CRYSTAL_RADIUS = 0.4;  // Approximate radius in X/Z
+                const CRYSTAL_HEIGHT = 0.8;  // Half-height in Y
+                let impactPoint = [0, 0, CRYSTAL_RADIUS];  // Default: front (toward camera)
 
                 switch (dir) {
                 case 'left':
-                    // Punched from left -> thrown right
-                    posX = knockback * dist;
-                    posY = -craterStrength * 0.05;  // Slight drop on impact
-                    rotZ = -knockback * bend;  // Bend right
-                    impactPoint = [-0.4, 0, 0];
-                    punchDir = [1, 0, 0];
+                    // Punch from camera's left - impact on left side (negative X)
+                    posX = recoil * moveDist;
+                    rotZ = -recoil * tiltAngle;
+                    impactPoint = [-CRYSTAL_RADIUS, 0, 0];
                     break;
 
                 case 'right':
-                    // Punched from right -> thrown left
-                    posX = -knockback * dist;
-                    posY = -craterStrength * 0.05;
-                    rotZ = knockback * bend;  // Bend left
-                    impactPoint = [0.4, 0, 0];
-                    punchDir = [-1, 0, 0];
+                    // Punch from camera's right - impact on right side (positive X)
+                    posX = -recoil * moveDist;
+                    rotZ = recoil * tiltAngle;
+                    impactPoint = [CRYSTAL_RADIUS, 0, 0];
                     break;
 
                 case 'front':
-                    // Gut punch -> thrown back, doubles over
-                    posZ = -knockback * dist * 0.7;
-                    posY = -craterStrength * 0.1 - knockback * 0.08;
-                    rotX = knockback * bend * 1.2;  // Double over hard
-                    impactPoint = [0, 0, 0.4];
-                    punchDir = [0, 0, -1];
+                    // Punch from camera toward mesh - impact on front (positive Z = toward camera)
+                    posZ = -recoil * moveDist;
+                    posY = -recoil * 0.03;
+                    rotX = recoil * tiltAngle * 0.7;
+                    impactPoint = [0, 0, CRYSTAL_RADIUS];
                     break;
 
                 case 'back':
-                    // Kidney shot -> thrown forward, arches
-                    posZ = knockback * dist * 0.8;
-                    rotX = -knockback * bend * 0.7;  // Arch back
-                    impactPoint = [0, 0, -0.4];
-                    punchDir = [0, 0, 1];
+                    // Punch from behind - impact on back (negative Z = away from camera)
+                    posZ = recoil * moveDist;
+                    rotX = -recoil * tiltAngle * 0.6;
+                    impactPoint = [0, 0, -CRYSTAL_RADIUS];
                     break;
 
                 case 'up':
-                    // Uppercut -> lifted, head snaps back
-                    posY = knockback * dist * 0.8;
-                    posZ = -knockback * dist * 0.3;
-                    rotX = -knockback * bend;  // Head back
-                    impactPoint = [0, -0.3, 0.2];
-                    punchDir = [0, 1, 0];
+                    // Uppercut - impact on top (positive Y)
+                    posY = recoil * moveDist;
+                    rotX = -recoil * tiltAngle * 0.4;
+                    impactPoint = [0, CRYSTAL_HEIGHT, 0];
                     break;
 
                 case 'down':
-                    // Hammer fist -> crushed down
-                    posY = -knockback * dist * 1.2;
-                    impactPoint = [0, 0.4, 0];
-                    punchDir = [0, -1, 0];
+                    // Hammer fist - impact on bottom (negative Y)
+                    posY = -recoil * moveDist;
+                    rotX = recoil * tiltAngle * 0.3;
+                    impactPoint = [0, -CRYSTAL_HEIGHT, 0];
                     break;
                 }
 
-                // ─────────────────────────────────────────────────────────────────
-                // GLOW - Flash on impact
-                // ─────────────────────────────────────────────────────────────────
+                // Glow flash on impact
                 let glowIntensity = 1.0;
                 let glowBoost = 0;
                 if (progress < 0.15) {
                     const t = progress / 0.15;
-                    glowIntensity = 1.0 + (1 - t) * 1.5;
-                    glowBoost = (1 - t) * 0.8;
+                    glowIntensity = 1.0 + (1 - t) * 0.6;
+                    glowBoost = (1 - t) * 0.4;
                 }
 
                 return {
                     cameraRelativePosition: [posX, posY, posZ],
                     cameraRelativeRotation: [rotX, rotY, rotZ],
-                    scale: 1.0,  // No scale fuckery - let shader handle deformation
+                    scale: 1.0,
                     glowIntensity,
                     glowBoost,
 
-                    // Shader deformation - THIS is what makes the punch visible
+                    // Localized dent at impact site
+                    // impactPoint is in CAMERA-RELATIVE space (X=right, Y=up, Z=toward camera)
+                    // Core3DManager transforms this to mesh-local space for tidal locking
                     deformation: {
                         enabled: true,
-                        type: 'elastic',
-                        strength: craterStrength * intensity,
-                        phase: progress,
-                        direction: punchDir,
-                        impactPoint,
-                        falloffRadius: 0.5
+                        strength: dentStrength * strength * 2.0,  // Strong dent
+                        impactPoint,  // Camera-relative, transformed by Core3DManager
+                        falloffRadius: 0.5  // Radius of dent effect
                     }
                 };
             }
