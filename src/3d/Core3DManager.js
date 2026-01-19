@@ -397,6 +397,13 @@ export class Core3DManager {
             enableReassembly: true,
             autoRestore: true
         });
+
+        // Wire up shatter callbacks for visual effects
+        this.shatterSystem.onShatterStart = () => {
+            // The shard materials already have emissive glow that creates a "particle-like" effect
+            // Phase 3 could add dedicated particle burst via orchestrator.triggerBurst()
+        };
+
         this._pendingShatter = null;
 
         // Note: Virtual particle pool is now managed by AnimationManager

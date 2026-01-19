@@ -92,6 +92,11 @@ class ShatterSystem {
 
         // Internal state
         this._shatterStartTime = 0;
+
+        // Soul reveal animation state
+        this._soulRevealProgress = 0;
+        this._soulOriginalScale = 1.0;
+        this._soulOriginalEmissive = 0;
     }
 
     /**
@@ -175,9 +180,24 @@ class ShatterSystem {
         // Hide original mesh
         mesh.visible = false;
 
-        // Reveal inner mesh (soul) if present
+        // Reveal inner mesh (soul) if present with animation
         if (revealInner && this.innerMesh) {
             this.innerMesh.visible = true;
+            this._soulRevealProgress = 0;
+
+            // Store original values for animation
+            this._soulOriginalScale = this.innerMesh.scale.x;
+
+            // Get original emissive if available
+            if (this.innerMesh.material?.emissiveIntensity !== undefined) {
+                this._soulOriginalEmissive = this.innerMesh.material.emissiveIntensity;
+            }
+
+            // Start with small scale and bright glow (will animate to normal)
+            this.innerMesh.scale.setScalar(this._soulOriginalScale * 0.5);
+            if (this.innerMesh.material?.emissiveIntensity !== undefined) {
+                this.innerMesh.material.emissiveIntensity = 2.0; // Bright flash
+            }
         }
 
         // Activate shards
@@ -256,6 +276,28 @@ class ShatterSystem {
         if (this.state === ShatterState.SHATTERING) {
             this.shardPool.update(deltaTime);
 
+            // ═══════════════════════════════════════════════════════════════
+            // SOUL REVEAL ANIMATION - Scale up and fade glow over 500ms
+            // ═══════════════════════════════════════════════════════════════
+            if (this.innerMesh && this._soulRevealProgress < 1) {
+                this._soulRevealProgress += deltaTime / 500; // 500ms animation
+                this._soulRevealProgress = Math.min(1, this._soulRevealProgress);
+
+                // Ease-out cubic for smooth deceleration
+                const t = this._soulRevealProgress;
+                const eased = 1 - Math.pow(1 - t, 3);
+
+                // Scale: 0.5 -> 1.0 (50% to full size)
+                const scale = this._soulOriginalScale * (0.5 + eased * 0.5);
+                this.innerMesh.scale.setScalar(scale);
+
+                // Emissive: 2.0 -> original (bright flash fades)
+                if (this.innerMesh.material?.emissiveIntensity !== undefined) {
+                    const emissive = 2.0 - eased * (2.0 - this._soulOriginalEmissive);
+                    this.innerMesh.material.emissiveIntensity = emissive;
+                }
+            }
+
             // Check if all shards finished
             if (this.shardPool.activeCount === 0) {
                 this._onShatterComplete();
@@ -283,8 +325,13 @@ class ShatterSystem {
         if (this.autoRestore && this.targetMesh) {
             this.targetMesh.visible = true;
 
+            // Reset soul to original state
             if (this.innerMesh) {
                 this.innerMesh.visible = false;
+                this.innerMesh.scale.setScalar(this._soulOriginalScale);
+                if (this.innerMesh.material?.emissiveIntensity !== undefined) {
+                    this.innerMesh.material.emissiveIntensity = this._soulOriginalEmissive;
+                }
             }
         }
     }

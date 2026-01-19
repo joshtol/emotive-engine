@@ -84,18 +84,30 @@ class ShardPool {
     }
 
     /**
-     * Create the shared shard material
+     * Create the shared shard material - crystal-like with glass properties
      * @private
      */
     _createShardMaterial() {
-        return new THREE.MeshStandardMaterial({
+        // Use MeshPhysicalMaterial for glass-like shards with transmission
+        return new THREE.MeshPhysicalMaterial({
             transparent: true,
-            opacity: 1,
+            opacity: 0.9,
             side: THREE.DoubleSide,
-            metalness: 0.2,
-            roughness: 0.3,
+            metalness: 0.1,
+            roughness: 0.15,
+            // Glass-like properties
+            transmission: 0.3,        // Slight transparency
+            thickness: 0.2,           // Refraction thickness
+            ior: 1.5,                 // Index of refraction (glass)
+            // Emissive for glow
             emissive: new THREE.Color(0x000000),
-            emissiveIntensity: 0
+            emissiveIntensity: 0,
+            // Slight iridescence for crystal effect
+            iridescence: 0.2,
+            iridescenceIOR: 1.3,
+            // Clearcoat for shine
+            clearcoat: 0.3,
+            clearcoatRoughness: 0.2
         });
     }
 
@@ -112,7 +124,10 @@ class ShardPool {
             opacity: 1,
             gravity: -9.8,
             originalPosition: new THREE.Vector3(),
-            originalRotation: new THREE.Euler()
+            originalRotation: new THREE.Euler(),
+            // Impact glow state
+            impactGlow: 1.0,          // Initial glow intensity (fades over time)
+            baseEmissiveIntensity: 0.5 // Base emissive for shards
         };
     }
 
@@ -203,9 +218,14 @@ class ShardPool {
             shard.userData.state.opacity = 1;
             shard.userData.state.gravity = gravity;
 
-            // Show shard
+            // Reset impact glow - bright flash at start
+            shard.userData.state.impactGlow = 1.0;
+            shard.userData.state.baseEmissiveIntensity = 0.5;
+
+            // Show shard with initial glow
             shard.visible = true;
-            shard.material.opacity = 1;
+            shard.material.opacity = 0.9;
+            shard.material.emissiveIntensity = 1.5; // Bright flash on impact
 
             this.active.push(shard);
             activatedShards.push(shard);
@@ -250,10 +270,28 @@ class ShardPool {
             state.velocity.multiplyScalar(0.995);
             state.angularVelocity.multiplyScalar(0.99);
 
-            // Fade out in last 30%
+            // ═══════════════════════════════════════════════════════════════
+            // IMPACT GLOW - Bright flash fades quickly in first 20%
+            // ═══════════════════════════════════════════════════════════════
+            if (progress < 0.2) {
+                // Fast exponential decay of impact glow
+                const glowProgress = progress / 0.2;
+                state.impactGlow = 1.0 - glowProgress * glowProgress; // Quadratic fade
+                const totalEmissive = state.baseEmissiveIntensity + state.impactGlow * 1.0;
+                shard.material.emissiveIntensity = totalEmissive;
+            } else if (progress < 0.5) {
+                // Subtle glow remains in middle
+                shard.material.emissiveIntensity = state.baseEmissiveIntensity * 0.8;
+            } else {
+                // Fade emissive with opacity in final phase
+                const fadeProgress = (progress - 0.5) / 0.5;
+                shard.material.emissiveIntensity = state.baseEmissiveIntensity * (1 - fadeProgress);
+            }
+
+            // Fade out opacity in last 30%
             if (progress > 0.7) {
                 state.opacity = 1 - ((progress - 0.7) / 0.3);
-                shard.material.opacity = state.opacity;
+                shard.material.opacity = state.opacity * 0.9; // Max 0.9 for glass effect
             }
 
             // Scale down slightly at end
