@@ -4,12 +4,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createStepGesture, createSlideGesture } from '../../../../src/core/gestures/motions/danceSteps.js';
-import { createLeanGesture } from '../../../../src/core/gestures/motions/leanFactory.js';
-import { createKickGesture } from '../../../../src/core/gestures/motions/kickFactory.js';
-import { createFloatGesture } from '../../../../src/core/gestures/motions/floatFactory.js';
-import { createPointGesture } from '../../../../src/core/gestures/motions/pointFactory.js';
-import { createSpinGesture } from '../../../../src/core/gestures/transforms/spinFactory.js';
+import { createStepGesture, createSlideGesture } from '../../../../src/core/gestures/dance/steps/danceSteps.js';
+import { createLeanGesture } from '../../../../src/core/gestures/idle/swaying/leanFactory.js';
+import { createKickGesture } from '../../../../src/core/gestures/actions/gesturing/kickFactory.js';
+import { createFloatGesture } from '../../../../src/core/gestures/idle/swaying/floatFactory.js';
+import { createPointGesture } from '../../../../src/core/gestures/actions/gesturing/pointFactory.js';
+import { createSpinGesture } from '../../../../src/core/gestures/actions/acrobatics/spinFactory.js';
 
 describe('Gesture Factories', () => {
     describe('createStepGesture()', () => {
@@ -296,11 +296,11 @@ describe('Gesture Factories', () => {
 describe('Gesture File Imports', () => {
     it('should import directional gesture files correctly', async () => {
         // Test that the one-liner gesture files work
-        const stepLeft = await import('../../../../src/core/gestures/motions/stepLeft.js');
-        const leanRight = await import('../../../../src/core/gestures/motions/leanRight.js');
-        const floatUp = await import('../../../../src/core/gestures/motions/floatUp.js');
-        const pointDown = await import('../../../../src/core/gestures/motions/pointDown.js');
-        const spinLeft = await import('../../../../src/core/gestures/transforms/spinLeft.js');
+        const stepLeft = await import('../../../../src/core/gestures/dance/steps/stepLeft.js');
+        const leanRight = await import('../../../../src/core/gestures/idle/swaying/leanRight.js');
+        const floatUp = await import('../../../../src/core/gestures/idle/swaying/floatUp.js');
+        const pointDown = await import('../../../../src/core/gestures/actions/gesturing/pointDown.js');
+        const spinLeft = await import('../../../../src/core/gestures/actions/acrobatics/spinLeft.js');
 
         expect(stepLeft.default.name).toBe('stepLeft');
         expect(leanRight.default.name).toBe('leanRight');

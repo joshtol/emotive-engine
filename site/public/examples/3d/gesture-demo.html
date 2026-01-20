@@ -7,9 +7,9 @@
 
   Features:
   - Dynamically loads all gestures from mascot.getAvailableGestures()
-  - Groups by type: Motion (blending), Transform (override), Effects
+  - Groups by semantic purpose: Idle, Dance, Actions, Reactions, Destruction, Atmosphere
   - Search filtering
-  - Type filtering via checkboxes
+  - Category filtering via checkboxes
 -->
 <html lang="en">
 <head>
@@ -60,7 +60,7 @@
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .filter-item {
@@ -68,7 +68,7 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            padding: 6px 8px;
+            padding: 4px 8px;
             border-radius: 6px;
             transition: background 0.2s;
         }
@@ -78,25 +78,25 @@
         }
 
         .filter-item input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             accent-color: var(--accent);
             cursor: pointer;
         }
 
         .filter-item label {
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .filter-count {
-            font-size: 11px;
+            font-size: 10px;
             opacity: 0.6;
             background: rgba(255, 255, 255, 0.1);
-            padding: 2px 6px;
+            padding: 2px 5px;
             border-radius: 10px;
         }
 
@@ -212,7 +212,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -403,28 +403,49 @@
         </div>
 
         <div class="section">
-            <h2>Filter by Type</h2>
+            <h2>Filter by Category</h2>
             <div class="section-content">
                 <div class="filter-group">
                     <div class="filter-item">
-                        <input type="checkbox" id="filter-motion" checked>
-                        <label for="filter-motion">
-                            Motion
-                            <span class="filter-count" id="count-motion">0</span>
+                        <input type="checkbox" id="filter-idle" checked>
+                        <label for="filter-idle">
+                            Idle
+                            <span class="filter-count" id="count-idle">0</span>
                         </label>
                     </div>
                     <div class="filter-item">
-                        <input type="checkbox" id="filter-transform" checked>
-                        <label for="filter-transform">
-                            Transform
-                            <span class="filter-count" id="count-transform">0</span>
+                        <input type="checkbox" id="filter-dance" checked>
+                        <label for="filter-dance">
+                            Dance
+                            <span class="filter-count" id="count-dance">0</span>
                         </label>
                     </div>
                     <div class="filter-item">
-                        <input type="checkbox" id="filter-effect" checked>
-                        <label for="filter-effect">
-                            Effects
-                            <span class="filter-count" id="count-effect">0</span>
+                        <input type="checkbox" id="filter-actions" checked>
+                        <label for="filter-actions">
+                            Actions
+                            <span class="filter-count" id="count-actions">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-reactions" checked>
+                        <label for="filter-reactions">
+                            Reactions
+                            <span class="filter-count" id="count-reactions">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-destruction" checked>
+                        <label for="filter-destruction">
+                            Destruction
+                            <span class="filter-count" id="count-destruction">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-atmosphere" checked>
+                        <label for="filter-atmosphere">
+                            Atmosphere
+                            <span class="filter-count" id="count-atmosphere">0</span>
                         </label>
                     </div>
                 </div>
@@ -481,10 +502,10 @@
 
     <!-- RIGHT MENU -->
     <div class="right-menu">
-        <div class="section" id="section-motion">
-            <h2>Motion Gestures <span class="gesture-count" id="header-count-motion"></span></h2>
+        <div class="section" id="section-idle">
+            <h2>Idle <span class="gesture-count" id="header-count-idle"></span></h2>
             <div class="section-content">
-                <div class="button-grid" id="grid-motion">
+                <div class="button-grid" id="grid-idle">
                     <div class="loading-state">
                         <div class="spinner"></div>
                         Loading gestures...
@@ -493,10 +514,10 @@
             </div>
         </div>
 
-        <div class="section" id="section-transform">
-            <h2 class="collapsed">Transform Gestures <span class="gesture-count" id="header-count-transform"></span></h2>
+        <div class="section" id="section-dance">
+            <h2 class="collapsed">Dance <span class="gesture-count" id="header-count-dance"></span></h2>
             <div class="section-content collapsed">
-                <div class="button-grid" id="grid-transform">
+                <div class="button-grid" id="grid-dance">
                     <div class="loading-state">
                         <div class="spinner"></div>
                         Loading...
@@ -505,10 +526,46 @@
             </div>
         </div>
 
-        <div class="section" id="section-effect">
-            <h2 class="collapsed">Effect Gestures <span class="gesture-count" id="header-count-effect"></span></h2>
+        <div class="section" id="section-actions">
+            <h2 class="collapsed">Actions <span class="gesture-count" id="header-count-actions"></span></h2>
             <div class="section-content collapsed">
-                <div class="button-grid" id="grid-effect">
+                <div class="button-grid" id="grid-actions">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-reactions">
+            <h2 class="collapsed">Reactions <span class="gesture-count" id="header-count-reactions"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-reactions">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-destruction">
+            <h2 class="collapsed">Destruction <span class="gesture-count" id="header-count-destruction"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-destruction">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-atmosphere">
+            <h2 class="collapsed">Atmosphere <span class="gesture-count" id="header-count-atmosphere"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-atmosphere">
                     <div class="loading-state">
                         <div class="spinner"></div>
                         Loading...
@@ -575,43 +632,51 @@
         const recentGestures = [];
         const MAX_RECENT = 8;
 
-        // Type mapping (API type -> display category)
-        const typeMapping = {
-            'blending': 'motion',
-            'override': 'transform',
-            'effect': 'effect'
-        };
+        // Get semantic categories dynamically from the engine (single source of truth)
+        // This automatically stays in sync when gestures are added/moved
+        const semanticCategories = mascot.getGestureCategories();
+
+        // Build reverse lookup for fast categorization
+        const gestureToCategory = {};
+        Object.entries(semanticCategories).forEach(([category, gestures]) => {
+            gestures.forEach(name => {
+                gestureToCategory[name] = category;
+            });
+        });
+
+        // Get semantic category for a gesture
+        function getSemanticCategory(gesture) {
+            // Use category from gesture object (populated by listGestures from engine)
+            if (gesture.category) {
+                return gesture.category;
+            }
+            // Fallback: check local mapping
+            if (gestureToCategory[gesture.name]) {
+                return gestureToCategory[gesture.name];
+            }
+            // Last resort fallback
+            if (gesture.type === 'blending') return 'idle';
+            if (gesture.type === 'override') return 'actions';
+            return 'atmosphere';
+        }
+
+        // Category list for iteration
+        const categories = ['idle', 'dance', 'actions', 'reactions', 'destruction', 'atmosphere'];
 
         // Elements
-        const grids = {
-            motion: document.getElementById('grid-motion'),
-            transform: document.getElementById('grid-transform'),
-            effect: document.getElementById('grid-effect')
-        };
+        const grids = {};
+        const sections = {};
+        const filters = {};
+        const counts = {};
+        const headerCounts = {};
 
-        const sections = {
-            motion: document.getElementById('section-motion'),
-            transform: document.getElementById('section-transform'),
-            effect: document.getElementById('section-effect')
-        };
-
-        const filters = {
-            motion: document.getElementById('filter-motion'),
-            transform: document.getElementById('filter-transform'),
-            effect: document.getElementById('filter-effect')
-        };
-
-        const counts = {
-            motion: document.getElementById('count-motion'),
-            transform: document.getElementById('count-transform'),
-            effect: document.getElementById('count-effect')
-        };
-
-        const headerCounts = {
-            motion: document.getElementById('header-count-motion'),
-            transform: document.getElementById('header-count-transform'),
-            effect: document.getElementById('header-count-effect')
-        };
+        categories.forEach(cat => {
+            grids[cat] = document.getElementById(`grid-${cat}`);
+            sections[cat] = document.getElementById(`section-${cat}`);
+            filters[cat] = document.getElementById(`filter-${cat}`);
+            counts[cat] = document.getElementById(`count-${cat}`);
+            headerCounts[cat] = document.getElementById(`header-count-${cat}`);
+        });
 
         const searchInput = document.getElementById('gesture-search');
         const statTotal = document.getElementById('stat-total');
@@ -624,11 +689,11 @@
         /**
          * Create a gesture button element
          */
-        function createGestureButton(gesture) {
+        function createGestureButton(gesture, category) {
             const btn = document.createElement('button');
             btn.className = 'gesture-btn';
             btn.dataset.gesture = gesture.name;
-            btn.dataset.type = typeMapping[gesture.type] || gesture.type;
+            btn.dataset.category = category;
             btn.dataset.description = gesture.description || '';
 
             btn.innerHTML = `
@@ -648,19 +713,15 @@
 
             // Clear loading states
             Object.values(grids).forEach(grid => {
-                grid.innerHTML = '';
+                if (grid) grid.innerHTML = '';
             });
 
-            // Group gestures by type
-            const grouped = {
-                motion: [],
-                transform: [],
-                effect: []
-            };
+            // Group gestures by semantic category
+            const grouped = {};
+            categories.forEach(cat => grouped[cat] = []);
 
             allGestures.forEach(gesture => {
-                // Use category field (from array membership) instead of type (behavior)
-                const category = gesture.category || typeMapping[gesture.type] || 'effect';
+                const category = getSemanticCategory(gesture);
                 if (grouped[category]) {
                     grouped[category].push(gesture);
                 }
@@ -682,12 +743,12 @@
                 }
 
                 gestures.forEach(gesture => {
-                    grid.appendChild(createGestureButton(gesture));
+                    grid.appendChild(createGestureButton(gesture, category));
                 });
 
                 // Update counts
-                counts[category].textContent = gestures.length;
-                headerCounts[category].textContent = `(${gestures.length})`;
+                if (counts[category]) counts[category].textContent = gestures.length;
+                if (headerCounts[category]) headerCounts[category].textContent = `(${gestures.length})`;
             });
 
             // Update stats
@@ -696,32 +757,33 @@
         }
 
         /**
-         * Filter gestures based on search and type filters
+         * Filter gestures based on search and category filters
          */
         function filterGestures() {
             const searchTerm = searchInput.value.toLowerCase().trim();
 
-            // Check which types are enabled
-            const enabledTypes = {
-                motion: filters.motion.checked,
-                transform: filters.transform.checked,
-                effect: filters.effect.checked
-            };
+            // Check which categories are enabled
+            const enabledCategories = {};
+            categories.forEach(cat => {
+                enabledCategories[cat] = filters[cat]?.checked ?? true;
+            });
 
-            // Show/hide sections based on type filters
-            Object.entries(sections).forEach(([type, section]) => {
-                section.style.display = enabledTypes[type] ? '' : 'none';
+            // Show/hide sections based on category filters
+            Object.entries(sections).forEach(([category, section]) => {
+                if (section) {
+                    section.style.display = enabledCategories[category] ? '' : 'none';
+                }
             });
 
             // Filter individual buttons
             document.querySelectorAll('.gesture-btn').forEach(btn => {
                 const name = btn.dataset.gesture.toLowerCase();
-                const type = btn.dataset.type;
+                const category = btn.dataset.category;
 
                 const matchesSearch = !searchTerm || name.includes(searchTerm);
-                const matchesType = enabledTypes[type];
+                const matchesCategory = enabledCategories[category];
 
-                btn.classList.toggle('hidden', !matchesSearch || !matchesType);
+                btn.classList.toggle('hidden', !matchesSearch || !matchesCategory);
             });
 
             updateVisibleCount();
@@ -781,16 +843,18 @@
             const gesture = allGestures.find(g => g.name === name);
             if (!gesture) return;
 
+            const category = btn.dataset.category || getSemanticCategory(gesture);
+
             // Desktop: floating tooltip
             tooltip.querySelector('.tooltip-name').textContent = `${gesture.emoji || '✨'} ${gesture.name}`;
-            tooltip.querySelector('.tooltip-type').textContent = `[${gesture.type}]`;
+            tooltip.querySelector('.tooltip-type').textContent = `[${category}]`;
             tooltip.querySelector('.tooltip-desc').textContent = `— ${gesture.description || 'No description'}`;
             tooltip.classList.add('visible');
 
             // Mobile: info-box replacement
             infoGesture.innerHTML = `
                 <span class="gesture-name">${gesture.emoji || '✨'} ${gesture.name}</span>
-                <span class="gesture-type">[${gesture.type}]</span>
+                <span class="gesture-type">[${category}]</span>
                 <span class="gesture-desc">${gesture.description || 'No description'}</span>
             `;
             infoBox.classList.add('showing-gesture');
@@ -825,7 +889,9 @@
 
         // Filter checkboxes
         Object.values(filters).forEach(checkbox => {
-            checkbox.addEventListener('change', filterGestures);
+            if (checkbox) {
+                checkbox.addEventListener('change', filterGestures);
+            }
         });
 
         // Tooltip on hover (desktop only) - anchored to button

@@ -41,7 +41,7 @@ import ParticleSystem from '../core/ParticleSystem.js'; // Reuse 2D particles!
 import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion, listEmotions, hasEmotion } from '../core/emotions/index.js';
-import { getGesture, listGestures } from '../core/gestures/index.js';
+import { getGesture, listGestures, GESTURE_CATEGORIES } from '../core/gestures/index.js';
 import { applySSSPreset as applySSS, SSSPresets } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
@@ -1660,10 +1660,19 @@ export class EmotiveMascot3D {
 
     /**
      * Get list of available gestures
-     * @returns {Array<{name: string, emoji: string, type: string, description: string}>} Array of gesture info objects
+     * @returns {Array<{name: string, emoji: string, type: string, category: string, description: string}>} Array of gesture info objects
      */
     getAvailableGestures() {
         return listGestures();
+    }
+
+    /**
+     * Get gesture categories mapping (for UI generation)
+     * Returns semantic categories: idle, dance, actions, reactions, destruction, atmosphere
+     * @returns {Object<string, string[]>} Category name to array of gesture names
+     */
+    getGestureCategories() {
+        return GESTURE_CATEGORIES;
     }
 
     /**

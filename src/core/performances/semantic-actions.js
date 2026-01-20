@@ -20,6 +20,14 @@
  *
  * This enables LLMs to trigger sophisticated choreographed performances with simple
  * action names, while maintaining fallback behavior for manual choreography.
+ *
+ * Actions are organized by semantic category matching the gesture system:
+ * - CONVERSATIONAL: Dialog-driven actions (greet, confirm, deny, guide)
+ * - COGNITIVE: Thinking/processing actions (think, listen, question)
+ * - PHYSICAL: Movement and reaction actions (attack, hit, dance, dodge)
+ * - DRAMATIC: High-impact theatrical actions (celebrate_big, rage, transform)
+ * - AMBIENT: Environmental/atmospheric actions (idle, ambient, weather)
+ * - NEUTRAL: Default/no-action state
  */
 
 /**
@@ -252,6 +260,490 @@ export const SEMANTIC_ACTIONS = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
+    // PHYSICAL ACTIONS (Maps to: actions, reactions, dance gesture categories)
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Attacking or aggressive action
+     */
+    attack: {
+        performance: 'attacking',
+        defaultShape: 'diamond',           // Sharp, aggressive shape
+        defaultGesture: 'lunge',           // Forward attack motion
+        emotionMatch: 'anger',
+        category: 'physical',
+        description: 'Aggressive forward action',
+        intensityModifier: 1.3,            // High intensity
+        examples: [
+            'Take this!',
+            'Attack!',
+            'Charge!'
+        ]
+    },
+
+    /**
+     * Being hit or taking damage
+     */
+    hit: {
+        performance: 'hit_reaction',
+        defaultShape: 'circle',            // Defensive shape
+        defaultGesture: 'oofFront',        // Impact reaction
+        emotionMatch: 'pain',
+        category: 'physical',
+        description: 'Reacting to being hit',
+        intensityModifier: 1.1,
+        examples: [
+            'Oof!',
+            'Ouch!',
+            'That hurt!'
+        ]
+    },
+
+    /**
+     * Dodging or evading
+     */
+    dodge: {
+        performance: 'dodging',
+        defaultShape: 'circle',            // Agile shape
+        defaultGesture: 'wobble',          // Quick evasive motion
+        emotionMatch: 'fear',
+        category: 'physical',
+        description: 'Evading an attack or obstacle',
+        intensityModifier: 1.0,
+        examples: [
+            'Whoa!',
+            'Close one!',
+            'Missed me!'
+        ]
+    },
+
+    /**
+     * Dancing or grooving
+     */
+    dance: {
+        performance: 'dancing',
+        defaultShape: 'star',              // Fun, dynamic shape
+        defaultGesture: 'runningman',      // Classic dance move
+        emotionMatch: 'joy',
+        category: 'physical',
+        description: 'Dancing or moving to rhythm',
+        intensityModifier: 1.2,
+        examples: [
+            'Let\'s dance!',
+            'Groove time!',
+            'Feel the beat!'
+        ]
+    },
+
+    /**
+     * Jumping with excitement
+     */
+    jump: {
+        performance: 'jumping',
+        defaultShape: 'star',              // Energetic shape
+        defaultGesture: 'jump',            // Vertical jump
+        emotionMatch: 'excitement',
+        category: 'physical',
+        description: 'Jumping with energy',
+        intensityModifier: 1.1,
+        examples: [
+            'Jump!',
+            'Boing!',
+            'Up we go!'
+        ]
+    },
+
+    /**
+     * Spinning around
+     */
+    spin: {
+        performance: 'spinning',
+        defaultShape: 'circle',            // Rotational shape
+        defaultGesture: 'spin',            // Full rotation
+        emotionMatch: 'excitement',
+        category: 'physical',
+        description: 'Spinning or rotating',
+        intensityModifier: 1.0,
+        examples: [
+            'Wheee!',
+            'Spin!',
+            'Round and round!'
+        ]
+    },
+
+    /**
+     * Bowing or showing respect
+     */
+    bow: {
+        performance: 'bowing',
+        defaultShape: 'circle',            // Humble shape
+        defaultGesture: 'bow',             // Respectful bow
+        emotionMatch: 'calm',
+        category: 'physical',
+        description: 'Showing respect or gratitude',
+        intensityModifier: 0.7,
+        examples: [
+            'Thank you',
+            'I\'m honored',
+            'My pleasure'
+        ]
+    },
+
+    /**
+     * Pointing to direct attention
+     */
+    point: {
+        performance: 'pointing',
+        defaultShape: 'triangle',          // Directional shape
+        defaultGesture: 'point',           // Pointing gesture
+        emotionMatch: 'calm',
+        category: 'physical',
+        description: 'Directing attention somewhere',
+        intensityModifier: 0.9,
+        examples: [
+            'Look over there!',
+            'This way!',
+            'Right here!'
+        ]
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // DRAMATIC ACTIONS (Maps to: destruction, reactions, atmosphere gesture categories)
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Big celebration with effects
+     */
+    celebrate_big: {
+        performance: 'celebrating_big',
+        defaultShape: 'star',              // Celebratory shape
+        defaultGesture: 'confetti',        // Party effect
+        emotionMatch: 'joy',
+        category: 'dramatic',
+        description: 'Major celebration with dramatic effects',
+        intensityModifier: 1.4,            // Maximum celebration
+        examples: [
+            'AMAZING!',
+            'INCREDIBLE!',
+            'WE DID IT!'
+        ]
+    },
+
+    /**
+     * Expressing intense anger
+     */
+    rage: {
+        performance: 'raging',
+        defaultShape: 'diamond',           // Sharp, angry shape
+        defaultGesture: 'rage',            // Intense anger gesture
+        emotionMatch: 'anger',
+        category: 'dramatic',
+        description: 'Expressing intense anger or frustration',
+        intensityModifier: 1.3,
+        examples: [
+            'ARGH!',
+            'This is unacceptable!',
+            'I\'ve had enough!'
+        ]
+    },
+
+    /**
+     * Dramatic transformation
+     */
+    transform: {
+        performance: 'transforming',
+        defaultShape: 'star',              // Dynamic shape
+        defaultGesture: 'morph',           // Transformation effect
+        emotionMatch: 'excitement',
+        category: 'dramatic',
+        description: 'Dramatic shape or state transformation',
+        intensityModifier: 1.2,
+        examples: [
+            'Transforming!',
+            'Watch this!',
+            'Behold!'
+        ]
+    },
+
+    /**
+     * Breaking apart dramatically
+     */
+    shatter: {
+        performance: 'shattering',
+        defaultShape: 'circle',            // Pre-shatter shape
+        defaultGesture: 'shatter',         // Break apart effect
+        emotionMatch: 'surprise',
+        category: 'dramatic',
+        description: 'Breaking apart into pieces',
+        intensityModifier: 1.3,
+        examples: [
+            'Breaking!',
+            'Shattered!',
+            'Falling apart!'
+        ]
+    },
+
+    /**
+     * Fading away or dissolving
+     */
+    dissolve: {
+        performance: 'dissolving',
+        defaultShape: 'circle',            // Fading shape
+        defaultGesture: 'dissolveUp',      // Dissolve effect
+        emotionMatch: 'sadness',
+        category: 'dramatic',
+        description: 'Fading or dissolving away',
+        intensityModifier: 0.8,
+        examples: [
+            'Goodbye...',
+            'Fading away...',
+            'Disappearing...'
+        ]
+    },
+
+    /**
+     * Getting knocked down
+     */
+    knockdown: {
+        performance: 'knocked_down',
+        defaultShape: 'circle',            // Defeated shape
+        defaultGesture: 'knockdown',       // Fall down gesture
+        emotionMatch: 'sadness',
+        category: 'dramatic',
+        description: 'Being knocked down or defeated',
+        intensityModifier: 1.1,
+        examples: [
+            'I\'m down!',
+            'Defeated...',
+            'Can\'t go on...'
+        ]
+    },
+
+    /**
+     * Victory pose
+     */
+    victory: {
+        performance: 'victorious',
+        defaultShape: 'star',              // Triumphant shape
+        defaultGesture: 'burstUp',         // Upward celebration
+        emotionMatch: 'joy',
+        category: 'dramatic',
+        description: 'Celebrating victory',
+        intensityModifier: 1.3,
+        examples: [
+            'Victory!',
+            'I won!',
+            'Champion!'
+        ]
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // AMBIENT ACTIONS (Maps to: idle, atmosphere gesture categories)
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Idle/waiting state with subtle movement
+     */
+    idle: {
+        performance: 'idling',
+        defaultShape: 'circle',            // Relaxed shape
+        defaultGesture: 'breathe',         // Subtle breathing
+        emotionMatch: 'neutral',
+        category: 'ambient',
+        description: 'Idle state with subtle animation',
+        intensityModifier: 0.4,            // Very subtle
+        examples: [
+            '...',
+            '*waiting*',
+            '*idle*'
+        ]
+    },
+
+    /**
+     * Ambient environmental effect
+     */
+    ambient: {
+        performance: 'ambient_effect',
+        defaultShape: 'circle',            // Neutral shape
+        defaultGesture: 'glow',            // Ambient glow
+        emotionMatch: 'calm',
+        category: 'ambient',
+        description: 'Ambient environmental effect',
+        intensityModifier: 0.5,
+        examples: [
+            '*glowing*',
+            '*ambient*',
+            '*atmospheric*'
+        ]
+    },
+
+    /**
+     * Weather-like atmospheric effect
+     */
+    weather: {
+        performance: 'weather_effect',
+        defaultShape: 'circle',            // Neutral shape
+        defaultGesture: 'rain',            // Weather particles
+        emotionMatch: 'calm',
+        category: 'ambient',
+        description: 'Weather or particle effect',
+        intensityModifier: 0.6,
+        examples: [
+            '*raining*',
+            '*snowing*',
+            '*stormy*'
+        ]
+    },
+
+    /**
+     * Sleepy or drowsy state
+     */
+    sleepy: {
+        performance: 'sleeping',
+        defaultShape: 'circle',            // Relaxed shape
+        defaultGesture: 'sway',            // Drowsy sway
+        emotionMatch: 'calm',
+        category: 'ambient',
+        description: 'Sleepy or drowsy state',
+        intensityModifier: 0.3,            // Very low energy
+        examples: [
+            '*yawn*',
+            'So sleepy...',
+            'Zzz...'
+        ]
+    },
+
+    /**
+     * Alert/awakening state
+     */
+    alert: {
+        performance: 'alerting',
+        defaultShape: 'diamond',           // Sharp, alert shape
+        defaultGesture: 'snap',            // Quick snap to attention
+        emotionMatch: 'surprise',
+        category: 'ambient',
+        description: 'Becoming alert or awakening',
+        intensityModifier: 1.0,
+        examples: [
+            'What?!',
+            'Huh?',
+            'I\'m awake!'
+        ]
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // EMOTIONAL REACTIONS (Maps to: reactions gesture category)
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Surprised reaction
+     */
+    surprise: {
+        performance: 'surprised',
+        defaultShape: 'star',              // Startled shape
+        defaultGesture: 'elasticBounce',   // Springy surprise
+        emotionMatch: 'surprise',
+        category: 'emotional',
+        description: 'Surprised or startled reaction',
+        intensityModifier: 1.1,
+        examples: [
+            'Oh!',
+            'Wow!',
+            'What?!'
+        ]
+    },
+
+    /**
+     * Scared/frightened reaction
+     */
+    scared: {
+        performance: 'frightened',
+        defaultShape: 'circle',            // Defensive shape
+        defaultGesture: 'shiver',          // Fearful shiver
+        emotionMatch: 'fear',
+        category: 'emotional',
+        description: 'Scared or frightened reaction',
+        intensityModifier: 1.0,
+        examples: [
+            'Eek!',
+            'I\'m scared!',
+            'Help!'
+        ]
+    },
+
+    /**
+     * Sad/disappointed reaction
+     */
+    sad: {
+        performance: 'saddened',
+        defaultShape: 'heart',             // Emotional shape
+        defaultGesture: 'deflate',         // Deflating sadly
+        emotionMatch: 'sadness',
+        category: 'emotional',
+        description: 'Sad or disappointed reaction',
+        intensityModifier: 0.7,
+        examples: [
+            'Oh no...',
+            'That\'s sad...',
+            'I\'m sorry to hear that'
+        ]
+    },
+
+    /**
+     * Excited/thrilled reaction
+     */
+    excited: {
+        performance: 'excited',
+        defaultShape: 'star',              // Energetic shape
+        defaultGesture: 'sparkle',         // Excited sparkle
+        emotionMatch: 'excitement',
+        category: 'emotional',
+        description: 'Excited or thrilled reaction',
+        intensityModifier: 1.2,
+        examples: [
+            'Yes!',
+            'This is exciting!',
+            'I can\'t wait!'
+        ]
+    },
+
+    /**
+     * Confused/puzzled reaction
+     */
+    confused: {
+        performance: 'confused',
+        defaultShape: 'circle',            // Uncertain shape
+        defaultGesture: 'wobble',          // Confused wobble
+        emotionMatch: 'confusion',
+        category: 'emotional',
+        description: 'Confused or puzzled reaction',
+        intensityModifier: 0.8,
+        examples: [
+            'Huh?',
+            'I don\'t understand...',
+            'That\'s confusing'
+        ]
+    },
+
+    /**
+     * Love/affection expression
+     */
+    love: {
+        performance: 'loving',
+        defaultShape: 'heart',             // Love shape
+        defaultGesture: 'heartbeat',       // Pulsing heart
+        emotionMatch: 'love',
+        category: 'emotional',
+        description: 'Expressing love or affection',
+        intensityModifier: 1.1,
+        examples: [
+            'I love it!',
+            'So sweet!',
+            'Adorable!'
+        ]
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
     // NEUTRAL / NONE
     // ═══════════════════════════════════════════════════════════════════════════════════
 
@@ -293,13 +785,24 @@ export function getAvailableActions() {
 
 /**
  * Get actions by category
- * @param {string} category - Category name ('conversational', 'cognitive', 'neutral')
+ * @param {string} category - Category name ('conversational', 'cognitive', 'physical', 'dramatic', 'ambient', 'emotional', 'neutral')
  * @returns {Array<Object>} List of actions in category
  */
 export function getActionsByCategory(category) {
     return Object.entries(SEMANTIC_ACTIONS)
         .filter(([_, config]) => config.category === category)
         .map(([name, config]) => ({ name, ...config }));
+}
+
+/**
+ * Get all available categories
+ * @returns {Array<string>} List of unique category names
+ */
+export function getAvailableCategories() {
+    const categories = new Set(
+        Object.values(SEMANTIC_ACTIONS).map(config => config.category)
+    );
+    return Array.from(categories);
 }
 
 /**

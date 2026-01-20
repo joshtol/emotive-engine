@@ -42,91 +42,50 @@ mascot.setEmotion('neutral', 'curiosity');  // Curious neutral
 
 ## Gestures
 
-### Movement Gestures
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `bounce` | Playful up-down | 4 beats |
-| `sway` | Gentle side-to-side | 1 bar |
-| `float` | Dreamy floating motion | ~2000ms |
-| `wiggle` | Side-to-side shake | 2 beats |
-| `nod` | Vertical acknowledgment | ~350ms |
-| `shake` | Horizontal "no" | ~400ms |
+Gestures are organized into **6 categories** by purpose:
 
-### Directional Gestures (Beat-Synced)
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `stepLeft` | Quick weight shift left | 1 beat |
-| `stepRight` | Quick weight shift right | 1 beat |
-| `stepUp` | Quick weight shift up | 1 beat |
-| `stepDown` | Quick weight shift down | 1 beat |
-| `slideLeft` | Smooth glide left | 2 beats |
-| `slideRight` | Smooth glide right | 2 beats |
-| `leanLeft` | Body tilt left | 2 beats |
-| `leanRight` | Body tilt right | 2 beats |
-| `kickLeft` | Quick kick left | 1 beat |
-| `kickRight` | Quick kick right | 1 beat |
-| `spinLeft` | Rotate counter-clockwise | ~600ms |
-| `spinRight` | Rotate clockwise | ~600ms |
+| Category | Purpose | Examples |
+|----------|---------|----------|
+| **Idle** | Background behaviors | `breathe`, `sway`, `float` |
+| **Dance** | Music-synced moves | `bounce`, `stepLeft`, `pop` |
+| **Actions** | Deliberate movements | `jump`, `spin`, `bow` |
+| **Reactions** | Impact responses | `oofLeft`, `recoil`, `wobble` |
+| **Destruction** | Breaking effects (3D) | `shatter`, `dissolve`, `morph` |
+| **Atmosphere** | Particle/glow effects | `rain`, `glow`, `fade` |
 
-### Directional Gestures (Storytelling)
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `floatUp` | Ethereal rise | ~2000ms |
-| `floatDown` | Gentle sink | ~2000ms |
-| `floatLeft` | Drift left | ~2000ms |
-| `floatRight` | Drift right | ~2000ms |
-| `pointUp` | Point upward | ~500ms |
-| `pointDown` | Point downward | ~500ms |
-| `pointLeft` | Point left | ~500ms |
-| `pointRight` | Point right | ~500ms |
+### Common Gestures
 
-### Accent Gestures (Dance-Friendly)
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `pop` | Quick scale burst | ~200ms |
-| `bob` | Head bob accent | ~300ms |
-| `dip` | Quick dip motion | ~400ms |
-| `flare` | Energetic burst | ~300ms |
-| `swell` | Gradual expansion | ~500ms |
-| `swagger` | Confident movement | ~600ms |
+| Gesture | Category | Description |
+|---------|----------|-------------|
+| `bounce` | Dance | Playful up-down motion |
+| `sway` | Idle | Gentle side-to-side |
+| `jump` | Actions | Vertical leap |
+| `spin` | Actions | Full rotation |
+| `bow` | Actions | Graceful forward bow |
+| `oofFront` | Reactions | Gut punch impact (3D) |
+| `shatter` | Destruction | Mesh fragmentation (3D) |
+| `glow` | Atmosphere | Sustained luminance |
 
-### Effect Gestures
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `pulse` | Rhythmic throb | ~500ms |
-| `spin` | Full rotation | ~600ms |
-| `flash` | Brief brightness burst | ~150ms |
-| `glow` | Sustained luminance | ~800ms |
-| `sparkle` | Twinkling bursts | 2 beats |
-| `shimmer` | Wave-like sparkle | 1 bar |
+### Directional Gestures
 
-### Transform Gestures
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `jump` | Vertical leap | ~400ms |
-| `twist` | Rotational twist | ~500ms |
-| `hula` | Hip-swaying motion | ~800ms |
-| `expand` | Confident growth | ~400ms |
-| `contract` | Modest shrink | ~400ms |
+Many gestures have directional variants:
 
-### Impact Gestures (3D Only - Mesh Deformation)
-| Gesture | Description | Duration |
-|---------|-------------|----------|
-| `oofLeft` | Punched from left | 1 beat |
-| `oofRight` | Punched from right | 1 beat |
-| `oofFront` | Gut punch | 1 beat |
-| `oofBack` | Kidney shot | 1 beat |
-| `oofUp` | Uppercut | 1 beat |
-| `oofDown` | Hammer fist | 1 beat |
-
-**Note:** Oof gestures create localized dents on the mesh surface with impact glow. The deformation is "tidally locked" to the camera - the dent always appears on the camera-facing side regardless of mesh rotation.
+| Base | Variants |
+|------|----------|
+| `step` | `stepLeft`, `stepRight`, `stepUp`, `stepDown` |
+| `float` | `floatUp`, `floatDown`, `floatLeft`, `floatRight` |
+| `point` | `pointUp`, `pointDown`, `pointLeft`, `pointRight` |
+| `lunge` | `lungeForward`, `lungeBack`, `lungeLeft`, `lungeRight`, `lungeUp`, `lungeDown` |
+| `dissolve` | `dissolveUp`, `dissolveDown`, `dissolveLeft`, `dissolveRight`, `dissolveAway`, `dissolveToward` |
 
 ```javascript
-mascot.gesture('bounce');
-mascot.gesture('stepLeft');  // Directional dance move
-mascot.gesture(['sway', 'shimmer']);  // Layered gestures
-mascot.gesture('oofFront');  // 3D impact with mesh deformation
+mascot.express('bounce');
+mascot.express('stepLeft');  // Directional dance move
+mascot.express(['sway', 'shimmer']);  // Layered gestures
+mascot.express('oofFront');  // 3D impact with mesh deformation
 ```
+
+> **Full Reference:** See [GESTURES.md](./GESTURES.md) for complete gesture documentation.
 
 ---
 

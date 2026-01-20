@@ -12,7 +12,7 @@ import {
     isValidDiagonal,
     getDirection,
     capitalize
-} from '../../../../src/core/gestures/motions/directions.js';
+} from '../../../../src/core/gestures/_shared/directions.js';
 
 describe('Directions Module', () => {
     describe('DIRECTIONS constant', () => {

@@ -83,104 +83,232 @@
  * ║ This redundancy enables richer LLM-driven expression and choreography.
  * ║ The cost (code size) is minimal since factories share implementation.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                           FOLDER STRUCTURE
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Gestures are organized by semantic purpose for new developer intuition:
+ * ║
+ * ║ idle/           - Subtle continuous behaviors
+ * ║   breathing/    - breathe, expand, contract, pulse
+ * ║   swaying/      - sway, float, bob, lean (+ directionals)
+ * ║   fidgeting/    - jitter, twitch, vibrate, shake, wiggle
+ * ║
+ * ║ dance/          - Music-synchronized movements
+ * ║   steps/        - stepLeft/Right/Up/Down, slideLeft/Right
+ * ║   moves/        - runningman, charleston, hula, twist
+ * ║   accents/      - pop, flare, swell, swagger, dip, bounce
+ * ║   orbits/       - orbit (+ directionals)
+ * ║
+ * ║ actions/        - Deliberate character movements
+ * ║   locomotion/   - jump (+ directionals), rush, lunge
+ * ║   acrobatics/   - spin, flip, backflip
+ * ║   gesturing/    - point, kick, bow, nod, reach, headBob
+ * ║   poses/        - crouch, tilt (+ directionals)
+ * ║
+ * ║ reactions/      - Responses to events
+ * ║   impacts/      - oof, recoil, knockdown, knockout, squash, stretch, etc.
+ * ║   emotions/     - rage, fury, battlecry, charge
+ * ║   oscillations/ - wobble, teeter, rock, pendulum
+ * ║
+ * ║ destruction/    - Breaking apart effects
+ * ║   shatter/      - shatter, shatterFactory variants
+ * ║   dissolve/     - dissolve directionals
+ * ║   reform/       - morph
+ * ║
+ * ║ atmosphere/     - Environmental effects
+ * ║   weather/      - rain, drift, vortex, cascade
+ * ║   particles/    - confetti, fizz, scatter, swarm, burst, ripple, wave
+ * ║   glow/         - flash, glow, bloom, flicker, shiver, heartbeat, snap, elasticBounce
+ * ║   control/      - hold, fade, settle, peek, directional, magnetic
+ * ║
+ * ║ _shared/        - Common utilities (directions.js)
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
 import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ IMPORT MOTION GESTURES (Blending - add to existing motion)
+// │ IMPORT IDLE GESTURES (Subtle continuous behaviors)
 // └─────────────────────────────────────────────────────────────────────────────────────
-import bounce from './motions/bounce.js';
-import pulse from './motions/pulse.js';
-import shake from './motions/shake.js';
-import nod from './motions/nod.js';
-import vibrate from './motions/vibrate.js';
-import twitch from './motions/twitch.js';
-import sway from './motions/sway.js';
-import float from './motions/float.js';
-import jitter from './motions/jitter.js';
-import wiggle from './motions/wiggle.js';
-import headBob from './motions/headBob.js';
-import lean from './motions/lean.js';
-import point from './motions/point.js';
-import reach from './motions/reach.js';
-// Accent gestures (dance-friendly - boost groove, don't compete)
-import pop from './motions/pop.js';
-// bob removed - redundant with headBob
-import swell from './motions/swell.js';
-import swagger from './motions/swagger.js';
-import dip from './motions/dip.js';
-import flare from './motions/flare.js';
-// Directional dance gestures (beat-synced steps and slides)
-import stepLeft from './motions/stepLeft.js';
-import stepRight from './motions/stepRight.js';
-import stepUp from './motions/stepUp.js';
-import stepDown from './motions/stepDown.js';
-import slideLeft from './motions/slideLeft.js';
-import slideRight from './motions/slideRight.js';
-// Directional lean gestures
-import leanLeft from './motions/leanLeft.js';
-import leanRight from './motions/leanRight.js';
-// Directional kick gestures (new)
-import kickLeft from './motions/kickLeft.js';
-import kickRight from './motions/kickRight.js';
-// Directional float gestures (storytelling)
-import floatUp from './motions/floatUp.js';
-import floatDown from './motions/floatDown.js';
-import floatLeft from './motions/floatLeft.js';
-import floatRight from './motions/floatRight.js';
-// Directional point gestures (storytelling)
-import pointUp from './motions/pointUp.js';
-import pointDown from './motions/pointDown.js';
-import pointLeft from './motions/pointLeft.js';
-import pointRight from './motions/pointRight.js';
-// Blending gestures moved from effects/
-import breathe from './motions/breathe.js';
-import expand from './motions/expand.js';
-import contract from './motions/contract.js';
+// idle/breathing/
+import breathe from './idle/breathing/breathe.js';
+import expand from './idle/breathing/expand.js';
+import contract from './idle/breathing/contract.js';
+import pulse from './idle/breathing/pulse.js';
+// idle/swaying/
+import sway from './idle/swaying/sway.js';
+import float from './idle/swaying/float.js';
+import floatUp from './idle/swaying/floatUp.js';
+import floatDown from './idle/swaying/floatDown.js';
+import floatLeft from './idle/swaying/floatLeft.js';
+import floatRight from './idle/swaying/floatRight.js';
+import bob from './idle/swaying/bob.js';
+import lean from './idle/swaying/lean.js';
+import leanLeft from './idle/swaying/leanLeft.js';
+import leanRight from './idle/swaying/leanRight.js';
+// idle/fidgeting/
+import jitter from './idle/fidgeting/jitter.js';
+import twitch from './idle/fidgeting/twitch.js';
+import vibrate from './idle/fidgeting/vibrate.js';
+import shake from './idle/fidgeting/shake.js';
+import wiggle from './idle/fidgeting/wiggle.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ IMPORT TRANSFORM GESTURES (Override - replace motion completely)
+// │ IMPORT DANCE GESTURES (Music-synchronized movements)
 // └─────────────────────────────────────────────────────────────────────────────────────
-import spin from './transforms/spin.js';
-// Directional spin gestures
-import spinLeft from './transforms/spinLeft.js';
-import spinRight from './transforms/spinRight.js';
-import jump from './transforms/jump.js';
-// Directional jump gestures
-import jumpUp from './transforms/jumpUp.js';
-import jumpDown from './transforms/jumpDown.js';
-import jumpLeft from './transforms/jumpLeft.js';
-import jumpRight from './transforms/jumpRight.js';
-import morph from './transforms/morph.js';
-import stretch from './transforms/stretch.js';
-import tilt from './transforms/tilt.js';
-// Directional tilt gestures
-import tiltUp from './transforms/tiltUp.js';
-import tiltDown from './transforms/tiltDown.js';
-import tiltLeft from './transforms/tiltLeft.js';
-import tiltRight from './transforms/tiltRight.js';
-// Directional orbit gestures (simple orbiting motion)
-import orbitLeft from './transforms/orbitLeft.js';
-import orbitRight from './transforms/orbitRight.js';
-import orbitUp from './transforms/orbitUp.js';
-import orbitDown from './transforms/orbitDown.js';
-import hula from './transforms/hula.js';
-import twist from './transforms/twist.js';
-// Override gestures moved from effects/ and motions/
-import orbit from './transforms/orbit.js';
-import vortex from './transforms/vortex.js';
-import shatter from './transforms/shatter.js';
-// New transform gestures - acrobatic
-import flip from './transforms/flip.js';
-import backflip from './transforms/backflip.js';
-// New transform gestures - dramatic poses
-import crouch from './transforms/crouch.js';
-import lunge from './transforms/lunge.js';
-import recoil from './transforms/recoil.js';
-import bow from './transforms/bow.js';
+// dance/steps/
+import stepLeft from './dance/steps/stepLeft.js';
+import stepRight from './dance/steps/stepRight.js';
+import stepUp from './dance/steps/stepUp.js';
+import stepDown from './dance/steps/stepDown.js';
+import slideLeft from './dance/steps/slideLeft.js';
+import slideRight from './dance/steps/slideRight.js';
+// dance/moves/
+import runningman from './dance/moves/runningman.js';
+import charleston from './dance/moves/charleston.js';
+import hula from './dance/moves/hula.js';
+import twist from './dance/moves/twist.js';
+// dance/accents/
+import pop from './dance/accents/pop.js';
+import flare from './dance/accents/flare.js';
+import swell from './dance/accents/swell.js';
+import swagger from './dance/accents/swagger.js';
+import dip from './dance/accents/dip.js';
+import bounce from './dance/accents/bounce.js';
+// dance/orbits/
+import orbit from './dance/orbits/orbit.js';
+import orbitLeft from './dance/orbits/orbitLeft.js';
+import orbitRight from './dance/orbits/orbitRight.js';
+import orbitUp from './dance/orbits/orbitUp.js';
+import orbitDown from './dance/orbits/orbitDown.js';
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ IMPORT ACTION GESTURES (Deliberate character movements)
+// └─────────────────────────────────────────────────────────────────────────────────────
+// actions/locomotion/
+import jump from './actions/locomotion/jump.js';
+// jumpUp removed - redundant with jump (which already goes up)
+import jumpDown from './actions/locomotion/jumpDown.js';
+import jumpLeft from './actions/locomotion/jumpLeft.js';
+import jumpRight from './actions/locomotion/jumpRight.js';
+import { createRushGesture } from './actions/locomotion/rushFactory.js';
+import lunge from './actions/locomotion/lunge.js';
+import { createLungeGesture } from './actions/locomotion/lungeFactory.js';
+// actions/acrobatics/
+import spin from './actions/acrobatics/spin.js';
+import spinLeft from './actions/acrobatics/spinLeft.js';
+import spinRight from './actions/acrobatics/spinRight.js';
+import flip from './actions/acrobatics/flip.js';
+import backflip from './actions/acrobatics/backflip.js';
+// actions/gesturing/
+import point from './actions/gesturing/point.js';
+import pointUp from './actions/gesturing/pointUp.js';
+import pointDown from './actions/gesturing/pointDown.js';
+import pointLeft from './actions/gesturing/pointLeft.js';
+import pointRight from './actions/gesturing/pointRight.js';
+import kickLeft from './actions/gesturing/kickLeft.js';
+import kickRight from './actions/gesturing/kickRight.js';
+import bow from './actions/gesturing/bow.js';
+// bowFactory removed - directional bow gestures (bowForward, bowBack, bowLeft, bowRight) were
+// semantically incorrect. A bow is always forward toward the audience. Use tilt for lateral leans.
+import nod from './actions/gesturing/nod.js';
+import reach from './actions/gesturing/reach.js';
+import headBob from './actions/gesturing/headBob.js';
+// actions/poses/
+import crouch from './actions/poses/crouch.js';
+import tilt from './actions/poses/tilt.js';
+import tiltUp from './actions/poses/tiltUp.js';
+import tiltDown from './actions/poses/tiltDown.js';
+import tiltLeft from './actions/poses/tiltLeft.js';
+import tiltRight from './actions/poses/tiltRight.js';
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ IMPORT REACTION GESTURES (Responses to events)
+// └─────────────────────────────────────────────────────────────────────────────────────
+// reactions/impacts/
+import { createOofGesture } from './reactions/impacts/oofFactory.js';
+import recoil from './reactions/impacts/recoil.js';
+import { createRecoilGesture } from './reactions/impacts/recoilFactory.js';
+import knockdown from './reactions/impacts/knockdown.js';
+import knockout from './reactions/impacts/knockout.js';
+import inflate from './reactions/impacts/inflate.js';
+import deflate from './reactions/impacts/deflate.js';
+import squash from './reactions/impacts/squash.js';
+import stretch from './reactions/impacts/stretch.js';
+import pancake from './reactions/impacts/pancake.js';
+// reactions/emotions/
+import rage from './reactions/emotions/rage.js';
+import fury from './reactions/emotions/fury.js';
+import battlecry from './reactions/emotions/battlecry.js';
+import charge from './reactions/emotions/charge.js';
+// reactions/oscillations/
+import wobble from './reactions/oscillations/wobble.js';
+import teeter from './reactions/oscillations/teeter.js';
+import rock from './reactions/oscillations/rock.js';
+import pendulum from './reactions/oscillations/pendulum.js';
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ IMPORT DESTRUCTION GESTURES (Breaking apart effects)
+// └─────────────────────────────────────────────────────────────────────────────────────
+// destruction/shatter/
+import shatter from './destruction/shatter/shatter.js';
+import { createShatterGesture } from './destruction/shatter/shatterFactory.js';
+// destruction/dissolve/
+import { createDissolveGesture } from './destruction/dissolve/dissolveFactory.js';
+// destruction/reform/
+import morph from './destruction/reform/morph.js';
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ IMPORT ATMOSPHERE GESTURES (Environmental effects)
+// └─────────────────────────────────────────────────────────────────────────────────────
+// atmosphere/weather/
+import rain from './atmosphere/weather/rain.js';
+import drift from './atmosphere/weather/drift.js';
+import driftUp from './atmosphere/weather/driftUp.js';
+import driftDown from './atmosphere/weather/driftDown.js';
+import driftLeft from './atmosphere/weather/driftLeft.js';
+import driftRight from './atmosphere/weather/driftRight.js';
+import vortex from './atmosphere/weather/vortex.js';
+import cascadeUp from './atmosphere/weather/cascadeUp.js';
+import cascadeDown from './atmosphere/weather/cascadeDown.js';
+import cascadeLeft from './atmosphere/weather/cascadeLeft.js';
+import cascadeRight from './atmosphere/weather/cascadeRight.js';
+// atmosphere/particles/
+import confetti from './atmosphere/particles/confetti.js';
+import fizz from './atmosphere/particles/fizz.js';
+import swarmUp from './atmosphere/particles/swarmUp.js';
+import swarmDown from './atmosphere/particles/swarmDown.js';
+import swarmLeft from './atmosphere/particles/swarmLeft.js';
+import swarmRight from './atmosphere/particles/swarmRight.js';
+import burst from './atmosphere/particles/burst.js';
+import burstUp from './atmosphere/particles/burstUp.js';
+import burstDown from './atmosphere/particles/burstDown.js';
+import burstLeft from './atmosphere/particles/burstLeft.js';
+import burstRight from './atmosphere/particles/burstRight.js';
+import ripple from './atmosphere/particles/ripple.js';
+import wave from './atmosphere/particles/wave.js';
+// atmosphere/glow/
+import flash from './atmosphere/glow/flash.js';
+import glow from './atmosphere/glow/glow.js';
+import bloom from './atmosphere/glow/bloom.js';
+import flicker from './atmosphere/glow/flicker.js';
+import shiver from './atmosphere/glow/shiver.js';
+import heartbeat from './atmosphere/glow/heartbeat.js';
+import snap from './atmosphere/glow/snap.js';
+import elasticBounce from './atmosphere/glow/elasticBounce.js';
+// atmosphere/control/
+import hold from './atmosphere/control/hold.js';
+import fade from './atmosphere/control/fade.js';
+import settle from './atmosphere/control/settle.js';
+import peek from './atmosphere/control/peek.js';
+import directional from './atmosphere/control/directional.js';
+import { createMagneticGesture } from './atmosphere/control/magneticFactory.js';
+
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ CREATE DIRECTIONAL GESTURE VARIANTS
+// └─────────────────────────────────────────────────────────────────────────────────────
 // Directional lunge gestures
-import { createLungeGesture } from './transforms/lungeFactory.js';
 const lungeForward = createLungeGesture('forward');
 const lungeBack = createLungeGesture('back');
 const lungeLeft = createLungeGesture('left');
@@ -188,32 +316,15 @@ const lungeRight = createLungeGesture('right');
 const lungeUp = createLungeGesture('up');
 const lungeDown = createLungeGesture('down');
 // Directional recoil gestures
-import { createRecoilGesture } from './transforms/recoilFactory.js';
 const recoilBack = createRecoilGesture('back');
 const recoilForward = createRecoilGesture('forward');
 const recoilLeft = createRecoilGesture('left');
 const recoilRight = createRecoilGesture('right');
 const recoilUp = createRecoilGesture('up');
 const recoilDown = createRecoilGesture('down');
-// Directional bow gestures
-import { createBowGesture } from './transforms/bowFactory.js';
-const bowForward = createBowGesture('forward');
-const bowBack = createBowGesture('back');
-const bowLeft = createBowGesture('left');
-const bowRight = createBowGesture('right');
-// New transform gestures - size transformations
-import inflate from './transforms/inflate.js';
-import deflate from './transforms/deflate.js';
-import squash from './transforms/squash.js';
-// New transform gestures - oscillating
-import pendulum from './transforms/pendulum.js';
-import teeter from './transforms/teeter.js';
-import wobble from './transforms/wobble.js';
-import rock from './transforms/rock.js';
-// New transform gestures - combat/impact
-import knockout from './transforms/knockout.js';
-import knockdown from './transforms/knockdown.js';
-import { createOofGesture } from './transforms/oofFactory.js';
+// Directional bow gestures REMOVED - bow is always forward toward the audience
+// Use tiltLeft/tiltRight for lateral leans, bow for forward bow
+// Directional oof gestures
 const oofLeft = createOofGesture('left');
 const oofRight = createOofGesture('right');
 const oofFront = createOofGesture('front');
@@ -221,7 +332,6 @@ const oofBack = createOofGesture('back');
 const oofUp = createOofGesture('up');
 const oofDown = createOofGesture('down');
 // Geometry shatter gestures (actual mesh fragmentation, 3D only)
-import { createShatterGesture } from './transforms/shatterFactory.js';
 const shatterMesh = createShatterGesture('default');
 const shatterExplosive = createShatterGesture('explosive');
 const shatterCrumble = createShatterGesture('crumble');
@@ -236,84 +346,20 @@ const shatterImplode = createShatterGesture('implode');
 const shatterGravity = createShatterGesture('gravity');
 const shatterOrbit = createShatterGesture('orbit');
 // Dissolve gestures (directional wind variants)
-import { createDissolveGesture } from './transforms/dissolveFactory.js';
 const dissolveUp = createDissolveGesture('up');
 const dissolveDown = createDissolveGesture('down');
 const dissolveLeft = createDissolveGesture('left');
 const dissolveRight = createDissolveGesture('right');
 const dissolveAway = createDissolveGesture('away');
 const dissolveToward = createDissolveGesture('toward');
-// New transform gestures - intense emotions
-import rage from './transforms/rage.js';
-import fury from './transforms/fury.js';
-import battlecry from './transforms/battlecry.js';
-import charge from './transforms/charge.js';
 // Directional rush gestures
-import { createRushGesture } from './transforms/rushFactory.js';
 const rushForward = createRushGesture('forward');
 const rushBack = createRushGesture('back');
 const rushLeft = createRushGesture('left');
 const rushRight = createRushGesture('right');
 const rushUp = createRushGesture('up');
 const rushDown = createRushGesture('down');
-// Pancake gesture (extreme squash)
-import pancake from './transforms/pancake.js';
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ IMPORT EFFECT GESTURES (Visual effects)
-// └─────────────────────────────────────────────────────────────────────────────────────
-import wave from './effects/wave.js';
-import drift from './effects/drift.js';
-// Directional drift gestures
-import driftUp from './effects/driftUp.js';
-import driftDown from './effects/driftDown.js';
-import driftLeft from './effects/driftLeft.js';
-import driftRight from './effects/driftRight.js';
-import flicker from './effects/flicker.js';
-import burst from './effects/burst.js';
-import directional from './effects/directional.js';
-import settle from './effects/settle.js';
-import fade from './effects/fade.js';
-import hold from './effects/hold.js';
-import flash from './effects/flash.js';
-import glow from './effects/glow.js';
-import peek from './effects/peek.js';
-import runningman from './effects/runningman.js';
-import charleston from './effects/charleston.js';
-import rain from './effects/rain.js';
-// New effect gestures (Tier 1 - emotional)
-import shiver from './effects/shiver.js';
-import heartbeat from './effects/heartbeat.js';
-import confetti from './effects/confetti.js';
-import fizz from './effects/fizz.js';
-// Cascade gestures (directional waterfall)
-import cascadeUp from './effects/cascadeUp.js';
-import cascadeDown from './effects/cascadeDown.js';
-import cascadeLeft from './effects/cascadeLeft.js';
-import cascadeRight from './effects/cascadeRight.js';
-// Directional burst gestures
-import burstUp from './effects/burstUp.js';
-import burstDown from './effects/burstDown.js';
-import burstLeft from './effects/burstLeft.js';
-import burstRight from './effects/burstRight.js';
-// New effect gestures (Tier 2 - dynamics)
-import ripple from './effects/ripple.js';
-import elasticBounce from './effects/elasticBounce.js';
-// Scatter gestures (directional chaos)
-import scatterUp from './effects/scatterUp.js';
-import scatterDown from './effects/scatterDown.js';
-import scatterLeft from './effects/scatterLeft.js';
-import scatterRight from './effects/scatterRight.js';
-// Swarm gestures (directional flock)
-import swarmUp from './effects/swarmUp.js';
-import swarmDown from './effects/swarmDown.js';
-import swarmLeft from './effects/swarmLeft.js';
-import swarmRight from './effects/swarmRight.js';
-// New effect gestures (Tier 3 - nice to have)
-import bloom from './effects/bloom.js';
-import snap from './effects/snap.js';
 // Directional magnetic gestures
-import { createMagneticGesture } from './effects/magneticFactory.js';
 const magneticForward = createMagneticGesture('forward');
 const magneticBack = createMagneticGesture('back');
 const magneticLeft = createMagneticGesture('left');
@@ -529,7 +575,23 @@ const MOTION_GESTURES = [
     // Blending gestures (moved from effects/)
     breathe,
     expand,
-    contract
+    contract,
+    // Oscillating motions (continuous rhythmic behaviors)
+    rock,
+    pendulum,
+    wobble,
+    teeter,
+    // Dance/rhythmic motions
+    hula,
+    orbit,
+    orbitLeft,
+    orbitRight,
+    orbitUp,
+    orbitDown,
+    twist,
+    // Dance moves (moved from effects/)
+    runningman,
+    charleston
 ];
 
 const TRANSFORM_GESTURES = [
@@ -537,8 +599,7 @@ const TRANSFORM_GESTURES = [
     spinLeft,
     spinRight,
     jump,
-    // Directional jump gestures
-    jumpUp,
+    // Directional jump gestures (jumpUp removed - redundant with jump)
     jumpDown,
     jumpLeft,
     jumpRight,
@@ -550,16 +611,6 @@ const TRANSFORM_GESTURES = [
     tiltDown,
     tiltLeft,
     tiltRight,
-    // Directional orbit gestures
-    orbitLeft,
-    orbitRight,
-    orbitUp,
-    orbitDown,
-    hula,
-    twist,
-    // Override gestures (moved from effects/ and motions/)
-    orbit,
-    vortex,
     shatter,
     // New transform gestures - acrobatic
     flip,
@@ -569,11 +620,6 @@ const TRANSFORM_GESTURES = [
     lunge,
     recoil,
     bow,
-    // Directional bow gestures
-    bowForward,
-    bowBack,
-    bowLeft,
-    bowRight,
     // Directional lunge gestures
     lungeForward,
     lungeBack,
@@ -592,11 +638,6 @@ const TRANSFORM_GESTURES = [
     inflate,
     deflate,
     squash,
-    // New transform gestures - oscillating
-    pendulum,
-    teeter,
-    wobble,
-    rock,
     // New transform gestures - combat/impact
     knockout,
     knockdown,
@@ -660,8 +701,6 @@ const EFFECT_GESTURES = [
     flash,
     glow,
     peek,
-    runningman,
-    charleston,
     rain,
     // New effect gestures (Tier 1 - emotional)
     shiver,
@@ -681,11 +720,6 @@ const EFFECT_GESTURES = [
     // New effect gestures (Tier 2 - dynamics)
     ripple,
     elasticBounce,
-    // Scatter gestures (directional chaos)
-    scatterUp,
-    scatterDown,
-    scatterLeft,
-    scatterRight,
     // Swarm gestures (directional flock)
     swarmUp,
     swarmDown,
@@ -702,7 +736,9 @@ const EFFECT_GESTURES = [
     magneticUp,
     magneticDown,
     magneticAttract,
-    magneticRepel
+    magneticRepel,
+    // Environmental particle effects
+    vortex
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -724,6 +760,101 @@ export const GESTURE_TYPES = {
     effect: EFFECT_GESTURES.map(g => g.name)
 };
 
+// ┌─────────────────────────────────────────────────────────────────────────────────────
+// │ SEMANTIC CATEGORIES - UI-friendly groupings based on folder structure
+// └─────────────────────────────────────────────────────────────────────────────────────
+// These categories match the folder organization and provide meaningful groupings
+// for demo UIs and documentation. This is the SINGLE SOURCE OF TRUTH for categories.
+export const GESTURE_CATEGORIES = {
+    idle: [
+        // idle/breathing/
+        'breathe', 'expand', 'contract', 'pulse',
+        // idle/swaying/
+        'sway', 'float', 'floatUp', 'floatDown', 'floatLeft', 'floatRight',
+        'bob', 'lean', 'leanLeft', 'leanRight',
+        // idle/fidgeting/
+        'jitter', 'twitch', 'vibrate', 'shake', 'wiggle'
+    ],
+    dance: [
+        // dance/steps/
+        'stepLeft', 'stepRight', 'stepUp', 'stepDown', 'slideLeft', 'slideRight',
+        // dance/moves/
+        'runningman', 'charleston', 'hula', 'twist',
+        // dance/accents/
+        'pop', 'flare', 'swell', 'swagger', 'dip', 'bounce',
+        // dance/orbits/
+        'orbit', 'orbitLeft', 'orbitRight', 'orbitUp', 'orbitDown',
+        // extras
+        'sparkle', 'shimmer', 'groove'
+    ],
+    actions: [
+        // actions/locomotion/
+        'jump', 'jumpDown', 'jumpLeft', 'jumpRight',
+        'rushForward', 'rushBack', 'rushLeft', 'rushRight', 'rushUp', 'rushDown',
+        'lunge', 'lungeForward', 'lungeBack', 'lungeLeft', 'lungeRight', 'lungeUp', 'lungeDown',
+        // actions/acrobatics/
+        'spin', 'spinLeft', 'spinRight', 'flip', 'backflip',
+        // actions/gesturing/
+        'point', 'pointUp', 'pointDown', 'pointLeft', 'pointRight',
+        'kickLeft', 'kickRight', 'bow', 'nod', 'reach', 'headBob',
+        // actions/poses/
+        'crouch', 'tilt', 'tiltUp', 'tiltDown', 'tiltLeft', 'tiltRight'
+    ],
+    reactions: [
+        // reactions/impacts/
+        'oofLeft', 'oofRight', 'oofFront', 'oofBack', 'oofUp', 'oofDown',
+        'recoil', 'recoilBack', 'recoilForward', 'recoilLeft', 'recoilRight', 'recoilUp', 'recoilDown',
+        'knockdown', 'knockout', 'inflate', 'deflate', 'squash', 'stretch', 'pancake',
+        // reactions/emotions/
+        'rage', 'fury', 'battlecry', 'charge',
+        // reactions/oscillations/
+        'wobble', 'teeter', 'rock', 'pendulum'
+    ],
+    destruction: [
+        // destruction/shatter/
+        'shatter', 'shatterMesh', 'shatterExplosive', 'shatterCrumble', 'shatterReform',
+        'shatterPunchLeft', 'shatterPunchRight', 'shatterPunchFront',
+        'shatterSuspend', 'shatterFreeze', 'shatterImplode', 'shatterGravity', 'shatterOrbit',
+        // destruction/dissolve/
+        'dissolveUp', 'dissolveDown', 'dissolveLeft', 'dissolveRight', 'dissolveAway', 'dissolveToward',
+        // destruction/reform/
+        'morph'
+    ],
+    atmosphere: [
+        // atmosphere/weather/
+        'rain', 'drift', 'driftUp', 'driftDown', 'driftLeft', 'driftRight',
+        'vortex', 'cascadeUp', 'cascadeDown', 'cascadeLeft', 'cascadeRight',
+        // atmosphere/particles/
+        'confetti', 'fizz',
+        'swarmUp', 'swarmDown', 'swarmLeft', 'swarmRight',
+        'burst', 'burstUp', 'burstDown', 'burstLeft', 'burstRight',
+        'ripple', 'wave',
+        // atmosphere/glow/
+        'flash', 'glow', 'bloom', 'flicker', 'shiver', 'heartbeat', 'snap', 'elasticBounce',
+        // atmosphere/control/
+        'hold', 'fade', 'settle', 'peek', 'directional',
+        'magneticForward', 'magneticBack', 'magneticLeft', 'magneticRight',
+        'magneticUp', 'magneticDown', 'magneticAttract', 'magneticRepel'
+    ]
+};
+
+// Build reverse lookup: gesture name → category
+export const GESTURE_TO_CATEGORY = {};
+Object.entries(GESTURE_CATEGORIES).forEach(([category, gestures]) => {
+    gestures.forEach(name => {
+        GESTURE_TO_CATEGORY[name] = category;
+    });
+});
+
+/**
+ * Get the semantic category for a gesture
+ * @param {string} name - Gesture name
+ * @returns {string} Category name ('idle', 'dance', 'actions', 'reactions', 'destruction', 'atmosphere')
+ */
+export function getGestureCategory(name) {
+    return GESTURE_TO_CATEGORY[name] || 'atmosphere'; // Default fallback
+}
+
 /**
  * Get a gesture by name (checks both core and plugin gestures)
  * @param {string} name - Gesture name (e.g., 'bounce', 'spin')
@@ -734,13 +865,13 @@ export function getGesture(name) {
     if (GESTURE_REGISTRY[name]) {
         return GESTURE_REGISTRY[name];
     }
-    
+
     // Check plugin gestures
     const pluginGesture = pluginAdapter.getPluginGesture(name);
     if (pluginGesture) {
         return pluginGesture;
     }
-    
+
     return null;
 }
 
@@ -777,46 +908,39 @@ export function isOverrideGesture(name) {
  */
 export function applyGesture(particle, gestureName, progress, motion, dt, centerX, centerY) {
     const gesture = getGesture(gestureName);
-    
+
     if (!gesture) {
         return false;
     }
-    
+
     // Apply the gesture
     if (gesture.apply) {
         gesture.apply(particle, progress, motion, dt, centerX, centerY);
     }
-    
+
     // Clean up if complete
     if (progress >= 1 && gesture.cleanup) {
         gesture.cleanup(particle);
     }
-    
+
     return true;
 }
 
 /**
  * Get list of all available gestures (core and plugin)
- * @returns {Array} Array of gesture info objects
+ * @returns {Array} Array of gesture info objects with semantic categories
  */
 export function listGestures() {
     const allGestures = [];
 
-    // Helper to determine category from array membership
-    const getCategory = gestureName => {
-        if (GESTURE_TYPES.blending.includes(gestureName)) return 'motion';
-        if (GESTURE_TYPES.override.includes(gestureName)) return 'transform';
-        if (GESTURE_TYPES.effect.includes(gestureName)) return 'effect';
-        return 'effect'; // Default fallback
-    };
-
-    // Add core gestures
+    // Add core gestures with semantic categories from GESTURE_TO_CATEGORY
     Object.values(GESTURE_REGISTRY).forEach(gesture => {
         allGestures.push({
             name: gesture.name,
             emoji: gesture.emoji || '🎭',
             type: gesture.type,
-            category: getCategory(gesture.name),
+            // Use semantic category (idle/dance/actions/reactions/destruction/atmosphere)
+            category: GESTURE_TO_CATEGORY[gesture.name] || 'atmosphere',
             description: gesture.description || 'No description',
             source: 'core'
         });
@@ -835,7 +959,7 @@ export function listGestures() {
             source: 'plugin'
         });
     });
-    
+
     return allGestures;
 }
 
@@ -849,7 +973,10 @@ export { pluginAdapter };
 export default {
     GESTURE_REGISTRY,
     GESTURE_TYPES,
+    GESTURE_CATEGORIES,
+    GESTURE_TO_CATEGORY,
     getGesture,
+    getGestureCategory,
     isBlendingGesture,
     isOverrideGesture,
     applyGesture,
