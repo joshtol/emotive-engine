@@ -2,25 +2,86 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE v4.0 - Gesture Registry
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central registry for all gesture animations with plugin support
  * @author Emotive Engine Team
  * @version 4.0.0
  * @module gestures
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Control center for all gestures with full plugin adapter integration.             
- * ║ • Three gesture types: blending (motions), override (transforms), effects        
- * ║ • Core gestures loaded synchronously at startup                                   
- * ║ • Plugin gestures registered dynamically via adapter                              
- * ║ • Value-agnostic configurations for easy tuning                                   
- * ║                                                                                    
- * ║ TO ADD A PLUGIN GESTURE:                                                          
- * ║ Use pluginAdapter.registerPluginGesture() from your plugin                        
+ * ║ Control center for all gestures with full plugin adapter integration.
+ * ║ • Three gesture categories: motions, transforms, effects
+ * ║ • Core gestures loaded synchronously at startup
+ * ║ • Plugin gestures registered dynamically via adapter
+ * ║ • Value-agnostic configurations for easy tuning
+ * ║
+ * ║ TO ADD A PLUGIN GESTURE:
+ * ║ Use pluginAdapter.registerPluginGesture() from your plugin
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                           GESTURE CATEGORIZATION
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Categories are organized by USAGE INTENT, not technical implementation:
+ * ║
+ * ║ MOTION_GESTURES - Continuous idle behaviors & dance moves
+ * ║   Examples: bob, breathe, sway, bounce, step, kick
+ * ║   Intent: Ongoing rhythmic movement, can layer with music
+ * ║   Technical: type='blending', has '3d'.evaluate()
+ * ║
+ * ║ TRANSFORM_GESTURES - Dramatic one-shot animations
+ * ║   Examples: jump, spin, flip, shatter, rage, lunge
+ * ║   Intent: Punctuated actions that demand attention
+ * ║   Technical: type='override', has '3d'.evaluate()
+ * ║
+ * ║ EFFECT_GESTURES - Environmental/particle overlays
+ * ║   Examples: wave, drift, rain, cascade, scatter
+ * ║   Intent: Atmospheric effects, weather, particle behaviors
+ * ║   Technical: type='override' (but categorized by visual purpose)
+ * ║
+ * ║ NOTE: The 'type' property (override/blending) controls animation blending,
+ * ║ while the category (motion/transform/effect) is for semantic organization.
+ * ║ Some effects have type='override' but are categorized as effects because
+ * ║ an LLM asking "make it drift" expects drift in effects, not transforms.
+ * ╚═══════════════════════════════════════════════════════════════════════════════════
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════════════
+ * ║                           INTENTIONAL REDUNDANCY
+ * ╠═══════════════════════════════════════════════════════════════════════════════════
+ * ║ Some gestures appear similar but are kept separate for LLM semantic mapping:
+ * ║
+ * ║ VIBRATION GROUP: vibrate, shake, jitter, twitch
+ * ║   - vibrate: mechanical, robotic tremor
+ * ║   - shake: forceful, angry shaking
+ * ║   - jitter: nervous energy, anxiety
+ * ║   - twitch: paranoid, startled micro-movements
+ * ║   An LLM saying "trembling with fear" vs "shaking with rage" should map
+ * ║   to different gestures even if the underlying math is similar.
+ * ║
+ * ║ EXPANSION GROUP: expand, contract, breathe, inflate, deflate
+ * ║   - expand/contract: raw physics (push out / pull in)
+ * ║   - breathe: organic, living rhythm
+ * ║   - inflate/deflate: cartoon balloon physics
+ * ║   Different emotional contexts warrant distinct gesture names.
+ * ║
+ * ║ OSCILLATION GROUP: rock, teeter, pendulum, wobble
+ * ║   - rock: gentle, soothing
+ * ║   - teeter: unstable, about to fall
+ * ║   - pendulum: hypnotic, measured
+ * ║   - wobble: drunk, dizzy, unsteady
+ * ║   Each carries different emotional connotation for storytelling.
+ * ║
+ * ║ INTENSITY GROUP: rage, fury
+ * ║   - rage: slow build, dramatic explosion (2000ms)
+ * ║   - fury: quick burst of anger (800ms)
+ * ║   Both express anger but with different dramatic timing.
+ * ║
+ * ║ This redundancy enables richer LLM-driven expression and choreography.
+ * ║ The cost (code size) is minimal since factories share implementation.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
