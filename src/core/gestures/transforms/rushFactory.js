@@ -109,8 +109,8 @@ export function createRushGesture(direction) {
                 // lean.x: positive = tilt top toward camera (forward lean)
                 // lean.z: positive = tilt top to viewer's left (CCW), negative = right (CW)
                 const dirVectors = {
-                    forward: { x: 0, y: 0, z: -1, lean: { x: 0.2, z: 0 } },
-                    back: { x: 0, y: 0, z: 1, lean: { x: -0.2, z: 0 } },
+                    forward: { x: 0, y: 0, z: 1, lean: { x: 0.2, z: 0 } },   // Toward camera (camera faces +Z)
+                    back: { x: 0, y: 0, z: -1, lean: { x: -0.2, z: 0 } },    // Away from camera
                     left: { x: -1, y: 0, z: 0, lean: { x: 0, z: 0.2 } },   // Lean INTO rush = top-left
                     right: { x: 1, y: 0, z: 0, lean: { x: 0, z: -0.2 } },  // Lean INTO rush = top-right
                     up: { x: 0, y: 1, z: 0, lean: { x: -0.15, z: 0 } },

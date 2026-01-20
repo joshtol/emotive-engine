@@ -125,14 +125,14 @@ export function createRecoilGesture(direction) {
 
                 switch (moveDir) {
                 case 'back':
-                    // Recoil back = move away from camera = positive Z
-                    zOffset = recoilAmount * distance * strength * intensity;
+                    // Recoil back = move away from camera = negative Z (camera faces +Z)
+                    zOffset = -recoilAmount * distance * strength * intensity;
                     rotX = -recoilAmount * 0.25 * strength * intensity; // Lean back (tilt away)
                     yOffset = recoilAmount * 0.05 * strength; // Slight rise
                     break;
                 case 'forward':
-                    // Recoil forward = move towards camera = negative Z
-                    zOffset = -recoilAmount * distance * strength * intensity;
+                    // Recoil forward = move towards camera = positive Z (camera faces +Z)
+                    zOffset = recoilAmount * distance * strength * intensity;
                     rotX = recoilAmount * 0.25 * strength * intensity; // Lean forward (tilt towards)
                     yOffset = -recoilAmount * 0.05 * strength; // Slight dip
                     break;

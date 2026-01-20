@@ -164,6 +164,24 @@ import { createShatterGesture } from './transforms/shatterFactory.js';
 const shatterMesh = createShatterGesture('default');
 const shatterExplosive = createShatterGesture('explosive');
 const shatterCrumble = createShatterGesture('crumble');
+const shatterReform = createShatterGesture('reform');
+const shatterPunchLeft = createShatterGesture('punchLeft');
+const shatterPunchRight = createShatterGesture('punchRight');
+const shatterPunchFront = createShatterGesture('punchFront');
+const shatterSuspend = createShatterGesture('suspend');
+const shatterFreeze = createShatterGesture('freeze');
+// Dual-mode shatter gestures (work on IDLE or FROZEN state)
+const shatterImplode = createShatterGesture('implode');
+const shatterGravity = createShatterGesture('gravity');
+const shatterOrbit = createShatterGesture('orbit');
+// Dissolve gestures (directional wind variants)
+import { createDissolveGesture } from './transforms/dissolveFactory.js';
+const dissolveUp = createDissolveGesture('up');
+const dissolveDown = createDissolveGesture('down');
+const dissolveLeft = createDissolveGesture('left');
+const dissolveRight = createDissolveGesture('right');
+const dissolveAway = createDissolveGesture('away');
+const dissolveToward = createDissolveGesture('toward');
 // New transform gestures - intense emotions
 import rage from './transforms/rage.js';
 import fury from './transforms/fury.js';
@@ -544,7 +562,24 @@ const TRANSFORM_GESTURES = [
     // Geometry shatter gestures (3D mesh fragmentation)
     shatterMesh,
     shatterExplosive,
-    shatterCrumble
+    shatterCrumble,
+    shatterReform,
+    shatterPunchLeft,
+    shatterPunchRight,
+    shatterPunchFront,
+    shatterSuspend,
+    shatterFreeze,
+    // Dual-mode shatter gestures (work on IDLE or FROZEN state)
+    shatterImplode,
+    shatterGravity,
+    shatterOrbit,
+    // Dissolve gestures (shards blow away like dust)
+    dissolveUp,
+    dissolveDown,
+    dissolveLeft,
+    dissolveRight,
+    dissolveAway,
+    dissolveToward
 ];
 
 const EFFECT_GESTURES = [

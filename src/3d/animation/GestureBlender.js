@@ -271,9 +271,18 @@ export class GestureBlender {
                     // Shatter is a one-shot trigger, don't blend - first trigger wins.
                     // impactPoint is in CAMERA-RELATIVE space (like deformation).
                     // Transformed to mesh-local space in Core3DManager.
-                    if (output.shatter && output.shatter.enabled) {
-                        if (!accumulated.shatter) {
+                    // Also pass through reassemble triggers separately.
+                    if (output.shatter) {
+                        if (output.shatter.enabled && !accumulated.shatter) {
                             accumulated.shatter = { ...output.shatter };
+                        }
+                        // Pass through reassembly trigger even when shatter.enabled is false
+                        if (output.shatter.reassemble) {
+                            if (!accumulated.shatter) {
+                                accumulated.shatter = { enabled: false };
+                            }
+                            accumulated.shatter.reassemble = true;
+                            accumulated.shatter.reassembleDuration = output.shatter.reassembleDuration || 1000;
                         }
                     }
                 }

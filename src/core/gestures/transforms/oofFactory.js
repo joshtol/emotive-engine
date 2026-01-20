@@ -148,17 +148,17 @@ export function createOofGesture(direction) {
 
                 switch (dir) {
                 case 'left':
-                    // Punch from camera's left - impact on left side (negative X)
-                    posX = recoil * moveDist;
-                    rotZ = -recoil * tiltAngle;
-                    impactPoint = [-CRYSTAL_RADIUS, 0, 0];
+                    // Punch from camera's left - dent on left, recoil to the right
+                    posX = -recoil * moveDist;
+                    rotZ = recoil * tiltAngle;
+                    impactPoint = [CRYSTAL_RADIUS, 0, 0];  // Positive X in camera-relative = left side
                     break;
 
                 case 'right':
-                    // Punch from camera's right - impact on right side (positive X)
-                    posX = -recoil * moveDist;
-                    rotZ = recoil * tiltAngle;
-                    impactPoint = [CRYSTAL_RADIUS, 0, 0];
+                    // Punch from camera's right - dent on right, recoil to the left
+                    posX = recoil * moveDist;
+                    rotZ = -recoil * tiltAngle;
+                    impactPoint = [-CRYSTAL_RADIUS, 0, 0]; // Negative X in camera-relative = right side
                     break;
 
                 case 'front':

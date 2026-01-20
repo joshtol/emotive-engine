@@ -755,6 +755,47 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Trigger reassembly of frozen shards (for shatterFreeze gesture)
+     * Call this after using the 'shatterFreeze' gesture to reassemble the shards.
+     * Only works when shatter is in FROZEN state (shards are frozen mid-air).
+     *
+     * @param {number} [duration=1500] - Animation duration in ms
+     * @returns {boolean} True if reassembly started
+     *
+     * @example
+     * mascot.express('shatterFreeze');  // Shatter and freeze
+     * // ... later, when ready to reassemble
+     * mascot.triggerReassembly(2000);   // Reassemble over 2 seconds
+     */
+    triggerReassembly(duration = 1500) {
+        if (this.core3D) {
+            return this.core3D.triggerReassembly(duration);
+        }
+        return false;
+    }
+
+    /**
+     * Check if shatter is currently in frozen state (awaiting manual reassembly)
+     * Use this to know when triggerReassembly() can be called.
+     *
+     * @returns {boolean} True if shards are frozen and awaiting reassembly
+     *
+     * @example
+     * mascot.express('shatterFreeze');
+     * // Poll until frozen
+     * const checkFrozen = setInterval(() => {
+     *     if (mascot.isShatterFrozen()) {
+     *         clearInterval(checkFrozen);
+     *         // Now safe to trigger reassembly
+     *         setTimeout(() => mascot.triggerReassembly(), 3000);
+     *     }
+     * }, 100);
+     */
+    isShatterFrozen() {
+        return this.core3D?.isShatterFrozen() || false;
+    }
+
+    /**
      * Express emotions, gestures, and shapes using natural language
      *
      * This is the primary API for LLM integration. Instead of calling
