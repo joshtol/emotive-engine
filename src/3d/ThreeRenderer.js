@@ -20,6 +20,7 @@ import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // normalizeColorLuminance - available for advanced color normalization
 import { GlowLayer } from './effects/GlowLayer.js';
+import { CrackLayer } from './effects/CrackLayer.js';
 import { CameraPresetManager } from './managers/CameraPresetManager.js';
 
 export class ThreeRenderer {
@@ -567,6 +568,11 @@ export class ThreeRenderer {
         // Isolated screen-space glow effect that activates during glow/flash gestures
         // Completely separate from main bloom pipeline to avoid affecting baseline appearance
         this.glowLayer = new GlowLayer(this.renderer);
+
+        // === CRACK LAYER ===
+        // Post-processing crack overlay that works on any geometry
+        // Uses depth buffer to mask cracks to mesh surface only
+        this.crackLayer = new CrackLayer(this.renderer);
     }
 
     /**
@@ -1630,12 +1636,23 @@ export class ThreeRenderer {
             if (this.glowLayer && this.glowLayer.isActive()) {
                 this.glowLayer.render(this.renderer);
             }
+
+            // === STEP 4: Render crack layer (if active) ===
+            // Post-processing crack overlay that works on any geometry
+            if (this.crackLayer && this.crackLayer.isActive()) {
+                this.crackLayer.render(this.renderer);
+            }
         } else {
             this.renderer.render(this.scene, this.camera);
 
             // Render glow layer even without composer
             if (this.glowLayer && this.glowLayer.isActive()) {
                 this.glowLayer.render(this.renderer);
+            }
+
+            // Render crack layer even without composer
+            if (this.crackLayer && this.crackLayer.isActive()) {
+                this.crackLayer.render(this.renderer);
             }
         }
     }
@@ -1653,6 +1670,45 @@ export class ThreeRenderer {
             this.glowLayer.setGlow(glowAmount, glowColor, worldPosition);
             this.glowLayer.update(deltaTime, this.camera);
         }
+    }
+
+    /**
+     * Update crack layer for gesture effects (PERSISTENT DAMAGE MODEL)
+     * Called from Core3DManager when gesture provides crack output
+     *
+     * Crack impacts accumulate (max 3) and persist until healed.
+     * - triggers: Array of new impacts to add
+     * - healTrigger: Starts healing animation that clears ALL impacts
+     *
+     * @param {Object} crackParams - Crack parameters from gesture
+     * @param {number} deltaTime - Time since last frame in milliseconds
+     */
+    updateCrackLayer(crackParams, deltaTime) {
+        if (!this.crackLayer) return;
+
+        // Add new crack impacts (legacy screen-space CrackLayer)
+        if (crackParams && crackParams.triggers && crackParams.triggers.length > 0) {
+            for (const trigger of crackParams.triggers) {
+                this.crackLayer.addImpact({
+                    centerUV: trigger.centerUV,
+                    direction: trigger.direction,
+                    propagation: trigger.propagation,
+                    amount: trigger.amount
+                });
+            }
+            // Update glow if provided
+            if (crackParams.glowStrength !== undefined) {
+                this.crackLayer.glowStrength = crackParams.glowStrength;
+            }
+        }
+
+        // Start healing animation (clears all cracks over duration)
+        if (crackParams.healTrigger) {
+            this.crackLayer.startHealing(crackParams.healDuration || 1500);
+        }
+
+        // Always update for animation
+        this.crackLayer.update(deltaTime, this.camera);
     }
 
     /**
@@ -1822,6 +1878,12 @@ export class ThreeRenderer {
         if (this.glowLayer) {
             this.glowLayer.dispose();
             this.glowLayer = null;
+        }
+
+        // Dispose crack layer
+        if (this.crackLayer) {
+            this.crackLayer.dispose();
+            this.crackLayer = null;
         }
 
         // Dispose camera preset manager

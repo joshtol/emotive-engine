@@ -477,9 +477,6 @@ export function createShatterGesture(variant = 'default') {
                         reassembleDuration: variantConfig.reassembleDuration || 1000,
                         // Soul reveal control
                         revealSoul: variantConfig.revealSoul !== false, // Default true for backwards compat
-                        // Crack mode: minimal scatter, no gravity, shards stay in place
-                        isCrackMode: variantConfig.isCrackMode || false,
-                        crackSeparation: variantConfig.crackSeparation || 0.02,
                         // Suspend mode: explode, freeze mid-air, then reassemble
                         isSuspendMode: variantConfig.isSuspendMode || false,
                         suspendAt: variantConfig.suspendAt || 0.25,

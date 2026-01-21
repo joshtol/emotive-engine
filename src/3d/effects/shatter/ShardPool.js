@@ -141,9 +141,6 @@ class ShardPool {
             // Depth-based timing for reassembly (front shards arrive first)
             depthFactor: 0,           // 0 = front, 1 = back (normalized z-depth)
             vortexPhase: 0,           // Random phase for spiral motion
-            // Crack mode state
-            isCrackMode: false,
-            crackTargetOffset: new THREE.Vector3(),   // Target offset from original position
             // Suspend mode state
             isSuspendMode: false,
             suspendProgress: 0,           // 0 = exploding, 1 = fully suspended
@@ -189,9 +186,6 @@ class ShardPool {
             meshPosition = new THREE.Vector3(),
             meshQuaternion = new THREE.Quaternion(),
             meshScale = new THREE.Vector3(1, 1, 1),
-            // Crack mode: shards separate slightly but stay in place
-            isCrackMode = false,
-            crackSeparation = 0.02,
             // Suspend mode: explode then freeze mid-air
             isSuspendMode = false
         } = config;

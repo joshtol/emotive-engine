@@ -8,6 +8,7 @@ import { createSunMaterial } from '../geometries/Sun.js';
 import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
 import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
 import { DEFORMATION_DEFAULT_UNIFORMS } from '../shaders/utils/deformation.js';
+import { CRACK_DEFAULT_UNIFORMS } from '../shaders/utils/objectSpaceCracks.js';
 
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
     const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null, assetBasePath = '/assets' } = options;
@@ -184,7 +185,24 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
             // ═══════════════════════════════════════════════════════════════
             deformationStrength: { value: DEFORMATION_DEFAULT_UNIFORMS.deformationStrength },
             impactPoint: { value: new THREE.Vector3(...DEFORMATION_DEFAULT_UNIFORMS.impactPoint) },
-            deformationFalloff: { value: DEFORMATION_DEFAULT_UNIFORMS.deformationFalloff }
+            deformationFalloff: { value: DEFORMATION_DEFAULT_UNIFORMS.deformationFalloff },
+            // ═══════════════════════════════════════════════════════════════
+            // OBJECT-SPACE CRACK UNIFORMS - Persistent damage
+            // Values from objectSpaceCracks.js utility module
+            // ═══════════════════════════════════════════════════════════════
+            crackImpact0: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackImpact0) },
+            crackImpact1: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackImpact1) },
+            crackImpact2: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackImpact2) },
+            crackDirection0: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackDirection0) },
+            crackDirection1: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackDirection1) },
+            crackDirection2: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackDirection2) },
+            crackParams0: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackParams0) },
+            crackParams1: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackParams1) },
+            crackParams2: { value: new THREE.Vector3(...CRACK_DEFAULT_UNIFORMS.crackParams2) },
+            crackNumImpacts: { value: CRACK_DEFAULT_UNIFORMS.crackNumImpacts },
+            crackColor: { value: new THREE.Color(...CRACK_DEFAULT_UNIFORMS.crackColor) },
+            crackGlowColor: { value: new THREE.Color(...CRACK_DEFAULT_UNIFORMS.crackGlowColor) },
+            crackGlowStrength: { value: CRACK_DEFAULT_UNIFORMS.crackGlowStrength }
         },
         vertexShader,
         fragmentShader,

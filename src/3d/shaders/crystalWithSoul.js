@@ -43,6 +43,10 @@ import {
     deformationVertexGLSL,
     deformationFragmentGLSL
 } from './utils/deformation.js';
+import {
+    crackUniformsGLSL,
+    crackFragmentGLSL
+} from './utils/objectSpaceCracks.js';
 
 /**
  * Vertex shader for frosted crystal
@@ -166,6 +170,8 @@ uniform float sssLayer2Strength;
 uniform float sssLayer2Enabled;
 
 ${deformationUniformsGLSL}
+
+${crackUniformsGLSL}
 
 varying vec3 vPosition;
 varying vec3 vNormal;
@@ -329,6 +335,11 @@ ${sssGLSL}
 // DEFORMATION IMPACT GLOW
 // ═══════════════════════════════════════════════════════════════════════════
 ${deformationFragmentGLSL}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OBJECT-SPACE CRACK FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+${crackFragmentGLSL}
 
 void main() {
     vec3 normal = normalize(vNormal);
@@ -893,6 +904,19 @@ void main() {
     // vPosition is in mesh-local space (impactPoint pre-transformed by JS)
     // ═══════════════════════════════════════════════════════════════════════
     finalColor += calculateImpactGlow(vPosition, emotionColor);
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // OBJECT-SPACE CRACKS - Persistent damage that rotates with mesh
+    // Uses calculateObjectSpaceCracks() from objectSpaceCracks.js utility
+    // vPosition is in mesh-local space (impacts pre-transformed by JS)
+    // ═══════════════════════════════════════════════════════════════════════
+    vec4 crackContrib = calculateObjectSpaceCracks(vPosition, normal);
+    if (crackContrib.a > 0.001) {
+        // Blend cracks over the final color
+        finalColor = mix(finalColor, crackContrib.rgb, crackContrib.a * 0.8);
+        // Cracks also affect alpha - make cracked areas more opaque
+        finalAlpha = max(finalAlpha, crackContrib.a * 0.5);
+    }
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }

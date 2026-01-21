@@ -247,6 +247,10 @@ import wobble from './reactions/oscillations/wobble.js';
 import teeter from './reactions/oscillations/teeter.js';
 import rock from './reactions/oscillations/rock.js';
 import pendulum from './reactions/oscillations/pendulum.js';
+// reactions/cracks/
+import {
+    crackFront, crackBack, crackLeft, crackRight, crackUp, crackDown, crackHeal
+} from './reactions/cracks/crackFactory.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ IMPORT DESTRUCTION GESTURES (Breaking apart effects)
@@ -647,6 +651,14 @@ const TRANSFORM_GESTURES = [
     oofBack,
     oofUp,
     oofDown,
+    // Crack gestures (post-processing surface cracks)
+    crackFront,
+    crackBack,
+    crackLeft,
+    crackRight,
+    crackUp,
+    crackDown,
+    crackHeal,
     // New transform gestures - intense emotions
     rage,
     fury,
@@ -805,6 +817,8 @@ export const GESTURE_CATEGORIES = {
         'oofLeft', 'oofRight', 'oofFront', 'oofBack', 'oofUp', 'oofDown',
         'recoil', 'recoilBack', 'recoilForward', 'recoilLeft', 'recoilRight', 'recoilUp', 'recoilDown',
         'knockdown', 'knockout', 'inflate', 'deflate', 'squash', 'stretch', 'pancake',
+        // reactions/cracks/
+        'crackFront', 'crackBack', 'crackLeft', 'crackRight', 'crackUp', 'crackDown', 'crackHeal',
         // reactions/emotions/
         'rage', 'fury', 'battlecry', 'charge',
         // reactions/oscillations/

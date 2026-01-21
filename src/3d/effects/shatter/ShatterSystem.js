@@ -176,9 +176,6 @@ class ShatterSystem {
             geometryId = null,
             revealInner = true,
             inheritMeshVelocity = null,
-            // Crack mode: minimal scatter, no gravity, shards stay in place
-            isCrackMode = false,
-            crackSeparation = 0.02,
             // Suspend mode: explode then freeze mid-air
             isSuspendMode = false,
             suspendAt = 0.25,
@@ -310,12 +307,11 @@ class ShatterSystem {
 
         // Calculate physics parameters with overrides
         // Defaults: explosionForce = 2.0 * intensity, rotationForce = 5.0 * intensity, gravity = -9.8
-        // Crack mode: minimal force, no gravity
         // Suspend mode: reduced gravity (-3.0)
         // Custom overrides (e.g., crumble) can specify their own values
-        const effectiveExplosionForce = isCrackMode ? 0 : (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
-        const effectiveRotationForce = isCrackMode ? 0.5 * intensity : (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
-        const effectiveGravity = isCrackMode ? 0 : (gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8));
+        const effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+        const effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
+        const effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
 
         const activatedCount = this.shardPool.activate(shards, worldImpact, worldDirection, {
             explosionForce: effectiveExplosionForce,
@@ -326,9 +322,6 @@ class ShatterSystem {
             meshPosition,
             meshQuaternion,
             meshScale,
-            // Crack mode: shards separate slightly but stay in place
-            isCrackMode,
-            crackSeparation,
             // Suspend mode: explode then freeze mid-air
             isSuspendMode
         });

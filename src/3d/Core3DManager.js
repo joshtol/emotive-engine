@@ -41,6 +41,7 @@ import { EffectManager } from './managers/EffectManager.js';
 import { BehaviorController } from './managers/BehaviorController.js';
 import { BreathingPhaseManager } from './managers/BreathingPhaseManager.js';
 import { ShatterSystem } from './effects/shatter/ShatterSystem.js';
+import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -421,6 +422,13 @@ export class Core3DManager {
         };
 
         this._pendingShatter = null;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // OBJECT-SPACE CRACK MANAGER
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Manages persistent crack damage that rotates with the mesh.
+        // Unlike screen-space CrackLayer, impacts are stored in mesh-local coordinates.
+        this.objectSpaceCrackManager = new ObjectSpaceCrackManager();
 
         // Note: Virtual particle pool is now managed by AnimationManager
 
@@ -1862,6 +1870,105 @@ export class Core3DManager {
         this.gestureQuaternion = blended.gestureQuaternion;
         this.glowBoost = blended.glowBoost || 0; // For isolated glow layer
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // OBJECT-SPACE CRACKS - Persistent damage that rotates with mesh
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Cracks accumulate from multiple impacts and persist until healed.
+        // Unlike screen-space CrackLayer, impacts are stored in MESH-LOCAL coordinates
+        // so cracks rotate with the model.
+        //
+        // Transform: Camera-relative (from gesture) → World → Mesh-local
+
+        // Handle new crack impacts
+        if (blended.crackTriggers && blended.crackTriggers.length > 0 && this.objectSpaceCrackManager) {
+            const cam = this.renderer?.camera;
+            const mesh = this.renderer?.coreMesh;
+
+            if (cam && mesh) {
+                // Ensure matrices are up to date
+                cam.updateMatrixWorld();
+                mesh.updateMatrixWorld();
+
+                // Get camera basis vectors
+                if (!this._crackCamRight) {
+                    this._crackCamRight = new THREE.Vector3();
+                    this._crackCamUp = new THREE.Vector3();
+                    this._crackCamForward = new THREE.Vector3();
+                    this._crackWorldPos = new THREE.Vector3();
+                    this._crackWorldDir = new THREE.Vector3();
+                    this._crackInvQuat = new THREE.Quaternion();
+                }
+
+                cam.getWorldDirection(this._crackCamForward);
+                this._crackCamRight.crossVectors(this._crackCamForward, cam.up).normalize();
+                this._crackCamUp.crossVectors(this._crackCamRight, this._crackCamForward).normalize();
+
+                // Get inverse mesh rotation for world→local transform
+                mesh.getWorldQuaternion(this._crackInvQuat);
+                this._crackInvQuat.invert();
+
+                for (const trigger of blended.crackTriggers) {
+                    const screenOffset = trigger.screenOffset || [0, 0];
+                    const screenDir = trigger.screenDirection || [0, 0];
+
+                    // Impact point should be ON the camera-facing surface of the mesh.
+                    // We calculate a point on a sphere of radius ~0.35 (mesh surface)
+                    // offset from center by the screen offset values.
+                    //
+                    // screenOffset: [0,0] = center of mesh facing camera
+                    //               [0.1, 0] = slightly right
+                    //               [0, 0.1] = slightly up
+
+                    // Start with direction toward camera (this is the front surface)
+                    const meshRadius = 0.35;  // Approximate mesh surface radius
+
+                    // Offset from center: tilt the surface point based on screenOffset
+                    // Small offsets (0.1) = ~5-10 degree tilt from center
+                    const tiltScale = 1.0;  // How much screenOffset affects position
+                    this._crackWorldPos.set(0, 0, 0)
+                        .addScaledVector(this._crackCamRight, screenOffset[0] * tiltScale)
+                        .addScaledVector(this._crackCamUp, screenOffset[1] * tiltScale)
+                        .addScaledVector(this._crackCamForward, -1.0);  // Toward camera
+
+                    // Normalize to get direction, then scale to mesh surface
+                    this._crackWorldPos.normalize().multiplyScalar(meshRadius);
+
+                    // Transform to mesh-local space (rotation only - mesh is at origin)
+                    this._crackWorldPos.applyQuaternion(this._crackInvQuat);
+
+                    // Convert screen direction to world, then to mesh-local
+                    // Direction tells us which way cracks spread from the impact
+                    this._crackWorldDir.set(0, 0, 0);
+                    if (Math.abs(screenDir[0]) > 0.01 || Math.abs(screenDir[1]) > 0.01) {
+                        this._crackWorldDir
+                            .addScaledVector(this._crackCamRight, screenDir[0])
+                            .addScaledVector(this._crackCamUp, screenDir[1])
+                            .normalize()
+                            .applyQuaternion(this._crackInvQuat);
+                    }
+                    // Note: zero direction = radial cracks spreading in all directions
+
+                    // Add to manager in mesh-local space
+                    this.objectSpaceCrackManager.addImpact({
+                        position: this._crackWorldPos.clone(),
+                        direction: this._crackWorldDir.clone(),
+                        propagation: trigger.propagation || 0.8,
+                        amount: trigger.amount || 1.0
+                    });
+                }
+            }
+        }
+
+        // Handle heal trigger
+        if (blended.crackHealTrigger && this.objectSpaceCrackManager) {
+            this.objectSpaceCrackManager.startHealing(blended.crackHealDuration || 1500);
+        }
+
+        // Pass through glow settings
+        if (blended.crack && blended.crack.glowStrength !== undefined && this.objectSpaceCrackManager) {
+            this.objectSpaceCrackManager.glowStrength = blended.crack.glowStrength;
+        }
+
         // Store freeze values for next frame's behavior controller update
         // (Behavior controller runs before blending, so we use previous frame's freeze)
         this._pendingFreezeRotation = blended.freezeRotation || 0;
@@ -2050,9 +2157,6 @@ export class Core3DManager {
                     impactDirection,
                     intensity: s.intensity || 1.0,
                     revealInner: s.revealSoul !== false, // Controlled per-variant
-                    // Crack mode: minimal scatter, no gravity
-                    isCrackMode: s.isCrackMode || false,
-                    crackSeparation: s.crackSeparation || 0.02,
                     // Suspend mode: explode, freeze mid-air, then reassemble
                     isSuspendMode: s.isSuspendMode || false,
                     suspendAt: s.suspendAt || 0.25,
@@ -2070,6 +2174,14 @@ export class Core3DManager {
                     // Gesture duration for suspend timing calculation
                     gestureDuration: s.gestureDuration
                 });
+
+                // Clear all cracks when shattering (geometry is destroyed)
+                if (this.objectSpaceCrackManager) {
+                    this.objectSpaceCrackManager.clearAll();
+                }
+                if (this.renderer.crackLayer) {
+                    this.renderer.crackLayer.clearAll();
+                }
             }
         }
 
@@ -2206,6 +2318,22 @@ export class Core3DManager {
             // Get world position of core mesh for glow center
             const worldPosition = this.coreMesh?.position;
             this.renderer.updateGlowLayer(this.glowBoost, this.glowColor, worldPosition, deltaTime);
+        }
+
+        // Update object-space crack manager (persistent damage in material)
+        // This is rendered IN the material shader and rotates with the mesh
+        if (this.objectSpaceCrackManager) {
+            this.objectSpaceCrackManager.update(deltaTime);
+            // Apply crack uniforms to material if it's a crystal-type shader
+            if (this.customMaterial?.uniforms) {
+                this.objectSpaceCrackManager.applyToMaterial(this.customMaterial);
+            }
+        }
+
+        // Legacy: Update screen-space crack layer (kept for backward compatibility)
+        // This is a universal post-process effect but cracks don't rotate with mesh
+        if (this.renderer.crackLayer && this.renderer.crackLayer.isActive()) {
+            this.renderer.updateCrackLayer(null, deltaTime);
         }
 
         // Update sun material animation if using sun geometry
@@ -2657,6 +2785,12 @@ export class Core3DManager {
         if (this.shatterSystem) {
             this.shatterSystem.dispose();
             this.shatterSystem = null;
+        }
+
+        // Clean up object-space crack manager
+        if (this.objectSpaceCrackManager) {
+            this.objectSpaceCrackManager.dispose();
+            this.objectSpaceCrackManager = null;
         }
 
         // Clean up effect manager (handles eclipse and crystal soul disposal)

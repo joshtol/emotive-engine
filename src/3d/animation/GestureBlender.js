@@ -30,6 +30,10 @@ export class GestureBlender {
         // Rotation smoothing state (prevents sudden jumps)
         this.prevRotation = [0, 0, 0];
         this.hasValidPrevRotation = false;
+
+        // Track which animations have already triggered crack impacts
+        // Key: animation id, Value: true if already triggered
+        this._crackTriggeredAnimations = new Set();
     }
 
     /**
@@ -88,7 +92,13 @@ export class GestureBlender {
             deformation: null,                                     // {enabled, type, strength, phase, direction, impactPoint, falloffRadius}
 
             // SHATTER channel - geometry fragmentation
-            shatter: null                                          // {enabled, impactPoint, intensity, variant}
+            shatter: null,                                         // {enabled, impactPoint, intensity, variant}
+
+            // CRACK channel - post-processing crack overlay (PERSISTENT MODEL)
+            crack: null,                                           // Latest crack params for glow updates
+            crackTriggers: null,                                   // Array of new impacts to add this frame
+            crackHealTrigger: false,                               // True when heal gesture starts
+            crackHealDuration: 1500                                // Duration for heal animation
         };
 
         // Blend all active animations
@@ -285,6 +295,52 @@ export class GestureBlender {
                             accumulated.shatter.reassembleDuration = output.shatter.reassembleDuration || 1000;
                         }
                     }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // CRACK CHANNEL - Post-processing crack overlay
+                    // ═══════════════════════════════════════════════════════════════
+                    // PERSISTENT DAMAGE MODEL:
+                    // - crack.trigger: adds a NEW persistent impact (max 3 accumulate)
+                    // - crack.heal: starts healing animation that clears ALL impacts
+                    // - Multiple triggers in same frame all get added to CrackLayer
+                    if (output.crack) {
+                        const c = output.crack;
+
+                        // Handle crack triggers (add new impacts)
+                        // Only trigger ONCE per animation - track by animation startTime as ID
+                        if (c.enabled && c.trigger) {
+                            const animId = animation.startTime;
+                            if (!this._crackTriggeredAnimations.has(animId)) {
+                                this._crackTriggeredAnimations.add(animId);
+                                // Accumulate triggers - each one becomes a separate impact
+                                if (!accumulated.crackTriggers) {
+                                    accumulated.crackTriggers = [];
+                                }
+                                accumulated.crackTriggers.push({
+                                    screenOffset: c.screenOffset,
+                                    screenDirection: c.screenDirection,
+                                    propagation: c.propagation,
+                                    amount: c.amount,
+                                    glowStrength: c.glowStrength
+                                });
+                            }
+                        }
+
+                        // Handle heal trigger - also deduplicate by animation ID
+                        if (c.heal && c.healTrigger) {
+                            const animId = animation.startTime;
+                            if (!this._crackTriggeredAnimations.has(animId)) {
+                                this._crackTriggeredAnimations.add(animId);
+                                accumulated.crackHealTrigger = true;
+                                accumulated.crackHealDuration = c.healDuration || 1500;
+                            }
+                        }
+
+                        // Store latest crack params for glow updates
+                        if (c.enabled) {
+                            accumulated.crack = { ...c };
+                        }
+                    }
                 }
             }
         }
@@ -333,6 +389,14 @@ export class GestureBlender {
             baseEuler[1] + gestureY,
             baseEuler[2] + gestureZ
         ];
+
+        // Clean up old crack trigger tracking (remove animations that are no longer active)
+        const activeAnimIds = new Set(animations.map(a => a.startTime));
+        for (const animId of this._crackTriggeredAnimations) {
+            if (!activeAnimIds.has(animId)) {
+                this._crackTriggeredAnimations.delete(animId);
+            }
+        }
 
         // Apply base values to accumulated results
         const finalScale = baseScale * accumulated.scale;
@@ -383,6 +447,12 @@ export class GestureBlender {
 
             // Shatter channel for geometry fragmentation
             shatter: accumulated.shatter,
+
+            // Crack channel for post-processing crack overlay (PERSISTENT MODEL)
+            crack: accumulated.crack,
+            crackTriggers: accumulated.crackTriggers,       // New impacts to add
+            crackHealTrigger: accumulated.crackHealTrigger, // Start healing animation
+            crackHealDuration: accumulated.crackHealDuration,
 
             gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
         };
