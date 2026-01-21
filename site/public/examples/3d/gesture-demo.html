@@ -394,6 +394,20 @@
     <!-- LEFT MENU -->
     <div class="left-menu">
         <div class="section">
+            <h2>Geometry</h2>
+            <div class="section-content">
+                <div class="button-grid" style="max-height: none;">
+                    <button data-action="geometry" data-value="crystal" class="active">💎 Crystal</button>
+                    <button data-action="geometry" data-value="heart">💗 Heart</button>
+                    <button data-action="geometry" data-value="rough">🪨 Rough</button>
+                    <button data-action="geometry" data-value="star">⭐ Star</button>
+                    <button data-action="geometry" data-value="moon">🌙 Moon</button>
+                    <button data-action="geometry" data-value="sun">☀️ Sun</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Search</h2>
             <div class="section-content">
                 <div class="search-box">
@@ -869,6 +883,19 @@
         // ═══════════════════════════════════════════════════════════════════════════
         // EVENT HANDLERS
         // ═══════════════════════════════════════════════════════════════════════════
+
+        // Geometry button clicks (morphing between shapes)
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="geometry"]');
+            if (!btn) return;
+
+            const value = btn.dataset.value;
+            mascot.morphTo(value);
+
+            // Update active state
+            document.querySelectorAll('[data-action="geometry"]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
 
         // Gesture button clicks (event delegation)
         document.addEventListener('click', e => {

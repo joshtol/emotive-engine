@@ -458,6 +458,184 @@ mascot.feel('dramatic entrance with a spin');
 
 ---
 
+## Timing & Music Integration
+
+All gestures are designed to work with the musical timing system. Durations map to standard musical units for natural synchronization.
+
+### Musical Duration System
+
+At 120 BPM (default):
+
+| Musical Unit | Beats | Duration |
+|--------------|-------|----------|
+| Eighth note | 0.5 | 250ms |
+| Quarter note | 1 | 500ms |
+| Half note | 2 | 1000ms |
+| Whole note (1 bar) | 4 | 2000ms |
+| 2 bars | 8 | 4000ms |
+
+**BPM Scaling:** Gestures scale proportionally with tempo. At 60 BPM, durations double. At 180 BPM, durations are 0.67x.
+
+### Gesture Durations by Category
+
+| Category | Typical Duration | Musical Time | Examples |
+|----------|------------------|--------------|----------|
+| **Accents** | 200-400ms | ⅛-½ beat | pop, flare, dip |
+| **Steps** | 500ms | 1 beat | stepLeft, stepRight |
+| **Actions** | 500-900ms | 1-2 beats | jump, spin, flip |
+| **Moves** | 1500-2000ms | 3-4 beats | hula, twist, charleston |
+| **Reactions** | 500-2000ms | 1-4 beats | oof*, wobble, rage |
+| **Destruction** | 1500-8000ms | 4-16 beats | shatter, shatterCrumble |
+| **Idle** | Continuous | Multi-bar | breathe, sway, float |
+
+### Rhythm Sync Modes
+
+Gestures can synchronize to music using different modes:
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| `beat` | Trigger on any beat | Quick accents (pop, flare) |
+| `bar` | Wait for bar boundary | Full movements (hula, rage) |
+| `phrase` | Wait for phrase start | Long sequences (shatterCrumble) |
+| `subdivision` | Sub-beat precision | Nervous energy (jitter, twitch) |
+| `immediate` | No waiting | Reactions (oof, recoil) |
+
+```javascript
+// Enable rhythm sync
+mascot.enableRhythmSync({ bpm: 120 });
+
+// Gestures auto-sync to beat
+mascot.express('pop');  // Waits for next beat
+```
+
+### Timing Properties
+
+Some gestures have special timing phases:
+
+| Property | Description | Example Gestures |
+|----------|-------------|------------------|
+| `anticipation` | Pre-action squash | jump (0.2 = 20% of duration) |
+| `hangTime` | Peak pause | jump (0.1 = 10% of duration) |
+| `holdTime` | Hold at end | bow (0.4 = 40% of duration) |
+| `triggerTime` | Impact moment | crack* (0.05 = first 5%) |
+
+### Type Behaviors
+
+| Type | Interruptible | Can Stack | Behavior |
+|------|---------------|-----------|----------|
+| `blending` | Yes | Yes | Continuous, layerable |
+| `override` | After 80% | No | Exclusive, one-shot |
+| `accent` | Yes | Yes | Multiplicative boost |
+| `effect` | Yes | Sometimes | Visual overlay |
+
+**Interruption:** Override gestures protect their animation until 80% complete, ensuring dramatic moments aren't cut short.
+
+---
+
+## Storytelling Patterns
+
+Gestures can be combined to create emotional arcs. Here are proven patterns:
+
+### Positive Energy Arc
+```javascript
+// Calm → Groove → Climax → Celebration
+mascot.chain([
+    'breathe',      // 1 bar - establish calm
+    'bounce',       // 4 beats - build energy
+    'pop',          // accent - punctuate
+    'jump',         // 2 beats - climax
+    'flare'         // accent - celebrate
+]);
+```
+
+### Conflict Arc
+```javascript
+// Calm → Anger → Damage → Recovery
+mascot.chain([
+    'sway',         // ambient - peace
+    'rage',         // 1 bar - anger builds
+    'crackFront',   // 1 bar - impact damage
+    'wobble',       // 4 beats - destabilized
+    'crackHeal'     // 3 beats - recovery
+]);
+```
+
+### Destruction Arc
+```javascript
+// Instability → Break → Pause → Reassemble
+mascot.chain([
+    'teeter',           // instability
+    'shatterExplosive', // dramatic break
+    'shatterSuspend',   // frozen moment
+    'shatterReform'     // reassembly
+]);
+```
+
+### Entrance Sequence
+```javascript
+// Dramatic character introduction
+mascot.chain([
+    'rushForward',  // burst in
+    'spin',         // flourish
+    'pop',          // accent landing
+    'bow'           // acknowledge audience
+]);
+```
+
+### Complementary Gesture Pairs
+
+These gestures work well together (similar durations, compatible motions):
+
+| Pair | Why It Works |
+|------|--------------|
+| `pop` + `bounce` | Accent on groove (sub-beat + 4 beats) |
+| `jump` + `spin` | Sequential acrobatics (both ~600-800ms) |
+| `rage` + `crackFront` | Anger leads to damage (both 1 bar) |
+| `wobble` + `teeter` | Stacking instability (similar oscillation) |
+| `shatter` + `shatterReform` | Break and rebuild narrative |
+| `breathe` + `shimmer` | Calm ambient combo (both continuous) |
+
+---
+
+## Crack Gestures
+
+Surface crack effects for damage visualization. Cracks persist until explicitly healed.
+
+### Directional Impacts
+| Gesture | Impact Point | Spread Direction |
+|---------|--------------|------------------|
+| `crackFront` | Center | Radial |
+| `crackBack` | Center | Radial |
+| `crackLeft` | Left edge | Rightward |
+| `crackRight` | Right edge | Leftward |
+| `crackUp` | Top | Downward |
+| `crackDown` | Bottom | Upward |
+
+### Healing
+| Gesture | Description |
+|---------|-------------|
+| `crackHeal` | Fade and heal all cracks (1.5s) |
+
+### Crack Mechanics
+
+- **Max impacts:** 3 simultaneous (FIFO replacement)
+- **Persistence:** Cracks stay until `crackHeal` or `shatter`
+- **Object-space:** Cracks rotate with the mesh
+- **Glow:** Configurable edge emission color
+
+```javascript
+// Multiple impacts accumulate
+mascot.express('crackLeft');
+mascot.express('crackRight');  // Now 2 cracks visible
+mascot.express('crackUp');     // Now 3 cracks visible
+mascot.express('crackDown');   // Oldest crack replaced (FIFO)
+
+// Heal all
+mascot.express('crackHeal');
+```
+
+---
+
 ## Related Documentation
 
 - [Quick Reference](./QUICK_REFERENCE.md) - Condensed API reference
