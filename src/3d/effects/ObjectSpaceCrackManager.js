@@ -24,6 +24,7 @@
 
 import * as THREE from 'three';
 import { CRACK_DEFAULT_UNIFORMS, MAX_IMPACTS } from '../shaders/utils/objectSpaceCracks.js';
+import { getElementalCrackStyle } from '../materials/ElementalMaterialFactory.js';
 
 export class ObjectSpaceCrackManager {
     constructor() {
@@ -35,6 +36,12 @@ export class ObjectSpaceCrackManager {
         this.crackColor = new THREE.Color(...CRACK_DEFAULT_UNIFORMS.crackColor);
         this.crackGlowColor = new THREE.Color(...CRACK_DEFAULT_UNIFORMS.crackGlowColor);
         this.glowStrength = CRACK_DEFAULT_UNIFORMS.crackGlowStrength;
+
+        // Elemental styling
+        this.elementalType = null;
+        this.elementalParam = 0.5;
+        this.pattern = 'organic';
+        this.animated = false;
 
         // Healing state
         this.isHealing = false;
@@ -175,9 +182,9 @@ export class ObjectSpaceCrackManager {
 
     /**
      * Update healing animation
-     * @param {number} deltaTime - Time since last frame in ms
+     * @param {number} _deltaTime - Time since last frame in ms (unused, time from performance.now)
      */
-    update(deltaTime) {
+    update(_deltaTime) {
         if (!this.isHealing || this.impacts.length === 0) return;
 
         const elapsed = performance.now() - this.healStartTime;
@@ -259,14 +266,73 @@ export class ObjectSpaceCrackManager {
 
     /**
      * Set glow color
-     * @param {THREE.Color|Array} color
+     * @param {THREE.Color|Array|number} color - Color as THREE.Color, [r,g,b] array, or hex number
      */
     setGlowColor(color) {
         if (Array.isArray(color)) {
             this.crackGlowColor.setRGB(color[0], color[1], color[2]);
+        } else if (typeof color === 'number') {
+            this.crackGlowColor.setHex(color);
         } else if (color) {
             this.crackGlowColor.copy(color);
         }
+    }
+
+    /**
+     * Set crack color
+     * @param {THREE.Color|Array|number} color - Color as THREE.Color, [r,g,b] array, or hex number
+     */
+    setCrackColor(color) {
+        if (Array.isArray(color)) {
+            this.crackColor.setRGB(color[0], color[1], color[2]);
+        } else if (typeof color === 'number') {
+            this.crackColor.setHex(color);
+        } else if (color) {
+            this.crackColor.copy(color);
+        }
+    }
+
+    /**
+     * Set elemental type for crack styling
+     * Applies elemental-specific crack appearance (color, glow, pattern)
+     *
+     * @param {string} element - Element type ('fire', 'water', 'ice', 'electric', 'void', 'smoke')
+     * @param {number} [masterParam=0.5] - Element's master parameter (0-1)
+     */
+    setElemental(element, masterParam = 0.5) {
+        this.elementalType = element;
+        this.elementalParam = masterParam;
+
+        const style = getElementalCrackStyle(element, masterParam);
+
+        // Apply style to visual parameters
+        if (typeof style.color === 'number') {
+            this.crackColor.setHex(style.color);
+            this.crackGlowColor.setHex(style.color);
+        } else if (style.color) {
+            this.crackColor.copy(style.color);
+            this.crackGlowColor.copy(style.color);
+        }
+
+        // Glow strength (handle negative for void absorption)
+        this.glowStrength = Math.max(0, style.emissive ?? 0.5);
+
+        // Store pattern and animation settings
+        this.pattern = style.pattern || 'organic';
+        this.animated = style.animated ?? false;
+    }
+
+    /**
+     * Clear elemental styling, return to defaults
+     */
+    clearElemental() {
+        this.elementalType = null;
+        this.elementalParam = 0.5;
+        this.crackColor.setRGB(...CRACK_DEFAULT_UNIFORMS.crackColor);
+        this.crackGlowColor.setRGB(...CRACK_DEFAULT_UNIFORMS.crackGlowColor);
+        this.glowStrength = CRACK_DEFAULT_UNIFORMS.crackGlowStrength;
+        this.pattern = 'organic';
+        this.animated = false;
     }
 
     /**
@@ -274,6 +340,7 @@ export class ObjectSpaceCrackManager {
      */
     reset() {
         this.clearAll();
+        this.clearElemental();
     }
 
     /**

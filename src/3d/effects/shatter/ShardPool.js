@@ -187,7 +187,15 @@ class ShardPool {
             jitterSeed: 0,                     // Seed for position jitter noise
             distFromCenter: 0,                 // Distance from explosion center (for radial gradient)
             baseScale: new THREE.Vector3(1, 1, 1),  // Original scale before pulsing
-            basePosition: new THREE.Vector3()  // Position before jitter
+            basePosition: new THREE.Vector3(),  // Position before jitter
+            // ═══════════════════════════════════════════════════════════════
+            // ELEMENTAL STATE
+            // ═══════════════════════════════════════════════════════════════
+            elementalType: null,               // Element type for this shard
+            elementalDrag: 0,                  // Elemental-specific drag
+            elementalBounce: 0,                // Elemental-specific bounce
+            riseSpeed: 0,                      // For fire/smoke rising
+            disperseRate: 0                    // For smoke dispersion
         };
     }
 
@@ -212,8 +220,15 @@ class ShardPool {
             // Suspend mode: explode then freeze mid-air
             isSuspendMode = false,
             // Dynamic material from MaterialAnalyzer (if available)
-            baseMaterial = null
+            baseMaterial = null,
+            // Elemental physics for specialized shard behavior
+            elementalPhysics = null,
+            elementalType = null
         } = config;
+
+        // Store elemental config for update methods
+        this._elementalPhysics = elementalPhysics;
+        this._elementalType = elementalType;
 
         const shardsNeeded = Math.min(shardGeometries.length, this.pool.length);
         const activatedShards = [];
@@ -323,6 +338,15 @@ class ShardPool {
             shard.userData.state.isSuspendMode = isSuspendMode;
             shard.userData.state.suspendProgress = 0;
             shard.userData.state.floatPhase = Math.random() * Math.PI * 2;
+
+            // Elemental state
+            shard.userData.state.elementalType = elementalType;
+            if (elementalPhysics) {
+                shard.userData.state.elementalDrag = elementalPhysics.drag || 0;
+                shard.userData.state.elementalBounce = elementalPhysics.bounce || 0;
+                shard.userData.state.riseSpeed = elementalPhysics.riseSpeed || 0;
+                shard.userData.state.disperseRate = elementalPhysics.disperseRate || 0;
+            }
 
             // ═══════════════════════════════════════════════════════════════
             // DYNAMIC MATERIAL - Clone from base and apply per-shard variation
@@ -801,9 +825,9 @@ class ShardPool {
 
     /**
      * Initialize implode mode - shards will fly inward to center
-     * @param {Object} config - { speed, spiral }
+     * @param {Object} _config - { speed, spiral } (reserved for future use)
      */
-    initImplodeMode(config = {}) {
+    initImplodeMode(_config = {}) {
         for (const shard of this.active) {
             const { state } = shard.userData;
             state.dualMode = 'implode';
@@ -1076,9 +1100,9 @@ class ShardPool {
      * @param {number} deltaTime - Time since last frame in ms
      * @param {number} progress - Animation progress (0-1)
      * @param {THREE.Vector3} centerPoint - Center of orbit
-     * @param {Object} config - { pulseGlow }
+     * @param {Object} _config - { pulseGlow } (reserved for future use)
      */
-    updateOrbit(deltaTime, progress, centerPoint, config = {}) {
+    updateOrbit(deltaTime, progress, centerPoint, _config = {}) {
         const dt = deltaTime / 1000;
         const time = performance.now() / 1000;
 

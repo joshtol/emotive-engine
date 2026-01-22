@@ -36,6 +36,11 @@ import * as THREE from 'three';
 import { ShardGenerator } from './ShardGenerator.js';
 import { ShardPool } from './ShardPool.js';
 import { extractMaterialProperties, createShardBaseMaterial } from './MaterialAnalyzer.js';
+import {
+    createElementalMaterial,
+    getElementalPhysics,
+    isElementSupported
+} from '../../materials/ElementalMaterialFactory.js';
 
 /**
  * States for the shatter state machine
@@ -294,7 +299,15 @@ class ShatterSystem {
             // Physics overrides (for crumble, etc.)
             gravity,           // undefined = use default
             explosionForce,    // undefined = use default
-            rotationForce      // undefined = use default
+            rotationForce,     // undefined = use default
+            // ═══════════════════════════════════════════════════════════════
+            // ELEMENTAL MATERIAL SYSTEM
+            // Use elemental materials for specialized shard appearance/physics
+            // ═══════════════════════════════════════════════════════════════
+            elemental = null,         // Element type: 'fire', 'water', 'smoke', 'ice', 'electric', 'void'
+            elementalParam = 0.5,     // Master parameter (0-1) for elemental behavior
+            overlay = null,           // Optional overlay element (e.g., 'smoke' on fire shatter)
+            overlayParam = 0.5        // Master parameter for overlay element
         } = config;
 
         this.state = ShatterState.GENERATING;
@@ -416,30 +429,69 @@ class ShatterSystem {
         const suspendLifetime = shardLifetimeOverride;
 
         // Calculate physics parameters with overrides
+        // Priority: explicit override > elemental physics > defaults
         // Defaults: explosionForce = 2.0 * intensity, rotationForce = 5.0 * intensity, gravity = -9.8
         // Suspend mode: reduced gravity (-3.0)
         // Custom overrides (e.g., crumble) can specify their own values
-        const effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
-        const effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
-        const effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
+        let effectiveExplosionForce, effectiveRotationForce, effectiveGravity;
 
-        // ═══════════════════════════════════════════════════════════════════
-        // USE CACHED MATERIAL if available (dynamic shard appearance)
-        // If cache exists but has no texture, re-extract (texture may have loaded async)
-        // Otherwise fall back to default crystal material + color sync
-        // ═══════════════════════════════════════════════════════════════════
-        let baseMaterial = this.shardMaterialCache?.baseMaterial || null;
+        if (elementalPhysics) {
+            // Use elemental physics as base, allow explicit overrides
+            effectiveGravity = gravity !== undefined ? gravity :
+                (isSuspendMode ? -3.0 : -elementalPhysics.gravity * 9.8);
+            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
 
-        // Defensive re-extraction: if cache has no texture but mesh now does, re-extract
-        if (this.shardMaterialCache && baseMaterial && !baseMaterial.map && mesh.material) {
-            const materialProps = extractMaterialProperties(mesh.material, this.shardMaterialCache.geometryType);
-            if (materialProps.map) {
-                // Texture loaded since precompute - recreate base material
-                baseMaterial.dispose();
-                baseMaterial = createShardBaseMaterial(materialProps);
-                this.shardMaterialCache.baseMaterial = baseMaterial;
-            }
+            // Apply elemental drag/bounce modifiers
+            this._elementalDrag = elementalPhysics.drag;
+            this._elementalBounce = elementalPhysics.bounce;
+        } else {
+            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
+            effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
+            this._elementalDrag = null;
+            this._elementalBounce = null;
         }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // MATERIAL SELECTION HIERARCHY:
+        // 1. Elemental material (if elemental specified)
+        // 2. Cached material (from precomputeShards)
+        // 3. Default crystal material + color sync
+        // ═══════════════════════════════════════════════════════════════════
+        let baseMaterial = null;
+        let elementalPhysics = null;
+
+        // Check for elemental material first
+        if (elemental && isElementSupported(elemental)) {
+            baseMaterial = createElementalMaterial(elemental, elementalParam);
+            elementalPhysics = getElementalPhysics(elemental, elementalParam);
+
+            // Store for overlay/reference
+            this._currentElemental = elemental;
+            this._currentElementalParam = elementalParam;
+        } else {
+            // Fall back to cached material
+            baseMaterial = this.shardMaterialCache?.baseMaterial || null;
+
+            // Defensive re-extraction: if cache has no texture but mesh now does, re-extract
+            if (this.shardMaterialCache && baseMaterial && !baseMaterial.map && mesh.material) {
+                const materialProps = extractMaterialProperties(mesh.material, this.shardMaterialCache.geometryType);
+                if (materialProps.map) {
+                    // Texture loaded since precompute - recreate base material
+                    baseMaterial.dispose();
+                    baseMaterial = createShardBaseMaterial(materialProps);
+                    this.shardMaterialCache.baseMaterial = baseMaterial;
+                }
+            }
+
+            this._currentElemental = null;
+            this._currentElementalParam = 0.5;
+        }
+
+        // Store overlay for potential particle effects
+        this._currentOverlay = overlay;
+        this._currentOverlayParam = overlayParam;
 
         const activatedCount = this.shardPool.activate(shards, worldImpact, worldDirection, {
             explosionForce: effectiveExplosionForce,
@@ -452,8 +504,11 @@ class ShatterSystem {
             meshScale,
             // Suspend mode: explode then freeze mid-air
             isSuspendMode,
-            // Dynamic material from cache (if available)
-            baseMaterial
+            // Dynamic material from cache or elemental
+            baseMaterial,
+            // Elemental physics for specialized shard behavior
+            elementalPhysics,
+            elementalType: elemental
         });
 
         // Only sync material colors if we didn't use cached material
