@@ -428,31 +428,6 @@ class ShatterSystem {
         }
         const suspendLifetime = shardLifetimeOverride;
 
-        // Calculate physics parameters with overrides
-        // Priority: explicit override > elemental physics > defaults
-        // Defaults: explosionForce = 2.0 * intensity, rotationForce = 5.0 * intensity, gravity = -9.8
-        // Suspend mode: reduced gravity (-3.0)
-        // Custom overrides (e.g., crumble) can specify their own values
-        let effectiveExplosionForce, effectiveRotationForce, effectiveGravity;
-
-        if (elementalPhysics) {
-            // Use elemental physics as base, allow explicit overrides
-            effectiveGravity = gravity !== undefined ? gravity :
-                (isSuspendMode ? -3.0 : -elementalPhysics.gravity * 9.8);
-            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
-            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
-
-            // Apply elemental drag/bounce modifiers
-            this._elementalDrag = elementalPhysics.drag;
-            this._elementalBounce = elementalPhysics.bounce;
-        } else {
-            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
-            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
-            effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
-            this._elementalDrag = null;
-            this._elementalBounce = null;
-        }
-
         // ═══════════════════════════════════════════════════════════════════
         // MATERIAL SELECTION HIERARCHY:
         // 1. Elemental material (if elemental specified)
@@ -487,6 +462,31 @@ class ShatterSystem {
 
             this._currentElemental = null;
             this._currentElementalParam = 0.5;
+        }
+
+        // Calculate physics parameters with overrides
+        // Priority: explicit override > elemental physics > defaults
+        // Defaults: explosionForce = 2.0 * intensity, rotationForce = 5.0 * intensity, gravity = -9.8
+        // Suspend mode: reduced gravity (-3.0)
+        // Custom overrides (e.g., crumble) can specify their own values
+        let effectiveExplosionForce, effectiveRotationForce, effectiveGravity;
+
+        if (elementalPhysics) {
+            // Use elemental physics as base, allow explicit overrides
+            effectiveGravity = gravity !== undefined ? gravity :
+                (isSuspendMode ? -3.0 : -elementalPhysics.gravity * 9.8);
+            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
+
+            // Apply elemental drag/bounce modifiers
+            this._elementalDrag = elementalPhysics.drag;
+            this._elementalBounce = elementalPhysics.bounce;
+        } else {
+            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
+            effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
+            this._elementalDrag = null;
+            this._elementalBounce = null;
         }
 
         // Store overlay for potential particle effects
