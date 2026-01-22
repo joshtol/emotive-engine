@@ -151,12 +151,27 @@ export class Core3DManager {
         // IMPORTANT: Must create material BEFORE calling _loadAsyncGeometry so it's available when OBJ loads
         let customMaterial = null;
         const emotionData = getEmotion(this.emotion);
+
+        // Create callback for when textures finish loading (for moon async textures)
+        // This re-runs shard precomputation so shards get the actual texture
+        // Capture geometryType NOW to ensure correct type even if morph happens before texture loads
+        const geometryTypeForCallback = this.geometryType;
+        const onTextureReady = material => {
+            if (this.shatterSystem && this.renderer?.coreMesh) {
+                this.shatterSystem.precomputeShards(
+                    this.renderer.coreMesh,
+                    geometryTypeForCallback
+                );
+            }
+        };
+
         const materialResult = createCustomMaterial(this.geometryType, this.geometryConfig, {
             glowColor: this.glowColor || [1.0, 1.0, 0.95],
             glowIntensity: this.glowIntensity || 1.0,
             materialVariant: this.materialVariant,
             emotionData, // Pass emotion data for auto-deriving geometry params
-            assetBasePath: this.assetBasePath
+            assetBasePath: this.assetBasePath,
+            onTextureReady
         });
 
         if (materialResult) {
@@ -422,6 +437,18 @@ export class Core3DManager {
         };
 
         this._pendingShatter = null;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PRECOMPUTE SHARDS FOR INITIAL GEOMETRY
+        // Generate shard geometries and extract material at startup to eliminate
+        // first-shatter lag. This is repeated on morphTo() for new geometries.
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (this.renderer?.coreMesh) {
+            this.shatterSystem.precomputeShards(
+                this.renderer.coreMesh,
+                this.geometryType
+            );
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // OBJECT-SPACE CRACK MANAGER
@@ -1299,6 +1326,14 @@ export class Core3DManager {
             return;
         }
 
+        // ═══════════════════════════════════════════════════════════════════
+        // CLEAR SHATTER STATE - If shards are out (frozen/shattering), clear them
+        // Morph should transition cleanly to new geometry without lingering shards
+        // ═══════════════════════════════════════════════════════════════════
+        if (this.shatterSystem && !this.shatterSystem.isIdle()) {
+            this.shatterSystem.forceStop();
+        }
+
         // Start smooth morph transition (handles interruptions internally)
         const started = this.geometryMorpher.startMorph(
             this.geometryType,
@@ -1443,12 +1478,27 @@ export class Core3DManager {
             // Use MaterialFactory for centralized material creation
             let customMaterial = null;
             const emotionData = getEmotion(this.emotion);
+
+            // Create callback for when textures finish loading (for moon async textures)
+            // This re-runs shard precomputation so shards get the actual texture
+            // IMPORTANT: Capture geometryType NOW because _targetGeometryType gets cleared after morph
+            const geometryTypeForCallback = this._targetGeometryType;
+            const onTextureReady = material => {
+                if (this.shatterSystem && this.renderer?.coreMesh) {
+                    this.shatterSystem.precomputeShards(
+                        this.renderer.coreMesh,
+                        geometryTypeForCallback
+                    );
+                }
+            };
+
             const materialResult = createCustomMaterial(this._targetGeometryType, this._targetGeometryConfig, {
                 glowColor: this.glowColor || [1.0, 1.0, 0.95],
                 glowIntensity: this.glowIntensity || 1.0,
                 materialVariant: this.materialVariant,
                 emotionData, // Pass emotion data for auto-deriving geometry params
-                assetBasePath: this.assetBasePath
+                assetBasePath: this.assetBasePath,
+                onTextureReady
             });
 
             if (materialResult) {
@@ -1494,6 +1544,17 @@ export class Core3DManager {
                 customMaterial: this.customMaterial,
                 sunRadius
             });
+
+            // ═══════════════════════════════════════════════════════════════════
+            // PRECOMPUTE SHARDS - Generate shard geometries and extract material
+            // This eliminates first-shatter lag by caching everything upfront
+            // ═══════════════════════════════════════════════════════════════════
+            if (this.shatterSystem && this.renderer?.coreMesh) {
+                this.shatterSystem.precomputeShards(
+                    this.renderer.coreMesh,
+                    this._targetGeometryType
+                );
+            }
 
             // Create or dispose crystal inner core (still uses createCrystalInnerCore for now)
             if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart' || this._targetGeometryType === 'star') {

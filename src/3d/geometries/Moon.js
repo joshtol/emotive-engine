@@ -335,6 +335,7 @@ export function createMoonFallbackMaterial(glowColor = new THREE.Color(0xffffff)
  * @param {number} options.shadowOffsetX - Manual shadow X offset (overrides moonPhase)
  * @param {number} options.shadowOffsetY - Manual shadow Y offset (overrides moonPhase)
  * @param {number} options.shadowCoverage - Shadow coverage 0-1 (default: 0.85)
+ * @param {Function} options.onTextureReady - Callback when color texture finishes loading
  * @returns {THREE.ShaderMaterial}
  */
 export function createMoonShadowMaterial(textureLoader, options = {}) {
@@ -445,6 +446,11 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
                 pending.texture = texture;
             }
             pendingTextures.delete(colorPath);
+
+            // Notify that texture is ready (for shard material precomputation)
+            if (options.onTextureReady) {
+                options.onTextureReady(material);
+            }
         },
         undefined,
         error => {
@@ -663,6 +669,7 @@ export function updateCrescentShadow(material, offsetX, offsetY, coverage) {
  * @param {Object} options - Material configuration options
  * @param {THREE.Color} options.glowColor - Glow color (default: white)
  * @param {number} options.glowIntensity - Glow intensity (default: 1.0)
+ * @param {Function} options.onTextureReady - Callback when color texture finishes loading
  * @returns {THREE.ShaderMaterial} Shader material with multiplexer blend modes
  */
 export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
@@ -750,6 +757,11 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
                 }
             };
             fadeIn();
+
+            // Notify that texture is ready (for shard material precomputation)
+            if (options.onTextureReady) {
+                options.onTextureReady(material);
+            }
         }
     );
 

@@ -17,6 +17,8 @@
  */
 
 import * as THREE from 'three';
+import { applyShardVariation } from './MaterialAnalyzer.js';
+import { createFireShardMaterial } from './FireShardMaterial.js';
 
 /**
  * @typedef {Object} ShardState
@@ -48,6 +50,16 @@ class ShardPool {
         this.active = [];
         this.shardMaterial = null;
         this._placeholderGeometry = null;
+
+        // Pre-allocated temp vectors to avoid GC pressure in update loops
+        this._tempVec3_basePos = new THREE.Vector3();
+        this._tempVec3_moveDir = new THREE.Vector3();
+        this._tempVec3_up = new THREE.Vector3(0, 1, 0);
+        this._tempVec3_perpX = new THREE.Vector3();
+        this._tempVec3_perpY = new THREE.Vector3();
+        this._tempVec3_perpAxis = new THREE.Vector3();  // For activate() angular velocity
+        this._tempVec3_targetPos = new THREE.Vector3(); // For reassembly target calculation
+        this._tempQuat = new THREE.Quaternion();
 
         this._initPool();
     }
@@ -164,7 +176,18 @@ class ShardPool {
             orbitAngle: 0,
             orbitSpeed: 0,
             orbitHeight: 0,
-            orbitTilt: 0
+            orbitTilt: 0,
+            // ═══════════════════════════════════════════════════════════════
+            // FIERY MATERIAL STATE (sun shards)
+            // ═══════════════════════════════════════════════════════════════
+            isFiery: false,                    // Flag for fire-specific effects
+            flickerPhase: 0,                   // Random phase for flicker animation
+            flickerSpeed: 0,                   // Random speed multiplier for flicker
+            scalePulsePhase: 0,                // Random phase for scale pulsing
+            jitterSeed: 0,                     // Seed for position jitter noise
+            distFromCenter: 0,                 // Distance from explosion center (for radial gradient)
+            baseScale: new THREE.Vector3(1, 1, 1),  // Original scale before pulsing
+            basePosition: new THREE.Vector3()  // Position before jitter
         };
     }
 
@@ -187,7 +210,9 @@ class ShardPool {
             meshQuaternion = new THREE.Quaternion(),
             meshScale = new THREE.Vector3(1, 1, 1),
             // Suspend mode: explode then freeze mid-air
-            isSuspendMode = false
+            isSuspendMode = false,
+            // Dynamic material from MaterialAnalyzer (if available)
+            baseMaterial = null
         } = config;
 
         const shardsNeeded = Math.min(shardGeometries.length, this.pool.length);
@@ -272,8 +297,8 @@ class ShardPool {
 
             // Angular velocity with directional bias
             // Shards near impact spin around an axis perpendicular to impact direction
-            const perpAxis = new THREE.Vector3()
-                .crossVectors(impactDirection, new THREE.Vector3(0, 1, 0))
+            const perpAxis = this._tempVec3_perpAxis
+                .crossVectors(impactDirection, this._tempVec3_up.set(0, 1, 0))
                 .normalize();
 
             // Random spin plus directional tumble
@@ -299,10 +324,100 @@ class ShardPool {
             shard.userData.state.suspendProgress = 0;
             shard.userData.state.floatPhase = Math.random() * Math.PI * 2;
 
+            // ═══════════════════════════════════════════════════════════════
+            // DYNAMIC MATERIAL - Clone from base and apply per-shard variation
+            // If baseMaterial provided, clone it and apply HSL variation
+            // Otherwise use the pre-allocated default crystal material
+            // ═══════════════════════════════════════════════════════════════
+            if (baseMaterial) {
+                // Dispose old material if it was a dynamic clone (not the shared default)
+                if (shard.material !== this.shardMaterial) {
+                    shard.material.dispose();
+                }
+
+                // Clone base material for this shard
+                const shardMat = baseMaterial.clone();
+
+                // Apply per-shard color variation using HSL offset
+                // This creates visual variety while maintaining overall appearance
+                applyShardVariation(shardMat);
+
+                shard.material = shardMat;
+            }
+
             // Show shard with initial glow
             shard.visible = true;
             shard.material.opacity = 0.9;
-            shard.material.emissiveIntensity = 1.5; // Bright flash on impact
+
+            // Set emissive intensity based on material type:
+            // - Textured materials (moon): low glow so texture shows through
+            // - Fiery materials (sun): preserve/boost high emissive for bloom overbleed
+            // - Crystal materials: moderate glow
+            if (shard.material.map) {
+                // Textured: low glow
+                shard.material.emissiveIntensity = 0.5;
+                shard.userData.state.isFiery = false;
+            } else if (shard.material.emissiveIntensity >= 1.5) {
+                // ═══════════════════════════════════════════════════════════════
+                // FIERY MATERIAL (sun) - Use custom FireShardMaterial
+                // Custom shader with built-in soft edges via barycentric coords
+                // ═══════════════════════════════════════════════════════════════
+                shard.userData.state.isFiery = true;
+
+                // Extract fire color from the original material before replacing
+                const fireColor = shard.material.emissive?.clone() ||
+                                  shard.material.color?.clone() ||
+                                  new THREE.Color(0xffaa00);
+
+                // Apply color variation (yellow → orange spectrum)
+                const lerpFactor = Math.random();
+                const orangeShift = lerpFactor * 0.5;
+                fireColor.r = Math.min(1.0, fireColor.r + orangeShift * 0.05);
+                fireColor.g = Math.max(0.35, fireColor.g - orangeShift * 0.4);
+                fireColor.b = Math.max(0.0, fireColor.b - orangeShift * 0.2);
+
+                // Radial intensity boost for inner shards
+                const distFromCenter = worldCentroid.clone().sub(impactPoint).length();
+                shard.userData.state.distFromCenter = distFromCenter;
+                const maxDist = 0.5;
+                const normalizedDist = Math.min(1, distFromCenter / maxDist);
+
+                let intensity = 3.0 + Math.random() * 1.5; // Base 3.0-4.5
+                if (normalizedDist < 0.3) {
+                    // Inner core: boost toward white-hot
+                    fireColor.r = Math.min(1.0, fireColor.r + 0.1);
+                    fireColor.g = Math.min(1.0, fireColor.g + 0.08);
+                    intensity *= 1.3;
+                }
+
+                // Dispose old material and create custom fire shader
+                // High intensity = bright fire that bloom will naturally soften
+                shard.material.dispose();
+                shard.material = createFireShardMaterial({
+                    color: fireColor,
+                    intensity,
+                    opacity: 0.6 + Math.random() * 0.2
+                });
+
+                // Cache base intensity in state for update loop (avoid reading uniform)
+                shard.userData.state.baseFireIntensity = intensity;
+
+                // Initialize flicker animation state
+                shard.userData.state.flickerPhase = Math.random() * Math.PI * 2;
+                shard.userData.state.flickerSpeed = 8 + Math.random() * 8; // 8-16 Hz
+
+                // Initialize scale pulse state
+                shard.userData.state.scalePulsePhase = Math.random() * Math.PI * 2;
+                shard.userData.state.baseScale.copy(shard.scale);
+
+                // Initialize position jitter state
+                shard.userData.state.jitterSeed = Math.random() * 1000;
+                shard.userData.state.basePosition.copy(shard.position);
+            } else {
+                // Crystal/standard: moderate glow
+                shard.material.emissiveIntensity = 1.5;
+                shard.userData.state.isFiery = false;
+            }
 
             this.active.push(shard);
             activatedShards.push(shard);
@@ -417,27 +532,77 @@ class ShardPool {
             }
 
             // ═══════════════════════════════════════════════════════════════
-            // IMPACT GLOW - Bright flash fades quickly in first 20%
+            // FIERY SHARD ANIMATIONS (sun) - Flicker, pulse, jitter
             // ═══════════════════════════════════════════════════════════════
-            if (progress < 0.2) {
-                // Fast exponential decay of impact glow
-                const glowProgress = progress / 0.2;
-                state.impactGlow = 1.0 - glowProgress * glowProgress; // Quadratic fade
-                const totalEmissive = state.baseEmissiveIntensity + state.impactGlow * 1.0;
-                shard.material.emissiveIntensity = totalEmissive;
-            } else if (progress < 0.5) {
-                // Subtle glow remains in middle
-                shard.material.emissiveIntensity = state.baseEmissiveIntensity * 0.8;
-            } else {
-                // Fade emissive with opacity in final phase
-                const fadeProgress = (progress - 0.5) / 0.5;
-                shard.material.emissiveIntensity = state.baseEmissiveIntensity * (1 - fadeProgress);
+            if (state.isFiery) {
+                // 1. ANIMATED FLICKER - Oscillate emissive intensity
+                const flickerBase = Math.sin(time * state.flickerSpeed + state.flickerPhase);
+                const flickerNoise = Math.sin(time * state.flickerSpeed * 2.3 + state.flickerPhase * 1.7);
+                const flicker = 0.85 + (flickerBase * 0.1 + flickerNoise * 0.05); // Range 0.7-1.0
+                state.flickerMultiplier = flicker;
+
+                // 2. SCALE PULSING - Subtle breathing effect
+                const pulseSpeed = 3 + Math.sin(state.scalePulsePhase) * 1; // 2-4 Hz
+                const pulse = 1 + Math.sin(time * pulseSpeed + state.scalePulsePhase) * 0.05; // ±5%
+                shard.scale.copy(state.baseScale).multiplyScalar(pulse);
+
+                // 3. POSITION JITTER - Turbulent fire motion
+                const jitterStrength = 0.003; // Subtle wobble
+                const jitterX = Math.sin(time * 12 + state.jitterSeed) * jitterStrength;
+                const jitterY = Math.sin(time * 15 + state.jitterSeed * 1.3) * jitterStrength;
+                const jitterZ = Math.sin(time * 10 + state.jitterSeed * 0.7) * jitterStrength;
+
+                // Store base position on first jitter application
+                if (state.basePosition.lengthSq() === 0) {
+                    state.basePosition.copy(shard.position);
+                }
+                // Apply jitter relative to current position (after physics)
+                shard.position.x += jitterX;
+                shard.position.y += jitterY;
+                shard.position.z += jitterZ;
             }
 
-            // Fade out opacity in last 30% (but NOT in suspend mode - shards stay visible for reassembly)
-            if (progress > 0.7 && !state.isSuspendMode) {
-                state.opacity = 1 - ((progress - 0.7) / 0.3);
-                shard.material.opacity = state.opacity * 0.9; // Max 0.9 for glass effect
+            // ═══════════════════════════════════════════════════════════════
+            // IMPACT GLOW - Bright flash fades quickly in first 20%
+            // Textured materials get reduced glow so texture shows through
+            // Fiery materials use custom shader with uniform updates
+            // ═══════════════════════════════════════════════════════════════
+            if (state.isFiery && shard.material.uniforms) {
+                // FIERY SHARD - Use custom shader uniforms
+                // Use cached baseFireIntensity to avoid reading/drifting uniform
+                const flickerMult = state.flickerMultiplier || 1.0;
+                const baseIntensity = state.baseFireIntensity || 3.0;
+
+                // Apply flicker to intensity (always relative to base, not current)
+                shard.material.uniforms.uIntensity.value = baseIntensity * flickerMult;
+
+                // Fade opacity in last 30%
+                if (progress > 0.7 && !state.isSuspendMode) {
+                    state.opacity = 1 - ((progress - 0.7) / 0.3);
+                    shard.material.uniforms.uOpacity.value = state.opacity * 0.6;
+                }
+            } else {
+                // STANDARD MATERIAL - Use direct properties
+                const hasTexture = !!shard.material.map;
+                const glowScale = hasTexture ? 0.3 : 1.0;
+
+                if (progress < 0.2) {
+                    const glowProgress = progress / 0.2;
+                    state.impactGlow = 1.0 - glowProgress * glowProgress;
+                    const totalEmissive = state.baseEmissiveIntensity + state.impactGlow * glowScale;
+                    shard.material.emissiveIntensity = totalEmissive;
+                } else if (progress < 0.5) {
+                    shard.material.emissiveIntensity = state.baseEmissiveIntensity * 0.8 * glowScale;
+                } else {
+                    const fadeProgress = (progress - 0.5) / 0.5;
+                    shard.material.emissiveIntensity = state.baseEmissiveIntensity * (1 - fadeProgress) * glowScale;
+                }
+
+                // Fade out opacity in last 30%
+                if (progress > 0.7 && !state.isSuspendMode) {
+                    state.opacity = 1 - ((progress - 0.7) / 0.3);
+                    shard.material.opacity = state.opacity * 0.9;
+                }
             }
 
             // Scale down slightly at end (but NOT in suspend mode - shards stay full size for reassembly)
@@ -456,6 +621,18 @@ class ShardPool {
     _deactivateShard(shard, activeIndex) {
         shard.visible = false;
         shard.scale.set(1, 1, 1);
+
+        // Reset fiery state
+        shard.userData.state.isFiery = false;
+        shard.userData.state.basePosition.set(0, 0, 0);
+
+        // If shard has a dynamic material (not the shared default), dispose it
+        // and restore the shared material for pool reuse
+        if (shard.material !== this.shardMaterial) {
+            shard.material.dispose();
+            shard.material = this.shardMaterial.clone();
+        }
+
         this.active.splice(activeIndex, 1);
         this.pool.push(shard);
     }
@@ -482,7 +659,7 @@ class ShardPool {
      * @param {THREE.Quaternion} meshTransform.quaternion - Current mesh world rotation
      * @param {THREE.Vector3} meshTransform.scale - Current mesh scale
      */
-    updateReassembly(progress, meshTransform = null) {
+    updateReassembly(progress, targetMesh = null) {
         const time = performance.now() / 1000;
 
         for (const shard of this.active) {
@@ -490,22 +667,24 @@ class ShardPool {
 
             // ═══════════════════════════════════════════════════════════════
             // DYNAMIC TARGET POSITION - Track mesh movement during reassembly
-            // If meshTransform is provided, compute target from local centroid
+            // If targetMesh is provided, compute target from local centroid
             // This prevents the "snap" when mesh has moved due to breathing/wobble
             // ═══════════════════════════════════════════════════════════════
             let targetPosition;
             let targetQuaternion;
             let targetScale;
 
-            if (meshTransform && state.localCentroid) {
+            if (targetMesh && state.localCentroid) {
                 // Compute dynamic world position from local centroid + current mesh transform
                 // Use CURRENT position/rotation so shards track mesh movement (breathing, wobble)
                 // But use ORIGINAL scale so shards don't snap when mesh scale fluctuates
-                targetPosition = state.localCentroid.clone();
-                targetPosition.multiply(meshTransform.scale);  // Use current scale for position calc
-                targetPosition.applyQuaternion(meshTransform.quaternion);
-                targetPosition.add(meshTransform.position);
-                targetQuaternion = meshTransform.quaternion;
+                // Use pre-allocated temp vector to avoid per-shard allocation
+                targetPosition = this._tempVec3_targetPos
+                    .copy(state.localCentroid)
+                    .multiply(targetMesh.scale)
+                    .applyQuaternion(targetMesh.quaternion)
+                    .add(targetMesh.position);
+                targetQuaternion = targetMesh.quaternion;
                 // IMPORTANT: Use original scale, not current mesh scale
                 // Mesh scale fluctuates with breathing/wobble, but shards should converge
                 // to the base mesh scale to avoid a snap at completion
@@ -529,8 +708,8 @@ class ShardPool {
             // VORTEX/SPIRAL MOTION - Curved paths during approach
             // Shards spiral inward rather than moving in straight lines
             // ═══════════════════════════════════════════════════════════════
-            // Base position lerp
-            const basePos = new THREE.Vector3().lerpVectors(
+            // Base position lerp (using pre-allocated vectors to avoid GC)
+            const basePos = this._tempVec3_basePos.lerpVectors(
                 state.reassemblyStartPos,
                 targetPosition,
                 clampedProgress
@@ -543,15 +722,15 @@ class ShardPool {
             const spiralRadius = spiralStrength * (1 - clampedProgress);
 
             // Calculate spiral offset perpendicular to movement direction
-            const moveDir = new THREE.Vector3().subVectors(
+            const moveDir = this._tempVec3_moveDir.subVectors(
                 targetPosition,
                 state.reassemblyStartPos
             ).normalize();
 
             // Create perpendicular vectors for spiral plane
-            const up = new THREE.Vector3(0, 1, 0);
-            const perpX = new THREE.Vector3().crossVectors(moveDir, up).normalize();
-            const perpY = new THREE.Vector3().crossVectors(perpX, moveDir).normalize();
+            const up = this._tempVec3_up.set(0, 1, 0);
+            const perpX = this._tempVec3_perpX.crossVectors(moveDir, up).normalize();
+            const perpY = this._tempVec3_perpY.crossVectors(perpX, moveDir).normalize();
 
             // Apply spiral offset
             basePos.addScaledVector(perpX, Math.cos(spiralAngle) * spiralRadius);
@@ -562,9 +741,8 @@ class ShardPool {
             // ═══════════════════════════════════════════════════════════════
             // ROTATION - Smooth slerp back to original orientation
             // ═══════════════════════════════════════════════════════════════
-            const currentQuat = new THREE.Quaternion();
-            currentQuat.slerpQuaternions(state.reassemblyStartQuat, targetQuaternion, clampedProgress);
-            shard.quaternion.copy(currentQuat);
+            this._tempQuat.slerpQuaternions(state.reassemblyStartQuat, targetQuaternion, clampedProgress);
+            shard.quaternion.copy(this._tempQuat);
 
             // Lerp scale back to original mesh scale
             shard.scale.lerpVectors(state.reassemblyStartScale, targetScale, clampedProgress);
@@ -726,14 +904,14 @@ class ShardPool {
         for (const shard of this.active) {
             const { state } = shard.userData;
 
-            // Add impulse to existing velocity
-            const impulse = new THREE.Vector3(
+            // Add impulse to existing velocity (reuse temp vector)
+            this._tempVec3_moveDir.set(
                 direction[0] * force + (Math.random() - 0.5) * spread * force,
                 direction[1] * force + (Math.random() - 0.5) * spread * force + 0.3, // Slight upward
                 direction[2] * force + (Math.random() - 0.5) * spread * force
             );
 
-            state.velocity.add(impulse);
+            state.velocity.add(this._tempVec3_moveDir);
 
             // Add some extra spin
             state.angularVelocity.x += (Math.random() - 0.5) * 6;
@@ -762,8 +940,8 @@ class ShardPool {
             const { state } = shard.userData;
             if (state.dualMode !== 'implode') continue;
 
-            // Lerp from start position to center with spiral
-            const basePos = new THREE.Vector3().lerpVectors(
+            // Lerp from start position to center with spiral (reuse temp vector)
+            this._tempVec3_basePos.lerpVectors(
                 state.implodeStartPos,
                 centerPoint,
                 eased
@@ -772,10 +950,10 @@ class ShardPool {
             // Add spiral motion (diminishes as approaching center)
             const spiralRadius = (1 - eased) * 0.15;
             const spiralAngle = state.vortexPhase + progress * Math.PI * 4;
-            basePos.x += Math.cos(spiralAngle) * spiralRadius;
-            basePos.z += Math.sin(spiralAngle) * spiralRadius;
+            this._tempVec3_basePos.x += Math.cos(spiralAngle) * spiralRadius;
+            this._tempVec3_basePos.z += Math.sin(spiralAngle) * spiralRadius;
 
-            shard.position.copy(basePos);
+            shard.position.copy(this._tempVec3_basePos);
 
             // Spin faster as approaching center
             const spinMultiplier = 1 + eased * 5;
@@ -807,8 +985,9 @@ class ShardPool {
             const { state } = shard.userData;
             if (state.dualMode !== 'dissolve') continue;
 
-            // Apply wind velocity
-            shard.position.add(state.dissolveVelocity.clone().multiplyScalar(dt));
+            // Apply wind velocity (reuse temp vector to avoid clone)
+            this._tempVec3_moveDir.copy(state.dissolveVelocity).multiplyScalar(dt);
+            shard.position.add(this._tempVec3_moveDir);
 
             // Add turbulent wobble (like dust in wind)
             const wobbleX = Math.sin(time * 3 + state.floatPhase) * turbulence * 0.02;
@@ -854,8 +1033,9 @@ class ShardPool {
             // Apply gravity to velocity
             state.gravityVelocity.y += state.gravity * dt;
 
-            // Update position
-            shard.position.add(state.gravityVelocity.clone().multiplyScalar(dt));
+            // Update position (reuse temp vector to avoid clone)
+            this._tempVec3_moveDir.copy(state.gravityVelocity).multiplyScalar(dt);
+            shard.position.add(this._tempVec3_moveDir);
 
             // Floor collision
             if (shard.position.y <= floorY && state.bounceCount < maxBounces) {
@@ -946,6 +1126,13 @@ class ShardPool {
             const shard = this.active[i];
             shard.visible = false;
             shard.scale.set(1, 1, 1);
+
+            // Dispose dynamic materials (not the shared default)
+            if (shard.material !== this.shardMaterial) {
+                shard.material.dispose();
+                shard.material = this.shardMaterial.clone();
+            }
+
             this.pool.push(shard);
         }
         this.active = [];

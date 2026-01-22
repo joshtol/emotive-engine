@@ -35,6 +35,7 @@
 import * as THREE from 'three';
 import { ShardGenerator } from './ShardGenerator.js';
 import { ShardPool } from './ShardPool.js';
+import { extractMaterialProperties, createShardBaseMaterial } from './MaterialAnalyzer.js';
 
 /**
  * States for the shatter state machine
@@ -85,7 +86,20 @@ class ShatterSystem {
 
         // Shard management
         this.shardPool = new ShardPool({ maxShards, scene });
+
+        // LRU geometry cache - evicts oldest entries when full
+        // Map maintains insertion order; we delete+reinsert on access to update order
         this.geometryCache = new Map();
+        this.geometryCacheMaxSize = 5;  // Max different geometries to cache
+        this.geometryCacheRefs = new Map();  // Ref counts - don't evict while shards active
+        this._activeGeometryId = null;  // Currently shattering geometry ID
+
+        // ═══════════════════════════════════════════════════════════════════
+        // DYNAMIC SHARD MATERIAL CACHE
+        // Single geometry cached at a time - invalidated on morphTo()
+        // Stores pre-computed shard geometries and extracted base material
+        // ═══════════════════════════════════════════════════════════════════
+        this.shardMaterialCache = null;  // { geometryType, baseMaterial, geometries }
 
         // Mesh references
         this.targetMesh = null;
@@ -144,7 +158,11 @@ class ShatterSystem {
         const id = geometryId || ShardGenerator.hashGeometry(geometry);
 
         if (this.geometryCache.has(id)) {
-            return this.geometryCache.get(id);
+            // LRU: Move to end by deleting and re-inserting
+            const cached = this.geometryCache.get(id);
+            this.geometryCache.delete(id);
+            this.geometryCache.set(id, cached);
+            return cached;
         }
 
         // Generate shards (synchronous - could use Web Worker for heavy meshes in future)
@@ -153,8 +171,95 @@ class ShatterSystem {
             seed: this._hashString(id)
         });
 
+        // LRU eviction: remove oldest entries if cache is full
+        // Skip entries with active refs (shards currently animating)
+        while (this.geometryCache.size >= this.geometryCacheMaxSize) {
+            let evicted = false;
+            for (const key of this.geometryCache.keys()) {
+                const refCount = this.geometryCacheRefs.get(key) || 0;
+                if (refCount === 0) {
+                    const oldShards = this.geometryCache.get(key);
+                    // Dispose evicted geometries to free GPU memory
+                    oldShards.forEach(shard => shard.dispose());
+                    this.geometryCache.delete(key);
+                    this.geometryCacheRefs.delete(key);
+                    evicted = true;
+                    break;
+                }
+            }
+            // If all entries have refs, allow cache to exceed max temporarily
+            if (!evicted) break;
+        }
+
         this.geometryCache.set(id, shards);
         return shards;
+    }
+
+    /**
+     * Pre-compute shard geometries and material for a mesh
+     * Call this on geometry load/morph to eliminate first-shatter lag
+     *
+     * @param {THREE.Mesh} mesh - Source mesh to analyze
+     * @param {string} geometryType - Geometry type (crystal, sun, moon, etc.)
+     */
+    precomputeShards(mesh, geometryType) {
+        if (!mesh?.geometry || !mesh?.material) {
+            console.warn('ShatterSystem.precomputeShards: Invalid mesh');
+            return;
+        }
+
+        // Invalidate previous cache (single geometry at a time)
+        if (this.shardMaterialCache?.baseMaterial) {
+            this.shardMaterialCache.baseMaterial.dispose();
+        }
+        this.shardMaterialCache = null;
+
+        // Extract material properties using type-specific analyzer
+        const materialProps = extractMaterialProperties(mesh.material, geometryType);
+
+        // Create base material for shards (will be cloned per-shard with variation)
+        const baseMaterial = createShardBaseMaterial(materialProps);
+
+        // Pre-generate shard geometries
+        const geometryId = ShardGenerator.hashGeometry(mesh.geometry);
+        let shardGeometries = this.geometryCache.get(geometryId);
+
+        if (!shardGeometries) {
+            shardGeometries = ShardGenerator.generate(mesh.geometry, {
+                shardCount: this.maxShards,
+                seed: this._hashString(geometryId)
+            });
+            this.geometryCache.set(geometryId, shardGeometries);
+        }
+
+        // Cache everything
+        this.shardMaterialCache = {
+            geometryType,
+            baseMaterial,
+            geometries: shardGeometries,
+            geometryId
+        };
+    }
+
+    /**
+     * Check if shards are pre-computed for current geometry
+     * @returns {boolean}
+     */
+    hasCachedShards() {
+        return this.shardMaterialCache !== null;
+    }
+
+    /**
+     * Get cached shard material info (for debugging)
+     * @returns {Object|null}
+     */
+    getCacheInfo() {
+        if (!this.shardMaterialCache) return null;
+        return {
+            geometryType: this.shardMaterialCache.geometryType,
+            shardCount: this.shardMaterialCache.geometries?.length || 0,
+            hasMaterial: !!this.shardMaterialCache.baseMaterial
+        };
     }
 
     /**
@@ -221,6 +326,11 @@ class ShatterSystem {
             this.state = ShatterState.IDLE;
             return false;
         }
+
+        // Track active geometry ref to prevent eviction during animation
+        this._activeGeometryId = id;
+        const currentRefs = this.geometryCacheRefs.get(id) || 0;
+        this.geometryCacheRefs.set(id, currentRefs + 1);
 
         // Get mesh world transform
         const meshPosition = new THREE.Vector3();
@@ -313,6 +423,24 @@ class ShatterSystem {
         const effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
         const effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
 
+        // ═══════════════════════════════════════════════════════════════════
+        // USE CACHED MATERIAL if available (dynamic shard appearance)
+        // If cache exists but has no texture, re-extract (texture may have loaded async)
+        // Otherwise fall back to default crystal material + color sync
+        // ═══════════════════════════════════════════════════════════════════
+        let baseMaterial = this.shardMaterialCache?.baseMaterial || null;
+
+        // Defensive re-extraction: if cache has no texture but mesh now does, re-extract
+        if (this.shardMaterialCache && baseMaterial && !baseMaterial.map && mesh.material) {
+            const materialProps = extractMaterialProperties(mesh.material, this.shardMaterialCache.geometryType);
+            if (materialProps.map) {
+                // Texture loaded since precompute - recreate base material
+                baseMaterial.dispose();
+                baseMaterial = createShardBaseMaterial(materialProps);
+                this.shardMaterialCache.baseMaterial = baseMaterial;
+            }
+        }
+
         const activatedCount = this.shardPool.activate(shards, worldImpact, worldDirection, {
             explosionForce: effectiveExplosionForce,
             rotationForce: effectiveRotationForce,
@@ -323,11 +451,16 @@ class ShatterSystem {
             meshQuaternion,
             meshScale,
             // Suspend mode: explode then freeze mid-air
-            isSuspendMode
+            isSuspendMode,
+            // Dynamic material from cache (if available)
+            baseMaterial
         });
 
-        // Copy material color to shards if available
-        this._syncShardMaterial(mesh);
+        // Only sync material colors if we didn't use cached material
+        // (cached material already has correct colors from extraction)
+        if (!baseMaterial) {
+            this._syncShardMaterial(mesh);
+        }
 
         // Fire callback
         if (this.onShatterStart) {
@@ -384,16 +517,19 @@ class ShatterSystem {
         this._chainedDelay = delay;
 
         // Sort targets by propagation direction if provided
-        const sortedTargets = [...targets];
+        let sortedTargets = [...targets];
         if (propagationDir) {
             const dir = propagationDir.clone().normalize();
-            sortedTargets.sort((a, b) => {
-                const posA = new THREE.Vector3();
-                const posB = new THREE.Vector3();
-                a.mesh.getWorldPosition(posA);
-                b.mesh.getWorldPosition(posB);
-                return posA.dot(dir) - posB.dot(dir);
-            });
+            const tempPos = new THREE.Vector3();
+            // Pre-compute dot products to avoid allocations in sort comparator
+            // Wrap each target with its dot product, sort, then unwrap
+            sortedTargets = sortedTargets
+                .map(t => {
+                    t.mesh.getWorldPosition(tempPos);
+                    return { target: t, dot: tempPos.dot(dir) };
+                })
+                .sort((a, b) => a.dot - b.dot)
+                .map(item => item.target);
         }
 
         // Queue all targets
@@ -754,16 +890,9 @@ class ShatterSystem {
                 ? 4 * t * t * t
                 : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-            // Get current mesh transform for dynamic target tracking
-            // This prevents the "snap" when mesh has moved due to breathing/wobble
-            const meshTransform = this.targetMesh ? {
-                position: this.targetMesh.position.clone(),
-                quaternion: this.targetMesh.quaternion.clone(),
-                scale: this.targetMesh.scale.clone()
-            } : null;
-
-            // Update shards with reassembly lerp and current mesh transform
-            this.shardPool.updateReassembly(eased, meshTransform);
+            // Update shards with reassembly lerp and target mesh for dynamic tracking
+            // Passing mesh directly avoids per-frame clone allocations
+            this.shardPool.updateReassembly(eased, this.targetMesh);
 
             // ═══════════════════════════════════════════════════════════════
             // SOUL MANAGEMENT DURING REASSEMBLY
@@ -971,6 +1100,7 @@ class ShatterSystem {
         // Reset dual-mode state
         this._dualModeType = null;
         this._dualModeConfig = {};
+        this._releaseGeometryRef();
         this.state = ShatterState.IDLE;
 
         // Fire callback
@@ -985,6 +1115,7 @@ class ShatterSystem {
      */
     _onShatterComplete() {
         this.state = ShatterState.IDLE;
+        this._releaseGeometryRef();
 
         // Optionally restore mesh visibility
         if (this.autoRestore && this.targetMesh) {
@@ -1011,6 +1142,7 @@ class ShatterSystem {
     _onReassemblyComplete() {
         // Clear all shards
         this.shardPool.clear();
+        this._releaseGeometryRef();
 
         // Restore target mesh
         if (this.targetMesh) {
@@ -1068,6 +1200,20 @@ class ShatterSystem {
     }
 
     /**
+     * Release geometry cache ref when shatter/reassembly completes
+     * @private
+     */
+    _releaseGeometryRef() {
+        if (this._activeGeometryId) {
+            const currentRefs = this.geometryCacheRefs.get(this._activeGeometryId) || 0;
+            if (currentRefs > 0) {
+                this.geometryCacheRefs.set(this._activeGeometryId, currentRefs - 1);
+            }
+            this._activeGeometryId = null;
+        }
+    }
+
+    /**
      * Set references to target meshes
      * @param {THREE.Mesh} coreMesh - The outer mesh that shatters
      * @param {THREE.Mesh} [innerMesh] - Inner mesh revealed on shatter
@@ -1093,6 +1239,7 @@ class ShatterSystem {
         this.shardPool.clear();
         this.state = ShatterState.IDLE;
         this._shatterQueue = [];
+        this._releaseGeometryRef();
 
         if (this.targetMesh) {
             this.targetMesh.visible = true;
@@ -1177,6 +1324,7 @@ class ShatterSystem {
             }
         }
         this.geometryCache.clear();
+        this.geometryCacheRefs.clear();
     }
 
     /**
@@ -1186,6 +1334,13 @@ class ShatterSystem {
         this.forceStop();
         this.shardPool.dispose();
         this.clearCache();
+
+        // Dispose cached shard material
+        if (this.shardMaterialCache?.baseMaterial) {
+            this.shardMaterialCache.baseMaterial.dispose();
+        }
+        this.shardMaterialCache = null;
+
         this.targetMesh = null;
         this.innerMesh = null;
         this.onShatterStart = null;

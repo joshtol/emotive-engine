@@ -11,10 +11,10 @@ import { DEFORMATION_DEFAULT_UNIFORMS } from '../shaders/utils/deformation.js';
 import { CRACK_DEFAULT_UNIFORMS } from '../shaders/utils/objectSpaceCracks.js';
 
 export function createCustomMaterial(geometryType, geometryConfig, options = {}) {
-    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null, assetBasePath = '/assets' } = options;
+    const { glowColor = [1.0, 1.0, 0.95], glowIntensity = 1.0, materialVariant = null, emotionData = null, assetBasePath = '/assets', onTextureReady = null } = options;
 
     if (geometryConfig.material === 'custom') {
-        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData, assetBasePath);
+        return createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, emotionData, assetBasePath, onTextureReady);
     }
 
     if (geometryConfig.material === 'emissive') {
@@ -24,12 +24,12 @@ export function createCustomMaterial(geometryType, geometryConfig, options = {})
     return null;
 }
 
-function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, _emotionData, assetBasePath) {
+function createCustomTypeMaterial(geometryType, glowColor, glowIntensity, materialVariant, _emotionData, assetBasePath, onTextureReady) {
     const textureLoader = new THREE.TextureLoader();
 
     switch (geometryType) {
     case 'moon':
-        return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant, assetBasePath);
+        return createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant, assetBasePath, onTextureReady);
     case 'crystal':
         // Uses quartz SSS preset for clear crystal appearance
         return createCrystalMaterial(glowColor, glowIntensity, 'crystal', { sssPreset: 'quartz' }, assetBasePath);
@@ -216,7 +216,7 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
     return { material, type: 'crystal' };
 }
 
-function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant = null, assetBasePath = '/assets') {
+function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVariant = null, assetBasePath = '/assets', onTextureReady = null) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const resolution = isMobile ? '2k' : '4k';
 
@@ -225,7 +225,8 @@ function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVar
             resolution,
             glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
             glowIntensity,
-            assetBasePath
+            assetBasePath,
+            onTextureReady
         });
         return { material, type: 'moon-multiplexer' };
     }
@@ -235,7 +236,8 @@ function createMoonMaterial(textureLoader, glowColor, glowIntensity, materialVar
         glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
         glowIntensity,
         moonPhase: 'full',
-        assetBasePath
+        assetBasePath,
+        onTextureReady
     });
 
     return { material, type: 'moon' };
