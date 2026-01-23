@@ -591,32 +591,21 @@ export function createVoidEffectGesture(variant) {
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
                 // ═══════════════════════════════════════════════════════════════
-                const voidOverlay = {
-                    enabled: effectStrength > 0.1,
-                    strength: effectStrength * cfg.intensity,
-                    depth: cfg.depth,
-                    category: cfg.category,
-                    time
-                };
-
-                // DEBUG: Log void gesture output
-                if (effectStrength > 0.1) {
-                    console.log('[VOID GESTURE DEBUG]', cfg.name, {
-                        progress: progress.toFixed(2),
-                        effectStrength: effectStrength.toFixed(2),
-                        voidOverlay
-                    });
-                }
-
                 return {
+                    voidOverlay: {
+                        enabled: effectStrength > 0.1,
+                        strength: effectStrength * cfg.intensity,
+                        depth: cfg.depth,
+                        category: cfg.category,
+                        time
+                    },
                     position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],
                     scale,
                     meshOpacity,
                     glowIntensity,
                     glowBoost,
-                    glowColorOverride: cfg.glowColor,
-                    voidOverlay
+                    glowColorOverride: cfg.glowColor
                 };
             }
         }
