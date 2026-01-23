@@ -260,6 +260,14 @@ import shatter from './destruction/shatter/shatter.js';
 import { createShatterGesture } from './destruction/shatter/shatterFactory.js';
 // destruction/dissolve/
 import { createDissolveGesture } from './destruction/dissolve/dissolveFactory.js';
+// destruction/elemental/
+import { createElementalGesture } from './destruction/elemental/elementalFactory.js';
+// destruction/elemental/ - Electric effect gestures (no shatter, just electrocution effect)
+import {
+    shock as electricShock,
+    overload as electricOverload,
+    glitch as electricGlitch
+} from './destruction/elemental/electricEffectFactory.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -356,6 +364,31 @@ const dissolveLeft = createDissolveGesture('left');
 const dissolveRight = createDissolveGesture('right');
 const dissolveAway = createDissolveGesture('away');
 const dissolveToward = createDissolveGesture('toward');
+// Elemental gestures (use elemental material system)
+// Water
+const splash = createElementalGesture('splash');
+const drip = createElementalGesture('drip');
+const rippleWater = createElementalGesture('ripple');
+// Smoke
+const smokebomb = createElementalGesture('smokebomb');
+const vanish = createElementalGesture('vanish');
+const materialize = createElementalGesture('materialize');
+// Fire
+const ignite = createElementalGesture('ignite');
+const phoenix = createElementalGesture('phoenix');
+const ember = createElementalGesture('ember');
+// Ice
+const iceFreeze = createElementalGesture('freeze');
+const shatterIce = createElementalGesture('shatterIce');
+const thaw = createElementalGesture('thaw');
+// Electric (uses electric effect gestures - no shatter, just electrocution visuals)
+const shock = electricShock;
+const overload = electricOverload;
+const glitch = electricGlitch;
+// Void
+const consume = createElementalGesture('consume');
+const corrupt = createElementalGesture('corrupt');
+const singularity = createElementalGesture('singularity');
 // Directional rush gestures
 const rushForward = createRushGesture('forward');
 const rushBack = createRushGesture('back');
@@ -693,7 +726,32 @@ const TRANSFORM_GESTURES = [
     dissolveLeft,
     dissolveRight,
     dissolveAway,
-    dissolveToward
+    dissolveToward,
+    // Elemental gestures (use elemental material system)
+    // Water
+    splash,
+    drip,
+    rippleWater,
+    // Smoke
+    smokebomb,
+    vanish,
+    materialize,
+    // Fire
+    ignite,
+    phoenix,
+    ember,
+    // Ice
+    iceFreeze,
+    shatterIce,
+    thaw,
+    // Electric
+    shock,
+    overload,
+    glitch,
+    // Void
+    consume,
+    corrupt,
+    singularity
 ];
 
 const EFFECT_GESTURES = [
@@ -831,6 +889,18 @@ export const GESTURE_CATEGORIES = {
         'shatterSuspend', 'shatterFreeze', 'shatterImplode', 'shatterGravity', 'shatterOrbit',
         // destruction/dissolve/
         'dissolveUp', 'dissolveDown', 'dissolveLeft', 'dissolveRight', 'dissolveAway', 'dissolveToward',
+        // destruction/elemental/ - Water
+        'splash', 'drip', 'ripple',
+        // destruction/elemental/ - Smoke
+        'smokebomb', 'vanish', 'materialize',
+        // destruction/elemental/ - Fire
+        'ignite', 'phoenix', 'ember',
+        // destruction/elemental/ - Ice
+        'iceFreeze', 'shatterIce', 'thaw',
+        // destruction/elemental/ - Electric
+        'shock', 'overload', 'glitch',
+        // destruction/elemental/ - Void
+        'consume', 'corrupt', 'singularity',
         // destruction/reform/
         'morph'
     ],

@@ -65,6 +65,8 @@ export class GestureBlender {
             nonUniformScale: [1.0, 1.0, 1.0],                  // Multiplicative channel [x, y, z] for squash/stretch
             glowIntensity: 1.0,                                // Multiplicative channel
             glowBoost: 0.0,                                    // Additive channel (for glow layer)
+            glowColorOverride: null,                           // Temporary glow color override [r,g,b]
+            electricOverlay: null,                             // Electric shader overlay {enabled, charge, time}
 
             // CAMERA-RELATIVE channels (transformed in Core3DManager)
             // Position: Z = toward camera, Y = up, X = right (in view space)
@@ -189,6 +191,21 @@ export class GestureBlender {
                     // GLOW BOOST: Additive blending for isolated glow layer
                     if (output.glowBoost !== undefined) {
                         accumulated.glowBoost += output.glowBoost;
+                    }
+
+                    // GLOW COLOR OVERRIDE: Last-wins (for electric/elemental effects)
+                    // Temporary color override that doesn't affect emotion glow
+                    if (output.glowColorOverride) {
+                        accumulated.glowColorOverride = output.glowColorOverride;
+                    }
+
+                    // ELECTRIC OVERLAY: Shader overlay for electrocution effect
+                    // Last-wins blending (strongest charge takes precedence)
+                    if (output.electricOverlay && output.electricOverlay.enabled) {
+                        if (!accumulated.electricOverlay ||
+                            output.electricOverlay.charge > accumulated.electricOverlay.charge) {
+                            accumulated.electricOverlay = { ...output.electricOverlay };
+                        }
                     }
 
                     // ═══════════════════════════════════════════════════════════════
@@ -421,6 +438,8 @@ export class GestureBlender {
             nonUniformScale: finalNonUniformScale,  // [x, y, z] or null for uniform
             glowIntensity: finalGlowIntensity,
             glowBoost: accumulated.glowBoost,
+            glowColorOverride: accumulated.glowColorOverride,
+            electricOverlay: accumulated.electricOverlay,
 
             // Camera-relative channels (view-space, transformed in Core3DManager)
             cameraRelativePosition: accumulated.cameraRelativePosition,

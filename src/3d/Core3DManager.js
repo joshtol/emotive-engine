@@ -42,6 +42,7 @@ import { BehaviorController } from './managers/BehaviorController.js';
 import { BreathingPhaseManager } from './managers/BreathingPhaseManager.js';
 import { ShatterSystem } from './effects/shatter/ShatterSystem.js';
 import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
+import { createElectricMaterial, updateElectricMaterial } from './materials/ElectricMaterial.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -1932,6 +1933,80 @@ export class Core3DManager {
         this.glowBoost = blended.glowBoost || 0; // For isolated glow layer
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // GLOW COLOR OVERRIDE - Temporary glow color from electric/elemental effects
+        // ═══════════════════════════════════════════════════════════════════════════
+        // When a gesture provides glowColorOverride, temporarily use that color
+        // instead of the emotion glow color. This creates electric cyan, fire orange, etc.
+        if (blended.glowColorOverride) {
+            // Store original color if not already stored
+            if (!this._originalGlowColor) {
+                this._originalGlowColor = [...this.glowColor];
+            }
+            // Apply override
+            this.glowColor = [...blended.glowColorOverride];
+        } else if (this._originalGlowColor) {
+            // Restore original color when override ends
+            this.glowColor = [...this._originalGlowColor];
+            this._originalGlowColor = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ELECTRIC OVERLAY - Additive lightning effect rendered ON TOP of mesh
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Creates a duplicate mesh with electric shader that renders additively,
+        // so lightning appears on top of the original mesh appearance.
+        if (blended.electricOverlay && blended.electricOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                // Create overlay mesh if not already created
+                if (!this._electricOverlayMesh) {
+                    // Create electric material with additive blending
+                    this._electricMaterial = createElectricMaterial({
+                        charge: Math.min(1.0, blended.electricOverlay.charge),
+                        opacity: 0.7  // Semi-transparent for overlay
+                    });
+
+                    // Clone the mesh geometry for the overlay
+                    this._electricOverlayMesh = new THREE.Mesh(
+                        mesh.geometry,
+                        this._electricMaterial
+                    );
+
+                    // Slightly larger to avoid z-fighting
+                    this._electricOverlayMesh.scale.setScalar(1.02);
+
+                    // Add as child of original mesh so it follows transforms
+                    mesh.add(this._electricOverlayMesh);
+
+                    // Render after original mesh
+                    this._electricOverlayMesh.renderOrder = mesh.renderOrder + 1;
+                }
+
+                // Update electric material each frame
+                if (this._electricMaterial?.uniforms?.uTime) {
+                    this._electricMaterial.uniforms.uTime.value = blended.electricOverlay.time;
+                }
+                // Update charge dynamically
+                if (this._electricMaterial?.uniforms?.uCharge) {
+                    this._electricMaterial.uniforms.uCharge.value = Math.min(1.0, blended.electricOverlay.charge);
+                }
+            }
+        } else if (this._electricOverlayMesh) {
+            // Remove overlay mesh when electric effect ends
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._electricOverlayMesh.parent) {
+                mesh.remove(this._electricOverlayMesh);
+            }
+            // Dispose resources
+            if (this._electricMaterial) {
+                this._electricMaterial.dispose();
+                this._electricMaterial = null;
+            }
+            this._electricOverlayMesh = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // OBJECT-SPACE CRACKS - Persistent damage that rotates with mesh
         // ═══════════════════════════════════════════════════════════════════════════
         // Cracks accumulate from multiple impacts and persist until healed.
@@ -2157,6 +2232,21 @@ export class Core3DManager {
             // NORMAL SHATTER - From IDLE state
             // ═══════════════════════════════════════════════════════════════
             else if (this.shatterSystem.isIdle()) {
+                // ═══════════════════════════════════════════════════════════════
+                // DEBUG LOGGING - Core3DManager shatter config
+                // ═══════════════════════════════════════════════════════════════
+                console.log('[CORE_3D] 🎭 Shatter triggered with config:', {
+                    variant: s.variant,
+                    elemental: s.elemental,
+                    elementalParam: s.elementalParam,
+                    overlay: s.overlay,
+                    overlayParam: s.overlayParam,
+                    intensity: s.intensity,
+                    isDualMode: s.isDualMode,
+                    dualModeType: s.dualModeType,
+                    fullShatterConfig: s
+                });
+
                 const ip = s.impactPoint || [0, 0, 0.4];
 
                 // Transform impact point from camera-relative to world space
@@ -2233,7 +2323,15 @@ export class Core3DManager {
                     explosionForce: s.explosionForce,
                     rotationForce: s.rotationForce,
                     // Gesture duration for suspend timing calculation
-                    gestureDuration: s.gestureDuration
+                    gestureDuration: s.gestureDuration,
+                    // ═══════════════════════════════════════════════════════════════
+                    // ELEMENTAL MATERIAL SYSTEM
+                    // Replaces shard material with elemental material (fire, water, etc.)
+                    // ═══════════════════════════════════════════════════════════════
+                    elemental: s.elemental || null,
+                    elementalParam: s.elementalParam ?? 0.5,
+                    overlay: s.overlay || null,
+                    overlayParam: s.overlayParam ?? 0.5
                 });
 
                 // Clear all cracks when shattering (geometry is destroyed)

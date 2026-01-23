@@ -108,13 +108,24 @@ export function createElectricMaterial(options = {}) {
 
         vertexShader: /* glsl */`
             varying vec3 vPosition;
+            varying vec3 vWorldPosition;
             varying vec3 vNormal;
+            varying vec3 vViewDir;
             varying vec2 vUv;
 
             void main() {
                 vPosition = position;
-                vNormal = normalMatrix * normal;
                 vUv = uv;
+
+                // World space position for view direction
+                vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPos.xyz;
+
+                // View direction in world space
+                vViewDir = normalize(cameraPosition - worldPos.xyz);
+
+                // Normal in world space
+                vNormal = normalize(mat3(modelMatrix) * normal);
 
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
@@ -132,116 +143,263 @@ export function createElectricMaterial(options = {}) {
             uniform float uCharge;
 
             varying vec3 vPosition;
+            varying vec3 vWorldPosition;
             varying vec3 vNormal;
+            varying vec3 vViewDir;
             varying vec2 vUv;
 
-            // Hash functions for procedural lightning
+            // ═══════════════════════════════════════════════════════════════
+            // HASH FUNCTIONS
+            // ═══════════════════════════════════════════════════════════════
             float hash(float n) {
                 return fract(sin(n) * 43758.5453);
             }
 
-            float hash2(vec2 p) {
-                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            vec2 hash2(vec2 p) {
+                p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+                return fract(sin(p) * 43758.5453);
             }
 
-            // 1D noise for arc wobble
-            float noise1D(float x) {
-                float i = floor(x);
-                float f = fract(x);
-                f = f * f * (3.0 - 2.0 * f);
-                return mix(hash(i), hash(i + 1.0), f);
+            vec3 hash3(vec3 p) {
+                p = vec3(
+                    dot(p, vec3(127.1, 311.7, 74.7)),
+                    dot(p, vec3(269.5, 183.3, 246.1)),
+                    dot(p, vec3(113.5, 271.9, 124.6))
+                );
+                return fract(sin(p) * 43758.5453);
             }
 
-            // Generate a single lightning bolt
-            float lightningBolt(vec2 uv, float seed, float time) {
-                // Bolt starts at top, goes to bottom (or center to edge)
-                float boltY = uv.y;
+            // ═══════════════════════════════════════════════════════════════
+            // VORONOI WITH EDGE DISTANCE
+            // Returns: x = distance to nearest cell, y = distance to edge
+            // The EDGE DISTANCE creates thin branching lines perfect for electricity
+            // ═══════════════════════════════════════════════════════════════
+            vec2 voronoi(vec3 p, float time, float jitter) {
+                vec3 n = floor(p);
+                vec3 f = fract(p);
 
-                // Add wobble to X position
-                float wobbleFreq = 8.0 + seed * 4.0;
-                float wobbleAmp = 0.1 + seed * 0.05;
-                float wobble = noise1D(boltY * wobbleFreq + time * 3.0 + seed * 100.0) - 0.5;
-                wobble *= wobbleAmp * (0.5 + boltY * 0.5);  // More wobble toward end
+                // First pass: find closest cell
+                float minDist = 10.0;
+                vec3 closestCell = vec3(0.0);
+                vec3 closestPoint = vec3(0.0);
 
-                // Bolt center line
-                float boltX = 0.5 + wobble + (hash(seed * 47.3) - 0.5) * 0.3;
+                for (int k = -1; k <= 1; k++) {
+                    for (int j = -1; j <= 1; j++) {
+                        for (int i = -1; i <= 1; i++) {
+                            vec3 neighbor = vec3(float(i), float(j), float(k));
+                            vec3 cellId = n + neighbor;
 
-                // Distance to bolt
-                float dist = abs(uv.x - boltX);
+                            // Animate cell position over time for moving electricity
+                            vec3 cellHash = hash3(cellId);
+                            vec3 cellOffset = cellHash * jitter;
+                            // Add time-based movement
+                            cellOffset += sin(time * 3.0 + cellHash * 6.28) * 0.15;
 
-                // Bolt thickness varies along length
-                float thickness = uArcThickness * (1.0 + sin(boltY * 20.0 + time * 5.0) * 0.3);
+                            vec3 cellPoint = neighbor + cellOffset;
+                            float d = length(cellPoint - f);
 
-                // Core and glow
-                float core = smoothstep(thickness, thickness * 0.3, dist);
-                float glow = smoothstep(thickness * 4.0, thickness * 0.5, dist) * 0.5;
+                            if (d < minDist) {
+                                minDist = d;
+                                closestCell = cellId;
+                                closestPoint = cellPoint;
+                            }
+                        }
+                    }
+                }
 
-                // Flicker/pulse
-                float flicker = 0.7 + 0.3 * sin(time * uFlickerRate + seed * 6.28);
-                flicker *= 0.8 + 0.2 * noise1D(time * 10.0 + seed);
+                // Second pass: find distance to nearest edge
+                // This is where the THIN LINES come from
+                float minEdgeDist = 10.0;
 
-                return (core + glow) * flicker;
+                for (int k = -1; k <= 1; k++) {
+                    for (int j = -1; j <= 1; j++) {
+                        for (int i = -1; i <= 1; i++) {
+                            vec3 neighbor = vec3(float(i), float(j), float(k));
+                            vec3 cellId = n + neighbor;
+
+                            if (cellId == closestCell) continue;
+
+                            vec3 cellHash = hash3(cellId);
+                            vec3 cellOffset = cellHash * jitter;
+                            cellOffset += sin(time * 3.0 + cellHash * 6.28) * 0.15;
+
+                            vec3 cellPoint = neighbor + cellOffset;
+
+                            // Calculate distance to edge between cells
+                            // Edge is the perpendicular bisector of the line between cells
+                            vec3 toCenter = (closestPoint + cellPoint) * 0.5;
+                            vec3 cellDiff = normalize(cellPoint - closestPoint);
+                            float edgeDist = dot(toCenter - f, cellDiff);
+                            edgeDist = abs(edgeDist);
+
+                            minEdgeDist = min(minEdgeDist, edgeDist);
+                        }
+                    }
+                }
+
+                return vec2(minDist, minEdgeDist);
             }
 
-            // Surface electric crackling
-            float surfaceCrackle(vec3 pos, float time) {
-                // Create electric noise pattern on surface
-                float n1 = noise1D(pos.x * 10.0 + time * 2.0);
-                float n2 = noise1D(pos.y * 10.0 + time * 2.3);
-                float n3 = noise1D(pos.z * 10.0 + time * 1.7);
+            // ═══════════════════════════════════════════════════════════════
+            // 2D VORONOI FOR SECONDARY CRACKLING
+            // ═══════════════════════════════════════════════════════════════
+            float voronoi2D(vec2 p, float time) {
+                vec2 n = floor(p);
+                vec2 f = fract(p);
 
-                float crackle = n1 * n2 * n3;
-                crackle = pow(crackle, 3.0);  // Sharpen to create sparks
+                float minDist = 10.0;
+                vec2 closestPoint = vec2(0.0);
+                vec2 closestCell = vec2(0.0);
 
-                return crackle * 3.0;
+                for (int j = -1; j <= 1; j++) {
+                    for (int i = -1; i <= 1; i++) {
+                        vec2 neighbor = vec2(float(i), float(j));
+                        vec2 cellId = n + neighbor;
+                        vec2 cellHash = hash2(cellId);
+                        vec2 cellOffset = cellHash * 0.9;
+                        cellOffset += sin(time * 5.0 + cellHash * 6.28) * 0.2;
+
+                        vec2 cellPoint = neighbor + cellOffset;
+                        float d = length(cellPoint - f);
+
+                        if (d < minDist) {
+                            minDist = d;
+                            closestPoint = cellPoint;
+                            closestCell = cellId;
+                        }
+                    }
+                }
+
+                float minEdgeDist = 10.0;
+                for (int j = -1; j <= 1; j++) {
+                    for (int i = -1; i <= 1; i++) {
+                        vec2 neighbor = vec2(float(i), float(j));
+                        vec2 cellId = n + neighbor;
+
+                        if (cellId == closestCell) continue;
+
+                        vec2 cellHash = hash2(cellId);
+                        vec2 cellOffset = cellHash * 0.9;
+                        cellOffset += sin(time * 5.0 + cellHash * 6.28) * 0.2;
+
+                        vec2 cellPoint = neighbor + cellOffset;
+
+                        vec2 toCenter = (closestPoint + cellPoint) * 0.5;
+                        vec2 cellDiff = normalize(cellPoint - closestPoint);
+                        float edgeDist = abs(dot(toCenter - f, cellDiff));
+
+                        minEdgeDist = min(minEdgeDist, edgeDist);
+                    }
+                }
+
+                return minEdgeDist;
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // SPARK POINTS - Random flickering bright spots
+            // ═══════════════════════════════════════════════════════════════
+            float sparks(vec3 pos, float time) {
+                vec3 gridPos = pos * 12.0;
+                vec3 gridId = floor(gridPos);
+                vec3 gridUv = fract(gridPos);
+
+                float spark = 0.0;
+                for (int z = 0; z <= 1; z++) {
+                    for (int y = 0; y <= 1; y++) {
+                        for (int x = 0; x <= 1; x++) {
+                            vec3 offset = vec3(float(x), float(y), float(z));
+                            vec3 cellId = gridId + offset;
+
+                            vec3 sparkPos = hash3(cellId) * 0.8 + 0.1;
+                            float d = length(gridUv - offset - sparkPos + 0.5);
+
+                            // Irregular flicker timing
+                            float flickerSeed = dot(cellId, vec3(127.1, 311.7, 74.7));
+                            float flicker = step(0.75, fract(sin(time * 15.0 + flickerSeed) * 43758.5453));
+
+                            spark += smoothstep(0.12, 0.0, d) * flicker;
+                        }
+                    }
+                }
+
+                return spark;
             }
 
             void main() {
                 vec3 normal = normalize(vNormal);
+                vec3 viewDir = normalize(vViewDir);
 
-                // Base surface glow
-                float baseGlow = 0.2 * uCharge;
+                // ═══════════════════════════════════════════════════════════════
+                // FRESNEL RIM - Subtle edge highlight
+                // ═══════════════════════════════════════════════════════════════
+                float fresnel = 1.0 - abs(dot(normal, viewDir));
+                fresnel = pow(fresnel, 3.0);
+                float rimGlow = fresnel * 0.15 * uCharge;
 
-                // Surface electric crackling
-                float crackle = surfaceCrackle(vPosition, uTime) * uCharge;
+                // ═══════════════════════════════════════════════════════════════
+                // LIGHTNING ARCS: Voronoi cell edges = thin branching lines
+                // ═══════════════════════════════════════════════════════════════
 
-                // Lightning bolts (for higher charge)
-                float bolts = 0.0;
-                if (uCharge > 0.3) {
-                    // Generate multiple bolts
-                    for (int i = 0; i < 4; i++) {
-                        if (float(i) >= uBranchCount) break;
+                // Use VERY thin line thickness for sharp electricity
+                float lineWidth = 0.015;  // Thin lines regardless of charge
 
-                        float seed = float(i) * 0.25;
-                        // Rotate UV space for each bolt
-                        float angle = seed * 6.28;
-                        vec2 rotUv = vec2(
-                            vUv.x * cos(angle) - vUv.y * sin(angle),
-                            vUv.x * sin(angle) + vUv.y * cos(angle)
-                        );
-                        rotUv = rotUv * 0.5 + 0.5;
+                // Primary arcs - larger cells = fewer, thicker main bolts
+                float scale1 = 3.0;
+                vec2 v1 = voronoi(vPosition * scale1, uTime * 0.8, 0.85);
+                float bolt1 = 1.0 - smoothstep(0.0, lineWidth * 1.2, v1.y);
+                bolt1 = pow(bolt1, 2.0);  // Sharpen the falloff
 
-                        // Only show bolts intermittently (flash effect)
-                        float flashTime = uTime * uArcFrequency + seed * 10.0;
-                        float flash = step(0.7, fract(flashTime));
+                // Secondary crackling - smaller cells = more fine detail
+                float scale2 = 6.0;
+                vec2 v2 = voronoi(vPosition * scale2, uTime * 1.2, 0.8);
+                float bolt2 = 1.0 - smoothstep(0.0, lineWidth * 0.8, v2.y);
+                bolt2 = pow(bolt2, 2.5) * 0.6;
 
-                        bolts += lightningBolt(rotUv, seed, uTime) * flash * (uCharge - 0.3) * 2.0;
-                    }
-                }
+                // Tertiary micro-cracks
+                float scale3 = 10.0;
+                vec2 v3 = voronoi(vPosition * scale3, uTime * 1.6, 0.75);
+                float bolt3 = 1.0 - smoothstep(0.0, lineWidth * 0.5, v3.y);
+                bolt3 = pow(bolt3, 3.0) * 0.3;
 
-                // Combine effects
-                float electric = baseGlow + crackle + bolts;
+                // Combine - don't let it exceed 1.0
+                float lightning = min(bolt1 + bolt2 + bolt3, 1.0);
 
-                // Color with intensity
-                vec3 finalColor = uColor * electric * uIntensity;
+                // ═══════════════════════════════════════════════════════════════
+                // FLICKER - Electrical pulsing
+                // ═══════════════════════════════════════════════════════════════
+                float flickerTime = uTime * uFlickerRate * 0.5;
+                float flicker = 0.7 + 0.3 * step(0.5, fract(sin(flickerTime * 11.3) * 43758.5453));
+                lightning *= flicker;
 
-                // Add white core for intense areas
-                finalColor = mix(finalColor, vec3(1.0), smoothstep(0.8, 1.5, electric) * 0.5);
+                // ═══════════════════════════════════════════════════════════════
+                // SPARKS - Occasional bright point flashes
+                // ═══════════════════════════════════════════════════════════════
+                float sparkVal = sparks(vPosition, uTime) * 0.8;
 
-                // Alpha based on electric intensity
-                float alpha = min(1.0, electric * uOpacity);
+                // ═══════════════════════════════════════════════════════════════
+                // FINAL COLOR - Keep it CYAN, not white
+                // ═══════════════════════════════════════════════════════════════
+                float brightness = lightning + sparkVal + rimGlow;
 
-                if (alpha < 0.01) discard;
+                // Color stays cyan - only the very brightest peaks go slightly white
+                vec3 cyanColor = uColor;  // Base cyan
+                vec3 brightCyan = uColor * 1.5 + vec3(0.2, 0.3, 0.4);  // Brighter cyan, slight white tint
+
+                // Mix based on brightness - mostly cyan, white only at peaks
+                float whiteMix = smoothstep(0.7, 1.0, brightness) * 0.3;
+                vec3 finalColor = mix(cyanColor, brightCyan, whiteMix);
+
+                // Apply brightness to color (capped to prevent white-out)
+                finalColor *= min(brightness * 1.5, 2.0);
+
+                // ═══════════════════════════════════════════════════════════════
+                // ALPHA: Thin lines visible, dark areas transparent
+                // ═══════════════════════════════════════════════════════════════
+                float alpha = brightness * uOpacity;
+                alpha = clamp(alpha, 0.0, 0.9);
+
+                // Discard dark pixels
+                if (alpha < 0.03) discard;
 
                 gl_FragColor = vec4(finalColor, alpha);
             }
