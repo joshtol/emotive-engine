@@ -160,7 +160,7 @@ const SMOKE_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 1.4,
         category: 'afflicted',
-        density: 0.8,                  // Denser for true obscuring
+        density: 0.5,                  // Less dense - more ethereal
         // Closing in motion (no rise)
         riseSpeed: 0.0,
         riseAcceleration: 0.0,
@@ -169,8 +169,8 @@ const SMOKE_EFFECT_VARIANTS = {
         tint: [0.52, 0.54, 0.62],
         // Wind - subtle inward pull
         windDir: [-0.02, 0.0],
-        // Stronger swirl for dramatic enveloping
-        swirl: 0.55,
+        // Moderate swirl - less concentrated
+        swirl: 0.4,
         // Swirling turbulence
         turbulenceAmount: 0.025,
         turbulenceSpeed: 2.5,

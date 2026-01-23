@@ -297,7 +297,7 @@ export class SmokeParticleSystem {
         this.material = new THREE.ShaderMaterial({
             uniforms: {
                 uTint: { value: new THREE.Vector3(this.tint[0], this.tint[1], this.tint[2]) },
-                uOpacity: { value: 0.8 },
+                uOpacity: { value: 0.6 },
                 uTime: { value: 0 } // Animation time
             },
 
@@ -377,9 +377,9 @@ export class SmokeParticleSystem {
                     // COLOR - Simple gray smoke
                     // ═══════════════════════════════════════════════════════════════
 
-                    // Core is lighter, edges darker
-                    vec3 coreColor = vec3(0.4, 0.4, 0.45);
-                    vec3 edgeColor = vec3(0.2, 0.2, 0.25);
+                    // Core is lighter, edges darker - darker overall for less bright blobs
+                    vec3 coreColor = vec3(0.3, 0.3, 0.35);
+                    vec3 edgeColor = vec3(0.15, 0.15, 0.2);
                     vec3 smokeColor = mix(coreColor, edgeColor, dist);
 
                     // Apply tint
@@ -416,25 +416,26 @@ export class SmokeParticleSystem {
 
         if (this.category === 'explosive') {
             // ═══════════════════════════════════════════════════════════════
-            // EXPLOSIVE: FAST burst outward - dramatic poof!
+            // EXPLOSIVE: FAST burst outward from BASE - ninja smokebomb!
             // ═══════════════════════════════════════════════════════════════
             const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(2 * Math.random() - 1);
-            // Start at center
+            // Bias phi toward horizontal (equator) for ground-level burst
+            const phi = Math.PI * 0.4 + Math.random() * Math.PI * 0.2;
+            // Start at base of mascot
             const spawnRadius = 0.02 + Math.random() * 0.03;
 
             particle.position.set(
                 Math.sin(phi) * Math.cos(theta) * spawnRadius,
-                Math.sin(phi) * Math.sin(theta) * spawnRadius * 0.3,
-                Math.cos(phi) * spawnRadius
+                -0.35 + Math.random() * 0.1,  // Start at base
+                Math.sin(phi) * Math.sin(theta) * spawnRadius
             );
 
-            // FAST burst - visible expansion!
-            const burstSpeed = 1.2 + Math.random() * 0.8;
+            // HORIZONTAL burst - expand outward, slight upward drift
+            const burstSpeed = 1.0 + Math.random() * 0.6;
             particle.velocity.set(
-                Math.sin(phi) * Math.cos(theta) * burstSpeed,
-                Math.abs(Math.sin(phi) * Math.sin(theta)) * burstSpeed * 0.5 + 0.4,
-                Math.cos(phi) * burstSpeed
+                Math.cos(theta) * burstSpeed,
+                0.15 + Math.random() * 0.2,  // Gentle upward drift only
+                Math.sin(theta) * burstSpeed
             );
 
             particle.maxLife = 0.8 + Math.random() * 0.4;
@@ -447,11 +448,12 @@ export class SmokeParticleSystem {
 
         } else if (this.category === 'afflicted') {
             // ═══════════════════════════════════════════════════════════════
-            // AFFLICTED: VISIBLE swirling orbit around mascot
+            // AFFLICTED: Ethereal swirling orbit - looser, less dense
             // ═══════════════════════════════════════════════════════════════
             const angle = Math.random() * Math.PI * 2;
-            const radius = 0.25 + Math.random() * 0.15;
-            const height = (Math.random() - 0.5) * 0.5;
+            // Wider orbit radius - less bunching
+            const radius = 0.35 + Math.random() * 0.2;
+            const height = (Math.random() - 0.5) * 0.6;
 
             particle.position.set(
                 Math.cos(angle) * radius,
@@ -459,31 +461,32 @@ export class SmokeParticleSystem {
                 Math.sin(angle) * radius
             );
 
-            // FAST orbital swirl - visibly circling!
-            const orbitSpeed = 0.6 + this.swirl * 0.6;
-            const inwardPull = 0.1 + this.swirl * 0.1;
-            const riseSpeed = 0.15 + Math.random() * 0.1;
+            // Visible orbital swirl with less inward pull
+            const orbitSpeed = 0.5 + this.swirl * 0.4;
+            const inwardPull = 0.05 + this.swirl * 0.05; // Reduced from 0.1
+            const riseSpeed = 0.1 + Math.random() * 0.08;
             particle.velocity.set(
                 -Math.sin(angle) * orbitSpeed - Math.cos(angle) * inwardPull,
                 riseSpeed,
                 Math.cos(angle) * orbitSpeed - Math.sin(angle) * inwardPull
             );
 
-            particle.maxLife = 1.5 + Math.random() * 0.8;
-            particle.scale = 0.06 + Math.random() * 0.04;
-            particle.scaleGrowth = 0.08 + Math.random() * 0.05;
-            particle.alpha = 0.4 + Math.random() * 0.2;
+            particle.maxLife = 1.8 + Math.random() * 0.8;
+            particle.scale = 0.05 + Math.random() * 0.04;
+            particle.scaleGrowth = 0.06 + Math.random() * 0.04;
+            // Lower alpha for ethereal look
+            particle.alpha = 0.25 + Math.random() * 0.15;
             particle.alphaDecay = particle.alpha / particle.maxLife;
-            // Visible spin
-            particle.rotationSpeed = (Math.random() - 0.5) * 3.0;
+            particle.rotationSpeed = (Math.random() - 0.5) * 2.5;
 
         } else {
             // ═══════════════════════════════════════════════════════════════
-            // EMANATING: VISIBLE rising wisps with drift
+            // EMANATING: Rising wisps - stay closer to mascot
             // ═══════════════════════════════════════════════════════════════
             const angle = Math.random() * Math.PI * 2;
-            const radius = 0.08 + Math.random() * 0.12;
-            const startHeight = -0.3 + Math.random() * 0.1;
+            const radius = 0.1 + Math.random() * 0.15;
+            // Start closer to mascot center
+            const startHeight = -0.15 + Math.random() * 0.1;
 
             particle.position.set(
                 Math.cos(angle) * radius,
@@ -491,23 +494,24 @@ export class SmokeParticleSystem {
                 Math.sin(angle) * radius
             );
 
-            // VISIBLE rise with sideways drift
-            const driftX = (Math.random() - 0.5) * 0.3;
-            const driftZ = (Math.random() - 0.5) * 0.3;
-            const riseSpeed = 0.4 + Math.random() * 0.3;
+            // Slower rise - stays in frame
+            const driftX = (Math.random() - 0.5) * 0.2;
+            const driftZ = (Math.random() - 0.5) * 0.2;
+            const riseSpeed = 0.2 + Math.random() * 0.15; // Reduced from 0.4-0.7
             particle.velocity.set(
                 driftX,
                 riseSpeed,
                 driftZ
             );
 
-            particle.maxLife = 1.5 + Math.random() * 0.8;
-            particle.scale = 0.05 + Math.random() * 0.04;
-            particle.scaleGrowth = 0.1 + Math.random() * 0.06;
-            particle.alpha = 0.4 + Math.random() * 0.2;
+            // Shorter life = stays closer
+            particle.maxLife = 1.0 + Math.random() * 0.5;
+            particle.scale = 0.04 + Math.random() * 0.03;
+            particle.scaleGrowth = 0.08 + Math.random() * 0.05;
+            // Lower alpha
+            particle.alpha = 0.3 + Math.random() * 0.15;
             particle.alphaDecay = particle.alpha / particle.maxLife;
-            // Visible spin
-            particle.rotationSpeed = (Math.random() - 0.5) * 2.5;
+            particle.rotationSpeed = (Math.random() - 0.5) * 2.0;
         }
 
         particle.rotation = Math.random() * Math.PI * 2;
