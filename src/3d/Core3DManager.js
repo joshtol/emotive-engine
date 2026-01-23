@@ -46,6 +46,7 @@ import { createElectricMaterial, updateElectricMaterial } from './materials/Elec
 import { createWaterMaterial, updateWaterMaterial } from './materials/WaterMaterial.js';
 import { createFireMaterial, updateFireMaterial } from './materials/FireMaterial.js';
 import { createSmokeMaterial, updateSmokeMaterial } from './materials/SmokeMaterial.js';
+import { createVoidMaterial, updateVoidMaterial } from './materials/VoidMaterial.js';
 import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
 
 // Crystal calibration rotation to show flat facet facing camera
@@ -2177,6 +2178,93 @@ export class Core3DManager {
             this._smokeParticleSystem.dispose();
             this._smokeParticleSystem = null;
             this._smokeMaterialCategory = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // VOID OVERLAY - Darkness absorption effect
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Creates a duplicate mesh with void shader that renders on top,
+        // showing darkness absorption, corruption tendrils, and light-draining effects.
+
+        // DEBUG: Check if voidOverlay is present in blended state
+        if (blended.voidOverlay) {
+            console.log('[VOID DEBUG] voidOverlay found:', {
+                enabled: blended.voidOverlay.enabled,
+                depth: blended.voidOverlay.depth,
+                strength: blended.voidOverlay.strength,
+                time: blended.voidOverlay.time
+            });
+        }
+
+        if (blended.voidOverlay && blended.voidOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+
+            console.log('[VOID DEBUG] Processing voidOverlay - mesh:', !!mesh, 'scene:', !!scene);
+
+            if (mesh && scene) {
+                // Create overlay mesh if not already created
+                if (!this._voidOverlayMesh) {
+                    console.log('[VOID DEBUG] Creating voidOverlayMesh with depth:', blended.voidOverlay.depth || 0.5);
+
+                    // Create void material in overlay mode - HIGH opacity for dramatic effect
+                    this._voidMaterial = createVoidMaterial({
+                        depth: blended.voidOverlay.depth || 0.7,
+                        innerPattern: 'swirl',
+                        opacity: 0.95  // Much higher base opacity
+                    });
+
+                    // Clone the mesh geometry for the overlay
+                    this._voidOverlayMesh = new THREE.Mesh(
+                        mesh.geometry,
+                        this._voidMaterial
+                    );
+
+                    // Scale up more to be clearly visible
+                    this._voidOverlayMesh.scale.setScalar(1.06);
+
+                    // Add as child of original mesh so it follows transforms
+                    mesh.add(this._voidOverlayMesh);
+
+                    // Render after original mesh
+                    this._voidOverlayMesh.renderOrder = mesh.renderOrder + 3;
+
+                    console.log('[VOID DEBUG] voidOverlayMesh created and added to scene');
+                }
+
+                // Update void material each frame
+                if (this._voidMaterial?.uniforms?.uTime) {
+                    this._voidMaterial.uniforms.uTime.value = blended.voidOverlay.time;
+                }
+                // Update depth based on effect strength - boost depth for more dramatic void
+                if (this._voidMaterial?.uniforms?.uDepth) {
+                    // Boost depth for stronger visual
+                    const boostedDepth = Math.min(1.0, (blended.voidOverlay.depth || 0.5) + 0.2);
+                    this._voidMaterial.uniforms.uDepth.value = boostedDepth;
+                }
+                // Update opacity based on strength - much higher for visibility
+                if (this._voidMaterial?.uniforms?.uOpacity) {
+                    // Full strength = full opacity (0.95), much more visible
+                    const opacity = Math.min(0.95, blended.voidOverlay.strength * 1.0);
+                    this._voidMaterial.uniforms.uOpacity.value = opacity;
+                    console.log('[VOID DEBUG] Updated uniforms - time:', blended.voidOverlay.time?.toFixed(2), 'depth:', blended.voidOverlay.depth?.toFixed(2), 'opacity:', opacity.toFixed(2));
+                }
+            } else {
+                console.log('[VOID DEBUG] Missing mesh or scene - cannot create overlay');
+            }
+        } else if (this._voidOverlayMesh) {
+            console.log('[VOID DEBUG] Cleaning up voidOverlayMesh');
+            // Remove overlay mesh when void effect ends
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._voidOverlayMesh.parent) {
+                mesh.remove(this._voidOverlayMesh);
+            }
+            // Dispose resources
+            if (this._voidMaterial) {
+                this._voidMaterial.dispose();
+                this._voidMaterial = null;
+            }
+            this._voidOverlayMesh = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

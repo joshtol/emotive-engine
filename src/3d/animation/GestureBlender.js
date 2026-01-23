@@ -70,6 +70,7 @@ export class GestureBlender {
             waterOverlay: null,                                // Water shader overlay {enabled, wetness, time}
             fireOverlay: null,                                 // Fire shader overlay {enabled, heat, temperature, time}
             smokeOverlay: null,                                // Smoke shader overlay {enabled, thickness, density, time}
+            voidOverlay: null,                                 // Void shader overlay {enabled, strength, depth, time}
             meshOpacity: 1.0,                                  // Mesh opacity for fade effects (0=invisible, 1=visible)
 
             // CAMERA-RELATIVE channels (transformed in Core3DManager)
@@ -236,6 +237,15 @@ export class GestureBlender {
                         if (!accumulated.smokeOverlay ||
                             output.smokeOverlay.thickness > accumulated.smokeOverlay.thickness) {
                             accumulated.smokeOverlay = { ...output.smokeOverlay };
+                        }
+                    }
+
+                    // VOID OVERLAY: Shader overlay for void/darkness absorption effect
+                    // Last-wins blending (strongest strength takes precedence)
+                    if (output.voidOverlay && output.voidOverlay.enabled) {
+                        if (!accumulated.voidOverlay ||
+                            output.voidOverlay.strength > accumulated.voidOverlay.strength) {
+                            accumulated.voidOverlay = { ...output.voidOverlay };
                         }
                     }
 
@@ -480,6 +490,7 @@ export class GestureBlender {
             waterOverlay: accumulated.waterOverlay,
             fireOverlay: accumulated.fireOverlay,
             smokeOverlay: accumulated.smokeOverlay,
+            voidOverlay: accumulated.voidOverlay,
             meshOpacity: accumulated.meshOpacity,
 
             // Camera-relative channels (view-space, transformed in Core3DManager)

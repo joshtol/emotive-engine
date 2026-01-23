@@ -304,6 +304,18 @@ import {
     vanish as smokeVanish,
     materialize as smokeMaterialize
 } from './destruction/elemental/smokeEffectFactory.js';
+// destruction/elemental/ - Void effect gestures (no shatter, absorption/corruption visuals)
+import {
+    drain as voidDrain,
+    siphon as voidSiphon,
+    hollow as voidHollow,
+    corrupt as voidCorrupt,
+    taint as voidTaint,
+    wither as voidWither,
+    consume as voidConsume,
+    erase as voidErase,
+    singularity as voidSingularity
+} from './destruction/elemental/voidEffectFactory.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -453,10 +465,19 @@ const crackle = electricCrackle;
 const chargeUp = electricCharge;
 const electricAuraEffect = electricAura;
 const staticDischarge = electricStatic;
-// Void
-const consume = createElementalGesture('consume');
-const corrupt = createElementalGesture('corrupt');
-const singularity = createElementalGesture('singularity');
+// Void effect gestures (no shatter, absorption/corruption visuals)
+// Absorption variants (becoming void)
+const drain = voidDrain;
+const siphon = voidSiphon;
+const hollow = voidHollow;
+// Corruption variants (being corrupted)
+const corrupt = voidCorrupt;
+const taint = voidTaint;
+const wither = voidWither;
+// Annihilation variants (being erased)
+const consume = voidConsume;
+const erase = voidErase;
+const singularity = voidSingularity;
 // Directional rush gestures
 const rushForward = createRushGesture('forward');
 const rushBack = createRushGesture('back');
@@ -836,9 +857,17 @@ const TRANSFORM_GESTURES = [
     chargeUp,
     electricAuraEffect,
     staticDischarge,
-    // Void
-    consume,
+    // Void - Absorption (becoming void)
+    drain,
+    siphon,
+    hollow,
+    // Void - Corruption (being corrupted)
     corrupt,
+    taint,
+    wither,
+    // Void - Annihilation (being erased)
+    consume,
+    erase,
     singularity,
     // Smoke - Emanating (source of smoke)
     puff,
@@ -1009,8 +1038,8 @@ export const GESTURE_CATEGORIES = {
         'shock', 'overload', 'glitch',
         // destruction/elemental/ - Electric (powered)
         'crackle', 'chargeUp', 'electricAuraEffect', 'staticDischarge',
-        // destruction/elemental/ - Void
-        'consume', 'corrupt', 'singularity',
+        // destruction/elemental/ - Void (absorption, corruption, annihilation)
+        'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
         // destruction/reform/
         'morph'
     ],

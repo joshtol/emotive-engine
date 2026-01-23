@@ -54,14 +54,14 @@ export function createVoidMaterial(options = {}) {
         opacity = 0.9
     } = options;
 
-    // Derive properties from depth
-    const coreOpacity = lerp(0.3, 1.0, depth);
-    const edgeWispiness = lerp(0.9, 0.0, depth);          // Wispy → solid edge
-    const lightAbsorption = lerp(0.2, 1.0, depth);        // How much it darkens
-    const innerSwirlSpeed = innerPattern === 'swirl' ? lerp(0.3, 1.5, depth) : 0;
+    // Derive properties from depth - BOOSTED for dramatic visibility
+    const coreOpacity = lerp(0.6, 1.0, depth);            // Much more opaque core
+    const edgeWispiness = lerp(0.6, 0.0, depth);          // Less wispy edges
+    const lightAbsorption = lerp(0.5, 1.0, depth);        // Stronger darkening
+    const innerSwirlSpeed = innerPattern === 'swirl' ? lerp(0.8, 2.5, depth) : 0;  // Faster swirl
     const cosmicStars = innerPattern === 'cosmic' ? Math.floor(lerp(10, 200, depth)) : 0;
-    const pulseSpeed = lerp(0.5, 2.0, depth);
-    const distortionStrength = lerp(0.0, 0.15, depth);    // Edge distortion
+    const pulseSpeed = lerp(1.0, 3.0, depth);             // Faster pulse
+    const distortionStrength = lerp(0.05, 0.25, depth);   // More edge distortion
 
     // Map pattern to uniform value
     const patternType = { solid: 0, swirl: 1, cosmic: 2 }[innerPattern] || 0;
@@ -212,15 +212,18 @@ export function createVoidMaterial(options = {}) {
                 vec3 innerColor = vec3(0.0);
 
                 if (uPatternType == 1) {
-                    // Swirl pattern
+                    // Swirl pattern - MUCH more visible
                     innerPattern = swirl(vUv, uTime);
-                    // Deep purple hints in the swirl
-                    innerColor = vec3(0.1, 0.0, 0.15) * innerPattern;
+                    // Bright purple/magenta swirls visible against black void
+                    innerColor = vec3(0.4, 0.0, 0.6) * innerPattern;
+                    // Add edge glow for tendrils
+                    float edgeGlow = smoothstep(0.3, 0.5, innerPattern);
+                    innerColor += vec3(0.2, 0.0, 0.35) * edgeGlow;
                 } else if (uPatternType == 2) {
                     // Cosmic pattern - stars in the void
                     innerPattern = stars(vUv, uCosmicStars);
-                    // Distant stars are white/blue
-                    innerColor = vec3(0.8, 0.9, 1.0) * innerPattern * 0.3;
+                    // Distant stars are white/blue - brighter
+                    innerColor = vec3(0.8, 0.9, 1.0) * innerPattern * 0.6;
                 }
                 // Type 0 (solid) has no inner pattern
 
@@ -236,11 +239,12 @@ export function createVoidMaterial(options = {}) {
                 float tendrilDist = distFromCenter + tendrils * 0.2;
 
                 // === PULSE/BREATHE EFFECT ===
-                float pulse = sin(uTime * uPulseSpeed) * 0.05 + 1.0;
+                // More dramatic pulse (0.85 to 1.15 range)
+                float pulse = sin(uTime * uPulseSpeed) * 0.15 + 1.0;
 
                 // === COMBINE DARKNESS ===
-                // Core darkness (black absorbing)
-                float darkness = uCoreOpacity * (1.0 - wispyEdge * 0.5) * pulse;
+                // Core darkness (black absorbing) - stronger base
+                float darkness = uCoreOpacity * (1.0 - wispyEdge * 0.3) * pulse;
 
                 // Add inner pattern
                 vec3 finalColor = mix(coreColor, innerColor, innerPattern);
@@ -254,15 +258,15 @@ export function createVoidMaterial(options = {}) {
                 float halo = smoothstep(1.0, 0.5, distFromCenter) - smoothstep(0.5, 0.0, distFromCenter);
                 halo *= uLightAbsorption * 0.3;
 
-                // Final alpha represents "how much to darken"
-                float alpha = darkness * uOpacity;
+                // Final alpha represents "how much to darken" - BOOSTED
+                float alpha = darkness * uOpacity * 1.3;  // 30% boost
 
-                // Edge fade for soft integration
-                float edgeFade = 1.0 - smoothstep(0.7, 1.0, tendrilDist);
+                // Edge fade for soft integration - less aggressive fade
+                float edgeFade = 1.0 - smoothstep(0.8, 1.0, tendrilDist);
                 alpha *= edgeFade;
 
-                // Deep void is more opaque
-                alpha = mix(alpha, min(1.0, alpha + 0.2), uDepth);
+                // Deep void is more opaque - stronger boost
+                alpha = mix(alpha, min(1.0, alpha + 0.35), uDepth);
 
                 if (alpha < 0.01) discard;
 
