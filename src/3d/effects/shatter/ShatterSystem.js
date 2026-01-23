@@ -146,6 +146,11 @@ class ShatterSystem {
         // Freeze mode state (shatter then freeze indefinitely)
         this._isFreezeMode = false;
 
+        // Elemental material state
+        this._currentElementalMaterial = null;  // Current elemental material (for disposal)
+        this._currentElemental = null;          // Current element type
+        this._currentElementalParam = 0.5;      // Current elemental parameter
+
         // Dual-mode behavior state (for gestures that work on frozen shards)
         this._dualModeType = null;          // 'implode', 'dissolve', 'ripple', 'gravity', 'orbit'
         this._dualModeConfig = {};          // Config for the dual-mode behavior
@@ -437,17 +442,50 @@ class ShatterSystem {
         let baseMaterial = null;
         let elementalPhysics = null;
 
+        // ═══════════════════════════════════════════════════════════════
+        // DEBUG LOGGING - ShatterSystem received elemental config
+        // ═══════════════════════════════════════════════════════════════
+        console.log('[SHATTER_SYSTEM] 📥 shatter() called with:', {
+            elemental,
+            elementalParam,
+            overlay,
+            overlayParam,
+            isElementSupported: elemental ? isElementSupported(elemental) : 'N/A',
+            hasCachedMaterial: !!this.shardMaterialCache?.baseMaterial
+        });
+
+        // Dispose any previous elemental material
+        if (this._currentElementalMaterial) {
+            this._currentElementalMaterial.dispose();
+            this._currentElementalMaterial = null;
+        }
+
         // Check for elemental material first
         if (elemental && isElementSupported(elemental)) {
             baseMaterial = createElementalMaterial(elemental, elementalParam);
             elementalPhysics = getElementalPhysics(elemental, elementalParam);
 
-            // Store for overlay/reference
+            console.log('[SHATTER_SYSTEM] ✨ Created elemental material:', {
+                elemental,
+                elementalParam,
+                materialCreated: !!baseMaterial,
+                materialType: baseMaterial?.type,
+                materialUserData: baseMaterial?.userData,
+                physicsConfig: elementalPhysics
+            });
+
+            // Store for disposal later and overlay/reference
+            this._currentElementalMaterial = baseMaterial;
             this._currentElemental = elemental;
             this._currentElementalParam = elementalParam;
         } else {
             // Fall back to cached material
             baseMaterial = this.shardMaterialCache?.baseMaterial || null;
+            console.log('[SHATTER_SYSTEM] 📦 Using cached/default material:', {
+                hasCachedMaterial: !!baseMaterial,
+                cachedMaterialType: baseMaterial?.type,
+                reason: elemental ? `Element '${elemental}' not supported` : 'No elemental specified'
+            });
 
             // Defensive re-extraction: if cache has no texture but mesh now does, re-extract
             if (this.shardMaterialCache && baseMaterial && !baseMaterial.map && mesh.material) {
@@ -492,6 +530,14 @@ class ShatterSystem {
         // Store overlay for potential particle effects
         this._currentOverlay = overlay;
         this._currentOverlayParam = overlayParam;
+
+        console.log('[SHATTER_SYSTEM] 🚀 Calling shardPool.activate() with:', {
+            baseMaterialExists: !!baseMaterial,
+            baseMaterialType: baseMaterial?.type,
+            baseMaterialElementalType: baseMaterial?.userData?.elementalType,
+            elementalType: elemental,
+            elementalPhysicsExists: !!elementalPhysics
+        });
 
         const activatedCount = this.shardPool.activate(shards, worldImpact, worldDirection, {
             explosionForce: effectiveExplosionForce,
@@ -1156,6 +1202,7 @@ class ShatterSystem {
         this._dualModeType = null;
         this._dualModeConfig = {};
         this._releaseGeometryRef();
+        this._disposeElementalMaterial();
         this.state = ShatterState.IDLE;
 
         // Fire callback
@@ -1171,6 +1218,7 @@ class ShatterSystem {
     _onShatterComplete() {
         this.state = ShatterState.IDLE;
         this._releaseGeometryRef();
+        this._disposeElementalMaterial();
 
         // Optionally restore mesh visibility
         if (this.autoRestore && this.targetMesh) {
@@ -1198,6 +1246,7 @@ class ShatterSystem {
         // Clear all shards
         this.shardPool.clear();
         this._releaseGeometryRef();
+        this._disposeElementalMaterial();
 
         // Restore target mesh
         if (this.targetMesh) {
@@ -1255,6 +1304,19 @@ class ShatterSystem {
     }
 
     /**
+     * Dispose the current elemental material if any
+     * @private
+     */
+    _disposeElementalMaterial() {
+        if (this._currentElementalMaterial) {
+            this._currentElementalMaterial.dispose();
+            this._currentElementalMaterial = null;
+        }
+        this._currentElemental = null;
+        this._currentElementalParam = 0.5;
+    }
+
+    /**
      * Release geometry cache ref when shatter/reassembly completes
      * @private
      */
@@ -1295,6 +1357,7 @@ class ShatterSystem {
         this.state = ShatterState.IDLE;
         this._shatterQueue = [];
         this._releaseGeometryRef();
+        this._disposeElementalMaterial();
 
         if (this.targetMesh) {
             this.targetMesh.visible = true;
@@ -1395,6 +1458,9 @@ class ShatterSystem {
             this.shardMaterialCache.baseMaterial.dispose();
         }
         this.shardMaterialCache = null;
+
+        // Dispose current elemental material
+        this._disposeElementalMaterial();
 
         this.targetMesh = null;
         this.innerMesh = null;

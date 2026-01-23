@@ -163,6 +163,14 @@ const DEFAULT_PHYSICS = {
  * @returns {THREE.ShaderMaterial|null} The created material, or null if element unknown
  */
 export function createElementalMaterial(element, masterParam = 0.5, options = {}) {
+    console.log('[ELEMENTAL_FACTORY] 🔧 createElementalMaterial called:', {
+        element,
+        masterParam,
+        options,
+        registryKeys: Object.keys(ELEMENTAL_REGISTRY),
+        hasRegistry: !!ELEMENTAL_REGISTRY[element]
+    });
+
     const registry = ELEMENTAL_REGISTRY[element];
     if (!registry) {
         console.warn(`ElementalMaterialFactory: Unknown element type '${element}'`);
@@ -175,7 +183,24 @@ export function createElementalMaterial(element, masterParam = 0.5, options = {}
         ...options
     };
 
-    return registry.create(materialOptions);
+    console.log('[ELEMENTAL_FACTORY] 📦 Calling registry.create with:', {
+        element,
+        masterParamName: registry.masterParam,
+        materialOptions
+    });
+
+    const material = registry.create(materialOptions);
+
+    console.log('[ELEMENTAL_FACTORY] ✅ Material created:', {
+        element,
+        materialCreated: !!material,
+        materialType: material?.type,
+        materialUserData: material?.userData,
+        hasUniforms: !!material?.uniforms,
+        uniformKeys: material?.uniforms ? Object.keys(material.uniforms) : []
+    });
+
+    return material;
 }
 
 /**

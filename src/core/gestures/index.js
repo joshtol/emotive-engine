@@ -283,6 +283,15 @@ import {
     liquefy as waterLiquefy,
     pool as waterPool
 } from './destruction/elemental/waterEffectFactory.js';
+// destruction/elemental/ - Fire effect gestures (no shatter, just flame visuals)
+import {
+    burn as fireBurn,
+    scorch as fireScorch,
+    combust as fireCombust,
+    radiate as fireRadiate,
+    blaze as fireBlaze,
+    smolder as fireSmolder
+} from './destruction/elemental/fireEffectFactory.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -396,10 +405,19 @@ const poolWater = waterPool;
 const smokebomb = createElementalGesture('smokebomb');
 const vanish = createElementalGesture('vanish');
 const materialize = createElementalGesture('materialize');
-// Fire
+// Fire (shatter-based)
 const ignite = createElementalGesture('ignite');
 const phoenix = createElementalGesture('phoenix');
 const ember = createElementalGesture('ember');
+// Fire effect gestures (no shatter, just flame visuals)
+// Burning variants (victim of fire)
+const burn = fireBurn;
+const scorch = fireScorch;
+const combust = fireCombust;
+// Radiating variants (source of fire)
+const radiate = fireRadiate;
+const blaze = fireBlaze;
+const smolder = fireSmolder;
 // Ice
 const iceFreeze = createElementalGesture('freeze');
 const shatterIce = createElementalGesture('shatterIce');
@@ -772,10 +790,18 @@ const TRANSFORM_GESTURES = [
     smokebomb,
     vanish,
     materialize,
-    // Fire
+    // Fire (shatter-based)
     ignite,
     phoenix,
     ember,
+    // Fire - Burning (victim of fire)
+    burn,
+    scorch,
+    combust,
+    // Fire - Radiating (source of fire)
+    radiate,
+    blaze,
+    smolder,
     // Ice
     iceFreeze,
     shatterIce,
@@ -940,6 +966,10 @@ export const GESTURE_CATEGORIES = {
         'smokebomb', 'vanish', 'materialize',
         // destruction/elemental/ - Fire
         'ignite', 'phoenix', 'ember',
+        // destruction/elemental/ - Fire (burning - victim of fire)
+        'burn', 'scorch', 'combust',
+        // destruction/elemental/ - Fire (radiating - source of fire)
+        'radiate', 'blaze', 'smolder',
         // destruction/elemental/ - Ice
         'iceFreeze', 'shatterIce', 'thaw',
         // destruction/elemental/ - Electric (electrocution)

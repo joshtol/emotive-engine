@@ -93,7 +93,8 @@ export function createFireMaterial(options = {}) {
         temperature = 0.5,
         color = null,
         intensity = null,
-        opacity = 0.7
+        opacity = 0.7,
+        overlay = false  // When true, sparse flame visibility for overlay effect
     } = options;
 
     // Derive from temperature if not overridden
@@ -110,16 +111,23 @@ export function createFireMaterial(options = {}) {
             uFlickerSpeed: { value: flickerSpeed },
             uFlickerAmount: { value: flickerAmount },
             uTime: { value: 0 },
-            uTemperature: { value: temperature }
+            uTemperature: { value: temperature },
+            uOverlay: { value: overlay ? 1.0 : 0.0 }
         },
 
         vertexShader: /* glsl */`
             varying vec3 vPosition;
             varying vec3 vNormal;
+            varying vec3 vViewDir;
 
             void main() {
                 vPosition = position;
                 vNormal = normalMatrix * normal;
+
+                // View direction for fresnel
+                vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                vViewDir = normalize(cameraPosition - worldPos.xyz);
+
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         `,
@@ -132,9 +140,11 @@ export function createFireMaterial(options = {}) {
             uniform float uFlickerAmount;
             uniform float uTime;
             uniform float uTemperature;
+            uniform float uOverlay;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
+            varying vec3 vViewDir;
 
             // Simple noise for flicker
             float hash(float n) {
@@ -148,7 +158,43 @@ export function createFireMaterial(options = {}) {
                 return mix(hash(i), hash(i + 1.0), f);
             }
 
+            // 3D noise for flame patterns
+            float hash3(vec3 p) {
+                return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+            }
+
+            float noise3D(vec3 p) {
+                vec3 i = floor(p);
+                vec3 f = fract(p);
+                f = f * f * (3.0 - 2.0 * f);
+
+                return mix(
+                    mix(mix(hash3(i), hash3(i + vec3(1,0,0)), f.x),
+                        mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x), f.y),
+                    mix(mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x),
+                        mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x), f.y),
+                    f.z
+                );
+            }
+
+            // FBM - Fractal Brownian Motion for richer flame patterns
+            float fbm(vec3 p) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                float frequency = 1.0;
+                // 4 octaves of noise
+                for (int i = 0; i < 4; i++) {
+                    value += amplitude * noise3D(p * frequency);
+                    frequency *= 2.0;
+                    amplitude *= 0.5;
+                }
+                return value;
+            }
+
             void main() {
+                vec3 normal = normalize(vNormal);
+                vec3 viewDir = normalize(vViewDir);
+
                 // Base fire color with intensity
                 vec3 fireColor = uColor * uIntensity;
 
@@ -159,6 +205,10 @@ export function createFireMaterial(options = {}) {
                 float centerGlow = 1.0 - length(vPosition) * 0.3;
                 centerGlow = max(0.5, centerGlow);
 
+                // Fresnel for rim flames
+                float fresnel = 1.0 - abs(dot(normal, viewDir));
+                fresnel = pow(fresnel, 2.0);
+
                 // Combine effects
                 vec3 finalColor = fireColor * flicker * centerGlow;
 
@@ -166,7 +216,60 @@ export function createFireMaterial(options = {}) {
                 float uniformity = mix(0.7, 1.0, uTemperature);
                 finalColor = mix(finalColor * 0.8, finalColor, uniformity);
 
-                gl_FragColor = vec4(finalColor, uOpacity);
+                float alpha;
+
+                if (uOverlay > 0.5) {
+                    // ═══════════════════════════════════════════════════════════════
+                    // OVERLAY MODE: Visible flames at edges + sparse interior sparks
+                    // Simple approach: rim glow + occasional bright peaks
+                    // ═══════════════════════════════════════════════════════════════
+
+                    // Height for vertical bias (flames stronger at bottom)
+                    float height = (vPosition.y + 0.5);  // 0=bottom, 1=top
+                    float bottomBias = 1.0 - height * 0.6;  // 1.0 at bottom, 0.4 at top
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // EDGE FLAMES - Always visible at rim (fresnel)
+                    // ═══════════════════════════════════════════════════════════════
+                    float edgeFlame = pow(fresnel, 2.5) * 0.7 * bottomBias;
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // SPARSE FLAME SPARKS - Only at bright noise peaks
+                    // ═══════════════════════════════════════════════════════════════
+                    vec3 sparkPos = vPosition * 8.0 + vec3(0.0, -uTime * 2.5, 0.0);
+                    float spark = noise3D(sparkPos);
+
+                    // Only show the brightest peaks (>0.7) as flame spots
+                    float flameSpark = smoothstep(0.65, 0.85, spark) * bottomBias;
+
+                    // Add flicker variation
+                    flameSpark *= (0.7 + flicker * 0.3);
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // COLOR: Orange-red base, yellow at bright spots
+                    // ═══════════════════════════════════════════════════════════════
+                    vec3 orangeRed = vec3(1.0, 0.4, 0.05);
+                    vec3 yellowBright = vec3(1.0, 0.75, 0.2);
+
+                    float totalIntensity = edgeFlame + flameSpark * 0.8;
+                    vec3 flameColor = mix(orangeRed, yellowBright, clamp(totalIntensity, 0.0, 1.0));
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // ALPHA: Edge flames + sparse sparks
+                    // ═══════════════════════════════════════════════════════════════
+                    alpha = edgeFlame * 0.6 + flameSpark * 0.4;
+
+                    // Moderate discard
+                    if (alpha < 0.06) discard;
+
+                    alpha = clamp(alpha, 0.0, 0.45);
+                    finalColor = flameColor;
+                } else {
+                    // STANDALONE MODE: Full fire material
+                    alpha = uOpacity;
+                }
+
+                gl_FragColor = vec4(finalColor, alpha);
             }
         `,
 

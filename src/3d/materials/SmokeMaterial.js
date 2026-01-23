@@ -69,7 +69,7 @@ export function createSmokeMaterial(options = {}) {
 
     // Derive properties from density
     const smokeColor = getSmokeColor(density, color);
-    const smokeOpacity = opacity ?? lerp(0.15, 0.7, density);
+    const smokeOpacity = opacity ?? lerp(0.4, 0.85, density);  // Increased visibility
     const softness = lerp(0.9, 0.3, density);           // Edge fade amount
     const noiseScale = lerp(3.0, 1.0, density);         // Finer noise when dense
     const riseSpeed = lerp(1.5, 0.3, density);          // Dense smoke rises slower
@@ -160,28 +160,30 @@ export function createSmokeMaterial(options = {}) {
             varying vec2 vUv;
             varying float vDepth;
 
-            // 2D noise for wispy patterns
-            float hash(vec2 p) {
-                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            // 3D noise for volumetric smoke (works on any geometry)
+            float hash3(vec3 p) {
+                return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
             }
 
-            float noise(vec2 p) {
-                vec2 i = floor(p);
-                vec2 f = fract(p);
+            float noise3D(vec3 p) {
+                vec3 i = floor(p);
+                vec3 f = fract(p);
                 f = f * f * (3.0 - 2.0 * f);
 
                 return mix(
-                    mix(hash(i), hash(i + vec2(1, 0)), f.x),
-                    mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x),
-                    f.y
+                    mix(mix(hash3(i), hash3(i + vec3(1,0,0)), f.x),
+                        mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x), f.y),
+                    mix(mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x),
+                        mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x), f.y),
+                    f.z
                 );
             }
 
-            float fbm(vec2 p) {
+            float fbm3D(vec3 p) {
                 float value = 0.0;
                 float amplitude = 0.5;
                 for (int i = 0; i < 4; i++) {
-                    value += amplitude * noise(p);
+                    value += amplitude * noise3D(p);
                     p *= 2.0;
                     amplitude *= 0.5;
                 }
@@ -189,33 +191,45 @@ export function createSmokeMaterial(options = {}) {
             }
 
             void main() {
-                // Circular distance from center for soft edges
-                vec2 centeredUv = vUv * 2.0 - 1.0;
-                float distFromCenter = length(centeredUv);
+                // Use 3D position for noise (works on any geometry, not just UV-mapped)
+                vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, uTime * 0.2, 0.0);
 
-                // Soft edge falloff
-                float edgeFade = 1.0 - smoothstep(1.0 - uSoftness, 1.0, distFromCenter);
+                // Volumetric smoke pattern
+                float smoke = fbm3D(noisePos);
 
-                // Wispy noise pattern
-                vec2 noiseCoord = vUv * uNoiseScale + uTime * 0.1;
-                float wisps = fbm(noiseCoord);
+                // Secondary swirling layer
+                vec3 swirl = vPosition * uNoiseScale * 1.5 + vec3(uTime * 0.1, 0.0, uTime * 0.15);
+                float swirls = fbm3D(swirl) * 0.5;
 
-                // More wisps at edges (smoke dissipating)
-                wisps = mix(wisps, wisps * 0.5 + 0.5, distFromCenter);
+                smoke = smoke + swirls;
+
+                // Dense smoke is more solid, light smoke is wispier
+                smoke = mix(smoke, 0.7, uDensity * 0.6);
+
+                // Soft edge based on distance from geometry center
+                float distFromCenter = length(vPosition);
+                float edgeFade = 1.0 - smoothstep(0.3, 0.8, distFromCenter * (1.0 - uSoftness));
 
                 // Dispersion over lifetime
-                float disperseFade = 1.0 - uDisperseRate * (1.0 - uLifetime);
+                float disperseFade = mix(1.0, 0.3, (1.0 - uLifetime) * uDisperseRate);
 
-                // Combine all alpha factors
-                float alpha = uOpacity * edgeFade * wisps * disperseFade * uLifetime;
+                // Combine alpha factors - ensure visibility
+                float baseAlpha = uOpacity * smoke * edgeFade * disperseFade * uLifetime;
 
-                // Dense smoke is more uniform, light smoke is more wispy
-                alpha = mix(alpha, uOpacity * edgeFade * disperseFade * uLifetime, uDensity * 0.5);
+                // Minimum visibility so smoke is always seen
+                float alpha = max(baseAlpha, uOpacity * 0.3 * uLifetime);
 
-                // Discard nearly transparent pixels
-                if (alpha < 0.01) discard;
+                // Clamp to reasonable range
+                alpha = clamp(alpha, 0.0, uOpacity);
 
-                gl_FragColor = vec4(uColor, alpha);
+                // Discard only very transparent pixels
+                if (alpha < 0.02) discard;
+
+                // Slight color variation based on smoke density
+                vec3 smokeColor = uColor;
+                smokeColor = mix(smokeColor, smokeColor * 1.2, smoke * 0.3);
+
+                gl_FragColor = vec4(smokeColor, alpha);
             }
         `,
 

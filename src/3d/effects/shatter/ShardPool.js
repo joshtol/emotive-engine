@@ -195,7 +195,8 @@ class ShardPool {
             elementalDrag: 0,                  // Elemental-specific drag
             elementalBounce: 0,                // Elemental-specific bounce
             riseSpeed: 0,                      // For fire/smoke rising
-            disperseRate: 0                    // For smoke dispersion
+            disperseRate: 0,                   // For smoke dispersion
+            isSharedElementalMaterial: false   // If true, don't dispose material on deactivate
         };
     }
 
@@ -354,30 +355,89 @@ class ShardPool {
             // Otherwise use the pre-allocated default crystal material
             // ═══════════════════════════════════════════════════════════════
             if (baseMaterial) {
+                // ═══════════════════════════════════════════════════════════════
+                // DEBUG LOGGING - ShardPool material assignment
+                // ═══════════════════════════════════════════════════════════════
+                if (i === 0) { // Only log for first shard
+                    console.log('[SHARD_POOL] 📋 First shard material info:', {
+                        baseMaterialType: baseMaterial.type,
+                        baseMaterialName: baseMaterial.name,
+                        baseMaterialUserData: baseMaterial.userData,
+                        isShaderMaterial: baseMaterial.type === 'ShaderMaterial',
+                        hasElementalType: !!baseMaterial.userData?.elementalType,
+                        elementalType: baseMaterial.userData?.elementalType,
+                        uniforms: baseMaterial.uniforms ? Object.keys(baseMaterial.uniforms) : 'N/A'
+                    });
+                }
+
                 // Dispose old material if it was a dynamic clone (not the shared default)
                 if (shard.material !== this.shardMaterial) {
                     shard.material.dispose();
                 }
 
-                // Clone base material for this shard
-                const shardMat = baseMaterial.clone();
+                // Check if this is an elemental ShaderMaterial
+                // ShaderMaterials have complex uniform structures that can fail on clone()
+                // For elemental materials, use the base material directly (shared) since
+                // they have uniform appearance by design and flicker/animation via uniforms
+                const isElementalShader = baseMaterial.type === 'ShaderMaterial' &&
+                    baseMaterial.userData?.elementalType;
 
-                // Apply per-shard color variation using HSL offset
-                // This creates visual variety while maintaining overall appearance
-                applyShardVariation(shardMat);
+                if (i === 0) { // Only log for first shard
+                    console.log('[SHARD_POOL] 🎨 Material decision:', {
+                        isElementalShader,
+                        willUseSharedMaterial: isElementalShader,
+                        willClone: !isElementalShader
+                    });
+                }
 
-                shard.material = shardMat;
+                if (isElementalShader) {
+                    // Use elemental material directly - no per-shard variation needed
+                    // Store a reference; we'll handle disposal carefully
+                    shard.material = baseMaterial;
+                    shard.userData.state.isSharedElementalMaterial = true;
+                } else {
+                    // Clone base material for this shard
+                    const shardMat = baseMaterial.clone();
+
+                    // Apply per-shard color variation using HSL offset
+                    // This creates visual variety while maintaining overall appearance
+                    applyShardVariation(shardMat);
+
+                    shard.material = shardMat;
+                    shard.userData.state.isSharedElementalMaterial = false;
+                }
+            } else {
+                if (i === 0) { // Only log for first shard
+                    console.log('[SHARD_POOL] ⚠️ No baseMaterial provided, using default crystal material');
+                }
             }
 
             // Show shard with initial glow
             shard.visible = true;
-            shard.material.opacity = 0.9;
 
+            // ═══════════════════════════════════════════════════════════════
+            // ELEMENTAL SHADER MATERIALS - Skip emissive/fiery handling
+            // Elemental materials (fire, water, ice, etc.) manage their own
+            // rendering via shader uniforms. Do NOT modify material properties
+            // as this corrupts shared materials and triggers incorrect fiery detection.
+            // ═══════════════════════════════════════════════════════════════
+            if (shard.userData.state.isSharedElementalMaterial) {
+                shard.userData.state.isFiery = false;
+                // Elemental materials handle their own opacity via uniforms
+                // Don't set material.opacity as it doesn't affect ShaderMaterial
+
+                if (i === 0) {
+                    console.log('[SHARD_POOL] ✨ Elemental material - skipping emissive/fiery handling:', {
+                        elementalType: baseMaterial.userData?.elementalType,
+                        uniformKeys: Object.keys(baseMaterial.uniforms || {})
+                    });
+                }
+            }
             // Set emissive intensity based on material type:
             // - Textured materials (moon): low glow so texture shows through
             // - Fiery materials (sun): preserve/boost high emissive for bloom overbleed
             // - Crystal materials: moderate glow
-            if (shard.material.map) {
+            else if (shard.material.map) {
                 // Textured: low glow
                 shard.material.emissiveIntensity = 0.5;
                 shard.userData.state.isFiery = false;
@@ -588,10 +648,26 @@ class ShardPool {
 
             // ═══════════════════════════════════════════════════════════════
             // IMPACT GLOW - Bright flash fades quickly in first 20%
-            // Textured materials get reduced glow so texture shows through
-            // Fiery materials use custom shader with uniform updates
+            // - Elemental materials: update shader uniforms (uTime, uOpacity)
+            // - Fiery materials: use custom shader with uniform updates
+            // - Textured materials: reduced glow so texture shows through
+            // - Standard materials: direct property updates
             // ═══════════════════════════════════════════════════════════════
-            if (state.isFiery && shard.material.uniforms) {
+            if (state.isSharedElementalMaterial && shard.material.uniforms) {
+                // ELEMENTAL MATERIAL - Update shader uniforms for animation
+                // Update time uniform for animated shaders (fire flicker, water wobble, etc.)
+                if (shard.material.uniforms.uTime) {
+                    shard.material.uniforms.uTime.value = time;
+                }
+
+                // Fade opacity in last 30% using shader uniform
+                if (progress > 0.7 && !state.isSuspendMode) {
+                    state.opacity = 1 - ((progress - 0.7) / 0.3);
+                    if (shard.material.uniforms.uOpacity) {
+                        shard.material.uniforms.uOpacity.value = state.opacity * 0.7;
+                    }
+                }
+            } else if (state.isFiery && shard.material.uniforms) {
                 // FIERY SHARD - Use custom shader uniforms
                 // Use cached baseFireIntensity to avoid reading/drifting uniform
                 const flickerMult = state.flickerMultiplier || 1.0;
@@ -652,10 +728,16 @@ class ShardPool {
 
         // If shard has a dynamic material (not the shared default), dispose it
         // and restore the shared material for pool reuse
+        // EXCEPTION: Don't dispose shared elemental materials - they're managed by ShatterSystem
         if (shard.material !== this.shardMaterial) {
-            shard.material.dispose();
+            if (!shard.userData.state.isSharedElementalMaterial) {
+                shard.material.dispose();
+            }
             shard.material = this.shardMaterial.clone();
         }
+
+        // Reset elemental state
+        shard.userData.state.isSharedElementalMaterial = false;
 
         this.active.splice(activeIndex, 1);
         this.pool.push(shard);
@@ -1152,10 +1234,16 @@ class ShardPool {
             shard.scale.set(1, 1, 1);
 
             // Dispose dynamic materials (not the shared default)
+            // EXCEPTION: Don't dispose shared elemental materials - they're managed by ShatterSystem
             if (shard.material !== this.shardMaterial) {
-                shard.material.dispose();
+                if (!shard.userData.state.isSharedElementalMaterial) {
+                    shard.material.dispose();
+                }
                 shard.material = this.shardMaterial.clone();
             }
+
+            // Reset elemental state
+            shard.userData.state.isSharedElementalMaterial = false;
 
             this.pool.push(shard);
         }

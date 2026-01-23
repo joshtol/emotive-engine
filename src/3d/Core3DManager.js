@@ -44,6 +44,7 @@ import { ShatterSystem } from './effects/shatter/ShatterSystem.js';
 import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
 import { createElectricMaterial, updateElectricMaterial } from './materials/ElectricMaterial.js';
 import { createWaterMaterial, updateWaterMaterial } from './materials/WaterMaterial.js';
+import { createFireMaterial, updateFireMaterial } from './materials/FireMaterial.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -2062,6 +2063,64 @@ export class Core3DManager {
                 this._waterMaterial = null;
             }
             this._waterOverlayMesh = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // FIRE OVERLAY - Flame effect applied as additive shader overlay
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Creates a duplicate mesh with fire shader that renders on top,
+        // showing flames, heat glow, and embers.
+        if (blended.fireOverlay && blended.fireOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                // Create overlay mesh if not already created
+                if (!this._fireOverlayMesh) {
+                    // Create fire material in overlay mode
+                    this._fireMaterial = createFireMaterial({
+                        temperature: blended.fireOverlay.temperature || 0.5,
+                        opacity: 0.6,
+                        overlay: true  // Use overlay mode for sparse flame visibility
+                    });
+
+                    // Clone the mesh geometry for the overlay
+                    this._fireOverlayMesh = new THREE.Mesh(
+                        mesh.geometry,
+                        this._fireMaterial
+                    );
+
+                    // Slightly larger to avoid z-fighting
+                    this._fireOverlayMesh.scale.setScalar(1.02);
+
+                    // Add as child of original mesh so it follows transforms
+                    mesh.add(this._fireOverlayMesh);
+
+                    // Render after original mesh
+                    this._fireOverlayMesh.renderOrder = mesh.renderOrder + 2;
+                }
+
+                // Update fire material each frame
+                if (this._fireMaterial?.uniforms?.uTime) {
+                    this._fireMaterial.uniforms.uTime.value = blended.fireOverlay.time;
+                }
+                // Update intensity based on heat
+                if (this._fireMaterial?.uniforms?.uIntensity) {
+                    const baseIntensity = this._fireMaterial.uniforms.uIntensity.value;
+                    this._fireMaterial.uniforms.uIntensity.value = baseIntensity * (0.5 + blended.fireOverlay.heat * 0.5);
+                }
+            }
+        } else if (this._fireOverlayMesh) {
+            // Remove overlay mesh when fire effect ends
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._fireOverlayMesh.parent) {
+                mesh.remove(this._fireOverlayMesh);
+            }
+            // Dispose resources
+            if (this._fireMaterial) {
+                this._fireMaterial.dispose();
+                this._fireMaterial = null;
+            }
+            this._fireOverlayMesh = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

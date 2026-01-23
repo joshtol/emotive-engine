@@ -5,26 +5,35 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Factory for electric effect gestures (shock, overload, glitch)
+ * @fileoverview Factory for electric effect gestures
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/electricEffectFactory
  *
  * ## Electric Effect Gestures
  *
- * These gestures apply electrocution effects directly to the mascot mesh WITHOUT
- * shattering. The mascot appears to be electrified with:
- * - Rapid position jitter (being shocked)
- * - Cyan/blue glow color
- * - Flickering intensity
- * - Scale vibration
+ * Two categories of electric gestures:
+ *
+ * ### Electrocution (being shocked)
+ * - Rapid position jitter
+ * - Violent shaking
+ * - Mascot is VICTIM of electricity
+ *
+ * ### Powered (emanating energy)
+ * - Gentle scale pulsing
+ * - Controlled motion
+ * - Mascot is SOURCE of electricity
  *
  * ## Variants
  *
- * | Gesture   | Effect                                  | Intensity |
- * |-----------|----------------------------------------|-----------|
- * | shock     | Brief electric surge, jittery          | Medium    |
- * | overload  | Intense buildup, extreme vibration     | High      |
- * | glitch    | Digital corruption, displacement       | Low-Med   |
+ * | Gesture            | Category    | Effect                              |
+ * |--------------------|-------------|-------------------------------------|
+ * | shock              | Electrocute | Brief electric surge, jittery       |
+ * | overload           | Electrocute | Intense buildup, extreme vibration  |
+ * | glitch             | Electrocute | Digital corruption, displacement    |
+ * | crackle            | Powered     | Ambient energy, gentle pulse        |
+ * | chargeUp           | Powered     | Building power, growing intensity   |
+ * | electricAuraEffect | Powered     | Emanating field, slow rotation      |
+ * | staticDischarge    | Powered     | Low-level ambient, subtle sparks    |
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -101,6 +110,119 @@ const ELECTRIC_EFFECT_VARIANTS = {
         holdFrames: true,           // Freeze in random positions
         holdProbability: 0.15,      // Chance to freeze per frame
         holdDuration: 0.05          // How long to freeze (seconds)
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // POWERED VARIANTS - Mascot is SOURCE of energy, not victim
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    crackle: {
+        name: 'crackle',
+        emoji: '✨',
+        type: 'blending',
+        description: 'Ambient electrical energy crackling across surface',
+        duration: 2000,
+        beats: 3,
+        intensity: 0.8,
+        category: 'powered',
+        // NO jitter - controlled energy
+        jitterFrequency: 0,
+        jitterAmplitude: 0,
+        jitterDecay: 0.2,
+        // Glow - pulsing with energy
+        glowColor: [0.4, 0.9, 1.0], // Cyan
+        glowIntensityMin: 1.0,
+        glowIntensityMax: 1.8,
+        glowFlickerRate: 8,         // Slower, more rhythmic
+        // Scale breathing - gentle grow/shrink
+        scaleVibration: 0.02,
+        scaleFrequency: 2,          // Slow breathing
+        // Powered-specific
+        scalePulse: true,           // Smooth sine pulse instead of vibration
+        rotationDrift: 0.01         // Very subtle slow rotation
+    },
+
+    charge: {
+        name: 'chargeUp',
+        emoji: '🔋',
+        type: 'blending',
+        description: 'Building up electrical power, growing intensity',
+        duration: 2500,
+        beats: 4,
+        intensity: 1.2,
+        category: 'powered',
+        // Minimal jitter - just slight tremble at peak
+        jitterFrequency: 30,
+        jitterAmplitude: 0.005,     // Very subtle
+        jitterDecay: 0.2,
+        // Glow - ramping up
+        glowColor: [0.3, 0.95, 1.0], // Bright cyan
+        glowIntensityMin: 0.8,
+        glowIntensityMax: 3.0,
+        glowFlickerRate: 12,
+        // Scale - growing with power
+        scaleVibration: 0.01,
+        scaleFrequency: 3,
+        // Charge-specific
+        scalePulse: true,
+        scaleGrowth: 0.08,          // Grows 8% larger during charge
+        rampUp: true,               // Intensity ramps up over duration
+        riseAmount: 0.02            // Slight upward drift
+    },
+
+    aura: {
+        name: 'electricAuraEffect',
+        emoji: '💫',
+        type: 'blending',
+        description: 'Emanating energy field, radiating power',
+        duration: 3000,
+        beats: 4,
+        intensity: 1.0,
+        category: 'powered',
+        // No jitter
+        jitterFrequency: 0,
+        jitterAmplitude: 0,
+        jitterDecay: 0.3,
+        // Glow - strong sustained
+        glowColor: [0.5, 0.85, 1.0], // Soft cyan
+        glowIntensityMin: 1.2,
+        glowIntensityMax: 2.0,
+        glowFlickerRate: 4,         // Very slow pulse
+        // Scale - subtle breathing
+        scaleVibration: 0.015,
+        scaleFrequency: 1.5,
+        // Aura-specific
+        scalePulse: true,
+        rotationDrift: 0.02,        // Slow majestic rotation
+        hover: true,                // Slight float effect
+        hoverAmount: 0.01
+    },
+
+    static: {
+        name: 'staticDischarge',
+        emoji: '⚡',
+        type: 'blending',
+        description: 'Low-level static electricity, ambient sparks',
+        duration: 1500,
+        beats: 2,
+        intensity: 0.4,
+        category: 'powered',
+        // Very minimal jitter - occasional twitch
+        jitterFrequency: 5,
+        jitterAmplitude: 0.002,
+        jitterDecay: 0.4,
+        // Glow - subtle
+        glowColor: [0.5, 0.8, 1.0], // Pale cyan
+        glowIntensityMin: 0.9,
+        glowIntensityMax: 1.3,
+        glowFlickerRate: 20,        // Quick subtle flickers
+        // Scale - barely perceptible
+        scaleVibration: 0.005,
+        scaleFrequency: 8,
+        // Static-specific
+        scalePulse: false,
+        sparkBursts: true,          // Occasional spark intensity spikes
+        sparkProbability: 0.1
     }
 };
 
@@ -159,12 +281,13 @@ export function createElectricEffectGesture(variant) {
 
         /**
          * 3D core transformation for electric effect
-         * Applies jitter, glow color change, and flickering
+         * Handles both electrocution (jittery) and powered (controlled) variants
          */
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
                 const time = progress * cfg.duration / 1000; // Convert to seconds
+                const isPowered = cfg.category === 'powered';
 
                 // ═══════════════════════════════════════════════════════════════
                 // PHASE CALCULATION
@@ -175,9 +298,13 @@ export function createElectricEffectGesture(variant) {
                 if (cfg.buildupPhase && progress < cfg.buildupPhase) {
                     effectStrength = progress / cfg.buildupPhase;
                     if (cfg.buildupGlowRamp) {
-                        // Ramp up glow during buildup
-                        effectStrength = Math.pow(effectStrength, 0.5); // Faster ramp
+                        effectStrength = Math.pow(effectStrength, 0.5);
                     }
+                }
+
+                // Ramp up for charge variant
+                if (cfg.rampUp) {
+                    effectStrength = Math.pow(progress, 0.7); // Gradual increase
                 }
 
                 // Decay in final phase
@@ -187,86 +314,130 @@ export function createElectricEffectGesture(variant) {
                 }
 
                 // ═══════════════════════════════════════════════════════════════
-                // POSITION JITTER - Rapid displacement simulating electric shock
+                // POSITION - Jitter (electrocution) or controlled (powered)
                 // ═══════════════════════════════════════════════════════════════
-                const jitterTime = time * cfg.jitterFrequency;
+                let posX = 0, posY = 0, posZ = 0;
 
-                // Glitch mode: occasional frame holds
-                let holdMultiplier = 1.0;
-                if (cfg.holdFrames) {
-                    const holdCheck = hash(Math.floor(jitterTime * 3));
-                    if (holdCheck < cfg.holdProbability) {
-                        // Hold position from a previous frame
-                        holdMultiplier = 0.1; // Almost freeze
+                if (cfg.jitterAmplitude > 0) {
+                    const jitterTime = time * cfg.jitterFrequency;
+
+                    // Glitch mode: occasional frame holds
+                    let holdMultiplier = 1.0;
+                    if (cfg.holdFrames) {
+                        const holdCheck = hash(Math.floor(jitterTime * 3));
+                        if (holdCheck < cfg.holdProbability) {
+                            holdMultiplier = 0.1;
+                        }
                     }
+
+                    // Multi-frequency noise for organic jitter
+                    posX = (
+                        noise1D(jitterTime) - 0.5 +
+                        (noise1D(jitterTime * 2.3 + 50) - 0.5) * 0.5 +
+                        (noise1D(jitterTime * 4.7 + 100) - 0.5) * 0.25
+                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
+
+                    posY = (
+                        noise1D(jitterTime + 33) - 0.5 +
+                        (noise1D(jitterTime * 2.1 + 83) - 0.5) * 0.5 +
+                        (noise1D(jitterTime * 5.3 + 133) - 0.5) * 0.25
+                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
+
+                    posZ = (
+                        noise1D(jitterTime + 66) - 0.5 +
+                        (noise1D(jitterTime * 1.9 + 116) - 0.5) * 0.5 +
+                        (noise1D(jitterTime * 3.7 + 166) - 0.5) * 0.25
+                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier * 0.5;
                 }
 
-                // Multi-frequency noise for organic jitter
-                const jitterX = (
-                    noise1D(jitterTime) - 0.5 +
-                    (noise1D(jitterTime * 2.3 + 50) - 0.5) * 0.5 +
-                    (noise1D(jitterTime * 4.7 + 100) - 0.5) * 0.25
-                ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
-
-                const jitterY = (
-                    noise1D(jitterTime + 33) - 0.5 +
-                    (noise1D(jitterTime * 2.1 + 83) - 0.5) * 0.5 +
-                    (noise1D(jitterTime * 5.3 + 133) - 0.5) * 0.25
-                ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
-
-                const jitterZ = (
-                    noise1D(jitterTime + 66) - 0.5 +
-                    (noise1D(jitterTime * 1.9 + 116) - 0.5) * 0.5 +
-                    (noise1D(jitterTime * 3.7 + 166) - 0.5) * 0.25
-                ) * cfg.jitterAmplitude * effectStrength * holdMultiplier * 0.5; // Less Z jitter
+                // Powered: hover/rise effect
+                if (cfg.hover && cfg.hoverAmount) {
+                    posY += Math.sin(time * Math.PI * 0.5) * cfg.hoverAmount * effectStrength;
+                }
+                if (cfg.riseAmount) {
+                    posY += cfg.riseAmount * effectStrength;
+                }
 
                 // ═══════════════════════════════════════════════════════════════
-                // ROTATION JITTER - Small rotational shake
+                // ROTATION - Jitter (electrocution) or drift (powered)
                 // ═══════════════════════════════════════════════════════════════
-                const rotJitterAmt = cfg.jitterAmplitude * 2; // More rotation
-                const rotX = (noise1D(jitterTime * 1.3 + 200) - 0.5) * rotJitterAmt * effectStrength;
-                const rotY = (noise1D(jitterTime * 1.7 + 250) - 0.5) * rotJitterAmt * effectStrength;
-                const rotZ = (noise1D(jitterTime * 2.1 + 300) - 0.5) * rotJitterAmt * effectStrength * 0.5;
+                let rotX = 0, rotY = 0, rotZ = 0;
+
+                if (!isPowered && cfg.jitterAmplitude > 0) {
+                    // Electrocution: rotational shake
+                    const jitterTime = time * cfg.jitterFrequency;
+                    const rotJitterAmt = cfg.jitterAmplitude * 2;
+                    rotX = (noise1D(jitterTime * 1.3 + 200) - 0.5) * rotJitterAmt * effectStrength;
+                    rotY = (noise1D(jitterTime * 1.7 + 250) - 0.5) * rotJitterAmt * effectStrength;
+                    rotZ = (noise1D(jitterTime * 2.1 + 300) - 0.5) * rotJitterAmt * effectStrength * 0.5;
+                } else if (cfg.rotationDrift) {
+                    // Powered: slow majestic rotation
+                    rotY = time * cfg.rotationDrift * effectStrength;
+                }
 
                 // ═══════════════════════════════════════════════════════════════
-                // SCALE VIBRATION - Rapid scale oscillation
+                // SCALE - Vibration (electrocution) or breathing pulse (powered)
                 // ═══════════════════════════════════════════════════════════════
+                let scale = 1.0;
                 const scaleTime = time * cfg.scaleFrequency;
-                const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.5 +
-                                  Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
-                const scale = 1.0 + scaleNoise * cfg.scaleVibration * effectStrength;
+
+                if (cfg.scalePulse) {
+                    // Powered: smooth sine breathing
+                    const breathe = Math.sin(scaleTime * Math.PI * 2) * 0.5 + 0.5; // 0-1
+                    scale = 1.0 + breathe * cfg.scaleVibration * effectStrength;
+
+                    // Growth during charge
+                    if (cfg.scaleGrowth) {
+                        scale += cfg.scaleGrowth * effectStrength;
+                    }
+                } else {
+                    // Electrocution: rapid vibration
+                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.5 +
+                                      Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
+                    scale = 1.0 + scaleNoise * cfg.scaleVibration * effectStrength;
+                }
 
                 // ═══════════════════════════════════════════════════════════════
-                // GLOW INTENSITY FLICKERING
+                // GLOW - Flickering (electrocution) or pulsing (powered)
                 // ═══════════════════════════════════════════════════════════════
                 const flickerTime = time * cfg.glowFlickerRate;
-                const flicker1 = Math.sin(flickerTime * Math.PI * 2);
-                const flicker2 = Math.sin(flickerTime * Math.PI * 5.3 + 1.7);
-                const flicker3 = hash(Math.floor(flickerTime * 2)) > 0.7 ? 1 : 0; // Random spikes
+                let flickerValue;
 
-                const flickerValue = (flicker1 * 0.4 + flicker2 * 0.3 + flicker3 * 0.5 + 0.5);
+                if (isPowered) {
+                    // Powered: smooth pulsing glow
+                    flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.3 + 0.7;
+
+                    // Spark bursts for static variant
+                    if (cfg.sparkBursts && hash(Math.floor(time * 10)) < cfg.sparkProbability) {
+                        flickerValue = 1.0;
+                    }
+                } else {
+                    // Electrocution: erratic flickering
+                    const flicker1 = Math.sin(flickerTime * Math.PI * 2);
+                    const flicker2 = Math.sin(flickerTime * Math.PI * 5.3 + 1.7);
+                    const flicker3 = hash(Math.floor(flickerTime * 2)) > 0.7 ? 1 : 0;
+                    flickerValue = (flicker1 * 0.4 + flicker2 * 0.3 + flicker3 * 0.5 + 0.5);
+                }
+
                 const glowIntensity = cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
 
-                // Glow boost for screen-space effect
                 const glowBoost = (flickerValue * 0.8 + 0.2) * effectStrength * cfg.intensity;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
                 // ═══════════════════════════════════════════════════════════════
                 return {
-                    position: [jitterX, jitterY, jitterZ],
+                    position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],
                     scale,
                     glowIntensity,
                     glowBoost,
-                    // Electric-specific: override glow color to cyan
                     glowColorOverride: cfg.glowColor,
-                    // Electric shader overlay - applies lightning material to mesh
                     electricOverlay: {
                         enabled: effectStrength > 0.1,
                         charge: effectStrength * cfg.intensity,
-                        time  // Pass time for shader animation
+                        time
                     }
                 };
             }
@@ -278,18 +449,32 @@ export function createElectricEffectGesture(variant) {
 // PRE-BUILT GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
+// Electrocution variants (being shocked)
 export const shock = createElectricEffectGesture('shock');
 export const overload = createElectricEffectGesture('overload');
 export const glitch = createElectricEffectGesture('glitch');
+
+// Powered variants (emanating energy)
+export const crackle = createElectricEffectGesture('crackle');
+export const charge = createElectricEffectGesture('charge');
+export const aura = createElectricEffectGesture('aura');
+export const staticElectric = createElectricEffectGesture('static');  // 'static' is reserved word
 
 export {
     ELECTRIC_EFFECT_VARIANTS
 };
 
 export default {
+    // Electrocution
     shock,
     overload,
     glitch,
+    // Powered
+    crackle,
+    charge,
+    aura,
+    static: staticElectric,
+    // Factory
     createElectricEffectGesture,
     ELECTRIC_EFFECT_VARIANTS
 };
