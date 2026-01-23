@@ -262,12 +262,27 @@ import { createShatterGesture } from './destruction/shatter/shatterFactory.js';
 import { createDissolveGesture } from './destruction/dissolve/dissolveFactory.js';
 // destruction/elemental/
 import { createElementalGesture } from './destruction/elemental/elementalFactory.js';
-// destruction/elemental/ - Electric effect gestures (no shatter, just electrocution effect)
+// destruction/elemental/ - Electric effect gestures (no shatter, just visual effects)
 import {
     shock as electricShock,
     overload as electricOverload,
-    glitch as electricGlitch
+    glitch as electricGlitch,
+    crackle as electricCrackle,
+    charge as electricCharge,
+    aura as electricAura,
+    staticElectric as electricStatic
 } from './destruction/elemental/electricEffectFactory.js';
+// destruction/elemental/ - Water effect gestures (no shatter, just fluid visuals)
+import {
+    splash as waterSplash,
+    drench as waterDrench,
+    soak as waterSoak,
+    flow as waterFlow,
+    ripple as waterRipple,
+    tide as waterTide,
+    liquefy as waterLiquefy,
+    pool as waterPool
+} from './destruction/elemental/waterEffectFactory.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -365,10 +380,18 @@ const dissolveRight = createDissolveGesture('right');
 const dissolveAway = createDissolveGesture('away');
 const dissolveToward = createDissolveGesture('toward');
 // Elemental gestures (use elemental material system)
-// Water
-const splash = createElementalGesture('splash');
-const drip = createElementalGesture('drip');
-const rippleWater = createElementalGesture('ripple');
+// Water (uses water effect gestures - no shatter, just fluid visuals)
+// Impact variants (water hitting mascot)
+const splash = waterSplash;
+const drench = waterDrench;
+const soak = waterSoak;
+// Ambient variants (emanating water)
+const flow = waterFlow;
+const rippleWater = waterRipple;
+const tide = waterTide;
+// Transform variants (becoming water)
+const liquefy = waterLiquefy;
+const poolWater = waterPool;
 // Smoke
 const smokebomb = createElementalGesture('smokebomb');
 const vanish = createElementalGesture('vanish');
@@ -381,10 +404,16 @@ const ember = createElementalGesture('ember');
 const iceFreeze = createElementalGesture('freeze');
 const shatterIce = createElementalGesture('shatterIce');
 const thaw = createElementalGesture('thaw');
-// Electric (uses electric effect gestures - no shatter, just electrocution visuals)
+// Electric (uses electric effect gestures - no shatter, just visual effects)
+// Electrocution variants (victim of electricity)
 const shock = electricShock;
 const overload = electricOverload;
 const glitch = electricGlitch;
+// Powered variants (source of electricity)
+const crackle = electricCrackle;
+const chargeUp = electricCharge;
+const electricAuraEffect = electricAura;
+const staticDischarge = electricStatic;
 // Void
 const consume = createElementalGesture('consume');
 const corrupt = createElementalGesture('corrupt');
@@ -728,10 +757,17 @@ const TRANSFORM_GESTURES = [
     dissolveAway,
     dissolveToward,
     // Elemental gestures (use elemental material system)
-    // Water
+    // Water - Impact (water hitting mascot)
     splash,
-    drip,
+    drench,
+    soak,
+    // Water - Ambient (emanating water)
+    flow,
     rippleWater,
+    tide,
+    // Water - Transform (becoming water)
+    liquefy,
+    poolWater,
     // Smoke
     smokebomb,
     vanish,
@@ -744,10 +780,15 @@ const TRANSFORM_GESTURES = [
     iceFreeze,
     shatterIce,
     thaw,
-    // Electric
+    // Electric - Electrocution (victim)
     shock,
     overload,
     glitch,
+    // Electric - Powered (source)
+    crackle,
+    chargeUp,
+    electricAuraEffect,
+    staticDischarge,
     // Void
     consume,
     corrupt,
@@ -889,16 +930,22 @@ export const GESTURE_CATEGORIES = {
         'shatterSuspend', 'shatterFreeze', 'shatterImplode', 'shatterGravity', 'shatterOrbit',
         // destruction/dissolve/
         'dissolveUp', 'dissolveDown', 'dissolveLeft', 'dissolveRight', 'dissolveAway', 'dissolveToward',
-        // destruction/elemental/ - Water
-        'splash', 'drip', 'ripple',
+        // destruction/elemental/ - Water (impact)
+        'splash', 'drench', 'soak',
+        // destruction/elemental/ - Water (ambient)
+        'flow', 'rippleWater', 'tide',
+        // destruction/elemental/ - Water (transform)
+        'liquefy', 'poolWater',
         // destruction/elemental/ - Smoke
         'smokebomb', 'vanish', 'materialize',
         // destruction/elemental/ - Fire
         'ignite', 'phoenix', 'ember',
         // destruction/elemental/ - Ice
         'iceFreeze', 'shatterIce', 'thaw',
-        // destruction/elemental/ - Electric
+        // destruction/elemental/ - Electric (electrocution)
         'shock', 'overload', 'glitch',
+        // destruction/elemental/ - Electric (powered)
+        'crackle', 'chargeUp', 'electricAuraEffect', 'staticDischarge',
         // destruction/elemental/ - Void
         'consume', 'corrupt', 'singularity',
         // destruction/reform/

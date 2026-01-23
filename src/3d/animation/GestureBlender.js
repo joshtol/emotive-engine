@@ -67,6 +67,7 @@ export class GestureBlender {
             glowBoost: 0.0,                                    // Additive channel (for glow layer)
             glowColorOverride: null,                           // Temporary glow color override [r,g,b]
             electricOverlay: null,                             // Electric shader overlay {enabled, charge, time}
+            waterOverlay: null,                                // Water shader overlay {enabled, wetness, time}
 
             // CAMERA-RELATIVE channels (transformed in Core3DManager)
             // Position: Z = toward camera, Y = up, X = right (in view space)
@@ -205,6 +206,15 @@ export class GestureBlender {
                         if (!accumulated.electricOverlay ||
                             output.electricOverlay.charge > accumulated.electricOverlay.charge) {
                             accumulated.electricOverlay = { ...output.electricOverlay };
+                        }
+                    }
+
+                    // WATER OVERLAY: Shader overlay for fluid/wet effect
+                    // Last-wins blending (strongest wetness takes precedence)
+                    if (output.waterOverlay && output.waterOverlay.enabled) {
+                        if (!accumulated.waterOverlay ||
+                            output.waterOverlay.wetness > accumulated.waterOverlay.wetness) {
+                            accumulated.waterOverlay = { ...output.waterOverlay };
                         }
                     }
 
@@ -440,6 +450,7 @@ export class GestureBlender {
             glowBoost: accumulated.glowBoost,
             glowColorOverride: accumulated.glowColorOverride,
             electricOverlay: accumulated.electricOverlay,
+            waterOverlay: accumulated.waterOverlay,
 
             // Camera-relative channels (view-space, transformed in Core3DManager)
             cameraRelativePosition: accumulated.cameraRelativePosition,

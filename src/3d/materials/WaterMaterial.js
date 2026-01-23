@@ -97,7 +97,8 @@ export function createWaterMaterial(options = {}) {
         viscosity = 0.3,
         color = null,
         clarity = 0.9,
-        opacity = 0.85
+        opacity = 0.85,
+        overlay = false  // When true, use additive blending for overlay effect
     } = options;
 
     // Derive properties from viscosity
@@ -122,7 +123,8 @@ export function createWaterMaterial(options = {}) {
             uFresnelPower: { value: fresnelPower },
             uOpacity: { value: opacity },
             uTime: { value: 0 },
-            uViscosity: { value: viscosity }
+            uViscosity: { value: viscosity },
+            uOverlay: { value: overlay ? 1.0 : 0.0 }
         },
 
         vertexShader: /* glsl */`
@@ -197,46 +199,105 @@ export function createWaterMaterial(options = {}) {
             uniform float uOpacity;
             uniform float uViscosity;
             uniform float uTime;
+            uniform float uOverlay;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
             varying vec2 vUv;
 
+            // Simple 3D noise for internal patterns
+            float hash3(vec3 p) {
+                return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+            }
+
+            float noise3D(vec3 p) {
+                vec3 i = floor(p);
+                vec3 f = fract(p);
+                f = f * f * (3.0 - 2.0 * f);
+
+                return mix(
+                    mix(mix(hash3(i), hash3(i + vec3(1,0,0)), f.x),
+                        mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x), f.y),
+                    mix(mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x),
+                        mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x), f.y),
+                    f.z
+                );
+            }
+
             void main() {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
 
-                // Fresnel effect - rim highlighting
+                // Fresnel effect - stronger rim highlighting for wet look
                 float fresnel = pow(1.0 - abs(dot(normal, viewDir)), uFresnelPower);
 
-                // Base color with transmission
+                // Base color - ensure it's clearly blue for water
                 vec3 baseColor = uColor;
 
-                // Internal caustic-like patterns for water/jello
-                if (uViscosity > 0.1 && uViscosity < 0.9) {
-                    float caustic = sin(vPosition.x * 10.0 + uTime) *
-                                   sin(vPosition.y * 10.0 + uTime * 0.7) *
-                                   sin(vPosition.z * 10.0 + uTime * 1.3);
-                    caustic = caustic * 0.5 + 0.5;
-                    baseColor += caustic * 0.1 * (1.0 - uViscosity);
+                // Internal caustic patterns using 3D position (works on any geometry)
+                float caustic1 = noise3D(vPosition * 8.0 + uTime * 0.5);
+                float caustic2 = noise3D(vPosition * 12.0 - uTime * 0.3);
+                float caustic3 = noise3D(vPosition * 4.0 + vec3(uTime * 0.2));
+                float caustics = caustic1 * caustic2 + caustic3 * 0.3;
+
+                // Moving light patterns inside the water
+                float internalLight = caustics * (0.3 + (1.0 - uViscosity) * 0.4);
+
+                // For water (low viscosity), add more caustic brightness
+                if (uViscosity < 0.5) {
+                    baseColor += vec3(0.1, 0.2, 0.3) * internalLight;
                 }
 
-                // Mercury gets specular highlights
+                // Mercury gets bright specular highlights
                 if (uViscosity < 0.15) {
-                    float spec = pow(max(dot(reflect(-viewDir, normal), vec3(0, 1, 0)), 0.0), 32.0);
-                    baseColor += spec * 0.5;
+                    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3));
+                    float spec = pow(max(dot(reflect(-viewDir, normal), lightDir), 0.0), 64.0);
+                    baseColor += vec3(1.0) * spec * 0.8;
                 }
 
-                // Rim glow from fresnel
-                vec3 rimColor = baseColor * 1.5;
-                vec3 finalColor = mix(baseColor, rimColor, fresnel * 0.5);
+                // Strong rim glow for wet/liquid appearance
+                vec3 rimColor = mix(baseColor * 1.8, vec3(0.6, 0.8, 1.0), 0.5);
+                vec3 finalColor = mix(baseColor, rimColor, fresnel * 0.7);
 
-                // Transmission affects alpha
-                float alpha = uOpacity * (1.0 - uTransmission * 0.3);
+                // Add subtle iridescence
+                float iridescence = sin(dot(normal, viewDir) * 10.0 + uTime) * 0.1;
+                finalColor += vec3(iridescence * 0.3, iridescence * 0.5, iridescence);
 
-                // Fresnel makes edges more visible
-                alpha = mix(alpha, min(1.0, alpha + 0.3), fresnel);
+                // Ensure water is clearly visible - boost the blue
+                finalColor = max(finalColor, baseColor * 0.5);
+
+                float alpha;
+
+                if (uOverlay > 0.5) {
+                    // OVERLAY MODE: Only show rim highlights and caustic sparkles
+                    // No uniform wash - sparse visibility like wet gleams
+
+                    // Fresnel gives strong rim/edge highlights
+                    float rimAlpha = pow(fresnel, 2.0) * 0.8;
+
+                    // Caustics give internal sparkle points
+                    float sparkle = max(0.0, caustics - 0.5) * 2.0;  // Only bright caustic peaks
+                    float sparkleAlpha = sparkle * 0.4;
+
+                    // Combine - primarily edges and sparkles
+                    alpha = rimAlpha + sparkleAlpha;
+
+                    // Brighten the color for additive blending
+                    finalColor = mix(baseColor, vec3(0.6, 0.85, 1.0), fresnel * 0.6);
+                    finalColor += vec3(0.2, 0.4, 0.6) * sparkle;
+
+                    // Discard near-invisible pixels to avoid uniform wash
+                    if (alpha < 0.05) discard;
+
+                    alpha = clamp(alpha, 0.0, 0.7);
+                } else {
+                    // STANDALONE MODE: Full opaque water material
+                    float baseAlpha = uOpacity * 0.85;
+                    float fresnelAlpha = fresnel * 0.4;
+                    alpha = baseAlpha + fresnelAlpha;
+                    alpha = clamp(alpha, 0.5, 0.95);
+                }
 
                 gl_FragColor = vec4(finalColor, alpha);
             }
@@ -244,7 +305,9 @@ export function createWaterMaterial(options = {}) {
 
         transparent: true,
         side: THREE.DoubleSide,
-        depthWrite: true
+        // Overlay mode: additive blending, no depth write (like electric overlay)
+        blending: overlay ? THREE.AdditiveBlending : THREE.NormalBlending,
+        depthWrite: overlay ? false : true
     });
 
     // Store parameters for external access

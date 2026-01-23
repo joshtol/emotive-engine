@@ -43,6 +43,7 @@ import { BreathingPhaseManager } from './managers/BreathingPhaseManager.js';
 import { ShatterSystem } from './effects/shatter/ShatterSystem.js';
 import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
 import { createElectricMaterial, updateElectricMaterial } from './materials/ElectricMaterial.js';
+import { createWaterMaterial, updateWaterMaterial } from './materials/WaterMaterial.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -2004,6 +2005,63 @@ export class Core3DManager {
                 this._electricMaterial = null;
             }
             this._electricOverlayMesh = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // WATER OVERLAY - Fluid/wet effect shader overlay
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Creates a duplicate mesh with water shader that renders on top,
+        // showing caustics, fresnel, and wet appearance.
+        if (blended.waterOverlay && blended.waterOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                // Create overlay mesh if not already created
+                if (!this._waterOverlayMesh) {
+                    // Create water material in overlay mode (additive blending)
+                    this._waterMaterial = createWaterMaterial({
+                        viscosity: 0.3,  // Watery (not thick)
+                        opacity: 0.5,   // Semi-transparent for overlay
+                        overlay: true    // Use additive blending like electric
+                    });
+
+                    // Clone the mesh geometry for the overlay
+                    this._waterOverlayMesh = new THREE.Mesh(
+                        mesh.geometry,
+                        this._waterMaterial
+                    );
+
+                    // Slightly larger to avoid z-fighting
+                    this._waterOverlayMesh.scale.setScalar(1.01);
+
+                    // Add as child of original mesh so it follows transforms
+                    mesh.add(this._waterOverlayMesh);
+
+                    // Render after original mesh
+                    this._waterOverlayMesh.renderOrder = mesh.renderOrder + 1;
+                }
+
+                // Update water material each frame
+                if (this._waterMaterial?.uniforms?.uTime) {
+                    this._waterMaterial.uniforms.uTime.value = blended.waterOverlay.time;
+                }
+                // Update opacity based on wetness
+                if (this._waterMaterial?.uniforms?.uOpacity) {
+                    this._waterMaterial.uniforms.uOpacity.value = Math.min(0.8, blended.waterOverlay.wetness);
+                }
+            }
+        } else if (this._waterOverlayMesh) {
+            // Remove overlay mesh when water effect ends
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._waterOverlayMesh.parent) {
+                mesh.remove(this._waterOverlayMesh);
+            }
+            // Dispose resources
+            if (this._waterMaterial) {
+                this._waterMaterial.dispose();
+                this._waterMaterial = null;
+            }
+            this._waterOverlayMesh = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
