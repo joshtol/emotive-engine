@@ -69,6 +69,8 @@ export class GestureBlender {
             electricOverlay: null,                             // Electric shader overlay {enabled, charge, time}
             waterOverlay: null,                                // Water shader overlay {enabled, wetness, time}
             fireOverlay: null,                                 // Fire shader overlay {enabled, heat, temperature, time}
+            smokeOverlay: null,                                // Smoke shader overlay {enabled, thickness, density, time}
+            meshOpacity: 1.0,                                  // Mesh opacity for fade effects (0=invisible, 1=visible)
 
             // CAMERA-RELATIVE channels (transformed in Core3DManager)
             // Position: Z = toward camera, Y = up, X = right (in view space)
@@ -226,6 +228,21 @@ export class GestureBlender {
                             output.fireOverlay.heat > accumulated.fireOverlay.heat) {
                             accumulated.fireOverlay = { ...output.fireOverlay };
                         }
+                    }
+
+                    // SMOKE OVERLAY: Shader overlay for smoke/fog effect
+                    // Last-wins blending (strongest thickness takes precedence)
+                    if (output.smokeOverlay && output.smokeOverlay.enabled) {
+                        if (!accumulated.smokeOverlay ||
+                            output.smokeOverlay.thickness > accumulated.smokeOverlay.thickness) {
+                            accumulated.smokeOverlay = { ...output.smokeOverlay };
+                        }
+                    }
+
+                    // MESH OPACITY: Fade mascot visibility (for smokebomb/vanish/materialize)
+                    // Takes minimum - most faded wins when multiple effects active
+                    if (output.meshOpacity !== undefined) {
+                        accumulated.meshOpacity = Math.min(accumulated.meshOpacity, output.meshOpacity);
                     }
 
                     // ═══════════════════════════════════════════════════════════════
@@ -462,6 +479,8 @@ export class GestureBlender {
             electricOverlay: accumulated.electricOverlay,
             waterOverlay: accumulated.waterOverlay,
             fireOverlay: accumulated.fireOverlay,
+            smokeOverlay: accumulated.smokeOverlay,
+            meshOpacity: accumulated.meshOpacity,
 
             // Camera-relative channels (view-space, transformed in Core3DManager)
             cameraRelativePosition: accumulated.cameraRelativePosition,

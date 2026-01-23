@@ -828,7 +828,8 @@ export class ThreeRenderer {
                 glowColor: { value: new THREE.Color(1, 1, 1) },
                 glowIntensity: { value: 1.0 },
                 coreColor: { value: new THREE.Color(1, 1, 1) },
-                fresnelPower: { value: 3.0 }
+                fresnelPower: { value: 3.0 },
+                uOpacity: { value: 1.0 }  // Mesh opacity for fade effects (smokebomb/vanish)
             },
             vertexShader: `
                 varying vec3 vNormal;
@@ -851,11 +852,15 @@ export class ThreeRenderer {
                 uniform vec3 coreColor;
                 uniform float glowIntensity;
                 uniform float fresnelPower;
+                uniform float uOpacity;
 
                 varying vec3 vNormal;
                 varying vec3 vViewPosition;
 
                 void main() {
+                    // Discard fully transparent pixels
+                    if (uOpacity < 0.01) discard;
+
                     // Fresnel effect: edges glow more than center
                     vec3 viewDir = normalize(vViewPosition);
                     float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), fresnelPower);
@@ -864,10 +869,10 @@ export class ThreeRenderer {
                     // Both core and glow respect glowIntensity for proper on/off toggle
                     vec3 finalColor = (coreColor * glowIntensity) + (glowColor * glowIntensity * fresnel);
 
-                    gl_FragColor = vec4(finalColor, 1.0);
+                    gl_FragColor = vec4(finalColor, uOpacity);
                 }
             `,
-            transparent: false,
+            transparent: true,
             side: THREE.FrontSide
         });
     }

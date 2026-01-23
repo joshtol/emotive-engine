@@ -292,6 +292,18 @@ import {
     blaze as fireBlaze,
     smolder as fireSmolder
 } from './destruction/elemental/fireEffectFactory.js';
+// destruction/elemental/ - Smoke effect gestures (no shatter, soft organic visuals)
+import {
+    puff as smokePuff,
+    billow as smokeBillow,
+    fume as smokeFume,
+    shroud as smokeShroud,
+    haze as smokeHaze,
+    choke as smokeChoke,
+    smokebomb as smokeSmokebomb,
+    vanish as smokeVanish,
+    materialize as smokeMaterialize
+} from './destruction/elemental/smokeEffectFactory.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -401,10 +413,10 @@ const tide = waterTide;
 // Transform variants (becoming water)
 const liquefy = waterLiquefy;
 const poolWater = waterPool;
-// Smoke
-const smokebomb = createElementalGesture('smokebomb');
-const vanish = createElementalGesture('vanish');
-const materialize = createElementalGesture('materialize');
+// Smoke (effect-based - soft organic smoke, no angular shards)
+const smokebomb = smokeSmokebomb;
+const vanish = smokeVanish;
+const materialize = smokeMaterialize;
 // Fire (shatter-based)
 const ignite = createElementalGesture('ignite');
 const phoenix = createElementalGesture('phoenix');
@@ -418,6 +430,15 @@ const combust = fireCombust;
 const radiate = fireRadiate;
 const blaze = fireBlaze;
 const smolder = fireSmolder;
+// Smoke effect gestures (no shatter, just wisp visuals)
+// Emanating variants (source of smoke)
+const puff = smokePuff;
+const billow = smokeBillow;
+const fume = smokeFume;
+// Afflicted variants (victim of smoke)
+const shroud = smokeShroud;
+const hazeSmoke = smokeHaze;
+const chokeSmoke = smokeChoke;
 // Ice
 const iceFreeze = createElementalGesture('freeze');
 const shatterIce = createElementalGesture('shatterIce');
@@ -818,7 +839,15 @@ const TRANSFORM_GESTURES = [
     // Void
     consume,
     corrupt,
-    singularity
+    singularity,
+    // Smoke - Emanating (source of smoke)
+    puff,
+    billow,
+    fume,
+    // Smoke - Afflicted (victim of smoke)
+    shroud,
+    hazeSmoke,
+    chokeSmoke
 ];
 
 const EFFECT_GESTURES = [
@@ -970,6 +999,10 @@ export const GESTURE_CATEGORIES = {
         'burn', 'scorch', 'combust',
         // destruction/elemental/ - Fire (radiating - source of fire)
         'radiate', 'blaze', 'smolder',
+        // destruction/elemental/ - Smoke (emanating - source of smoke)
+        'puff', 'billow', 'fume',
+        // destruction/elemental/ - Smoke (afflicted - victim of smoke)
+        'shroud', 'hazeSmoke', 'chokeSmoke',
         // destruction/elemental/ - Ice
         'iceFreeze', 'shatterIce', 'thaw',
         // destruction/elemental/ - Electric (electrocution)

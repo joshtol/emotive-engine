@@ -45,6 +45,8 @@ import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
 import { createElectricMaterial, updateElectricMaterial } from './materials/ElectricMaterial.js';
 import { createWaterMaterial, updateWaterMaterial } from './materials/WaterMaterial.js';
 import { createFireMaterial, updateFireMaterial } from './materials/FireMaterial.js';
+import { createSmokeMaterial, updateSmokeMaterial } from './materials/SmokeMaterial.js';
+import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -1428,6 +1430,9 @@ export class Core3DManager {
             return;
         }
 
+        // Store deltaTime in seconds for particle systems
+        this._lastDeltaTime = deltaTime / 1000;
+
         // Update animations
         this.animator.update(deltaTime);
 
@@ -2121,6 +2126,105 @@ export class Core3DManager {
                 this._fireMaterial = null;
             }
             this._fireOverlayMesh = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SMOKE OVERLAY - Billboard sprite particles for soft organic smoke
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Uses billboard sprites instead of mesh overlay to avoid angular look.
+        // Sprites always face camera, overlap and blend for volumetric appearance.
+        // Emanating: Rising particles, additive blend
+        // Afflicted: Swirling particles, normal blend, surrounding effect
+        if (blended.smokeOverlay && blended.smokeOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh) {
+                const smokeCategory = blended.smokeOverlay.category || 'emanating';
+
+                // Create particle system if not exists or category changed
+                if (!this._smokeParticleSystem || this._smokeMaterialCategory !== smokeCategory) {
+                    // Clean up old system
+                    if (this._smokeParticleSystem) {
+                        this._smokeParticleSystem.dispose();
+                    }
+
+                    // Create new particle system with current settings
+                    this._smokeParticleSystem = new SmokeParticleSystem({
+                        maxParticles: 80,
+                        category: smokeCategory,
+                        tint: blended.smokeOverlay.tint || [1.0, 1.0, 1.0],
+                        density: blended.smokeOverlay.density || 0.5,
+                        swirl: blended.smokeOverlay.swirl || 0.0
+                    });
+
+                    this._smokeMaterialCategory = smokeCategory;
+
+                    // Attach to mesh so it follows transforms
+                    this._smokeParticleSystem.attachTo(mesh);
+                }
+
+                // Update particle system each frame
+                const deltaTime = this._lastDeltaTime || 0.016;
+                this._smokeParticleSystem.update(deltaTime, {
+                    thickness: blended.smokeOverlay.thickness,
+                    category: smokeCategory,
+                    tint: blended.smokeOverlay.tint,
+                    density: blended.smokeOverlay.density,
+                    swirl: blended.smokeOverlay.swirl
+                });
+            }
+        } else if (this._smokeParticleSystem) {
+            // Remove particle system when smoke effect ends
+            this._smokeParticleSystem.dispose();
+            this._smokeParticleSystem = null;
+            this._smokeMaterialCategory = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MESH OPACITY - Fade mascot in/out (for smokebomb/vanish/materialize)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Controls the main mesh's opacity independent of glow/overlay effects.
+        // Used for ninja smokebomb (fade while hidden by smoke) and magician vanish.
+        // Works with both ShaderMaterial (uOpacity/opacity uniform) and standard materials.
+        if (blended.meshOpacity !== undefined && blended.meshOpacity < 1.0) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh?.material) {
+                // ShaderMaterial - check for uOpacity or opacity uniform
+                if (mesh.material.uniforms?.uOpacity) {
+                    mesh.material.uniforms.uOpacity.value = blended.meshOpacity;
+                } else if (mesh.material.uniforms?.opacity) {
+                    // MaterialFactory creates materials with 'opacity' uniform
+                    mesh.material.uniforms.opacity.value = blended.meshOpacity;
+                }
+                // Standard materials use opacity property
+                else if (mesh.material.opacity !== undefined) {
+                    if (this._originalMeshOpacity === undefined) {
+                        this._originalMeshOpacity = mesh.material.opacity ?? 1.0;
+                        this._originalMeshTransparent = mesh.material.transparent ?? false;
+                    }
+                    mesh.material.transparent = true;
+                    mesh.material.opacity = blended.meshOpacity;
+                    mesh.material.needsUpdate = true;
+                }
+            }
+        } else if (blended.meshOpacity === undefined || blended.meshOpacity >= 1.0) {
+            // Restore full opacity when effect ends
+            const mesh = this.renderer?.coreMesh;
+            if (mesh?.material) {
+                // ShaderMaterial - check for uOpacity or opacity uniform
+                if (mesh.material.uniforms?.uOpacity) {
+                    mesh.material.uniforms.uOpacity.value = 1.0;
+                } else if (mesh.material.uniforms?.opacity) {
+                    mesh.material.uniforms.opacity.value = 1.0;
+                }
+                // Standard materials - restore original
+                else if (this._originalMeshOpacity !== undefined) {
+                    mesh.material.opacity = this._originalMeshOpacity;
+                    mesh.material.transparent = this._originalMeshTransparent;
+                    mesh.material.needsUpdate = true;
+                    this._originalMeshOpacity = undefined;
+                    this._originalMeshTransparent = undefined;
+                }
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -3061,6 +3165,12 @@ export class Core3DManager {
         if (this.shatterSystem) {
             this.shatterSystem.dispose();
             this.shatterSystem = null;
+        }
+
+        // Clean up smoke particle system
+        if (this._smokeParticleSystem) {
+            this._smokeParticleSystem.dispose();
+            this._smokeParticleSystem = null;
         }
 
         // Clean up object-space crack manager

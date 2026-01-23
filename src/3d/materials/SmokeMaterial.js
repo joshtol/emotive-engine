@@ -17,16 +17,23 @@
  * | 0.5     | Visible, soft edges     | Medium rise        | Standard     |
  * | 1.0     | Thick, opaque           | Slow rise, lingers | Heavy smoke  |
  *
+ * ## Overlay Categories
+ *
+ * | Category  | Visual Effect                | Blend Mode |
+ * |-----------|------------------------------|------------|
+ * | emanating | Rising wisps, edge glow      | Additive   |
+ * | afflicted | Surrounding swirl, darkening | Multiply   |
+ *
  * ## Usage
  *
  * Standalone:
  *   const smokeMesh = new THREE.Mesh(geometry, createSmokeMaterial({ density: 0.5 }));
  *
- * Shatter system:
- *   shatterSystem.shatter(mesh, dir, { elemental: 'smoke', elementalParam: 0.5 });
+ * Overlay (emanating - source of smoke):
+ *   createSmokeMaterial({ overlay: true, category: 'emanating', tint: [0.8, 0.8, 0.8] });
  *
- * As overlay:
- *   shatterSystem.shatter(mesh, dir, { overlay: 'smoke', overlayParam: 0.3 });
+ * Overlay (afflicted - victim of smoke):
+ *   createSmokeMaterial({ overlay: true, category: 'afflicted', swirl: 0.5 });
  */
 
 import * as THREE from 'three';
@@ -57,6 +64,11 @@ function getSmokeColor(density, tint) {
  * @param {THREE.Color} [options.color] - Override color (otherwise gray gradient)
  * @param {number} [options.opacity] - Override opacity (otherwise derived from density)
  * @param {boolean} [options.additive=false] - Use additive blending (for lighter smoke)
+ * @param {boolean} [options.overlay=false] - Use sparse overlay mode for effect gestures
+ * @param {string} [options.category='emanating'] - 'emanating' (source) or 'afflicted' (victim)
+ * @param {Array} [options.tint] - RGB tint multiplier [r, g, b] for colored smoke
+ * @param {Array} [options.windDir] - Wind direction [x, z] for drift
+ * @param {number} [options.swirl=0] - Swirl/vortex intensity (0-1)
  * @returns {THREE.ShaderMaterial}
  */
 export function createSmokeMaterial(options = {}) {
@@ -64,18 +76,32 @@ export function createSmokeMaterial(options = {}) {
         density = 0.5,
         color = null,
         opacity = null,
-        additive = false
+        additive = false,
+        overlay = false,
+        category = 'emanating',  // 'emanating' or 'afflicted'
+        tint = [1.0, 1.0, 1.0],  // RGB tint multiplier
+        windDir = [0.0, 0.0],    // Wind direction [x, z]
+        swirl = 0.0              // Swirl intensity (0-1)
     } = options;
 
     // Derive properties from density
     const smokeColor = getSmokeColor(density, color);
-    const smokeOpacity = opacity ?? lerp(0.4, 0.85, density);  // Increased visibility
-    const softness = lerp(0.9, 0.3, density);           // Edge fade amount
-    const noiseScale = lerp(3.0, 1.0, density);         // Finer noise when dense
-    const riseSpeed = lerp(1.5, 0.3, density);          // Dense smoke rises slower
-    const disperseRate = lerp(0.4, 0.05, density);      // Light smoke disperses faster
-    const turbulence = lerp(0.8, 0.3, density);         // Light smoke more chaotic
-    const billboardSpin = lerp(2.0, 0.3, density);      // Light smoke spins faster
+    const smokeOpacity = opacity ?? lerp(0.4, 0.85, density);
+    const softness = lerp(0.9, 0.3, density);
+    const noiseScale = lerp(3.0, 1.0, density);
+    const riseSpeed = lerp(1.5, 0.3, density);
+    const disperseRate = lerp(0.4, 0.05, density);
+    const turbulence = lerp(0.8, 0.3, density);
+    const billboardSpin = lerp(2.0, 0.3, density);
+
+    // Category flag: 0 = emanating (source), 1 = afflicted (victim)
+    const categoryValue = category === 'afflicted' ? 1.0 : 0.0;
+
+    // Afflicted mode uses normal blending to darken, emanating uses additive
+    const isAfflicted = category === 'afflicted';
+    const blendMode = overlay
+        ? (isAfflicted ? THREE.NormalBlending : THREE.AdditiveBlending)
+        : (additive ? THREE.AdditiveBlending : THREE.NormalBlending);
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
@@ -89,7 +115,13 @@ export function createSmokeMaterial(options = {}) {
             uBillboardSpin: { value: billboardSpin },
             uTime: { value: 0 },
             uDensity: { value: density },
-            uLifetime: { value: 1.0 }  // For fade-out animation (0-1)
+            uLifetime: { value: 1.0 },
+            uOverlay: { value: overlay ? 1.0 : 0.0 },
+            // New uniforms
+            uCategory: { value: categoryValue },  // 0=emanating, 1=afflicted
+            uTint: { value: new THREE.Vector3(tint[0], tint[1], tint[2]) },
+            uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]) },
+            uSwirl: { value: swirl }
         },
 
         vertexShader: /* glsl */`
@@ -99,6 +131,8 @@ export function createSmokeMaterial(options = {}) {
             uniform float uLifetime;
 
             varying vec3 vPosition;
+            varying vec3 vNormal;
+            varying vec3 vViewDir;
             varying vec2 vUv;
             varying float vDepth;
 
@@ -122,6 +156,13 @@ export function createSmokeMaterial(options = {}) {
             void main() {
                 vUv = uv;
                 vPosition = position;
+
+                // World space for view direction calculation
+                vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                vViewDir = normalize(cameraPosition - worldPos.xyz);
+
+                // Normal in world space
+                vNormal = normalize(mat3(modelMatrix) * normal);
 
                 vec3 pos = position;
 
@@ -155,12 +196,21 @@ export function createSmokeMaterial(options = {}) {
             uniform float uTime;
             uniform float uDensity;
             uniform float uLifetime;
+            uniform float uOverlay;
+            uniform float uCategory;
+            uniform vec3 uTint;
+            uniform vec2 uWindDir;
+            uniform float uSwirl;
 
             varying vec3 vPosition;
+            varying vec3 vNormal;
+            varying vec3 vViewDir;
             varying vec2 vUv;
             varying float vDepth;
 
-            // 3D noise for volumetric smoke (works on any geometry)
+            // ═══════════════════════════════════════════════════════════════
+            // NOISE FUNCTIONS
+            // ═══════════════════════════════════════════════════════════════
             float hash3(vec3 p) {
                 return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
             }
@@ -182,7 +232,8 @@ export function createSmokeMaterial(options = {}) {
             float fbm3D(vec3 p) {
                 float value = 0.0;
                 float amplitude = 0.5;
-                for (int i = 0; i < 4; i++) {
+                // 5 octaves for smoother, more organic noise
+                for (int i = 0; i < 5; i++) {
                     value += amplitude * noise3D(p);
                     p *= 2.0;
                     amplitude *= 0.5;
@@ -190,51 +241,193 @@ export function createSmokeMaterial(options = {}) {
                 return value;
             }
 
-            void main() {
-                // Use 3D position for noise (works on any geometry, not just UV-mapped)
-                vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, uTime * 0.2, 0.0);
+            // ═══════════════════════════════════════════════════════════════
+            // SWIRL DISTORTION
+            // ═══════════════════════════════════════════════════════════════
+            vec3 applySwirl(vec3 pos, float intensity, float time) {
+                if (intensity < 0.01) return pos;
 
-                // Volumetric smoke pattern
+                // Distance from vertical axis
+                float dist = length(pos.xz);
+                // Angle based on height and time
+                float angle = intensity * (pos.y * 3.0 + time * 0.5) * 2.0;
+
+                // Rotate around Y axis
+                float c = cos(angle);
+                float s = sin(angle);
+                return vec3(
+                    pos.x * c - pos.z * s,
+                    pos.y,
+                    pos.x * s + pos.z * c
+                );
+            }
+
+            void main() {
+                vec3 normal = normalize(vNormal);
+                vec3 viewDir = normalize(vViewDir);
+
+                // ═══════════════════════════════════════════════════════════════
+                // FRESNEL - Proper rim detection
+                // ═══════════════════════════════════════════════════════════════
+                float fresnel = 1.0 - abs(dot(normal, viewDir));
+                fresnel = pow(fresnel, 2.0);
+
+                // ═══════════════════════════════════════════════════════════════
+                // BASE SMOKE PATTERN (standalone mode)
+                // ═══════════════════════════════════════════════════════════════
+                vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, uTime * 0.2, 0.0);
                 float smoke = fbm3D(noisePos);
 
-                // Secondary swirling layer
                 vec3 swirl = vPosition * uNoiseScale * 1.5 + vec3(uTime * 0.1, 0.0, uTime * 0.15);
                 float swirls = fbm3D(swirl) * 0.5;
-
                 smoke = smoke + swirls;
 
-                // Dense smoke is more solid, light smoke is wispier
                 smoke = mix(smoke, 0.7, uDensity * 0.6);
 
-                // Soft edge based on distance from geometry center
                 float distFromCenter = length(vPosition);
                 float edgeFade = 1.0 - smoothstep(0.3, 0.8, distFromCenter * (1.0 - uSoftness));
-
-                // Dispersion over lifetime
                 float disperseFade = mix(1.0, 0.3, (1.0 - uLifetime) * uDisperseRate);
 
-                // Combine alpha factors - ensure visibility
-                float baseAlpha = uOpacity * smoke * edgeFade * disperseFade * uLifetime;
+                // Apply tint to base color
+                vec3 smokeColor = uColor * uTint;
+                float alpha;
 
-                // Minimum visibility so smoke is always seen
-                float alpha = max(baseAlpha, uOpacity * 0.3 * uLifetime);
+                if (uOverlay > 0.5) {
+                    bool isAfflicted = uCategory > 0.5;
 
-                // Clamp to reasonable range
-                alpha = clamp(alpha, 0.0, uOpacity);
+                    // ═══════════════════════════════════════════════════════════════
+                    // WIND DIRECTION
+                    // ═══════════════════════════════════════════════════════════════
+                    vec3 windOffset = vec3(
+                        uWindDir.x * uTime * 0.8,
+                        isAfflicted ? 0.0 : -uTime * 1.5,  // Afflicted: no rise, Emanating: rise
+                        uWindDir.y * uTime * 0.8
+                    );
 
-                // Discard only very transparent pixels
-                if (alpha < 0.02) discard;
+                    // ═══════════════════════════════════════════════════════════════
+                    // SWIRL DISTORTION
+                    // ═══════════════════════════════════════════════════════════════
+                    vec3 swirlPos = applySwirl(vPosition, uSwirl, uTime);
 
-                // Slight color variation based on smoke density
-                vec3 smokeColor = uColor;
-                smokeColor = mix(smokeColor, smokeColor * 1.2, smoke * 0.3);
+                    if (isAfflicted) {
+                        // ═══════════════════════════════════════════════════════════════
+                        // AFFLICTED MODE: Surrounding, obscuring, darkening
+                        // Uses FBM for smooth organic smoke (no angular N64 look)
+                        // ═══════════════════════════════════════════════════════════════
+
+                        // Layer 1: Large swirling clouds (low frequency, smooth)
+                        vec3 cloudPos = swirlPos * 2.5 + windOffset * 0.5;
+                        float clouds = fbm3D(cloudPos);
+                        float cloudAlpha = smoothstep(0.25, 0.65, clouds);
+
+                        // Layer 2: Medium wisps (flowing motion)
+                        vec3 wispPos = swirlPos * 4.0 + windOffset + vec3(uTime * 0.15, 0.0, uTime * 0.12);
+                        float wisps = fbm3D(wispPos);
+                        float wispAlpha = smoothstep(0.3, 0.7, wisps) * 0.7;
+
+                        // Layer 3: Fine detail tendrils (high frequency, subtle)
+                        vec3 detailPos = swirlPos * 7.0 + windOffset * 1.5 + vec3(uTime * 0.25, uTime * 0.1, uTime * 0.2);
+                        float detail = fbm3D(detailPos);
+                        float detailAlpha = smoothstep(0.35, 0.75, detail) * 0.4;
+
+                        // Layer 4: Micro turbulence (adds organic texture)
+                        vec3 microPos = swirlPos * 12.0 + windOffset * 2.0 + vec3(uTime * 0.4, 0.0, uTime * 0.35);
+                        float micro = fbm3D(microPos);
+                        float microAlpha = smoothstep(0.4, 0.8, micro) * 0.25;
+
+                        // Edge wisps using fresnel - smoke at silhouette (softened)
+                        float edgeWisp = pow(fresnel, 1.5) * 0.45 * (0.5 + uDensity * 0.5);
+
+                        // Soft inner glow (distance from center)
+                        float distFromCenter = length(vPosition.xz);
+                        float innerGlow = smoothstep(0.6, 0.1, distFromCenter) * 0.2;
+
+                        // Combine all layers with soft blending
+                        alpha = cloudAlpha * 0.5 + wispAlpha + detailAlpha + microAlpha + edgeWisp + innerGlow;
+
+                        // Apply density - denser = more visible
+                        alpha *= (0.35 + uDensity * 0.65);
+
+                        // Darken color for obscuring effect (smoother gradient)
+                        float darkness = 0.4 + (1.0 - alpha * 0.7) * 0.6;
+                        smokeColor = smokeColor * darkness * 0.75;
+
+                        // Very soft discard threshold
+                        if (alpha < 0.02) discard;
+
+                        // Clamp - afflicted can be more opaque to obscure
+                        alpha = clamp(alpha, 0.0, 0.7);
+
+                    } else {
+                        // ═══════════════════════════════════════════════════════════════
+                        // EMANATING MODE: Rising wisps, edge glow
+                        // Uses FBM for smooth organic smoke
+                        // ═══════════════════════════════════════════════════════════════
+
+                        // Height bias - smoke rises, stronger at top
+                        float height = (vPosition.y + 0.5);
+                        float topBias = 0.5 + height * 0.5;
+
+                        // Layer 1: Large billowing clouds (low frequency)
+                        vec3 cloudPos = swirlPos * 2.0 + windOffset * 0.6;
+                        float clouds = fbm3D(cloudPos);
+                        float cloudAlpha = smoothstep(0.3, 0.65, clouds) * topBias * 0.5;
+
+                        // Layer 2: Rising wisp pattern (medium frequency)
+                        vec3 wispPos = swirlPos * 4.0 + windOffset;
+                        float wisp = fbm3D(wispPos);
+                        float wispAlpha = smoothstep(0.35, 0.7, wisp) * topBias;
+
+                        // Layer 3: Detail wisps (higher frequency)
+                        vec3 detailPos = swirlPos * 7.0 + windOffset * 1.3 + vec3(uTime * 0.2, 0.0, uTime * 0.15);
+                        float detail = fbm3D(detailPos);
+                        float detailAlpha = smoothstep(0.4, 0.75, detail) * 0.45 * topBias;
+
+                        // Layer 4: Fine tendrils (high frequency, subtle)
+                        vec3 tendrilPos = swirlPos * 10.0 + windOffset * 1.8 + vec3(uTime * 0.35, uTime * 0.1, uTime * 0.25);
+                        float tendril = fbm3D(tendrilPos);
+                        float tendrilAlpha = smoothstep(0.45, 0.8, tendril) * 0.25 * topBias;
+
+                        // Edge wisps using proper fresnel - smoke curls at rim (softened)
+                        float edgeWisp = pow(fresnel, 1.5) * 0.35 * topBias * (0.5 + uDensity * 0.5);
+
+                        // Combine all layers
+                        alpha = cloudAlpha + wispAlpha + detailAlpha + tendrilAlpha + edgeWisp;
+
+                        // Apply density
+                        alpha *= (0.45 + uDensity * 0.55);
+
+                        // Brighten at wisp peaks (smooth)
+                        float brightness = 0.85 + wisp * 0.3;
+                        smokeColor = smokeColor * brightness;
+
+                        // Soft discard
+                        if (alpha < 0.03) discard;
+
+                        // Clamp
+                        alpha = clamp(alpha, 0.0, 0.55);
+                    }
+
+                } else {
+                    // ═══════════════════════════════════════════════════════════════
+                    // STANDALONE MODE: Full volumetric smoke
+                    // ═══════════════════════════════════════════════════════════════
+
+                    float baseAlpha = uOpacity * smoke * edgeFade * disperseFade * uLifetime;
+                    alpha = max(baseAlpha, uOpacity * 0.3 * uLifetime);
+                    alpha = clamp(alpha, 0.0, uOpacity);
+
+                    if (alpha < 0.02) discard;
+
+                    smokeColor = mix(smokeColor, smokeColor * 1.2, smoke * 0.3);
+                }
 
                 gl_FragColor = vec4(smokeColor, alpha);
             }
         `,
 
         transparent: true,
-        blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+        blending: blendMode,
         depthWrite: false,
         side: THREE.DoubleSide
     });
@@ -242,6 +435,7 @@ export function createSmokeMaterial(options = {}) {
     // Store parameters for external access
     material.userData.density = density;
     material.userData.elementalType = 'smoke';
+    material.userData.category = category;
 
     return material;
 }
@@ -280,14 +474,14 @@ export function setSmokeMaterialLifetime(material, lifetime) {
  */
 export function getSmokePhysics(density = 0.5) {
     return {
-        gravity: lerp(-0.4, -0.05, density),          // All rise, dense rises slower
-        drag: lerp(0.05, 0.3, density),               // Dense smoke has more drag
-        bounce: 0.0,                                   // Smoke doesn't bounce
+        gravity: lerp(-0.4, -0.05, density),
+        drag: lerp(0.05, 0.3, density),
+        bounce: 0.0,
         disperseOverTime: true,
         disperseRate: lerp(0.4, 0.05, density),
-        billboardRotation: lerp(2.0, 0.3, density),   // Spin speed
+        billboardRotation: lerp(2.0, 0.3, density),
         fadeOut: true,
-        lifetime: lerp(1.5, 4.0, density)             // Dense smoke lingers
+        lifetime: lerp(1.5, 4.0, density)
     };
 }
 
@@ -299,13 +493,12 @@ export function getSmokePhysics(density = 0.5) {
  * @returns {Object} Crack style configuration
  */
 export function getSmokeCrackStyle(density = 0.5) {
-    // Smoke cracks = wisps escaping from crack lines
     return {
         color: 0x444444,
-        emissive: 0.0,              // No glow
+        emissive: 0.0,
         animated: true,
         pattern: 'wispy',
-        emitParticles: density > 0.3  // Dense smoke spawns particles from cracks
+        emitParticles: density > 0.3
     };
 }
 
