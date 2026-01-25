@@ -45,19 +45,19 @@ function getIceColor(melt) {
     const color = new THREE.Color();
 
     if (melt < 0.3) {
-        // Solid ice - clear blue-white
-        color.setRGB(0.85, 0.95, 1.0);
+        // Solid ice - cool blue tint (darker for overlay use)
+        color.setRGB(0.4, 0.6, 0.85);
     } else if (melt < 0.7) {
-        // Melting - more blue, less white
+        // Melting - lighter blue
         const t = (melt - 0.3) / 0.4;
         color.setRGB(
-            lerp(0.85, 0.6, t),
-            lerp(0.95, 0.85, t),
-            1.0
+            lerp(0.4, 0.45, t),
+            lerp(0.6, 0.7, t),
+            lerp(0.85, 0.9, t)
         );
     } else {
         // Nearly water - blue
-        color.setRGB(0.5, 0.75, 1.0);
+        color.setRGB(0.45, 0.65, 0.9);
     }
 
     return color;
@@ -202,8 +202,9 @@ export function createIceMaterial(options = {}) {
                 if (uFrostAmount > 0.01) {
                     float frost = voronoi(vPosition * 15.0);
                     frost = smoothstep(0.1, 0.3, frost);
-                    // Frost adds white crystalline patterns
-                    baseColor = mix(baseColor, vec3(1.0), (1.0 - frost) * uFrostAmount * 0.4);
+                    // Frost adds pale blue crystalline patterns (not white)
+                    vec3 frostColor = vec3(0.7, 0.85, 1.0);
+                    baseColor = mix(baseColor, frostColor, (1.0 - frost) * uFrostAmount * 0.25);
                 }
 
                 // Internal crack patterns
@@ -224,14 +225,14 @@ export function createIceMaterial(options = {}) {
                 float scatter = uSubsurfaceScatter * (1.0 - abs(dot(normal, viewDir)));
                 baseColor = mix(baseColor, scatterColor, scatter * 0.3);
 
-                // Specular highlights (sharper when frozen)
+                // Specular highlights (sharper when frozen) - reduced intensity
                 float specPower = mix(64.0, 16.0, uMelt);
                 float spec = pow(max(dot(reflect(-viewDir, normal), vec3(0.5, 1.0, 0.5)), 0.0), specPower);
-                baseColor += spec * (1.0 - uRoughness) * 0.5;
+                baseColor += spec * (1.0 - uRoughness) * 0.15;
 
-                // Rim glow from fresnel
-                vec3 rimColor = mix(uColor * 1.3, vec3(0.9, 0.95, 1.0), 0.5);
-                baseColor = mix(baseColor, rimColor, fresnel * 0.4);
+                // Rim glow from fresnel - reduced and more blue
+                vec3 rimColor = vec3(0.5, 0.7, 0.9);
+                baseColor = mix(baseColor, rimColor, fresnel * 0.2);
 
                 // Alpha based on transmission
                 float alpha = uOpacity * (1.0 - uTransmission * 0.2);

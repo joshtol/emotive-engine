@@ -143,7 +143,7 @@ import floatUp from './idle/swaying/floatUp.js';
 import floatDown from './idle/swaying/floatDown.js';
 import floatLeft from './idle/swaying/floatLeft.js';
 import floatRight from './idle/swaying/floatRight.js';
-import bob from './idle/swaying/bob.js';
+// bob import removed - redundant with headBob
 import lean from './idle/swaying/lean.js';
 import leanLeft from './idle/swaying/leanLeft.js';
 import leanRight from './idle/swaying/leanRight.js';
@@ -316,6 +316,66 @@ import {
     erase as voidErase,
     singularity as voidSingularity
 } from './destruction/elemental/voidEffectFactory.js';
+// destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
+import {
+    freeze as iceEffectFreeze,
+    chill as iceChill,
+    frostbite as iceFrostbite,
+    thaw as iceThaw,
+    frost as iceFrost,
+    crystallize as iceCrystallize,
+    glacial as iceGlacial,
+    shatter as iceEffectShatter,
+    encase as iceEncase
+} from './destruction/elemental/iceEffectFactory.js';
+// destruction/elemental/ - Light effect gestures (radiance/holy visuals)
+import {
+    blind as lightBlind,
+    purify as lightPurify,
+    cleanse as lightCleanse,
+    radiate as lightRadiate,
+    glow as lightGlow,
+    beacon as lightBeacon,
+    ascend as lightAscend,
+    illuminate as lightIlluminate,
+    dissolve as lightDissolve
+} from './destruction/elemental/lightEffectFactory.js';
+// destruction/elemental/ - Poison effect gestures (toxic/acid visuals)
+import {
+    infect as poisonInfect,
+    sicken as poisonSicken,
+    ooze as poisonOoze,
+    seep as poisonSeep,
+    toxic as poisonToxic,
+    corrode as poisonCorrode,
+    melt as poisonMelt,
+    decay as poisonDecay,
+    dissolve as poisonDissolve
+} from './destruction/elemental/poisonEffectFactory.js';
+// destruction/elemental/ - Earth effect gestures (stone/petrification visuals)
+import {
+    petrify as earthPetrify,
+    burden as earthBurden,
+    rumble as earthRumble,
+    quake as earthQuake,
+    encase as earthEncase,
+    crumble as earthCrumble,
+    shatter as earthShatter,
+    erode as earthErode,
+    fossilize as earthFossilize
+} from './destruction/elemental/earthEffectFactory.js';
+// destruction/elemental/ - Nature effect gestures (plant/growth visuals)
+import {
+    entangle as natureEntangle,
+    root as natureRoot,
+    constrict as natureConstrict,
+    bloom as natureBloom,
+    sprout as natureSprout,
+    flourish as natureFlourish,
+    wilt as natureWilt,
+    overgrow as natureOvergrow,
+    blossom as natureBlossom
+} from './destruction/elemental/natureEffectFactory.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -876,7 +936,67 @@ const TRANSFORM_GESTURES = [
     // Smoke - Afflicted (victim of smoke)
     shroud,
     hazeSmoke,
-    chokeSmoke
+    chokeSmoke,
+    // Ice Effect - Afflicted (being frozen)
+    iceEffectFreeze,
+    iceChill,
+    iceFrostbite,
+    iceThaw,
+    // Ice Effect - Emanating (projecting cold)
+    iceFrost,
+    // Ice Effect - Transform (becoming ice)
+    iceCrystallize,
+    iceGlacial,
+    iceEffectShatter,
+    iceEncase,
+    // Light Effect - Afflicted (overwhelmed by light)
+    lightBlind,
+    lightPurify,
+    lightCleanse,
+    // Light Effect - Emanating (projecting radiance)
+    lightRadiate,
+    lightGlow,
+    lightBeacon,
+    // Light Effect - Transform (becoming light)
+    lightAscend,
+    lightIlluminate,
+    lightDissolve,
+    // Poison Effect - Afflicted (being poisoned)
+    poisonInfect,
+    poisonSicken,
+    // Poison Effect - Emanating (exuding toxins)
+    poisonOoze,
+    poisonSeep,
+    poisonToxic,
+    // Poison Effect - Transform (becoming toxic)
+    poisonCorrode,
+    poisonMelt,
+    poisonDecay,
+    poisonDissolve,
+    // Earth Effect - Afflicted (being petrified)
+    earthPetrify,
+    earthBurden,
+    // Earth Effect - Emanating (controlling earth)
+    earthRumble,
+    earthQuake,
+    // Earth Effect - Transform (becoming/breaking stone)
+    earthEncase,
+    earthCrumble,
+    earthShatter,
+    earthErode,
+    earthFossilize,
+    // Nature Effect - Afflicted (being overtaken)
+    natureEntangle,
+    natureRoot,
+    natureConstrict,
+    // Nature Effect - Emanating (projecting growth)
+    natureBloom,
+    natureSprout,
+    natureFlourish,
+    // Nature Effect - Transform (becoming nature)
+    natureWilt,
+    natureOvergrow,
+    natureBlossom
 ];
 
 const EFFECT_GESTURES = [
@@ -1040,6 +1160,21 @@ export const GESTURE_CATEGORIES = {
         'crackle', 'chargeUp', 'electricAuraEffect', 'staticDischarge',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
+        // destruction/elemental/ - Ice Effect (afflicted, emanating, transform)
+        'iceFreeze', 'iceChill', 'iceFrostbite', 'iceThaw', 'iceFrost',
+        'iceCrystallize', 'iceGlacial', 'iceShatter', 'iceEncase',
+        // destruction/elemental/ - Light Effect (afflicted, emanating, transform)
+        'lightBlind', 'lightPurify', 'lightCleanse', 'lightRadiate', 'lightGlow', 'lightBeacon',
+        'lightAscend', 'lightIlluminate', 'lightDissolve',
+        // destruction/elemental/ - Poison Effect (afflicted, emanating, transform)
+        'poisonInfect', 'poisonSicken', 'poisonOoze', 'poisonSeep', 'poisonToxic',
+        'poisonCorrode', 'poisonMelt', 'poisonDecay', 'poisonDissolve',
+        // destruction/elemental/ - Earth Effect (afflicted, emanating, transform)
+        'earthPetrify', 'earthBurden', 'earthRumble', 'earthQuake',
+        'earthEncase', 'earthCrumble', 'earthShatter', 'earthErode', 'earthFossilize',
+        // destruction/elemental/ - Nature Effect (afflicted, emanating, transform)
+        'natureEntangle', 'natureRoot', 'natureConstrict', 'natureBloom', 'natureSprout', 'natureFlourish',
+        'natureWilt', 'natureOvergrow', 'natureBlossom',
         // destruction/reform/
         'morph'
     ],

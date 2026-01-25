@@ -23,3 +23,93 @@ export {
     VOID_VARIANTS,
     ALL_ELEMENTAL_VARIANTS
 } from './elementalFactory.js';
+
+// Ice effect gestures
+export {
+    createIceEffectGesture,
+    freeze,
+    chill,
+    frostbite,
+    thaw,
+    frost,
+    crystallize,
+    glacial,
+    shatter as iceShatter,
+    encase as iceEncase,
+    ICE_EFFECT_VARIANTS
+} from './iceEffectFactory.js';
+
+// Light effect gestures
+export {
+    createLightEffectGesture,
+    blind,
+    purify,
+    cleanse,
+    radiate,
+    glow,
+    beacon,
+    ascend,
+    illuminate,
+    dissolve as lightDissolve,
+    LIGHT_EFFECT_VARIANTS
+} from './lightEffectFactory.js';
+
+// Poison effect gestures
+export {
+    createPoisonEffectGesture,
+    infect,
+    sicken,
+    ooze,
+    seep,
+    toxic,
+    corrode,
+    melt,
+    decay,
+    dissolve as poisonDissolve,
+    POISON_EFFECT_VARIANTS
+} from './poisonEffectFactory.js';
+
+// Earth effect gestures
+export {
+    createEarthEffectGesture,
+    petrify,
+    burden,
+    rumble,
+    quake,
+    encase as earthEncase,
+    crumble,
+    shatter as earthShatter,
+    erode,
+    fossilize,
+    EARTH_EFFECT_VARIANTS
+} from './earthEffectFactory.js';
+
+// Nature effect gestures
+export {
+    createNatureEffectGesture,
+    entangle,
+    root,
+    constrict,
+    bloom,
+    sprout,
+    flourish,
+    wilt,
+    overgrow,
+    blossom,
+    NATURE_EFFECT_VARIANTS
+} from './natureEffectFactory.js';
+
+// Void effect gestures
+export {
+    createVoidEffectGesture,
+    drain,
+    siphon,
+    hollow,
+    corrupt,
+    taint,
+    wither,
+    consume,
+    erase,
+    singularity,
+    VOID_EFFECT_VARIANTS
+} from './voidEffectFactory.js';

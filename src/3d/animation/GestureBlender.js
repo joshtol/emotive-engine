@@ -71,6 +71,11 @@ export class GestureBlender {
             fireOverlay: null,                                 // Fire shader overlay {enabled, heat, temperature, time}
             smokeOverlay: null,                                // Smoke shader overlay {enabled, thickness, density, time}
             voidOverlay: null,                                 // Void shader overlay {enabled, strength, depth, time}
+            iceOverlay: null,                                  // Ice shader overlay {enabled, strength, frost, time}
+            lightOverlay: null,                                // Light shader overlay {enabled, strength, radiance, time}
+            poisonOverlay: null,                               // Poison shader overlay {enabled, strength, toxicity, time}
+            earthOverlay: null,                                // Earth shader overlay {enabled, strength, petrification, time}
+            natureOverlay: null,                               // Nature shader overlay {enabled, strength, growth, time}
             meshOpacity: 1.0,                                  // Mesh opacity for fade effects (0=invisible, 1=visible)
 
             // CAMERA-RELATIVE channels (transformed in Core3DManager)
@@ -246,6 +251,51 @@ export class GestureBlender {
                         if (!accumulated.voidOverlay ||
                             output.voidOverlay.strength > accumulated.voidOverlay.strength) {
                             accumulated.voidOverlay = { ...output.voidOverlay };
+                        }
+                    }
+
+                    // ICE OVERLAY: Shader overlay for frost/freezing effect
+                    // Last-wins blending (strongest strength takes precedence)
+                    if (output.iceOverlay && output.iceOverlay.enabled) {
+                        if (!accumulated.iceOverlay ||
+                            output.iceOverlay.strength > accumulated.iceOverlay.strength) {
+                            accumulated.iceOverlay = { ...output.iceOverlay };
+                        }
+                    }
+
+                    // LIGHT OVERLAY: Shader overlay for radiance/holy effect
+                    // Last-wins blending (strongest strength takes precedence)
+                    if (output.lightOverlay && output.lightOverlay.enabled) {
+                        if (!accumulated.lightOverlay ||
+                            output.lightOverlay.strength > accumulated.lightOverlay.strength) {
+                            accumulated.lightOverlay = { ...output.lightOverlay };
+                        }
+                    }
+
+                    // POISON OVERLAY: Shader overlay for toxic/acid effect
+                    // Last-wins blending (strongest strength takes precedence)
+                    if (output.poisonOverlay && output.poisonOverlay.enabled) {
+                        if (!accumulated.poisonOverlay ||
+                            output.poisonOverlay.strength > accumulated.poisonOverlay.strength) {
+                            accumulated.poisonOverlay = { ...output.poisonOverlay };
+                        }
+                    }
+
+                    // EARTH OVERLAY: Shader overlay for stone/petrification effect
+                    // Last-wins blending (strongest strength takes precedence)
+                    if (output.earthOverlay && output.earthOverlay.enabled) {
+                        if (!accumulated.earthOverlay ||
+                            output.earthOverlay.strength > accumulated.earthOverlay.strength) {
+                            accumulated.earthOverlay = { ...output.earthOverlay };
+                        }
+                    }
+
+                    // NATURE OVERLAY: Shader overlay for plant/growth effect
+                    // Last-wins blending (strongest strength takes precedence)
+                    if (output.natureOverlay && output.natureOverlay.enabled) {
+                        if (!accumulated.natureOverlay ||
+                            output.natureOverlay.strength > accumulated.natureOverlay.strength) {
+                            accumulated.natureOverlay = { ...output.natureOverlay };
                         }
                     }
 
@@ -491,6 +541,11 @@ export class GestureBlender {
             fireOverlay: accumulated.fireOverlay,
             smokeOverlay: accumulated.smokeOverlay,
             voidOverlay: accumulated.voidOverlay,
+            iceOverlay: accumulated.iceOverlay,
+            lightOverlay: accumulated.lightOverlay,
+            poisonOverlay: accumulated.poisonOverlay,
+            earthOverlay: accumulated.earthOverlay,
+            natureOverlay: accumulated.natureOverlay,
             meshOpacity: accumulated.meshOpacity,
 
             // Camera-relative channels (view-space, transformed in Core3DManager)

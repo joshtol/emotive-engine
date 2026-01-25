@@ -47,7 +47,13 @@ import { createWaterMaterial, updateWaterMaterial } from './materials/WaterMater
 import { createFireMaterial, updateFireMaterial } from './materials/FireMaterial.js';
 import { createSmokeMaterial, updateSmokeMaterial } from './materials/SmokeMaterial.js';
 import { createVoidMaterial, updateVoidMaterial } from './materials/VoidMaterial.js';
+import { createIceMaterial, updateIceMaterial } from './materials/IceMaterial.js';
+import { createLightMaterial, updateLightMaterial } from './materials/LightMaterial.js';
+import { createPoisonMaterial, updatePoisonMaterial } from './materials/PoisonMaterial.js';
+import { createEarthMaterial, updateEarthMaterial } from './materials/EarthMaterial.js';
+import { createNatureMaterial, updateNatureMaterial } from './materials/NatureMaterial.js';
 import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
+import { ElementSpawner } from './effects/ElementSpawner.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -462,6 +468,25 @@ export class Core3DManager {
         // Manages persistent crack damage that rotates with the mesh.
         // Unlike screen-space CrackLayer, impacts are stored in mesh-local coordinates.
         this.objectSpaceCrackManager = new ObjectSpaceCrackManager();
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ELEMENT SPAWNER
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Spawns 3D elemental geometry (ice crystals, rocks, vines) around mascot
+        this.elementSpawner = new ElementSpawner({
+            scene: this.renderer.scene,
+            assetBasePath: this.assetBasePath,
+            maxElements: 20
+        });
+
+        // Initialize with core mesh and camera if available
+        if (this.renderer?.coreMesh) {
+            this.elementSpawner.initialize(this.renderer.coreMesh, this.renderer.camera);
+            // Preload models for instant spawning
+            this.elementSpawner.preloadModels('ice');
+            this.elementSpawner.preloadModels('earth');
+            this.elementSpawner.preloadModels('nature');
+        }
 
         // Note: Virtual particle pool is now managed by AnimationManager
 
@@ -2234,6 +2259,247 @@ export class Core3DManager {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // ICE OVERLAY - Frost/freezing effect + 3D ice crystal spawning
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (blended.iceOverlay && blended.iceOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                if (!this._iceOverlayMesh) {
+                    this._iceMaterial = createIceMaterial({
+                        frost: blended.iceOverlay.frost || 0.7,
+                        opacity: 0.25
+                    });
+                    this._iceOverlayMesh = new THREE.Mesh(mesh.geometry, this._iceMaterial);
+                    this._iceOverlayMesh.scale.setScalar(1.02);
+                    mesh.add(this._iceOverlayMesh);
+                    this._iceOverlayMesh.renderOrder = mesh.renderOrder + 3;
+
+                    // Spawn 3D ice crystals only if gesture explicitly requests it via spawnMode
+                    // spawnMode: 'orbit' | 'impact' | 'burst' | 'none' (default)
+                    const {spawnMode} = blended.iceOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('ice')) {
+                        this.elementSpawner.spawn('ice', {
+                            intensity: blended.iceOverlay.strength || 0.8,
+                            mode: spawnMode
+                        });
+                    }
+                }
+                if (this._iceMaterial?.uniforms?.uTime) {
+                    this._iceMaterial.uniforms.uTime.value = blended.iceOverlay.time;
+                }
+                if (this._iceMaterial?.uniforms?.uFrost) {
+                    this._iceMaterial.uniforms.uFrost.value = blended.iceOverlay.frost || 0.7;
+                }
+                if (this._iceMaterial?.uniforms?.uOpacity) {
+                    this._iceMaterial.uniforms.uOpacity.value = Math.min(0.25, blended.iceOverlay.strength);
+                }
+            }
+        } else if (this._iceOverlayMesh) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._iceOverlayMesh.parent) {
+                mesh.remove(this._iceOverlayMesh);
+            }
+            if (this._iceMaterial) {
+                this._iceMaterial.dispose();
+                this._iceMaterial = null;
+            }
+            this._iceOverlayMesh = null;
+
+            // Despawn ice crystals
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('ice');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // LIGHT OVERLAY - Radiance/holy effect
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (blended.lightOverlay && blended.lightOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                if (!this._lightOverlayMesh) {
+                    this._lightMaterial = createLightMaterial({
+                        radiance: blended.lightOverlay.radiance || 0.7,
+                        hue: 'golden',
+                        opacity: 0.35
+                    });
+                    this._lightOverlayMesh = new THREE.Mesh(mesh.geometry, this._lightMaterial);
+                    this._lightOverlayMesh.scale.setScalar(1.04);
+                    mesh.add(this._lightOverlayMesh);
+                    this._lightOverlayMesh.renderOrder = mesh.renderOrder + 3;
+                }
+                if (this._lightMaterial?.uniforms?.uTime) {
+                    this._lightMaterial.uniforms.uTime.value = blended.lightOverlay.time;
+                }
+                if (this._lightMaterial?.uniforms?.uRadiance) {
+                    this._lightMaterial.uniforms.uRadiance.value = blended.lightOverlay.radiance || 0.7;
+                }
+                if (this._lightMaterial?.uniforms?.uOpacity) {
+                    this._lightMaterial.uniforms.uOpacity.value = Math.min(0.35, blended.lightOverlay.strength);
+                }
+            }
+        } else if (this._lightOverlayMesh) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._lightOverlayMesh.parent) {
+                mesh.remove(this._lightOverlayMesh);
+            }
+            if (this._lightMaterial) {
+                this._lightMaterial.dispose();
+                this._lightMaterial = null;
+            }
+            this._lightOverlayMesh = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // POISON OVERLAY - Toxic/acid effect
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (blended.poisonOverlay && blended.poisonOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                if (!this._poisonOverlayMesh) {
+                    this._poisonMaterial = createPoisonMaterial({
+                        toxicity: blended.poisonOverlay.toxicity || 0.7,
+                        opacity: 0.40
+                    });
+                    this._poisonOverlayMesh = new THREE.Mesh(mesh.geometry, this._poisonMaterial);
+                    this._poisonOverlayMesh.scale.setScalar(1.03);
+                    mesh.add(this._poisonOverlayMesh);
+                    this._poisonOverlayMesh.renderOrder = mesh.renderOrder + 3;
+                }
+                if (this._poisonMaterial?.uniforms?.uTime) {
+                    this._poisonMaterial.uniforms.uTime.value = blended.poisonOverlay.time;
+                }
+                if (this._poisonMaterial?.uniforms?.uToxicity) {
+                    this._poisonMaterial.uniforms.uToxicity.value = blended.poisonOverlay.toxicity || 0.7;
+                }
+                if (this._poisonMaterial?.uniforms?.uOpacity) {
+                    this._poisonMaterial.uniforms.uOpacity.value = Math.min(0.40, blended.poisonOverlay.strength);
+                }
+            }
+        } else if (this._poisonOverlayMesh) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._poisonOverlayMesh.parent) {
+                mesh.remove(this._poisonOverlayMesh);
+            }
+            if (this._poisonMaterial) {
+                this._poisonMaterial.dispose();
+                this._poisonMaterial = null;
+            }
+            this._poisonOverlayMesh = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // EARTH OVERLAY - Stone/petrification effect + 3D rock chunk spawning
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (blended.earthOverlay && blended.earthOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                if (!this._earthOverlayMesh) {
+                    this._earthMaterial = createEarthMaterial({
+                        petrification: blended.earthOverlay.petrification || 0.7,
+                        opacity: 0.9
+                    });
+                    this._earthOverlayMesh = new THREE.Mesh(mesh.geometry, this._earthMaterial);
+                    this._earthOverlayMesh.scale.setScalar(1.03);
+                    mesh.add(this._earthOverlayMesh);
+                    this._earthOverlayMesh.renderOrder = mesh.renderOrder + 3;
+
+                    // Spawn 3D rock chunks only if gesture explicitly requests it via spawnMode
+                    // spawnMode: 'orbit' | 'impact' | 'burst' | 'none' (default)
+                    const {spawnMode} = blended.earthOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('earth')) {
+                        this.elementSpawner.spawn('earth', {
+                            intensity: blended.earthOverlay.strength || 0.8,
+                            mode: spawnMode
+                        });
+                    }
+                }
+                if (this._earthMaterial?.uniforms?.uTime) {
+                    this._earthMaterial.uniforms.uTime.value = blended.earthOverlay.time;
+                }
+                if (this._earthMaterial?.uniforms?.uPetrification) {
+                    this._earthMaterial.uniforms.uPetrification.value = blended.earthOverlay.petrification || 0.7;
+                }
+                if (this._earthMaterial?.uniforms?.uOpacity) {
+                    this._earthMaterial.uniforms.uOpacity.value = Math.min(0.9, blended.earthOverlay.strength);
+                }
+            }
+        } else if (this._earthOverlayMesh) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._earthOverlayMesh.parent) {
+                mesh.remove(this._earthOverlayMesh);
+            }
+            if (this._earthMaterial) {
+                this._earthMaterial.dispose();
+                this._earthMaterial = null;
+            }
+            this._earthOverlayMesh = null;
+
+            // Despawn rock chunks
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('earth');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // NATURE OVERLAY - Plant/growth effect
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (blended.natureOverlay && blended.natureOverlay.enabled) {
+            const mesh = this.renderer?.coreMesh;
+            const scene = this.renderer?.scene;
+            if (mesh && scene) {
+                if (!this._natureOverlayMesh) {
+                    this._natureMaterial = createNatureMaterial({
+                        growth: blended.natureOverlay.growth || 0.7,
+                        season: 'summer',
+                        opacity: 0.95
+                    });
+                    this._natureOverlayMesh = new THREE.Mesh(mesh.geometry, this._natureMaterial);
+                    this._natureOverlayMesh.scale.setScalar(1.12);
+                    mesh.add(this._natureOverlayMesh);
+                    this._natureOverlayMesh.renderOrder = mesh.renderOrder + 3;
+
+                    // Spawn 3D nature elements only if gesture explicitly requests it via spawnMode
+                    const {spawnMode} = blended.natureOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('nature')) {
+                        this.elementSpawner.spawn('nature', {
+                            intensity: blended.natureOverlay.strength || 0.8,
+                            mode: spawnMode
+                        });
+                    }
+                }
+                if (this._natureMaterial?.uniforms?.uTime) {
+                    this._natureMaterial.uniforms.uTime.value = blended.natureOverlay.time;
+                }
+                if (this._natureMaterial?.uniforms?.uGrowth) {
+                    this._natureMaterial.uniforms.uGrowth.value = blended.natureOverlay.growth || 0.7;
+                }
+                if (this._natureMaterial?.uniforms?.uOpacity) {
+                    this._natureMaterial.uniforms.uOpacity.value = Math.min(0.95, blended.natureOverlay.strength);
+                }
+            }
+        } else if (this._natureOverlayMesh) {
+            const mesh = this.renderer?.coreMesh;
+            if (mesh && this._natureOverlayMesh.parent) {
+                mesh.remove(this._natureOverlayMesh);
+            }
+            if (this._natureMaterial) {
+                this._natureMaterial.dispose();
+                this._natureMaterial = null;
+            }
+            this._natureOverlayMesh = null;
+
+            // Despawn nature elements
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('nature');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // MESH OPACITY - Fade mascot in/out (for smokebomb/vanish/materialize)
         // ═══════════════════════════════════════════════════════════════════════════
         // Controls the main mesh's opacity independent of glow/overlay effects.
@@ -2629,6 +2895,11 @@ export class Core3DManager {
         // Update shatter system each frame
         if (this.shatterSystem) {
             this.shatterSystem.update(deltaTime);
+        }
+
+        // Update element spawner (ice crystals, rocks, etc.)
+        if (this.elementSpawner) {
+            this.elementSpawner.update(deltaTime);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -3028,6 +3299,14 @@ export class Core3DManager {
                 return;
             }
 
+            // Initialize ElementSpawner now that coreMesh exists
+            if (this.elementSpawner && this.renderer?.coreMesh && !this.elementSpawner.coreMesh) {
+                this.elementSpawner.initialize(this.renderer.coreMesh, this.renderer.camera);
+                this.elementSpawner.preloadModels('ice');
+                this.elementSpawner.preloadModels('earth');
+                this.elementSpawner.preloadModels('nature');
+            }
+
             // NOW we're fully ready for rendering
             this._logSceneHierarchy();
             this._ready = true;
@@ -3231,6 +3510,12 @@ export class Core3DManager {
         if (this.objectSpaceCrackManager) {
             this.objectSpaceCrackManager.dispose();
             this.objectSpaceCrackManager = null;
+        }
+
+        // Clean up element spawner
+        if (this.elementSpawner) {
+            this.elementSpawner.dispose();
+            this.elementSpawner = null;
         }
 
         // Clean up effect manager (handles eclipse and crystal soul disposal)
