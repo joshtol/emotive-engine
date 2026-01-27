@@ -43,6 +43,20 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+// Animation system imports
+import { AnimationConfig } from './animation/AnimationConfig.js';
+import { AnimationState, AnimationStates } from './animation/AnimationState.js';
+import { calculateHoldAnimations } from './animation/HoldAnimations.js';
+import { TrailState } from './animation/Trail.js';
+
+// Procedural materials
+import {
+    createProceduralFireMaterial,
+    updateProceduralFireMaterial,
+    setProceduralFireIntensity,
+    setProceduralFireTemperature
+} from '../materials/ProceduralFireMaterial.js';
+
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GOLDEN RATIO SIZING SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -108,7 +122,38 @@ const MODEL_SIZES = {
     'petal-scatter':   { class: 'tiny',   variance: 0.3 },  // Loose petals
     'root-tendril':    { class: 'small',  variance: 0.3 },  // Root piece
     'moss-patch':      { class: 'tiny',   variance: 0.25 }, // Moss cluster
-    'mushroom-cap':    { class: 'small',  variance: 0.3 }   // Small mushroom
+    'mushroom-cap':    { class: 'small',  variance: 0.3 },  // Small mushroom
+
+    // Fire models - dynamic, rising flames
+    'ember-cluster':   { class: 'tiny',   variance: 0.3 },  // Small ember particles
+    'flame-wisp':      { class: 'small',  variance: 0.25 }, // Single wispy flame
+    'flame-tongue':    { class: 'medium', variance: 0.25 }, // Larger flame lick
+    'fire-burst':      { class: 'large',  variance: 0.2 },  // Explosive flame cluster
+
+    // Electricity models - angular, energetic
+    'arc-small':       { class: 'small',  variance: 0.25 }, // Short lightning arc
+    'arc-medium':      { class: 'medium', variance: 0.2 },  // Medium arc with branch
+    'arc-cluster':     { class: 'large',  variance: 0.2 },  // Branching lightning cluster
+    'spark-node':      { class: 'tiny',   variance: 0.3 },  // Small spark discharge
+
+    // Water models - flowing, organic
+    'droplet-small':   { class: 'tiny',   variance: 0.25 }, // Small water droplet
+    'droplet-large':   { class: 'small',  variance: 0.2 },  // Larger teardrop
+    'splash-ring':     { class: 'medium', variance: 0.25 }, // Ripple splash ring
+    'bubble-cluster':  { class: 'small',  variance: 0.3 },  // Group of bubbles
+    'wave-curl':       { class: 'medium', variance: 0.25 }, // Curling wave shape
+
+    // Void models - dark, corrupting
+    'void-crack':      { class: 'small',  variance: 0.3 },  // Reality crack/tear
+    'shadow-tendril':  { class: 'medium', variance: 0.25 }, // Dark reaching tendril
+    'corruption-patch': { class: 'small', variance: 0.3 },  // Spreading dark patch
+    'void-shard':      { class: 'tiny',   variance: 0.25 }, // Fragment of void
+
+    // Light models - radiant, geometric
+    'light-ray':       { class: 'medium', variance: 0.25 }, // Beam of light
+    'prism-shard':     { class: 'small',  variance: 0.2 },  // Refracting crystal
+    'halo-ring':       { class: 'large',  variance: 0.2 },  // Glowing ring
+    'sparkle-star':    { class: 'tiny',   variance: 0.3 }   // 4-point star sparkle
 };
 
 /**
@@ -125,17 +170,17 @@ const MODEL_SIZES = {
  * - For 'tangent': 0 = flush, positive = one end lifts off surface
  */
 const MODEL_ORIENTATIONS = {
-    // Ice - all point outward like crystals
-    'crystal-small':   { mode: 'outward', tiltAngle: 0.1 },
-    'crystal-medium':  { mode: 'outward', tiltAngle: 0.15 },
-    'crystal-cluster': { mode: 'outward', tiltAngle: 0.1 },
-    'ice-spike':       { mode: 'outward', tiltAngle: 0.2 },
+    // Ice - crystals point outward, spikes more perpendicular
+    'crystal-small':   { mode: 'outward', tiltAngle: 0.15 },  // Small crystals with slight tilt
+    'crystal-medium':  { mode: 'outward', tiltAngle: 0.2 },   // Medium crystals, more variety
+    'crystal-cluster': { mode: 'outward', tiltAngle: 0.25 },  // Clusters spread outward
+    'ice-spike':       { mode: 'outward', tiltAngle: 0.05 },  // Spikes nearly perpendicular for dramatic effect
 
-    // Earth - chunky rocks embedded
-    'rock-chunk-small':  { mode: 'outward', tiltAngle: 0.3 },  // Tumbled rocks
-    'rock-chunk-medium': { mode: 'outward', tiltAngle: 0.25 },
-    'rock-cluster':      { mode: 'outward', tiltAngle: 0.2 },
-    'stone-slab':        { mode: 'flat',    tiltAngle: 0.15 }, // Slabs lie flatter
+    // Earth - chunky rocks embedded, tumbled appearance
+    'rock-chunk-small':  { mode: 'outward', tiltAngle: 0.35 },  // Small rocks tumble more
+    'rock-chunk-medium': { mode: 'outward', tiltAngle: 0.3 },   // Medium rocks, varied angles
+    'rock-cluster':      { mode: 'outward', tiltAngle: 0.15 },  // Clusters feel grounded, less tilt
+    'stone-slab':        { mode: 'flat',    tiltAngle: 0.1 },   // Slabs lie nearly flush
 
     // Nature - organic variety
     'vine-tendril':    { mode: 'tangent', tiltAngle: 0.2 },   // Trails along surface
@@ -149,13 +194,44 @@ const MODEL_ORIENTATIONS = {
     'petal-scatter':   { mode: 'flat',    tiltAngle: 0.1 },   // Fallen petals lie flat
     'root-tendril':    { mode: 'tangent', tiltAngle: -0.1 },  // Digs into surface (negative = into)
     'moss-patch':      { mode: 'flat',    tiltAngle: 0 },     // Completely flush
-    'mushroom-cap':    { mode: 'outward', tiltAngle: 0.15 }   // Cap faces outward
+    'mushroom-cap':    { mode: 'outward', tiltAngle: 0.15 },  // Cap faces outward
+
+    // Fire - special 'rising' mode biases toward world-up
+    'ember-cluster':   { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.6 },   // Embers drift upward
+    'flame-wisp':      { mode: 'rising',  tiltAngle: 0.15, riseFactor: 0.8 },  // Strong upward bias
+    'flame-tongue':    { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.75 },  // Flames lick upward
+    'fire-burst':      { mode: 'rising',  tiltAngle: 0.25, riseFactor: 0.5 },  // Bursts more radial
+
+    // Electricity - arcs follow surface tangent, sparks radiate
+    'arc-small':       { mode: 'tangent', tiltAngle: 0.1 },   // Short arc along surface
+    'arc-medium':      { mode: 'tangent', tiltAngle: 0.15 },  // Medium arc crawling
+    'arc-cluster':     { mode: 'outward', tiltAngle: 0.3 },   // Cluster radiates outward
+    'spark-node':      { mode: 'outward', tiltAngle: 0.4 },   // Sparks burst outward
+
+    // Water - droplets fall, splashes flat, bubbles rise
+    'droplet-small':   { mode: 'falling', tiltAngle: 0.1, riseFactor: -0.5 },  // Drops fall down
+    'droplet-large':   { mode: 'falling', tiltAngle: 0.15, riseFactor: -0.6 }, // Larger drops fall more
+    'splash-ring':     { mode: 'flat',    tiltAngle: 0.05 },  // Ripples lie flat
+    'bubble-cluster':  { mode: 'rising',  tiltAngle: 0.1, riseFactor: 0.4 },   // Bubbles rise gently
+    'wave-curl':       { mode: 'tangent', tiltAngle: 0.2 },   // Waves follow surface
+
+    // Void - cracks flat, tendrils reach, patches spread
+    'void-crack':      { mode: 'flat',    tiltAngle: 0 },     // Cracks lie in surface
+    'shadow-tendril':  { mode: 'outward', tiltAngle: 0.4 },   // Tendrils reach outward
+    'corruption-patch': { mode: 'flat',   tiltAngle: 0.05 },  // Patches spread on surface
+    'void-shard':      { mode: 'outward', tiltAngle: 0.35 },  // Shards jut outward
+
+    // Light - rays outward, prisms outward, halos flat, sparkles camera-facing
+    'light-ray':       { mode: 'outward', tiltAngle: 0.1 },   // Rays beam outward
+    'prism-shard':     { mode: 'outward', tiltAngle: 0.2 },   // Prisms catch light outward
+    'halo-ring':       { mode: 'flat',    tiltAngle: 0 },     // Halos lie flat as rings
+    'sparkle-star':    { mode: 'outward', tiltAngle: 0.5 }    // Stars face camera (high tilt = more camera facing)
 };
 
 /**
  * Get orientation config for a model
  * @param {string} modelName - Name of the model
- * @returns {{ mode: string, tiltAngle: number }}
+ * @returns {{ mode: string, tiltAngle: number, riseFactor?: number }}
  */
 function getModelOrientation(modelName) {
     return MODEL_ORIENTATIONS[modelName] || { mode: 'outward', tiltAngle: 0.2 };
@@ -265,6 +341,143 @@ export function createNatureMaterial(options = {}) {
 }
 
 /**
+ * Create fire material with hot, glowing appearance
+ *
+ * @param {Object} options
+ * @param {number} [options.baseColor=0xff6600] - Fire orange color
+ * @param {number} [options.emissive=0xff4400] - Hot glow color
+ * @param {number} [options.emissiveIntensity=0.8] - Glow strength
+ * @returns {THREE.MeshStandardMaterial}
+ */
+export function createFireMaterial(options = {}) {
+    const {
+        baseColor = 0xff6600,
+        emissive = 0xff4400,
+        emissiveIntensity = 0.8
+    } = options;
+
+    return new THREE.MeshStandardMaterial({
+        color: baseColor,
+        metalness: 0.0,
+        roughness: 0.3,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide,
+        emissive,
+        emissiveIntensity
+    });
+}
+
+/**
+ * Create electricity material with bright, crackling appearance
+ *
+ * @param {Object} options
+ * @param {number} [options.baseColor=0x44ffff] - Electric cyan color
+ * @param {number} [options.emissive=0xaaffff] - Bright glow
+ * @param {number} [options.emissiveIntensity=1.2] - Strong glow
+ * @returns {THREE.MeshStandardMaterial}
+ */
+export function createElectricityMaterial(options = {}) {
+    const {
+        baseColor = 0x44ffff,
+        emissive = 0xaaffff,
+        emissiveIntensity = 1.2
+    } = options;
+
+    return new THREE.MeshStandardMaterial({
+        color: baseColor,
+        metalness: 0.2,
+        roughness: 0.1,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide,
+        emissive,
+        emissiveIntensity
+    });
+}
+
+/**
+ * Create water material with transparent, flowing appearance
+ *
+ * @param {Object} options
+ * @param {number} [options.baseColor=0x4488cc] - Water blue color
+ * @param {number} [options.opacity=0.7] - Water transparency
+ * @returns {THREE.MeshStandardMaterial}
+ */
+export function createWaterMaterial(options = {}) {
+    const {
+        baseColor = 0x4488cc,
+        opacity = 0.7
+    } = options;
+
+    return new THREE.MeshStandardMaterial({
+        color: baseColor,
+        metalness: 0.1,
+        roughness: 0.1,
+        transparent: true,
+        opacity,
+        side: THREE.DoubleSide,
+        emissive: 0x224466,
+        emissiveIntensity: 0.1
+    });
+}
+
+/**
+ * Create void material with dark, corrupting appearance
+ *
+ * @param {Object} options
+ * @param {number} [options.baseColor=0x220033] - Deep void purple
+ * @param {number} [options.emissive=0x440066] - Subtle dark glow
+ * @returns {THREE.MeshStandardMaterial}
+ */
+export function createVoidMaterial(options = {}) {
+    const {
+        baseColor = 0x220033,
+        emissive = 0x440066,
+        emissiveIntensity = 0.4
+    } = options;
+
+    return new THREE.MeshStandardMaterial({
+        color: baseColor,
+        metalness: 0.3,
+        roughness: 0.4,
+        transparent: true,
+        opacity: 0.95,
+        side: THREE.DoubleSide,
+        emissive,
+        emissiveIntensity
+    });
+}
+
+/**
+ * Create light material with radiant, glowing appearance
+ *
+ * @param {Object} options
+ * @param {number} [options.baseColor=0xffffee] - Pure white/gold
+ * @param {number} [options.emissive=0xffffff] - Maximum brightness
+ * @param {number} [options.emissiveIntensity=1.5] - Very strong glow
+ * @returns {THREE.MeshStandardMaterial}
+ */
+export function createLightMaterial(options = {}) {
+    const {
+        baseColor = 0xffffee,
+        emissive = 0xffffff,
+        emissiveIntensity = 1.5
+    } = options;
+
+    return new THREE.MeshStandardMaterial({
+        color: baseColor,
+        metalness: 0.0,
+        roughness: 0.0,
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide,
+        emissive,
+        emissiveIntensity
+    });
+}
+
+/**
  * ElementSpawner - Manages loading and spawning of 3D elemental geometry
  */
 export class ElementSpawner {
@@ -289,13 +502,23 @@ export class ElementSpawner {
         this.activeElements = {
             ice: [],
             earth: [],
-            nature: []
+            nature: [],
+            fire: [],
+            electricity: [],
+            water: [],
+            void: [],
+            light: []
         };
 
         // Materials (created once, reused)
         this.iceMaterial = null;
         this.earthMaterial = null;
         this.natureMaterial = null;
+        this.fireMaterial = null;
+        this.electricityMaterial = null;
+        this.waterMaterial = null;
+        this.voidMaterial = null;
+        this.lightMaterial = null;
 
         // Animation state
         this.time = 0;
@@ -330,6 +553,46 @@ export class ElementSpawner {
                 orbitRadius: { min: 0.5, max: 0.9 },
                 heightOffset: { min: -0.2, max: 0.6 },
                 rotationSpeed: { min: 0.01, max: 0.05 }  // Gentle sway
+            },
+            fire: {
+                models: ['ember-cluster', 'flame-wisp', 'flame-tongue', 'fire-burst'],
+                count: { min: 4, max: 10 },
+                scale: { min: 0.08, max: 0.18 },
+                orbitRadius: { min: 0.5, max: 0.9 },
+                heightOffset: { min: -0.1, max: 0.5 },
+                rotationSpeed: { min: 0.02, max: 0.06 }  // Flickering motion
+            },
+            electricity: {
+                models: ['arc-small', 'arc-medium', 'arc-cluster', 'spark-node'],
+                count: { min: 3, max: 8 },
+                scale: { min: 0.06, max: 0.15 },
+                orbitRadius: { min: 0.4, max: 0.8 },
+                heightOffset: { min: -0.3, max: 0.4 },
+                rotationSpeed: { min: 0.05, max: 0.12 }  // Quick, erratic
+            },
+            water: {
+                models: ['droplet-small', 'droplet-large', 'splash-ring', 'bubble-cluster', 'wave-curl'],
+                count: { min: 4, max: 10 },
+                scale: { min: 0.06, max: 0.14 },
+                orbitRadius: { min: 0.5, max: 0.9 },
+                heightOffset: { min: -0.3, max: 0.3 },
+                rotationSpeed: { min: 0.01, max: 0.04 }  // Flowing, slow
+            },
+            void: {
+                models: ['void-crack', 'shadow-tendril', 'corruption-patch', 'void-shard'],
+                count: { min: 3, max: 8 },
+                scale: { min: 0.08, max: 0.16 },
+                orbitRadius: { min: 0.4, max: 0.7 },
+                heightOffset: { min: -0.4, max: 0.2 },
+                rotationSpeed: { min: 0.005, max: 0.02 }  // Ominously slow
+            },
+            light: {
+                models: ['light-ray', 'prism-shard', 'halo-ring', 'sparkle-star'],
+                count: { min: 4, max: 10 },
+                scale: { min: 0.08, max: 0.18 },
+                orbitRadius: { min: 0.6, max: 1.1 },
+                heightOffset: { min: 0, max: 0.6 },
+                rotationSpeed: { min: 0.02, max: 0.06 }  // Gentle radiance
             }
         };
 
@@ -370,8 +633,61 @@ export class ElementSpawner {
         this.iceMaterial = createIceCrystalMaterial();
         this.earthMaterial = createEarthMaterial();
         this.natureMaterial = createNatureMaterial();
+        this.fireMaterial = createProceduralFireMaterial({ temperature: 0.5 });
+        this.electricityMaterial = createElectricityMaterial();
+        this.waterMaterial = createWaterMaterial();
+        this.voidMaterial = createVoidMaterial();
+        this.lightMaterial = createLightMaterial();
 
         // Debug: console.log(`[ElementSpawner] Initialized with mascot radius: ${this.mascotRadius.toFixed(3)}`);
+    }
+
+    /**
+     * Set intensity for all active animation elements
+     * Updates intensity scaling for dynamic effect adjustment
+     * @param {number} intensity - Intensity 0-1
+     */
+    setIntensity(intensity) {
+        const clampedIntensity = Math.max(0, Math.min(1, intensity));
+
+        // Update all active elements with animation states
+        for (const type of Object.keys(this.activeElements)) {
+            for (const mesh of this.activeElements[type]) {
+                if (mesh.userData.animationConfig) {
+                    mesh.userData.animationConfig.setIntensity(clampedIntensity);
+                }
+            }
+        }
+    }
+
+    /**
+     * Trigger exit for all animation elements
+     * Forces all elements to begin their exit animation
+     */
+    triggerExit() {
+        for (const type of Object.keys(this.activeElements)) {
+            for (const mesh of this.activeElements[type]) {
+                if (mesh.userData.animationState) {
+                    mesh.userData.animationState.triggerExit();
+                }
+            }
+        }
+    }
+
+    /**
+     * Update beat state for all animation elements
+     * Call this when a beat occurs for beat-synced animations
+     * @param {number} beatNumber - Current beat number in the gesture
+     * @param {number} [bpm=120] - Beats per minute
+     */
+    setBeat(beatNumber, bpm = 120) {
+        for (const type of Object.keys(this.activeElements)) {
+            for (const mesh of this.activeElements[type]) {
+                if (mesh.userData.animationState) {
+                    mesh.userData.animationState.setBeat(beatNumber, bpm);
+                }
+            }
+        }
     }
 
     /**
@@ -794,6 +1110,49 @@ export class ElementSpawner {
             }
             break;
 
+        case 'rising':
+        case 'falling': {
+            // Fire/bubbles rise toward world-up, water droplets fall toward world-down
+            // Blends between surface normal and world direction based on riseFactor
+            const worldUp = new THREE.Vector3(0, 1, 0);
+            const riseFactor = orientConfig.riseFactor ?? 0.7;
+
+            // For 'falling', invert the world direction (negative riseFactor in config)
+            // riseFactor > 0 = bias toward world-up (fire, bubbles)
+            // riseFactor < 0 = bias toward world-down (water droplets)
+            let targetDir;
+            if (riseFactor >= 0) {
+                // Blend from surface normal toward world-up
+                targetDir = normal.clone()
+                    .multiplyScalar(1 - riseFactor)
+                    .addScaledVector(worldUp, riseFactor)
+                    .normalize();
+            } else {
+                // Blend from surface normal toward world-down
+                const worldDown = new THREE.Vector3(0, -1, 0);
+                const fallFactor = Math.abs(riseFactor);
+                targetDir = normal.clone()
+                    .multiplyScalar(1 - fallFactor)
+                    .addScaledVector(worldDown, fallFactor)
+                    .normalize();
+            }
+
+            baseQuat.setFromUnitVectors(up, targetDir);
+
+            // Apply tilt for variation
+            if (orientConfig.tiltAngle !== 0) {
+                const tiltQuat = new THREE.Quaternion();
+                tiltQuat.setFromAxisAngle(rotatedTangent, orientConfig.tiltAngle);
+                baseQuat.premultiply(tiltQuat);
+            }
+
+            // Random spin around the target direction
+            const spinQuat = new THREE.Quaternion();
+            spinQuat.setFromAxisAngle(targetDir, randomAngle);
+            baseQuat.premultiply(spinQuat);
+            break;
+        }
+
         case 'outward':
         default: {
             // Element points away from surface (default behavior)
@@ -838,8 +1197,14 @@ export class ElementSpawner {
      * @param {boolean} [options.animated=true] - Enable spawn animation
      * @param {string|Object} [options.mode='orbit'] - Spawn mode string or config object
      * @param {THREE.Camera} [options.camera] - Camera for facing calculations
+     * @param {Object} [options.animation] - Animation config for gesture-synced animations
+     * @param {Array} [options.elements] - Per-element choreography array
      */
     async spawn(elementType, options = {}) {
+        // Check for elements array (choreographed sequences)
+        if (options.elements && Array.isArray(options.elements)) {
+            return this._spawnFromElementsArray(elementType, options);
+        }
         const { intensity = 1.0, animated = true } = options;
         // Use passed camera or fall back to stored camera
         const camera = options.camera || this.camera;
@@ -861,7 +1226,10 @@ export class ElementSpawner {
                 scaleMultiplier: mode.scale ?? 1.5,
                 // Minimum distance between elements as fraction of mascot radius
                 // Higher values = more spread out, lower = allows closer placement
-                minDistanceFactor: mode.minDistance ?? 0.18
+                minDistanceFactor: mode.minDistance ?? 0.18,
+                // Ephemeral mode for flash-in/fade-out behavior (lightning, sparks)
+                // { lifetime: {min, max}, respawn: true, flashIn: 50, fadeOut: 100 }
+                ephemeral: mode.ephemeral || null
             };
         } else if (typeof mode === 'string') {
             modeType = mode;
@@ -917,8 +1285,9 @@ export class ElementSpawner {
 
             if (!geometry) continue;
 
-            // Create mesh with shared material
-            const mesh = new THREE.Mesh(geometry, material);
+            // Create mesh - clone material for fire elements to allow per-element intensity
+            const useMaterial = (elementType === 'fire') ? material.clone() : material;
+            const mesh = new THREE.Mesh(geometry, useMaterial);
 
             // ═══════════════════════════════════════════════════════════════════════
             // GOLDEN RATIO SIZING: Calculate scale relative to mascot radius
@@ -940,6 +1309,86 @@ export class ElementSpawner {
             mesh.userData.elementType = elementType;
             mesh.userData.spawnTime = this.time;
 
+            // Handle ephemeral mode - flash in, hold, fade out, respawn
+            if (surfaceConfig?.ephemeral) {
+                const eph = surfaceConfig.ephemeral;
+                // Clone material so each mesh can have independent opacity/emissive
+                mesh.material = material.clone();
+                // Store original material values for interpolation
+                mesh.userData.originalOpacity = mesh.material.opacity;
+                mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
+                // Store config reference for dynamic respawning
+                mesh.userData.ephemeralConfig = eph;
+                // Store spawn start time for progression calculation
+                mesh.userData.spawnStartTime = this.time;
+                // Calculate timing (may evolve with progression)
+                const timing = this._getEphemeralTiming(eph, 0); // progress=0 at spawn
+                // Store ephemeral state
+                // initialDelay: wait before ANY elements appear
+                // stagger: additional per-element delay (element 0 gets 0, element 1 gets stagger, etc.)
+                const initialDelay = eph.initialDelay ?? 0;
+                const staggerDelay = i * (eph.stagger ?? 0);
+                const totalDelay = initialDelay + staggerDelay;
+                mesh.userData.ephemeral = {
+                    ...timing,
+                    respawn: eph.respawn ?? true,
+                    birthTime: this.time,
+                    phase: totalDelay > 0 ? 'stagger' : 'flash-in', // Wait for delay if configured
+                    staggerOffset: totalDelay
+                };
+                // Start invisible (will flash in after stagger delay)
+                mesh.material.opacity = 0;
+                mesh.material.emissiveIntensity = 0;
+                // Also hide mesh during stagger phase for guaranteed invisibility
+                if (totalDelay > 0) {
+                    mesh.visible = false;
+                }
+            }
+
+            // NEW ANIMATION SYSTEM - gesture-synced animations
+            // Takes priority over ephemeral if both are present
+            if (options.animation) {
+                // Clone material for independent animation control
+                mesh.material = material.clone();
+                mesh.userData.originalOpacity = mesh.material.opacity;
+                mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
+                mesh.userData.originalScale = scale;
+
+                // Create AnimationConfig and AnimationState for this element
+                const gestureDuration = options.gestureDuration ?? 1000;
+                const animConfig = new AnimationConfig(options.animation, gestureDuration);
+                const animState = new AnimationState(animConfig, i);
+
+                // Apply rendering settings from config
+                this._applyRenderSettings(mesh, animConfig.rendering);
+
+                // Initialize with current time
+                animState.initialize(this.time);
+
+                // Store on mesh
+                mesh.userData.animationState = animState;
+                mesh.userData.animationConfig = animConfig;
+
+                // Fire-specific: Store base flame height for animation
+                if (elementType === 'fire' && mesh.material?.uniforms?.uFlameHeight) {
+                    mesh.userData.baseFlameHeight = mesh.material.uniforms.uFlameHeight.value;
+                }
+
+                // Create trail if configured
+                if (animConfig.rendering.trail) {
+                    const trailState = new TrailState(animConfig.rendering.trail);
+                    const parent = modeType === 'surface' && this.coreMesh
+                        ? this.coreMesh : this.container;
+                    trailState.initialize(mesh, parent);
+                    mesh.userData.trailState = trailState;
+                }
+
+                // Start invisible (animation system controls visibility)
+                mesh.material.opacity = 0;
+                mesh.material.emissiveIntensity = 0;
+                mesh.visible = false;
+            }
+
             if (modeType === 'surface' && surfacePoints && surfacePoints[i]) {
                 // SURFACE MODE: Attach to mascot surface with configurable depth and orientation
                 const sample = surfacePoints[i];
@@ -955,6 +1404,14 @@ export class ElementSpawner {
 
                 const offset = sample.normal.clone().multiplyScalar(netOffset);
                 mesh.position.copy(sample.position).add(offset);
+
+                // DEBUG: Log spawn position and mark first fire element for tracking
+                if (elementType === 'fire') {
+                    mesh.userData.debugIndex = i;
+                    if (i === 0) {
+                        console.log(`[FIRE SPAWN] element ${i} position:`, mesh.position.x.toFixed(3), mesh.position.y.toFixed(3), mesh.position.z.toFixed(3));
+                    }
+                }
 
                 // Hybrid orientation: blend normal-aligned with camera-facing
                 // Uses model-specific orientation (flat, tangent, outward)
@@ -1031,6 +1488,11 @@ export class ElementSpawner {
                 mesh.userData.despawning = true;
                 mesh.userData.despawnStart = this.time;
             } else {
+                // Dispose trail if present
+                if (mesh.userData.trailState) {
+                    mesh.userData.trailState.dispose();
+                }
+
                 // Surface mode elements are attached to coreMesh
                 if (mesh.userData.spawnMode === 'surface' && this.coreMesh) {
                     this.coreMesh.remove(mesh);
@@ -1050,7 +1512,7 @@ export class ElementSpawner {
      * Despawn all elements
      */
     despawnAll() {
-        for (const type of ['ice', 'earth', 'nature']) {
+        for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light']) {
             this.despawn(type, false);
         }
     }
@@ -1058,8 +1520,9 @@ export class ElementSpawner {
     /**
      * Update animations
      * @param {number} deltaTime - Time since last frame in seconds
+     * @param {number} [gestureProgress=null] - Gesture progress 0-1 for synced animations
      */
-    update(deltaTime) {
+    update(deltaTime, gestureProgress = null) {
         this.time += deltaTime;
 
         // Sync container position with coreMesh
@@ -1067,12 +1530,74 @@ export class ElementSpawner {
             this.container.position.copy(this.coreMesh.position);
         }
 
-        for (const type of ['ice', 'earth', 'nature']) {
+        // Update procedural fire material animation
+        if (this.fireMaterial?.uniforms) {
+            updateProceduralFireMaterial(this.fireMaterial, deltaTime);
+        }
+
+        for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light']) {
             const elements = this.activeElements[type];
             const toRemove = [];
 
             for (const mesh of elements) {
                 const isSurfaceMode = mesh.userData.spawnMode === 'surface';
+
+                // NEW ANIMATION SYSTEM - gesture-synced animations
+                if (mesh.userData.animationState) {
+                    const animState = mesh.userData.animationState;
+                    const isFireDebug = type === 'fire' && mesh.userData.debugIndex === 0;
+
+                    // DEBUG: Track state before update
+                    const stateBefore = animState.state;
+                    const posBefore = isFireDebug ? mesh.position.clone() : null;
+
+                    // Update state machine
+                    animState.update(this.time, deltaTime, gestureProgress);
+
+                    // DEBUG: Log state transition
+                    if (isFireDebug && stateBefore !== animState.state) {
+                        console.log(`[FIRE UPDATE] STATE TRANSITION: ${stateBefore} → ${animState.state}`);
+                    }
+
+                    // Check if element is dead and not respawning
+                    if (animState.state === AnimationStates.DEAD && !animState.config.lifecycle.respawn) {
+                        toRemove.push(mesh);
+                        continue;
+                    }
+
+                    // Apply animation values to mesh
+                    this._applyAnimationToMesh(mesh, animState);
+
+                    // DEBUG: Check if position changed unexpectedly between state update and animation apply
+                    if (isFireDebug && posBefore) {
+                        const dx = mesh.position.x - posBefore.x;
+                        const dy = mesh.position.y - posBefore.y;
+                        const dz = mesh.position.z - posBefore.z;
+                        if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01 || Math.abs(dz) > 0.01) {
+                            console.log(`[FIRE UPDATE] ⚠️ LARGE POSITION CHANGE: (${dx.toFixed(4)}, ${dy.toFixed(4)}, ${dz.toFixed(4)})`);
+                        }
+                    }
+
+                    // Update trail if present
+                    if (mesh.userData.trailState) {
+                        mesh.userData.trailState.update(this.time, animState.opacity);
+
+                        // Clear trail on respawn
+                        if (animState.state === AnimationStates.WAITING) {
+                            mesh.userData.trailState.clear();
+                        }
+                    }
+
+                    // Handle respawn position change - ONLY for respawns, not fresh spawns
+                    // Fresh spawns (respawnCount === 0) keep their original spawn position
+                    if (animState.state === AnimationStates.WAITING && isSurfaceMode && animState.respawnCount > 0) {
+                        // Reposition during waiting phase before respawn
+                        this._repositionEphemeral(mesh, type);
+                    }
+
+                    // Skip legacy animations when using new system
+                    continue;
+                }
 
                 // Spawn animation
                 if (mesh.userData.targetScale) {
@@ -1107,6 +1632,79 @@ export class ElementSpawner {
                         toRemove.push(mesh);
                     }
                     continue; // Skip other animations during despawn
+                }
+
+                // EPHEMERAL LIFECYCLE: stagger → flash-in → hold → fade-out → waiting → respawn/die
+                // This runs for ephemeral elements regardless of surface/orbit mode
+                if (mesh.userData.ephemeral) {
+                    const eph = mesh.userData.ephemeral;
+
+                    // STAGGER: Wait for initial stagger offset before first flash
+                    if (eph.phase === 'stagger') {
+                        const staggerAge = (this.time - eph.birthTime) * 1000;
+                        if (staggerAge >= eph.staggerOffset) {
+                            eph.phase = 'flash-in';
+                            eph.birthTime = this.time; // Reset birth time for actual lifecycle
+                        }
+                        continue;
+                    }
+
+                    // WAITING: Pause between respawns (respawnDelay)
+                    if (eph.phase === 'waiting') {
+                        const waitAge = (this.time - eph.waitStartTime) * 1000;
+                        if (waitAge >= eph.respawnDelay) {
+                            eph.phase = 'flash-in';
+                            eph.birthTime = this.time;
+                            // Pick new position when transitioning from waiting
+                            if (mesh.userData.spawnMode === 'surface' && this.coreMesh?.geometry) {
+                                this._repositionEphemeral(mesh, type);
+                            }
+                        }
+                        continue;
+                    }
+
+                    const ageMs = (this.time - eph.birthTime) * 1000; // Convert seconds to ms
+
+                    if (eph.phase === 'flash-in') {
+                        // Flash in: rapidly increase opacity/emissive
+                        const progress = Math.min(ageMs / eph.flashIn, 1);
+                        const eased = progress * progress; // ease-in for sudden appearance
+                        mesh.material.opacity = eased * mesh.userData.originalOpacity;
+                        mesh.material.emissiveIntensity = eased * mesh.userData.originalEmissive * 1.5; // Extra bright on flash
+                        if (progress >= 1) {
+                            eph.phase = 'hold';
+                            mesh.material.emissiveIntensity = mesh.userData.originalEmissive;
+                        }
+                    } else if (eph.phase === 'hold') {
+                        // Hold: maintain visibility, slight flicker for electricity
+                        const holdEnd = eph.lifetime - eph.fadeOut;
+                        // Add slight random flicker during hold
+                        const flicker = 0.9 + Math.random() * 0.2;
+                        mesh.material.emissiveIntensity = mesh.userData.originalEmissive * flicker;
+                        if (ageMs >= holdEnd) {
+                            eph.phase = 'fade-out';
+                            eph.fadeStartTime = this.time;
+                        }
+                    } else if (eph.phase === 'fade-out') {
+                        // Fade out: rapidly decrease opacity/emissive
+                        const fadeAge = (this.time - eph.fadeStartTime) * 1000;
+                        const progress = Math.min(fadeAge / eph.fadeOut, 1);
+                        const eased = 1 - (1 - progress) * (1 - progress); // ease-out for quick fade
+                        mesh.material.opacity = (1 - eased) * mesh.userData.originalOpacity;
+                        mesh.material.emissiveIntensity = (1 - eased) * mesh.userData.originalEmissive;
+                        if (progress >= 1) {
+                            eph.phase = 'dead';
+                        }
+                    } else if (eph.phase === 'dead') {
+                        if (eph.respawn) {
+                            // Respawn at new random position on surface
+                            this._respawnEphemeral(mesh, type);
+                        } else {
+                            toRemove.push(mesh);
+                            continue;
+                        }
+                    }
+                    continue; // Ephemeral elements don't need other animations
                 }
 
                 // SURFACE MODE: Static after spawn - no animation
@@ -1174,8 +1772,611 @@ export class ElementSpawner {
             return this.earthMaterial;
         case 'nature':
             return this.natureMaterial;
+        case 'fire':
+            return this.fireMaterial;
+        case 'electricity':
+            return this.electricityMaterial;
+        case 'water':
+            return this.waterMaterial;
+        case 'void':
+            return this.voidMaterial;
+        case 'light':
+            return this.lightMaterial;
         default:
             return new THREE.MeshStandardMaterial({ color: 0x888888 });
+        }
+    }
+
+    /**
+     * Get ephemeral timing values, optionally modified by progression
+     * @param {Object} config - Ephemeral config from spawnMode
+     * @param {number} progress - Gesture progress 0-1 (for evolution)
+     * @returns {Object} Timing values: lifetime, flashIn, fadeOut, respawnDelay
+     * @private
+     */
+    _getEphemeralTiming(config, progress = 0) {
+        // Base timing values
+        let lifetimeMin = config.lifetime?.min ?? 150;
+        let lifetimeMax = config.lifetime?.max ?? 400;
+        let flashIn = config.flashIn ?? 50;
+        let fadeOut = config.fadeOut ?? 100;
+        let respawnDelayMin = config.respawnDelay?.min ?? 0;
+        let respawnDelayMax = config.respawnDelay?.max ?? 0;
+
+        // Apply progression if configured
+        // progression: { lifetime: [startMin, startMax, endMin, endMax], ... }
+        if (config.progression && progress > 0) {
+            const p = config.progression;
+
+            if (p.lifetime) {
+                // Interpolate between start and end ranges
+                lifetimeMin = p.lifetime[0] + (p.lifetime[2] - p.lifetime[0]) * progress;
+                lifetimeMax = p.lifetime[1] + (p.lifetime[3] - p.lifetime[1]) * progress;
+            }
+            if (p.flashIn) {
+                flashIn = p.flashIn[0] + (p.flashIn[1] - p.flashIn[0]) * progress;
+            }
+            if (p.fadeOut) {
+                fadeOut = p.fadeOut[0] + (p.fadeOut[1] - p.fadeOut[0]) * progress;
+            }
+            if (p.respawnDelay) {
+                respawnDelayMin = p.respawnDelay[0] + (p.respawnDelay[2] - p.respawnDelay[0]) * progress;
+                respawnDelayMax = p.respawnDelay[1] + (p.respawnDelay[3] - p.respawnDelay[1]) * progress;
+            }
+        }
+
+        // Calculate random values within ranges
+        const lifetime = lifetimeMin + Math.random() * (lifetimeMax - lifetimeMin);
+        const respawnDelay = respawnDelayMin + Math.random() * (respawnDelayMax - respawnDelayMin);
+
+        return { lifetime, flashIn, fadeOut, respawnDelay };
+    }
+
+    /**
+     * Respawn an ephemeral element at a new position
+     * @param {THREE.Mesh} mesh - The mesh to respawn
+     * @param {string} elementType - Element type for config lookup
+     * @private
+     */
+    _respawnEphemeral(mesh, elementType) {
+        const eph = mesh.userData.ephemeral;
+        const ephConfig = mesh.userData.ephemeralConfig;
+        const {surfaceConfig} = mesh.userData;
+
+        // Calculate progression (0-1) based on time since initial spawn
+        let progress = 0;
+        if (ephConfig?.progression?.duration && mesh.userData.spawnStartTime) {
+            const elapsed = (this.time - mesh.userData.spawnStartTime) * 1000; // to ms
+            progress = Math.min(1, elapsed / ephConfig.progression.duration);
+        }
+
+        // Get timing with progression applied
+        const timing = this._getEphemeralTiming(ephConfig, progress);
+        eph.lifetime = timing.lifetime;
+        eph.flashIn = timing.flashIn;
+        eph.fadeOut = timing.fadeOut;
+        eph.respawnDelay = timing.respawnDelay;
+
+        // If respawnDelay > 0, go to 'waiting' phase first
+        if (timing.respawnDelay > 0) {
+            eph.phase = 'waiting';
+            eph.waitStartTime = this.time;
+        } else {
+            eph.phase = 'flash-in';
+            eph.birthTime = this.time;
+        }
+        delete eph.fadeStartTime;
+
+        // Reset material to invisible
+        mesh.material.opacity = 0;
+        mesh.material.emissiveIntensity = 0;
+
+        // Pick new position on surface (if we have surface data)
+        if (mesh.userData.spawnMode === 'surface' && this.coreMesh?.geometry) {
+            // Sample a single new point
+            const newPoints = this._sampleSurfacePoints(
+                this.coreMesh.geometry,
+                1,
+                surfaceConfig,
+                this.camera
+            );
+
+            if (newPoints.length > 0) {
+                const sample = newPoints[0];
+                const embedDepth = surfaceConfig?.embedDepth ?? 0.2;
+                const scale = mesh.userData.finalScale || mesh.scale.x;
+                const outwardOffset = (1 - embedDepth) * scale * 0.4;
+                const inwardOffset = embedDepth * scale * 0.3;
+                const netOffset = outwardOffset - inwardOffset;
+
+                const offset = sample.normal.clone().multiplyScalar(netOffset);
+                mesh.position.copy(sample.position).add(offset);
+
+                // Update stored surface data
+                mesh.userData.surfaceNormal = sample.normal.clone();
+                mesh.userData.surfacePosition = sample.position.clone();
+                mesh.userData.targetGrowthOffset = netOffset;
+
+                // Re-orient to new normal
+                const cameraFacing = surfaceConfig?.cameraFacing ?? 0.3;
+                const modelName = this.spawnConfig[elementType]?.models?.[
+                    Math.floor(Math.random() * this.spawnConfig[elementType].models.length)
+                ];
+                this._orientElement(mesh, sample.normal, cameraFacing, this.camera, modelName);
+            }
+        }
+    }
+
+    /**
+     * Spawn elements from a choreographed elements array
+     * Each element in the array can specify its own model, timing, and animation
+     *
+     * @param {string} elementType - Element type for material/model lookup
+     * @param {Object} options - Spawn options with elements array
+     * @private
+     */
+    async _spawnFromElementsArray(elementType, options) {
+        const { elements, animation: globalAnimation = {}, gestureDuration = 1000 } = options;
+        const camera = options.camera || this.camera;
+        const material = this._getMaterial(elementType);
+        const config = this.spawnConfig[elementType];
+
+        if (!config) {
+            console.warn(`[ElementSpawner] Unknown element type: ${elementType}`);
+            return;
+        }
+
+        // Clear existing elements of this type
+        this.despawn(elementType, false);
+
+        // Track global element index for stagger calculations
+        let globalIndex = 0;
+
+        // Process each element definition in the array
+        for (const elemDef of elements) {
+            const {
+                model: modelName = null,
+                count = 1,
+                position = null,
+                spawnMode = null,
+                // Per-element animation overrides
+                appearAt,
+                disappearAt,
+                stagger: elemStagger,
+                enter,
+                exit,
+                pulse,
+                flicker,
+                drift,
+                rotate,
+                emissive,
+                respawn,
+                scale: scaleConfig,
+                color,
+                opacity
+            } = elemDef;
+
+            // Determine which model(s) to use
+            const modelsToUse = modelName
+                ? [modelName]
+                : (elemDef.models || config.models);
+
+            // Build per-element animation config by merging global + element overrides
+            const elemAnimation = {
+                ...globalAnimation,
+                ...(appearAt !== undefined && { appearAt }),
+                ...(disappearAt !== undefined && { disappearAt }),
+                ...(elemStagger !== undefined && { stagger: elemStagger }),
+                ...(enter && { enter: { ...globalAnimation.enter, ...enter } }),
+                ...(exit && { exit: { ...globalAnimation.exit, ...exit } }),
+                ...(pulse && { pulse: { ...globalAnimation.pulse, ...pulse } }),
+                ...(flicker && { flicker: { ...globalAnimation.flicker, ...flicker } }),
+                ...(drift && { drift: { ...globalAnimation.drift, ...drift } }),
+                ...(rotate && { rotate: { ...globalAnimation.rotate, ...rotate } }),
+                ...(emissive && { emissive: { ...globalAnimation.emissive, ...emissive } }),
+                ...(respawn !== undefined && { respawn }),
+                ...(scaleConfig && { scale: { ...globalAnimation.scale, ...scaleConfig } }),
+                ...(color && { color: { ...globalAnimation.color, ...color } }),
+                ...(opacity && { opacity: { ...globalAnimation.opacity, ...opacity } })
+            };
+
+            // Get surface points if using spawnMode
+            let surfacePoints = null;
+            if (spawnMode?.type === 'surface' && this.coreMesh?.geometry) {
+                const surfaceConfig = {
+                    pattern: spawnMode.pattern || 'scattered',
+                    embedDepth: spawnMode.embedDepth ?? 0.2,
+                    cameraFacing: spawnMode.cameraFacing ?? 0.3,
+                    clustering: spawnMode.clustering ?? 0,
+                    minDistanceFactor: spawnMode.minDistance ?? 0.15
+                };
+                surfacePoints = this._sampleSurfacePoints(
+                    this.coreMesh.geometry,
+                    count,
+                    surfaceConfig,
+                    camera
+                );
+            }
+
+            // Spawn the specified count of this element
+            for (let i = 0; i < count; i++) {
+                // Select model (cycle through if multiple)
+                const selectedModel = modelsToUse[i % modelsToUse.length];
+                const geometry = await this.loadModel(elementType, selectedModel);
+
+                if (!geometry) continue;
+
+                // Create mesh
+                const mesh = new THREE.Mesh(geometry, material.clone());
+
+                // Calculate scale
+                const modelSizeFraction = getModelSizeFraction(selectedModel);
+                const baseScale = modelSizeFraction.min +
+                    Math.random() * (modelSizeFraction.max - modelSizeFraction.min);
+                const mascotRelativeScale = baseScale * this.mascotRadius;
+                const scaleMultiplier = spawnMode?.scale ?? 1.0;
+                const scale = mascotRelativeScale * scaleMultiplier;
+
+                // Store metadata
+                mesh.userData.elementType = elementType;
+                mesh.userData.spawnTime = this.time;
+                mesh.userData.spawnMode = spawnMode?.type || (position ? 'point' : 'orbit');
+                mesh.userData.originalOpacity = mesh.material.opacity;
+                mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
+                mesh.userData.originalScale = scale;
+                mesh.userData.finalScale = scale;
+
+                // Position the element
+                if (position) {
+                    // Explicit position
+                    mesh.position.set(position.x || 0, position.y || 0, position.z || 0);
+                    mesh.rotation.set(
+                        Math.random() * Math.PI,
+                        Math.random() * Math.PI,
+                        Math.random() * Math.PI
+                    );
+                } else if (surfacePoints && surfacePoints[i]) {
+                    // Surface spawn
+                    const sample = surfacePoints[i];
+                    const embedDepth = spawnMode?.embedDepth ?? 0.2;
+                    const outwardOffset = (1 - embedDepth) * scale * 0.4;
+                    const inwardOffset = embedDepth * scale * 0.3;
+                    const netOffset = outwardOffset - inwardOffset;
+
+                    const offset = sample.normal.clone().multiplyScalar(netOffset);
+                    mesh.position.copy(sample.position).add(offset);
+
+                    mesh.userData.surfaceNormal = sample.normal.clone();
+                    mesh.userData.surfacePosition = sample.position.clone();
+                    mesh.userData.surfaceConfig = spawnMode;
+
+                    const cameraFacing = spawnMode?.cameraFacing ?? 0.3;
+                    this._orientElement(mesh, sample.normal, cameraFacing, camera, selectedModel);
+                } else {
+                    // Default orbit positioning
+                    const angle = (globalIndex / 8) * Math.PI * 2 + Math.random() * 0.5;
+                    const radius = 0.6 + Math.random() * 0.4;
+                    const height = -0.2 + Math.random() * 0.6;
+
+                    mesh.position.set(
+                        Math.cos(angle) * radius,
+                        height,
+                        Math.sin(angle) * radius
+                    );
+                    mesh.rotation.set(
+                        Math.random() * Math.PI,
+                        Math.random() * Math.PI,
+                        Math.random() * Math.PI
+                    );
+                }
+
+                // Create animation state with merged config
+                const animConfig = new AnimationConfig(elemAnimation, gestureDuration);
+                const animState = new AnimationState(animConfig, globalIndex);
+                animState.initialize(this.time);
+
+                // Apply rendering settings from config
+                this._applyRenderSettings(mesh, animConfig.rendering);
+
+                // Create trail if configured
+                if (animConfig.rendering.trail) {
+                    const trailState = new TrailState(animConfig.rendering.trail);
+                    const parent = spawnMode?.type === 'surface' && this.coreMesh
+                        ? this.coreMesh : this.container;
+                    trailState.initialize(mesh, parent);
+                    mesh.userData.trailState = trailState;
+                }
+
+                mesh.userData.animationState = animState;
+                mesh.userData.animationConfig = animConfig;
+
+                // Start invisible
+                mesh.material.opacity = 0;
+                mesh.material.emissiveIntensity = 0;
+                mesh.visible = false;
+                mesh.scale.setScalar(scale);
+
+                // Add to scene
+                if (spawnMode?.type === 'surface' && this.coreMesh) {
+                    this.coreMesh.add(mesh);
+                } else {
+                    this.container.add(mesh);
+                }
+                this.activeElements[elementType].push(mesh);
+
+                globalIndex++;
+            }
+        }
+    }
+
+    /**
+     * Apply rendering settings to a mesh material
+     * @param {THREE.Mesh} mesh - The mesh to configure
+     * @param {Object} rendering - Rendering config from AnimationConfig
+     * @private
+     */
+    _applyRenderSettings(mesh, rendering) {
+        if (!rendering) return;
+
+        // Render order
+        if (rendering.renderOrder !== undefined) {
+            mesh.renderOrder = rendering.renderOrder;
+        }
+
+        // Depth settings
+        if (rendering.depthTest !== undefined) {
+            mesh.material.depthTest = rendering.depthTest;
+        }
+        if (rendering.depthWrite !== undefined) {
+            mesh.material.depthWrite = rendering.depthWrite;
+        }
+
+        // Blending mode
+        if (rendering.blending) {
+            switch (rendering.blending) {
+            case 'additive':
+                mesh.material.blending = THREE.AdditiveBlending;
+                break;
+            case 'multiply':
+                mesh.material.blending = THREE.MultiplyBlending;
+                break;
+            case 'normal':
+            default:
+                mesh.material.blending = THREE.NormalBlending;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Apply animation state values to a mesh
+     * @param {THREE.Mesh} mesh - The mesh to update
+     * @param {AnimationState} animState - The animation state
+     * @private
+     */
+    _applyAnimationToMesh(mesh, animState) {
+        // DEBUG: Track position at start (only for first fire element)
+        const isFireDebug = mesh.userData.elementType === 'fire' && mesh.userData.debugIndex === 0;
+        const posAtStart = isFireDebug ? mesh.position.clone() : null;
+
+        // Visibility
+        const isVisible = animState.state !== AnimationStates.WAITING &&
+                         animState.state !== AnimationStates.DEAD;
+        mesh.visible = isVisible;
+
+        if (!isVisible) {
+            if (isFireDebug) {
+                console.log(`[FIRE ANIM] state=${animState.state} INVISIBLE, pos:`, mesh.position.x.toFixed(3), mesh.position.y.toFixed(3), mesh.position.z.toFixed(3));
+            }
+            return;
+        }
+
+        // Get animation config for intensity scaling
+        const animConfig = mesh.userData.animationConfig;
+
+        // Opacity
+        const baseOpacity = mesh.userData.originalOpacity ?? 1;
+        mesh.material.opacity = animState.opacity * baseOpacity;
+
+        // Scale - apply intensity scaling
+        const baseScale = mesh.userData.originalScale ?? 1;
+        const scaledScale = animConfig
+            ? animConfig.getScaledValue('scale', animState.scale)
+            : animState.scale;
+        const targetScale = scaledScale * baseScale;
+
+        // For fire elements, smooth the scale animation to avoid jitter
+        // Lerp toward target instead of snapping (high-frequency pulse looks glitchy otherwise)
+        const isProceduralFire = mesh.userData.elementType === 'fire' && mesh.material?.uniforms;
+        if (isProceduralFire) {
+            const currentScale = mesh.scale.x;
+            const smoothing = 0.08; // Lower = smoother/slower response
+            const smoothedScale = currentScale + (targetScale - currentScale) * smoothing;
+            mesh.scale.setScalar(smoothedScale);
+        } else {
+            mesh.scale.setScalar(targetScale);
+        }
+
+        // Emissive intensity - apply intensity scaling
+        const baseEmissive = mesh.userData.originalEmissive ?? 1;
+        const scaledEmissive = animConfig
+            ? animConfig.getScaledValue('emissiveMax', animState.emissive)
+            : animState.emissive;
+        mesh.material.emissiveIntensity = scaledEmissive * baseEmissive;
+
+        // Drift offset - apply to position ONLY if drift is configured and non-zero
+        // Note: animState.driftOffset is always an object, so check for actual values
+        const {driftOffset} = animState;
+        const hasDrift = driftOffset && (driftOffset.x !== 0 || driftOffset.y !== 0 || driftOffset.z !== 0);
+        if (hasDrift) {
+            const { x, y, z } = driftOffset;
+            // Store original position if not already stored
+            if (!mesh.userData.originalPosition) {
+                mesh.userData.originalPosition = mesh.position.clone();
+                if (isFireDebug) {
+                    console.log('[FIRE ANIM] STORING originalPosition:', mesh.userData.originalPosition.x.toFixed(3), mesh.userData.originalPosition.y.toFixed(3), mesh.userData.originalPosition.z.toFixed(3));
+                }
+            }
+            // Apply drift relative to original position
+            mesh.position.copy(mesh.userData.originalPosition);
+            mesh.position.x += x;
+            mesh.position.y += y;
+            mesh.position.z += z;
+            if (isFireDebug) {
+                console.log(`[FIRE ANIM] DRIFT applied: drift=(${x.toFixed(4)}, ${y.toFixed(4)}, ${z.toFixed(4)}) → pos=(${mesh.position.x.toFixed(3)}, ${mesh.position.y.toFixed(3)}, ${mesh.position.z.toFixed(3)})`);
+            }
+        }
+
+        // DEBUG: Log position change if it happened
+        if (isFireDebug && posAtStart) {
+            const dx = mesh.position.x - posAtStart.x;
+            const dy = mesh.position.y - posAtStart.y;
+            const dz = mesh.position.z - posAtStart.z;
+            if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001 || Math.abs(dz) > 0.001) {
+                console.log(`[FIRE ANIM] state=${animState.state} pos CHANGED by (${dx.toFixed(4)}, ${dy.toFixed(4)}, ${dz.toFixed(4)})`);
+            }
+        }
+
+        // Rotation offset - apply to rotation
+        if (animState.rotationOffset) {
+            const { x, y, z } = animState.rotationOffset;
+            // Store original rotation if not already stored
+            if (!mesh.userData.originalRotation) {
+                mesh.userData.originalRotation = mesh.rotation.clone();
+            }
+            // Apply rotation relative to original
+            mesh.rotation.x = mesh.userData.originalRotation.x + x;
+            mesh.rotation.y = mesh.userData.originalRotation.y + y;
+            mesh.rotation.z = mesh.userData.originalRotation.z + z;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // FIRE ELEMENT SPECIAL HANDLING - Animate procedural fire shader uniforms
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (mesh.userData.elementType === 'fire' && mesh.material?.uniforms) {
+            // Apply intensity (with flicker) for brightness
+            // Apply fadeProgress (smooth, no flicker) for stable vertex displacement
+            setProceduralFireIntensity(mesh.material, animState.opacity, animState.fadeProgress);
+
+            // DEBUG: Log fire intensity for first element
+            if (isFireDebug) {
+                const actualIntensity = mesh.material.uniforms.uIntensity?.value;
+                const fadeProgress = mesh.material.uniforms.uFadeProgress?.value;
+                console.log(`[FIRE SHADER] opacity=${animState.opacity.toFixed(3)} fade=${animState.fadeProgress?.toFixed(3)} → intensity=${actualIntensity?.toFixed(3)}`);
+            }
+
+            // Get temperature config from animation or use default
+            const tempConfig = animConfig?.temperature;
+            if (tempConfig) {
+                // Animate temperature over gesture lifetime
+                const progress = animState.gestureProgress ?? 0;
+                const temp = this._interpolateTemperature(tempConfig, progress);
+                setProceduralFireTemperature(mesh.material, temp);
+            }
+
+            // NOTE: Flame height animation disabled - was causing vertex position glitches
+            // The procedural shader handles flame appearance via intensity/temperature
+            // if (mesh.material.uniforms.uFlameHeight) {
+            //     const baseHeight = mesh.userData.baseFlameHeight ?? 0.3;
+            //     mesh.material.uniforms.uFlameHeight.value = baseHeight * animState.opacity;
+            // }
+        }
+    }
+
+    /**
+     * Interpolate temperature value based on gesture progress
+     * @param {Object} config - Temperature config { start, peak, end, curve }
+     * @param {number} progress - Gesture progress 0-1
+     * @returns {number} Interpolated temperature
+     * @private
+     */
+    _interpolateTemperature(config, progress) {
+        const { start = 0.5, peak = 0.6, end = 0.4, curve = 'bell' } = config;
+
+        switch (curve) {
+        case 'bell':
+            // Bell curve: start → peak at 0.5 → end
+            if (progress < 0.5) {
+                const t = progress * 2; // 0→1 for first half
+                return start + (peak - start) * t;
+            } else {
+                const t = (progress - 0.5) * 2; // 0→1 for second half
+                return peak + (end - peak) * t;
+            }
+
+        case 'spike':
+            // Spike: slow rise then quick peak then fall
+            if (progress < 0.6) {
+                const t = progress / 0.6;
+                return start + (peak - start) * t * t; // Quadratic rise
+            } else {
+                const t = (progress - 0.6) / 0.4;
+                return peak + (end - peak) * t;
+            }
+
+        case 'sustained':
+            // Quick rise to peak, hold, then fall at end
+            if (progress < 0.15) {
+                return start + (peak - start) * (progress / 0.15);
+            } else if (progress < 0.85) {
+                return peak;
+            } else {
+                const t = (progress - 0.85) / 0.15;
+                return peak + (end - peak) * t;
+            }
+
+        case 'pulse': {
+            // Gentle sine wave pulse
+            const wave = Math.sin(progress * Math.PI * 2) * 0.5 + 0.5;
+            return start + (peak - start) * wave;
+        }
+
+        default:
+            return start;
+        }
+    }
+
+    /**
+     * Reposition an ephemeral element to a new surface location (without changing timing)
+     * @param {THREE.Mesh} mesh - The mesh to reposition
+     * @param {string} elementType - Element type for config lookup
+     * @private
+     */
+    _repositionEphemeral(mesh, elementType) {
+        const {surfaceConfig} = mesh.userData;
+
+        if (!this.coreMesh?.geometry) return;
+
+        // Sample a single new point
+        const newPoints = this._sampleSurfacePoints(
+            this.coreMesh.geometry,
+            1,
+            surfaceConfig,
+            this.camera
+        );
+
+        if (newPoints.length > 0) {
+            const sample = newPoints[0];
+            const embedDepth = surfaceConfig?.embedDepth ?? 0.2;
+            const scale = mesh.userData.finalScale || mesh.scale.x;
+            const outwardOffset = (1 - embedDepth) * scale * 0.4;
+            const inwardOffset = embedDepth * scale * 0.3;
+            const netOffset = outwardOffset - inwardOffset;
+
+            const offset = sample.normal.clone().multiplyScalar(netOffset);
+            mesh.position.copy(sample.position).add(offset);
+
+            // Update stored surface data
+            mesh.userData.surfaceNormal = sample.normal.clone();
+            mesh.userData.surfacePosition = sample.position.clone();
+            mesh.userData.targetGrowthOffset = netOffset;
+
+            // Re-orient to new normal
+            const cameraFacing = surfaceConfig?.cameraFacing ?? 0.3;
+            const modelName = this.spawnConfig[elementType]?.models?.[
+                Math.floor(Math.random() * this.spawnConfig[elementType].models.length)
+            ];
+            this._orientElement(mesh, sample.normal, cameraFacing, this.camera, modelName);
         }
     }
 
@@ -1203,6 +2404,11 @@ export class ElementSpawner {
         this.iceMaterial?.dispose();
         this.earthMaterial?.dispose();
         this.natureMaterial?.dispose();
+        this.fireMaterial?.dispose();
+        this.electricityMaterial?.dispose();
+        this.waterMaterial?.dispose();
+        this.voidMaterial?.dispose();
+        this.lightMaterial?.dispose();
 
         // Remove container from parent
         if (this.container.parent) {

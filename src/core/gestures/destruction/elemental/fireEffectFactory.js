@@ -54,6 +54,82 @@ const FIRE_EFFECT_VARIANTS = {
         intensity: 1.0,
         category: 'burning',
         temperature: 0.6,              // Active flame temperature
+        // 3D Element spawning - flames rising from surface
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Flames scattered across surface
+            embedDepth: 0.15,
+            cameraFacing: 0.3,
+            clustering: 0.25,           // Some clustering for flame groups
+            count: 8,
+            scale: 1.0,
+            models: ['flame-wisp', 'ember-cluster', 'flame-tongue'],
+            minDistance: 0.12,          // Flames can be fairly close
+            // ═══════════════════════════════════════════════════════════════
+            // NEW ANIMATION SYSTEM CONFIG
+            // ═══════════════════════════════════════════════════════════════
+            animation: {
+                // Timing - staggered flame appearance
+                appearAt: 0.05,
+                disappearAt: 0.85,
+                stagger: 0.03,          // Staggered ignition
+                // Enter - flames ignite with flash
+                enter: {
+                    type: 'fade',       // Smooth fade in for procedural fire
+                    duration: 0.08,
+                    easing: 'easeOut'
+                },
+                // Exit - flames die down
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Temperature evolution over gesture lifetime
+                temperature: {
+                    start: 0.4,         // Cool ignition
+                    peak: 0.65,         // Hot active flames
+                    end: 0.35,          // Dying embers
+                    curve: 'bell'       // Gradual rise and fall
+                },
+                // Hold - flickering fire animation
+                flicker: {
+                    intensity: 0.35,    // Strong flicker
+                    rate: 12,           // Fast fire flicker
+                    pattern: 'random'
+                },
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 8,       // Fast pulsing
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.8,
+                    max: 2.0,
+                    frequency: 10,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',    // Flames rise
+                    distance: 0.1,      // Total drift over gesture lifetime (musical timing)
+                    noise: 0.02         // Subtle variation
+                },
+                // Variance - chaotic fire
+                scaleVariance: 0.35,
+                lifetimeVariance: 0.3,
+                delayVariance: 0.1,
+                // Rendering
+                blending: 'additive',
+                renderOrder: 10,
+                // Intensity scaling
+                intensityScaling: {
+                    scale: 1.3,
+                    pulseAmplitude: 1.5,
+                    flickerIntensity: 1.4,
+                    emissiveMax: 1.6
+                }
+            }
+        },
         // Flame flicker motion
         flickerFrequency: 12,          // Fast flickering
         flickerAmplitude: 0.015,       // Subtle position jitter
@@ -80,6 +156,71 @@ const FIRE_EFFECT_VARIANTS = {
         intensity: 1.3,
         category: 'burning',
         temperature: 0.8,              // High heat
+        // 3D Element spawning - intense flame coverage
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Full heat coverage
+            embedDepth: 0.2,
+            cameraFacing: 0.25,
+            clustering: 0.15,
+            count: 10,
+            scale: 1.1,
+            models: ['flame-tongue', 'flame-wisp', 'fire-burst'],
+            minDistance: 0.1,           // Dense flame coverage
+            animation: {
+                appearAt: 0.03,
+                disappearAt: 0.88,
+                stagger: 0.02,
+                enter: {
+                    type: 'fade',       // Smooth fade for procedural fire
+                    duration: 0.1,
+                    easing: 'easeOutCubic'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.12,
+                    easing: 'easeInQuad'
+                },
+                // Temperature: sustained high heat
+                temperature: {
+                    start: 0.6,         // Already hot
+                    peak: 0.85,         // Intense sustained heat
+                    end: 0.7,           // Stays hot
+                    curve: 'sustained'  // Quick rise, hold at peak
+                },
+                // Sustained intense heat - less flicker, more emissive
+                flicker: {
+                    intensity: 0.2,     // Less chaotic than burn
+                    rate: 6,
+                    pattern: 'sine'
+                },
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 3,       // Slower, more intense
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 1.2,           // Higher baseline
+                    max: 3.0,           // Intense peak
+                    frequency: 4,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',
+                    distance: 0.08,     // Total drift over gesture lifetime
+                    noise: 0.01
+                },
+                scaleVariance: 0.25,
+                lifetimeVariance: 0.2,
+                blending: 'additive',
+                renderOrder: 12,
+                intensityScaling: {
+                    scale: 1.4,
+                    emissiveMax: 1.8,
+                    pulseAmplitude: 1.3
+                }
+            }
+        },
         // Minimal flicker - more sustained heat
         flickerFrequency: 6,
         flickerAmplitude: 0.008,
@@ -108,6 +249,73 @@ const FIRE_EFFECT_VARIANTS = {
         intensity: 1.5,
         category: 'burning',
         temperature: 0.9,              // Very hot at burst
+        // 3D Element spawning - explosive flame burst
+        spawnMode: {
+            type: 'surface',
+            pattern: 'spikes',          // Flames burst outward
+            embedDepth: 0.1,
+            cameraFacing: 0.35,
+            clustering: 0.3,
+            count: 12,
+            scale: 1.2,
+            models: ['fire-burst', 'flame-tongue', 'ember-cluster'],
+            minDistance: 0.08,          // Dense explosion
+            animation: {
+                appearAt: 0.55,         // Appears at burst moment
+                disappearAt: 0.95,
+                stagger: 0.01,          // Rapid sequential burst
+                enter: {
+                    type: 'fade',       // Quick fade for procedural fire
+                    duration: 0.03,
+                    easing: 'easeOut'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.1,
+                    easing: 'easeInCubic'
+                },
+                // Temperature: spike at burst
+                temperature: {
+                    start: 0.5,         // Building heat
+                    peak: 0.95,         // Explosive plasma burst
+                    end: 0.6,           // Hot aftermath
+                    curve: 'spike'      // Slow rise then explosive peak
+                },
+                flicker: {
+                    intensity: 0.5,     // Very chaotic at burst
+                    rate: 25,           // Extremely fast
+                    pattern: 'random'
+                },
+                pulse: {
+                    amplitude: 0.25,
+                    frequency: 15,
+                    easing: 'easeOut'
+                },
+                emissive: {
+                    min: 1.5,
+                    max: 4.0,           // Extremely bright burst
+                    frequency: 20,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward', // Explodes outward
+                    distance: 0.15,     // Total expansion over gesture lifetime
+                    maxDistance: 0.15,  // Cap for outward accumulation
+                    noise: 0.02
+                },
+                scaleVariance: 0.4,
+                lifetimeVariance: 0.25,
+                delayVariance: 0.05,
+                blending: 'additive',
+                renderOrder: 15,
+                intensityScaling: {
+                    scale: 1.5,
+                    emissiveMax: 2.0,
+                    flickerIntensity: 1.6,
+                    driftSpeed: 1.4
+                }
+            }
+        },
         // Buildup then burst
         buildupPhase: 0.6,             // 60% buildup
         burstPhase: 0.4,               // 40% burst
@@ -142,6 +350,73 @@ const FIRE_EFFECT_VARIANTS = {
         intensity: 0.8,
         category: 'radiating',
         temperature: 0.4,              // Warm, not hot
+        // 3D Element spawning - gentle ambient embers
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Gentle scattered embers
+            embedDepth: 0.15,
+            cameraFacing: 0.3,
+            clustering: 0.2,
+            count: 5,
+            scale: 0.9,
+            models: ['ember-cluster', 'flame-wisp'],
+            minDistance: 0.18,          // Spread out for ambient feel
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.9,
+                stagger: 0.05,
+                enter: {
+                    type: 'fade',       // Gentle fade in
+                    duration: 0.12,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeInQuad'
+                },
+                // Temperature: gentle warmth pulse
+                temperature: {
+                    start: 0.3,         // Warm start
+                    peak: 0.45,         // Gentle peak
+                    end: 0.3,           // Return to warmth
+                    curve: 'pulse'      // Smooth sine wave
+                },
+                // Controlled emanation - smooth breathing
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 1.5,     // Slow breathing
+                    easing: 'easeInOut',
+                    sync: 'global'      // All elements pulse together
+                },
+                emissive: {
+                    min: 0.6,
+                    max: 1.2,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    distance: 0.05,     // Subtle outward drift over gesture
+                    noise: 0.005
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.02,
+                    oscillate: true,
+                    range: Math.PI / 6
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.3,
+                    pulseAmplitude: 1.2
+                }
+            }
+        },
         // No jitter - controlled emission
         flickerFrequency: 0,
         flickerAmplitude: 0,
@@ -170,6 +445,72 @@ const FIRE_EFFECT_VARIANTS = {
         intensity: 1.2,
         category: 'radiating',
         temperature: 0.7,              // Hot flame
+        // 3D Element spawning - powerful flame aura
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Full coverage aura
+            embedDepth: 0.1,
+            cameraFacing: 0.35,
+            clustering: 0.1,
+            count: 10,
+            scale: 1.1,
+            models: ['flame-tongue', 'fire-burst', 'flame-wisp'],
+            minDistance: 0.1,           // Dense aura
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.9,
+                stagger: 0.02,
+                enter: {
+                    type: 'fade',       // Smooth fade for procedural fire
+                    duration: 0.08,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.1,
+                    easing: 'easeIn'
+                },
+                // Temperature: powerful sustained heat with breathing
+                temperature: {
+                    start: 0.55,        // Starting hot
+                    peak: 0.75,         // Powerful peak
+                    end: 0.6,           // Sustained warmth
+                    curve: 'bell'       // Controlled rise and fall
+                },
+                // Powerful controlled flames
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                flicker: {
+                    intensity: 0.15,    // Subtle flicker, controlled
+                    rate: 6,
+                    pattern: 'sine'
+                },
+                emissive: {
+                    min: 1.0,
+                    max: 2.2,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',
+                    distance: 0.08,     // Controlled rise over gesture lifetime
+                    noise: 0.01
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 10,
+                intensityScaling: {
+                    scale: 1.35,
+                    emissiveMax: 1.5,
+                    pulseAmplitude: 1.3
+                }
+            }
+        },
         // Controlled flicker
         flickerFrequency: 0,
         flickerAmplitude: 0,
@@ -199,6 +540,66 @@ const FIRE_EFFECT_VARIANTS = {
         intensity: 0.4,
         category: 'radiating',
         temperature: 0.15,             // Embers
+        // 3D Element spawning - sparse embers
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Sparse embers
+            embedDepth: 0.2,
+            cameraFacing: 0.25,
+            clustering: 0.3,
+            count: 4,
+            scale: 0.8,
+            models: ['ember-cluster'],
+            minDistance: 0.2,           // Very sparse
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.85,
+                stagger: 0.08,          // Slow stagger
+                enter: {
+                    type: 'fade',
+                    duration: 0.25,     // Slow fade in for embers
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.3,      // Slow fade out
+                    easing: 'easeInQuad'
+                },
+                // Temperature: subtle ember glow
+                temperature: {
+                    start: 0.1,         // Cool embers
+                    peak: 0.2,          // Gentle warmth
+                    end: 0.08,          // Dying down
+                    curve: 'pulse'      // Subtle breathing
+                },
+                // Subtle smoldering - very slow
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 0.5,     // Very slow pulse
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.3,
+                    max: 0.8,           // Subtle ember glow
+                    frequency: 0.7,
+                    pattern: 'sine'
+                },
+                // Minimal drift
+                drift: {
+                    direction: 'up',
+                    distance: 0.02,     // Barely perceptible rise over gesture
+                    noise: 0.002
+                },
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.2,
+                blending: 'additive',
+                renderOrder: 5,
+                intensityScaling: {
+                    scale: 1.1,
+                    emissiveMax: 1.4
+                }
+            }
+        },
         // Very subtle flicker
         flickerFrequency: 0,
         flickerAmplitude: 0,
@@ -418,8 +819,13 @@ export function createFireEffectGesture(variant) {
                     glowColorOverride: cfg.glowColor,
                     fireOverlay: {
                         enabled: effectStrength > 0.1,
+                        strength: effectStrength * cfg.intensity,
                         heat: effectStrength * cfg.intensity,
                         temperature: cfg.temperature,
+                        category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
+                        duration: cfg.duration,
+                        progress,
                         time
                     }
                 };
