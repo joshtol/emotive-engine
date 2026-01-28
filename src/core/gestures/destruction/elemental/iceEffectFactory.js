@@ -69,7 +69,95 @@ const ICE_EFFECT_VARIANTS = {
             embedDepth: 0.2,            // Slightly embedded into surface
             cameraFacing: 0.4,          // Mostly normal-aligned, some camera bias
             clustering: 0.15,           // Slight clustering for organic spread
-            scale: 1.0                  // Use φ-based model sizes
+            scale: 1.0,                 // Use φ-based model sizes
+            minDistance: 0.12,          // Ice can cluster fairly densely
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.9,
+                stagger: 0.04,          // Ice spreads progressively
+                enter: {
+                    type: 'grow',       // Crystals grow from surface
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'shrink',     // Ice melts/recedes
+                    duration: 0.15,
+                    easing: 'easeInQuad'
+                },
+                // Crystalline shimmer - slow, geometric
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 1.5,     // Slow shimmer
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.4,
+                    max: 0.9,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.01,        // Very slow crystalline rotation
+                    oscillate: true,
+                    range: Math.PI / 12
+                },
+                // Minimal variance - ice is structured
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.1,
+                blending: 'normal',
+                renderOrder: 5,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.3
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'crystal-small': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.0 },
+                                y: { expand: true, rate: 1.4 },
+                                z: { expand: true, rate: 1.0 }
+                            },
+                            easing: 'easeOutQuad'
+                        }
+                    },
+                    'crystal-medium': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.1 },
+                                y: { expand: true, rate: 1.5 },
+                                z: { expand: true, rate: 1.1 }
+                            }
+                        }
+                    },
+                    'crystal-cluster': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2 },
+                                y: { expand: true, rate: 1.3 },
+                                z: { expand: true, rate: 1.2 }
+                            }
+                        }
+                    },
+                    'ice-spike': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.9 },
+                                y: { expand: true, rate: 1.8 },
+                                z: { expand: false, rate: 0.9 }
+                            }
+                        }
+                    }
+                }
+            }
         },
         // Slowing effect
         slowRate: 0.5,
@@ -136,7 +224,78 @@ const ICE_EFFECT_VARIANTS = {
             embedDepth: 0.15,           // Slight embed
             cameraFacing: 0.5,          // Balanced for visibility
             clustering: 0.4,            // Moderate clustering (damage patches)
-            scale: 0.9                  // Slightly smaller frost patches
+            scale: 0.9,                 // Slightly smaller frost patches
+            minDistance: 0.1,           // Frost patches can cluster tightly
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.85,
+                stagger: 0.05,
+                enter: {
+                    type: 'flash',      // Frost snaps into place (cracking)
+                    duration: 0.03,
+                    easing: 'easeOut'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.18,
+                    easing: 'easeIn'
+                },
+                // Crackling - occasional sharp pulses
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 4,       // Crackling rhythm
+                    easing: 'snap'      // Sharp crackle feel
+                },
+                flicker: {
+                    intensity: 0.15,
+                    rate: 6,            // Occasional crackling flash
+                    pattern: 'random'
+                },
+                emissive: {
+                    min: 0.5,
+                    max: 1.1,
+                    frequency: 4,
+                    pattern: 'sine'
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                delayVariance: 0.08,    // Staggered cracking
+                blending: 'normal',
+                renderOrder: 6,
+                intensityScaling: {
+                    scale: 1.25,
+                    flickerIntensity: 1.4
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'crystal-small': {
+                        enter: { type: 'flash', duration: 0.02 },
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.15, frequency: 4 }
+                    },
+                    'crystal-cluster': {
+                        enter: { type: 'flash', duration: 0.03 },
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.3, oscillate: true },
+                                y: { expand: true, rate: 1.2 },
+                                z: { expand: true, rate: 1.3, oscillate: true }
+                            },
+                            wobbleFrequency: 4, wobbleAmplitude: 0.1
+                        }
+                    },
+                    'ice-spike': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.85 },
+                                y: { expand: true, rate: 1.6 },
+                                z: { expand: false, rate: 0.85 }
+                            }
+                        }
+                    }
+                }
+            }
         },
         // Crackling effect
         crackleRate: 0.4,
@@ -247,7 +406,86 @@ const ICE_EFFECT_VARIANTS = {
             cameraFacing: 0.5,          // Balanced camera facing
             clustering: 0.2,            // Light clustering
             count: 8,                   // Good number of crystals
-            scale: 1.0                  // Use φ-based sizes
+            scale: 1.0,                 // Use φ-based sizes
+            minDistance: 0.15,          // Spikes need some spacing for dramatic effect
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.88,
+                stagger: 0.06,          // Sequential crystal growth
+                enter: {
+                    type: 'grow',       // Dramatic crystal growth
+                    duration: 0.12,
+                    easing: 'easeOutBack', // Overshoot for crystal pop
+                    overshoot: 1.15
+                },
+                exit: {
+                    type: 'shrink',
+                    duration: 0.1,
+                    easing: 'easeInCubic'
+                },
+                // Prismatic shimmer
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.5,
+                    max: 1.2,
+                    frequency: 3,
+                    pattern: 'sine'
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.015,       // Slow faceted rotation
+                    oscillate: false    // Continuous rotation
+                },
+                // Low variance - geometric precision
+                scaleVariance: 0.1,
+                lifetimeVariance: 0.1,
+                blending: 'normal',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.3,
+                    emissiveMax: 1.4,
+                    rotateSpeed: 1.2
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'crystal-small': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2 },
+                                y: { expand: true, rate: 1.6 },
+                                z: { expand: true, rate: 1.2 }
+                            },
+                            easing: 'easeOutBack'
+                        }
+                    },
+                    'crystal-medium': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.3 },
+                                y: { expand: true, rate: 1.7 },
+                                z: { expand: true, rate: 1.3 }
+                            }
+                        }
+                    },
+                    'ice-spike': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.8 },
+                                y: { expand: true, rate: 2.0 },
+                                z: { expand: false, rate: 0.8 }
+                            }
+                        }
+                    }
+                }
+            }
         },
         // Glow - prismatic ice
         glowColor: [0.85, 0.95, 1.0],  // Crystal white-blue
@@ -282,7 +520,84 @@ const ICE_EFFECT_VARIANTS = {
             cameraFacing: 0.3,          // Mostly natural
             clustering: 0.1,            // Even distribution
             count: 10,                  // Good coverage
-            scale: 1.0                  // Use φ-based sizes (ice models already smaller)
+            scale: 1.0,                 // Use φ-based sizes (ice models already smaller)
+            minDistance: 0.1,           // Dense glacier coverage
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.9,
+                stagger: 0.04,
+                enter: {
+                    type: 'grow',
+                    duration: 0.15,     // Slow, massive growth
+                    easing: 'easeOutCubic'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.2,
+                    easing: 'easeIn'
+                },
+                // Massive, slow pulsing
+                pulse: {
+                    amplitude: 0.06,
+                    frequency: 0.8,     // Very slow - ancient glacier pulse
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.4,
+                    max: 0.85,
+                    frequency: 1,
+                    pattern: 'sine'
+                },
+                // Minimal drift - glaciers are stable
+                drift: {
+                    direction: 'up',
+                    speed: 0.003,
+                    noise: 0.02
+                },
+                scaleVariance: 0.12,
+                lifetimeVariance: 0.1,
+                blending: 'normal',
+                renderOrder: 7,
+                intensityScaling: {
+                    scale: 1.4,
+                    emissiveMax: 1.3
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'crystal-medium': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.4 },
+                                y: { expand: true, rate: 1.6 },
+                                z: { expand: true, rate: 1.4 }
+                            },
+                            easing: 'easeOutCubic'
+                        }
+                    },
+                    'crystal-cluster': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.5 },
+                                y: { expand: true, rate: 1.4 },
+                                z: { expand: true, rate: 1.5 }
+                            }
+                        }
+                    },
+                    'ice-spike': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.7 },
+                                y: { expand: true, rate: 2.2 },
+                                z: { expand: false, rate: 0.7 }
+                            }
+                        }
+                    }
+                }
+            }
         },
         // Massive buildup
         buildupRate: 0.3,
@@ -354,7 +669,79 @@ const ICE_EFFECT_VARIANTS = {
             cameraFacing: 0.3,          // Mostly surface-aligned
             clustering: 0.0,            // Very even distribution
             count: 12,                  // Dense coverage
-            scale: 1.0                  // Use φ-based sizes
+            scale: 1.0,                 // Use φ-based sizes
+            minDistance: 0.08,          // Very dense for full encasement
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.92,
+                stagger: 0.025,         // Fast spreading encasement
+                enter: {
+                    type: 'grow',
+                    duration: 0.07,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Frozen solid - minimal animation
+                pulse: {
+                    amplitude: 0.04,    // Very subtle
+                    frequency: 1,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.5,
+                    max: 0.8,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                // No drift - frozen solid
+                // Very low variance - uniform encasement
+                scaleVariance: 0.08,
+                lifetimeVariance: 0.05,
+                blending: 'normal',
+                renderOrder: 6,
+                intensityScaling: {
+                    scale: 1.25,
+                    emissiveMax: 1.2
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'crystal-small': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.1 },
+                                y: { expand: true, rate: 1.2 },
+                                z: { expand: true, rate: 1.1 }
+                            }
+                        }
+                    },
+                    'crystal-medium': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2 },
+                                y: { expand: true, rate: 1.3 },
+                                z: { expand: true, rate: 1.2 }
+                            }
+                        }
+                    },
+                    'crystal-cluster': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.15 },
+                                y: { expand: true, rate: 1.15 },
+                                z: { expand: true, rate: 1.15 }
+                            }
+                        }
+                    }
+                }
+            }
         },
         // Encasement spreading
         encaseProgress: 0.8,

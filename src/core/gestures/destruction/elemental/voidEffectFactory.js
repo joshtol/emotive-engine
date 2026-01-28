@@ -62,6 +62,82 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 0.7,
         category: 'absorption',
         depth: 0.4,                    // Moderate void depth
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.2,
+            cameraFacing: 0.2,
+            clustering: 0.3,
+            count: 5,
+            scale: 0.9,
+            models: ['void-shard', 'corruption-patch'],
+            minDistance: 0.15,
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.9,
+                stagger: 0.06,
+                enter: {
+                    type: 'fade',       // Emerges from darkness
+                    duration: 0.15,
+                    easing: 'easeOut'
+                },
+                exit: {
+                    type: 'shrink',     // Collapses to nothing
+                    duration: 0.12,
+                    easing: 'easeInCubic'
+                },
+                // Slow draining pulse
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 1,       // Very slow void pulse
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.2,           // Dark
+                    max: 0.5,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'inward', // Draining inward
+                    speed: 0.012,
+                    noise: 0.05
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.015,
+                    oscillate: false
+                },
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.12,
+                blending: 'normal',
+                renderOrder: 3,
+                intensityScaling: {
+                    scale: 0.9,         // Void shrinks things
+                    emissiveMax: 0.8
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'void-shard': {
+                        drift: { direction: 'inward', speed: 0.015, noise: 0.05 },
+                        opacityLink: 'dissipate'
+                    },
+                    'corruption-patch': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2 },
+                                y: { expand: false, rate: 0.6 },
+                                z: { expand: true, rate: 1.2 }
+                            }
+                        },
+                        drift: { direction: 'outward-flat', speed: 0.01, adherence: 0.6 },
+                        orientationOverride: 'flat'
+                    }
+                }
+            }
+        },
         // Slow dimming effect
         dimRate: 0.3,
         dimPulse: true,
@@ -90,6 +166,17 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 1.0,
         category: 'absorption',
         depth: 0.6,                    // Stronger void
+        spawnMode: {
+            type: 'surface',
+            pattern: 'ring',
+            embedDepth: 0.15,
+            cameraFacing: 0.3,
+            clustering: 0.2,
+            count: 6,
+            scale: 0.85,
+            models: ['void-crack', 'shadow-tendril', 'void-shard'],
+            minDistance: 0.12
+        },
         // Active pulling motion
         pullStrength: 0.015,
         spiralRate: 1.5,               // Spinning pull
@@ -119,6 +206,17 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 0.8,
         category: 'absorption',
         depth: 0.5,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.25,
+            cameraFacing: 0.15,
+            clustering: 0.4,
+            count: 4,
+            scale: 0.8,
+            models: ['void-crack', 'void-shard'],
+            minDistance: 0.18
+        },
         // Emptying effect - core transparency
         hollowCore: true,
         hollowProgress: 0.7,           // How much interior becomes void
@@ -152,6 +250,17 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 1.2,
         category: 'corruption',
         depth: 0.65,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.1,
+            cameraFacing: 0.2,
+            clustering: 0.5,
+            count: 8,
+            scale: 1.0,
+            models: ['corruption-patch', 'shadow-tendril', 'void-crack'],
+            minDistance: 0.1
+        },
         // Spreading darkness
         spreadRate: 0.4,               // How fast corruption spreads
         spreadPulse: true,
@@ -183,6 +292,17 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 0.5,
         category: 'corruption',
         depth: 0.35,                   // Light corruption
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.12,
+            cameraFacing: 0.15,
+            clustering: 0.35,
+            count: 4,
+            scale: 0.7,
+            models: ['corruption-patch', 'void-shard'],
+            minDistance: 0.2
+        },
         // Subtle spreading
         spreadRate: 0.2,
         // Glow - barely noticeable darkening
@@ -210,6 +330,17 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 0.9,
         category: 'corruption',
         depth: 0.55,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.18,
+            cameraFacing: 0.2,
+            clustering: 0.4,
+            count: 6,
+            scale: 0.85,
+            models: ['shadow-tendril', 'corruption-patch', 'void-shard'],
+            minDistance: 0.12
+        },
         // Withering effect
         witherRate: 0.35,
         // Glow - fading life
@@ -242,6 +373,105 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 1.5,
         category: 'annihilation',
         depth: 0.85,                   // Deep void
+        spawnMode: {
+            type: 'surface',
+            pattern: 'crown',
+            embedDepth: 0.1,
+            cameraFacing: 0.35,
+            clustering: 0.3,
+            count: 10,
+            scale: 1.1,
+            models: ['void-crack', 'shadow-tendril', 'corruption-patch', 'void-shard'],
+            minDistance: 0.08,
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.88,
+                stagger: 0.02,
+                enter: {
+                    type: 'grow',       // Void tendrils extend
+                    duration: 0.06,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'shrink',     // Collapse to center
+                    duration: 0.08,
+                    easing: 'easeInCubic'
+                },
+                // Consuming spiral
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 3,
+                    easing: 'easeIn'
+                },
+                emissive: {
+                    min: 0.1,           // Near-darkness
+                    max: 0.4,
+                    frequency: 4,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'inward', // Pull toward center
+                    speed: 0.035,
+                    noise: 0.1
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.12,        // Spiraling faster
+                    oscillate: false
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 2,
+                intensityScaling: {
+                    scale: 0.85,
+                    driftSpeed: 1.5,
+                    rotateSpeed: 1.4
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'void-crack': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.6 },
+                                y: { expand: true, rate: 1.4 },
+                                z: { expand: true, rate: 0.8 }
+                            }
+                        },
+                        drift: { direction: 'inward', speed: 0.04, noise: 0.1 }
+                    },
+                    'shadow-tendril': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.7 },
+                                y: { expand: true, rate: 1.8 },
+                                z: { expand: false, rate: 0.7 }
+                            },
+                            wobbleFrequency: 3, wobbleAmplitude: 0.15
+                        },
+                        drift: { direction: 'inward', speed: 0.035 }
+                    },
+                    'corruption-patch': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.5 },
+                                y: { expand: false, rate: 0.5 },
+                                z: { expand: true, rate: 1.5 }
+                            }
+                        },
+                        drift: { direction: 'inward', speed: 0.03 },
+                        orientationOverride: 'flat'
+                    },
+                    'void-shard': {
+                        drift: { direction: 'inward', speed: 0.045, noise: 0.08 },
+                        opacityLink: 'inverse-scale'
+                    }
+                }
+            }
+        },
         // Consumption effect
         pullStrength: 0.025,
         spiralRate: 2.0,               // Fast spiral into void
@@ -275,6 +505,17 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 1.3,
         category: 'annihilation',
         depth: 0.7,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.2,
+            cameraFacing: 0.25,
+            clustering: 0.35,
+            count: 7,
+            scale: 0.95,
+            models: ['void-crack', 'void-shard', 'corruption-patch'],
+            minDistance: 0.1
+        },
         // Erasure effect - smooth fade
         erasePattern: 'dissolve',      // Pixels dissolve away
         // Glow - fading to nothing
@@ -309,6 +550,111 @@ const VOID_EFFECT_VARIANTS = {
         intensity: 2.0,
         category: 'annihilation',
         depth: 1.0,                    // Maximum void
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',
+            embedDepth: 0.05,
+            cameraFacing: 0.4,
+            clustering: 0.15,
+            count: 12,
+            scale: 1.2,
+            models: ['void-crack', 'shadow-tendril', 'corruption-patch', 'void-shard'],
+            minDistance: 0.06,
+            animation: {
+                appearAt: 0.02,
+                disappearAt: 0.95,
+                stagger: 0.015,
+                enter: {
+                    type: 'flash',      // Instant void appearance
+                    duration: 0.02,
+                    easing: 'linear'
+                },
+                exit: {
+                    type: 'shrink',     // Collapses to point
+                    duration: 0.05,
+                    easing: 'easeInCubic'
+                },
+                // Violent collapse
+                pulse: {
+                    amplitude: 0.2,
+                    frequency: 8,       // Frantic
+                    easing: 'snap'
+                },
+                flicker: {
+                    intensity: 0.25,
+                    rate: 15,
+                    pattern: 'random'
+                },
+                emissive: {
+                    min: 0.05,          // Near-total darkness
+                    max: 0.3,
+                    frequency: 10,
+                    pattern: 'random'
+                },
+                drift: {
+                    direction: 'inward', // Violent pull to center
+                    speed: 0.06,
+                    noise: 0.15
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.25,        // Rapid spin
+                    oscillate: false
+                },
+                scaleVariance: 0.25,
+                lifetimeVariance: 0.2,
+                blending: 'normal',
+                renderOrder: 1,         // Render behind everything
+                intensityScaling: {
+                    scale: 0.7,         // Dramatic shrinkage
+                    driftSpeed: 1.8,
+                    rotateSpeed: 1.6
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'void-crack': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 2.0 },
+                                y: { expand: true, rate: 1.8 },
+                                z: { expand: false, rate: 0.6 }
+                            },
+                            wobbleFrequency: 6, wobbleAmplitude: 0.2
+                        },
+                        drift: { direction: 'inward', speed: 0.06, noise: 0.15 }
+                    },
+                    'shadow-tendril': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.6 },
+                                y: { expand: true, rate: 2.2 },
+                                z: { expand: false, rate: 0.6 }
+                            },
+                            wobbleFrequency: 5, wobbleAmplitude: 0.2
+                        },
+                        drift: { direction: 'inward', speed: 0.055 }
+                    },
+                    'corruption-patch': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.8 },
+                                y: { expand: false, rate: 0.4 },
+                                z: { expand: true, rate: 1.8 }
+                            }
+                        },
+                        drift: { direction: 'inward', speed: 0.05 },
+                        orientationOverride: 'flat'
+                    },
+                    'void-shard': {
+                        drift: { direction: 'inward', speed: 0.065, noise: 0.1 },
+                        opacityLink: 'inverse-scale'
+                    }
+                }
+            }
+        },
         // Collapse effect
         collapsePhase: 0.7,            // 70% collapse, 30% release
         pullStrength: 0.04,
@@ -597,6 +943,7 @@ export function createVoidEffectGesture(variant) {
                         strength: effectStrength * cfg.intensity,
                         depth: cfg.depth,
                         category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
                         time
                     },
                     position: [posX, posY, posZ],

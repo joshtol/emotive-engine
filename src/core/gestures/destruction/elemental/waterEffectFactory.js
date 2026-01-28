@@ -57,6 +57,113 @@ const WATER_EFFECT_VARIANTS = {
         beats: 2,
         intensity: 1.0,
         category: 'impact',
+        turbulence: 0.9,              // High turbulence for explosive splash
+        // 3D Element spawning - splash droplets and rings
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Splash droplets scattered
+            embedDepth: 0.1,
+            cameraFacing: 0.4,
+            clustering: 0.3,
+            count: 8,
+            scale: 1.0,
+            models: ['droplet-small', 'droplet-large', 'splash-ring'],
+            minDistance: 0.12,
+            animation: {
+                appearAt: 0.02,         // Immediate splash
+                disappearAt: 0.9,
+                stagger: 0.01,          // Rapid burst
+                enter: {
+                    type: 'pop',        // Splash pop-in
+                    duration: 0.025,
+                    easing: 'easeOutBack',
+                    overshoot: 1.25
+                },
+                exit: {
+                    type: 'fade',       // Droplets settle/evaporate
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.06,    // Fast smoothing for explosive splash
+                    geometryStability: true  // Use fadeProgress for stable wave displacement
+                },
+                // Parameter animation: animate water dynamics over gesture lifetime
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.2,          // Calm before impact
+                        peak: 1.0,           // Maximum chaos at splash
+                        end: 0.1,            // Settling
+                        curve: 'spike'       // Quick burst
+                    },
+                    wetness: {
+                        start: 0.5,
+                        peak: 1.0,
+                        end: 0.3,
+                        curve: 'bell'
+                    }
+                },
+                // Wobbling water motion
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 6,       // Fast wobble
+                    easing: 'easeInOut'
+                },
+                drift: {
+                    direction: 'outward', // Splash outward
+                    distance: 0.2,        // Musical timing: travels 0.2 units over gesture
+                    noise: 0.3
+                },
+                // Water variance
+                scaleVariance: 0.3,
+                lifetimeVariance: 0.25,
+                delayVariance: 0.05,
+                blending: 'normal',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.25,
+                    driftSpeed: 1.4
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 2.0 },
+                                y: { expand: false, rate: 0.2 },
+                                z: { expand: true, rate: 2.0 }
+                            }
+                        },
+                        drift: { direction: 'outward-flat', speed: 0.05 },
+                        opacityLink: 'inverse-scale'
+                    },
+                    'droplet-small': {
+                        drift: { direction: 'outward', speed: 0.04, noise: 0.2 },
+                        enter: { type: 'pop', duration: 0.02 }
+                    },
+                    'droplet-large': {
+                        drift: { direction: 'outward', speed: 0.03, noise: 0.15 },
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.8 },
+                                y: { expand: true, rate: 1.2 },
+                                z: { expand: false, rate: 0.8 }
+                            }
+                        }
+                    },
+                    'wave-curl': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.2, frequency: 6 }
+                    },
+                    'bubble-cluster': {
+                        enter: { type: 'pop', duration: 0.03 },
+                        drift: { direction: 'rising', speed: 0.03, buoyancy: true }
+                    }
+                }
+            }
+        },
         // Wobble parameters - quick burst then decay
         wobbleFrequency: 8,          // Fast initial wobble
         wobbleAmplitude: 0.04,       // Strong initial displacement
@@ -83,6 +190,103 @@ const WATER_EFFECT_VARIANTS = {
         beats: 3,
         intensity: 1.2,
         category: 'impact',
+        turbulence: 0.6,              // Moderate turbulence - heavy but not chaotic
+        // 3D Element spawning - heavy water coverage
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Full wet coverage
+            embedDepth: 0.15,
+            cameraFacing: 0.3,
+            clustering: 0.2,
+            count: 10,
+            scale: 1.0,
+            models: ['droplet-large', 'wave-curl', 'splash-ring'],
+            minDistance: 0.1,
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.9,
+                stagger: 0.03,
+                enter: {
+                    type: 'fade',
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.08,    // Smooth for heavy dripping
+                    geometryStability: true
+                },
+                // Parameter animation: heavy saturation
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.4,
+                        peak: 0.6,           // Less chaotic than splash
+                        end: 0.2,
+                        curve: 'bell'
+                    },
+                    wetness: {
+                        start: 0.6,
+                        peak: 1.0,           // Maximum saturation
+                        end: 0.8,            // Stays wet
+                        curve: 'sustained'
+                    },
+                    weight: {
+                        start: 0.3,
+                        peak: 1.0,           // Heavy water weight
+                        end: 0.7,
+                        curve: 'sustained'
+                    }
+                },
+                drift: {
+                    direction: 'down',    // Heavy dripping
+                    distance: 0.1,
+                    noise: 0.15
+                },
+                scaleVariance: 0.25,
+                lifetimeVariance: 0.2,
+                blending: 'normal',
+                renderOrder: 7,
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2 },
+                                y: { expand: false, rate: 0.3 },
+                                z: { expand: true, rate: 1.2 }
+                            }
+                        },
+                        opacityLink: 'inverse-scale'
+                    },
+                    'droplet-large': {
+                        drift: { direction: 'gravity', speed: 0.04, acceleration: 0.02 },
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.6 },
+                                y: { expand: true, rate: 1.5 },
+                                z: { expand: false, rate: 0.6 }
+                            },
+                            velocityLink: 'y'
+                        },
+                        orientationOverride: 'velocity'
+                    },
+                    'wave-curl': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.1, frequency: 1.5 },
+                        drift: { direction: 'tangent', speed: 0.01, adherence: 0.6 }
+                    },
+                    'bubble-cluster': {
+                        drift: { direction: 'rising', speed: 0.015, buoyancy: true, noise: 0.1 }
+                    }
+                }
+            }
+        },
         // Wobble - slower, heavier feeling
         wobbleFrequency: 3,
         wobbleAmplitude: 0.025,
@@ -110,6 +314,96 @@ const WATER_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 0.6,
         category: 'impact',
+        turbulence: 0.15,             // Very calm - gradual saturation
+        // 3D Element spawning - gradual droplet buildup
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Droplets accumulating
+            embedDepth: 0.2,
+            cameraFacing: 0.35,
+            clustering: 0.25,
+            count: 6,
+            scale: 0.9,
+            models: ['droplet-small', 'bubble-cluster'],
+            minDistance: 0.15,
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.95,
+                stagger: 0.08,          // Gradual appearance
+                enter: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.2,
+                    easing: 'easeInQuad'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.12,    // Very smooth for gradual soaking
+                    geometryStability: true
+                },
+                // Parameter animation: gradual saturation buildup
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.05,
+                        peak: 0.15,          // Very calm
+                        end: 0.1,
+                        curve: 'bell'
+                    },
+                    wetness: {
+                        start: 0.1,
+                        peak: 0.9,           // Builds to saturated
+                        end: 0.8,
+                        curve: 'sustained'   // Gradual buildup
+                    },
+                    absorption: {
+                        start: 0.0,
+                        peak: 1.0,
+                        end: 0.9,
+                        curve: 'linear'      // Steady absorption
+                    }
+                },
+                pulse: {
+                    amplitude: 0.05,
+                    frequency: 1,
+                    easing: 'easeInOut'
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 6,
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 0.8 },
+                                y: { expand: false, rate: 0.5 },
+                                z: { expand: true, rate: 0.8 }
+                            }
+                        }
+                    },
+                    'droplet-small': {
+                        drift: { direction: 'gravity', speed: 0.008, adherence: 0.7 }
+                    },
+                    'bubble-cluster': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.7 },
+                                y: { expand: false, rate: 0.7 },
+                                z: { expand: false, rate: 0.7 }
+                            }
+                        },
+                        opacityLink: 'inverse-scale'
+                    }
+                }
+            }
+        },
         // Wobble - very gentle
         wobbleFrequency: 1.5,
         wobbleAmplitude: 0.01,
@@ -141,6 +435,110 @@ const WATER_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 0.8,
         category: 'ambient',
+        turbulence: 0.3,              // Calm flowing water
+        // 3D Element spawning - flowing water elements
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Flowing coverage
+            embedDepth: 0.12,
+            cameraFacing: 0.3,
+            clustering: 0.15,
+            count: 6,
+            scale: 0.9,
+            models: ['wave-curl', 'droplet-small', 'bubble-cluster'],
+            minDistance: 0.15,
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.85,
+                stagger: 0.05,
+                enter: {
+                    type: 'fade',       // Gentle fluid emergence
+                    duration: 0.1,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeInQuad'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.1,     // Smooth flowing motion
+                    geometryStability: true
+                },
+                // Parameter animation: sustained gentle flow
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.2,
+                        peak: 0.3,           // Calm, minimal turbulence
+                        end: 0.2,
+                        curve: 'sustained'
+                    },
+                    flowSpeed: {
+                        start: 0.5,
+                        peak: 0.8,
+                        end: 0.5,
+                        curve: 'bell'
+                    }
+                },
+                // Smooth flowing animation
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 1.5,     // Slow fluid breathing
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.5,
+                    max: 0.9,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'tangent', // Flow along surface
+                    distance: 0.1,        // Musical timing: gentle drift
+                    noise: 0.1
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.01,
+                    oscillate: true,
+                    range: Math.PI / 8
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 6,
+                intensityScaling: {
+                    scale: 1.15,
+                    driftSpeed: 1.2
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.1, oscillate: true },
+                                y: { expand: false, rate: 0.4 },
+                                z: { expand: true, rate: 1.1, oscillate: true }
+                            },
+                            wobbleFrequency: 1.5
+                        }
+                    },
+                    'droplet-small': {
+                        drift: { direction: 'tangent', speed: 0.015, noise: 0.1 }
+                    },
+                    'wave-curl': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.12, frequency: 1.5 },
+                        rotate: { axis: 'tangent', speed: 0.015, oscillate: true, range: Math.PI / 6 }
+                    },
+                    'bubble-cluster': {
+                        drift: { direction: 'rising', speed: 0.02, buoyancy: true, noise: 0.15 }
+                    }
+                }
+            }
+        },
         // Flow motion - smooth S-curve
         flowFrequency: 0.8,          // Slow wave
         flowAmplitude: 0.02,         // Gentle side-to-side
@@ -167,6 +565,93 @@ const WATER_EFFECT_VARIANTS = {
         beats: 3,
         intensity: 0.7,
         category: 'ambient',
+        turbulence: 0.35,             // Moderate - visible wave patterns
+        // 3D Element spawning - ripple rings
+        spawnMode: {
+            type: 'surface',
+            pattern: 'ring',            // Rings of water
+            embedDepth: 0.1,
+            cameraFacing: 0.35,
+            clustering: 0.2,
+            count: 5,
+            scale: 1.0,
+            models: ['splash-ring', 'droplet-small'],
+            minDistance: 0.15,
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.88,
+                stagger: 0.08,          // Sequential ripples
+                enter: {
+                    type: 'grow',       // Ripples expand out
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.12,
+                    easing: 'easeIn'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.08,    // Quick response for ripple animation
+                    geometryStability: true
+                },
+                // Parameter animation: expanding ripples
+                parameterAnimation: {
+                    waveHeight: {
+                        start: 0.3,
+                        peak: 1.0,
+                        end: 0.1,
+                        curve: 'bell'
+                    },
+                    rippleSpeed: {
+                        start: 0.5,
+                        peak: 0.8,
+                        end: 0.3,
+                        curve: 'sustained'
+                    }
+                },
+                // Concentric pulse animation
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 3,       // Ripple frequency
+                    easing: 'easeInOut',
+                    sync: 'staggered'   // Each ring slightly offset
+                },
+                drift: {
+                    direction: 'outward',
+                    distance: 0.15,     // Musical timing: expands 0.15 units
+                    noise: 0
+                },
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.1,
+                blending: 'normal',
+                renderOrder: 5,
+                intensityScaling: {
+                    scale: 1.2,
+                    pulseAmplitude: 1.3
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.6 },
+                                y: { expand: false, rate: 0.2 },
+                                z: { expand: true, rate: 1.6 }
+                            },
+                            easing: 'easeOutQuad'
+                        },
+                        drift: { direction: 'outward-flat', speed: 0.04 },
+                        opacityLink: 'inverse-scale'
+                    },
+                    'droplet-small': {
+                        drift: { direction: 'outward-flat', speed: 0.02 }
+                    }
+                }
+            }
+        },
         // Ripple motion - pulsing outward
         wobbleFrequency: 2,
         wobbleAmplitude: 0.008,
@@ -193,6 +678,92 @@ const WATER_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 0.9,
         category: 'ambient',
+        turbulence: 0.5,              // Ocean wave motion
+        // 3D Element spawning - wave elements
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Full wave coverage
+            embedDepth: 0.1,
+            cameraFacing: 0.3,
+            clustering: 0.1,
+            count: 8,
+            scale: 1.0,
+            models: ['wave-curl', 'splash-ring', 'droplet-large'],
+            minDistance: 0.12,
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.88,
+                stagger: 0.04,
+                enter: {
+                    type: 'fade',
+                    duration: 0.12,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeInQuad'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.1,     // Smooth tidal motion
+                    geometryStability: true
+                },
+                // Parameter animation: ocean wave rhythm
+                parameterAnimation: {
+                    waveHeight: {
+                        start: 0.3,
+                        peak: 0.8,
+                        end: 0.4,
+                        curve: 'pulse'       // Rhythmic wave pattern
+                    },
+                    turbulence: {
+                        start: 0.2,
+                        peak: 0.5,
+                        end: 0.3,
+                        curve: 'bell'
+                    },
+                    flowSpeed: {
+                        start: 0.4,
+                        peak: 0.7,
+                        end: 0.5,
+                        curve: 'sustained'
+                    }
+                },
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 0.8,     // Slow tidal rhythm
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                drift: {
+                    direction: 'tangent',
+                    distance: 0.08,     // Musical timing: gentle lateral drift
+                    noise: 0.1
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 6,
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.1, frequency: 0.8 },
+                        drift: { direction: 'tangent', speed: 0.015, noise: 0.1 }
+                    },
+                    'droplet-large': {
+                        drift: { direction: 'tangent', speed: 0.02, noise: 0.15 }
+                    },
+                    'wave-curl': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.15, frequency: 0.8 },
+                        rotate: { axis: 'tangent', speed: 0.02, oscillate: true, range: Math.PI / 4 }
+                    },
+                    'bubble-cluster': {
+                        drift: { direction: 'tangent', speed: 0.015, noise: 0.2 }
+                    }
+                }
+            }
+        },
         // Tide motion - slow lateral sway
         flowFrequency: 0.4,          // Very slow
         flowAmplitude: 0.03,         // Broader movement
@@ -223,6 +794,115 @@ const WATER_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 1.0,
         category: 'transform',
+        turbulence: 0.8,              // High turbulence - chaotic melting
+        // 3D Element spawning - dripping melting water
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Dripping points
+            embedDepth: 0.1,
+            cameraFacing: 0.35,
+            clustering: 0.3,
+            count: 8,
+            scale: 1.0,
+            models: ['droplet-large', 'droplet-small', 'wave-curl'],
+            minDistance: 0.1,
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.92,
+                stagger: 0.04,
+                enter: {
+                    type: 'grow',       // Drips form
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'shrink',     // Drips fall away
+                    duration: 0.1,
+                    easing: 'easeIn'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.07,    // Responsive for chaotic melting
+                    geometryStability: true
+                },
+                // Parameter animation: increasing chaos as form dissolves
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.1,
+                        peak: 1.0,           // Maximum instability
+                        end: 0.8,
+                        curve: 'sustained'   // Keeps building
+                    },
+                    transparency: {
+                        start: 0.0,
+                        peak: 0.7,
+                        end: 0.9,
+                        curve: 'linear'      // Steadily dissolving
+                    }
+                },
+                // Increasing wobble as form dissolves
+                pulse: {
+                    amplitude: 0.2,     // Stronger wobble
+                    frequency: 4,
+                    easing: 'easeInOut'
+                },
+                flicker: {
+                    intensity: 0.1,
+                    rate: 6,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'down',  // Dripping down
+                    distance: 0.15,     // Musical timing: drips 0.15 units
+                    noise: 0.2
+                },
+                scaleVariance: 0.3,
+                lifetimeVariance: 0.2,
+                blending: 'normal',
+                renderOrder: 7,
+                intensityScaling: {
+                    scale: 1.2,
+                    pulseAmplitude: 1.4,
+                    driftSpeed: 1.3
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.8, oscillate: true },
+                                y: { expand: false, rate: 0.4 },
+                                z: { expand: true, rate: 1.8, oscillate: true }
+                            },
+                            wobbleFrequency: 4, wobbleAmplitude: 0.2
+                        }
+                    },
+                    'droplet-small': {
+                        drift: { direction: 'gravity', speed: 0.05, acceleration: 0.02 }
+                    },
+                    'droplet-large': {
+                        drift: { direction: 'gravity', speed: 0.04, acceleration: 0.015 },
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.7 },
+                                y: { expand: true, rate: 1.4 },
+                                z: { expand: false, rate: 0.7 }
+                            },
+                            velocityLink: 'y'
+                        }
+                    },
+                    'wave-curl': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.25, frequency: 4 }
+                    },
+                    'bubble-cluster': {
+                        enter: { type: 'pop', duration: 0.02 },
+                        drift: { direction: 'random', speed: 0.03, noise: 0.4 }
+                    }
+                }
+            }
+        },
         // Wobble - increasing instability
         wobbleFrequency: 4,
         wobbleAmplitude: 0.02,
@@ -250,6 +930,94 @@ const WATER_EFFECT_VARIANTS = {
         beats: 3,
         intensity: 0.8,
         category: 'transform',
+        turbulence: 0.1,              // Very calm settling pool
+        // 3D Element spawning - pool ripples
+        spawnMode: {
+            type: 'surface',
+            pattern: 'ring',            // Pool at base
+            embedDepth: 0.2,
+            cameraFacing: 0.25,
+            clustering: 0.2,
+            count: 5,
+            scale: 1.1,
+            models: ['splash-ring', 'bubble-cluster'],
+            minDistance: 0.15,
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.92,
+                stagger: 0.06,
+                enter: {
+                    type: 'grow',
+                    duration: 0.12,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeInQuad'
+                },
+                // Procedural config - enables ProceduralWaterMaterial
+                procedural: {
+                    scaleSmoothing: 0.12,    // Very smooth for calm settling
+                    geometryStability: true
+                },
+                // Parameter animation: settling and spreading
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.3,
+                        peak: 0.2,           // Calming down
+                        end: 0.05,           // Very calm pool
+                        curve: 'linear'
+                    },
+                    spread: {
+                        start: 0.2,
+                        peak: 1.0,
+                        end: 0.9,
+                        curve: 'sustained'   // Spreads and holds
+                    },
+                    depth: {
+                        start: 0.1,
+                        peak: 0.6,
+                        end: 0.5,
+                        curve: 'bell'
+                    }
+                },
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 1.5,
+                    easing: 'easeInOut'
+                },
+                drift: {
+                    direction: 'outward',
+                    distance: 0.12,     // Musical timing: spreading outward
+                    noise: 0.05
+                },
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.1,
+                blending: 'normal',
+                renderOrder: 5,
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'splash-ring': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.3 },
+                                y: { expand: false, rate: 0.3 },
+                                z: { expand: true, rate: 1.3 }
+                            },
+                            easing: 'easeOutQuad'
+                        },
+                        drift: { direction: 'outward-flat', speed: 0.02 },
+                        opacityLink: 'inverse-scale'
+                    },
+                    'bubble-cluster': {
+                        drift: { direction: 'rising', speed: 0.025, buoyancy: true },
+                        exit: { type: 'pop', duration: 0.03 }
+                    }
+                }
+            }
+        },
         // Wobble - gentle settling ripples
         wobbleFrequency: 2,
         wobbleAmplitude: 0.015,
@@ -535,7 +1303,13 @@ export function createWaterEffectGesture(variant) {
                     glowColorOverride: cfg.glowColor,
                     waterOverlay: {
                         enabled: effectStrength > 0.1,
+                        strength: effectStrength * cfg.intensity,
                         wetness: effectStrength * cfg.intensity,
+                        turbulence: cfg.turbulence,
+                        category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
+                        duration: cfg.duration,
+                        progress,
                         time
                     }
                 };

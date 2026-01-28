@@ -85,12 +85,19 @@ const FIRE_EFFECT_VARIANTS = {
                     duration: 0.15,
                     easing: 'easeIn'
                 },
-                // Temperature evolution over gesture lifetime
-                temperature: {
-                    start: 0.4,         // Cool ignition
-                    peak: 0.65,         // Hot active flames
-                    end: 0.35,          // Dying embers
-                    curve: 'bell'       // Gradual rise and fall
+                // Procedural shader config (universal for all procedural elements)
+                procedural: {
+                    scaleSmoothing: 0.08,    // Smooth scale lerping to avoid jitter
+                    geometryStability: true  // Use fadeProgress for stable vertex displacement
+                },
+                // Parameter animation: animate shader uniforms over gesture lifetime
+                parameterAnimation: {
+                    temperature: {
+                        start: 0.4,         // Cool ignition
+                        peak: 0.65,         // Hot active flames
+                        end: 0.35,          // Dying embers
+                        curve: 'bell'       // Gradual rise and fall
+                    }
                 },
                 // Hold - flickering fire animation
                 flicker: {
@@ -127,6 +134,38 @@ const FIRE_EFFECT_VARIANTS = {
                     pulseAmplitude: 1.5,
                     flickerIntensity: 1.4,
                     emissiveMax: 1.6
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'ember-cluster': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.2, frequency: 4 },
+                        drift: { direction: 'rising', speed: 0.025, noise: 0.25, buoyancy: true },
+                        opacityLink: 'flicker'
+                    },
+                    'flame-wisp': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.7 },
+                                y: { expand: true, rate: 1.6 },
+                                z: { expand: false, rate: 0.7 }
+                            }
+                        },
+                        drift: { direction: 'rising', speed: 0.03, noise: 0.15, buoyancy: true },
+                        orientationOverride: 'rising'
+                    },
+                    'flame-tongue': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.8, oscillate: true },
+                                y: { expand: true, rate: 1.4 },
+                                z: { expand: false, rate: 0.8, oscillate: true }
+                            },
+                            wobbleFrequency: 5, wobbleAmplitude: 0.15
+                        },
+                        drift: { direction: 'rising', speed: 0.025, noise: 0.2 }
+                    }
                 }
             }
         },
@@ -181,12 +220,19 @@ const FIRE_EFFECT_VARIANTS = {
                     duration: 0.12,
                     easing: 'easeInQuad'
                 },
+                // Procedural shader config
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
                 // Temperature: sustained high heat
-                temperature: {
-                    start: 0.6,         // Already hot
-                    peak: 0.85,         // Intense sustained heat
-                    end: 0.7,           // Stays hot
-                    curve: 'sustained'  // Quick rise, hold at peak
+                parameterAnimation: {
+                    temperature: {
+                        start: 0.6,         // Already hot
+                        peak: 0.85,         // Intense sustained heat
+                        end: 0.7,           // Stays hot
+                        curve: 'sustained'  // Quick rise, hold at peak
+                    }
                 },
                 // Sustained intense heat - less flicker, more emissive
                 flicker: {
@@ -218,6 +264,44 @@ const FIRE_EFFECT_VARIANTS = {
                     scale: 1.4,
                     emissiveMax: 1.8,
                     pulseAmplitude: 1.3
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'flame-tongue': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2, oscillate: true },
+                                y: { expand: true, rate: 1.3 },
+                                z: { expand: true, rate: 1.2, oscillate: true }
+                            },
+                            wobbleFrequency: 3, wobbleAmplitude: 0.1
+                        },
+                        drift: { direction: 'rising', speed: 0.02, noise: 0.1 }
+                    },
+                    'flame-wisp': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.8 },
+                                y: { expand: true, rate: 1.8 },
+                                z: { expand: false, rate: 0.8 }
+                            }
+                        },
+                        drift: { direction: 'rising', speed: 0.02, buoyancy: true }
+                    },
+                    'fire-burst': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2 },
+                                y: { expand: true, rate: 1.3 },
+                                z: { expand: true, rate: 1.2 }
+                            }
+                        },
+                        drift: { direction: 'outward', speed: 0.02, noise: 0.05 },
+                        opacityLink: 'inverse-scale'
+                    }
                 }
             }
         },
@@ -274,12 +358,19 @@ const FIRE_EFFECT_VARIANTS = {
                     duration: 0.1,
                     easing: 'easeInCubic'
                 },
+                // Procedural shader config
+                procedural: {
+                    scaleSmoothing: 0.06,   // Slightly faster for explosive effect
+                    geometryStability: true
+                },
                 // Temperature: spike at burst
-                temperature: {
-                    start: 0.5,         // Building heat
-                    peak: 0.95,         // Explosive plasma burst
-                    end: 0.6,           // Hot aftermath
-                    curve: 'spike'      // Slow rise then explosive peak
+                parameterAnimation: {
+                    temperature: {
+                        start: 0.5,         // Building heat
+                        peak: 0.95,         // Explosive plasma burst
+                        end: 0.6,           // Hot aftermath
+                        curve: 'spike'      // Slow rise then explosive peak
+                    }
                 },
                 flicker: {
                     intensity: 0.5,     // Very chaotic at burst
@@ -299,8 +390,7 @@ const FIRE_EFFECT_VARIANTS = {
                 },
                 drift: {
                     direction: 'outward', // Explodes outward
-                    distance: 0.15,     // Total expansion over gesture lifetime
-                    maxDistance: 0.15,  // Cap for outward accumulation
+                    distance: 0.15,       // Total expansion over gesture lifetime
                     noise: 0.02
                 },
                 scaleVariance: 0.4,
@@ -313,6 +403,37 @@ const FIRE_EFFECT_VARIANTS = {
                     emissiveMax: 2.0,
                     flickerIntensity: 1.6,
                     driftSpeed: 1.4
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'fire-burst': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.8 },
+                                y: { expand: true, rate: 2.0 },
+                                z: { expand: true, rate: 1.8 }
+                            }
+                        },
+                        drift: { direction: 'outward', speed: 0.06, noise: 0.15 },
+                        opacityLink: 'inverse-scale'
+                    },
+                    'flame-tongue': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.4, oscillate: true },
+                                y: { expand: true, rate: 1.6 },
+                                z: { expand: true, rate: 1.4, oscillate: true }
+                            },
+                            wobbleFrequency: 8, wobbleAmplitude: 0.2
+                        },
+                        drift: { direction: 'outward', speed: 0.04, noise: 0.1 }
+                    },
+                    'ember-cluster': {
+                        drift: { direction: 'outward', speed: 0.05, noise: 0.3 },
+                        opacityLink: 'flicker'
+                    }
                 }
             }
         },
@@ -375,12 +496,19 @@ const FIRE_EFFECT_VARIANTS = {
                     duration: 0.15,
                     easing: 'easeInQuad'
                 },
+                // Procedural shader config
+                procedural: {
+                    scaleSmoothing: 0.1,    // Very smooth for gentle radiating
+                    geometryStability: true
+                },
                 // Temperature: gentle warmth pulse
-                temperature: {
-                    start: 0.3,         // Warm start
-                    peak: 0.45,         // Gentle peak
-                    end: 0.3,           // Return to warmth
-                    curve: 'pulse'      // Smooth sine wave
+                parameterAnimation: {
+                    temperature: {
+                        start: 0.3,         // Warm start
+                        peak: 0.45,         // Gentle peak
+                        end: 0.3,           // Return to warmth
+                        curve: 'pulse'      // Smooth sine wave
+                    }
                 },
                 // Controlled emanation - smooth breathing
                 pulse: {
@@ -414,6 +542,24 @@ const FIRE_EFFECT_VARIANTS = {
                     scale: 1.2,
                     emissiveMax: 1.3,
                     pulseAmplitude: 1.2
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'ember-cluster': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.15, frequency: 1.5 },
+                        drift: { direction: 'rising', speed: 0.015, noise: 0.1, buoyancy: true }
+                    },
+                    'flame-wisp': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.8 },
+                                y: { expand: true, rate: 1.2 },
+                                z: { expand: false, rate: 0.8 }
+                            }
+                        },
+                        drift: { direction: 'rising', speed: 0.01, buoyancy: true }
+                    }
                 }
             }
         },
@@ -470,12 +616,19 @@ const FIRE_EFFECT_VARIANTS = {
                     duration: 0.1,
                     easing: 'easeIn'
                 },
+                // Procedural shader config
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
                 // Temperature: powerful sustained heat with breathing
-                temperature: {
-                    start: 0.55,        // Starting hot
-                    peak: 0.75,         // Powerful peak
-                    end: 0.6,           // Sustained warmth
-                    curve: 'bell'       // Controlled rise and fall
+                parameterAnimation: {
+                    temperature: {
+                        start: 0.55,        // Starting hot
+                        peak: 0.75,         // Powerful peak
+                        end: 0.6,           // Sustained warmth
+                        curve: 'bell'       // Controlled rise and fall
+                    }
                 },
                 // Powerful controlled flames
                 pulse: {
@@ -508,6 +661,44 @@ const FIRE_EFFECT_VARIANTS = {
                     scale: 1.35,
                     emissiveMax: 1.5,
                     pulseAmplitude: 1.3
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'flame-tongue': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.2, oscillate: true },
+                                y: { expand: true, rate: 1.8 },
+                                z: { expand: true, rate: 1.2, oscillate: true }
+                            },
+                            wobbleFrequency: 2, wobbleAmplitude: 0.1
+                        },
+                        drift: { direction: 'rising', speed: 0.03, buoyancy: true }
+                    },
+                    'fire-burst': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: true, rate: 1.3 },
+                                y: { expand: true, rate: 1.4 },
+                                z: { expand: true, rate: 1.3 }
+                            }
+                        },
+                        drift: { direction: 'outward', speed: 0.025, noise: 0.05 },
+                        opacityLink: 'inverse-scale'
+                    },
+                    'flame-wisp': {
+                        scaling: {
+                            mode: 'non-uniform',
+                            axes: {
+                                x: { expand: false, rate: 0.7 },
+                                y: { expand: true, rate: 2.0 },
+                                z: { expand: false, rate: 0.7 }
+                            }
+                        },
+                        drift: { direction: 'rising', speed: 0.035, buoyancy: true }
+                    }
                 }
             }
         },
@@ -565,12 +756,19 @@ const FIRE_EFFECT_VARIANTS = {
                     duration: 0.3,      // Slow fade out
                     easing: 'easeInQuad'
                 },
+                // Procedural shader config
+                procedural: {
+                    scaleSmoothing: 0.12,   // Very smooth for slow embers
+                    geometryStability: true
+                },
                 // Temperature: subtle ember glow
-                temperature: {
-                    start: 0.1,         // Cool embers
-                    peak: 0.2,          // Gentle warmth
-                    end: 0.08,          // Dying down
-                    curve: 'pulse'      // Subtle breathing
+                parameterAnimation: {
+                    temperature: {
+                        start: 0.1,         // Cool embers
+                        peak: 0.2,          // Gentle warmth
+                        end: 0.08,          // Dying down
+                        curve: 'pulse'      // Subtle breathing
+                    }
                 },
                 // Subtle smoldering - very slow
                 pulse: {
@@ -597,6 +795,14 @@ const FIRE_EFFECT_VARIANTS = {
                 intensityScaling: {
                     scale: 1.1,
                     emissiveMax: 1.4
+                },
+                // Model-specific behavior overrides (Phase 11)
+                modelOverrides: {
+                    'ember-cluster': {
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.08, frequency: 0.5 },
+                        drift: { direction: 'rising', speed: 0.008, noise: 0.05, buoyancy: true },
+                        opacityLink: 'dissipate'
+                    }
                 }
             }
         },
