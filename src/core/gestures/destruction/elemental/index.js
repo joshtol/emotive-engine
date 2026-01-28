@@ -113,3 +113,18 @@ export {
     singularity,
     VOID_EFFECT_VARIANTS
 } from './voidEffectFactory.js';
+
+// Smoke effect gestures (derived element - uses void models)
+export {
+    createSmokeEffectGesture,
+    puff,
+    billow,
+    fume,
+    shroud,
+    haze,
+    choke,
+    smokebomb,
+    vanish,
+    materialize,
+    SMOKE_EFFECT_VARIANTS
+} from './smokeEffectFactory.js';

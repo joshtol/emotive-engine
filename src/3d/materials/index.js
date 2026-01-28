@@ -174,3 +174,15 @@ export {
     setProceduralSmokeWarmth,
     getProceduralSmokePhysics
 } from './ProceduralSmokeMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Procedural Void Material (advanced shader-based with rift support)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    createProceduralVoidMaterial,
+    updateProceduralVoidMaterial,
+    setProceduralVoidDepth,
+    setProceduralVoidIntensity,
+    setProceduralVoidRiftMode,
+    getProceduralVoidPhysics
+} from './ProceduralVoidMaterial.js';
