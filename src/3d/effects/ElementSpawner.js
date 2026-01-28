@@ -57,6 +57,27 @@ import {
     setProceduralFireTemperature
 } from '../materials/ProceduralFireMaterial.js';
 
+import {
+    createProceduralWaterMaterial,
+    updateProceduralWaterMaterial,
+    setProceduralWaterIntensity,
+    setProceduralWaterTurbulence
+} from '../materials/ProceduralWaterMaterial.js';
+
+import {
+    createProceduralPoisonMaterial,
+    updateProceduralPoisonMaterial,
+    setProceduralPoisonIntensity,
+    setProceduralPoisonToxicity
+} from '../materials/ProceduralPoisonMaterial.js';
+
+import {
+    createProceduralSmokeMaterial,
+    updateProceduralSmokeMaterial,
+    setProceduralSmokeIntensity,
+    setProceduralSmokeDensity
+} from '../materials/ProceduralSmokeMaterial.js';
+
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GOLDEN RATIO SIZING SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -163,11 +184,15 @@ const MODEL_SIZES = {
  * - 'outward': Points away from surface (default) - good for spikes, flowers, mushrooms
  * - 'flat': Lies parallel to surface - good for moss, fallen petals, flat leaves
  * - 'tangent': Trails along surface in random direction - good for vines, roots
+ * - 'rising': Biases toward world-up - good for flames, bubbles, rising elements
+ * - 'falling': Biases toward world-down - good for droplets, falling elements
+ * - 'outward-flat': Faces away from surface but lies flat - good for rifts, portals
  *
  * tiltAngle: Additional tilt from base orientation (radians)
  * - For 'outward': 0 = straight out, positive = tilts away from vertical
  * - For 'flat': 0 = flush, positive = slight lift at one end
  * - For 'tangent': 0 = flush, positive = one end lifts off surface
+ * - For 'outward-flat': 0 = perfectly flat, positive = slight angle off surface
  */
 const MODEL_ORIENTATIONS = {
     // Ice - crystals point outward, spikes more perpendicular
@@ -216,10 +241,10 @@ const MODEL_ORIENTATIONS = {
     'wave-curl':       { mode: 'tangent', tiltAngle: 0.2 },   // Waves follow surface
 
     // Void - cracks flat, tendrils reach, patches spread
-    'void-crack':      { mode: 'flat',    tiltAngle: 0 },     // Cracks lie in surface
-    'shadow-tendril':  { mode: 'outward', tiltAngle: 0.4 },   // Tendrils reach outward
-    'corruption-patch': { mode: 'flat',   tiltAngle: 0.05 },  // Patches spread on surface
-    'void-shard':      { mode: 'outward', tiltAngle: 0.35 },  // Shards jut outward
+    'void-crack':      { mode: 'outward-flat', tiltAngle: 0 },  // Rifts face away, lie flat
+    'shadow-tendril':  { mode: 'outward', tiltAngle: 0.4 },     // Tendrils reach outward
+    'corruption-patch': { mode: 'outward-flat', tiltAngle: 0.05 },  // Patches spread flat on surface
+    'void-shard':      { mode: 'outward', tiltAngle: 0.35 },    // Shards jut outward
 
     // Light - rays outward, prisms outward, halos flat, sparkles camera-facing
     'light-ray':       { mode: 'outward', tiltAngle: 0.1 },   // Rays beam outward
@@ -227,6 +252,102 @@ const MODEL_ORIENTATIONS = {
     'halo-ring':       { mode: 'flat',    tiltAngle: 0 },     // Halos lie flat as rings
     'sparkle-star':    { mode: 'outward', tiltAngle: 0.5 }    // Stars face camera (high tilt = more camera facing)
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// MODEL ALIASING - Derived elements reuse base element models with custom shaders
+// ═══════════════════════════════════════════════════════════════════════════════════════
+//
+// Derived elements don't need their own 3D models - they reuse existing models from
+// base elements and apply custom procedural shaders to achieve distinct visual identity.
+//
+// | Derived   | Base    | Models Used                    | Shader                    |
+// |-----------|---------|--------------------------------|---------------------------|
+// | poison    | water   | droplet, splash, ring, etc.   | ProceduralPoisonMaterial  |
+// | smoke     | void    | crack, tendril, patch, shard  | ProceduralSmokeMaterial   |
+// | steam     | water   | droplet, bubble, etc.         | ProceduralSteamMaterial   |
+// | shadow    | void    | tendril, patch, shard         | ProceduralShadowMaterial  |
+// | lava      | fire    | flame, ember, burst           | ProceduralLavaMaterial    |
+// | blood     | water   | droplet, splash, ring         | ProceduralBloodMaterial   |
+//
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Model aliases for derived elements
+ * Maps derived element type to base element for model loading
+ */
+const MODEL_ALIASES = {
+    // Active derived elements
+    poison: 'water',
+    smoke: 'void',
+    // Future derived elements
+    steam: 'water',
+    shadow: 'void',
+    lava: 'fire',
+    blood: 'water'
+};
+
+/**
+ * Resolve element type to base element for model loading
+ * @param {string} elementType - Element type (may be derived)
+ * @returns {string} Base element type for model lookup
+ */
+function resolveModelElement(elementType) {
+    return MODEL_ALIASES[elementType] || elementType;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// BLEND MODES - Per-element rendering modes for proper visual effect
+// ═══════════════════════════════════════════════════════════════════════════════════════
+//
+// | Mode     | Elements                          | Effect                             |
+// |----------|-----------------------------------|------------------------------------|
+// | additive | fire, electric, light, void       | Glowing, energy-based, brightens  |
+// | normal   | water, ice, earth, nature, poison | Physical, opaque, realistic blend |
+// | normal   | smoke                             | Translucent, depth-sorted          |
+//
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Blend mode per element type
+ */
+const ELEMENT_BLEND_MODES = {
+    // Additive: glowing, energy-based elements
+    fire: 'additive',
+    electricity: 'additive',
+    light: 'additive',
+    void: 'additive',
+
+    // Normal: physical, opaque elements
+    water: 'normal',
+    ice: 'normal',
+    earth: 'normal',
+    nature: 'normal',
+    poison: 'normal',
+    smoke: 'normal',
+
+    // Future elements
+    steam: 'normal',
+    shadow: 'additive',
+    lava: 'additive',
+    blood: 'normal'
+};
+
+/**
+ * Apply blend mode to material based on element type
+ * @param {THREE.Material} material - Material to configure
+ * @param {string} elementType - Element type
+ */
+function applyBlendMode(material, elementType) {
+    const mode = ELEMENT_BLEND_MODES[elementType] || 'normal';
+
+    if (mode === 'additive') {
+        material.blending = THREE.AdditiveBlending;
+        material.depthWrite = false;
+    } else {
+        material.blending = THREE.NormalBlending;
+        material.depthWrite = true;
+    }
+}
 
 /**
  * Get orientation config for a model
@@ -507,7 +628,10 @@ export class ElementSpawner {
             electricity: [],
             water: [],
             void: [],
-            light: []
+            light: [],
+            // Derived elements
+            poison: [],
+            smoke: []
         };
 
         // Materials (created once, reused)
@@ -519,6 +643,9 @@ export class ElementSpawner {
         this.waterMaterial = null;
         this.voidMaterial = null;
         this.lightMaterial = null;
+        // Derived element materials
+        this.poisonMaterial = null;
+        this.smokeMaterial = null;
 
         // Animation state
         this.time = 0;
@@ -593,6 +720,30 @@ export class ElementSpawner {
                 orbitRadius: { min: 0.6, max: 1.1 },
                 heightOffset: { min: 0, max: 0.6 },
                 rotationSpeed: { min: 0.02, max: 0.06 }  // Gentle radiance
+            },
+
+            // ═══════════════════════════════════════════════════════════════
+            // DERIVED ELEMENTS - Reuse models from base elements
+            // ═══════════════════════════════════════════════════════════════
+
+            // Poison uses water models with viscous, toxic shader
+            poison: {
+                models: ['droplet-small', 'droplet-large', 'splash-ring', 'bubble-cluster', 'wave-curl'],
+                count: { min: 3, max: 8 },
+                scale: { min: 0.07, max: 0.15 },
+                orbitRadius: { min: 0.4, max: 0.8 },
+                heightOffset: { min: -0.4, max: 0.2 },
+                rotationSpeed: { min: 0.005, max: 0.02 }  // Viscous, slow movement
+            },
+
+            // Smoke uses void models with billowing, rising shader
+            smoke: {
+                models: ['void-crack', 'shadow-tendril', 'corruption-patch', 'void-shard'],
+                count: { min: 4, max: 10 },
+                scale: { min: 0.1, max: 0.2 },
+                orbitRadius: { min: 0.5, max: 1.0 },
+                heightOffset: { min: 0, max: 0.6 },
+                rotationSpeed: { min: 0.01, max: 0.03 }  // Billowing, rising
             }
         };
 
@@ -635,9 +786,13 @@ export class ElementSpawner {
         this.natureMaterial = createNatureMaterial();
         this.fireMaterial = createProceduralFireMaterial({ temperature: 0.5 });
         this.electricityMaterial = createElectricityMaterial();
-        this.waterMaterial = createWaterMaterial();
+        this.waterMaterial = createProceduralWaterMaterial({ turbulence: 0.5 });
         this.voidMaterial = createVoidMaterial();
         this.lightMaterial = createLightMaterial();
+
+        // Derived element materials (use base element models with custom shaders)
+        this.poisonMaterial = createProceduralPoisonMaterial({ toxicity: 0.5 });
+        this.smokeMaterial = createProceduralSmokeMaterial({ density: 0.5 });
 
         // Debug: console.log(`[ElementSpawner] Initialized with mascot radius: ${this.mascotRadius.toFixed(3)}`);
     }
@@ -742,18 +897,22 @@ export class ElementSpawner {
 
     /**
      * Load a model from disk
-     * @param {string} elementType - 'ice', 'earth', or 'nature'
+     * @param {string} elementType - Element type (may be derived like 'poison' or 'smoke')
      * @param {string} modelName - Model name without extension
      * @returns {Promise<THREE.BufferGeometry>}
      */
     loadModel(elementType, modelName) {
-        const cacheKey = `${elementType}/${modelName}`;
+        // Resolve derived elements to their base element for model loading
+        // e.g., 'poison' -> 'water', 'smoke' -> 'void'
+        const modelElement = resolveModelElement(elementType);
+
+        const cacheKey = `${modelElement}/${modelName}`;
 
         if (this.geometryCache.has(cacheKey)) {
             return Promise.resolve(this.geometryCache.get(cacheKey));
         }
 
-        const path = `${this.assetBasePath}/models/Elements/${this._capitalize(elementType)}/${modelName}.glb`;
+        const path = `${this.assetBasePath}/models/Elements/${this._capitalize(modelElement)}/${modelName}.glb`;
 
         return new Promise((resolve, _reject) => {
             this.gltfLoader.load(
@@ -1153,6 +1312,41 @@ export class ElementSpawner {
             break;
         }
 
+        case 'outward-flat': {
+            // Element faces away from surface but lies flat (parallel to surface)
+            // Perfect for rifts, portals, spreading cracks - they open up facing outward
+            // but spread along the surface plane
+
+            // First: orient so the element's "front" faces along the normal (away from surface)
+            // The element's Y-up becomes perpendicular to normal (lies in surface plane)
+            const forward = normal.clone();  // Element faces this direction
+
+            // Create a basis where forward = normal, up lies in surface plane
+            const matrix = new THREE.Matrix4();
+
+            // Pick an "up" direction that lies in the surface plane
+            // Use the rotated tangent as the element's up (it lies in surface plane)
+            const elementUp = rotatedTangent.clone();
+
+            // Right vector completes the basis
+            const elementRight = new THREE.Vector3().crossVectors(elementUp, forward).normalize();
+
+            // Recalculate up to ensure orthogonality
+            const finalUp = new THREE.Vector3().crossVectors(forward, elementRight).normalize();
+
+            // Build rotation matrix: X=right, Y=up (in surface plane), Z=forward (away from surface)
+            matrix.makeBasis(elementRight, finalUp, forward);
+            baseQuat.setFromRotationMatrix(matrix);
+
+            // Apply tilt - slight angle off the surface for depth
+            if (orientConfig.tiltAngle !== 0) {
+                const tiltQuat = new THREE.Quaternion();
+                tiltQuat.setFromAxisAngle(elementRight, orientConfig.tiltAngle);
+                baseQuat.premultiply(tiltQuat);
+            }
+            break;
+        }
+
         case 'outward':
         default: {
             // Element points away from surface (default behavior)
@@ -1535,7 +1729,22 @@ export class ElementSpawner {
             updateProceduralFireMaterial(this.fireMaterial, deltaTime);
         }
 
-        for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light']) {
+        // Update procedural water material animation
+        if (this.waterMaterial?.uniforms) {
+            updateProceduralWaterMaterial(this.waterMaterial, deltaTime);
+        }
+
+        // Update procedural poison material animation
+        if (this.poisonMaterial?.uniforms) {
+            updateProceduralPoisonMaterial(this.poisonMaterial, deltaTime);
+        }
+
+        // Update procedural smoke material animation
+        if (this.smokeMaterial?.uniforms) {
+            updateProceduralSmokeMaterial(this.smokeMaterial, deltaTime);
+        }
+
+        for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light', 'poison', 'smoke']) {
             const elements = this.activeElements[type];
             const toRemove = [];
 
@@ -1567,6 +1776,12 @@ export class ElementSpawner {
 
                     // Apply animation values to mesh
                     this._applyAnimationToMesh(mesh, animState);
+
+                    // Update procedural shader time for per-mesh animation (fire, water, etc.)
+                    // Each mesh has a cloned material, so uTime must be updated per-mesh
+                    if (mesh.material?.uniforms?.uTime) {
+                        mesh.material.uniforms.uTime.value += deltaTime;
+                    }
 
                     // DEBUG: Check if position changed unexpectedly between state update and animation apply
                     if (isFireDebug && posBefore) {
@@ -1782,6 +1997,11 @@ export class ElementSpawner {
             return this.voidMaterial;
         case 'light':
             return this.lightMaterial;
+        // Derived elements
+        case 'poison':
+            return this.poisonMaterial;
+        case 'smoke':
+            return this.smokeMaterial;
         default:
             return new THREE.MeshStandardMaterial({ color: 0x888888 });
         }
@@ -2185,13 +2405,12 @@ export class ElementSpawner {
             : animState.scale;
         const targetScale = scaledScale * baseScale;
 
-        // For fire elements, smooth the scale animation to avoid jitter
-        // Lerp toward target instead of snapping (high-frequency pulse looks glitchy otherwise)
-        const isProceduralFire = mesh.userData.elementType === 'fire' && mesh.material?.uniforms;
-        if (isProceduralFire) {
+        // Config-driven scale smoothing for procedural elements
+        // Prevents jitter from high-frequency pulse animations with shader vertex displacement
+        const scaleSmoothing = animConfig?.procedural?.scaleSmoothing ?? 0;
+        if (scaleSmoothing > 0) {
             const currentScale = mesh.scale.x;
-            const smoothing = 0.08; // Lower = smoother/slower response
-            const smoothedScale = currentScale + (targetScale - currentScale) * smoothing;
+            const smoothedScale = currentScale + (targetScale - currentScale) * scaleSmoothing;
             mesh.scale.setScalar(smoothedScale);
         } else {
             mesh.scale.setScalar(targetScale);
@@ -2251,9 +2470,15 @@ export class ElementSpawner {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // FIRE ELEMENT SPECIAL HANDLING - Animate procedural fire shader uniforms
+        // PROCEDURAL ELEMENT HANDLING - Animate shader uniforms
+        // Works for fire, water, electricity, or any element with procedural shaders
         // ═══════════════════════════════════════════════════════════════════════════
-        if (mesh.userData.elementType === 'fire' && mesh.material?.uniforms) {
+        const isProcedural = mesh.material?.uniforms && animConfig?.procedural;
+        const isFire = mesh.userData.elementType === 'fire';
+        const isWater = mesh.userData.elementType === 'water';
+
+        // Fire-specific: intensity and fade progress
+        if (isFire && mesh.material?.uniforms) {
             // Apply intensity (with flicker) for brightness
             // Apply fadeProgress (smooth, no flicker) for stable vertex displacement
             setProceduralFireIntensity(mesh.material, animState.opacity, animState.fadeProgress);
@@ -2264,14 +2489,52 @@ export class ElementSpawner {
                 const fadeProgress = mesh.material.uniforms.uFadeProgress?.value;
                 console.log(`[FIRE SHADER] opacity=${animState.opacity.toFixed(3)} fade=${animState.fadeProgress?.toFixed(3)} → intensity=${actualIntensity?.toFixed(3)}`);
             }
+        }
 
-            // Get temperature config from animation or use default
-            const tempConfig = animConfig?.temperature;
-            if (tempConfig) {
-                // Animate temperature over gesture lifetime
-                const progress = animState.gestureProgress ?? 0;
-                const temp = this._interpolateTemperature(tempConfig, progress);
-                setProceduralFireTemperature(mesh.material, temp);
+        // Water-specific: intensity and fade progress
+        if (isWater && mesh.material?.uniforms) {
+            // Apply intensity for brightness and wave strength
+            // Apply fadeProgress for stable wave displacement
+            setProceduralWaterIntensity(mesh.material, animState.opacity, animState.fadeProgress);
+        }
+
+        // Generic procedural: apply fadeProgress for geometry stability
+        if (isProcedural && animConfig.procedural.geometryStability && mesh.material.uniforms.uFadeProgress) {
+            mesh.material.uniforms.uFadeProgress.value = Math.max(0.01, animState.fadeProgress ?? 1);
+        }
+
+        // Parameter animation: animate any shader uniform over gesture lifetime
+        // Works for fire (temperature), water (waveHeight), electricity (intensity), etc.
+        const paramAnim = animConfig?.parameterAnimation;
+        if (paramAnim && mesh.material?.uniforms) {
+            const progress = animState.gestureProgress ?? 0;
+
+            // Handle both old style (primary) and new style (named parameters)
+            if (paramAnim.primary) {
+                // Old style: fire temperature
+                if (isFire) {
+                    const temp = this._interpolateParameter(paramAnim.primary, progress);
+                    setProceduralFireTemperature(mesh.material, temp);
+                }
+            } else {
+                // New style: named parameters
+                for (const [paramName, config] of Object.entries(paramAnim)) {
+                    const uniformName = `u${paramName.charAt(0).toUpperCase()}${paramName.slice(1)}`;
+                    if (mesh.material.uniforms[uniformName]) {
+                        const value = this._interpolateParameter(config, progress);
+                        mesh.material.uniforms[uniformName].value = value;
+                    }
+                    // Fire-specific: temperature has special setter
+                    if (paramName === 'temperature' && isFire) {
+                        const temp = this._interpolateParameter(config, progress);
+                        setProceduralFireTemperature(mesh.material, temp);
+                    }
+                    // Water-specific: turbulence has special setter
+                    if (paramName === 'turbulence' && isWater) {
+                        const turb = this._interpolateParameter(config, progress);
+                        setProceduralWaterTurbulence(mesh.material, turb);
+                    }
+                }
             }
 
             // NOTE: Flame height animation disabled - was causing vertex position glitches
@@ -2284,13 +2547,14 @@ export class ElementSpawner {
     }
 
     /**
-     * Interpolate temperature value based on gesture progress
-     * @param {Object} config - Temperature config { start, peak, end, curve }
+     * Interpolate parameter value based on gesture progress
+     * Generic system that works for any shader uniform (temperature, waveHeight, intensity, etc.)
+     * @param {Object} config - Parameter config { start, peak, end, curve }
      * @param {number} progress - Gesture progress 0-1
-     * @returns {number} Interpolated temperature
+     * @returns {number} Interpolated value
      * @private
      */
-    _interpolateTemperature(config, progress) {
+    _interpolateParameter(config, progress) {
         const { start = 0.5, peak = 0.6, end = 0.4, curve = 'bell' } = config;
 
         switch (curve) {
@@ -2330,6 +2594,10 @@ export class ElementSpawner {
             const wave = Math.sin(progress * Math.PI * 2) * 0.5 + 0.5;
             return start + (peak - start) * wave;
         }
+
+        case 'linear':
+            // Simple linear interpolation: start → end
+            return start + (end - start) * progress;
 
         default:
             return start;
@@ -2409,6 +2677,8 @@ export class ElementSpawner {
         this.waterMaterial?.dispose();
         this.voidMaterial?.dispose();
         this.lightMaterial?.dispose();
+        this.poisonMaterial?.dispose();
+        this.smokeMaterial?.dispose();
 
         // Remove container from parent
         if (this.container.parent) {

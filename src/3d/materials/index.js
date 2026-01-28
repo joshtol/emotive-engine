@@ -16,11 +16,19 @@
  * | Element  | Master Param  | Range                          |
  * |----------|---------------|--------------------------------|
  * | fire     | temperature   | 0=embers, 0.5=fire, 1=plasma   |
- * | water    | viscosity     | 0=mercury, 0.3=water, 1=jello  |
+ * | water    | turbulence    | 0=calm, 0.5=river, 1=storm     |
  * | smoke    | density       | 0=steam, 0.5=smoke, 1=heavy    |
  * | ice      | melt          | 0=frozen, 0.5=melting, 1=slush |
  * | electric | charge        | 0=static, 0.5=arcs, 1=lightning|
  * | void     | depth         | 0=wispy, 0.5=dark, 1=black hole|
+ *
+ * ## Procedural Materials (Advanced)
+ *
+ * For realistic, shader-based elemental effects:
+ * - ProceduralFireMaterial - Dynamic flames with blackbody colors
+ * - ProceduralWaterMaterial - Waves, caustics, foam generation
+ * - ProceduralPoisonMaterial - Viscous toxic fluid (uses water models)
+ * - ProceduralSmokeMaterial - Billowing rising smoke (uses void models)
  *
  * ## Quick Start
  *
@@ -120,3 +128,49 @@ export {
     getVoidPhysics,
     getVoidCrackStyle
 } from './VoidMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Procedural Fire Material (advanced shader-based)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    createProceduralFireMaterial,
+    updateProceduralFireMaterial,
+    setProceduralFireTemperature,
+    setProceduralFireIntensity,
+    getProceduralFirePhysics
+} from './ProceduralFireMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Procedural Water Material (advanced shader-based)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    createProceduralWaterMaterial,
+    updateProceduralWaterMaterial,
+    setProceduralWaterTurbulence,
+    setProceduralWaterIntensity,
+    setProceduralWaterTint,
+    getProceduralWaterPhysics
+} from './ProceduralWaterMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Procedural Poison Material (derived element - uses water models)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    createProceduralPoisonMaterial,
+    updateProceduralPoisonMaterial,
+    setProceduralPoisonToxicity,
+    setProceduralPoisonIntensity,
+    getProceduralPoisonPhysics
+} from './ProceduralPoisonMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Procedural Smoke Material (derived element - uses void models)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    createProceduralSmokeMaterial,
+    updateProceduralSmokeMaterial,
+    setProceduralSmokeDensity,
+    setProceduralSmokeIntensity,
+    setProceduralSmokeWarmth,
+    getProceduralSmokePhysics
+} from './ProceduralSmokeMaterial.js';
