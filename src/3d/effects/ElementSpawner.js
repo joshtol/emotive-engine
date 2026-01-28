@@ -46,7 +46,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 // Animation system imports
 import { AnimationConfig } from './animation/AnimationConfig.js';
 import { AnimationState, AnimationStates } from './animation/AnimationState.js';
-import { calculateHoldAnimations } from './animation/HoldAnimations.js';
+import {
+    calculateHoldAnimations,
+    calculateNonUniformScale,
+    calculatePhysicsDrift,
+    calculateOpacityLink
+} from './animation/HoldAnimations.js';
 import { TrailState } from './animation/Trail.js';
 
 // Procedural materials
@@ -347,6 +352,480 @@ function applyBlendMode(material, elementType) {
         material.blending = THREE.NormalBlending;
         material.depthWrite = true;
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// MODEL BEHAVIORS - Animation behaviors per model shape
+// ═══════════════════════════════════════════════════════════════════════════════════════
+//
+// Different model shapes require different animations:
+// - Rings expand outward and flatten
+// - Droplets elongate as they fall
+// - Flames stretch upward
+// - Crystals grow from base
+// - Patches spread along surface
+//
+// Behaviors include:
+// - scaling: non-uniform or pulse-based scaling
+// - drift: physics-aware movement (gravity, rising, outward-flat)
+// - orientationOverride: override MODEL_ORIENTATIONS for dynamic orientation
+// - opacityLink: link opacity to scale or flicker
+//
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const MODEL_BEHAVIORS = {
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // WATER MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'splash-ring': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.5 },
+                y: { expand: false, rate: 0.3 },
+                z: { expand: true, rate: 1.5 }
+            },
+            easing: 'easeOutQuad'
+        },
+        drift: { direction: 'outward-flat', speed: 0.03 },
+        orientationOverride: 'flat',
+        opacityLink: 'inverse-scale'
+    },
+
+    'droplet-small': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.8 },
+                y: { expand: true, rate: 1.3 },
+                z: { expand: false, rate: 0.8 }
+            },
+            velocityLink: 'y'
+        },
+        drift: { direction: 'gravity', speed: 0.02, acceleration: 0.01, adherence: 0.3 },
+        orientationOverride: 'velocity'
+    },
+
+    'droplet-large': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.7 },
+                y: { expand: true, rate: 1.4 },
+                z: { expand: false, rate: 0.7 }
+            },
+            velocityLink: 'y'
+        },
+        drift: { direction: 'gravity', speed: 0.03, acceleration: 0.015, adherence: 0.5 },
+        orientationOverride: 'velocity'
+    },
+
+    'wave-curl': {
+        scaling: { mode: 'uniform-pulse', amplitude: 0.15, frequency: 1.5 },
+        drift: { direction: 'tangent', speed: 0.015, noise: 0.2 },
+        rotate: { axis: 'tangent', speed: 0.02, oscillate: true, range: Math.PI / 6 },
+        orientationOverride: 'tangent'
+    },
+
+    'bubble-cluster': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.1, oscillate: true },
+                y: { expand: true, rate: 1.2 },
+                z: { expand: true, rate: 1.1, oscillate: true }
+            },
+            wobbleFrequency: 3,
+            wobbleAmplitude: 0.1
+        },
+        drift: { direction: 'rising', speed: 0.025, noise: 0.3, buoyancy: true },
+        orientationOverride: 'rising'
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // FIRE MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'ember-cluster': {
+        scaling: { mode: 'uniform-pulse', amplitude: 0.2, frequency: 4 },
+        drift: { direction: 'rising', speed: 0.02, noise: 0.25, buoyancy: true },
+        opacityLink: 'flicker'
+    },
+
+    'flame-wisp': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.7 },
+                y: { expand: true, rate: 1.6 },
+                z: { expand: false, rate: 0.7 }
+            }
+        },
+        drift: { direction: 'rising', speed: 0.03, noise: 0.15, buoyancy: true },
+        orientationOverride: 'rising'
+    },
+
+    'flame-tongue': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.8, oscillate: true },
+                y: { expand: true, rate: 1.4 },
+                z: { expand: false, rate: 0.8, oscillate: true }
+            },
+            wobbleFrequency: 5,
+            wobbleAmplitude: 0.15
+        },
+        drift: { direction: 'rising', speed: 0.025, noise: 0.2 }
+    },
+
+    'fire-burst': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.3 },
+                y: { expand: true, rate: 1.5 },
+                z: { expand: true, rate: 1.3 }
+            }
+        },
+        drift: { direction: 'outward', speed: 0.04, noise: 0.1 },
+        opacityLink: 'inverse-scale'
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // ICE MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'crystal-small': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.0 },
+                y: { expand: true, rate: 1.4 },
+                z: { expand: true, rate: 1.0 }
+            },
+            easing: 'easeOutQuad'
+        },
+        drift: null
+    },
+
+    'crystal-medium': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.1 },
+                y: { expand: true, rate: 1.5 },
+                z: { expand: true, rate: 1.1 }
+            }
+        }
+    },
+
+    'crystal-cluster': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.2 },
+                y: { expand: true, rate: 1.3 },
+                z: { expand: true, rate: 1.2 }
+            }
+        }
+    },
+
+    'ice-spike': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.9 },
+                y: { expand: true, rate: 1.8 },
+                z: { expand: false, rate: 0.9 }
+            }
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // NATURE MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'vine-tendril': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.0 },
+                y: { expand: true, rate: 1.5 },
+                z: { expand: true, rate: 1.0 }
+            }
+        },
+        drift: { direction: 'tangent', speed: 0.01, adherence: 0.8 },
+        orientationOverride: 'tangent'
+    },
+
+    'leaf-single': {
+        scaling: { mode: 'uniform-pulse', amplitude: 0.1, frequency: 0.5 },
+        drift: { direction: 'gravity', speed: 0.01, acceleration: 0.005, noise: 0.3 },
+        rotate: { axis: 'random', speed: 0.02, oscillate: true }
+    },
+
+    'fern-frond': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.2 },
+                y: { expand: true, rate: 1.4 },
+                z: { expand: true, rate: 1.0 }
+            }
+        },
+        drift: { direction: 'outward', speed: 0.008 }
+    },
+
+    'flower-bloom': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.3 },
+                y: { expand: true, rate: 1.1 },
+                z: { expand: true, rate: 1.3 }
+            }
+        }
+    },
+
+    'mushroom-cap': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.2 },
+                y: { expand: true, rate: 1.0 },
+                z: { expand: true, rate: 1.2 }
+            }
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // ELECTRICITY MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'arc-small': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.2, oscillate: true },
+                y: { expand: false, rate: 0.9 },
+                z: { expand: true, rate: 1.2, oscillate: true }
+            },
+            wobbleFrequency: 8,
+            wobbleAmplitude: 0.2
+        },
+        opacityLink: 'flicker'
+    },
+
+    'arc-medium': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.4 },
+                y: { expand: true, rate: 1.1 },
+                z: { expand: true, rate: 1.4 }
+            },
+            wobbleFrequency: 6,
+            wobbleAmplitude: 0.15
+        },
+        orientationOverride: 'velocity',
+        opacityLink: 'flicker'
+    },
+
+    'spark-node': {
+        scaling: { mode: 'uniform-pulse', amplitude: 0.3, frequency: 10 },
+        drift: { direction: 'random', speed: 0.05, noise: 0.5 },
+        opacityLink: 'flicker'
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // VOID MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'void-crack': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.4 },
+                y: { expand: false, rate: 0.8 },
+                z: { expand: true, rate: 1.4 }
+            }
+        },
+        drift: { direction: 'outward-flat', speed: 0.02, adherence: 0.5 },
+        orientationOverride: 'flat',
+        opacityLink: 'inverse-scale'
+    },
+
+    'shadow-tendril': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.8 },
+                y: { expand: true, rate: 1.6 },
+                z: { expand: false, rate: 0.8 }
+            }
+        },
+        drift: { direction: 'outward', speed: 0.02, noise: 0.15 }
+    },
+
+    'corruption-patch': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.3 },
+                y: { expand: false, rate: 0.5 },
+                z: { expand: true, rate: 1.3 }
+            }
+        },
+        drift: { direction: 'outward-flat', speed: 0.015, adherence: 0.8 },
+        orientationOverride: 'flat'
+    },
+
+    'void-shard': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.2 },
+                y: { expand: true, rate: 1.4 },
+                z: { expand: true, rate: 1.2 }
+            }
+        },
+        drift: { direction: 'outward', speed: 0.015, noise: 0.1 }
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════
+    // LIGHT MODELS
+    // ═══════════════════════════════════════════════════════════════════════════════════
+
+    'light-ray': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: false, rate: 0.7 },
+                y: { expand: true, rate: 2.0 },
+                z: { expand: false, rate: 0.7 }
+            }
+        },
+        drift: { direction: 'outward', speed: 0.03 },
+        opacityLink: 'inverse-scale'
+    },
+
+    'prism-shard': {
+        scaling: { mode: 'uniform-pulse', amplitude: 0.1, frequency: 2 },
+        rotate: { axis: 'y', speed: 0.03 }
+    },
+
+    'halo-ring': {
+        scaling: {
+            mode: 'non-uniform',
+            axes: {
+                x: { expand: true, rate: 1.4 },
+                y: { expand: false, rate: 0.3 },
+                z: { expand: true, rate: 1.4 }
+            }
+        },
+        orientationOverride: 'flat',
+        opacityLink: 'inverse-scale'
+    },
+
+    'sparkle-star': {
+        scaling: { mode: 'uniform-pulse', amplitude: 0.25, frequency: 4 },
+        opacityLink: 'flicker'
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// DERIVED ELEMENT BEHAVIOR MODIFIERS
+// ═══════════════════════════════════════════════════════════════════════════════════════
+//
+// Derived elements (poison, smoke) inherit base element behaviors but with modifications.
+// These modifiers are applied on top of the base model behavior.
+//
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const DERIVED_BEHAVIOR_MODIFIERS = {
+    // Poison (derived from water) - slower, more viscous, sticky
+    poison: {
+        driftSpeedMultiplier: 0.5,     // Half the speed of water (viscous)
+        scalingRateMultiplier: 0.7,    // Slower expansion
+        additionalAdherence: 0.3,      // Stickier to surfaces
+        opacityLinkOverride: null      // Use base behavior
+    },
+
+    // Smoke (derived from void) - rising, billowing, dissipating
+    smoke: {
+        driftOverride: { direction: 'rising', speed: 0.02, noise: 0.25, buoyancy: true },
+        opacityLinkOverride: 'dissipate',
+        scalingMode: 'uniform-pulse',  // Billowing effect
+        scalingAmplitude: 0.15,
+        scalingFrequency: 1.5
+    }
+};
+
+/**
+ * Get behavior config for a model, with derived element modifications
+ * @param {string} modelName - Name of the model
+ * @param {string} [elementType] - Element type (for derived element modifiers)
+ * @returns {Object|null} Model behavior config or null
+ */
+function getModelBehavior(modelName, elementType = null) {
+    const baseBehavior = MODEL_BEHAVIORS[modelName];
+    if (!baseBehavior) return null;
+
+    // Check for derived element modifier
+    const modifier = elementType ? DERIVED_BEHAVIOR_MODIFIERS[elementType] : null;
+    if (!modifier) return baseBehavior;
+
+    // Apply derived element modifications
+    return applyDerivedModifier(baseBehavior, modifier);
+}
+
+/**
+ * Apply derived element modifier to base behavior
+ * @param {Object} base - Base model behavior
+ * @param {Object} modifier - Derived element modifier
+ * @returns {Object} Modified behavior
+ */
+function applyDerivedModifier(base, modifier) {
+    const result = JSON.parse(JSON.stringify(base)); // Deep clone
+
+    // Override drift if specified
+    if (modifier.driftOverride) {
+        result.drift = { ...modifier.driftOverride };
+    } else if (result.drift && modifier.driftSpeedMultiplier) {
+        result.drift.speed *= modifier.driftSpeedMultiplier;
+    }
+
+    // Add adherence
+    if (modifier.additionalAdherence && result.drift) {
+        result.drift.adherence = (result.drift.adherence || 0) + modifier.additionalAdherence;
+    }
+
+    // Override opacity link
+    if (modifier.opacityLinkOverride) {
+        result.opacityLink = modifier.opacityLinkOverride;
+    }
+
+    // Override scaling mode
+    if (modifier.scalingMode) {
+        result.scaling = {
+            mode: modifier.scalingMode,
+            amplitude: modifier.scalingAmplitude || 0.1,
+            frequency: modifier.scalingFrequency || 2
+        };
+    } else if (result.scaling && modifier.scalingRateMultiplier) {
+        // Modify existing scaling rates
+        if (result.scaling.axes) {
+            for (const axis of ['x', 'y', 'z']) {
+                if (result.scaling.axes[axis]?.rate) {
+                    result.scaling.axes[axis].rate *= modifier.scalingRateMultiplier;
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -1347,6 +1826,33 @@ export class ElementSpawner {
             break;
         }
 
+        case 'velocity': {
+            // Orient along velocity vector (for falling droplets, moving particles)
+            // Requires mesh.userData.velocity to be set
+            const velocity = mesh.userData?.velocity;
+            if (velocity && (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z) > 0.0001) {
+                const velDir = new THREE.Vector3(velocity.x, velocity.y, velocity.z).normalize();
+                baseQuat.setFromUnitVectors(up, velDir);
+            } else {
+                // Fall back to 'falling' mode when stationary or no velocity
+                const worldDown = new THREE.Vector3(0, -1, 0);
+                const fallFactor = 0.5;
+                const targetDir = normal.clone()
+                    .multiplyScalar(1 - fallFactor)
+                    .addScaledVector(worldDown, fallFactor)
+                    .normalize();
+                baseQuat.setFromUnitVectors(up, targetDir);
+            }
+
+            // Apply tilt for variation
+            if (orientConfig.tiltAngle !== 0) {
+                const tiltQuat = new THREE.Quaternion();
+                tiltQuat.setFromAxisAngle(rotatedTangent, orientConfig.tiltAngle);
+                baseQuat.premultiply(tiltQuat);
+            }
+            break;
+        }
+
         case 'outward':
         default: {
             // Element points away from surface (default behavior)
@@ -1503,6 +2009,12 @@ export class ElementSpawner {
             mesh.userData.elementType = elementType;
             mesh.userData.spawnTime = this.time;
 
+            // Phase 11: Velocity tracking for physics-aware animations
+            mesh.userData.modelName = modelName;
+            mesh.userData.velocity = { x: 0, y: 0, z: 0 };
+            mesh.userData.lastPosition = mesh.position.clone();
+            mesh.userData.surfaceNormal = { x: 0, y: 1, z: 0 }; // Default, updated in surface mode
+
             // Handle ephemeral mode - flash in, hold, fade out, respawn
             if (surfaceConfig?.ephemeral) {
                 const eph = surfaceConfig.ephemeral;
@@ -1586,6 +2098,13 @@ export class ElementSpawner {
             if (modeType === 'surface' && surfacePoints && surfacePoints[i]) {
                 // SURFACE MODE: Attach to mascot surface with configurable depth and orientation
                 const sample = surfacePoints[i];
+
+                // Phase 11: Store surface normal for physics drift
+                mesh.userData.surfaceNormal = {
+                    x: sample.normal.x,
+                    y: sample.normal.y,
+                    z: sample.normal.z
+                };
 
                 // Calculate embed depth: negative offset moves into the mesh
                 const embedDepth = surfaceConfig?.embedDepth ?? 0.2;
@@ -1776,6 +2295,21 @@ export class ElementSpawner {
 
                     // Apply animation values to mesh
                     this._applyAnimationToMesh(mesh, animState);
+
+                    // Phase 11: Update velocity tracking
+                    if (mesh.userData.lastPosition && deltaTime > 0) {
+                        const currentPos = mesh.position;
+                        const lastPos = mesh.userData.lastPosition;
+                        mesh.userData.velocity = {
+                            x: (currentPos.x - lastPos.x) / deltaTime,
+                            y: (currentPos.y - lastPos.y) / deltaTime,
+                            z: (currentPos.z - lastPos.z) / deltaTime
+                        };
+                        mesh.userData.lastPosition.copy(currentPos);
+                    }
+
+                    // Phase 11: Apply model-specific behaviors
+                    this._applyModelBehaviors(mesh, animState, deltaTime);
 
                     // Update procedural shader time for per-mesh animation (fire, water, etc.)
                     // Each mesh has a cloned material, so uTime must be updated per-mesh
@@ -2602,6 +3136,137 @@ export class ElementSpawner {
         default:
             return start;
         }
+    }
+
+    /**
+     * Apply Phase 11 model-specific behaviors (non-uniform scale, physics drift, opacity link)
+     * @param {THREE.Mesh} mesh - The mesh to animate
+     * @param {Object} animState - Animation state
+     * @param {number} deltaTime - Frame delta in seconds
+     * @private
+     */
+    _applyModelBehaviors(mesh, animState, deltaTime) {
+        const { modelName, elementType, animationConfig, velocity, surfaceNormal } = mesh.userData;
+        if (!modelName) return;
+
+        // Get base behavior from MODEL_BEHAVIORS (with derived element modifications)
+        const baseBehavior = getModelBehavior(modelName, elementType);
+        if (!baseBehavior) return;
+
+        // Merge with gesture-specific overrides if present
+        const modelOverrides = animationConfig?.modelOverrides?.[modelName];
+        const behavior = modelOverrides ?
+            this._deepMergeBehavior(baseBehavior, modelOverrides) :
+            baseBehavior;
+
+        const time = mesh.userData.animationState?.elapsed ?? 0;
+        const progress = animState.gestureProgress ?? 0;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // NON-UNIFORM SCALING
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (behavior.scaling) {
+            const nuScale = calculateNonUniformScale(behavior, time, progress, velocity);
+
+            // Apply non-uniform scale (multiply with existing scale)
+            mesh.scale.x *= nuScale.x;
+            mesh.scale.y *= nuScale.y;
+            mesh.scale.z *= nuScale.z;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PHYSICS DRIFT
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (behavior.drift) {
+            const normalVec = surfaceNormal ?
+                { x: surfaceNormal.x, y: surfaceNormal.y, z: surfaceNormal.z } :
+                null;
+            const currentOffset = mesh.userData.behaviorDriftOffset || { x: 0, y: 0, z: 0 };
+
+            const driftOffset = calculatePhysicsDrift(
+                behavior.drift,
+                time,
+                deltaTime,
+                normalVec,
+                currentOffset
+            );
+
+            // Store cumulative drift
+            mesh.userData.behaviorDriftOffset = driftOffset;
+
+            // Apply drift to position
+            if (!mesh.userData.behaviorBasePosition) {
+                mesh.userData.behaviorBasePosition = mesh.position.clone();
+            }
+            mesh.position.x = mesh.userData.behaviorBasePosition.x + driftOffset.x;
+            mesh.position.y = mesh.userData.behaviorBasePosition.y + driftOffset.y;
+            mesh.position.z = mesh.userData.behaviorBasePosition.z + driftOffset.z;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // OPACITY LINK
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (behavior.opacityLink) {
+            const scale = { x: mesh.scale.x, y: mesh.scale.y, z: mesh.scale.z };
+            const seed = mesh.userData.spawnIndex ?? 0;
+            const opacityMod = calculateOpacityLink(behavior.opacityLink, scale, time, seed);
+
+            // Apply opacity modifier
+            mesh.material.opacity *= opacityMod;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BEHAVIOR ROTATION
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (behavior.rotate) {
+            const { axis, speed, oscillate, range } = behavior.rotate;
+            let rotAmount;
+
+            if (oscillate && range) {
+                rotAmount = Math.sin(time * speed * Math.PI * 2) * range;
+            } else {
+                rotAmount = time * speed;
+            }
+
+            switch (axis) {
+            case 'y':
+                mesh.rotation.y += rotAmount;
+                break;
+            case 'x':
+                mesh.rotation.x += rotAmount;
+                break;
+            case 'z':
+                mesh.rotation.z += rotAmount;
+                break;
+            case 'tangent':
+            case 'random': {
+                // Use random axis based on spawn index
+                const idx = mesh.userData.spawnIndex ?? 0;
+                if (idx % 3 === 0) mesh.rotation.x += rotAmount;
+                else if (idx % 3 === 1) mesh.rotation.y += rotAmount;
+                else mesh.rotation.z += rotAmount;
+                break;
+            }
+            }
+        }
+    }
+
+    /**
+     * Deep merge model behavior with overrides
+     * @private
+     */
+    _deepMergeBehavior(base, overrides) {
+        const result = { ...base };
+
+        for (const [key, value] of Object.entries(overrides)) {
+            if (value && typeof value === 'object' && !Array.isArray(value) && base[key]) {
+                result[key] = this._deepMergeBehavior(base[key], value);
+            } else {
+                result[key] = value;
+            }
+        }
+
+        return result;
     }
 
     /**

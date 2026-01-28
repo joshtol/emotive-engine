@@ -120,12 +120,13 @@ export const FLICKER_DEFAULTS = {
 /**
  * Default drift animation config
  * distance: total distance to drift over gesture lifetime (musical timing)
- * maxDistance: cap on total drift (for directions like 'random' that accumulate)
+ * distance: total drift over gesture lifetime (musical timing)
  */
 export const DRIFT_DEFAULTS = {
     direction: 'outward',
-    distance: 0.1,          // Total drift distance over gesture lifetime
-    maxDistance: 0.5,       // Max cap for accumulating drift directions
+    distance: 0.1,          // Total drift distance over gesture lifetime (musical timing)
+    speed: 0.02,            // Speed for physics-based drift (units per frame)
+    maxDistance: 1.0,       // Maximum drift distance cap
     bounce: false,
     noise: 0
 };
@@ -150,6 +151,30 @@ export const EMISSIVE_DEFAULTS = {
     frequency: 1,
     pattern: 'sine',
     dutyCycle: 0.5
+};
+
+/**
+ * Default procedural element config
+ * For elements with shader-driven animations (fire, water, electricity, etc.)
+ */
+export const PROCEDURAL_DEFAULTS = {
+    // Geometry stability: use smooth fade for vertex displacement
+    geometryStability: true,
+    // Scale smoothing: lerp factor per frame (0 = instant, 1 = no change)
+    scaleSmoothing: 0,          // 0 = disabled (instant), 0.08 = smooth (fire), 0.15 = very smooth
+    // Shader bindings: map animation state to shader uniforms
+    shaderBindings: null
+};
+
+/**
+ * Default parameter animation config
+ * Animates shader uniforms over gesture lifetime (e.g., temperature, waveHeight)
+ */
+export const PARAMETER_ANIMATION_DEFAULTS = {
+    start: 0,
+    peak: 1,
+    end: 0,
+    curve: 'bell'       // 'bell', 'spike', 'sustained', 'pulse', 'linear'
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -180,11 +205,32 @@ export class AnimationConfig {
         this.events = this._parseEvents(config);
         this.intensityScaling = this._parseIntensityScaling(config.intensityScaling);
 
-        // Fire-specific: temperature animation config
-        this.temperature = config.temperature || null;
+        // Procedural element config (geometry stability, scale smoothing)
+        this.procedural = this._parseProcedural(config);
+
+        // Parameter animation: animate shader uniforms over gesture lifetime
+        // Generic system that works for any element (fire temperature, water flow, etc.)
+        this.parameterAnimation = this._parseParameterAnimation(config.parameterAnimation || config.temperature);
+
+        // Phase 11: Model-specific behavior overrides
+        // Allows gestures to override MODEL_BEHAVIORS for specific models
+        this.modelOverrides = config.modelOverrides || null;
 
         // Current intensity (can be updated dynamically)
         this._intensity = 1.0;
+    }
+
+    /**
+     * Get effective animation config for a specific model
+     * Merges base config with model-specific overrides
+     * @param {string} modelName - Model name
+     * @returns {Object} Config with model overrides applied
+     */
+    getConfigForModel(modelName) {
+        if (!this.modelOverrides || !this.modelOverrides[modelName]) {
+            return null;
+        }
+        return this.modelOverrides[modelName];
     }
 
     /**
@@ -357,15 +403,12 @@ export class AnimationConfig {
      * @private
      */
     _parseDrift(drift) {
-        // Support both 'distance' (new, musical) and 'speed' (legacy)
-        // distance takes priority if both are specified
-        const distance = drift.distance ?? DRIFT_DEFAULTS.distance;
-
         return {
             direction: drift.direction ?? DRIFT_DEFAULTS.direction,
-            distance,                                                    // Total drift over gesture
-            gestureDuration: this.gestureDuration,                       // For calculating per-frame speed
+            distance: drift.distance ?? DRIFT_DEFAULTS.distance,
+            speed: drift.speed ?? DRIFT_DEFAULTS.speed,
             maxDistance: drift.maxDistance ?? DRIFT_DEFAULTS.maxDistance,
+            gestureDuration: this.gestureDuration,
             bounce: drift.bounce ?? DRIFT_DEFAULTS.bounce,
             noise: drift.noise ?? DRIFT_DEFAULTS.noise
         };
@@ -500,6 +543,70 @@ export class AnimationConfig {
         };
     }
 
+    /**
+     * Parse procedural element configuration
+     * For elements with shader-driven animations (fire, water, electricity, etc.)
+     * @private
+     */
+    _parseProcedural(config) {
+        // Check if any procedural features are explicitly configured
+        const hasProceduralConfig = config.procedural ||
+            config.scaleSmoothing !== undefined ||
+            config.geometryStability !== undefined;
+
+        if (!hasProceduralConfig) {
+            return null;
+        }
+
+        const procedural = config.procedural || {};
+        return {
+            geometryStability: procedural.geometryStability ??
+                config.geometryStability ??
+                PROCEDURAL_DEFAULTS.geometryStability,
+            scaleSmoothing: procedural.scaleSmoothing ??
+                config.scaleSmoothing ??
+                PROCEDURAL_DEFAULTS.scaleSmoothing,
+            shaderBindings: procedural.shaderBindings ?? null
+        };
+    }
+
+    /**
+     * Parse parameter animation configuration
+     * Generic system to animate any shader uniform over gesture lifetime
+     * Works for fire (temperature), water (waveHeight), electricity (intensity), etc.
+     * @private
+     */
+    _parseParameterAnimation(paramConfig) {
+        if (!paramConfig) return null;
+
+        // If it's the old fire-style config with start/peak/end at top level
+        if (paramConfig.start !== undefined || paramConfig.peak !== undefined) {
+            return {
+                primary: {
+                    start: paramConfig.start ?? PARAMETER_ANIMATION_DEFAULTS.start,
+                    peak: paramConfig.peak ?? PARAMETER_ANIMATION_DEFAULTS.peak,
+                    end: paramConfig.end ?? PARAMETER_ANIMATION_DEFAULTS.end,
+                    curve: paramConfig.curve ?? PARAMETER_ANIMATION_DEFAULTS.curve
+                }
+            };
+        }
+
+        // New style: object with named parameters
+        // e.g., { temperature: { start, peak, end, curve }, waveHeight: { ... } }
+        const parsed = {};
+        for (const [key, value] of Object.entries(paramConfig)) {
+            if (typeof value === 'object' && value !== null) {
+                parsed[key] = {
+                    start: value.start ?? PARAMETER_ANIMATION_DEFAULTS.start,
+                    peak: value.peak ?? PARAMETER_ANIMATION_DEFAULTS.peak,
+                    end: value.end ?? PARAMETER_ANIMATION_DEFAULTS.end,
+                    curve: value.curve ?? PARAMETER_ANIMATION_DEFAULTS.curve
+                };
+            }
+        }
+        return Object.keys(parsed).length > 0 ? parsed : null;
+    }
+
     // ═══════════════════════════════════════════════════════════════════════════════════
     // UTILITY METHODS
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -585,7 +692,7 @@ export class AnimationConfig {
      * @param {number} [seed] - Optional random seed for deterministic variance
      * @returns {Object} Per-element configuration
      */
-    createElementConfig(index, seed = null) {
+    createElementConfig(index, _seed = null) {
         // Could use seeded random here if seed is provided
         return {
             index,

@@ -180,27 +180,27 @@ export function calculateLayeredFlicker(config, time, layers = {}) {
 
 /**
  * Calculate drift position offset
+ * Uses musical timing: distance = total drift over gesture lifetime
  *
  * @param {Object} config - Drift configuration
- * @param {string} config.direction - 'outward' | 'inward' | 'up' | 'down' | 'random'
- * @param {number} config.speed - Units per second
- * @param {number} config.maxDistance - Maximum drift distance
+ * @param {string} config.direction - 'outward' | 'inward' | 'up' | 'down' | 'tangent' | 'random'
+ * @param {number} config.distance - Total drift distance over gesture lifetime
+ * @param {number} config.gestureDuration - Gesture duration in ms (for calculating per-frame movement)
  * @param {boolean} [config.bounce=false] - Bounce at boundary vs clamp
- * @param {number} [config.noise=0] - Perlin noise amount
+ * @param {number} [config.noise=0] - Random noise amount (0-1)
  * @param {Object} currentOffset - Current offset { x, y, z }
- * @param {number} deltaTime - Time since last frame
- * @param {Object} [origin] - Origin position for outward/inward
+ * @param {number} deltaTime - Time since last frame in seconds
  * @returns {Object} New offset { x, y, z }
  *
  * @example
  * const offset = calculateDrift(config, currentOffset, deltaTime);
  * mesh.position.add(new THREE.Vector3(offset.x, offset.y, offset.z));
  */
-export function calculateDrift(config, currentOffset, deltaTime, origin = null) {
+export function calculateDrift(config, currentOffset, deltaTime) {
     const {
         direction = 'outward',
-        speed = 0.02,
-        maxDistance = 0.5,
+        distance = 0.1,
+        gestureDuration = 1000,
         bounce = false,
         noise = 0
     } = config;
@@ -212,73 +212,67 @@ export function calculateDrift(config, currentOffset, deltaTime, origin = null) 
         z: currentOffset.z || 0
     };
 
-    const movement = speed * deltaTime;
+    // Calculate per-frame increment from total distance and gesture duration
+    const increment = (distance / gestureDuration) * deltaTime;
+
+    // Add noise if configured
+    const noiseX = noise > 0 ? (Math.random() - 0.5) * noise * increment : 0;
+    const noiseY = noise > 0 ? (Math.random() - 0.5) * noise * increment : 0;
+    const noiseZ = noise > 0 ? (Math.random() - 0.5) * noise * increment : 0;
 
     // Apply direction-based movement
     switch (direction) {
     case 'outward': {
         // Move away from origin
-        const len = Math.sqrt(offset.x ** 2 + offset.y ** 2 + offset.z ** 2) || 0.001;
-        const nx = offset.x / len;
-        const ny = offset.y / len;
-        const nz = offset.z / len;
-        offset.x += nx * movement;
-        offset.y += ny * movement;
-        offset.z += nz * movement;
+        offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
+        offset.y += (offset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
+        offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
         break;
     }
 
     case 'inward': {
         // Move toward origin
-        const len = Math.sqrt(offset.x ** 2 + offset.y ** 2 + offset.z ** 2);
-        if (len > movement) {
-            const scale = (len - movement) / len;
-            offset.x *= scale;
-            offset.y *= scale;
-            offset.z *= scale;
-        } else {
-            offset.x = offset.y = offset.z = 0;
-        }
+        offset.x -= (offset.x || 0.001) > 0 ? increment : -increment;
+        offset.y -= (offset.y || 0.001) > 0 ? increment : -increment;
+        offset.z -= (offset.z || 0.001) > 0 ? increment : -increment;
         break;
     }
 
     case 'up':
-        offset.y += movement;
+        offset.y += increment + noiseY;
         break;
 
     case 'down':
-        offset.y -= movement;
+        offset.y -= increment + noiseY;
+        break;
+
+    case 'tangent':
+        // Flow along surface (horizontal drift)
+        offset.x += increment + noiseX;
+        offset.z += noiseZ;
         break;
 
     case 'random': {
-        offset.x += (Math.random() - 0.5) * movement * 2;
-        offset.y += (Math.random() - 0.5) * movement * 2;
-        offset.z += (Math.random() - 0.5) * movement * 2;
+        offset.x += (Math.random() - 0.5) * increment * 2;
+        offset.y += (Math.random() - 0.5) * increment * 2;
+        offset.z += (Math.random() - 0.5) * increment * 2;
         break;
     }
     }
 
-    // Add noise if configured
-    if (noise > 0) {
-        const time = Date.now() / 1000;
-        offset.x += Math.sin(time * 1.3) * noise * movement;
-        offset.y += Math.sin(time * 1.7) * noise * movement;
-        offset.z += Math.sin(time * 2.1) * noise * movement;
-    }
-
-    // Apply distance limit
+    // Clamp to distance limit (the configured total distance is the max)
     const dist = Math.sqrt(offset.x ** 2 + offset.y ** 2 + offset.z ** 2);
 
-    if (dist > maxDistance) {
+    if (dist > distance) {
         if (bounce) {
             // Reflect direction
-            const scale = -maxDistance / dist;
+            const scale = -distance / dist;
             offset.x *= scale;
             offset.y *= scale;
             offset.z *= scale;
         } else {
             // Clamp to max distance
-            const scale = maxDistance / dist;
+            const scale = distance / dist;
             offset.x *= scale;
             offset.y *= scale;
             offset.z *= scale;
@@ -488,6 +482,255 @@ export function calculateHoldAnimations(holdConfig, state, time, deltaTime) {
     return result;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// NON-UNIFORM SCALING - Model behavior based axis scaling
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Calculate non-uniform scale based on model behavior
+ *
+ * @param {Object} behavior - Model behavior config from MODEL_BEHAVIORS
+ * @param {number} time - Current time in seconds
+ * @param {number} progress - Animation progress 0-1
+ * @param {Object} [velocity] - Current velocity { x, y, z } for velocity-linked scaling
+ * @returns {{ x: number, y: number, z: number }} Scale multipliers per axis
+ *
+ * @example
+ * const nuScale = calculateNonUniformScale(behavior, time, progress, velocity);
+ * mesh.scale.set(baseScale * nuScale.x, baseScale * nuScale.y, baseScale * nuScale.z);
+ */
+export function calculateNonUniformScale(behavior, time, progress, velocity = null) {
+    if (!behavior?.scaling) {
+        return { x: 1, y: 1, z: 1 };
+    }
+
+    const { scaling } = behavior;
+
+    // Uniform pulse mode - simple breathing
+    if (scaling.mode === 'uniform-pulse') {
+        const pulse = 1 + Math.sin(time * scaling.frequency * Math.PI * 2) * scaling.amplitude;
+        return { x: pulse, y: pulse, z: pulse };
+    }
+
+    // Non-uniform mode - per-axis control
+    if (scaling.mode === 'non-uniform') {
+        const result = { x: 1, y: 1, z: 1 };
+
+        for (const axis of ['x', 'y', 'z']) {
+            const axisConfig = scaling.axes?.[axis];
+            if (!axisConfig) continue;
+
+            let scale = 1;
+
+            // Base expansion/contraction over time
+            if (axisConfig.expand) {
+                scale += progress * axisConfig.rate;
+            } else {
+                scale -= progress * (1 - axisConfig.rate) * 0.5;
+            }
+
+            // Oscillation for wobble effect
+            if (axisConfig.oscillate) {
+                scale += Math.sin(time * 3) * 0.1;
+            }
+
+            // Velocity-linked scaling (for droplet elongation during fall)
+            if (scaling.velocityLink === axis && velocity) {
+                const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+                scale += speed * 0.5;
+            }
+
+            result[axis] = Math.max(0.1, scale);
+        }
+
+        // Wobble effect - alternating X/Z for organic movement
+        if (scaling.wobbleFrequency) {
+            const wobble = Math.sin(time * scaling.wobbleFrequency * Math.PI * 2);
+            const wobbleAmp = scaling.wobbleAmplitude || 0.1;
+            result.x += wobble * wobbleAmp;
+            result.z -= wobble * wobbleAmp;
+        }
+
+        return result;
+    }
+
+    return { x: 1, y: 1, z: 1 };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// PHYSICS DRIFT - Gravity, rising, adherence based movement
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Calculate physics-aware drift for elemental models
+ * Supports: gravity (water/nature), rising (fire/bubbles), outward-flat (rings/cracks)
+ *
+ * @param {Object} driftConfig - Drift configuration from MODEL_BEHAVIORS
+ * @param {number} time - Elapsed time in seconds
+ * @param {number} deltaTime - Frame delta in seconds
+ * @param {Object} [surfaceNormal] - Surface normal { x, y, z } at spawn point
+ * @param {Object} [currentOffset] - Current offset { x, y, z }
+ * @returns {{ x: number, y: number, z: number }} Drift offset
+ *
+ * @example
+ * const offset = calculatePhysicsDrift(driftConfig, time, deltaTime, normal);
+ * mesh.position.add(new THREE.Vector3(offset.x, offset.y, offset.z));
+ */
+export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNormal = null, currentOffset = null) {
+    if (!driftConfig) {
+        return { x: 0, y: 0, z: 0 };
+    }
+
+    const offset = { x: 0, y: 0, z: 0 };
+    const speed = driftConfig.speed || 0.02;
+    const noise = driftConfig.noise || 0;
+
+    switch (driftConfig.direction) {
+    case 'gravity': {
+        // Surface adherence phase - droplets cling before falling
+        const adherenceTime = driftConfig.adherence || 0;
+        if (adherenceTime > 0 && time < adherenceTime) {
+            // Clinging to surface - minimal drift with slight outward
+            const clingProgress = time / adherenceTime;
+            const clingStrength = 1 - clingProgress;
+            if (surfaceNormal) {
+                offset.x = surfaceNormal.x * 0.01 * clingStrength;
+                offset.z = surfaceNormal.z * 0.01 * clingStrength;
+            }
+        } else {
+            // Falling phase with acceleration
+            const fallTime = time - adherenceTime;
+            const accel = driftConfig.acceleration || 0.01;
+            const fallSpeed = speed + fallTime * accel;
+            offset.y = -fallSpeed * fallTime;
+        }
+        break;
+    }
+
+    case 'rising': {
+        // Buoyant rise with optional acceleration
+        let riseSpeed = speed;
+        if (driftConfig.buoyancy) {
+            riseSpeed += time * 0.01;  // Accelerates upward
+        }
+        offset.y = riseSpeed * time;
+
+        // Wobbly horizontal drift
+        if (noise > 0) {
+            offset.x = Math.sin(time * 2.3) * noise * 0.1;
+            offset.z = Math.cos(time * 1.7) * noise * 0.1;
+        }
+        break;
+    }
+
+    case 'outward-flat': {
+        // Expand in XZ plane only (for rings, cracks, patches)
+        const expandDist = speed * time;
+        if (surfaceNormal) {
+            // Project outward in surface plane
+            offset.x = surfaceNormal.x * expandDist;
+            offset.z = surfaceNormal.z * expandDist;
+        } else {
+            // Default radial expansion
+            const angle = currentOffset ?
+                Math.atan2(currentOffset.z, currentOffset.x) :
+                Math.random() * Math.PI * 2;
+            offset.x = Math.cos(angle) * expandDist;
+            offset.z = Math.sin(angle) * expandDist;
+        }
+        // No Y drift
+        break;
+    }
+
+    case 'outward': {
+        // Radial expansion in all directions
+        const expandDist = speed * time;
+        if (surfaceNormal) {
+            offset.x = surfaceNormal.x * expandDist;
+            offset.y = surfaceNormal.y * expandDist;
+            offset.z = surfaceNormal.z * expandDist;
+        }
+        if (noise > 0) {
+            offset.x += (Math.random() - 0.5) * noise * expandDist;
+            offset.y += (Math.random() - 0.5) * noise * expandDist;
+            offset.z += (Math.random() - 0.5) * noise * expandDist;
+        }
+        break;
+    }
+
+    case 'tangent': {
+        // Flow along surface (for waves, vines)
+        const tangentDist = speed * time;
+        // Surface adherence keeps it close
+        if (driftConfig.adherence && surfaceNormal) {
+            offset.x = -surfaceNormal.z * tangentDist;  // Perpendicular to normal
+            offset.z = surfaceNormal.x * tangentDist;
+        }
+        if (noise > 0) {
+            offset.x += Math.sin(time * 1.5) * noise * 0.05;
+            offset.z += Math.cos(time * 1.8) * noise * 0.05;
+        }
+        break;
+    }
+
+    case 'random': {
+        // Chaotic movement (sparks, particles)
+        if (noise > 0) {
+            offset.x = (Math.random() - 0.5) * speed * deltaTime * 10;
+            offset.y = (Math.random() - 0.5) * speed * deltaTime * 10;
+            offset.z = (Math.random() - 0.5) * speed * deltaTime * 10;
+        }
+        break;
+    }
+    }
+
+    return offset;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// OPACITY LINK - Scale/flicker based opacity modifiers
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Calculate opacity modifier based on opacity link type
+ *
+ * @param {string} opacityLink - 'inverse-scale' | 'flicker' | null
+ * @param {Object} scale - Current scale { x, y, z }
+ * @param {number} time - Current time in seconds
+ * @param {number} [seed=0] - Seed for deterministic flicker
+ * @returns {number} Opacity multiplier 0-1
+ */
+export function calculateOpacityLink(opacityLink, scale, time, seed = 0) {
+    if (!opacityLink) {
+        return 1;
+    }
+
+    switch (opacityLink) {
+    case 'inverse-scale': {
+        // Fade as scale increases (for expanding rings, bursts)
+        const avgScale = (scale.x + scale.y + scale.z) / 3;
+        // Map scale 1-3 to opacity 1-0
+        return Math.max(0, Math.min(1, 2 - avgScale));
+    }
+
+    case 'flicker': {
+        // Random flicker (for embers, sparks, electricity)
+        const flickerFreq = 8;
+        const flickerAmp = 0.3;
+        const seededNoise = Math.sin(time * flickerFreq + seed * 17.3) *
+                            Math.sin(time * flickerFreq * 1.7 + seed * 31.1);
+        return Math.max(0.2, 1 - Math.abs(seededNoise) * flickerAmp);
+    }
+
+    case 'dissipate': {
+        // Gradual fade over time (for smoke rising)
+        return Math.max(0, 1 - time * 0.3);
+    }
+    }
+
+    return 1;
+}
+
 export default {
     calculatePulse,
     calculatePulseEased,
@@ -497,5 +740,9 @@ export default {
     calculateRotation,
     calculateEmissive,
     calculateBreathingEmissive,
-    calculateHoldAnimations
+    calculateHoldAnimations,
+    // Phase 11 additions
+    calculateNonUniformScale,
+    calculatePhysicsDrift,
+    calculateOpacityLink
 };
