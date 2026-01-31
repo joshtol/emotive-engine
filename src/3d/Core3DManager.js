@@ -66,6 +66,12 @@ const CRYSTAL_CALIBRATION_ROTATION = {
     z: 0     // No Z rotation
 };
 
+// All available element types for preloading
+const ALL_ELEMENT_TYPES = ['fire', 'ice', 'water', 'earth', 'nature', 'electricity', 'void', 'light'];
+
+// Delay before background pre-warm starts (ms)
+const BACKGROUND_PREWARM_DELAY = 2000;
+
 export class Core3DManager {
     /**
      * Create a new Core3DManager instance
@@ -88,6 +94,8 @@ export class Core3DManager {
      * @param {string} [options.materialVariant] - Material variant override
      * @param {string} [options.assetBasePath='/assets'] - Base path for loading assets (textures, models)
      * @param {boolean} [options.enableShatter=true] - Enable shatter/shard system
+     * @param {string[]} [options.preloadElements] - Element types to preload immediately (e.g., ['fire', 'ice'])
+     * @param {boolean} [options.backgroundPrewarm=true] - Auto-preload remaining elements after 2s idle
      */
     constructor(canvas, options = {}) {
         // Validate required dependencies
@@ -119,6 +127,13 @@ export class Core3DManager {
 
         // Shatter system toggle (can be disabled for isolated testing)
         this.enableShatter = options.enableShatter !== false;
+
+        // Element preloading options
+        // preloadElements: specific elements to preload immediately (e.g., ['fire', 'ice'])
+        // backgroundPrewarm: auto-preload remaining elements after 2s idle (default: true)
+        this._preloadElements = options.preloadElements || [];
+        this._backgroundPrewarm = options.backgroundPrewarm !== false;
+        this._prewarmTimeoutId = null;
 
         // Load geometry type first (needed to determine if moon = tidally locked)
         this.geometryType = options.geometry || 'sphere';
@@ -3428,6 +3443,9 @@ export class Core3DManager {
             // NOW we're fully ready for rendering
             this._logSceneHierarchy();
             this._ready = true;
+
+            // Start element preloading (after ready, so it doesn't block initialization)
+            this._startElementPreloading();
         } catch (error) {
             console.warn(`[Core3D:${this._instanceId}] Async geometry load FAILED:`, error);
             // Mark ready even on failure so render doesn't hang (unless destroyed)
@@ -3582,12 +3600,82 @@ export class Core3DManager {
         }
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ELEMENT PRELOADING - Opt-in and background pre-warm
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Start element preloading based on configuration
+     * @private
+     */
+    _startElementPreloading() {
+        if (this._destroyed || !this.elementSpawner) return;
+
+        // Option 2: Immediate preload of specified elements
+        if (this._preloadElements.length > 0) {
+            console.log(`[Core3D] Preloading specified elements: ${this._preloadElements.join(', ')}`);
+            this._preloadElements.forEach(type => {
+                if (ALL_ELEMENT_TYPES.includes(type)) {
+                    this.elementSpawner.preloadModels(type);
+                }
+            });
+        }
+
+        // Option 3: Background pre-warm after delay
+        if (this._backgroundPrewarm) {
+            this._prewarmTimeoutId = setTimeout(() => {
+                this._backgroundPrewarmElements();
+            }, BACKGROUND_PREWARM_DELAY);
+        }
+    }
+
+    /**
+     * Background pre-warm: load remaining element types that weren't explicitly preloaded
+     * @private
+     */
+    async _backgroundPrewarmElements() {
+        if (this._destroyed || !this.elementSpawner) return;
+
+        // Find elements that haven't been preloaded yet
+        const alreadyLoaded = new Set(this._preloadElements);
+        const toPrewarm = ALL_ELEMENT_TYPES.filter(type => !alreadyLoaded.has(type));
+
+        if (toPrewarm.length === 0) return;
+
+        console.log(`[Core3D] Background pre-warming elements: ${toPrewarm.join(', ')}`);
+
+        // Load one at a time with small delays to avoid blocking the main thread
+        for (const type of toPrewarm) {
+            if (this._destroyed) break;
+
+            // Small delay between loads to keep UI responsive
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            if (this._destroyed) break;
+            this.elementSpawner.preloadModels(type);
+        }
+    }
+
+    /**
+     * Cancel any pending background pre-warm
+     * @private
+     */
+    _cancelPrewarm() {
+        if (this._prewarmTimeoutId) {
+            clearTimeout(this._prewarmTimeoutId);
+            this._prewarmTimeoutId = null;
+        }
+    }
+
     /**
      * Cleanup
      */
     destroy() {
         // Set destroyed flag first to prevent any pending render calls
         this._destroyed = true;
+
+        // Cancel any pending background pre-warm
+        this._cancelPrewarm();
 
         // Clean up crystal soul FIRST - before renderer.destroy() clears the scene
         // This ensures we properly remove the mesh from scene before scene is cleared
