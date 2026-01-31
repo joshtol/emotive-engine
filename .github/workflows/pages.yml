@@ -59,6 +59,10 @@ jobs:
           mkdir -p _pages/site/public
           cp dist/emotive-mascot.umd.js _pages/site/public/emotive-engine.js
 
+          # 3D examples reference /emotive-engine-3d.bundled.js at root
+          # Copy the bundled version (includes Three.js) for static HTML demos
+          cp dist/emotive-mascot-3d.bundled.js _pages/emotive-engine-3d.bundled.js
+
           # Create index.html that lists all examples
           cat > _pages/index.html << 'INDEXEOF'
           <!DOCTYPE html>
