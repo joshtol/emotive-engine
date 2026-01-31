@@ -283,15 +283,16 @@ import {
     liquefy as waterLiquefy,
     pool as waterPool
 } from './destruction/elemental/waterEffectFactory.js';
-// destruction/elemental/ - Fire effect gestures (no shatter, just flame visuals)
-import {
-    burn as fireBurn,
-    scorch as fireScorch,
-    combust as fireCombust,
-    radiate as fireRadiate,
-    blaze as fireBlaze,
-    smolder as fireSmolder
-} from './destruction/elemental/fireEffectFactory.js';
+// destruction/elemental/ - Fire effect gestures (self-contained gesture files)
+import fireBurn from './destruction/elemental/burn.js';
+import fireScorch from './destruction/elemental/scorch.js';
+import fireCombust from './destruction/elemental/combust.js';
+import fireRadiate from './destruction/elemental/radiate.js';
+import fireBlaze from './destruction/elemental/blaze.js';
+import fireSmolder from './destruction/elemental/smolder.js';
+import flameVortexGesture from './destruction/elemental/flameVortex.js';
+import firedanceGesture from './destruction/elemental/firedance.js';
+import phoenixGesture from './destruction/elemental/phoenix.js';
 // destruction/elemental/ - Smoke effect gestures (no shatter, soft organic visuals)
 import {
     puff as smokePuff,
@@ -365,15 +366,13 @@ import {
     fossilize as earthFossilize
 } from './destruction/elemental/earthEffectFactory.js';
 // destruction/elemental/ - Nature effect gestures (plant/growth visuals)
+// NOTE: sprout, wilt, and overgrow removed due to crash - needs investigation
 import {
     entangle as natureEntangle,
     root as natureRoot,
     constrict as natureConstrict,
     bloom as natureBloom,
-    sprout as natureSprout,
     flourish as natureFlourish,
-    wilt as natureWilt,
-    overgrow as natureOvergrow,
     blossom as natureBlossom
 } from './destruction/elemental/natureEffectFactory.js';
 // destruction/reform/
@@ -491,13 +490,18 @@ const vanish = smokeVanish;
 const materialize = smokeMaterialize;
 // Fire (shatter-based)
 const ignite = createElementalGesture('ignite');
-const phoenix = createElementalGesture('phoenix');
 const ember = createElementalGesture('ember');
 // Fire effect gestures (no shatter, just flame visuals)
 // Burning variants (victim of fire)
 const burn = fireBurn;
 const scorch = fireScorch;
 const combust = fireCombust;
+// Vortex variants (spiraling fire tornado) - has dedicated file
+const flameVortex = flameVortexGesture;
+// Firedance - vertical dancing rings - has dedicated file
+const firedance = firedanceGesture;
+// Phoenix - rising rebirth with gyroscoping vertical rings - has dedicated file
+const phoenix = phoenixGesture;
 // Radiating variants (source of fire)
 const radiate = fireRadiate;
 const blaze = fireBlaze;
@@ -894,12 +898,15 @@ const TRANSFORM_GESTURES = [
     materialize,
     // Fire (shatter-based)
     ignite,
-    phoenix,
     ember,
     // Fire - Burning (victim of fire)
     burn,
     scorch,
     combust,
+    // Fire - Axis-travel effects (ring-based)
+    flameVortex,    // Horizontal tornado rings
+    firedance,      // Vertical dancing rings
+    phoenix,        // Vertical gyroscope rings
     // Fire - Radiating (source of fire)
     radiate,
     blaze,
@@ -991,11 +998,8 @@ const TRANSFORM_GESTURES = [
     natureConstrict,
     // Nature Effect - Emanating (projecting growth)
     natureBloom,
-    natureSprout,
     natureFlourish,
     // Nature Effect - Transform (becoming nature)
-    natureWilt,
-    natureOvergrow,
     natureBlossom
 ];
 
@@ -1146,6 +1150,10 @@ export const GESTURE_CATEGORIES = {
         'ignite', 'phoenix', 'ember',
         // destruction/elemental/ - Fire (burning - victim of fire)
         'burn', 'scorch', 'combust',
+        // destruction/elemental/ - Fire (vortex - spiraling fire tornado)
+        'flameVortex',
+        // destruction/elemental/ - Fire (firedance - vertical dancing rings)
+        'firedance',
         // destruction/elemental/ - Fire (radiating - source of fire)
         'radiate', 'blaze', 'smolder',
         // destruction/elemental/ - Smoke (emanating - source of smoke)
@@ -1173,8 +1181,8 @@ export const GESTURE_CATEGORIES = {
         'earthPetrify', 'earthBurden', 'earthRumble', 'earthQuake',
         'earthEncase', 'earthCrumble', 'earthShatter', 'earthErode', 'earthFossilize',
         // destruction/elemental/ - Nature Effect (afflicted, emanating, transform)
-        'natureEntangle', 'natureRoot', 'natureConstrict', 'natureBloom', 'natureSprout', 'natureFlourish',
-        'natureWilt', 'natureOvergrow', 'natureBlossom',
+        'natureEntangle', 'natureRoot', 'natureConstrict', 'natureBloom', 'natureFlourish',
+        'natureBlossom',
         // destruction/reform/
         'morph'
     ],
@@ -1300,7 +1308,9 @@ export function listGestures() {
             // Use semantic category (idle/dance/actions/reactions/destruction/atmosphere)
             category: GESTURE_TO_CATEGORY[gesture.name] || 'atmosphere',
             description: gesture.description || 'No description',
-            source: 'core'
+            source: 'core',
+            // Include usesShatter flag for filtering shatter-based gestures
+            usesShatter: gesture.usesShatter || false
         });
     });
 
