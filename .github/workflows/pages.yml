@@ -45,8 +45,14 @@ jobs:
           # Copy dist files
           cp -r dist _pages/dist
 
-          # Copy examples
-          cp -r examples _pages/examples
+          # Copy examples - use site/public/examples for 3D (bundled imports)
+          # and examples/ for 2D (which don't need bundled Three.js)
+          mkdir -p _pages/examples
+          cp -r examples/2d _pages/examples/2d 2>/dev/null || true
+          cp -r examples/llm-integration _pages/examples/llm-integration 2>/dev/null || true
+          cp examples/*.css _pages/examples/ 2>/dev/null || true
+          # 3D examples from site/public use bundled imports that work in browsers
+          cp -r site/public/examples/3d _pages/examples/3d
 
           # Copy assets needed by examples
           cp -r assets _pages/assets 2>/dev/null || true
