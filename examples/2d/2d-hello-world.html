@@ -98,20 +98,12 @@
 
             // STEP 2: Get EmotiveMascot from the global window object
             // The UMD bundle loads it as window.EmotiveMascot
-            console.log('🔍 Debug: window.EmotiveMascot =', window.EmotiveMascot);
-            console.log('🔍 Debug: window.EmotiveMascot?.default =', window.EmotiveMascot?.default);
-            console.log('🔍 Debug: Canvas element =', canvas);
-            console.log('🔍 Debug: Canvas dimensions =', canvas?.getBoundingClientRect());
-
             const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
 
             if (!EmotiveMascot) {
                 console.error('❌ EmotiveMascot not loaded - check script path');
                 return null;
             }
-
-            console.log('🔍 Debug: EmotiveMascot constructor =', EmotiveMascot);
-            console.log('🔍 Debug: Has THREE?', typeof THREE !== 'undefined' ? 'YES (3D bundle!)' : 'NO (2D bundle)');
 
             // STEP 3: Set canvas dimensions (required for proper rendering)
             canvas.width = 400;
@@ -149,35 +141,6 @@
             mascot.start();
 
             console.log('✅ Mascot created and started!');
-
-            // Debug: Check internal engine state
-            const engine = mascot._realEngine || mascot._engine;
-            console.log('🔍 Debug: Internal engine =', engine);
-            console.log('🔍 Debug: Renderer =', engine?.renderer);
-            console.log('🔍 Debug: CanvasManager =', engine?.canvasManager);
-            console.log('🔍 Debug: AnimationController running =', engine?.animationController?.isAnimating?.());
-
-            // Check if the canvas has a 2D context
-            const ctx = canvas.getContext('2d');
-            console.log('🔍 Debug: Canvas 2D context =', ctx);
-
-            // Check for errors in the error boundary
-            if (engine?.errorBoundary) {
-                const stats = engine.errorBoundary.getErrorStats();
-                console.log('🔍 Debug: ErrorBoundary stats =', stats);
-                if (stats.totalErrors > 0) {
-                    console.error('❌ Render errors detected:', stats.recentErrors);
-                }
-            }
-
-            // Log after a frame to see if rendering is happening
-            setTimeout(() => {
-                const stats = engine?.errorBoundary?.getErrorStats?.();
-                if (stats?.totalErrors > 0) {
-                    console.error('❌ Errors after 1 second:', stats);
-                }
-            }, 1000);
-
             return mascot;
         }
 
