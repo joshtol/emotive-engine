@@ -70,6 +70,8 @@ jobs:
             -e "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" \
             -e 's|"/assets/|"../../assets/|g' \
             -e "s|'/assets/|'../../assets/|g" \
+            -e "s|'/assets'|'../../assets'|g" \
+            -e "s|'/hdri/|'../../hdri/|g" \
             {} \;
           # Also fix demo-utils.js which imports from /examples/3d/layer-utils.js
           sed -i "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" _pages/examples/3d/demo-utils.js 2>/dev/null || true
