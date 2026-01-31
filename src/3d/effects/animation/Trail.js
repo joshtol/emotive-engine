@@ -19,6 +19,50 @@
  */
 
 import * as THREE from 'three';
+import { elementSpawnerStats } from '../ElementSpawnerStats.js';
+
+/**
+ * Clone material for trail, with deep uniform cloning for shader materials
+ * Tracks material creation for GPU memory management
+ * @param {THREE.Material} material - Material to clone
+ * @returns {THREE.Material} Cloned material
+ */
+function cloneTrailMaterial(material) {
+    elementSpawnerStats.materialsCloned++;
+    const cloned = material.clone();
+
+    // Deep clone uniforms for shader materials
+    if (cloned.isShaderMaterial && cloned.uniforms) {
+        const newUniforms = {};
+        for (const [key, uniform] of Object.entries(cloned.uniforms)) {
+            const value = uniform.value;
+            if (value instanceof THREE.Color) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Vector2) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Vector3) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Vector4) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Matrix3) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Matrix4) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Texture) {
+                // Textures are shared (don't clone)
+                newUniforms[key] = { value: value };
+            } else if (Array.isArray(value)) {
+                newUniforms[key] = { value: [...value] };
+            } else {
+                // Primitive values (number, boolean, etc.)
+                newUniforms[key] = { value: value };
+            }
+        }
+        cloned.uniforms = newUniforms;
+    }
+
+    return cloned;
+}
 
 /**
  * TrailState - Manages trail effect for a single element
@@ -62,7 +106,8 @@ export class TrailState {
         // Create trail meshes (clones of original)
         for (let i = 0; i < this.count; i++) {
             const trailMesh = mesh.clone();
-            trailMesh.material = mesh.material.clone();
+            // Deep clone shader materials to preserve uniforms
+            trailMesh.material = cloneTrailMaterial(mesh.material);
             trailMesh.material.transparent = true;
             trailMesh.visible = false;
             trailMesh.userData.isTrail = true;
@@ -149,12 +194,28 @@ export class TrailState {
             if (mesh.parent) {
                 mesh.parent.remove(mesh);
             }
+            // Dispose cloned material (geometry is shared with original, don't dispose)
             if (mesh.material) {
                 mesh.material.dispose();
+                elementSpawnerStats.materialsDisposed++;
+                mesh.material = null;
             }
+            // Clear mesh references
+            mesh.geometry = null;
+            mesh.userData = {};
         }
         this.meshes = [];
+
+        // Clear history entries (contain cloned Vector3/Euler)
+        for (const entry of this.history) {
+            entry.position = null;
+            entry.rotation = null;
+            entry.scale = null;
+        }
         this.history = [];
+
+        // Clear reference to original
+        this.originalMesh = null;
     }
 }
 

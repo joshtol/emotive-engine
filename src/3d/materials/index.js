@@ -141,7 +141,7 @@ export {
 } from './ProceduralFireMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Procedural Water Material (advanced shader-based)
+// Procedural Water Material (advanced shader-based with animation types)
 // ═══════════════════════════════════════════════════════════════════════════
 export {
     createProceduralWaterMaterial,
@@ -149,7 +149,12 @@ export {
     setProceduralWaterTurbulence,
     setProceduralWaterIntensity,
     setProceduralWaterTint,
-    getProceduralWaterPhysics
+    setProceduralWaterAnimation,
+    setRotatingArc,
+    setRipplePulse,
+    setFlowStream,
+    getProceduralWaterPhysics,
+    WATER_ANIMATION_TYPES
 } from './ProceduralWaterMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -186,3 +191,27 @@ export {
     setProceduralVoidRiftMode,
     getProceduralVoidPhysics
 } from './ProceduralVoidMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Instanced Shader Utilities (for GPU-efficient element rendering)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    INSTANCED_ATTRIBUTES_VERTEX,
+    INSTANCED_ATTRIBUTES_FRAGMENT,
+    INSTANCED_TIME_CALC_VERTEX,
+    INSTANCED_TIME_UNIFORMS,
+    MODEL_SELECTION_VERTEX,
+    TRAIL_OFFSET_VERTEX,
+    injectInstancedVertex,
+    injectInstancedFragment,
+    createInstancedUniforms
+} from './InstancedShaderUtils.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Instanced Fire Material (GPU-efficient instanced version)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    createInstancedFireMaterial,
+    updateInstancedFireMaterial,
+    setInstancedFireTemperature
+} from './InstancedFireMaterial.js';

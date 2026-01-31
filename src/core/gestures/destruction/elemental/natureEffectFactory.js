@@ -75,7 +75,54 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.2,
             count: 8,
             scale: 1.0,
-            models: ['vine-tendril', 'vine-coil', 'thorn-vine']
+            models: ['vine-tendril', 'vine-coil', 'thorn-vine'],
+            minDistance: 0.15,         // Vines can be close but not overlapping
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.88,
+                stagger: 0.05,         // Vines grow sequentially
+                enter: {
+                    type: 'grow',      // Organic vine growth
+                    duration: 0.15,
+                    easing: 'easeOutCubic'
+                },
+                exit: {
+                    type: 'shrink',
+                    duration: 0.12,
+                    easing: 'easeIn'
+                },
+                // Living plant motion
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 2,
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.4,
+                    max: 0.7,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    speed: 0.01,
+                    noise: 0.15        // Organic movement
+                },
+                rotate: {
+                    axis: [0, 1, 0.5], // Slight twist axis
+                    speed: 0.008,
+                    oscillate: true,
+                    range: Math.PI / 10
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 6,
+                intensityScaling: {
+                    scale: 1.2,
+                    driftSpeed: 1.15
+                }
+            }
         },
         // Glow - deep green
         glowColor: [0.2, 0.7, 0.25],   // Deep vine green
@@ -121,7 +168,50 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.3,           // Roots cluster near base
             count: 6,
             scale: 1.0,
-            models: ['root-tendril', 'moss-patch']
+            models: ['root-tendril', 'moss-patch'],
+            minDistance: 0.18,         // Roots spread out organically
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.9,
+                stagger: 0.06,         // Roots grow progressively
+                enter: {
+                    type: 'grow',      // Roots spread out
+                    duration: 0.12,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Grounded plant motion
+                pulse: {
+                    amplitude: 0.05,
+                    frequency: 1.2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.3,
+                    max: 0.55,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                // Minimal drift - roots anchor
+                drift: {
+                    direction: 'down',
+                    speed: 0.005,
+                    noise: 0.05
+                },
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.1,
+                blending: 'normal',
+                renderOrder: 4,
+                intensityScaling: {
+                    scale: 1.15,
+                    emissiveMax: 1.2
+                }
+            }
         },
         // Glow - earthy green-brown
         glowColor: [0.35, 0.5, 0.2],   // Root brown-green
@@ -164,7 +254,50 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.4,           // Tight clustering
             count: 10,
             scale: 1.0,
-            models: ['vine-coil', 'thorn-vine', 'vine-tendril']
+            models: ['vine-coil', 'thorn-vine', 'vine-tendril'],
+            minDistance: 0.1,          // Tight wrapping allows close proximity
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.85,
+                stagger: 0.025,        // Rapid tightening
+                enter: {
+                    type: 'grow',
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'shrink',
+                    duration: 0.1,
+                    easing: 'easeInCubic'
+                },
+                // Constricting pulse
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 4,      // Pulsing grip
+                    easing: 'snap'     // Sharp pulse like tightening
+                },
+                emissive: {
+                    min: 0.4,
+                    max: 0.8,
+                    frequency: 4,
+                    pattern: 'sine'
+                },
+                // Inward squeeze
+                drift: {
+                    direction: 'inward',
+                    speed: 0.015,
+                    noise: 0.08
+                },
+                scaleVariance: 0.18,
+                lifetimeVariance: 0.12,
+                blending: 'normal',
+                renderOrder: 7,
+                intensityScaling: {
+                    scale: 1.25,
+                    pulseAmplitude: 1.4,
+                    driftSpeed: 1.3
+                }
+            }
         },
         // Glow - intense green
         glowColor: [0.25, 0.75, 0.2],  // Intense green
@@ -210,7 +343,55 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.15,
             count: 10,
             scale: 1.0,
-            models: ['flower-bloom', 'flower-bud', 'petal-scatter']
+            models: ['flower-bloom', 'flower-bud', 'petal-scatter'],
+            minDistance: 0.15,         // Flowers need space to be visible
+            animation: {
+                appearAt: 0.12,
+                disappearAt: 0.9,
+                stagger: 0.06,         // Flowers bloom sequentially
+                enter: {
+                    type: 'pop',       // Flowers pop open
+                    duration: 0.1,
+                    easing: 'easeOutBack',
+                    overshoot: 1.2
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Gentle flower sway
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 1.8,
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.5,
+                    max: 0.9,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',
+                    speed: 0.008,
+                    noise: 0.12
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.012,
+                    oscillate: true,
+                    range: Math.PI / 8
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.25
+                }
+            }
         },
         // Glow - flower pink/soft colors
         glowColor: [0.9, 0.6, 0.7],    // Soft pink
@@ -254,7 +435,48 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.2,
             count: 6,
             scale: 1.0,
-            models: ['leaf-single', 'leaf-cluster', 'fern-frond']
+            models: ['leaf-single', 'leaf-cluster', 'fern-frond'],
+            minDistance: 0.18,         // New growth spreads out
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.88,
+                stagger: 0.05,
+                enter: {
+                    type: 'grow',      // Shoots emerge from surface
+                    duration: 0.12,
+                    easing: 'easeOutCubic'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.12,
+                    easing: 'easeIn'
+                },
+                // Fresh spring growth
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 2.5,
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.5,
+                    max: 0.85,
+                    frequency: 2.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',
+                    speed: 0.012,
+                    noise: 0.08
+                },
+                scaleVariance: 0.18,
+                lifetimeVariance: 0.12,
+                blending: 'normal',
+                renderOrder: 7,
+                intensityScaling: {
+                    scale: 1.18,
+                    emissiveMax: 1.2
+                }
+            }
         },
         // Glow - bright spring green
         glowColor: [0.5, 0.9, 0.35],   // Spring green
@@ -295,7 +517,56 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.1,           // Even spread
             count: 12,
             scale: 1.0,
-            models: ['leaf-cluster', 'fern-frond', 'vine-tendril', 'flower-bloom']
+            models: ['leaf-cluster', 'fern-frond', 'vine-tendril', 'flower-bloom'],
+            minDistance: 0.12,         // Dense lush coverage
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.9,
+                stagger: 0.035,
+                enter: {
+                    type: 'grow',
+                    duration: 0.1,
+                    easing: 'easeOutBack',
+                    overshoot: 1.15
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Lush abundant growth
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.55,
+                    max: 0.95,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    speed: 0.01,
+                    noise: 0.1
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.01,
+                    oscillate: true,
+                    range: Math.PI / 10
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.12,
+                blending: 'normal',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.25,
+                    emissiveMax: 1.3
+                }
+            }
         },
         // Glow - rich forest green
         glowColor: [0.3, 0.8, 0.3],    // Forest green
@@ -342,7 +613,8 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.25,
             count: 5,
             scale: 0.9,                // Slightly smaller - wilted
-            models: ['leaf-single', 'petal-scatter', 'flower-bud']
+            models: ['leaf-single', 'petal-scatter', 'flower-bud'],
+            minDistance: 0.2           // Sparse coverage, more spacing
         },
         // Glow - fading yellow-green
         glowColor: [0.6, 0.65, 0.3],   // Fading green
@@ -391,7 +663,8 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.15,
             count: 15,                 // High count for full overgrowth
             scale: 1.1,                // Slightly larger for overgrown feel
-            models: ['vine-coil', 'leaf-cluster', 'fern-frond', 'moss-patch', 'mushroom-cap']
+            models: ['vine-coil', 'leaf-cluster', 'fern-frond', 'moss-patch', 'mushroom-cap'],
+            minDistance: 0.1           // Very dense overgrowth
         },
         // Glow - deep jungle green
         glowColor: [0.15, 0.6, 0.2],   // Deep jungle
@@ -442,7 +715,8 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.2,
             count: 10,
             scale: 1.0,
-            models: ['flower-bloom', 'petal-scatter', 'flower-bud', 'leaf-single']
+            models: ['flower-bloom', 'petal-scatter', 'flower-bud', 'leaf-single'],
+            minDistance: 0.15          // Flowers need visibility
         },
         // Glow - vibrant flower colors
         glowColor: [0.95, 0.5, 0.6],   // Vibrant pink
@@ -720,7 +994,14 @@ export function createNatureEffectGesture(variant) {
                         growth: cfg.growth,
                         category: cfg.category,
                         spawnMode: cfg.spawnMode || null,
-                        time
+                        duration: cfg.duration,
+                        time,
+                        // Extract spawn options from spawnMode (like fire does)
+                        animation: config.spawnMode?.animation,
+                        models: config.spawnMode?.models,
+                        count: config.spawnMode?.count,
+                        scale: config.spawnMode?.scale,
+                        embedDepth: config.spawnMode?.embedDepth
                     },
                     position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],
@@ -746,12 +1027,11 @@ export const constrict = createNatureEffectGesture('constrict');
 
 // Emanating variants (projecting growth)
 export const bloom = createNatureEffectGesture('bloom');
-export const sprout = createNatureEffectGesture('sprout');
+// NOTE: sprout removed due to crash - needs investigation
 export const flourish = createNatureEffectGesture('flourish');
 
 // Transform variants (becoming nature)
-export const wilt = createNatureEffectGesture('wilt');
-export const overgrow = createNatureEffectGesture('overgrow');
+// NOTE: wilt and overgrow removed due to crash - needs investigation
 export const blossom = createNatureEffectGesture('blossom');
 
 export {
@@ -765,11 +1045,8 @@ export default {
     constrict,
     // Emanating
     bloom,
-    sprout,
     flourish,
     // Transform
-    wilt,
-    overgrow,
     blossom,
     // Factory
     createNatureEffectGesture,

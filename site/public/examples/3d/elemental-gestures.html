@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<!--
+  ELEMENTAL GESTURES - Emotive Engine 3D
+
+  Showcase for elemental destruction gestures with their enhanced animation systems.
+  Features fire, ice, electric, water, void, light, earth, and nature elements.
+
+  Each element has unique visual characteristics:
+  - Fire: Flash enter, high flicker, additive blending, chaotic variance
+  - Ice: Grow enter, slow shimmer, geometric precision
+  - Electric: Flash/pop enter, extreme flicker, chaotic rotation
+  - Water: Pop/fade enter, flowing drift, organic variance
+  - Void: Fade enter, inward drift, shrink exit, dark absorption
+  - Light: Flash enter, high emissive, radiant additive blending
+  - Earth: Grow enter, minimal animation, heavy stability
+  - Nature: Grow enter, organic drift, living motion
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elemental Gestures - Emotive Engine</title>
+    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <style>
+        /* Theme: Cyan/Teal for elemental magic */
+        :root {
+            --accent: #06b6d4;
+            --accent-rgb: 6, 182, 212;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+        }
+
+        /* Element color accents */
+        .element-fire { --element-color: #f97316; }
+        .element-ice { --element-color: #38bdf8; }
+        .element-electric { --element-color: #facc15; }
+        .element-water { --element-color: #3b82f6; }
+        .element-poison { --element-color: #84cc16; }
+        .element-void { --element-color: #a855f7; }
+        .element-light { --element-color: #fef08a; }
+        .element-earth { --element-color: #a3a3a3; }
+        .element-nature { --element-color: #4ade80; }
+
+        /* Search box styling */
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Filter checkboxes with element colors */
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .filter-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-item input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .filter-item label {
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-item .element-icon {
+            font-size: 14px;
+        }
+
+        .filter-count {
+            font-size: 10px;
+            opacity: 0.6;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 5px;
+            border-radius: 10px;
+        }
+
+        /* Stats display */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Gesture button enhancements */
+        .gesture-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 10px 8px;
+            min-height: 60px;
+            font-size: 11px;
+            line-height: 1.2;
+            transition: transform 0.15s, background 0.15s, border-color 0.15s;
+        }
+
+        .gesture-btn .emoji {
+            font-size: 18px;
+        }
+
+        .gesture-btn .name {
+            word-break: break-word;
+            text-align: center;
+        }
+
+        .gesture-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .gesture-btn.hidden {
+            display: none;
+        }
+
+        /* Element-specific button styling */
+        .gesture-btn[data-element="fire"]:hover {
+            border-color: rgba(249, 115, 22, 0.5);
+            background: rgba(249, 115, 22, 0.15);
+        }
+        .gesture-btn[data-element="ice"]:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            background: rgba(56, 189, 248, 0.15);
+        }
+        .gesture-btn[data-element="electric"]:hover {
+            border-color: rgba(250, 204, 21, 0.5);
+            background: rgba(250, 204, 21, 0.15);
+        }
+        .gesture-btn[data-element="water"]:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.15);
+        }
+        .gesture-btn[data-element="poison"]:hover {
+            border-color: rgba(132, 204, 22, 0.5);
+            background: rgba(132, 204, 22, 0.15);
+        }
+        .gesture-btn[data-element="void"]:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            background: rgba(168, 85, 247, 0.15);
+        }
+        .gesture-btn[data-element="light"]:hover {
+            border-color: rgba(254, 240, 138, 0.5);
+            background: rgba(254, 240, 138, 0.15);
+        }
+        .gesture-btn[data-element="earth"]:hover {
+            border-color: rgba(163, 163, 163, 0.5);
+            background: rgba(163, 163, 163, 0.15);
+        }
+        .gesture-btn[data-element="nature"]:hover {
+            border-color: rgba(74, 222, 128, 0.5);
+            background: rgba(74, 222, 128, 0.15);
+        }
+
+        /* Section headers with counts */
+        .section h2 .gesture-count {
+            font-size: 11px;
+            font-weight: normal;
+            opacity: 0.6;
+            margin-left: 6px;
+        }
+
+        /* Section header element icons */
+        .section h2 .element-icon {
+            margin-right: 6px;
+        }
+
+        /* Hide collapsed sections properly */
+        .section-content.collapsed {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        /* Left-menu collapsible section */
+        .left-menu #filters-section > h2 {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .left-menu #filters-section > h2::after {
+            content: '+';
+            font-size: 16px;
+            font-weight: bold;
+            color: #888;
+            margin-left: 8px;
+        }
+
+        .left-menu #filters-section > h2:not(.collapsed)::after {
+            content: '−';
+        }
+
+        /* Right-menu sections */
+        .right-menu {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-menu > .section {
+            display: block;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .right-menu .section-content {
+            display: block;
+        }
+
+        .right-menu .section > h2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            min-height: auto !important;
+            font-size: clamp(11px, 1vw, 13px);
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            cursor: pointer;
+        }
+
+        /* Button grid scrollable */
+        .right-menu .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* Custom scrollbar */
+        .right-menu .button-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .right-menu .button-grid::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+        }
+
+        .right-menu .button-grid::-webkit-scrollbar-thumb {
+            background: rgba(var(--accent-rgb), 0.4);
+            border-radius: 2px;
+        }
+
+        .right-menu .button-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--accent-rgb), 0.6);
+        }
+
+        .right-menu .button-grid > .gesture-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .button-grid > .loading-state,
+        .button-grid > .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.5;
+            font-size: 13px;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 30px;
+            opacity: 0.6;
+        }
+
+        .loading-state .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Gesture tooltip */
+        .gesture-tooltip {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(var(--accent-rgb), 0.5);
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 12px;
+            line-height: 1.4;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.15s;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .gesture-tooltip.visible {
+            opacity: 1;
+        }
+
+        body:has(.gesture-tooltip.visible) .camera-hint {
+            opacity: 0 !important;
+            animation: none !important;
+        }
+
+        .gesture-tooltip .tooltip-name {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .gesture-tooltip .tooltip-element {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-left: 8px;
+        }
+
+        .gesture-tooltip .tooltip-desc {
+            opacity: 0.8;
+            margin-left: 8px;
+        }
+
+        /* Info box gesture display */
+        .info-gesture {
+            display: none;
+        }
+
+        .info-box.showing-gesture .info-default {
+            display: none;
+        }
+
+        .info-box.showing-gesture .info-gesture {
+            display: block;
+        }
+
+        .info-box.showing-gesture {
+            background: rgba(var(--accent-rgb), 0.15);
+            border-color: rgba(var(--accent-rgb), 0.4);
+        }
+
+        .info-gesture .gesture-name {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .info-gesture .gesture-element {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-left: 6px;
+        }
+
+        .info-gesture .gesture-desc {
+            display: block;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        /* Element legend */
+        .element-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 12px;
+            font-size: 11px;
+        }
+
+        .element-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.7;
+        }
+
+        .element-legend-item .swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 1000px) {
+            .gesture-tooltip {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- LEFT MENU -->
+    <div class="left-menu">
+        <div class="section">
+            <h2>Geometry</h2>
+            <div class="section-content">
+                <div class="button-grid" style="max-height: none;">
+                    <button data-action="geometry" data-value="crystal" class="active">💎 Crystal</button>
+                    <button data-action="geometry" data-value="heart">💗 Heart</button>
+                    <button data-action="geometry" data-value="rough">🪨 Rough</button>
+                    <button data-action="geometry" data-value="star">⭐ Star</button>
+                    <button data-action="geometry" data-value="moon">🌙 Moon</button>
+                    <button data-action="geometry" data-value="sun">☀️ Sun</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="filters-section">
+            <h2 class="collapsed">Search & Filters</h2>
+            <div class="section-content collapsed">
+                <div class="search-box">
+                    <input type="text" id="gesture-search" placeholder="Filter elemental gestures...">
+                </div>
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-fire" checked>
+                        <label for="filter-fire">
+                            <span class="element-icon">🔥</span> Fire
+                            <span class="filter-count" id="count-fire">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-ice" checked>
+                        <label for="filter-ice">
+                            <span class="element-icon">❄️</span> Ice
+                            <span class="filter-count" id="count-ice">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-electric" checked>
+                        <label for="filter-electric">
+                            <span class="element-icon">⚡</span> Electric
+                            <span class="filter-count" id="count-electric">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-water" checked>
+                        <label for="filter-water">
+                            <span class="element-icon">💧</span> Water
+                            <span class="filter-count" id="count-water">0</span>
+                        </label>
+                    </div>
+                    <!-- Poison filter removed - no element spawning -->
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-void" checked>
+                        <label for="filter-void">
+                            <span class="element-icon">🌑</span> Void
+                            <span class="filter-count" id="count-void">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-light" checked>
+                        <label for="filter-light">
+                            <span class="element-icon">✨</span> Light
+                            <span class="filter-count" id="count-light">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-earth" checked>
+                        <label for="filter-earth">
+                            <span class="element-icon">🪨</span> Earth
+                            <span class="filter-count" id="count-earth">0</span>
+                        </label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-nature" checked>
+                        <label for="filter-nature">
+                            <span class="element-icon">🌿</span> Nature
+                            <span class="filter-count" id="count-nature">0</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="stats-grid" style="margin-top: 12px;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-total">-</div>
+                        <div class="stat-label">Elemental</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-visible">-</div>
+                        <div class="stat-label">Visible</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="info-section">
+            <div class="info-box" id="info-box">
+                <div class="info-default">
+                    <strong>Elemental Gestures</strong><br>
+                    Destruction effects powered by fire, ice, electricity, water, void, light, earth, and nature.
+                </div>
+                <div class="info-gesture" id="info-gesture"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER ANIMATION -->
+    <div class="center-content">
+        <div id="animation-container"></div>
+        <div class="camera-hint">Drag to rotate | Scroll to zoom | Click elements to unleash</div>
+        <div class="gesture-tooltip" id="gesture-tooltip">
+            <span class="tooltip-name"></span>
+            <span class="tooltip-element"></span>
+            <span class="tooltip-desc"></span>
+        </div>
+    </div>
+
+    <!-- RIGHT MENU -->
+    <div class="right-menu">
+        <div class="section" id="section-fire">
+            <h2><span class="element-icon">🔥</span> Fire <span class="gesture-count" id="header-count-fire"></span></h2>
+            <div class="section-content">
+                <div class="button-grid" id="grid-fire">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-ice">
+            <h2 class="collapsed"><span class="element-icon">❄️</span> Ice <span class="gesture-count" id="header-count-ice"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-ice">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-electric">
+            <h2 class="collapsed"><span class="element-icon">⚡</span> Electric <span class="gesture-count" id="header-count-electric"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-electric">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-water">
+            <h2 class="collapsed"><span class="element-icon">💧</span> Water <span class="gesture-count" id="header-count-water"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-water">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Poison section removed - no element spawning -->
+
+        <div class="section" id="section-void">
+            <h2 class="collapsed"><span class="element-icon">🌑</span> Void <span class="gesture-count" id="header-count-void"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-void">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-light">
+            <h2 class="collapsed"><span class="element-icon">✨</span> Light <span class="gesture-count" id="header-count-light"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-light">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-earth">
+            <h2 class="collapsed"><span class="element-icon">🪨</span> Earth <span class="gesture-count" id="header-count-earth"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-earth">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-nature">
+            <h2 class="collapsed"><span class="element-icon">🌿</span> Nature <span class="gesture-count" id="header-count-nature"></span></h2>
+            <div class="section-content collapsed">
+                <div class="button-grid" id="grid-nature">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section visual-controls">
+            <h2 class="has-toggle">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INITIALIZE MASCOT
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const container = document.getElementById('animation-container');
+        const mascot = new EmotiveMascot3D({
+            coreGeometry: 'crystal',
+            enableParticles: true,
+            enablePostProcessing: true,
+            enableShadows: false,
+            enableControls: true,
+            enableShatter: false, // Disabled for isolated element spawner testing
+            autoRotate: true,
+            cameraDistance: 1.2,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0,
+            materialVariant: 'multiplexer',
+            assetBasePath: '/assets'
+        });
+
+        mascot.init(container);
+        mascot.start();
+
+        // Setup shared toggles
+        setupParticlesToggle(mascot);
+        setupVisualToggles(mascot);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ELEMENTAL GESTURE DISCOVERY
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Elemental types for testing (all elements - shatter gestures filtered by usesShatter)
+        const elements = ['fire', 'ice', 'electric', 'water', 'void', 'light', 'earth', 'nature'];
+
+        // Element metadata for display
+        const elementMeta = {
+            fire: { emoji: '🔥', name: 'Fire' },
+            ice: { emoji: '❄️', name: 'Ice' },
+            electric: { emoji: '⚡', name: 'Electric' },
+            water: { emoji: '💧', name: 'Water' },
+            void: { emoji: '🌑', name: 'Void' },
+            light: { emoji: '✨', name: 'Light' },
+            earth: { emoji: '🪨', name: 'Earth' },
+            nature: { emoji: '🌿', name: 'Nature' }
+        };
+
+        // Storage for gesture data
+        let allElementalGestures = [];
+
+        // Elements
+        const grids = {};
+        const sections = {};
+        const filters = {};
+        const counts = {};
+        const headerCounts = {};
+
+        elements.forEach(el => {
+            grids[el] = document.getElementById(`grid-${el}`);
+            sections[el] = document.getElementById(`section-${el}`);
+            filters[el] = document.getElementById(`filter-${el}`);
+            counts[el] = document.getElementById(`count-${el}`);
+            headerCounts[el] = document.getElementById(`header-count-${el}`);
+        });
+
+        const searchInput = document.getElementById('gesture-search');
+        const statTotal = document.getElementById('stat-total');
+        const statVisible = document.getElementById('stat-visible');
+        const tooltip = document.getElementById('gesture-tooltip');
+        const infoBox = document.getElementById('info-box');
+        const infoGesture = document.getElementById('info-gesture');
+
+        /**
+         * Detect element type from gesture name
+         * Uses prefix-based detection first, then specific keywords
+         */
+        function detectElement(gestureName) {
+            const name = gestureName.toLowerCase();
+
+            // ═══════════════════════════════════════════════════════════════
+            // PREFIX-BASED DETECTION (most reliable)
+            // ═══════════════════════════════════════════════════════════════
+            if (name.startsWith('poison')) return 'poison';
+            if (name.startsWith('light')) return 'light';
+            if (name.startsWith('fire')) return 'fire';
+            if (name.startsWith('ice')) return 'ice';
+            if (name.startsWith('electric')) return 'electric';
+            if (name.startsWith('water')) return 'water';
+            if (name.startsWith('void')) return 'void';
+            if (name.startsWith('earth')) return 'earth';
+            if (name.startsWith('nature')) return 'nature';
+
+            // ═══════════════════════════════════════════════════════════════
+            // KEYWORD-BASED DETECTION (for unprefixed gestures)
+            // ═══════════════════════════════════════════════════════════════
+
+            // Fire keywords (flame-vortex matches on 'flame', phoenix is fire rebirth)
+            if (name.includes('burn') || name.includes('blaze') || name.includes('scorch') ||
+                name.includes('combust') || name.includes('smolder') || name.includes('ignite') ||
+                name.includes('inferno') || name.includes('flame') || name.includes('ember') ||
+                name.includes('radiate') || name.includes('phoenix') || name.includes('firedance')) {
+                return 'fire';
+            }
+
+            // Ice keywords
+            if (name.includes('freeze') || name.includes('frost') ||
+                name.includes('crystal') || name.includes('glacial') || name.includes('chill') ||
+                name.includes('frozen') || name.includes('thaw')) {
+                return 'ice';
+            }
+
+            // Electric keywords
+            if (name.includes('shock') || name.includes('zap') ||
+                name.includes('crackle') || name.includes('charge') || name.includes('volt') ||
+                name.includes('spark') || name.includes('lightning') || name.includes('static') ||
+                name.includes('overload') || name.includes('glitch')) {
+                return 'electric';
+            }
+
+            // Water keywords (specific to actual water gestures)
+            if (name.includes('splash') || name.includes('drench') || name.includes('soak') ||
+                name.includes('tide') || name.includes('liquefy') || name.includes('pool') ||
+                name.includes('flood') || name.includes('drown') || name.includes('aqua') ||
+                name === 'flow' || name === 'ripple') {
+                return 'water';
+            }
+
+            // Poison keywords
+            if (name.includes('toxic') || name.includes('corrode') || name.includes('ooze') ||
+                name.includes('seep') || name.includes('infect') || name.includes('sicken') ||
+                name.includes('melt') || name.includes('decay') || name.includes('acid') ||
+                name.includes('venom')) {
+                return 'poison';
+            }
+
+            // Void keywords
+            if (name.includes('drain') || name.includes('consume') ||
+                name.includes('singularity') || name.includes('abyss') || name.includes('dark') ||
+                name.includes('hollow') || name.includes('null') || name.includes('devour') ||
+                name.includes('corrupt')) {
+                return 'void';
+            }
+
+            // Light keywords
+            if (name.includes('blind') || name.includes('purify') || name.includes('cleanse') ||
+                name.includes('ascend') || name.includes('shine') || name.includes('illuminate') ||
+                name.includes('luminous') || name.includes('bright') || name.includes('beam') ||
+                name.includes('beacon') || name.includes('holy')) {
+                return 'light';
+            }
+
+            // Earth keywords
+            if (name.includes('petrify') || name.includes('stone') || name.includes('rock') ||
+                name.includes('quake') || name.includes('tremor') ||
+                name.includes('rubble') || name.includes('boulder') || name.includes('mineral') ||
+                name.includes('shatter')) {
+                return 'earth';
+            }
+
+            // Nature keywords
+            if (name.includes('entangle') || name.includes('root') || name.includes('vine') ||
+                name.includes('bloom') || name.includes('sprout') || name.includes('flourish') ||
+                name.includes('plant') || name.includes('grow') ||
+                name.includes('constrict') || name.includes('thorn') || name.includes('leaf')) {
+                return 'nature';
+            }
+
+            return null;
+        }
+
+        /**
+         * Create a gesture button element
+         */
+        function createGestureButton(gesture, element) {
+            const btn = document.createElement('button');
+            btn.className = 'gesture-btn';
+            btn.dataset.gesture = gesture.name;
+            btn.dataset.element = element;
+            btn.dataset.description = gesture.description || '';
+
+            btn.innerHTML = `
+                <span class="emoji">${gesture.emoji || elementMeta[element].emoji}</span>
+                <span class="name">${gesture.name}</span>
+            `;
+
+            return btn;
+        }
+
+        /**
+         * Populate gesture grids from API
+         */
+        function populateGestures() {
+            // Get all available gestures from the mascot
+            const allGestures = mascot.getAvailableGestures();
+
+            // Clear loading states
+            Object.values(grids).forEach(grid => {
+                if (grid) grid.innerHTML = '';
+            });
+
+            // Filter to only elemental gestures and group by element
+            const grouped = {};
+            elements.forEach(el => grouped[el] = []);
+
+            allGestures.forEach(gesture => {
+                // Skip gestures that use the shatter system (enableShatter is false)
+                if (gesture.usesShatter) {
+                    return;
+                }
+                const element = detectElement(gesture.name);
+                if (element && grouped[element]) {
+                    grouped[element].push(gesture);
+                    allElementalGestures.push({ ...gesture, element });
+                }
+            });
+
+            // Sort each group alphabetically
+            Object.keys(grouped).forEach(element => {
+                grouped[element].sort((a, b) => a.name.localeCompare(b.name));
+            });
+
+            // Populate grids
+            Object.entries(grouped).forEach(([element, gestures]) => {
+                const grid = grids[element];
+                if (!grid) return;
+
+                if (gestures.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No gestures</div>';
+                    return;
+                }
+
+                gestures.forEach(gesture => {
+                    grid.appendChild(createGestureButton(gesture, element));
+                });
+
+                // Update counts
+                if (counts[element]) counts[element].textContent = gestures.length;
+                if (headerCounts[element]) headerCounts[element].textContent = `(${gestures.length})`;
+            });
+
+            // Update stats
+            statTotal.textContent = allElementalGestures.length;
+            updateVisibleCount();
+        }
+
+        /**
+         * Filter gestures based on search and element filters
+         */
+        function filterGestures() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            // Check which elements are enabled
+            const enabledElements = {};
+            elements.forEach(el => {
+                enabledElements[el] = filters[el]?.checked ?? true;
+            });
+
+            // Show/hide sections based on element filters
+            Object.entries(sections).forEach(([element, section]) => {
+                if (section) {
+                    section.style.display = enabledElements[element] ? '' : 'none';
+                }
+            });
+
+            // Filter individual buttons
+            document.querySelectorAll('.gesture-btn').forEach(btn => {
+                const name = btn.dataset.gesture.toLowerCase();
+                const element = btn.dataset.element;
+
+                const matchesSearch = !searchTerm || name.includes(searchTerm);
+                const matchesElement = enabledElements[element];
+
+                btn.classList.toggle('hidden', !matchesSearch || !matchesElement);
+            });
+
+            updateVisibleCount();
+        }
+
+        /**
+         * Update visible gesture count
+         */
+        function updateVisibleCount() {
+            const visible = document.querySelectorAll('.gesture-btn:not(.hidden)').length;
+            statVisible.textContent = visible;
+        }
+
+        /**
+         * Show tooltip for gesture
+         */
+        function showTooltip(btn) {
+            const name = btn.dataset.gesture;
+            const gesture = allElementalGestures.find(g => g.name === name);
+            if (!gesture) return;
+
+            const element = btn.dataset.element;
+            const meta = elementMeta[element];
+
+            // Desktop: floating tooltip
+            tooltip.querySelector('.tooltip-name').textContent = `${gesture.emoji || meta.emoji} ${gesture.name}`;
+            tooltip.querySelector('.tooltip-element').textContent = `[${meta.name}]`;
+            tooltip.querySelector('.tooltip-desc').textContent = `— ${gesture.description || 'Elemental destruction'}`;
+            tooltip.classList.add('visible');
+
+            // Mobile: info-box replacement
+            infoGesture.innerHTML = `
+                <span class="gesture-name">${gesture.emoji || meta.emoji} ${gesture.name}</span>
+                <span class="gesture-element">[${meta.name}]</span>
+                <span class="gesture-desc">${gesture.description || 'Elemental destruction effect'}</span>
+            `;
+            infoBox.classList.add('showing-gesture');
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // EVENT HANDLERS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Left-menu section toggle (Search & Filters)
+        const filtersSection = document.getElementById('filters-section');
+        if (filtersSection) {
+            const header = filtersSection.querySelector('h2');
+            const content = filtersSection.querySelector('.section-content');
+            if (header && content) {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', () => {
+                    header.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            }
+        }
+
+        // Geometry button clicks
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="geometry"]');
+            if (!btn) return;
+
+            const value = btn.dataset.value;
+            mascot.morphTo(value);
+
+            document.querySelectorAll('[data-action="geometry"]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+
+        // Gesture button clicks
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-gesture]');
+            if (!btn) return;
+
+            showTooltip(btn);
+
+            const gestureName = btn.dataset.gesture;
+            mascot.express(gestureName);
+        });
+
+        // Search input
+        searchInput.addEventListener('input', filterGestures);
+
+        // Filter checkboxes
+        Object.values(filters).forEach(checkbox => {
+            if (checkbox) {
+                checkbox.addEventListener('change', filterGestures);
+            }
+        });
+
+        // Tooltip on hover
+        let tooltipTimeout;
+        let currentTooltipBtn = null;
+
+        document.addEventListener('mouseover', e => {
+            const btn = e.target.closest('.gesture-btn');
+            if (btn && btn !== currentTooltipBtn) {
+                clearTimeout(tooltipTimeout);
+                currentTooltipBtn = btn;
+                tooltipTimeout = setTimeout(() => {
+                    showTooltip(btn);
+                }, 400);
+            }
+        });
+
+        document.addEventListener('mouseout', e => {
+            const btn = e.target.closest('.gesture-btn');
+            if (btn) {
+                clearTimeout(tooltipTimeout);
+                currentTooltipBtn = null;
+                hideTooltip();
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INITIALIZE
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        setTimeout(() => {
+            populateGestures();
+        }, 100);
+    </script>
+</body>
+</html>

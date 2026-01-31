@@ -62,6 +62,63 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.5,
         category: 'afflicted',
         radiance: 1.0,                 // Maximum radiance
+        spawnMode: {
+            type: 'surface',
+            pattern: 'crown',
+            embedDepth: 0.05,
+            cameraFacing: 0.6,
+            clustering: 0.2,
+            count: 10,
+            scale: 1.1,
+            models: ['light-ray', 'sparkle-star', 'prism-shard'],
+            minDistance: 0.08,
+            animation: {
+                appearAt: 0.02,
+                disappearAt: 0.85,
+                stagger: 0.01,
+                enter: {
+                    type: 'flash',      // Blinding flash
+                    duration: 0.015,
+                    easing: 'linear'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.2,
+                    easing: 'easeOut'
+                },
+                // Brilliant blinding light
+                pulse: {
+                    amplitude: 0.2,
+                    frequency: 8,       // Rapid brilliant pulse
+                    easing: 'easeOut'
+                },
+                flicker: {
+                    intensity: 0.3,
+                    rate: 15,
+                    pattern: 'sine'
+                },
+                emissive: {
+                    min: 1.5,           // Very bright baseline
+                    max: 4.0,           // Blinding peak
+                    frequency: 10,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    speed: 0.025,
+                    noise: 0.2
+                },
+                scaleVariance: 0.25,
+                lifetimeVariance: 0.2,
+                blending: 'additive',
+                renderOrder: 20,        // Render on top
+                intensityScaling: {
+                    scale: 1.4,
+                    emissiveMax: 1.8,
+                    flickerIntensity: 1.5
+                }
+            }
+        },
         // Blinding flash
         flashPeak: 0.3,                // Peak intensity point
         flashDecay: 0.5,
@@ -90,6 +147,17 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.2,
         category: 'afflicted',
         radiance: 0.8,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.1,
+            cameraFacing: 0.5,
+            clustering: 0.25,
+            count: 8,
+            scale: 1.0,
+            models: ['sparkle-star', 'prism-shard', 'light-ray'],
+            minDistance: 0.1
+        },
         // Purification waves
         waveRate: 0.4,
         waveSpread: true,
@@ -119,6 +187,17 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 0.7,
         category: 'afflicted',
         radiance: 0.5,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.12,
+            cameraFacing: 0.4,
+            clustering: 0.3,
+            count: 5,
+            scale: 0.85,
+            models: ['sparkle-star', 'prism-shard'],
+            minDistance: 0.15
+        },
         // Gentle effect
         gentleWave: true,
         // Glow - soft warm
@@ -151,6 +230,64 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.3,
         category: 'emanating',
         radiance: 0.85,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'spikes',
+            embedDepth: 0.08,
+            cameraFacing: 0.45,
+            clustering: 0.15,
+            count: 8,
+            scale: 1.15,
+            models: ['light-ray', 'prism-shard', 'sparkle-star'],
+            minDistance: 0.1,
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.88,
+                stagger: 0.04,
+                enter: {
+                    type: 'grow',       // Rays extend outward
+                    duration: 0.08,
+                    easing: 'easeOutBack',
+                    overshoot: 1.2
+                },
+                exit: {
+                    type: 'shrink',
+                    duration: 0.12,
+                    easing: 'easeIn'
+                },
+                // Powerful radiance
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 2.5,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 1.0,
+                    max: 2.5,
+                    frequency: 3,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    speed: 0.02,
+                    noise: 0.1
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.02,
+                    oscillate: false
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 15,
+                intensityScaling: {
+                    scale: 1.3,
+                    emissiveMax: 1.5
+                }
+            }
+        },
         // Ray projection
         rayCount: 8,
         raySpeed: 1.5,
@@ -181,6 +318,58 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 0.6,
         category: 'emanating',
         radiance: 0.45,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.15,
+            cameraFacing: 0.35,
+            clustering: 0.35,
+            count: 5,
+            scale: 0.8,
+            models: ['sparkle-star', 'prism-shard'],
+            minDistance: 0.15,
+            animation: {
+                appearAt: 0.12,
+                disappearAt: 0.88,
+                stagger: 0.06,
+                enter: {
+                    type: 'fade',       // Gentle glow appearance
+                    duration: 0.12,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Soft warm glow
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 1.5,     // Slow breathing
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.6,
+                    max: 1.2,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',
+                    speed: 0.008,
+                    noise: 0.05
+                },
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.1,
+                blending: 'additive',
+                renderOrder: 10,
+                intensityScaling: {
+                    scale: 1.15,
+                    emissiveMax: 1.3
+                }
+            }
+        },
         // Soft emanation
         innerGlow: true,
         glowSpread: 0.3,
@@ -210,6 +399,17 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.1,
         category: 'emanating',
         radiance: 0.75,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'crown',
+            embedDepth: 0.1,
+            cameraFacing: 0.5,
+            clustering: 0.2,
+            count: 6,
+            scale: 1.0,
+            models: ['light-ray', 'halo-ring', 'sparkle-star'],
+            minDistance: 0.12
+        },
         // Beacon pulse
         beaconPulse: true,
         pulseRate: 1.5,
@@ -242,6 +442,64 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.4,
         category: 'transform',
         radiance: 0.9,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',
+            embedDepth: 0.05,
+            cameraFacing: 0.55,
+            clustering: 0.15,
+            count: 10,
+            scale: 1.1,
+            models: ['light-ray', 'halo-ring', 'sparkle-star', 'prism-shard'],
+            minDistance: 0.08,
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.9,
+                stagger: 0.04,
+                enter: {
+                    type: 'grow',       // Divine manifestation
+                    duration: 0.1,
+                    easing: 'easeOutCubic'
+                },
+                exit: {
+                    type: 'fade',       // Dissolve into light
+                    duration: 0.2,
+                    easing: 'easeOut'
+                },
+                // Heavenly ascension
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 1.0,
+                    max: 2.2,
+                    frequency: 2.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',    // Rising to heaven
+                    speed: 0.025,
+                    noise: 0.08
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.015,
+                    oscillate: false
+                },
+                scaleVariance: 0.18,
+                lifetimeVariance: 0.12,
+                blending: 'additive',
+                renderOrder: 18,
+                intensityScaling: {
+                    scale: 1.3,
+                    emissiveMax: 1.5,
+                    driftSpeed: 1.3
+                }
+            }
+        },
         // Ascending motion
         ascendRate: 0.6,
         ascendAcceleration: 0.3,
@@ -278,6 +536,17 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.5,
         category: 'transform',
         radiance: 0.95,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.08,
+            cameraFacing: 0.5,
+            clustering: 0.2,
+            count: 12,
+            scale: 1.15,
+            models: ['sparkle-star', 'light-ray', 'prism-shard', 'halo-ring'],
+            minDistance: 0.06
+        },
         // Illumination spreading
         spreadFromCore: true,
         spreadRate: 0.5,
@@ -313,6 +582,17 @@ const LIGHT_EFFECT_VARIANTS = {
         intensity: 1.3,
         category: 'transform',
         radiance: 0.8,
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',
+            embedDepth: 0.12,
+            cameraFacing: 0.6,
+            clustering: 0.25,
+            count: 15,
+            scale: 0.9,
+            models: ['sparkle-star', 'prism-shard'],
+            minDistance: 0.05
+        },
         // Particle dissolution
         particleDisperse: true,
         disperseRate: 0.4,
@@ -335,6 +615,134 @@ const LIGHT_EFFECT_VARIANTS = {
         fadeCurve: 'accelerating',
         // Decay
         decayRate: 0.08
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // PHASE 13: AXIS CHOREOGRAPHY GESTURES
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    halo: {
+        name: 'lightHalo',
+        emoji: '😇',
+        type: 'blending',
+        description: 'Radiant halo floating above head',
+        duration: 3000,
+        beats: 4,
+        intensity: 0.8,
+        category: 'emanating',
+        radiance: 1.2,
+        // 3D Element spawning - anchored at head landmark
+        spawnMode: {
+            type: 'anchor',
+            anchor: {
+                landmark: 'head',
+                offset: { x: 0, y: 0.15, z: 0 },
+                orientation: 'flat',
+                bob: {
+                    amplitude: 0.02,
+                    frequency: 0.3
+                }
+            },
+            count: 1,
+            scale: 1.5,
+            models: ['light-ring'],
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.9,
+                enter: {
+                    type: 'grow',
+                    duration: 0.15,
+                    easing: 'easeOutBack',
+                    overshoot: 1.1
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.2,
+                    easing: 'easeIn'
+                },
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 0.5,
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 1.2,
+                    max: 2.0,
+                    frequency: 0.3,
+                    pattern: 'sine'
+                }
+            }
+        },
+        // Glow - angelic
+        glowColor: [1.0, 0.95, 0.8],
+        glowIntensityMin: 1.3,
+        glowIntensityMax: 1.8,
+        glowPulseRate: 0.5,
+        // Halo-specific
+        holyGlow: true,
+        radianceRays: 12
+    },
+
+    stargate: {
+        name: 'lightStargate',
+        emoji: '⭕',
+        type: 'blending',
+        description: 'Descending light rings that reverse back up like transporters',
+        duration: 4000,
+        beats: 6,
+        intensity: 1.2,
+        category: 'transform',
+        radiance: 1.5,
+        // 3D Element spawning - stacked rings traveling along axis
+        spawnMode: {
+            type: 'axis-travel',
+            formation: {
+                type: 'stack',
+                count: 3,
+                spacing: 0.2,
+                phaseOffset: 0.08          // Staggered descent
+            },
+            axisTravel: {
+                axis: 'y',
+                start: 1.5,                 // Above mascot (absolute value)
+                end: 'bottom',
+                easing: 'easeInOut',
+                reverseAt: 0.5,             // Reverse at midpoint
+                startDiameter: 1.3,
+                endDiameter: 0.8            // Tighter at bottom
+            },
+            count: 3,
+            scale: 1.3,
+            models: ['light-ring'],
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.95,
+                enter: {
+                    type: 'grow',
+                    duration: 0.1,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                emissive: {
+                    min: 1.0,
+                    max: 2.5,
+                    frequency: 1.0,
+                    pattern: 'sine'
+                }
+            }
+        },
+        // Glow - transporter energy
+        glowColor: [0.9, 0.95, 1.0],
+        glowIntensityMin: 1.4,
+        glowIntensityMax: 2.2,
+        glowPulseRate: 1.5,
+        // Stargate-specific
+        transporterBeam: true,
+        materializeEffect: true
     }
 };
 
@@ -584,6 +992,7 @@ export function createLightEffectGesture(variant) {
                         strength: effectStrength * cfg.intensity,
                         radiance: cfg.radiance,
                         category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
                         time
                     },
                     position: [posX, posY, posZ],

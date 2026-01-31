@@ -80,8 +80,9 @@ class ShardPool {
         this.shardMaterial = this._createShardMaterial();
 
         for (let i = 0; i < this.maxShards; i++) {
-            const material = this.shardMaterial.clone();
-            const mesh = new THREE.Mesh(this._placeholderGeometry, material);
+            // Pool shards share the base material - materials are cloned only when
+            // activating with different properties. This saves 50 material clones at init.
+            const mesh = new THREE.Mesh(this._placeholderGeometry, this.shardMaterial);
             mesh.visible = false;
             mesh.frustumCulled = true;
             mesh.userData.poolIndex = i;
@@ -729,11 +730,12 @@ class ShardPool {
         // If shard has a dynamic material (not the shared default), dispose it
         // and restore the shared material for pool reuse
         // EXCEPTION: Don't dispose shared elemental materials - they're managed by ShatterSystem
+        // NOTE: Pool shards use shared material directly - no clone needed (they're invisible)
         if (shard.material !== this.shardMaterial) {
             if (!shard.userData.state.isSharedElementalMaterial) {
                 shard.material.dispose();
             }
-            shard.material = this.shardMaterial.clone();
+            shard.material = this.shardMaterial; // Use shared directly, don't clone
         }
 
         // Reset elemental state
@@ -1235,11 +1237,12 @@ class ShardPool {
 
             // Dispose dynamic materials (not the shared default)
             // EXCEPTION: Don't dispose shared elemental materials - they're managed by ShatterSystem
+            // NOTE: Pool shards use shared material directly - no clone needed (they're invisible)
             if (shard.material !== this.shardMaterial) {
                 if (!shard.userData.state.isSharedElementalMaterial) {
                     shard.material.dispose();
                 }
-                shard.material = this.shardMaterial.clone();
+                shard.material = this.shardMaterial; // Use shared directly, don't clone
             }
 
             // Reset elemental state

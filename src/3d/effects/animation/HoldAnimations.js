@@ -493,7 +493,7 @@ export function calculateHoldAnimations(holdConfig, state, time, deltaTime) {
  * @param {number} time - Current time in seconds
  * @param {number} progress - Animation progress 0-1
  * @param {Object} [velocity] - Current velocity { x, y, z } for velocity-linked scaling
- * @returns {{ x: number, y: number, z: number }} Scale multipliers per axis
+ * @returns {{ x: number, y: number, z: number, velocityAxis: Object|null }} Scale multipliers per axis + velocity direction
  *
  * @example
  * const nuScale = calculateNonUniformScale(behavior, time, progress, velocity);
@@ -501,7 +501,7 @@ export function calculateHoldAnimations(holdConfig, state, time, deltaTime) {
  */
 export function calculateNonUniformScale(behavior, time, progress, velocity = null) {
     if (!behavior?.scaling) {
-        return { x: 1, y: 1, z: 1 };
+        return { x: 1, y: 1, z: 1, velocityAxis: null };
     }
 
     const { scaling } = behavior;
@@ -509,12 +509,12 @@ export function calculateNonUniformScale(behavior, time, progress, velocity = nu
     // Uniform pulse mode - simple breathing
     if (scaling.mode === 'uniform-pulse') {
         const pulse = 1 + Math.sin(time * scaling.frequency * Math.PI * 2) * scaling.amplitude;
-        return { x: pulse, y: pulse, z: pulse };
+        return { x: pulse, y: pulse, z: pulse, velocityAxis: null };
     }
 
     // Non-uniform mode - per-axis control
     if (scaling.mode === 'non-uniform') {
-        const result = { x: 1, y: 1, z: 1 };
+        const result = { x: 1, y: 1, z: 1, velocityAxis: null };
 
         for (const axis of ['x', 'y', 'z']) {
             const axisConfig = scaling.axes?.[axis];
@@ -554,7 +554,39 @@ export function calculateNonUniformScale(behavior, time, progress, velocity = nu
         return result;
     }
 
-    return { x: 1, y: 1, z: 1 };
+    // Velocity-stretch mode - elongate in direction of movement (for water droplets)
+    if (scaling.mode === 'velocity-stretch' && velocity) {
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+        const stretchFactor = scaling.stretchFactor || 2.0;
+        const minSpeed = scaling.minSpeed || 0.05;  // Very low threshold - stretch almost always
+        const maxStretch = scaling.maxStretch || 3.0;
+
+        if (speed > minSpeed) {
+            // Calculate stretch amount based on speed (more responsive)
+            const speedRange = 1.0;  // Speed at which max stretch is reached
+            const normalizedSpeed = Math.min((speed - minSpeed) / speedRange, 1.0);
+            const stretch = 1 + normalizedSpeed * (stretchFactor - 1);
+            const clampedStretch = Math.min(stretch, maxStretch);
+
+            // Squash perpendicular axes to maintain volume
+            const perpSquash = 1 / Math.sqrt(clampedStretch);
+
+            // Return velocity direction for orientation
+            const velLen = speed > 0.001 ? speed : 1;
+            return {
+                x: perpSquash,
+                y: clampedStretch,  // Stretch along Y (will be rotated to velocity dir)
+                z: perpSquash,
+                velocityAxis: {
+                    x: velocity.x / velLen,
+                    y: velocity.y / velLen,
+                    z: velocity.z / velLen
+                }
+            };
+        }
+    }
+
+    return { x: 1, y: 1, z: 1, velocityAxis: null };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -585,13 +617,18 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
     const speed = driftConfig.speed || 0.02;
     const noise = driftConfig.noise || 0;
 
+    // Cap time to prevent unbounded drift growth
+    // Elements shouldn't drift for more than a few seconds regardless of lifetime
+    const maxDriftTime = driftConfig.maxTime || 3.0;
+    const cappedTime = Math.min(time, maxDriftTime);
+
     switch (driftConfig.direction) {
     case 'gravity': {
         // Surface adherence phase - droplets cling before falling
         const adherenceTime = driftConfig.adherence || 0;
-        if (adherenceTime > 0 && time < adherenceTime) {
+        if (adherenceTime > 0 && cappedTime < adherenceTime) {
             // Clinging to surface - minimal drift with slight outward
-            const clingProgress = time / adherenceTime;
+            const clingProgress = cappedTime / adherenceTime;
             const clingStrength = 1 - clingProgress;
             if (surfaceNormal) {
                 offset.x = surfaceNormal.x * 0.01 * clingStrength;
@@ -599,10 +636,55 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
             }
         } else {
             // Falling phase with acceleration
-            const fallTime = time - adherenceTime;
+            const fallTime = cappedTime - adherenceTime;
             const accel = driftConfig.acceleration || 0.01;
             const fallSpeed = speed + fallTime * accel;
             offset.y = -fallSpeed * fallTime;
+        }
+        break;
+    }
+
+    case 'parabolic': {
+        // Realistic projectile motion - initial horizontal velocity + gravity
+        // Creates natural arcing trajectories for splashing water
+
+        // Generate consistent random angle per element using currentOffset as seed
+        // This ensures each droplet has its own trajectory
+        const seed = currentOffset ?
+            Math.abs(currentOffset.x * 1000 + currentOffset.z * 100) :
+            Math.random() * 1000;
+        const randomAngle = (seed % 628) / 100;  // 0 to 2*PI, deterministic per element
+        const randomSpread = 0.5 + (seed % 100) / 200;  // 0.5 to 1.0 spread variation
+
+        // Use surface normal if available, otherwise use random outward direction
+        let baseVelX, baseVelZ;
+        if (surfaceNormal && (Math.abs(surfaceNormal.x) > 0.01 || Math.abs(surfaceNormal.z) > 0.01)) {
+            baseVelX = surfaceNormal.x;
+            baseVelZ = surfaceNormal.z;
+        } else {
+            // Random outward direction when no surface normal
+            baseVelX = Math.cos(randomAngle);
+            baseVelZ = Math.sin(randomAngle);
+        }
+
+        const horizontalSpeed = speed * 8 * randomSpread;
+        const initialVelX = driftConfig.initialVelocity?.x ?? baseVelX * horizontalSpeed;
+        const initialVelY = driftConfig.initialVelocity?.y ?? speed * 6;
+        const initialVelZ = driftConfig.initialVelocity?.z ?? baseVelZ * horizontalSpeed;
+        const gravity = driftConfig.gravity || 0.15;
+
+        // x(t) = v0x * t
+        // y(t) = v0y * t - 0.5 * g * t^2
+        // z(t) = v0z * t
+        offset.x = initialVelX * cappedTime;
+        offset.y = initialVelY * cappedTime - 0.5 * gravity * cappedTime * cappedTime;
+        offset.z = initialVelZ * cappedTime;
+
+        // Add slight noise for natural variation (use uncapped time for smooth variation)
+        if (noise > 0) {
+            const noiseScale = noise * 0.05;
+            offset.x += Math.sin(time * 3.1 + seed * 0.1) * noiseScale;
+            offset.z += Math.cos(time * 2.7 + seed * 0.1) * noiseScale;
         }
         break;
     }
@@ -611,11 +693,11 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
         // Buoyant rise with optional acceleration
         let riseSpeed = speed;
         if (driftConfig.buoyancy) {
-            riseSpeed += time * 0.01;  // Accelerates upward
+            riseSpeed += cappedTime * 0.01;  // Accelerates upward (capped)
         }
-        offset.y = riseSpeed * time;
+        offset.y = riseSpeed * cappedTime;
 
-        // Wobbly horizontal drift
+        // Wobbly horizontal drift (use uncapped time for continuous wobble)
         if (noise > 0) {
             offset.x = Math.sin(time * 2.3) * noise * 0.1;
             offset.z = Math.cos(time * 1.7) * noise * 0.1;
@@ -625,7 +707,7 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
 
     case 'outward-flat': {
         // Expand in XZ plane only (for rings, cracks, patches)
-        const expandDist = speed * time;
+        const expandDist = speed * cappedTime;
         if (surfaceNormal) {
             // Project outward in surface plane
             offset.x = surfaceNormal.x * expandDist;
@@ -644,7 +726,7 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
 
     case 'outward': {
         // Radial expansion in all directions
-        const expandDist = speed * time;
+        const expandDist = speed * cappedTime;
         if (surfaceNormal) {
             offset.x = surfaceNormal.x * expandDist;
             offset.y = surfaceNormal.y * expandDist;
@@ -658,15 +740,44 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
         break;
     }
 
+    case 'inward': {
+        // Contract toward center (for void effects)
+        const contractDist = speed * cappedTime;
+        if (surfaceNormal) {
+            // Move opposite to surface normal (toward mascot center)
+            offset.x = -surfaceNormal.x * contractDist;
+            offset.y = -surfaceNormal.y * contractDist;
+            offset.z = -surfaceNormal.z * contractDist;
+        }
+        if (noise > 0) {
+            offset.x += (Math.random() - 0.5) * noise * contractDist;
+            offset.y += (Math.random() - 0.5) * noise * contractDist;
+            offset.z += (Math.random() - 0.5) * noise * contractDist;
+        }
+        break;
+    }
+
+    case 'down': {
+        // Simple downward movement (gravity alias without adherence)
+        offset.y = -speed * cappedTime;
+        if (noise > 0) {
+            // Use uncapped time for continuous wobble
+            offset.x = Math.sin(time * 2.1) * noise * 0.1;
+            offset.z = Math.cos(time * 1.9) * noise * 0.1;
+        }
+        break;
+    }
+
     case 'tangent': {
         // Flow along surface (for waves, vines)
-        const tangentDist = speed * time;
+        const tangentDist = speed * cappedTime;
         // Surface adherence keeps it close
         if (driftConfig.adherence && surfaceNormal) {
             offset.x = -surfaceNormal.z * tangentDist;  // Perpendicular to normal
             offset.z = surfaceNormal.x * tangentDist;
         }
         if (noise > 0) {
+            // Use uncapped time for continuous wobble
             offset.x += Math.sin(time * 1.5) * noise * 0.05;
             offset.z += Math.cos(time * 1.8) * noise * 0.05;
         }
@@ -709,8 +820,9 @@ export function calculateOpacityLink(opacityLink, scale, time, seed = 0) {
     case 'inverse-scale': {
         // Fade as scale increases (for expanding rings, bursts)
         const avgScale = (scale.x + scale.y + scale.z) / 3;
-        // Map scale 1-3 to opacity 1-0
-        return Math.max(0, Math.min(1, 2 - avgScale));
+        // Map scale 1-1.7 to opacity 1-0 (fade faster to avoid pulse oscillations
+        // bringing opacity back up when rings are at full size)
+        return Math.max(0, Math.min(1, (1.7 - avgScale) / 0.7));
     }
 
     case 'flicker': {

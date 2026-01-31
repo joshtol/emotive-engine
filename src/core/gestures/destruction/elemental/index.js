@@ -45,7 +45,7 @@ export {
     blind,
     purify,
     cleanse,
-    radiate,
+    radiate as lightRadiate,
     glow,
     beacon,
     ascend,
@@ -128,3 +128,33 @@ export {
     materialize,
     SMOKE_EFFECT_VARIANTS
 } from './smokeEffectFactory.js';
+
+// Fire effect factory (buildFireEffectGesture helper only)
+export { buildFireEffectGesture } from './fireEffectFactory.js';
+
+// Fire effect gestures (self-contained gesture files)
+export { default as burn } from './burn.js';
+export { default as scorch } from './scorch.js';
+export { default as combust } from './combust.js';
+export { default as flameVortex } from './flameVortex.js';
+export { default as firedance } from './firedance.js';
+export { default as firedanceGesture } from './firedance.js';
+export { default as phoenix } from './phoenix.js';
+export { default as phoenixGesture } from './phoenix.js';
+export { default as radiate } from './radiate.js';
+export { default as fireRadiate } from './radiate.js';
+export { default as blaze } from './blaze.js';
+export { default as smolder } from './smolder.js';
+
+// Fire effect variants list for discovery
+export const FIRE_EFFECT_VARIANTS = [
+    'burn',
+    'scorch',
+    'combust',
+    'flame-vortex',
+    'firedance',
+    'phoenix',
+    'radiate',
+    'blaze',
+    'smolder'
+];

@@ -52,122 +52,97 @@ const WATER_EFFECT_VARIANTS = {
         name: 'splash',
         emoji: '💦',
         type: 'blending',
-        description: 'Quick water burst, wobble then settle',
+        description: 'Rising water ring traveling from bottom to top',
         duration: 1200,
         beats: 2,
         intensity: 1.0,
         category: 'impact',
-        turbulence: 0.9,              // High turbulence for explosive splash
-        // 3D Element spawning - splash droplets and rings
+        turbulence: 0.9,              // High turbulence for dynamic water
+        // 3D Element spawning - single ring traveling bottom to top
         spawnMode: {
-            type: 'surface',
-            pattern: 'scattered',       // Splash droplets scattered
-            embedDepth: 0.1,
-            cameraFacing: 0.4,
-            clustering: 0.3,
-            count: 8,
+            type: 'axis-travel',
+            axisTravel: {
+                axis: 'y',
+                start: 'bottom',
+                end: 'top',
+                easing: 'easeOutQuad',     // Quick start, gentle arrival
+                startScale: 0.8,           // Slightly smaller at start
+                endScale: 1.2,             // Expands as it rises
+                startDiameter: 0.7,        // Tighter at bottom
+                endDiameter: 1.1           // Wider at top
+            },
+            count: 1,
             scale: 1.0,
-            models: ['droplet-small', 'droplet-large', 'splash-ring'],
-            minDistance: 0.12,
+            models: ['splash-ring'],
             animation: {
-                appearAt: 0.02,         // Immediate splash
-                disappearAt: 0.9,
-                stagger: 0.01,          // Rapid burst
+                appearAt: 0.02,         // Immediate appearance
+                disappearAt: 0.95,
                 enter: {
-                    type: 'pop',        // Splash pop-in
-                    duration: 0.025,
+                    type: 'grow',       // Ring emerges from center
+                    duration: 0.08,
                     easing: 'easeOutBack',
-                    overshoot: 1.25
+                    overshoot: 1.15
                 },
                 exit: {
-                    type: 'fade',       // Droplets settle/evaporate
-                    duration: 0.15,
+                    type: 'fade',       // Dissolves at top
+                    duration: 0.12,
                     easing: 'easeIn'
                 },
                 // Procedural config - enables ProceduralWaterMaterial
                 procedural: {
-                    scaleSmoothing: 0.06,    // Fast smoothing for explosive splash
-                    geometryStability: true  // Use fadeProgress for stable wave displacement
+                    scaleSmoothing: 0.06,
+                    geometryStability: true
                 },
-                // Parameter animation: animate water dynamics over gesture lifetime
+                // Parameter animation: water dynamics during travel
                 parameterAnimation: {
                     turbulence: {
-                        start: 0.2,          // Calm before impact
-                        peak: 1.0,           // Maximum chaos at splash
-                        end: 0.1,            // Settling
-                        curve: 'spike'       // Quick burst
+                        start: 0.8,          // Energetic start
+                        peak: 1.0,           // Maximum mid-journey
+                        end: 0.3,            // Calming at top
+                        curve: 'bell'
                     },
                     wetness: {
-                        start: 0.5,
+                        start: 0.6,
                         peak: 1.0,
-                        end: 0.3,
+                        end: 0.5,
                         curve: 'bell'
                     }
                 },
-                // Wobbling water motion
+                // Gentle pulse for organic motion
                 pulse: {
-                    amplitude: 0.15,
-                    frequency: 6,       // Fast wobble
+                    amplitude: 0.08,
+                    frequency: 4,
                     easing: 'easeInOut'
                 },
-                drift: {
-                    direction: 'outward', // Splash outward
-                    distance: 0.2,        // Musical timing: travels 0.2 units over gesture
-                    noise: 0.3
-                },
-                // Water variance
-                scaleVariance: 0.3,
-                lifetimeVariance: 0.25,
-                delayVariance: 0.05,
                 blending: 'normal',
                 renderOrder: 8,
-                intensityScaling: {
-                    scale: 1.25,
-                    driftSpeed: 1.4
-                },
-                // Model-specific behavior overrides (Phase 11)
+                // Model-specific behavior overrides
                 modelOverrides: {
                     'splash-ring': {
                         scaling: {
                             mode: 'non-uniform',
                             axes: {
-                                x: { expand: true, rate: 2.0 },
-                                y: { expand: false, rate: 0.2 },
-                                z: { expand: true, rate: 2.0 }
+                                x: { expand: true, rate: 1.5 },
+                                y: { expand: false, rate: 0.3 },
+                                z: { expand: true, rate: 1.5 }
                             }
                         },
-                        drift: { direction: 'outward-flat', speed: 0.05 },
-                        opacityLink: 'inverse-scale'
-                    },
-                    'droplet-small': {
-                        drift: { direction: 'outward', speed: 0.04, noise: 0.2 },
-                        enter: { type: 'pop', duration: 0.02 }
-                    },
-                    'droplet-large': {
-                        drift: { direction: 'outward', speed: 0.03, noise: 0.15 },
-                        scaling: {
-                            mode: 'non-uniform',
-                            axes: {
-                                x: { expand: false, rate: 0.8 },
-                                y: { expand: true, rate: 1.2 },
-                                z: { expand: false, rate: 0.8 }
-                            }
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for dynamic ring
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.5,    // Visible arc width
+                            arcSpeed: 1.5,    // 1.5 rotations over gesture
+                            arcCount: 2       // Two arcs for fuller appearance
                         }
-                    },
-                    'wave-curl': {
-                        scaling: { mode: 'uniform-pulse', amplitude: 0.2, frequency: 6 }
-                    },
-                    'bubble-cluster': {
-                        enter: { type: 'pop', duration: 0.03 },
-                        drift: { direction: 'rising', speed: 0.03, buoyancy: true }
                     }
                 }
             }
         },
-        // Wobble parameters - quick burst then decay
-        wobbleFrequency: 8,          // Fast initial wobble
-        wobbleAmplitude: 0.04,       // Strong initial displacement
-        wobbleDecay: 0.7,            // Decays quickly
+        // Wobble parameters - reduced for fluid motion
+        wobbleFrequency: 3,
+        wobbleAmplitude: 0.015,
+        wobbleDecay: 0.5,
         // Scale - brief expansion then contract
         scaleWobble: 0.06,
         scaleFrequency: 6,
@@ -177,8 +152,8 @@ const WATER_EFFECT_VARIANTS = {
         glowIntensityMax: 1.6,
         glowPulseRate: 4,
         // Impact-specific
-        impactBurst: true,           // Initial burst at start
-        burstDuration: 0.2           // First 20% is burst phase
+        impactBurst: true,
+        burstDuration: 0.2
     },
 
     drench: {
@@ -262,35 +237,49 @@ const WATER_EFFECT_VARIANTS = {
                                 z: { expand: true, rate: 1.2 }
                             }
                         },
-                        opacityLink: 'inverse-scale'
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 2
+                        }
                     },
                     'droplet-large': {
-                        drift: { direction: 'gravity', speed: 0.04, acceleration: 0.02 },
+                        // Heavy dripping with velocity stretch
                         scaling: {
-                            mode: 'non-uniform',
-                            axes: {
-                                x: { expand: false, rate: 0.6 },
-                                y: { expand: true, rate: 1.5 },
-                                z: { expand: false, rate: 0.6 }
-                            },
-                            velocityLink: 'y'
+                            mode: 'velocity-stretch',
+                            stretchFactor: 1.5,
+                            minSpeed: 0.02,
+                            maxStretch: 2.0
                         },
-                        orientationOverride: 'velocity'
+                        drift: {
+                            direction: 'gravity',
+                            speed: 0.04,
+                            acceleration: 0.03,
+                            adherence: 0.2,
+                            noise: 0.01
+                        },
+                        // Shader animation: vertical drip stretch
+                        shaderAnimation: {
+                            type: 3  // DRIP_FALL
+                        }
                     },
                     'wave-curl': {
-                        scaling: { mode: 'uniform-pulse', amplitude: 0.1, frequency: 1.5 },
-                        drift: { direction: 'tangent', speed: 0.01, adherence: 0.6 }
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.08, frequency: 1.2 },
+                        drift: { direction: 'tangent', speed: 0.008, adherence: 0.6, noise: 0.02 }
                     },
                     'bubble-cluster': {
-                        drift: { direction: 'rising', speed: 0.015, buoyancy: true, noise: 0.1 }
+                        drift: { direction: 'rising', speed: 0.012, buoyancy: true, noise: 0.03 }
                     }
                 }
             }
         },
-        // Wobble - slower, heavier feeling
-        wobbleFrequency: 3,
-        wobbleAmplitude: 0.025,
-        wobbleDecay: 0.4,
+        // Wobble - minimal for fluid motion
+        wobbleFrequency: 1.5,
+        wobbleAmplitude: 0.01,
+        wobbleDecay: 0.3,
         // Scale - slight compression from weight
         scaleWobble: 0.03,
         scaleFrequency: 2,
@@ -385,6 +374,14 @@ const WATER_EFFECT_VARIANTS = {
                                 y: { expand: false, rate: 0.5 },
                                 z: { expand: true, rate: 0.8 }
                             }
+                        },
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 2
                         }
                     },
                     'droplet-small': {
@@ -524,6 +521,14 @@ const WATER_EFFECT_VARIANTS = {
                                 z: { expand: true, rate: 1.1, oscillate: true }
                             },
                             wobbleFrequency: 1.5
+                        },
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 2
                         }
                     },
                     'droplet-small': {
@@ -531,7 +536,12 @@ const WATER_EFFECT_VARIANTS = {
                     },
                     'wave-curl': {
                         scaling: { mode: 'uniform-pulse', amplitude: 0.12, frequency: 1.5 },
-                        rotate: { axis: 'tangent', speed: 0.015, oscillate: true, range: Math.PI / 6 }
+                        rotate: { axis: 'tangent', speed: 0.015, oscillate: true, range: Math.PI / 6 },
+                        // Shader animation: directional flow
+                        shaderAnimation: {
+                            type: 4,  // FLOW_STREAM
+                            flowDirection: 0
+                        }
                     },
                     'bubble-cluster': {
                         drift: { direction: 'rising', speed: 0.02, buoyancy: true, noise: 0.15 }
@@ -644,7 +654,14 @@ const WATER_EFFECT_VARIANTS = {
                             easing: 'easeOutQuad'
                         },
                         drift: { direction: 'outward-flat', speed: 0.04 },
-                        opacityLink: 'inverse-scale'
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 3   // More arcs for ripple effect
+                        }
                     },
                     'droplet-small': {
                         drift: { direction: 'outward-flat', speed: 0.02 }
@@ -749,7 +766,15 @@ const WATER_EFFECT_VARIANTS = {
                 modelOverrides: {
                     'splash-ring': {
                         scaling: { mode: 'uniform-pulse', amplitude: 0.1, frequency: 0.8 },
-                        drift: { direction: 'tangent', speed: 0.015, noise: 0.1 }
+                        drift: { direction: 'tangent', speed: 0.015, noise: 0.1 },
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,    // Wider arc for flowing tide
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 2
+                        }
                     },
                     'droplet-large': {
                         drift: { direction: 'tangent', speed: 0.02, noise: 0.15 }
@@ -840,21 +865,16 @@ const WATER_EFFECT_VARIANTS = {
                         curve: 'linear'      // Steadily dissolving
                     }
                 },
-                // Increasing wobble as form dissolves
+                // Minimal pulse - velocity stretch provides dynamism
                 pulse: {
-                    amplitude: 0.2,     // Stronger wobble
-                    frequency: 4,
+                    amplitude: 0.08,    // Subtle breathing
+                    frequency: 1.5,
                     easing: 'easeInOut'
-                },
-                flicker: {
-                    intensity: 0.1,
-                    rate: 6,
-                    pattern: 'sine'
                 },
                 drift: {
                     direction: 'down',  // Dripping down
                     distance: 0.15,     // Musical timing: drips 0.15 units
-                    noise: 0.2
+                    noise: 0.05         // Minimal noise for smooth drips
                 },
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.2,
@@ -871,42 +891,76 @@ const WATER_EFFECT_VARIANTS = {
                         scaling: {
                             mode: 'non-uniform',
                             axes: {
-                                x: { expand: true, rate: 1.8, oscillate: true },
+                                x: { expand: true, rate: 1.5 },
                                 y: { expand: false, rate: 0.4 },
-                                z: { expand: true, rate: 1.8, oscillate: true }
-                            },
-                            wobbleFrequency: 4, wobbleAmplitude: 0.2
+                                z: { expand: true, rate: 1.5 }
+                            }
+                        },
+                        drift: { direction: 'outward-flat', speed: 0.02, noise: 0.03 },
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 2
                         }
                     },
                     'droplet-small': {
-                        drift: { direction: 'gravity', speed: 0.05, acceleration: 0.02 }
+                        // Melting drips with velocity stretch
+                        scaling: {
+                            mode: 'velocity-stretch',
+                            stretchFactor: 1.8,
+                            minSpeed: 0.02,
+                            maxStretch: 2.5
+                        },
+                        drift: {
+                            direction: 'gravity',
+                            speed: 0.05,
+                            acceleration: 0.04,
+                            adherence: 0.3,
+                            noise: 0.01
+                        },
+                        // Shader animation: vertical drip stretch
+                        shaderAnimation: {
+                            type: 3  // DRIP_FALL
+                        }
                     },
                     'droplet-large': {
-                        drift: { direction: 'gravity', speed: 0.04, acceleration: 0.015 },
+                        // Heavy drips with velocity stretch
                         scaling: {
-                            mode: 'non-uniform',
-                            axes: {
-                                x: { expand: false, rate: 0.7 },
-                                y: { expand: true, rate: 1.4 },
-                                z: { expand: false, rate: 0.7 }
-                            },
-                            velocityLink: 'y'
+                            mode: 'velocity-stretch',
+                            stretchFactor: 1.5,
+                            minSpeed: 0.02,
+                            maxStretch: 2.0
+                        },
+                        drift: {
+                            direction: 'gravity',
+                            speed: 0.045,
+                            acceleration: 0.035,
+                            adherence: 0.25,
+                            noise: 0.01
+                        },
+                        // Shader animation: vertical drip stretch
+                        shaderAnimation: {
+                            type: 3  // DRIP_FALL
                         }
                     },
                     'wave-curl': {
-                        scaling: { mode: 'uniform-pulse', amplitude: 0.25, frequency: 4 }
+                        scaling: { mode: 'uniform-pulse', amplitude: 0.15, frequency: 2 },
+                        drift: { direction: 'tangent', speed: 0.01, noise: 0.02 }
                     },
                     'bubble-cluster': {
                         enter: { type: 'pop', duration: 0.02 },
-                        drift: { direction: 'random', speed: 0.03, noise: 0.4 }
+                        drift: { direction: 'rising', speed: 0.02, buoyancy: true, noise: 0.05 }
                     }
                 }
             }
         },
-        // Wobble - increasing instability
-        wobbleFrequency: 4,
-        wobbleAmplitude: 0.02,
-        wobbleDecay: -0.3,           // NEGATIVE = wobble INCREASES over time
+        // Wobble - minimal for fluid motion
+        wobbleFrequency: 2,
+        wobbleAmplitude: 0.01,
+        wobbleDecay: 0.2,
         // Scale - irregular wobbling
         scaleWobble: 0.04,
         scaleFrequency: 3,
@@ -1009,7 +1063,14 @@ const WATER_EFFECT_VARIANTS = {
                             easing: 'easeOutQuad'
                         },
                         drift: { direction: 'outward-flat', speed: 0.02 },
-                        opacityLink: 'inverse-scale'
+                        opacityLink: 'inverse-scale',
+                        // Shader animation: rotating arc for partial ring visibility
+                        shaderAnimation: {
+                            type: 1,  // ROTATING_ARC
+                            arcWidth: 0.6,
+                            arcSpeed: 1.0,  // One rotation over gesture
+                            arcCount: 2
+                        }
                     },
                     'bubble-cluster': {
                         drift: { direction: 'rising', speed: 0.025, buoyancy: true },
@@ -1035,6 +1096,93 @@ const WATER_EFFECT_VARIANTS = {
         // Pool-specific
         settleDown: 0.03,            // Sink downward
         spreadOut: true
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // PHASE 13: AXIS CHOREOGRAPHY GESTURES
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    vortex: {
+        name: 'vortex',
+        emoji: '🌀',
+        type: 'blending',
+        description: 'Spiraling water vortex rising from feet to head',
+        duration: 2500,
+        beats: 4,
+        intensity: 1.1,
+        category: 'transform',
+        turbulence: 0.8,
+        // 3D Element spawning - spiral formation traveling up axis
+        spawnMode: {
+            type: 'axis-travel',
+            formation: {
+                type: 'spiral',
+                count: 5,
+                spacing: 0.12,
+                arcOffset: 72,          // 360/5 = evenly distributed spiral
+                phaseOffset: 0.04       // Staggered travel for flowing effect
+            },
+            axisTravel: {
+                axis: 'y',
+                start: 'bottom',
+                end: 'top',
+                easing: 'easeInOut',
+                startDiameter: 0.6,     // Tighter at bottom
+                endDiameter: 1.2        // Wider at top (expanding vortex)
+            },
+            count: 5,
+            scale: 1.0,
+            models: ['splash-ring'],
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.95,
+                stagger: 0.02,
+                enter: {
+                    type: 'grow',
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.1,
+                    easing: 'easeIn'
+                },
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
+                parameterAnimation: {
+                    turbulence: {
+                        start: 0.4,
+                        peak: 0.9,
+                        end: 0.5,
+                        curve: 'bell'
+                    }
+                },
+                modelOverrides: {
+                    'splash-ring': {
+                        shaderAnimation: {
+                            type: 1,        // ROTATING_ARC
+                            arcWidth: 0.4,  // Tighter arc for vortex
+                            arcSpeed: 2.0,  // 2 rotations over gesture
+                            arcCount: 2
+                        }
+                    }
+                }
+            }
+        },
+        // Wobble - swirling motion
+        wobbleFrequency: 4,
+        wobbleAmplitude: 0.02,
+        wobbleDecay: 0.3,
+        // Glow - water vortex glow
+        glowColor: [0.2, 0.5, 0.9],
+        glowIntensityMin: 1.2,
+        glowIntensityMax: 1.6,
+        glowPulseRate: 2,
+        // Vortex-specific
+        swirl: true,
+        riseSpeed: 0.03
     }
 };
 
@@ -1310,7 +1458,14 @@ export function createWaterEffectGesture(variant) {
                         spawnMode: cfg.spawnMode || null,
                         duration: cfg.duration,
                         progress,
-                        time
+                        time,
+                        // Phase 11: Pass animation config to ElementSpawner
+                        // Use config.spawnMode (not cfg.spawnMode) because motion may override with string
+                        animation: config.spawnMode?.animation,
+                        models: config.spawnMode?.models,
+                        count: config.spawnMode?.count,
+                        scale: config.spawnMode?.scale,
+                        embedDepth: config.spawnMode?.embedDepth
                     }
                 };
             }
@@ -1336,6 +1491,9 @@ export const tide = createWaterEffectGesture('tide');
 export const liquefy = createWaterEffectGesture('liquefy');
 export const pool = createWaterEffectGesture('pool');
 
+// Axis choreography variants (Phase 13)
+export const vortex = createWaterEffectGesture('vortex');
+
 export {
     WATER_EFFECT_VARIANTS
 };
@@ -1352,6 +1510,8 @@ export default {
     // Transform
     liquefy,
     pool,
+    // Axis choreography
+    vortex,
     // Factory
     createWaterEffectGesture,
     WATER_EFFECT_VARIANTS

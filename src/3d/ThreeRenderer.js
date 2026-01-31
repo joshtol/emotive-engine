@@ -1596,6 +1596,10 @@ export class ThreeRenderer {
             // === STEP 2: Render particles (layer 1) to separate render target ===
             // OPTIMIZATION: Skip particle pass entirely if particles are disabled
             if (hasParticles && this.particleRenderTarget && this.particleBloomPass) {
+                // Reset WebGL state before particle rendering
+                // This ensures procedural element shaders don't leave dirty state
+                this.renderer.state.reset();
+
                 // Clear particle render target with WHITE (non-black) to prevent dark halos
                 this.renderer.setRenderTarget(this.particleRenderTarget);
                 this.renderer.setClearColor(0xffffff, 0); // White RGB, but 0 alpha

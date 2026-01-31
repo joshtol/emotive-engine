@@ -54,6 +54,10 @@ import {
 } from './animation/HoldAnimations.js';
 import { TrailState } from './animation/Trail.js';
 
+// Spawn modes
+import { MascotSpatialRef } from './MascotSpatialRef.js';
+import { createSpawnMode, isNewSpawnMode } from './spawn-modes/index.js';
+
 // Procedural materials
 import {
     createProceduralFireMaterial,
@@ -66,7 +70,9 @@ import {
     createProceduralWaterMaterial,
     updateProceduralWaterMaterial,
     setProceduralWaterIntensity,
-    setProceduralWaterTurbulence
+    setProceduralWaterTurbulence,
+    setProceduralWaterAnimation,
+    WATER_ANIMATION_TYPES
 } from '../materials/ProceduralWaterMaterial.js';
 
 import {
@@ -82,6 +88,104 @@ import {
     setProceduralSmokeIntensity,
     setProceduralSmokeDensity
 } from '../materials/ProceduralSmokeMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// REUSABLE TEMP OBJECT POOL - Prevents per-frame/per-element allocations
+// ═══════════════════════════════════════════════════════════════════════════════════════
+//
+// These objects are reused across method calls to avoid creating garbage.
+// CRITICAL: Never store references to these objects - they get overwritten!
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const _tempPool = {
+    // Vectors for surface sampling and orientation
+    vec3_a: new THREE.Vector3(),
+    vec3_b: new THREE.Vector3(),
+    vec3_c: new THREE.Vector3(),
+    vec3_d: new THREE.Vector3(),
+    vec3_e: new THREE.Vector3(),
+    vec3_f: new THREE.Vector3(),
+    vec3_g: new THREE.Vector3(),
+    // Quaternions for orientation
+    quat_a: new THREE.Quaternion(),
+    quat_b: new THREE.Quaternion(),
+    // Matrix for basis calculation
+    matrix_a: new THREE.Matrix4(),
+    // Camera direction (reused across surface samples)
+    cameraDir: new THREE.Vector3(),
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// DEBUG: MEMORY LEAK TRACKING
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// Imported from separate file to avoid circular dependency with Trail.js
+// Usage: ELEMENT_SPAWNER_STATS.report() - show table with leak detection
+//        ELEMENT_SPAWNER_STATS.reset() - reset counters
+import { elementSpawnerStats as _debugStats, MAX_ACTIVE_MATERIALS, MAX_TOTAL_ELEMENTS } from './ElementSpawnerStats.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// SHADER MATERIAL DEEP CLONE
+// ═══════════════════════════════════════════════════════════════════════════════════════
+//
+// THREE.ShaderMaterial.clone() does a shallow copy of uniforms - all cloned materials
+// share the same uniform VALUE objects. This means updating uTime or uAnimationType
+// on one mesh affects ALL meshes using clones of that material.
+//
+// We need to deep clone uniforms so each mesh has independent animation state.
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Deep clone a shader material's uniforms
+ * Creates new objects for each uniform value so cloned materials are independent
+ *
+ * @param {THREE.ShaderMaterial} material - Material to clone
+ * @returns {THREE.ShaderMaterial} Cloned material with independent uniforms
+ */
+function cloneShaderMaterialDeep(material) {
+    _debugStats.materialsCloned++;
+
+    // Warning when approaching material limit (helps debugging)
+    const activeCount = _debugStats.activeMaterials;
+    if (activeCount > MAX_ACTIVE_MATERIALS * 0.8 && activeCount % 10 === 0) {
+        console.warn(`[ElementSpawner] Material count high: ${activeCount}/${MAX_ACTIVE_MATERIALS}`);
+    }
+
+    const cloned = material.clone();
+
+    // Deep clone uniforms - create new { value: } objects for each uniform
+    if (cloned.uniforms) {
+        const newUniforms = {};
+        for (const [key, uniform] of Object.entries(cloned.uniforms)) {
+            // Clone the uniform object
+            const value = uniform.value;
+            if (value instanceof THREE.Color) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Vector2) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Vector3) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Vector4) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Matrix3) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Matrix4) {
+                newUniforms[key] = { value: value.clone() };
+            } else if (value instanceof THREE.Texture) {
+                // Textures are shared (don't clone them)
+                newUniforms[key] = { value: value };
+            } else if (Array.isArray(value)) {
+                // Clone arrays
+                newUniforms[key] = { value: [...value] };
+            } else {
+                // Primitive values (number, boolean, etc.)
+                newUniforms[key] = { value: value };
+            }
+        }
+        cloned.uniforms = newUniforms;
+    }
+
+    return cloned;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GOLDEN RATIO SIZING SYSTEM
@@ -400,8 +504,7 @@ const MODEL_BEHAVIORS = {
                 x: { expand: false, rate: 0.8 },
                 y: { expand: true, rate: 1.3 },
                 z: { expand: false, rate: 0.8 }
-            },
-            velocityLink: 'y'
+            }
         },
         drift: { direction: 'gravity', speed: 0.02, acceleration: 0.01, adherence: 0.3 },
         orientationOverride: 'velocity'
@@ -414,8 +517,7 @@ const MODEL_BEHAVIORS = {
                 x: { expand: false, rate: 0.7 },
                 y: { expand: true, rate: 1.4 },
                 z: { expand: false, rate: 0.7 }
-            },
-            velocityLink: 'y'
+            }
         },
         drift: { direction: 'gravity', speed: 0.03, acceleration: 0.015, adherence: 0.5 },
         orientationOverride: 'velocity'
@@ -1089,6 +1191,11 @@ export class ElementSpawner {
      */
     constructor(options = {}) {
         this.scene = options.scene;
+
+        // Store reference for emergency cleanup
+        if (typeof window !== 'undefined') {
+            window._elementSpawnerInstance = this;
+        }
         this.assetBasePath = options.assetBasePath || '/assets';
         this.maxElements = options.maxElements || 20;
 
@@ -1113,6 +1220,23 @@ export class ElementSpawner {
             smoke: []
         };
 
+        // Spawn generation counter to detect stale spawns (race condition protection)
+        this._spawnGeneration = {
+            ice: 0, earth: 0, nature: 0, fire: 0, electricity: 0,
+            water: 0, void: 0, light: 0, poison: 0, smoke: 0
+        };
+
+        // Spawn-in-progress flags to prevent duplicate concurrent spawns
+        this._spawning = {
+            ice: false, earth: false, nature: false, fire: false, electricity: false,
+            water: false, void: false, light: false, poison: false, smoke: false
+        };
+
+        // Global spawn serialization - prevents race condition where multiple element
+        // types spawn simultaneously, all passing the material limit check before
+        // any materials are actually created
+        this._spawnQueue = Promise.resolve();
+
         // Materials (created once, reused)
         this.iceMaterial = null;
         this.earthMaterial = null;
@@ -1128,6 +1252,10 @@ export class ElementSpawner {
 
         // Animation state
         this.time = 0;
+
+        // Periodic cleanup state (GPU memory protection)
+        this._lastCleanupCheck = 0;
+        this._cleanupCheckInterval = 3000; // Check every 3 seconds
 
         // Spawn configuration per element type
         this.spawnConfig = {
@@ -1239,6 +1367,12 @@ export class ElementSpawner {
         // Mascot bounding sphere radius (calculated on initialize)
         // Used for Golden Ratio relative sizing
         this.mascotRadius = 1.0;  // Default fallback
+
+        // Mascot spatial reference for landmark-based positioning
+        this.spatialRef = new MascotSpatialRef();
+
+        // Cache of active spawn mode instances
+        this.spawnModeCache = new Map();
     }
 
     /**
@@ -1252,6 +1386,9 @@ export class ElementSpawner {
 
         // Calculate mascot's bounding sphere radius for Golden Ratio sizing
         this._calculateMascotRadius();
+
+        // Initialize mascot spatial reference for landmark positioning
+        this.spatialRef.initialize(coreMesh);
 
         // Add container to scene (not coreMesh) for reliable rendering
         // We'll sync position with coreMesh in update()
@@ -1398,12 +1535,37 @@ export class ElementSpawner {
                 path,
                 gltf => {
                     let geometry = null;
+                    const toDispose = []; // Track resources to dispose
 
                     gltf.scene.traverse(child => {
-                        if (child.isMesh && child.geometry) {
-                            geometry = child.geometry.clone();
+                        if (child.isMesh) {
+                            if (child.geometry && !geometry) {
+                                geometry = child.geometry.clone();
+                            }
+                            // Track original geometry and material for disposal
+                            if (child.geometry) toDispose.push(child.geometry);
+                            if (child.material) {
+                                // Material might be an array
+                                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                materials.forEach(mat => {
+                                    toDispose.push(mat);
+                                    // Dispose any textures the material has
+                                    if (mat.map) toDispose.push(mat.map);
+                                    if (mat.normalMap) toDispose.push(mat.normalMap);
+                                    if (mat.roughnessMap) toDispose.push(mat.roughnessMap);
+                                    if (mat.metalnessMap) toDispose.push(mat.metalnessMap);
+                                    if (mat.aoMap) toDispose.push(mat.aoMap);
+                                    if (mat.emissiveMap) toDispose.push(mat.emissiveMap);
+                                });
+                            }
                         }
                     });
+
+                    // CRITICAL: Dispose original GLTF resources to free GPU memory
+                    // We only keep the cloned geometry, everything else is waste
+                    for (const resource of toDispose) {
+                        resource?.dispose?.();
+                    }
 
                     if (geometry) {
                         // Center and normalize geometry
@@ -1439,7 +1601,7 @@ export class ElementSpawner {
      */
     async preloadModels(elementType) {
         const config = this.spawnConfig[elementType];
-        if (!config) return;
+        if (!config?.models?.length) return;
 
         const promises = config.models.map(modelName =>
             this.loadModel(elementType, modelName)
@@ -1476,24 +1638,36 @@ export class ElementSpawner {
         const vertexCount = positions.count;
 
         // Build weighted vertex list based on pattern and camera
+        // Use temp pool vectors for calculations, only clone when storing in candidates
         const candidates = [];
-        const cameraDir = camera ?
-            new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion) :
-            new THREE.Vector3(0, 0, 1);
+        const cameraDir = _tempPool.cameraDir;
+        if (camera) {
+            cameraDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+        } else {
+            cameraDir.set(0, 0, 1);
+        }
+
+        // Reusable temp vectors for loop - NEVER store references to these
+        const tempPos = _tempPool.vec3_a;
+        const tempNormal = _tempPool.vec3_b;
+        const tempRadial = _tempPool.vec3_c;
 
         for (let i = 0; i < vertexCount; i++) {
-            const pos = new THREE.Vector3(
+            tempPos.set(
                 positions.getX(i),
                 positions.getY(i),
                 positions.getZ(i)
             );
-            const normal = normals ?
-                new THREE.Vector3(
+
+            if (normals) {
+                tempNormal.set(
                     normals.getX(i),
                     normals.getY(i),
                     normals.getZ(i)
-                ).normalize() :
-                new THREE.Vector3(0, 1, 0);
+                ).normalize();
+            } else {
+                tempNormal.set(0, 1, 0);
+            }
 
             // Calculate weight based on pattern
             let weight = 1.0;
@@ -1501,30 +1675,30 @@ export class ElementSpawner {
             switch (pattern) {
             case 'crown':
                 // Favor top of mascot (high Y, facing upward)
-                weight = Math.max(0, pos.y) * 2 + Math.max(0, normal.y) * 0.5;
+                weight = Math.max(0, tempPos.y) * 2 + Math.max(0, tempNormal.y) * 0.5;
                 break;
 
             case 'shell':
                 // Even distribution, slight camera bias for visibility
-                weight = 0.5 + Math.max(0, normal.dot(cameraDir)) * 0.5;
+                weight = 0.5 + Math.max(0, tempNormal.dot(cameraDir)) * 0.5;
                 break;
 
             case 'scattered':
                 // Random with camera visibility weighting
-                weight = 0.3 + Math.max(0, normal.dot(cameraDir)) * 0.7;
+                weight = 0.3 + Math.max(0, tempNormal.dot(cameraDir)) * 0.7;
                 break;
 
             case 'spikes': {
                 // Favor outward-facing normals (edges, protrusions)
-                const radialDir = pos.clone().normalize();
-                weight = Math.max(0, normal.dot(radialDir)) * 1.5;
+                tempRadial.copy(tempPos).normalize();
+                weight = Math.max(0, tempNormal.dot(tempRadial)) * 1.5;
                 break;
             }
 
             case 'ring': {
                 // Horizontal ring around center
-                const horizontalness = 1 - Math.abs(normal.y);
-                const atCenter = 1 - Math.abs(pos.y) * 2;
+                const horizontalness = 1 - Math.abs(tempNormal.y);
+                const atCenter = 1 - Math.abs(tempPos.y) * 2;
                 weight = horizontalness * 0.5 + Math.max(0, atCenter) * 0.5;
                 break;
             }
@@ -1534,13 +1708,19 @@ export class ElementSpawner {
             }
 
             // Apply camera-facing boost for all patterns
-            const cameraDot = normal.dot(cameraDir);
+            const cameraDot = tempNormal.dot(cameraDir);
             if (cameraDot > 0) {
                 weight *= 1 + cameraDot * 0.3;
             }
 
+            // Only clone when storing - these are the positions/normals we need to keep
             if (weight > 0.01) {
-                candidates.push({ position: pos, normal, weight, index: i });
+                candidates.push({
+                    position: tempPos.clone(),
+                    normal: tempNormal.clone(),
+                    weight,
+                    index: i
+                });
             }
         }
 
@@ -1679,7 +1859,14 @@ export class ElementSpawner {
      * @private
      */
     _orientElement(mesh, normal, cameraFacing, camera = null, modelName = null) {
-        const up = new THREE.Vector3(0, 1, 0);
+        // Use temp pool to avoid per-call allocations
+        const up = _tempPool.vec3_a.set(0, 1, 0);
+        const tangent = _tempPool.vec3_b;
+        const bitangent = _tempPool.vec3_c;
+        const rotatedTangent = _tempPool.vec3_d;
+        const baseQuat = _tempPool.quat_a;
+        const tiltQuat = _tempPool.quat_b;
+
         const orientConfig = modelName ? getModelOrientation(modelName) : { mode: 'outward', tiltAngle: 0.2 };
 
         // Random angle for variety (used by all modes)
@@ -1687,38 +1874,36 @@ export class ElementSpawner {
 
         // Calculate a tangent vector perpendicular to the normal
         // This gives us a direction "along" the surface
-        const tangent = new THREE.Vector3();
         if (Math.abs(normal.y) < 0.999) {
             tangent.crossVectors(up, normal).normalize();
         } else {
             // If normal is nearly vertical, use a different reference
-            tangent.crossVectors(new THREE.Vector3(1, 0, 0), normal).normalize();
+            tangent.set(1, 0, 0).cross(normal).normalize();
         }
 
         // Calculate bitangent (perpendicular to both normal and tangent)
-        const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+        bitangent.crossVectors(normal, tangent).normalize();
 
         // Rotate tangent by random angle around normal for variety
-        const rotatedTangent = tangent.clone()
+        rotatedTangent.copy(tangent)
             .multiplyScalar(Math.cos(randomAngle))
             .addScaledVector(bitangent, Math.sin(randomAngle));
 
-        const baseQuat = new THREE.Quaternion();
+        baseQuat.identity();
 
         switch (orientConfig.mode) {
         case 'flat':
             // Element lies parallel to surface
             // Up axis becomes the surface normal, forward is along tangent
             {
-                const matrix = new THREE.Matrix4();
+                const matrix = _tempPool.matrix_a;
                 // X = rotated tangent (forward), Y = normal (up), Z = cross product
-                const zAxis = new THREE.Vector3().crossVectors(rotatedTangent, normal).normalize();
+                const zAxis = _tempPool.vec3_e.crossVectors(rotatedTangent, normal).normalize();
                 matrix.makeBasis(rotatedTangent, normal, zAxis);
                 baseQuat.setFromRotationMatrix(matrix);
 
                 // Apply tilt - rotate around tangent axis to lift one edge
                 if (orientConfig.tiltAngle !== 0) {
-                    const tiltQuat = new THREE.Quaternion();
                     tiltQuat.setFromAxisAngle(rotatedTangent, orientConfig.tiltAngle);
                     baseQuat.premultiply(tiltQuat);
                 }
@@ -1731,7 +1916,7 @@ export class ElementSpawner {
             {
                 // Element's "up" is tilted between normal and tangent
                 const tiltAmount = 0.3; // How much the element lifts off surface
-                const elementUp = normal.clone()
+                const elementUp = _tempPool.vec3_e.copy(normal)
                     .multiplyScalar(tiltAmount)
                     .addScaledVector(rotatedTangent, 1 - tiltAmount)
                     .normalize();
@@ -1740,8 +1925,7 @@ export class ElementSpawner {
 
                 // Apply additional tilt (negative = digs in, positive = lifts)
                 if (orientConfig.tiltAngle !== 0) {
-                    const tiltAxis = new THREE.Vector3().crossVectors(rotatedTangent, normal).normalize();
-                    const tiltQuat = new THREE.Quaternion();
+                    const tiltAxis = _tempPool.vec3_f.crossVectors(rotatedTangent, normal).normalize();
                     tiltQuat.setFromAxisAngle(tiltAxis, orientConfig.tiltAngle);
                     baseQuat.premultiply(tiltQuat);
                 }
@@ -1752,26 +1936,24 @@ export class ElementSpawner {
         case 'falling': {
             // Fire/bubbles rise toward world-up, water droplets fall toward world-down
             // Blends between surface normal and world direction based on riseFactor
-            const worldUp = new THREE.Vector3(0, 1, 0);
             const riseFactor = orientConfig.riseFactor ?? 0.7;
 
             // For 'falling', invert the world direction (negative riseFactor in config)
             // riseFactor > 0 = bias toward world-up (fire, bubbles)
             // riseFactor < 0 = bias toward world-down (water droplets)
-            let targetDir;
+            const targetDir = _tempPool.vec3_e;
             if (riseFactor >= 0) {
                 // Blend from surface normal toward world-up
-                targetDir = normal.clone()
+                targetDir.copy(normal)
                     .multiplyScalar(1 - riseFactor)
-                    .addScaledVector(worldUp, riseFactor)
+                    .add(_tempPool.vec3_f.set(0, riseFactor, 0))
                     .normalize();
             } else {
                 // Blend from surface normal toward world-down
-                const worldDown = new THREE.Vector3(0, -1, 0);
                 const fallFactor = Math.abs(riseFactor);
-                targetDir = normal.clone()
+                targetDir.copy(normal)
                     .multiplyScalar(1 - fallFactor)
-                    .addScaledVector(worldDown, fallFactor)
+                    .add(_tempPool.vec3_f.set(0, -fallFactor, 0))
                     .normalize();
             }
 
@@ -1779,15 +1961,13 @@ export class ElementSpawner {
 
             // Apply tilt for variation
             if (orientConfig.tiltAngle !== 0) {
-                const tiltQuat = new THREE.Quaternion();
                 tiltQuat.setFromAxisAngle(rotatedTangent, orientConfig.tiltAngle);
                 baseQuat.premultiply(tiltQuat);
             }
 
             // Random spin around the target direction
-            const spinQuat = new THREE.Quaternion();
-            spinQuat.setFromAxisAngle(targetDir, randomAngle);
-            baseQuat.premultiply(spinQuat);
+            tiltQuat.setFromAxisAngle(targetDir, randomAngle);
+            baseQuat.premultiply(tiltQuat);
             break;
         }
 
@@ -1798,20 +1978,20 @@ export class ElementSpawner {
 
             // First: orient so the element's "front" faces along the normal (away from surface)
             // The element's Y-up becomes perpendicular to normal (lies in surface plane)
-            const forward = normal.clone();  // Element faces this direction
+            const forward = _tempPool.vec3_e.copy(normal);  // Element faces this direction
 
             // Create a basis where forward = normal, up lies in surface plane
-            const matrix = new THREE.Matrix4();
+            const matrix = _tempPool.matrix_a;
 
             // Pick an "up" direction that lies in the surface plane
             // Use the rotated tangent as the element's up (it lies in surface plane)
-            const elementUp = rotatedTangent.clone();
+            const elementUp = _tempPool.vec3_f.copy(rotatedTangent);
 
             // Right vector completes the basis
-            const elementRight = new THREE.Vector3().crossVectors(elementUp, forward).normalize();
+            const elementRight = _tempPool.vec3_g.crossVectors(elementUp, forward).normalize();
 
-            // Recalculate up to ensure orthogonality
-            const finalUp = new THREE.Vector3().crossVectors(forward, elementRight).normalize();
+            // Recalculate up to ensure orthogonality (reuse elementUp since it's consumed)
+            const finalUp = _tempPool.vec3_f.crossVectors(forward, elementRight).normalize();
 
             // Build rotation matrix: X=right, Y=up (in surface plane), Z=forward (away from surface)
             matrix.makeBasis(elementRight, finalUp, forward);
@@ -1819,7 +1999,6 @@ export class ElementSpawner {
 
             // Apply tilt - slight angle off the surface for depth
             if (orientConfig.tiltAngle !== 0) {
-                const tiltQuat = new THREE.Quaternion();
                 tiltQuat.setFromAxisAngle(elementRight, orientConfig.tiltAngle);
                 baseQuat.premultiply(tiltQuat);
             }
@@ -1831,13 +2010,13 @@ export class ElementSpawner {
             // Requires mesh.userData.velocity to be set
             const velocity = mesh.userData?.velocity;
             if (velocity && (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z) > 0.0001) {
-                const velDir = new THREE.Vector3(velocity.x, velocity.y, velocity.z).normalize();
+                const velDir = _tempPool.vec3_e.set(velocity.x, velocity.y, velocity.z).normalize();
                 baseQuat.setFromUnitVectors(up, velDir);
             } else {
                 // Fall back to 'falling' mode when stationary or no velocity
-                const worldDown = new THREE.Vector3(0, -1, 0);
+                const worldDown = _tempPool.vec3_f.set(0, -1, 0);
                 const fallFactor = 0.5;
-                const targetDir = normal.clone()
+                const targetDir = _tempPool.vec3_e.copy(normal)
                     .multiplyScalar(1 - fallFactor)
                     .addScaledVector(worldDown, fallFactor)
                     .normalize();
@@ -1846,7 +2025,6 @@ export class ElementSpawner {
 
             // Apply tilt for variation
             if (orientConfig.tiltAngle !== 0) {
-                const tiltQuat = new THREE.Quaternion();
                 tiltQuat.setFromAxisAngle(rotatedTangent, orientConfig.tiltAngle);
                 baseQuat.premultiply(tiltQuat);
             }
@@ -1860,30 +2038,28 @@ export class ElementSpawner {
 
             // Apply tilt - rotate away from straight-out for more natural look
             if (orientConfig.tiltAngle !== 0) {
-                const tiltQuat = new THREE.Quaternion();
                 tiltQuat.setFromAxisAngle(rotatedTangent, orientConfig.tiltAngle);
                 baseQuat.premultiply(tiltQuat);
             }
 
-            // Random spin around normal
-            const spinQuat = new THREE.Quaternion();
-            spinQuat.setFromAxisAngle(normal, randomAngle);
-            baseQuat.premultiply(spinQuat);
+            // Random spin around normal (reuse tiltQuat since tilt is done)
+            tiltQuat.setFromAxisAngle(normal, randomAngle);
+            baseQuat.premultiply(tiltQuat);
             break;
         }
         }
 
         // Apply camera-facing blend if requested
         if (cameraFacing > 0 && camera && orientConfig.mode === 'outward') {
-            const cameraPos = camera.position.clone();
-            const meshWorldPos = mesh.getWorldPosition(new THREE.Vector3());
+            const cameraPos = _tempPool.cameraDir.copy(camera.position);
+            const meshWorldPos = mesh.getWorldPosition(_tempPool.vec3_e);
             const toCamera = cameraPos.sub(meshWorldPos).normalize();
 
-            const cameraQuat = new THREE.Quaternion();
-            cameraQuat.setFromUnitVectors(up, toCamera);
+            // Reuse tiltQuat for camera quaternion
+            tiltQuat.setFromUnitVectors(up, toCamera);
 
             // Slerp between base orientation and camera facing
-            baseQuat.slerp(cameraQuat, cameraFacing);
+            baseQuat.slerp(tiltQuat, cameraFacing);
         }
 
         mesh.quaternion.copy(baseQuat);
@@ -1900,15 +2076,65 @@ export class ElementSpawner {
      * @param {Object} [options.animation] - Animation config for gesture-synced animations
      * @param {Array} [options.elements] - Per-element choreography array
      */
-    async spawn(elementType, options = {}) {
-        // Check for elements array (choreographed sequences)
-        if (options.elements && Array.isArray(options.elements)) {
-            return this._spawnFromElementsArray(elementType, options);
+    spawn(elementType, options = {}) {
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SERIALIZE SPAWNS: Queue spawns to prevent race condition where multiple
+        // element types pass material limit check simultaneously before any materials
+        // are created. Each spawn waits for previous spawns to complete.
+        // ═══════════════════════════════════════════════════════════════════════════
+        const spawnPromise = this._spawnQueue.then(() => this._doSpawn(elementType, options));
+        this._spawnQueue = spawnPromise.catch(() => {}); // Prevent queue from breaking on errors
+        return spawnPromise;
+    }
+
+    /**
+     * Internal spawn implementation - called by spawn() through serialized queue
+     * @private
+     */
+    async _doSpawn(elementType, options = {}) {
+        _debugStats.spawnCalls++;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // DIAGNOSTIC: Log resource state on every spawn
+        // ═══════════════════════════════════════════════════════════════════════════
+        const totalElements = Object.values(this.activeElements).reduce((sum, arr) => sum + arr.length, 0);
+        console.log(`[ElementSpawner] SPAWN ${elementType}: ` +
+            `elements=${totalElements}, ` +
+            `materials=${_debugStats.activeMaterials}, ` +
+            `meshes=${_debugStats.meshesCreated - _debugStats.meshesDisposed}`);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GPU MEMORY PROTECTION: Check limits before spawning
+        // ═══════════════════════════════════════════════════════════════════════════
+        // If too many materials OR elements are active, force cleanup before proceeding.
+        // This prevents GPU memory exhaustion that causes browser compositor failure.
+        if (_debugStats.activeMaterials > MAX_ACTIVE_MATERIALS || totalElements > MAX_TOTAL_ELEMENTS) {
+            console.warn(`[ElementSpawner] Limit exceeded (materials=${_debugStats.activeMaterials}/${MAX_ACTIVE_MATERIALS}, elements=${totalElements}/${MAX_TOTAL_ELEMENTS}), forcing emergency cleanup`);
+            this.despawnAll();
+            // Give GPU a frame to process disposal
+            await new Promise(resolve => requestAnimationFrame(resolve));
         }
-        const { intensity = 1.0, animated = true } = options;
+
+        // Prevent duplicate concurrent spawns of same element type
+        if (this._spawning[elementType]) {
+            return; // Spawn already in progress
+        }
+        this._spawning[elementType] = true;
+
+        try {
+            // Check for elements array (choreographed sequences)
+            if (options.elements && Array.isArray(options.elements)) {
+                await this._spawnFromElementsArray(elementType, options);
+                return;
+            }
+            const { intensity = 1.0, animated = true } = options;
         // Use passed camera or fall back to stored camera
         const camera = options.camera || this.camera;
         const { mode = 'orbit' } = options;
+
+        // Extract animation config - can be in options directly OR nested in mode object
+        // Core3DManager passes mode: spawnMode which contains animation inside
+        const animationConfig = options.animation || (typeof mode === 'object' ? mode.animation : null);
 
         // Normalize mode to configuration object
         let surfaceConfig = null;
@@ -1947,6 +2173,14 @@ export class ElementSpawner {
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Phase 13: Handle new spawn modes (axis-travel, anchor)
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (isNewSpawnMode(modeType)) {
+            await this._spawnWithNewMode(elementType, modeType, mode, options);
+            return;
+        }
+
         const config = this.spawnConfig[elementType];
 
         if (!config) {
@@ -1957,15 +2191,26 @@ export class ElementSpawner {
         // Clear existing elements of this type
         this.despawn(elementType, false);
 
+        // Increment spawn generation to invalidate any concurrent spawns (race condition protection)
+        const currentGeneration = ++this._spawnGeneration[elementType];
+
+        // Use gesture-specific models list if provided (can be in options or mode), otherwise use default config
+        const gestureModels = options.models || (typeof mode === 'object' ? mode.models : null);
+        const modelsToUse = gestureModels && gestureModels.length > 0
+            ? gestureModels
+            : (config.models ?? []);
+
         // Calculate spawn count based on intensity (or use override)
         const count = surfaceConfig?.countOverride || Math.floor(
             config.count.min + (config.count.max - config.count.min) * intensity
         );
 
-        // Debug: console.log(`[ElementSpawner] Spawning ${count} ${elementType} elements (mode: ${modeType}, pattern: ${surfaceConfig?.pattern || 'n/a'})`);
-
         // Get material for this type
         const material = this._getMaterial(elementType);
+        if (!material) {
+            console.error(`[ElementSpawner] No material for element type: ${elementType}`);
+            return;
+        }
 
         // For surface mode, sample points from mascot geometry with pattern awareness
         let surfacePoints = null;
@@ -1978,16 +2223,39 @@ export class ElementSpawner {
             );
         }
 
+        // Validate models array before spawning
+        if (!modelsToUse || modelsToUse.length === 0) {
+            console.warn(`[ElementSpawner] No models available for element type: ${elementType}`);
+            return;
+        }
+
         for (let i = 0; i < count; i++) {
-            // Select random model
-            const modelName = config.models[Math.floor(Math.random() * config.models.length)];
+            // Select random model from gesture-specific or default list
+            const modelName = modelsToUse[Math.floor(Math.random() * modelsToUse.length)];
+
             const geometry = await this.loadModel(elementType, modelName);
 
-            if (!geometry) continue;
+            // Check if a newer spawn has started (race condition protection)
+            if (this._spawnGeneration[elementType] !== currentGeneration) {
+                return; // Abort this spawn - a newer one has taken over
+            }
 
-            // Create mesh - clone material for fire elements to allow per-element intensity
-            const useMaterial = (elementType === 'fire') ? material.clone() : material;
+            if (!geometry) {
+                continue;
+            }
+
+            // Create mesh - ALWAYS clone material for each element
+            // This ensures safe disposal (disposing one mesh's material doesn't affect others)
+            // Use deep clone for shader materials to ensure independent uniforms
+            let useMaterial;
+            if (material.isShaderMaterial) {
+                useMaterial = cloneShaderMaterialDeep(material);
+            } else {
+                useMaterial = material.clone();
+                _debugStats.materialsCloned++;
+            }
             const mesh = new THREE.Mesh(geometry, useMaterial);
+            _debugStats.meshesCreated++;
 
             // ═══════════════════════════════════════════════════════════════════════
             // GOLDEN RATIO SIZING: Calculate scale relative to mascot radius
@@ -2019,7 +2287,17 @@ export class ElementSpawner {
             if (surfaceConfig?.ephemeral) {
                 const eph = surfaceConfig.ephemeral;
                 // Clone material so each mesh can have independent opacity/emissive
-                mesh.material = material.clone();
+                // Use deep clone for shader materials to ensure independent uniforms
+                // IMPORTANT: Only clone if not already cloned (fire elements clone at mesh creation)
+                const alreadyCloned = mesh.material !== material;
+                if (!alreadyCloned) {
+                    if (material.isShaderMaterial) {
+                        mesh.material = cloneShaderMaterialDeep(material);
+                    } else {
+                        mesh.material = material.clone();
+                        _debugStats.materialsCloned++;
+                    }
+                }
                 // Store original material values for interpolation
                 mesh.userData.originalOpacity = mesh.material.opacity;
                 mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
@@ -2053,17 +2331,28 @@ export class ElementSpawner {
 
             // NEW ANIMATION SYSTEM - gesture-synced animations
             // Takes priority over ephemeral if both are present
-            if (options.animation) {
+            if (animationConfig) {
                 // Clone material for independent animation control
-                mesh.material = material.clone();
+                // Use deep clone for shader materials to ensure independent uniforms
+                // IMPORTANT: Only clone if not already cloned (fire elements clone at mesh creation)
+                const alreadyCloned = mesh.material !== material;
+                if (!alreadyCloned) {
+                    if (material.isShaderMaterial) {
+                        mesh.material = cloneShaderMaterialDeep(material);
+                    } else {
+                        mesh.material = material.clone();
+                        _debugStats.materialsCloned++;
+                    }
+                }
                 mesh.userData.originalOpacity = mesh.material.opacity;
                 mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
                 mesh.userData.originalScale = scale;
 
                 // Create AnimationConfig and AnimationState for this element
                 const gestureDuration = options.gestureDuration ?? 1000;
-                const animConfig = new AnimationConfig(options.animation, gestureDuration);
+                const animConfig = new AnimationConfig(animationConfig, gestureDuration);
                 const animState = new AnimationState(animConfig, i);
+                _debugStats.animationStatesCreated++;
 
                 // Apply rendering settings from config
                 this._applyRenderSettings(mesh, animConfig.rendering);
@@ -2080,9 +2369,19 @@ export class ElementSpawner {
                     mesh.userData.baseFlameHeight = mesh.material.uniforms.uFlameHeight.value;
                 }
 
+                // Water-specific: Apply shader animation from modelOverrides
+                if (elementType === 'water' && mesh.material?.uniforms?.uAnimationType) {
+                    const modelOverrides = options.animation?.modelOverrides;
+                    const shaderAnim = modelOverrides?.[modelName]?.shaderAnimation;
+                    if (shaderAnim) {
+                        setProceduralWaterAnimation(mesh.material, shaderAnim.type, shaderAnim);
+                    }
+                }
+
                 // Create trail if configured
                 if (animConfig.rendering.trail) {
                     const trailState = new TrailState(animConfig.rendering.trail);
+                    _debugStats.trailsCreated++;
                     const parent = modeType === 'surface' && this.coreMesh
                         ? this.coreMesh : this.container;
                     trailState.initialize(mesh, parent);
@@ -2117,14 +2416,6 @@ export class ElementSpawner {
 
                 const offset = sample.normal.clone().multiplyScalar(netOffset);
                 mesh.position.copy(sample.position).add(offset);
-
-                // DEBUG: Log spawn position and mark first fire element for tracking
-                if (elementType === 'fire') {
-                    mesh.userData.debugIndex = i;
-                    if (i === 0) {
-                        console.log(`[FIRE SPAWN] element ${i} position:`, mesh.position.x.toFixed(3), mesh.position.y.toFixed(3), mesh.position.z.toFixed(3));
-                    }
-                }
 
                 // Hybrid orientation: blend normal-aligned with camera-facing
                 // Uses model-specific orientation (flat, tangent, outward)
@@ -2177,13 +2468,36 @@ export class ElementSpawner {
                 mesh.scale.setScalar(scale);
             }
 
-            // For surface mode, add to coreMesh so it moves with it
-            if (modeType === 'surface' && this.coreMesh) {
-                this.coreMesh.add(mesh);
-            } else {
-                this.container.add(mesh);
+            // ATOMIC: Add to scene and tracking together
+            const isSurfaceMode = modeType === 'surface';
+            if (!this._registerElement(mesh, elementType, isSurfaceMode)) {
+                // Registration failed - dispose resources to prevent leak
+                if (mesh.userData.trailState) {
+                    mesh.userData.trailState.dispose();
+                    _debugStats.trailsDisposed++;
+                }
+                // Dispose material (geometry is cached/shared, don't dispose)
+                if (mesh.material) {
+                    mesh.material.dispose();
+                    _debugStats.materialsDisposed++;
+                }
+                continue;
             }
-            this.activeElements[elementType].push(mesh);
+        }
+
+        } catch (error) {
+            console.error(`[ElementSpawner] SPAWN ERROR for ${elementType}:`, error);
+            console.error('[ElementSpawner] Stack:', error.stack);
+        } finally {
+            // Always clear spawning flag
+            this._spawning[elementType] = false;
+
+            // Log post-spawn state
+            const postElements = Object.values(this.activeElements).reduce((sum, arr) => sum + arr.length, 0);
+            console.log(`[ElementSpawner] SPAWN DONE ${elementType}: ` +
+                `elements=${postElements}, ` +
+                `materials=${_debugStats.activeMaterials}, ` +
+                `meshes=${_debugStats.meshesCreated - _debugStats.meshesDisposed}`);
         }
     }
 
@@ -2193,6 +2507,7 @@ export class ElementSpawner {
      * @param {boolean} [animated=true] - Enable despawn animation
      */
     despawn(elementType, animated = true) {
+        _debugStats.despawnCalls++;
         const elements = this.activeElements[elementType];
         if (!elements) return;
 
@@ -2204,6 +2519,7 @@ export class ElementSpawner {
                 // Dispose trail if present
                 if (mesh.userData.trailState) {
                     mesh.userData.trailState.dispose();
+                    _debugStats.trailsDisposed++;
                 }
 
                 // Surface mode elements are attached to coreMesh
@@ -2212,7 +2528,19 @@ export class ElementSpawner {
                 } else {
                     this.container.remove(mesh);
                 }
-                mesh.geometry.dispose();
+
+                // Dispose material (geometry is cached and shared, disposed with spawner)
+                // NOTE: DO NOT dispose geometry here - it's shared across all elements of this type
+                if (mesh.material) {
+                    mesh.material.dispose();
+                    _debugStats.materialsDisposed++;
+                    mesh.material = null;
+                }
+                mesh.geometry = null; // Clear reference but don't dispose
+                _debugStats.meshesDisposed++;
+
+                // Clear userData references to help GC (avoid retaining Vector3/etc clones)
+                this._clearMeshUserData(mesh);
             }
         }
 
@@ -2222,12 +2550,211 @@ export class ElementSpawner {
     }
 
     /**
+     * Clear userData references to help GC - prevents memory leaks from cloned vectors
+     * @param {THREE.Mesh} mesh - Mesh to clean
+     * @private
+     */
+    _clearMeshUserData(mesh) {
+        // Animation state/config
+        mesh.userData.animationState = null;
+        mesh.userData.animationConfig = null;
+
+        // Original transform clones (Vector3/Euler)
+        mesh.userData.originalPosition = null;
+        mesh.userData.originalRotation = null;
+        mesh.userData.originalScale = null;
+
+        // Spawn mode data
+        mesh.userData.anchor = null;
+        mesh.userData.velocity = null;
+
+        // Orbit mode data (primitives, but clear for consistency)
+        mesh.userData.orbitAngle = undefined;
+        mesh.userData.orbitRadius = undefined;
+        mesh.userData.heightOffset = undefined;
+        mesh.userData.rotationSpeed = undefined;
+
+        // Axis-travel mode data
+        mesh.userData.axisTravel = null;
+
+        // Trail state (already disposed separately)
+        mesh.userData.trailState = null;
+
+        // Clear remaining spawn mode references
+        mesh.userData.spawnMode = null;
+        mesh.userData.spawnModeType = null;
+        mesh.userData.requiresSpawnModeUpdate = false;
+    }
+
+    /**
+     * ATOMIC element registration - adds mesh to scene AND tracking in one operation.
+     * This prevents orphaned meshes from race conditions.
+     * @param {THREE.Mesh} mesh - The mesh to register
+     * @param {string} elementType - Element type for tracking
+     * @param {boolean} isSurfaceMode - Whether to attach to coreMesh
+     * @private
+     */
+    _registerElement(mesh, elementType, isSurfaceMode = false) {
+        // Validate tracking array exists
+        if (!this.activeElements[elementType]) {
+            console.error(`[ElementSpawner] Invalid element type: ${elementType}`);
+            // Dispose material but NOT geometry (geometry is cached/shared)
+            mesh.geometry = null; // Clear reference only
+            mesh.material?.dispose();
+            return false;
+        }
+
+        // Mark for tracking
+        mesh.userData._isTrackedElement = true;
+        mesh.userData._elementType = elementType;
+
+        // ATOMIC: Add to scene and tracking together
+        if (isSurfaceMode && this.coreMesh) {
+            this.coreMesh.add(mesh);
+        } else {
+            this.container.add(mesh);
+        }
+        this.activeElements[elementType].push(mesh);
+
+        return true;
+    }
+
+    /**
+     * ATOMIC element unregistration - removes mesh from scene AND tracking.
+     * @param {THREE.Mesh} mesh - The mesh to unregister
+     * @param {string} elementType - Element type for tracking
+     * @private
+     */
+    _unregisterElement(mesh, elementType) {
+        // Remove from scene
+        if (mesh.userData?.spawnMode === 'surface' && this.coreMesh) {
+            this.coreMesh.remove(mesh);
+        } else if (this.container) {
+            this.container.remove(mesh);
+        }
+
+        // Remove from tracking
+        const elements = this.activeElements[elementType];
+        if (elements) {
+            const idx = elements.indexOf(mesh);
+            if (idx > -1) elements.splice(idx, 1);
+        }
+
+        // Dispose resources
+        if (mesh.userData?.trailState) {
+            mesh.userData.trailState.dispose();
+            _debugStats.trailsDisposed++;
+        }
+        // NOTE: DO NOT dispose geometry - it's cached and shared
+        mesh.geometry = null; // Clear reference only
+        if (mesh.material) {
+            mesh.material.dispose();
+            _debugStats.materialsDisposed++;
+            mesh.material = null;
+        }
+        _debugStats.meshesDisposed++;
+
+        this._clearMeshUserData(mesh);
+        mesh.userData._isTrackedElement = false;
+    }
+
+    /**
+     * Nuclear cleanup - walks the scene graph and removes ANY element/trail meshes
+     * that aren't properly tracked. Use when normal cleanup fails.
+     * @private
+     */
+    _nuclearCleanup() {
+        const orphanElements = [];
+        const orphanTrails = [];
+
+        // Build set of all tracked elements for fast lookup
+        const trackedElements = new Set();
+        for (const type of Object.keys(this.activeElements)) {
+            for (const mesh of this.activeElements[type]) {
+                trackedElements.add(mesh);
+            }
+        }
+
+        // Build set of valid trail meshes (owned by tracked elements)
+        const validTrails = new Set();
+        for (const mesh of trackedElements) {
+            if (mesh.userData?.trailState?.meshes) {
+                for (const trailMesh of mesh.userData.trailState.meshes) {
+                    validTrails.add(trailMesh);
+                }
+            }
+        }
+
+        const checkChild = (child) => {
+            if (!child.isMesh) return;
+
+            // Check for orphaned trail meshes
+            if (child.userData?.isTrail) {
+                if (!validTrails.has(child)) {
+                    orphanTrails.push({ mesh: child, parent: child.parent });
+                }
+                return;
+            }
+
+            // Check for orphaned element meshes
+            if (child.userData?.elementType || child.userData?._isTrackedElement) {
+                if (!trackedElements.has(child)) {
+                    orphanElements.push({ mesh: child, parent: child.parent });
+                }
+            }
+        };
+
+        // Walk container children
+        if (this.container) {
+            this.container.traverse(checkChild);
+        }
+
+        // Walk coreMesh children
+        if (this.coreMesh) {
+            this.coreMesh.traverse(checkChild);
+        }
+
+        // Remove orphan elements
+        for (const { mesh, parent } of orphanElements) {
+            if (parent) parent.remove(mesh);
+            // NOTE: DO NOT dispose geometry - it's cached and shared
+            mesh.geometry = null;
+            if (mesh.material) {
+                mesh.material.dispose();
+                mesh.material = null;
+            }
+        }
+
+        // Remove orphan trails
+        for (const { mesh, parent } of orphanTrails) {
+            if (parent) parent.remove(mesh);
+            // Trail geometry is shared with original, don't dispose
+            if (mesh.material) {
+                mesh.material.dispose();
+                mesh.material = null;
+            }
+        }
+
+        const total = orphanElements.length + orphanTrails.length;
+        if (total > 0) {
+            console.warn(`[ElementSpawner] NUCLEAR CLEANUP: Found ${orphanElements.length} orphan elements, ${orphanTrails.length} orphan trails`);
+        }
+
+        return total;
+    }
+
+    /**
      * Despawn all elements
      */
     despawnAll() {
-        for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light']) {
+        for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light', 'poison', 'smoke']) {
             this.despawn(type, false);
         }
+        // Clear spawn mode cache to free references
+        this.spawnModeCache.clear();
+
+        // Nuclear cleanup: catch any orphaned meshes that escaped normal tracking
+        this._nuclearCleanup();
     }
 
     /**
@@ -2237,6 +2764,15 @@ export class ElementSpawner {
      */
     update(deltaTime, gestureProgress = null) {
         this.time += deltaTime;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PERIODIC CLEANUP CHECK: Catch orphaned materials
+        // ═══════════════════════════════════════════════════════════════════════════
+        this._lastCleanupCheck += deltaTime;
+        if (this._lastCleanupCheck >= this._cleanupCheckInterval) {
+            this._lastCleanupCheck = 0;
+            this._periodicCleanupCheck();
+        }
 
         // Sync container position with coreMesh
         if (this.coreMesh) {
@@ -2265,15 +2801,24 @@ export class ElementSpawner {
 
         for (const type of ['ice', 'earth', 'nature', 'fire', 'electricity', 'water', 'void', 'light', 'poison', 'smoke']) {
             const elements = this.activeElements[type];
+            if (!elements || elements.length === 0) continue;
+
             const toRemove = [];
 
             for (const mesh of elements) {
+                try {
+                // Skip disposed meshes (race condition protection)
+                if (!mesh || !mesh.material) {
+                    toRemove.push(mesh);
+                    continue;
+                }
+
                 const isSurfaceMode = mesh.userData.spawnMode === 'surface';
 
                 // NEW ANIMATION SYSTEM - gesture-synced animations
                 if (mesh.userData.animationState) {
                     const animState = mesh.userData.animationState;
-                    const isFireDebug = type === 'fire' && mesh.userData.debugIndex === 0;
+                    const isFireDebug = false; // Disabled - was causing 188ms frame times
 
                     // DEBUG: Track state before update
                     const stateBefore = animState.state;
@@ -2296,16 +2841,30 @@ export class ElementSpawner {
                     // Apply animation values to mesh
                     this._applyAnimationToMesh(mesh, animState);
 
-                    // Phase 11: Update velocity tracking
+                    // Phase 11: Update velocity tracking (reuse object to avoid per-frame allocation)
                     if (mesh.userData.lastPosition && deltaTime > 0) {
                         const currentPos = mesh.position;
                         const lastPos = mesh.userData.lastPosition;
-                        mesh.userData.velocity = {
-                            x: (currentPos.x - lastPos.x) / deltaTime,
-                            y: (currentPos.y - lastPos.y) / deltaTime,
-                            z: (currentPos.z - lastPos.z) / deltaTime
-                        };
+                        if (!mesh.userData.velocity) {
+                            mesh.userData.velocity = { x: 0, y: 0, z: 0 };
+                        }
+                        mesh.userData.velocity.x = (currentPos.x - lastPos.x) / deltaTime;
+                        mesh.userData.velocity.y = (currentPos.y - lastPos.y) / deltaTime;
+                        mesh.userData.velocity.z = (currentPos.z - lastPos.z) / deltaTime;
                         mesh.userData.lastPosition.copy(currentPos);
+                    }
+
+                    // Phase 13: Update spawn mode (axis-travel, anchor, etc.)
+                    if (mesh.userData.requiresSpawnModeUpdate && mesh.userData.spawnModeType) {
+                        const modeType = mesh.userData.spawnModeType;
+                        let mode = this.spawnModeCache.get(modeType);
+                        if (!mode) {
+                            mode = createSpawnMode(modeType, this, this.spatialRef);
+                            if (mode) this.spawnModeCache.set(modeType, mode);
+                        }
+                        if (mode) {
+                            mode.updateElement(mesh, deltaTime, gestureProgress);
+                        }
                     }
 
                     // Phase 11: Apply model-specific behaviors
@@ -2372,10 +2931,18 @@ export class ElementSpawner {
 
                 // Despawn animation
                 if (mesh.userData.despawning) {
+                    // Guard against missing despawnStart
+                    if (mesh.userData.despawnStart === undefined) {
+                        mesh.userData.despawnStart = this.time;
+                    }
                     const elapsed = this.time - mesh.userData.despawnStart;
-                    const progress = Math.min(elapsed / 0.3, 1); // 0.3s despawn duration
+                    const progress = Math.min(Math.max(elapsed / 0.3, 0), 1); // 0.3s despawn duration, clamp to 0-1
 
-                    mesh.scale.setScalar(mesh.scale.x * (1 - progress * progress));
+                    // Only scale if mesh hasn't been disposed
+                    if (mesh.scale) {
+                        const currentScale = mesh.scale.x || 0.001;
+                        mesh.scale.setScalar(currentScale * (1 - progress * progress));
+                    }
 
                     if (progress >= 1) {
                         toRemove.push(mesh);
@@ -2483,17 +3050,49 @@ export class ElementSpawner {
                     mesh.rotation.y += deltaTime * mesh.userData.rotationSpeed * 0.1;
                     mesh.rotation.x += deltaTime * mesh.userData.rotationSpeed * 0.03;
                 }
+                } catch (meshError) {
+                    // If any mesh processing fails, mark for removal to prevent further errors
+                    console.warn(`[ElementSpawner] Error updating mesh, marking for removal:`, meshError);
+                    toRemove.push(mesh);
+                }
             }
 
             // Remove despawned elements
             for (const mesh of toRemove) {
+                // Skip null meshes (already removed)
+                if (!mesh) {
+                    continue;
+                }
+
                 // Surface mode elements are attached to coreMesh, not container
-                if (mesh.userData.spawnMode === 'surface' && this.coreMesh) {
+                if (mesh.userData?.spawnMode === 'surface' && this.coreMesh) {
                     this.coreMesh.remove(mesh);
-                } else {
+                } else if (this.container) {
                     this.container.remove(mesh);
                 }
-                mesh.geometry.dispose();
+
+                // Clear geometry reference (don't dispose - it's cached and shared)
+                mesh.geometry = null;
+
+                // Dispose cloned material (critical for memory - each element has its own clone)
+                if (mesh.material) {
+                    mesh.material.dispose();
+                    _debugStats.materialsDisposed++;
+                    mesh.material = null;
+                }
+                _debugStats.meshesDisposed++;
+
+                // Dispose trail state if present
+                if (mesh.userData?.trailState) {
+                    mesh.userData.trailState.dispose();
+                    _debugStats.trailsDisposed++;
+                }
+
+                // Clear userData references to help GC (avoid retaining Vector3/etc clones)
+                if (mesh.userData) {
+                    this._clearMeshUserData(mesh);
+                }
+
                 const idx = elements.indexOf(mesh);
                 if (idx > -1) elements.splice(idx, 1);
             }
@@ -2506,7 +3105,9 @@ export class ElementSpawner {
      * @returns {boolean}
      */
     hasElements(elementType) {
-        return this.activeElements[elementType]?.length > 0;
+        // Return true if spawn is in progress OR if elements already exist
+        // This prevents Core3DManager from triggering duplicate spawns
+        return this._spawning[elementType] || this.activeElements[elementType]?.length > 0;
     }
 
     /**
@@ -2653,12 +3254,175 @@ export class ElementSpawner {
 
                 // Re-orient to new normal
                 const cameraFacing = surfaceConfig?.cameraFacing ?? 0.3;
-                const modelName = this.spawnConfig[elementType]?.models?.[
-                    Math.floor(Math.random() * this.spawnConfig[elementType].models.length)
-                ];
+                const models = this.spawnConfig[elementType]?.models;
+                const modelName = models?.length > 0
+                    ? models[Math.floor(Math.random() * models.length)]
+                    : null;
                 this._orientElement(mesh, sample.normal, cameraFacing, this.camera, modelName);
             }
         }
+    }
+
+    /**
+     * Spawn elements using new spawn mode system (axis-travel, anchor)
+     * Phase 13: Axis Choreography System
+     *
+     * @param {string} elementType - Element type for material/model lookup
+     * @param {string} modeType - Spawn mode type ('axis-travel', 'anchor')
+     * @param {Object} modeConfig - Full mode configuration object
+     * @param {Object} options - Spawn options
+     * @private
+     */
+    async _spawnWithNewMode(elementType, modeType, modeConfig, options) {
+        const { intensity = 1.0, animated = true, gestureDuration = 1000 } = options;
+        const camera = options.camera || this.camera;
+
+        const config = this.spawnConfig[elementType];
+        if (!config) {
+            console.warn(`[ElementSpawner] Unknown element type: ${elementType}`);
+            return;
+        }
+
+        // Clear existing elements of this type
+        this.despawn(elementType, false);
+
+        // Increment spawn generation to invalidate any concurrent spawns (race condition protection)
+        const currentGeneration = ++this._spawnGeneration[elementType];
+
+        // Get or create spawn mode instance
+        let spawnMode = this.spawnModeCache.get(modeType);
+        if (!spawnMode) {
+            spawnMode = createSpawnMode(modeType, this, this.spatialRef);
+            if (spawnMode) this.spawnModeCache.set(modeType, spawnMode);
+        }
+
+        if (!spawnMode) {
+            console.warn(`[ElementSpawner] Could not create spawn mode: ${modeType}`);
+            return;
+        }
+
+        // Parse the mode configuration
+        const parsedConfig = spawnMode.parseConfig(modeConfig);
+
+        // Use gesture-specific models list if provided
+        const modelsToUse = modeConfig.models && modeConfig.models.length > 0
+            ? modeConfig.models
+            : (config.models ?? []);
+
+        // Validate models array before spawning
+        if (!modelsToUse || modelsToUse.length === 0) {
+            console.warn(`[ElementSpawner] No models available for element type: ${elementType}`);
+            return;
+        }
+
+        // Get material for this type
+        const material = this._getMaterial(elementType);
+        if (!material) {
+            console.error(`[ElementSpawner] No material for element type: ${elementType}`);
+            return;
+        }
+
+        // Expand formation if present (creates multiple elements with offsets)
+        const formationElements = spawnMode.expandFormation
+            ? spawnMode.expandFormation(parsedConfig)
+            : [{ index: 0, positionOffset: 0, rotationOffset: 0, progressOffset: 0 }];
+
+        // Determine count - from formation or config
+        const count = parsedConfig.formation?.count || modeConfig.count || 1;
+
+        for (let i = 0; i < count; i++) {
+            const formationData = formationElements[i] || formationElements[0];
+
+            // Select model
+            const modelName = modelsToUse[Math.floor(Math.random() * modelsToUse.length)];
+            const geometry = await this.loadModel(elementType, modelName);
+
+            // Check if a newer spawn has started (race condition protection)
+            if (this._spawnGeneration[elementType] !== currentGeneration) {
+                return; // Abort this spawn - a newer one has taken over
+            }
+
+            if (!geometry) continue;
+
+            // Clone material for independent shader state
+            const useMaterial = cloneShaderMaterialDeep(material);
+            const mesh = new THREE.Mesh(geometry, useMaterial);
+            _debugStats.meshesCreated++;
+
+            // Calculate scale using Golden Ratio system
+            const modelSizeFraction = getModelSizeFraction(modelName);
+            const baseScale = modelSizeFraction.min +
+                Math.random() * (modelSizeFraction.max - modelSizeFraction.min);
+            const mascotRelativeScale = baseScale * this.mascotRadius;
+            const scaleMultiplier = parsedConfig.scale ?? modeConfig.scale ?? 1.0;
+            const finalScale = mascotRelativeScale * scaleMultiplier;
+
+            mesh.scale.setScalar(finalScale);
+            mesh.userData.finalScale = finalScale;
+            mesh.userData.modelName = modelName;
+            mesh.userData.elementType = elementType;
+            mesh.userData.spawnTime = this.time;
+            mesh.userData.spawnMode = modeType;
+
+            // Position element using spawn mode
+            spawnMode.positionElement(mesh, parsedConfig, i, formationData);
+
+            // Apply orientation for anchor mode
+            if (modeType === 'anchor' && modeConfig.anchor?.orientation === 'flat') {
+                mesh.rotation.x = -Math.PI / 2;
+            }
+
+            // Set up animation config if animation options provided
+            const animConfig = modeConfig.animation || options.animation;
+            if (animConfig) {
+                const animationConfig = new AnimationConfig({
+                    gestureDuration: gestureDuration / 1000,
+                    ...animConfig,
+                    index: i,
+                    totalCount: count
+                });
+
+                const animState = new AnimationState(animationConfig);
+                _debugStats.animationStatesCreated++;
+                mesh.userData.animationState = animState;
+                mesh.userData.animationConfig = animationConfig;
+
+                // Apply model overrides for shader animation
+                const modelOverrides = animConfig.modelOverrides?.[modelName];
+                if (modelOverrides?.shaderAnimation && useMaterial.uniforms) {
+                    const sa = modelOverrides.shaderAnimation;
+                    if (sa.type !== undefined && useMaterial.uniforms.uAnimationType) {
+                        useMaterial.uniforms.uAnimationType.value = sa.type;
+                    }
+                    if (sa.arcWidth !== undefined && useMaterial.uniforms.uArcWidth) {
+                        useMaterial.uniforms.uArcWidth.value = sa.arcWidth;
+                    }
+                    if (sa.arcSpeed !== undefined && useMaterial.uniforms.uArcSpeed) {
+                        useMaterial.uniforms.uArcSpeed.value = sa.arcSpeed;
+                    }
+                    if (sa.arcCount !== undefined && useMaterial.uniforms.uArcCount) {
+                        useMaterial.uniforms.uArcCount.value = sa.arcCount;
+                    }
+                }
+            }
+
+            // Store original position for animation offsets
+            mesh.userData.originalPosition = mesh.position.clone();
+            mesh.userData.originalRotation = mesh.rotation.clone();
+            mesh.userData.originalScale = mesh.scale.clone();
+
+            // ATOMIC: Add to scene and tracking together
+            if (!this._registerElement(mesh, elementType, false)) {
+                // Registration failed - dispose material (geometry is cached/shared)
+                if (mesh.material) {
+                    mesh.material.dispose();
+                    _debugStats.materialsDisposed++;
+                }
+                continue;
+            }
+        }
+
+        // console.log(`[ElementSpawner] Spawned ${count} ${elementType} elements with ${modeType} mode`);
     }
 
     /**
@@ -2675,6 +3439,11 @@ export class ElementSpawner {
         const material = this._getMaterial(elementType);
         const config = this.spawnConfig[elementType];
 
+        if (!material) {
+            console.error(`[ElementSpawner] No material for element type: ${elementType}`);
+            return;
+        }
+
         if (!config) {
             console.warn(`[ElementSpawner] Unknown element type: ${elementType}`);
             return;
@@ -2682,6 +3451,9 @@ export class ElementSpawner {
 
         // Clear existing elements of this type
         this.despawn(elementType, false);
+
+        // Increment spawn generation to invalidate any concurrent spawns (race condition protection)
+        const currentGeneration = ++this._spawnGeneration[elementType];
 
         // Track global element index for stagger calculations
         let globalIndex = 0;
@@ -2713,7 +3485,13 @@ export class ElementSpawner {
             // Determine which model(s) to use
             const modelsToUse = modelName
                 ? [modelName]
-                : (elemDef.models || config.models);
+                : (elemDef.models || config.models || []);
+
+            // Skip if no models available
+            if (modelsToUse.length === 0) {
+                console.warn(`[ElementSpawner] No models available for element type: ${elementType}`);
+                continue;
+            }
 
             // Build per-element animation config by merging global + element overrides
             const elemAnimation = {
@@ -2758,10 +3536,23 @@ export class ElementSpawner {
                 const selectedModel = modelsToUse[i % modelsToUse.length];
                 const geometry = await this.loadModel(elementType, selectedModel);
 
+                // Check if a newer spawn has started (race condition protection)
+                if (this._spawnGeneration[elementType] !== currentGeneration) {
+                    return; // Abort this spawn - a newer one has taken over
+                }
+
                 if (!geometry) continue;
 
-                // Create mesh
-                const mesh = new THREE.Mesh(geometry, material.clone());
+                // Create mesh - use deep clone for shader materials
+                let clonedMaterial;
+                if (material.isShaderMaterial) {
+                    clonedMaterial = cloneShaderMaterialDeep(material); // Increments inside
+                } else {
+                    clonedMaterial = material.clone();
+                    _debugStats.materialsCloned++;
+                }
+                const mesh = new THREE.Mesh(geometry, clonedMaterial);
+                _debugStats.meshesCreated++;
 
                 // Calculate scale
                 const modelSizeFraction = getModelSizeFraction(selectedModel);
@@ -2827,6 +3618,7 @@ export class ElementSpawner {
                 // Create animation state with merged config
                 const animConfig = new AnimationConfig(elemAnimation, gestureDuration);
                 const animState = new AnimationState(animConfig, globalIndex);
+                _debugStats.animationStatesCreated++;
                 animState.initialize(this.time);
 
                 // Apply rendering settings from config
@@ -2835,6 +3627,7 @@ export class ElementSpawner {
                 // Create trail if configured
                 if (animConfig.rendering.trail) {
                     const trailState = new TrailState(animConfig.rendering.trail);
+                    _debugStats.trailsCreated++;
                     const parent = spawnMode?.type === 'surface' && this.coreMesh
                         ? this.coreMesh : this.container;
                     trailState.initialize(mesh, parent);
@@ -2850,13 +3643,21 @@ export class ElementSpawner {
                 mesh.visible = false;
                 mesh.scale.setScalar(scale);
 
-                // Add to scene
-                if (spawnMode?.type === 'surface' && this.coreMesh) {
-                    this.coreMesh.add(mesh);
-                } else {
-                    this.container.add(mesh);
+                // ATOMIC: Add to scene and tracking together
+                const isSurfaceMode = spawnMode?.type === 'surface';
+                if (!this._registerElement(mesh, elementType, isSurfaceMode)) {
+                    // Registration failed - dispose resources to prevent leak
+                    if (mesh.userData.trailState) {
+                        mesh.userData.trailState.dispose();
+                        _debugStats.trailsDisposed++;
+                    }
+                    // Dispose material (geometry is cached/shared, don't dispose)
+                    if (mesh.material) {
+                        mesh.material.dispose();
+                        _debugStats.materialsDisposed++;
+                    }
+                    continue;
                 }
-                this.activeElements[elementType].push(mesh);
 
                 globalIndex++;
             }
@@ -2910,7 +3711,7 @@ export class ElementSpawner {
      */
     _applyAnimationToMesh(mesh, animState) {
         // DEBUG: Track position at start (only for first fire element)
-        const isFireDebug = mesh.userData.elementType === 'fire' && mesh.userData.debugIndex === 0;
+        const isFireDebug = false; // Disabled - was causing performance issues
         const posAtStart = isFireDebug ? mesh.position.clone() : null;
 
         // Visibility
@@ -2943,11 +3744,14 @@ export class ElementSpawner {
         // Prevents jitter from high-frequency pulse animations with shader vertex displacement
         const scaleSmoothing = animConfig?.procedural?.scaleSmoothing ?? 0;
         if (scaleSmoothing > 0) {
-            const currentScale = mesh.scale.x;
-            const smoothedScale = currentScale + (targetScale - currentScale) * scaleSmoothing;
+            // Use stored uniform scale to avoid including non-uniform modifications from previous frame
+            const currentUniformScale = mesh.userData.smoothedUniformScale ?? targetScale;
+            const smoothedScale = currentUniformScale + (targetScale - currentUniformScale) * scaleSmoothing;
+            mesh.userData.smoothedUniformScale = smoothedScale;
             mesh.scale.setScalar(smoothedScale);
         } else {
             mesh.scale.setScalar(targetScale);
+            mesh.userData.smoothedUniformScale = targetScale;
         }
 
         // Emissive intensity - apply intensity scaling
@@ -3030,6 +3834,11 @@ export class ElementSpawner {
             // Apply intensity for brightness and wave strength
             // Apply fadeProgress for stable wave displacement
             setProceduralWaterIntensity(mesh.material, animState.opacity, animState.fadeProgress);
+
+            // Set gesture progress for arc rotation (0-1 over gesture lifetime)
+            if (mesh.material.uniforms.uGestureProgress) {
+                mesh.material.uniforms.uGestureProgress.value = animState.gestureProgress ?? 0;
+            }
         }
 
         // Generic procedural: apply fadeProgress for geometry stability
@@ -3168,10 +3977,34 @@ export class ElementSpawner {
         if (behavior.scaling) {
             const nuScale = calculateNonUniformScale(behavior, time, progress, velocity);
 
-            // Apply non-uniform scale (multiply with existing scale)
-            mesh.scale.x *= nuScale.x;
-            mesh.scale.y *= nuScale.y;
-            mesh.scale.z *= nuScale.z;
+            // Store the uniform scale from _applyAnimationToMesh before we modify it
+            // This prevents exponential growth when scale smoothing is enabled
+            if (mesh.userData.lastUniformScale === undefined) {
+                mesh.userData.lastUniformScale = mesh.scale.x;
+            }
+            // Use the uniform scale as base (mesh.scale was just set by _applyAnimationToMesh)
+            const uniformScale = mesh.scale.x;
+
+            // Apply non-uniform scale relative to the uniform base (not cumulative)
+            mesh.scale.x = uniformScale * nuScale.x;
+            mesh.scale.y = uniformScale * nuScale.y;
+            mesh.scale.z = uniformScale * nuScale.z;
+
+            // Velocity-stretch mode: orient mesh to face velocity direction
+            if (nuScale.velocityAxis && behavior.scaling.mode === 'velocity-stretch') {
+                const velAxis = nuScale.velocityAxis;
+                // Point mesh Y-axis (the stretched axis) toward velocity direction
+                // Using simple rotation: pitch down based on velocity.y, yaw based on velocity.x/z
+                const horizontalSpeed = Math.sqrt(velAxis.x * velAxis.x + velAxis.z * velAxis.z);
+                if (horizontalSpeed > 0.001 || Math.abs(velAxis.y) > 0.001) {
+                    // Pitch: rotate around X axis based on vertical component
+                    mesh.rotation.x = -Math.asin(Math.max(-1, Math.min(1, velAxis.y)));
+                    // Yaw: rotate around Y axis based on horizontal direction
+                    if (horizontalSpeed > 0.001) {
+                        mesh.rotation.y = Math.atan2(velAxis.x, velAxis.z);
+                    }
+                }
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -3207,7 +4040,14 @@ export class ElementSpawner {
         // OPACITY LINK
         // ═══════════════════════════════════════════════════════════════════════════
         if (behavior.opacityLink) {
-            const scale = { x: mesh.scale.x, y: mesh.scale.y, z: mesh.scale.z };
+            // Normalize scale by uniform base to get the non-uniform scale factors
+            // This ensures inverse-scale works regardless of the element's base size
+            const uniformBase = mesh.userData.lastUniformScale || mesh.userData.smoothedUniformScale || 1;
+            const scale = {
+                x: mesh.scale.x / uniformBase,
+                y: mesh.scale.y / uniformBase,
+                z: mesh.scale.z / uniformBase
+            };
             const seed = mesh.userData.spawnIndex ?? 0;
             const opacityMod = calculateOpacityLink(behavior.opacityLink, scale, time, seed);
 
@@ -3306,9 +4146,10 @@ export class ElementSpawner {
 
             // Re-orient to new normal
             const cameraFacing = surfaceConfig?.cameraFacing ?? 0.3;
-            const modelName = this.spawnConfig[elementType]?.models?.[
-                Math.floor(Math.random() * this.spawnConfig[elementType].models.length)
-            ];
+            const models = this.spawnConfig[elementType]?.models;
+            const modelName = models?.length > 0
+                ? models[Math.floor(Math.random() * models.length)]
+                : null;
             this._orientElement(mesh, sample.normal, cameraFacing, this.camera, modelName);
         }
     }
@@ -3319,6 +4160,39 @@ export class ElementSpawner {
      */
     _capitalize(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    /**
+     * Periodic cleanup check - detects orphaned materials and triggers emergency cleanup
+     * Called every few seconds from update() to catch resource leaks.
+     * @private
+     */
+    _periodicCleanupCheck() {
+        const activeMats = _debugStats.activeMaterials;
+        const totalActiveElements = Object.values(this.activeElements)
+            .reduce((sum, arr) => sum + arr.length, 0);
+
+        // If we have many materials but few/no active elements, something is wrong
+        // Expected: ~4 materials per element (1 main + 3 trails)
+        const expectedMaterials = totalActiveElements * 4;
+        const orphanThreshold = 50; // Allow some margin
+
+        if (activeMats > expectedMaterials + orphanThreshold) {
+            console.warn(
+                `[ElementSpawner] Orphan material check: ${activeMats} active, ` +
+                `${totalActiveElements} elements (expected ~${expectedMaterials}). ` +
+                `Forcing cleanup.`
+            );
+            this.despawnAll();
+        }
+
+        // Also check for dangerous levels even with elements present
+        if (activeMats > MAX_ACTIVE_MATERIALS * 0.9) {
+            console.warn(
+                `[ElementSpawner] Materials at ${Math.round(activeMats / MAX_ACTIVE_MATERIALS * 100)}% ` +
+                `of limit (${activeMats}/${MAX_ACTIVE_MATERIALS}). Consider reducing element count.`
+            );
+        }
     }
 
     /**

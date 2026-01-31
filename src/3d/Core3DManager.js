@@ -53,7 +53,9 @@ import { createPoisonMaterial, updatePoisonMaterial } from './materials/PoisonMa
 import { createEarthMaterial, updateEarthMaterial } from './materials/EarthMaterial.js';
 import { createNatureMaterial, updateNatureMaterial } from './materials/NatureMaterial.js';
 import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
-import { ElementSpawner } from './effects/ElementSpawner.js';
+// OLD: import { ElementSpawner } from './effects/ElementSpawner.js';
+// NEW: GPU-instanced spawner (fixes GPU memory leaks)
+import { ElementInstancedSpawner } from './effects/ElementInstancedSpawner.js';
 
 // Crystal calibration rotation to show flat facet facing camera
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
@@ -85,6 +87,7 @@ export class Core3DManager {
      * @param {number} [options.maxZoom] - Maximum zoom distance
      * @param {string} [options.materialVariant] - Material variant override
      * @param {string} [options.assetBasePath='/assets'] - Base path for loading assets (textures, models)
+     * @param {boolean} [options.enableShatter=true] - Enable shatter/shard system
      */
     constructor(canvas, options = {}) {
         // Validate required dependencies
@@ -113,6 +116,9 @@ export class Core3DManager {
         // Asset base path for textures and models (configurable for GitHub Pages, etc.)
         // Empty string triggers auto-detection in ThreeRenderer
         this.assetBasePath = options.assetBasePath !== undefined ? options.assetBasePath : '';
+
+        // Shatter system toggle (can be disabled for isolated testing)
+        this.enableShatter = options.enableShatter !== false;
 
         // Load geometry type first (needed to determine if moon = tidally locked)
         this.geometryType = options.geometry || 'sphere';
@@ -418,48 +424,52 @@ export class Core3DManager {
         // SHATTER SYSTEM INITIALIZATION
         // ═══════════════════════════════════════════════════════════════════════════
         // Runtime geometry fracturing for dramatic storytelling effects
-        this.shatterSystem = new ShatterSystem({
-            scene: this.renderer.scene,
-            maxShards: 50,
-            shardLifetime: 2000,
-            enableReassembly: true,
-            autoRestore: true
-        });
-
-        // Wire up shatter callbacks for visual effects
-        this.shatterSystem.onShatterStart = () => {
-            // The shard materials already have emissive glow that creates a "particle-like" effect
-            // Phase 3 could add dedicated particle burst via orchestrator.triggerBurst()
-        };
-
-        // Restore soul visibility after shatter completes (when shards finish animating)
-        this.shatterSystem.onShatterComplete = () => {
-            // Restore crystal soul to its normal visibility state based on coreGlowEnabled
-            if (this.crystalSoul) {
-                this.crystalSoul.setVisible(this.coreGlowEnabled);
-            }
-        };
-
-        // Restore soul visibility after reassembly completes
-        this.shatterSystem.onReassemblyComplete = () => {
-            // Restore crystal soul to its normal visibility state based on coreGlowEnabled
-            if (this.crystalSoul) {
-                this.crystalSoul.setVisible(this.coreGlowEnabled);
-            }
-        };
-
+        // Can be disabled via enableShatter: false for isolated testing
+        this.shatterSystem = null;
         this._pendingShatter = null;
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // PRECOMPUTE SHARDS FOR INITIAL GEOMETRY
-        // Generate shard geometries and extract material at startup to eliminate
-        // first-shatter lag. This is repeated on morphTo() for new geometries.
-        // ═══════════════════════════════════════════════════════════════════════════
-        if (this.renderer?.coreMesh) {
-            this.shatterSystem.precomputeShards(
-                this.renderer.coreMesh,
-                this.geometryType
-            );
+        if (this.enableShatter) {
+            this.shatterSystem = new ShatterSystem({
+                scene: this.renderer.scene,
+                maxShards: 50,
+                shardLifetime: 2000,
+                enableReassembly: true,
+                autoRestore: true
+            });
+
+            // Wire up shatter callbacks for visual effects
+            this.shatterSystem.onShatterStart = () => {
+                // The shard materials already have emissive glow that creates a "particle-like" effect
+                // Phase 3 could add dedicated particle burst via orchestrator.triggerBurst()
+            };
+
+            // Restore soul visibility after shatter completes (when shards finish animating)
+            this.shatterSystem.onShatterComplete = () => {
+                // Restore crystal soul to its normal visibility state based on coreGlowEnabled
+                if (this.crystalSoul) {
+                    this.crystalSoul.setVisible(this.coreGlowEnabled);
+                }
+            };
+
+            // Restore soul visibility after reassembly completes
+            this.shatterSystem.onReassemblyComplete = () => {
+                // Restore crystal soul to its normal visibility state based on coreGlowEnabled
+                if (this.crystalSoul) {
+                    this.crystalSoul.setVisible(this.coreGlowEnabled);
+                }
+            };
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // PRECOMPUTE SHARDS FOR INITIAL GEOMETRY
+            // Generate shard geometries and extract material at startup to eliminate
+            // first-shatter lag. This is repeated on morphTo() for new geometries.
+            // ═══════════════════════════════════════════════════════════════════════════
+            if (this.renderer?.coreMesh) {
+                this.shatterSystem.precomputeShards(
+                    this.renderer.coreMesh,
+                    this.geometryType
+                );
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -470,13 +480,12 @@ export class Core3DManager {
         this.objectSpaceCrackManager = new ObjectSpaceCrackManager();
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // ELEMENT SPAWNER
+        // ELEMENT SPAWNER (GPU-Instanced)
         // ═══════════════════════════════════════════════════════════════════════════
-        // Spawns 3D elemental geometry (ice crystals, rocks, vines) around mascot
-        this.elementSpawner = new ElementSpawner({
+        // Uses instanced rendering to fix GPU memory leaks from material cloning
+        this.elementSpawner = new ElementInstancedSpawner({
             scene: this.renderer.scene,
-            assetBasePath: this.assetBasePath,
-            maxElements: 20
+            assetsBasePath: this.assetBasePath
         });
 
         // Initialize with core mesh and camera if available
@@ -486,6 +495,11 @@ export class Core3DManager {
             this.elementSpawner.preloadModels('ice');
             this.elementSpawner.preloadModels('earth');
             this.elementSpawner.preloadModels('nature');
+            this.elementSpawner.preloadModels('fire');
+            this.elementSpawner.preloadModels('electricity');
+            this.elementSpawner.preloadModels('water');
+            this.elementSpawner.preloadModels('void');
+            this.elementSpawner.preloadModels('light');
         }
 
         // Note: Virtual particle pool is now managed by AnimationManager
@@ -2014,6 +2028,15 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._electricOverlayMesh.renderOrder = mesh.renderOrder + 1;
+
+                    // Spawn 3D electricity elements if gesture requests it via spawnMode
+                    const {spawnMode} = blended.electricOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('electricity')) {
+                        this.elementSpawner.spawn('electricity', {
+                            intensity: blended.electricOverlay.strength || 0.8,
+                            mode: spawnMode
+                        });
+                    }
                 }
 
                 // Update electric material each frame
@@ -2037,6 +2060,11 @@ export class Core3DManager {
                 this._electricMaterial = null;
             }
             this._electricOverlayMesh = null;
+
+            // Despawn electricity elements
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('electricity');
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2071,6 +2099,21 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._waterOverlayMesh.renderOrder = mesh.renderOrder + 1;
+
+                    // Spawn 3D water elements if gesture requests it via spawnMode
+                    const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.waterOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('water')) {
+                        this.elementSpawner.spawn('water', {
+                            intensity: blended.waterOverlay.strength || 0.8,
+                            mode: spawnMode,
+                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: duration || 1500
+                        });
+                    }
                 }
 
                 // Update water material each frame
@@ -2081,6 +2124,9 @@ export class Core3DManager {
                 if (this._waterMaterial?.uniforms?.uOpacity) {
                     this._waterMaterial.uniforms.uOpacity.value = Math.min(0.8, blended.waterOverlay.wetness);
                 }
+
+                // Store gesture progress for element spawner animation
+                this._currentWaterProgress = blended.waterOverlay.progress ?? null;
             }
         } else if (this._waterOverlayMesh) {
             // Remove overlay mesh when water effect ends
@@ -2094,6 +2140,14 @@ export class Core3DManager {
                 this._waterMaterial = null;
             }
             this._waterOverlayMesh = null;
+
+            // Despawn water elements
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('water');
+            }
+
+            // Clear water progress tracking
+            this._currentWaterProgress = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2128,6 +2182,21 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._fireOverlayMesh.renderOrder = mesh.renderOrder + 2;
+
+                    // Spawn 3D fire elements if gesture requests it via spawnMode
+                    const {spawnMode, animation, models, count, scale, embedDepth} = blended.fireOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('fire')) {
+                        this.elementSpawner.spawn('fire', {
+                            intensity: blended.fireOverlay.strength || 0.8,
+                            mode: spawnMode,
+                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: blended.fireOverlay.duration || 2000
+                        });
+                    }
                 }
 
                 // Update fire material each frame
@@ -2139,6 +2208,9 @@ export class Core3DManager {
                     const baseIntensity = this._fireMaterial.uniforms.uIntensity.value;
                     this._fireMaterial.uniforms.uIntensity.value = baseIntensity * (0.5 + blended.fireOverlay.heat * 0.5);
                 }
+
+                // Store gesture progress for element spawner animation (temperature evolution)
+                this._currentFireProgress = blended.fireOverlay.progress ?? null;
             }
         } else if (this._fireOverlayMesh) {
             // Remove overlay mesh when fire effect ends
@@ -2152,6 +2224,14 @@ export class Core3DManager {
                 this._fireMaterial = null;
             }
             this._fireOverlayMesh = null;
+
+            // Despawn fire elements
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('fire');
+            }
+
+            // Clear fire progress tracking
+            this._currentFireProgress = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2230,6 +2310,21 @@ export class Core3DManager {
                     this._voidOverlayMesh.scale.setScalar(1.06);
                     mesh.add(this._voidOverlayMesh);
                     this._voidOverlayMesh.renderOrder = mesh.renderOrder + 3;
+
+                    // Spawn 3D void elements if gesture requests it via spawnMode
+                    const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.voidOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('void')) {
+                        this.elementSpawner.spawn('void', {
+                            intensity: blended.voidOverlay.strength || 0.8,
+                            mode: spawnMode,
+                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: duration || 2000
+                        });
+                    }
                 }
 
                 // Update void material each frame
@@ -2243,6 +2338,9 @@ export class Core3DManager {
                 if (this._voidMaterial?.uniforms?.uOpacity) {
                     this._voidMaterial.uniforms.uOpacity.value = Math.min(0.95, blended.voidOverlay.strength);
                 }
+
+                // Store gesture progress for element spawner animation
+                this._currentVoidProgress = blended.voidOverlay.progress ?? null;
             }
         } else if (this._voidOverlayMesh) {
             // Remove overlay mesh when void effect ends
@@ -2256,6 +2354,14 @@ export class Core3DManager {
                 this._voidMaterial = null;
             }
             this._voidOverlayMesh = null;
+
+            // Despawn void elements
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('void');
+            }
+
+            // Clear void progress tracking
+            this._currentVoidProgress = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2277,11 +2383,17 @@ export class Core3DManager {
 
                     // Spawn 3D ice crystals only if gesture explicitly requests it via spawnMode
                     // spawnMode: 'orbit' | 'impact' | 'burst' | 'none' (default)
-                    const {spawnMode} = blended.iceOverlay;
+                    const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.iceOverlay;
                     if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('ice')) {
                         this.elementSpawner.spawn('ice', {
                             intensity: blended.iceOverlay.strength || 0.8,
-                            mode: spawnMode
+                            mode: spawnMode,
+                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: duration || 2000
                         });
                     }
                 }
@@ -2294,6 +2406,9 @@ export class Core3DManager {
                 if (this._iceMaterial?.uniforms?.uOpacity) {
                     this._iceMaterial.uniforms.uOpacity.value = Math.min(0.25, blended.iceOverlay.strength);
                 }
+
+                // Store gesture progress for element spawner animation
+                this._currentIceProgress = blended.iceOverlay.progress ?? null;
             }
         } else if (this._iceOverlayMesh) {
             const mesh = this.renderer?.coreMesh;
@@ -2310,6 +2425,9 @@ export class Core3DManager {
             if (this.elementSpawner) {
                 this.elementSpawner.despawn('ice');
             }
+
+            // Clear ice progress tracking
+            this._currentIceProgress = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2329,6 +2447,15 @@ export class Core3DManager {
                     this._lightOverlayMesh.scale.setScalar(1.04);
                     mesh.add(this._lightOverlayMesh);
                     this._lightOverlayMesh.renderOrder = mesh.renderOrder + 3;
+
+                    // Spawn 3D light elements if gesture requests it via spawnMode
+                    const {spawnMode} = blended.lightOverlay;
+                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('light')) {
+                        this.elementSpawner.spawn('light', {
+                            intensity: blended.lightOverlay.strength || 0.8,
+                            mode: spawnMode
+                        });
+                    }
                 }
                 if (this._lightMaterial?.uniforms?.uTime) {
                     this._lightMaterial.uniforms.uTime.value = blended.lightOverlay.time;
@@ -2350,6 +2477,11 @@ export class Core3DManager {
                 this._lightMaterial = null;
             }
             this._lightOverlayMesh = null;
+
+            // Despawn light elements
+            if (this.elementSpawner) {
+                this.elementSpawner.despawn('light');
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2452,46 +2584,32 @@ export class Core3DManager {
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
-                if (!this._natureOverlayMesh) {
-                    this._natureMaterial = createNatureMaterial({
-                        growth: blended.natureOverlay.growth || 0.7,
-                        season: 'summer',
-                        opacity: 0.95
-                    });
-                    this._natureOverlayMesh = new THREE.Mesh(mesh.geometry, this._natureMaterial);
-                    this._natureOverlayMesh.scale.setScalar(1.12);
-                    mesh.add(this._natureOverlayMesh);
-                    this._natureOverlayMesh.renderOrder = mesh.renderOrder + 3;
+                // Track if we've already spawned elements this gesture (use a simple flag)
+                if (!this._natureSpawnedThisGesture) {
+                    this._natureSpawnedThisGesture = true;
 
                     // Spawn 3D nature elements only if gesture explicitly requests it via spawnMode
-                    const {spawnMode} = blended.natureOverlay;
+                    // Extract all spawn options like fire does
+                    const {spawnMode, animation, models, count, scale, embedDepth} = blended.natureOverlay;
                     if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('nature')) {
                         this.elementSpawner.spawn('nature', {
                             intensity: blended.natureOverlay.strength || 0.8,
-                            mode: spawnMode
+                            mode: spawnMode,
+                            animation,
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: blended.natureOverlay.duration || 3000
+                        }).catch(err => {
+                            console.error('[Core3DManager] Nature spawn error:', err);
                         });
                     }
                 }
-                if (this._natureMaterial?.uniforms?.uTime) {
-                    this._natureMaterial.uniforms.uTime.value = blended.natureOverlay.time;
-                }
-                if (this._natureMaterial?.uniforms?.uGrowth) {
-                    this._natureMaterial.uniforms.uGrowth.value = blended.natureOverlay.growth || 0.7;
-                }
-                if (this._natureMaterial?.uniforms?.uOpacity) {
-                    this._natureMaterial.uniforms.uOpacity.value = Math.min(0.95, blended.natureOverlay.strength);
-                }
             }
-        } else if (this._natureOverlayMesh) {
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._natureOverlayMesh.parent) {
-                mesh.remove(this._natureOverlayMesh);
-            }
-            if (this._natureMaterial) {
-                this._natureMaterial.dispose();
-                this._natureMaterial = null;
-            }
-            this._natureOverlayMesh = null;
+        } else if (this._natureSpawnedThisGesture) {
+            // Reset spawn flag when gesture ends
+            this._natureSpawnedThisGesture = false;
 
             // Despawn nature elements
             if (this.elementSpawner) {
@@ -2730,12 +2848,14 @@ export class Core3DManager {
         // SHATTER CHANNEL HANDLING - Geometry fragmentation
         // ═══════════════════════════════════════════════════════════════════════════
         // Transform impact point from camera-relative to mesh-local space (same as deformation)
-        // Then trigger the shatter system
+        // Then trigger the shatter system (if enabled)
 
-        // Reset the flag when shards are no longer frozen
-        if (!this.shatterSystem?.isFrozen()) {
-            this._frozenShardsMovedThisGesture = false;
-        }
+        // Skip all shatter handling if shatter system is disabled
+        if (this.enableShatter && this.shatterSystem) {
+            // Reset the flag when shards are no longer frozen
+            if (!this.shatterSystem.isFrozen()) {
+                this._frozenShardsMovedThisGesture = false;
+            }
 
         if (blended.shatter && blended.shatter.enabled) {
             const s = blended.shatter;
@@ -2885,21 +3005,27 @@ export class Core3DManager {
             }
         }
 
-        // Handle reassembly trigger from gesture
-        if (blended.shatter && blended.shatter.reassemble && this.shatterSystem.isShattering()) {
-            this.shatterSystem.reassemble({
-                duration: blended.shatter.reassembleDuration || 1000
-            });
-        }
+            // Handle reassembly trigger from gesture
+            if (blended.shatter && blended.shatter.reassemble && this.shatterSystem.isShattering()) {
+                this.shatterSystem.reassemble({
+                    duration: blended.shatter.reassembleDuration || 1000
+                });
+            }
 
-        // Update shatter system each frame
-        if (this.shatterSystem) {
+            // Update shatter system each frame
             this.shatterSystem.update(deltaTime);
-        }
+        } // end if (this.enableShatter && this.shatterSystem)
 
         // Update element spawner (ice crystals, rocks, etc.)
         if (this.elementSpawner) {
-            this.elementSpawner.update(deltaTime);
+            // Pass gesture progress for element animations (fire temperature, water flow, etc.)
+            // Use first available progress from any active elemental effect
+            const gestureProgress = this._currentFireProgress
+                ?? this._currentWaterProgress
+                ?? this._currentIceProgress
+                ?? this._currentVoidProgress
+                ?? null;
+            this.elementSpawner.update(deltaTime, gestureProgress);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -3305,6 +3431,11 @@ export class Core3DManager {
                 this.elementSpawner.preloadModels('ice');
                 this.elementSpawner.preloadModels('earth');
                 this.elementSpawner.preloadModels('nature');
+                this.elementSpawner.preloadModels('fire');
+                this.elementSpawner.preloadModels('electricity');
+                this.elementSpawner.preloadModels('water');
+                this.elementSpawner.preloadModels('void');
+                this.elementSpawner.preloadModels('light');
             }
 
             // NOW we're fully ready for rendering

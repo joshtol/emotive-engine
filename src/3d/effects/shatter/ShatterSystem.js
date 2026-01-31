@@ -454,31 +454,50 @@ class ShatterSystem {
             hasCachedMaterial: !!this.shardMaterialCache?.baseMaterial
         });
 
-        // Dispose any previous elemental material
-        if (this._currentElementalMaterial) {
-            this._currentElementalMaterial.dispose();
-            this._currentElementalMaterial = null;
-        }
-
         // Check for elemental material first
+        // CACHE: Reuse existing material if same element type (avoid rapid create/dispose)
         if (elemental && isElementSupported(elemental)) {
-            baseMaterial = createElementalMaterial(elemental, elementalParam);
-            elementalPhysics = getElementalPhysics(elemental, elementalParam);
+            // Check if we can reuse the existing material (same element type)
+            if (this._currentElementalMaterial && this._currentElemental === elemental) {
+                // Reuse existing material - just get physics
+                baseMaterial = this._currentElementalMaterial;
+                elementalPhysics = getElementalPhysics(elemental, elementalParam);
+                this._currentElementalParam = elementalParam;
 
-            console.log('[SHATTER_SYSTEM] ✨ Created elemental material:', {
-                elemental,
-                elementalParam,
-                materialCreated: !!baseMaterial,
-                materialType: baseMaterial?.type,
-                materialUserData: baseMaterial?.userData,
-                physicsConfig: elementalPhysics
-            });
+                console.log('[SHATTER_SYSTEM] ♻️ Reusing cached elemental material:', {
+                    elemental,
+                    elementalParam,
+                    materialType: baseMaterial?.type
+                });
+            } else {
+                // Different element - dispose old and create new
+                if (this._currentElementalMaterial) {
+                    this._currentElementalMaterial.dispose();
+                    this._currentElementalMaterial = null;
+                }
 
-            // Store for disposal later and overlay/reference
-            this._currentElementalMaterial = baseMaterial;
-            this._currentElemental = elemental;
-            this._currentElementalParam = elementalParam;
+                baseMaterial = createElementalMaterial(elemental, elementalParam);
+                elementalPhysics = getElementalPhysics(elemental, elementalParam);
+
+                console.log('[SHATTER_SYSTEM] ✨ Created new elemental material:', {
+                    elemental,
+                    elementalParam,
+                    materialCreated: !!baseMaterial,
+                    materialType: baseMaterial?.type
+                });
+
+                // Store for reuse
+                this._currentElementalMaterial = baseMaterial;
+                this._currentElemental = elemental;
+                this._currentElementalParam = elementalParam;
+            }
         } else {
+            // No elemental - dispose any cached elemental material
+            if (this._currentElementalMaterial) {
+                this._currentElementalMaterial.dispose();
+                this._currentElementalMaterial = null;
+                this._currentElemental = null;
+            }
             // Fall back to cached material
             baseMaterial = this.shardMaterialCache?.baseMaterial || null;
             console.log('[SHATTER_SYSTEM] 📦 Using cached/default material:', {

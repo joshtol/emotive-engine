@@ -295,6 +295,7 @@ export class EmotiveMascot3D {
                 enablePostProcessing: this.config.enablePostProcessing,
                 enableShadows: this.config.enableShadows,
                 enableControls: this.config.enableControls,
+                enableShatter: this.config.enableShatter,
                 autoRotate: this.config.autoRotate,
                 enableBlinking: this.config.enableBlinking,
                 enableBreathing: this.config.enableBreathing,

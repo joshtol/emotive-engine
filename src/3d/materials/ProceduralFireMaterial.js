@@ -117,15 +117,15 @@ float snoise(vec3 v) {
     return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
 }
 
-// Fractal Brownian Motion - 6 octaves for rich detail
-float fbm6(vec3 p) {
+// Fractal Brownian Motion - 3 octaves (reduced from 6 for GPU performance)
+float fbm3(vec3 p) {
     float value = 0.0;
     float amplitude = 0.5;
     float frequency = 1.0;
     float lacunarity = 2.0;
     float persistence = 0.5;
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 3; i++) {
         value += amplitude * snoise(p * frequency);
         frequency *= lacunarity;
         amplitude *= persistence;
@@ -133,13 +133,13 @@ float fbm6(vec3 p) {
     return value;
 }
 
-// Turbulence - absolute value FBM for sharper, more chaotic patterns
+// Turbulence - absolute value FBM for sharper, more chaotic patterns (3 octaves max for GPU performance)
 float turbulence(vec3 p, int octaves) {
     float value = 0.0;
     float amplitude = 0.5;
     float frequency = 1.0;
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 3; i++) {
         if (i >= octaves) break;
         value += amplitude * abs(snoise(p * frequency));
         frequency *= 2.0;
@@ -223,7 +223,7 @@ void main() {
 
     // Noise-based displacement along normal (very slow for realistic fire)
     vec3 noisePos = position * 3.0 + vec3(0.0, -uTime * 0.001, 0.0);
-    float noiseValue = fbm6(noisePos);
+    float noiseValue = fbm3(noisePos);
 
     // Position-based variation for asymmetric flames
     float posVariation = snoise(position * 5.0) * 0.3 + 0.85;
@@ -288,8 +288,8 @@ void main() {
     // Animated noise position - flames rise upward (very slow for realism)
     vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, -uTime * 0.00085, 0.0);
 
-    // Primary flame pattern using turbulence
-    float flame = turbulence(noisePos, 5);
+    // Primary flame pattern using turbulence (3 octaves for GPU performance)
+    float flame = turbulence(noisePos, 3);
 
     // Secondary detail layer (very slow)
     vec3 detailPos = noisePos * 2.0 + vec3(uTime * 0.00015, 0.0, uTime * 0.0001);

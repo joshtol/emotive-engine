@@ -14,6 +14,7 @@ import { TimelineRecorder } from './public/TimelineRecorder.js';
 import { ElementAttachmentManager } from './public/ElementAttachmentManager.js';
 import { VisualEffectsManager } from './public/VisualEffectsManager.js';
 import { IntentParser } from './core/intent/IntentParser.js';
+import { listGestures } from './core/gestures/index.js';
 
 /**
  * Public API wrapper for Emotive Engine
@@ -1392,21 +1393,11 @@ class EmotiveMascotPublic {
     // === Query Methods ===
 
     /**
-     * Get available gestures
-     * @returns {Array<string>} List of gesture names
+     * Get available gestures from the full gesture registry
+     * @returns {Array<Object>} List of gesture info objects with name, emoji, type, category, description
      */
     getAvailableGestures() {
-        return [
-            // Motion
-            'bounce', 'pulse', 'shake', 'spin', 'nod', 'tilt',
-            'drift', 'vibrate', 'sway', 'float', 'wave',
-            // Transform
-            'expand', 'contract', 'stretch', 'morph', 'jump',
-            // Effects
-            'flash', 'glow', 'flicker',
-            // Complex
-            'scan', 'hula', 'orbit', 'breathe', 'settle'
-        ];
+        return listGestures();
     }
 
     /**

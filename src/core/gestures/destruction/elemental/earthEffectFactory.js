@@ -69,7 +69,52 @@ const EARTH_EFFECT_VARIANTS = {
             embedDepth: 0.35,           // Heavy embed for stone feel
             cameraFacing: 0.25,         // More natural stone orientation
             clustering: 0.15,           // Slight clustering
-            scale: 1.0                  // Use φ-based model sizes
+            scale: 1.0,                 // Use φ-based model sizes
+            minDistance: 0.2,           // Rocks need spacing - chunky elements
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.92,
+                stagger: 0.05,          // Stone spreads progressively
+                enter: {
+                    type: 'grow',       // Stone forms from surface
+                    duration: 0.12,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                // Heavy, solid stone - minimal animation
+                pulse: {
+                    amplitude: 0.03,    // Very subtle
+                    frequency: 1,       // Slow
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.3,
+                    max: 0.5,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                // No drift - stone is heavy and static
+                rotate: {
+                    axis: 'y',
+                    speed: 0.002,       // Nearly imperceptible
+                    oscillate: true,
+                    range: Math.PI / 24
+                },
+                // Low variance - stone is uniform
+                scaleVariance: 0.12,
+                lifetimeVariance: 0.08,
+                blending: 'normal',
+                renderOrder: 4,
+                intensityScaling: {
+                    scale: 1.15,
+                    emissiveMax: 1.2
+                }
+            }
         },
         // Spreading stone
         spreadRate: 0.4,
@@ -204,7 +249,45 @@ const EARTH_EFFECT_VARIANTS = {
             cameraFacing: 0.2,          // Natural stone look
             clustering: 0.0,            // Even shell distribution
             count: 14,                  // Dense coverage
-            scale: 1.2                  // Slightly larger for armor plates
+            scale: 1.2,                 // Slightly larger for armor plates
+            minDistance: 0.15,          // Armor plates, fairly dense but chunky
+            animation: {
+                appearAt: 0.06,
+                disappearAt: 0.9,
+                stagger: 0.03,          // Armor plates form rapidly
+                enter: {
+                    type: 'grow',       // Stone plates form
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.12,
+                    easing: 'easeIn'
+                },
+                // Heavy stone armor - very minimal animation
+                pulse: {
+                    amplitude: 0.02,
+                    frequency: 0.8,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.25,
+                    max: 0.45,
+                    frequency: 1,
+                    pattern: 'sine'
+                },
+                // No drift - armor is static
+                scaleVariance: 0.1,
+                lifetimeVariance: 0.06,
+                blending: 'normal',
+                renderOrder: 5,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.15
+                }
+            }
         },
         // Encasement spreading
         encaseProgress: 0.8,
@@ -352,7 +435,8 @@ const EARTH_EFFECT_VARIANTS = {
             cameraFacing: 0.15,         // Very natural orientation
             clustering: 0.4,            // Some clustering (fossil deposits)
             count: 10,                  // Moderate coverage
-            scale: 0.9                  // Weathered, moderate size
+            scale: 0.9,                 // Weathered, moderate size
+            minDistance: 0.22           // Scattered ancient rocks, wide spacing
         },
         // Fossilization
         ageProgression: 0.6,

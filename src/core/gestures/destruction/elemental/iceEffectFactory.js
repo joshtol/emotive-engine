@@ -1004,7 +1004,16 @@ export function createIceEffectGesture(variant) {
                         frost: frostLevel,
                         category: cfg.category,
                         spawnMode: cfg.spawnMode || null,  // 'orbit' | 'impact' | 'burst' | null
-                        time
+                        time,
+                        progress,
+                        duration: cfg.duration,
+                        // Phase 11: Pass animation config to ElementSpawner
+                        // Use config.spawnMode (not cfg.spawnMode) because motion may override with string
+                        animation: config.spawnMode?.animation,
+                        models: config.spawnMode?.models,
+                        count: config.spawnMode?.count,
+                        scale: config.spawnMode?.scale,
+                        embedDepth: config.spawnMode?.embedDepth
                     },
                     position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],

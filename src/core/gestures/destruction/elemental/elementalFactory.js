@@ -176,26 +176,7 @@ const FIRE_VARIANTS = {
         explosionForce: 1.0,
         rotationForce: 4.0          // Flickering rotation
     },
-    phoenix: {
-        name: 'phoenix',
-        emoji: '🦅',
-        description: 'Fire shatter then reassemble from flames',
-        duration: 5000,
-        beats: 10,
-        intensity: 1.5,
-        elemental: 'fire',
-        elementalParam: 0.8,        // Hot flames
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 1, 0],
-        revealSoul: true,
-        reassemble: true,
-        reassembleAt: 0.6,
-        reassembleDuration: 2000,
-        gravity: 0.5,               // Floats up
-        explosionForce: 1.2,
-        rotationForce: 3.0,
-        glowPulse: true             // Pulsing fire glow
-    },
+    // NOTE: phoenix moved to fireEffectFactory.js (ring-based effect)
     ember: {
         name: 'ember',
         emoji: '🪨',
@@ -444,6 +425,7 @@ export function createElementalGesture(variant) {
         emoji: config.emoji,
         type: 'override',
         description: config.description,
+        usesShatter: true, // Marks gestures that use the ShatterSystem
 
         config: {
             duration: config.duration,

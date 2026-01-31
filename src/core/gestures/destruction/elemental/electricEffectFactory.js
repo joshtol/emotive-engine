@@ -49,6 +49,74 @@ const ELECTRIC_EFFECT_VARIANTS = {
         duration: 1200,
         beats: 2,
         intensity: 1.0,
+        category: 'electrocute',
+        // 3D Element spawning - arcs jumping across surface
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Random arc placements
+            embedDepth: 0.1,
+            cameraFacing: 0.4,
+            clustering: 0.35,
+            count: 6,
+            scale: 1.0,
+            models: ['arc-small', 'spark-node', 'arc-medium'],
+            minDistance: 0.12,
+            // Ephemeral: lightning arcs flash in, hold briefly, fade out, respawn elsewhere
+            ephemeral: {
+                lifetime: { min: 100, max: 300 },   // Very brief arcs
+                flashIn: 30,                         // Snap in quickly
+                fadeOut: 80,                         // Fade out slightly slower
+                respawn: true                        // Keep crackling
+            },
+            // ═══════════════════════════════════════════════════════════════
+            // NEW ANIMATION SYSTEM - Complements ephemeral
+            // ═══════════════════════════════════════════════════════════════
+            animation: {
+                appearAt: 0.02,
+                disappearAt: 0.95,
+                stagger: 0.01,
+                enter: {
+                    type: 'flash',      // Instant electrical appearance
+                    duration: 0.01,
+                    easing: 'linear'
+                },
+                exit: {
+                    type: 'flash',      // Instant disappearance
+                    duration: 0.02,
+                    easing: 'linear'
+                },
+                // Chaotic electric animation
+                flicker: {
+                    intensity: 0.5,     // Very intense flicker
+                    rate: 30,           // Extremely fast
+                    pattern: 'random'
+                },
+                emissive: {
+                    min: 1.0,
+                    max: 3.0,
+                    frequency: 25,
+                    pattern: 'random',
+                    dutyCycle: 0.6
+                },
+                rotate: {
+                    axis: [1, 1, 0],    // Diagonal axis for chaotic feel
+                    speed: 0.5,
+                    oscillate: true,
+                    range: Math.PI / 3
+                },
+                // Very high variance - electricity is chaotic
+                scaleVariance: 0.4,
+                lifetimeVariance: 0.5,
+                delayVariance: 0.2,
+                blending: 'additive',
+                renderOrder: 15,
+                intensityScaling: {
+                    scale: 1.3,
+                    flickerIntensity: 1.5,
+                    emissiveMax: 1.8
+                }
+            }
+        },
         // Jitter parameters
         jitterFrequency: 60,        // Hz - very rapid
         jitterAmplitude: 0.015,     // Position displacement
@@ -70,6 +138,39 @@ const ELECTRIC_EFFECT_VARIANTS = {
         duration: 2500,
         beats: 4,
         intensity: 2.0,
+        category: 'electrocute',
+        // 3D Element spawning - BUILD UP to overload
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Full coverage
+            embedDepth: 0.1,
+            cameraFacing: 0.35,
+            clustering: 0.2,
+            count: 12,
+            scale: 1.1,
+            models: ['arc-small', 'arc-medium', 'arc-cluster', 'spark-node'],
+            minDistance: 0.1,
+            // Ephemeral: BUILDUP - starts small/fast, grows to big/slow/intense
+            ephemeral: {
+                lifetime: { min: 80, max: 150 },    // Starting: brief sparks
+                flashIn: 15,                         // Starting: instant
+                fadeOut: 40,                         // Starting: quick
+                respawn: true,
+                stagger: 30,                         // Stagger initial spawn
+                // Progression: evolve timing over 2500ms gesture duration
+                progression: {
+                    duration: 2500,
+                    // lifetime: [startMin, startMax, endMin, endMax]
+                    lifetime: [80, 150, 300, 600],  // Grows from brief to sustained
+                    // flashIn: [start, end]
+                    flashIn: [15, 40],               // Flash gets more deliberate
+                    // fadeOut: [start, end]
+                    fadeOut: [40, 150],              // Fade gets more dramatic
+                    // respawnDelay: [startMin, startMax, endMin, endMax]
+                    respawnDelay: [0, 30, 0, 0]      // Less delay as it intensifies
+                }
+            }
+        },
         // Jitter parameters - more extreme
         jitterFrequency: 80,
         jitterAmplitude: 0.03,
@@ -94,6 +195,28 @@ const ELECTRIC_EFFECT_VARIANTS = {
         duration: 1800,
         beats: 3,
         intensity: 0.7,
+        category: 'electrocute',
+        // 3D Element spawning - VERY FEW erratic glitch sparks
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Glitchy random placement
+            embedDepth: 0.15,
+            cameraFacing: 0.5,
+            clustering: 0.4,
+            count: 2,                   // Very few - just 2 glitchy sparks
+            scale: 0.7,                 // Smaller for glitch feel
+            models: ['spark-node'],     // Just sparks, no arcs
+            minDistance: 0.25,
+            // Ephemeral: ERRATIC - very short, random gaps between
+            ephemeral: {
+                lifetime: { min: 25, max: 80 },     // Extremely brief glitch flash
+                flashIn: 8,                          // Instant pop-in
+                fadeOut: 15,                         // Instant pop-out
+                respawn: true,
+                // Random delay between glitches for erratic rhythm
+                respawnDelay: { min: 80, max: 400 }
+            }
+        },
         // Jitter parameters - irregular, digital
         jitterFrequency: 20,        // Slower but bigger jumps
         jitterAmplitude: 0.04,
@@ -125,6 +248,64 @@ const ELECTRIC_EFFECT_VARIANTS = {
         beats: 3,
         intensity: 0.8,
         category: 'powered',
+        // 3D Element spawning - WHIP CRACK + aftershock
+        spawnMode: {
+            type: 'surface',
+            pattern: 'spikes',          // Dramatic outward arcs
+            embedDepth: 0.08,
+            cameraFacing: 0.5,
+            clustering: 0.3,
+            count: 2,                   // Just 2: main crack + aftershock
+            scale: 1.3,                 // BIG dramatic arc
+            models: ['arc-medium', 'arc-cluster'],  // Larger arc models
+            minDistance: 0.2,
+            // Ephemeral: WHIP CRACK - ONE dramatic flash + aftershock, then done
+            ephemeral: {
+                lifetime: { min: 250, max: 400 },   // Visible crack duration
+                flashIn: 15,                         // Snap in fast
+                fadeOut: 150,                        // Dramatic fade
+                respawn: false,                      // NO respawn - just 1-2 cracks total
+                initialDelay: 333,                   // Wait half a beat before crack
+                stagger: 100                         // Aftershock delayed behind main crack
+            },
+            animation: {
+                appearAt: 0.15,         // Delayed whip crack
+                disappearAt: 0.85,
+                stagger: 0.05,
+                enter: {
+                    type: 'pop',        // Dramatic crack appearance
+                    duration: 0.015,
+                    easing: 'elasticOut',
+                    overshoot: 1.3
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeOutCubic'
+                },
+                // Controlled power crackle
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 4,
+                    easing: 'snap',     // Sharp pulse
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.8,
+                    max: 2.5,
+                    frequency: 6,
+                    pattern: 'sine'
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 12,
+                intensityScaling: {
+                    scale: 1.25,
+                    emissiveMax: 1.5
+                }
+            }
+        },
         // NO jitter - controlled energy
         jitterFrequency: 0,
         jitterAmplitude: 0,
@@ -151,6 +332,85 @@ const ELECTRIC_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 1.2,
         category: 'powered',
+        // 3D Element spawning - CHARGING UP: small/fast → big/slow
+        spawnMode: {
+            type: 'surface',
+            pattern: 'crown',           // Energy gathering upward
+            embedDepth: 0.1,
+            cameraFacing: 0.4,
+            clustering: 0.3,
+            count: 6,
+            scale: 1.0,
+            models: ['spark-node', 'arc-small', 'arc-medium'],
+            minDistance: 0.12,
+            // Ephemeral: CHARGE UP - starts small/fast, becomes big/slow/sustained
+            ephemeral: {
+                lifetime: { min: 50, max: 100 },    // Starting: quick sparks
+                flashIn: 12,                         // Starting: instant
+                fadeOut: 30,                         // Starting: quick
+                respawn: true,
+                stagger: 50,                         // Spread out initial sparks
+                // Progression: arcs get slower and more sustained as power builds
+                progression: {
+                    duration: 2500,
+                    // lifetime: [startMin, startMax, endMin, endMax]
+                    lifetime: [50, 100, 400, 700],   // Brief sparks → sustained arcs
+                    // flashIn: [start, end]
+                    flashIn: [12, 60],                // Quick snap → deliberate appearance
+                    // fadeOut: [start, end]
+                    fadeOut: [30, 200],               // Quick → slow dramatic fade
+                    // respawnDelay: [startMin, startMax, endMin, endMax]
+                    respawnDelay: [0, 20, 100, 250]   // Frequent sparks → deliberate pulses
+                }
+            },
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.92,
+                stagger: 0.03,
+                enter: {
+                    type: 'grow',       // Power building up
+                    duration: 0.04,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'flash',
+                    duration: 0.02,
+                    easing: 'linear'
+                },
+                // Power ramping animation
+                pulse: {
+                    amplitude: 0.18,
+                    frequency: 3,       // Builds with charge
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.6,
+                    max: 2.8,           // High peak at full charge
+                    frequency: 4,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',    // Energy gathers upward
+                    speed: 0.025,
+                    noise: 0.15
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.08,
+                    oscillate: false
+                },
+                scaleVariance: 0.25,
+                lifetimeVariance: 0.2,
+                blending: 'additive',
+                renderOrder: 12,
+                intensityScaling: {
+                    scale: 1.35,
+                    emissiveMax: 1.6,
+                    driftSpeed: 1.3
+                }
+            }
+        },
         // Minimal jitter - just slight tremble at peak
         jitterFrequency: 30,
         jitterAmplitude: 0.005,     // Very subtle
@@ -179,6 +439,80 @@ const ELECTRIC_EFFECT_VARIANTS = {
         beats: 4,
         intensity: 1.0,
         category: 'powered',
+        // 3D Element spawning - AURA: slow roaming + fast traveling
+        spawnMode: {
+            type: 'surface',
+            pattern: 'shell',           // Full coverage aura
+            embedDepth: 0.1,
+            cameraFacing: 0.3,
+            clustering: 0.1,
+            count: 10,                  // More elements for layered effect
+            scale: 1.0,
+            models: ['arc-cluster', 'arc-medium', 'arc-small', 'spark-node'],
+            minDistance: 0.08,
+            // Ephemeral: MIX of slow roaming (longer) and fast traveling (shorter)
+            // Wide variance creates natural two-speed population
+            ephemeral: {
+                lifetime: { min: 100, max: 700 },   // Wide range: some fast, some slow
+                flashIn: 35,                         // Medium appearance
+                fadeOut: 120,                        // Graceful fade
+                respawn: true,
+                stagger: 100,                        // Wave-like staggered starts
+                // Slower respawn for lazy roaming feel
+                respawnDelay: { min: 50, max: 200 }
+            },
+            animation: {
+                appearAt: 0.08,
+                disappearAt: 0.88,
+                stagger: 0.04,
+                enter: {
+                    type: 'fade',       // Graceful aura appearance
+                    duration: 0.08,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.12,
+                    easing: 'easeIn'
+                },
+                // Sustained electric aura
+                pulse: {
+                    amplitude: 0.12,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                flicker: {
+                    intensity: 0.15,    // Subtle background flicker
+                    rate: 8,
+                    pattern: 'sine'
+                },
+                emissive: {
+                    min: 0.9,
+                    max: 1.8,
+                    frequency: 2.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    speed: 0.012,
+                    noise: 0.1
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.025,
+                    oscillate: false
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.25,
+                blending: 'additive',
+                renderOrder: 10,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.4
+                }
+            }
+        },
         // No jitter
         jitterFrequency: 0,
         jitterAmplitude: 0,
@@ -207,6 +541,28 @@ const ELECTRIC_EFFECT_VARIANTS = {
         beats: 2,
         intensity: 0.4,
         category: 'powered',
+        // 3D Element spawning - OCCASIONAL static discharge pops
+        spawnMode: {
+            type: 'surface',
+            pattern: 'scattered',       // Random sparse sparks
+            embedDepth: 0.15,
+            cameraFacing: 0.35,
+            clustering: 0.3,
+            count: 2,                   // Just 2 - occasional pops
+            scale: 0.6,                 // Small static sparks
+            models: ['spark-node'],
+            minDistance: 0.3,
+            // Ephemeral: OCCASIONAL - brief pop then long wait
+            ephemeral: {
+                lifetime: { min: 40, max: 100 },    // Very brief pop
+                flashIn: 10,                         // Instant snap
+                fadeOut: 30,                         // Quick fade
+                respawn: true,
+                stagger: 200,                        // Spread out initial pops
+                // Long gaps between discharges - feels like occasional static
+                respawnDelay: { min: 250, max: 600 }
+            }
+        },
         // Very minimal jitter - occasional twitch
         jitterFrequency: 5,
         jitterAmplitude: 0.002,
@@ -436,7 +792,10 @@ export function createElectricEffectGesture(variant) {
                     glowColorOverride: cfg.glowColor,
                     electricOverlay: {
                         enabled: effectStrength > 0.1,
+                        strength: effectStrength * cfg.intensity,
                         charge: effectStrength * cfg.intensity,
+                        category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
                         time
                     }
                 };

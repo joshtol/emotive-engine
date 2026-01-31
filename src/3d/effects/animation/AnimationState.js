@@ -258,8 +258,9 @@ export class AnimationState {
      */
     _updateEntering(time, deltaTime, currentTime, disappearTime) {
         const {enter} = this.config;
+        // Convert progress-based duration to seconds (same formula as _updateExiting)
         const duration = this.config.timing.mode === 'progress'
-            ? enter.duration
+            ? enter.duration * this.config.gestureDuration / 1000
             : enter.durationMs / 1000;
 
         // Calculate progress through enter animation
@@ -457,53 +458,62 @@ export class AnimationState {
         // Uses musical timing: distance = total drift over gesture lifetime
         if (hold.drift) {
             const d = hold.drift;
-            // Calculate per-frame speed from total distance and gesture duration
-            // speed = distance / gestureDuration * deltaTime (both in ms, so they cancel)
-            const speed = (d.distance / d.gestureDuration) * deltaTime;
+            // Calculate per-frame increment from total distance and gesture duration
+            const increment = (d.distance / d.gestureDuration) * deltaTime;
+
+            // Add noise if configured
+            const noiseX = d.noise > 0 ? (Math.random() - 0.5) * d.noise * increment : 0;
+            const noiseY = d.noise > 0 ? (Math.random() - 0.5) * d.noise * increment : 0;
+            const noiseZ = d.noise > 0 ? (Math.random() - 0.5) * d.noise * increment : 0;
 
             switch (d.direction) {
             case 'outward':
-                // Move away from origin
-                this.driftOffset.x += (this.driftOffset.x || 0.001) * speed * 10;
-                this.driftOffset.y += (this.driftOffset.y || 0.001) * speed * 10;
-                this.driftOffset.z += (this.driftOffset.z || 0.001) * speed * 10;
+                // Move away from origin (use element's initial position direction)
+                this.driftOffset.x += (this.driftOffset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
+                this.driftOffset.y += (this.driftOffset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
+                this.driftOffset.z += (this.driftOffset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
                 break;
             case 'inward':
                 // Move toward origin
-                this.driftOffset.x *= (1 - speed * 10);
-                this.driftOffset.y *= (1 - speed * 10);
-                this.driftOffset.z *= (1 - speed * 10);
+                this.driftOffset.x -= (this.driftOffset.x || 0.001) > 0 ? increment : -increment;
+                this.driftOffset.y -= (this.driftOffset.y || 0.001) > 0 ? increment : -increment;
+                this.driftOffset.z -= (this.driftOffset.z || 0.001) > 0 ? increment : -increment;
                 break;
             case 'up':
-                this.driftOffset.y += speed;
+                this.driftOffset.y += increment + noiseY;
                 break;
             case 'down':
-                this.driftOffset.y -= speed;
+                this.driftOffset.y -= increment + noiseY;
+                break;
+            case 'tangent':
+                // Flow along surface (horizontal drift)
+                this.driftOffset.x += increment + noiseX;
+                this.driftOffset.z += noiseZ;
                 break;
             case 'random':
-                this.driftOffset.x += (Math.random() - 0.5) * speed * 2;
-                this.driftOffset.y += (Math.random() - 0.5) * speed * 2;
-                this.driftOffset.z += (Math.random() - 0.5) * speed * 2;
+                this.driftOffset.x += (Math.random() - 0.5) * increment * 2;
+                this.driftOffset.y += (Math.random() - 0.5) * increment * 2;
+                this.driftOffset.z += (Math.random() - 0.5) * increment * 2;
                 break;
             }
 
-            // Apply max distance limit
+            // Clamp to distance limit (the configured total distance is the max)
             const dist = Math.sqrt(
                 this.driftOffset.x ** 2 +
                 this.driftOffset.y ** 2 +
                 this.driftOffset.z ** 2
             );
 
-            if (dist > d.maxDistance) {
+            if (dist > d.distance) {
                 if (d.bounce) {
                     // Reverse direction
-                    const scale = d.maxDistance / dist;
+                    const scale = d.distance / dist;
                     this.driftOffset.x *= -scale;
                     this.driftOffset.y *= -scale;
                     this.driftOffset.z *= -scale;
                 } else {
                     // Clamp to max
-                    const scale = d.maxDistance / dist;
+                    const scale = d.distance / dist;
                     this.driftOffset.x *= scale;
                     this.driftOffset.y *= scale;
                     this.driftOffset.z *= scale;
