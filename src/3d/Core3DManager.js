@@ -2857,153 +2857,153 @@ export class Core3DManager {
                 this._frozenShardsMovedThisGesture = false;
             }
 
-        if (blended.shatter && blended.shatter.enabled) {
-            const s = blended.shatter;
+            if (blended.shatter && blended.shatter.enabled) {
+                const s = blended.shatter;
 
-            // ═══════════════════════════════════════════════════════════════
-            // DUAL-MODE HANDLING - Apply behavior to existing frozen shards
-            // If shards are frozen and this is a dual-mode gesture, apply behavior directly
-            // ═══════════════════════════════════════════════════════════════
-            if (s.isDualMode && this.shatterSystem.isFrozen()) {
+                // ═══════════════════════════════════════════════════════════════
+                // DUAL-MODE HANDLING - Apply behavior to existing frozen shards
+                // If shards are frozen and this is a dual-mode gesture, apply behavior directly
+                // ═══════════════════════════════════════════════════════════════
+                if (s.isDualMode && this.shatterSystem.isFrozen()) {
                 // Apply dual-mode behavior to existing frozen shards
-                this.shatterSystem.triggerDualMode(s.dualModeType, s.dualModeConfig || {});
-            }
-            // ═══════════════════════════════════════════════════════════════
-            // SHATTER REFORM ON FROZEN SHARDS - Trigger reassembly
-            // ═══════════════════════════════════════════════════════════════
-            else if (s.variant === 'reform' && this.shatterSystem.isFrozen()) {
+                    this.shatterSystem.triggerDualMode(s.dualModeType, s.dualModeConfig || {});
+                }
+                // ═══════════════════════════════════════════════════════════════
+                // SHATTER REFORM ON FROZEN SHARDS - Trigger reassembly
+                // ═══════════════════════════════════════════════════════════════
+                else if (s.variant === 'reform' && this.shatterSystem.isFrozen()) {
                 // Reform on frozen shards = reassemble them
-                this.shatterSystem.triggerReassembly(s.reassembleDuration || 1500);
-            }
-            // ═══════════════════════════════════════════════════════════════
-            // ALL OTHER SHATTER GESTURES WHEN FROZEN - Move shards in impact direction
-            // Shatter/punch/crumble/etc on frozen shards = scatter them
-            // ═══════════════════════════════════════════════════════════════
-            else if (!s.isDualMode && this.shatterSystem.isFrozen() && !this._frozenShardsMovedThisGesture) {
+                    this.shatterSystem.triggerReassembly(s.reassembleDuration || 1500);
+                }
+                // ═══════════════════════════════════════════════════════════════
+                // ALL OTHER SHATTER GESTURES WHEN FROZEN - Move shards in impact direction
+                // Shatter/punch/crumble/etc on frozen shards = scatter them
+                // ═══════════════════════════════════════════════════════════════
+                else if (!s.isDualMode && this.shatterSystem.isFrozen() && !this._frozenShardsMovedThisGesture) {
                 // Move frozen shards in the gesture's impact direction
-                const moveDir = s.impactDirection || [0, 0, -1];
-                // Use different force based on gesture type
-                const force = s.variant?.startsWith('punch') ? 3.5 :
-                    s.variant === 'explosive' ? 4.0 :
-                        s.variant === 'crumble' ? 1.5 : 2.5;
-                this.shatterSystem.moveFrozenShards(moveDir, force);
-                this._frozenShardsMovedThisGesture = true;
-            }
-            // ═══════════════════════════════════════════════════════════════
-            // NORMAL SHATTER - From IDLE state
-            // ═══════════════════════════════════════════════════════════════
-            else if (this.shatterSystem.isIdle()) {
+                    const moveDir = s.impactDirection || [0, 0, -1];
+                    // Use different force based on gesture type
+                    const force = s.variant?.startsWith('punch') ? 3.5 :
+                        s.variant === 'explosive' ? 4.0 :
+                            s.variant === 'crumble' ? 1.5 : 2.5;
+                    this.shatterSystem.moveFrozenShards(moveDir, force);
+                    this._frozenShardsMovedThisGesture = true;
+                }
+                // ═══════════════════════════════════════════════════════════════
+                // NORMAL SHATTER - From IDLE state
+                // ═══════════════════════════════════════════════════════════════
+                else if (this.shatterSystem.isIdle()) {
                 // ═══════════════════════════════════════════════════════════════
                 // DEBUG LOGGING - Core3DManager shatter config
                 // ═══════════════════════════════════════════════════════════════
-                console.log('[CORE_3D] 🎭 Shatter triggered with config:', {
-                    variant: s.variant,
-                    elemental: s.elemental,
-                    elementalParam: s.elementalParam,
-                    overlay: s.overlay,
-                    overlayParam: s.overlayParam,
-                    intensity: s.intensity,
-                    isDualMode: s.isDualMode,
-                    dualModeType: s.dualModeType,
-                    fullShatterConfig: s
-                });
+                    console.log('[CORE_3D] 🎭 Shatter triggered with config:', {
+                        variant: s.variant,
+                        elemental: s.elemental,
+                        elementalParam: s.elementalParam,
+                        overlay: s.overlay,
+                        overlayParam: s.overlayParam,
+                        intensity: s.intensity,
+                        isDualMode: s.isDualMode,
+                        dualModeType: s.dualModeType,
+                        fullShatterConfig: s
+                    });
 
-                const ip = s.impactPoint || [0, 0, 0.4];
+                    const ip = s.impactPoint || [0, 0, 0.4];
 
-                // Transform impact point from camera-relative to world space
-                let impactPoint = new THREE.Vector3(ip[0], ip[1], ip[2]);
+                    // Transform impact point from camera-relative to world space
+                    let impactPoint = new THREE.Vector3(ip[0], ip[1], ip[2]);
 
-                if (this.renderer?.camera && this.renderer?.coreMesh) {
-                    const cam = this.renderer.camera;
-                    const mesh = this.renderer.coreMesh;
+                    if (this.renderer?.camera && this.renderer?.coreMesh) {
+                        const cam = this.renderer.camera;
+                        const mesh = this.renderer.coreMesh;
 
-                    // Get camera basis vectors
-                    const camRight = new THREE.Vector3();
-                    const camUp = new THREE.Vector3();
-                    const camForward = new THREE.Vector3();
-                    cam.getWorldDirection(camForward);
-                    camRight.crossVectors(cam.up, camForward).normalize();
-                    camUp.crossVectors(camForward, camRight).normalize();
+                        // Get camera basis vectors
+                        const camRight = new THREE.Vector3();
+                        const camUp = new THREE.Vector3();
+                        const camForward = new THREE.Vector3();
+                        cam.getWorldDirection(camForward);
+                        camRight.crossVectors(cam.up, camForward).normalize();
+                        camUp.crossVectors(camForward, camRight).normalize();
 
-                    // Transform to world space
-                    impactPoint = new THREE.Vector3()
-                        .addScaledVector(camRight, ip[0])
-                        .addScaledVector(camUp, ip[1])
-                        .addScaledVector(camForward, -ip[2]); // Z toward camera = -forward
+                        // Transform to world space
+                        impactPoint = new THREE.Vector3()
+                            .addScaledVector(camRight, ip[0])
+                            .addScaledVector(camUp, ip[1])
+                            .addScaledVector(camForward, -ip[2]); // Z toward camera = -forward
 
-                    // Add mesh position
-                    impactPoint.add(mesh.position);
+                        // Add mesh position
+                        impactPoint.add(mesh.position);
 
-                    // Set targets for the shatter system
-                    // CrystalSoul exposes inner mesh via .mesh property
-                    const soulMesh = this.crystalSoul?.mesh || null;
-                    this.shatterSystem.setTargets(mesh, soulMesh);
-                }
+                        // Set targets for the shatter system
+                        // CrystalSoul exposes inner mesh via .mesh property
+                        const soulMesh = this.crystalSoul?.mesh || null;
+                        this.shatterSystem.setTargets(mesh, soulMesh);
+                    }
 
-                // Transform impact direction the same way as impact point
-                const id = s.impactDirection || [0, 0, -1];
-                let impactDirection = new THREE.Vector3(id[0], id[1], id[2]);
+                    // Transform impact direction the same way as impact point
+                    const id = s.impactDirection || [0, 0, -1];
+                    let impactDirection = new THREE.Vector3(id[0], id[1], id[2]);
 
-                if (this.renderer?.camera) {
-                    const cam = this.renderer.camera;
+                    if (this.renderer?.camera) {
+                        const cam = this.renderer.camera;
 
-                    // Get camera basis vectors
-                    const camRight = new THREE.Vector3();
-                    const camUp = new THREE.Vector3();
-                    const camForward = new THREE.Vector3();
-                    cam.getWorldDirection(camForward);
-                    camRight.crossVectors(cam.up, camForward).normalize();
-                    camUp.crossVectors(camForward, camRight).normalize();
+                        // Get camera basis vectors
+                        const camRight = new THREE.Vector3();
+                        const camUp = new THREE.Vector3();
+                        const camForward = new THREE.Vector3();
+                        cam.getWorldDirection(camForward);
+                        camRight.crossVectors(cam.up, camForward).normalize();
+                        camUp.crossVectors(camForward, camRight).normalize();
 
-                    // Transform direction to world space
-                    impactDirection = new THREE.Vector3()
-                        .addScaledVector(camRight, id[0])
-                        .addScaledVector(camUp, id[1])
-                        .addScaledVector(camForward, -id[2])
-                        .normalize();
-                }
+                        // Transform direction to world space
+                        impactDirection = new THREE.Vector3()
+                            .addScaledVector(camRight, id[0])
+                            .addScaledVector(camUp, id[1])
+                            .addScaledVector(camForward, -id[2])
+                            .normalize();
+                    }
 
-                // Trigger shatter
-                this.shatterSystem.shatter(this.renderer.coreMesh, {
-                    impactPoint,
-                    impactDirection,
-                    intensity: s.intensity || 1.0,
-                    revealInner: s.revealSoul !== false, // Controlled per-variant
-                    // Suspend mode: explode, freeze mid-air, then reassemble
-                    isSuspendMode: s.isSuspendMode || false,
-                    suspendAt: s.suspendAt || 0.25,
-                    suspendDuration: s.suspendDuration || 0.35,
-                    // Freeze mode: explode, freeze indefinitely (manual reassembly via API)
-                    isFreezeMode: s.isFreezeMode || false,
-                    // Dual-mode: behavior to apply after shatter completes initial phase
-                    isDualMode: s.isDualMode || false,
-                    dualModeType: s.dualModeType,
-                    dualModeConfig: s.dualModeConfig || {},
-                    // Physics overrides (for crumble, etc.)
-                    gravity: s.gravity,           // undefined = use default
-                    explosionForce: s.explosionForce,
-                    rotationForce: s.rotationForce,
-                    // Gesture duration for suspend timing calculation
-                    gestureDuration: s.gestureDuration,
-                    // ═══════════════════════════════════════════════════════════════
-                    // ELEMENTAL MATERIAL SYSTEM
-                    // Replaces shard material with elemental material (fire, water, etc.)
-                    // ═══════════════════════════════════════════════════════════════
-                    elemental: s.elemental || null,
-                    elementalParam: s.elementalParam ?? 0.5,
-                    overlay: s.overlay || null,
-                    overlayParam: s.overlayParam ?? 0.5
-                });
+                    // Trigger shatter
+                    this.shatterSystem.shatter(this.renderer.coreMesh, {
+                        impactPoint,
+                        impactDirection,
+                        intensity: s.intensity || 1.0,
+                        revealInner: s.revealSoul !== false, // Controlled per-variant
+                        // Suspend mode: explode, freeze mid-air, then reassemble
+                        isSuspendMode: s.isSuspendMode || false,
+                        suspendAt: s.suspendAt || 0.25,
+                        suspendDuration: s.suspendDuration || 0.35,
+                        // Freeze mode: explode, freeze indefinitely (manual reassembly via API)
+                        isFreezeMode: s.isFreezeMode || false,
+                        // Dual-mode: behavior to apply after shatter completes initial phase
+                        isDualMode: s.isDualMode || false,
+                        dualModeType: s.dualModeType,
+                        dualModeConfig: s.dualModeConfig || {},
+                        // Physics overrides (for crumble, etc.)
+                        gravity: s.gravity,           // undefined = use default
+                        explosionForce: s.explosionForce,
+                        rotationForce: s.rotationForce,
+                        // Gesture duration for suspend timing calculation
+                        gestureDuration: s.gestureDuration,
+                        // ═══════════════════════════════════════════════════════════════
+                        // ELEMENTAL MATERIAL SYSTEM
+                        // Replaces shard material with elemental material (fire, water, etc.)
+                        // ═══════════════════════════════════════════════════════════════
+                        elemental: s.elemental || null,
+                        elementalParam: s.elementalParam ?? 0.5,
+                        overlay: s.overlay || null,
+                        overlayParam: s.overlayParam ?? 0.5
+                    });
 
-                // Clear all cracks when shattering (geometry is destroyed)
-                if (this.objectSpaceCrackManager) {
-                    this.objectSpaceCrackManager.clearAll();
-                }
-                if (this.renderer.crackLayer) {
-                    this.renderer.crackLayer.clearAll();
+                    // Clear all cracks when shattering (geometry is destroyed)
+                    if (this.objectSpaceCrackManager) {
+                        this.objectSpaceCrackManager.clearAll();
+                    }
+                    if (this.renderer.crackLayer) {
+                        this.renderer.crackLayer.clearAll();
+                    }
                 }
             }
-        }
 
             // Handle reassembly trigger from gesture
             if (blended.shatter && blended.shatter.reassemble && this.shatterSystem.isShattering()) {
