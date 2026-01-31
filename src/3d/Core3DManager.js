@@ -3419,16 +3419,10 @@ export class Core3DManager {
             }
 
             // Initialize ElementSpawner now that coreMesh exists
+            // NOTE: Models are NOT preloaded here - they load lazily on first spawn
+            // This prevents GPU overhead for demos that don't use elemental gestures
             if (this.elementSpawner && this.renderer?.coreMesh && !this.elementSpawner.coreMesh) {
                 this.elementSpawner.initialize(this.renderer.coreMesh, this.renderer.camera);
-                this.elementSpawner.preloadModels('ice');
-                this.elementSpawner.preloadModels('earth');
-                this.elementSpawner.preloadModels('nature');
-                this.elementSpawner.preloadModels('fire');
-                this.elementSpawner.preloadModels('electricity');
-                this.elementSpawner.preloadModels('water');
-                this.elementSpawner.preloadModels('void');
-                this.elementSpawner.preloadModels('light');
             }
 
             // NOW we're fully ready for rendering
