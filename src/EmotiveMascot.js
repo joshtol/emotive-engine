@@ -181,8 +181,9 @@ class EmotiveMascot {
             audioAnalyzer: this.audioAnalyzer,
             shapeMorpher: this.shapeMorpher,
             state: {
-                get speaking() { return this.speaking; },
-                get llmHandler() { return this.llmHandler; }
+                get speaking() { return mascot.speaking; },
+                get llmHandler() { return mascot.llmHandler; },
+                set llmHandler(v) { mascot.llmHandler = v; }
             },
             stop: () => this.stop(),
             stopSpeaking: () => this.stopSpeaking(),
@@ -198,8 +199,8 @@ class EmotiveMascot {
             renderer: this.renderer,
             config: this.config,
             state: {
-                get speaking() { return this.speaking; },
-                get audioLevel() { return this.audioLevel; }
+                get speaking() { return mascot.speaking; },
+                get audioLevel() { return mascot.audioLevel; }
             },
             getEventNames: () => this.getEventNames()
         });
@@ -209,8 +210,8 @@ class EmotiveMascot {
             idleBehavior: this.idleBehavior,
             renderer: this.renderer,
             state: {
-                get sleeping() { return this.sleeping; },
-                set sleeping(v) { this.sleeping = v; }
+                get sleeping() { return mascot.sleeping; },
+                set sleeping(v) { mascot.sleeping = v; }
             },
             emit: (event, data) => this.emit(event, data),
             chainTarget: this
