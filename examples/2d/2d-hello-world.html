@@ -98,12 +98,19 @@
 
             // STEP 2: Get EmotiveMascot from the global window object
             // The UMD bundle loads it as window.EmotiveMascot
+            console.log('🔍 Debug: window.EmotiveMascot =', window.EmotiveMascot);
+            console.log('🔍 Debug: window.EmotiveMascot?.default =', window.EmotiveMascot?.default);
+            console.log('🔍 Debug: Canvas element =', canvas);
+            console.log('🔍 Debug: Canvas dimensions =', canvas?.getBoundingClientRect());
+
             const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
 
             if (!EmotiveMascot) {
                 console.error('❌ EmotiveMascot not loaded - check script path');
                 return null;
             }
+
+            console.log('🔍 Debug: EmotiveMascot constructor =', EmotiveMascot);
 
             // STEP 3: Set canvas dimensions (required for proper rendering)
             canvas.width = 400;
@@ -160,6 +167,8 @@
                 console.log('   mascot.morphTo("heart")');
                 console.log('   mascot.express("bounce")');
             }
+        }).catch(err => {
+            console.error('❌ Mascot initialization failed:', err);
         });
     </script>
 </body>
