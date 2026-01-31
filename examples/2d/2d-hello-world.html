@@ -161,6 +161,23 @@
             const ctx = canvas.getContext('2d');
             console.log('🔍 Debug: Canvas 2D context =', ctx);
 
+            // Check for errors in the error boundary
+            if (engine?.errorBoundary) {
+                const stats = engine.errorBoundary.getErrorStats();
+                console.log('🔍 Debug: ErrorBoundary stats =', stats);
+                if (stats.totalErrors > 0) {
+                    console.error('❌ Render errors detected:', stats.recentErrors);
+                }
+            }
+
+            // Log after a frame to see if rendering is happening
+            setTimeout(() => {
+                const stats = engine?.errorBoundary?.getErrorStats?.();
+                if (stats?.totalErrors > 0) {
+                    console.error('❌ Errors after 1 second:', stats);
+                }
+            }, 1000);
+
             return mascot;
         }
 
