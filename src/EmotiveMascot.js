@@ -154,7 +154,15 @@ class EmotiveMascot {
         this.renderStateBuilder = new RenderStateBuilder(this);
         this.threatLevelCalculator = new ThreatLevelCalculator(this);
         this.particleConfigCalculator = new ParticleConfigCalculator(this);
-        this.gestureMotionProvider = new GestureMotionProvider(this);
+        // Capture mascot reference for state getters/setters
+        const mascot = this;
+        this.gestureMotionProvider = new GestureMotionProvider({
+            renderer: this.renderer,
+            state: {
+                get currentModularGesture() { return mascot.currentModularGesture; },
+                set currentModularGesture(v) { mascot.currentModularGesture = v; }
+            }
+        });
         this.renderLayerOrchestrator = new RenderLayerOrchestrator(this);
         this.debugInfoRenderer = new DebugInfoRenderer(this);
         this.destructionManager = new DestructionManager({
