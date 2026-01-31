@@ -146,9 +146,12 @@ class ErrorBoundary {
         // Log to console with appropriate level based on frequency
         if (count < 3) {
             // Log first few occurrences normally
+            console.warn(`[EmotiveEngine] ${context}:`, error.message);
         } else if (count === 3) {
-            // Log threshold reached
+            // Log threshold reached, will suppress further logs
+            console.warn(`[EmotiveEngine] ${context}: Error occurred 3+ times, suppressing further logs`);
         }
+        // After 3 occurrences, we suppress to avoid console spam
     }
 
     /**
