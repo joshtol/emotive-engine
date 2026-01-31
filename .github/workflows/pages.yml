@@ -54,6 +54,26 @@ jobs:
           # 3D examples from site/public use bundled imports that work in browsers
           cp -r site/public/examples/3d _pages/examples/3d
 
+          # Rewrite absolute paths to relative paths for GitHub Pages subdirectory
+          # GitHub Pages serves at /emotive-engine/, not /, so absolute paths fail
+          # From examples/3d/*.html, the paths need to be:
+          #   /emotive-engine-3d.bundled.js → ../../emotive-engine-3d.bundled.js
+          #   /examples/3d-example-style.css → ../3d-example-style.css
+          #   /examples/3d/demo-utils.js → ./demo-utils.js
+          #   /examples/3d/layer-utils.js → ./layer-utils.js
+          #   /assets/ → ../../assets/
+          find _pages/examples/3d -name "*.html" -exec sed -i \
+            -e "s|'/emotive-engine-3d.bundled.js'|'../../emotive-engine-3d.bundled.js'|g" \
+            -e "s|\"/emotive-engine-3d.bundled.js\"|\"../../emotive-engine-3d.bundled.js\"|g" \
+            -e 's|href="/examples/3d-example-style.css"|href="../3d-example-style.css"|g' \
+            -e "s|'/examples/3d/demo-utils.js'|'./demo-utils.js'|g" \
+            -e "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" \
+            -e 's|"/assets/|"../../assets/|g' \
+            -e "s|'/assets/|'../../assets/|g" \
+            {} \;
+          # Also fix demo-utils.js which imports from /examples/3d/layer-utils.js
+          sed -i "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" _pages/examples/3d/demo-utils.js 2>/dev/null || true
+
           # Copy assets needed by examples
           cp -r assets _pages/assets 2>/dev/null || true
 
