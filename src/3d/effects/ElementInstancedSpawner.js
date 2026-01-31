@@ -921,6 +921,12 @@ export class ElementInstancedSpawner {
      * @param {number} [gestureProgress=null] - Gesture progress 0-1
      */
     update(deltaTime, gestureProgress = null) {
+        // Skip ALL work if no elements are active and no pools exist
+        // This ensures demos that don't use elemental gestures have zero overhead
+        if (this.activeElements.size === 0 && this.pools.size === 0) {
+            return;
+        }
+
         this.time += deltaTime;
 
         // Sync container transform with mascot (position, rotation, scale)

@@ -489,17 +489,10 @@ export class Core3DManager {
         });
 
         // Initialize with core mesh and camera if available
+        // NOTE: Models are NOT preloaded here - they load lazily on first spawn
+        // This prevents GPU overhead for demos that don't use elemental gestures
         if (this.renderer?.coreMesh) {
             this.elementSpawner.initialize(this.renderer.coreMesh, this.renderer.camera);
-            // Preload models for instant spawning
-            this.elementSpawner.preloadModels('ice');
-            this.elementSpawner.preloadModels('earth');
-            this.elementSpawner.preloadModels('nature');
-            this.elementSpawner.preloadModels('fire');
-            this.elementSpawner.preloadModels('electricity');
-            this.elementSpawner.preloadModels('water');
-            this.elementSpawner.preloadModels('void');
-            this.elementSpawner.preloadModels('light');
         }
 
         // Note: Virtual particle pool is now managed by AnimationManager
