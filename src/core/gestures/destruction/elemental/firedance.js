@@ -22,7 +22,7 @@
  * FEATURES:
  * - 3 flame rings with vertical orientation
  * - Rings travel from bottom to top
- * - Standing rings create dancing/swaying effect
+ * - GYROSCOPE rotation: each ring spins on different axis (X/Y/Z)
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -115,7 +115,7 @@ const FIREDANCE_CONFIG = {
                 pattern: 'sine'
             },
             rotate: {
-                axis: 'y',
+                gyroscope: true,  // Each ring rotates on different axis (X/Y/Z)
                 speed: 1.5,
                 oscillate: false
             },
@@ -159,5 +159,6 @@ const FIREDANCE_CONFIG = {
  * - 3 flame-ring models travel from bottom to top
  * - Rings are VERTICAL (ringOrientation: 'vertical') for dance effect
  * - 120° arcOffset spreads rings around the mascot
+ * - GYROSCOPE rotation: ring 0 spins on X, ring 1 on Y, ring 2 on Z
  */
 export default buildFireEffectGesture(FIREDANCE_CONFIG);

@@ -139,7 +139,8 @@ export const ROTATE_DEFAULTS = {
     speed: 0.1,
     oscillate: false,
     range: Math.PI / 4,
-    easing: 'linear'
+    easing: 'linear',
+    gyroscope: false  // When true, each element rotates on a different axis (X/Y/Z)
 };
 
 /**
@@ -419,6 +420,9 @@ export class AnimationConfig {
      * @private
      */
     _parseRotate(rotate) {
+        // Check for gyroscope mode - each element rotates on different axis
+        const gyroscope = rotate.gyroscope ?? ROTATE_DEFAULTS.gyroscope;
+
         // Normalize axis to array format
         let axis = rotate.axis ?? ROTATE_DEFAULTS.axis;
         if (typeof axis === 'string') {
@@ -433,7 +437,8 @@ export class AnimationConfig {
             speed: rotate.speed ?? ROTATE_DEFAULTS.speed,
             oscillate: rotate.oscillate ?? ROTATE_DEFAULTS.oscillate,
             range: rotate.range ?? ROTATE_DEFAULTS.range,
-            easing: getEasing(rotate.easing ?? ROTATE_DEFAULTS.easing)
+            easing: getEasing(rotate.easing ?? ROTATE_DEFAULTS.easing),
+            gyroscope  // When true, element index determines axis (0=X, 1=Y, 2=Z)
         };
     }
 

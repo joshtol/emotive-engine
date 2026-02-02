@@ -526,18 +526,28 @@ export class AnimationState {
             const r = hold.rotate;
             const speed = r.speed * deltaTime;
 
+            // Gyroscope mode: each element rotates on a different axis based on index
+            // Element 0 = X axis, Element 1 = Y axis, Element 2 = Z axis, then repeats
+            let {axis} = r;
+            if (r.gyroscope) {
+                const axisIndex = this.index % 3;
+                axis = axisIndex === 0 ? [1, 0, 0] :  // X axis
+                    axisIndex === 1 ? [0, 1, 0] :  // Y axis
+                        [0, 0, 1];  // Z axis
+            }
+
             if (r.oscillate) {
                 // Oscillating rotation
                 const phase = time * r.speed * 2;
                 const wave = Math.sin(phase);
-                this.rotationOffset.x = r.axis[0] * wave * r.range;
-                this.rotationOffset.y = r.axis[1] * wave * r.range;
-                this.rotationOffset.z = r.axis[2] * wave * r.range;
+                this.rotationOffset.x = axis[0] * wave * r.range;
+                this.rotationOffset.y = axis[1] * wave * r.range;
+                this.rotationOffset.z = axis[2] * wave * r.range;
             } else {
                 // Continuous rotation
-                this.rotationOffset.x += r.axis[0] * speed;
-                this.rotationOffset.y += r.axis[1] * speed;
-                this.rotationOffset.z += r.axis[2] * speed;
+                this.rotationOffset.x += axis[0] * speed;
+                this.rotationOffset.y += axis[1] * speed;
+                this.rotationOffset.z += axis[2] * speed;
             }
         }
 

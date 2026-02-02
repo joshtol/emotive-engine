@@ -638,6 +638,16 @@ export class ProceduralAnimator {
     }
 
     /**
+     * Stop only emotion animations, preserving gestures
+     * Emotion animations don't have a gestureName property
+     */
+    stopEmotions() {
+        // Keep gestures (have gestureName), remove emotions (no gestureName)
+        this.animations = this.animations.filter(anim => anim.gestureName);
+        this.currentAnimation = null;
+    }
+
+    /**
      * Cleanup all resources
      */
     destroy() {

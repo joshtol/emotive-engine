@@ -630,8 +630,9 @@ export class Core3DManager {
             this.behaviorController.applyUndertone(undertoneModifier['3d']);
         }
 
-        // Stop all previous emotion animations to prevent stacking
-        this.animator.stopAll();
+        // Stop previous emotion animations to prevent stacking
+        // Use stopEmotions() to preserve active gestures (additive blending)
+        this.animator.stopEmotions();
 
         // Store base glow intensity for this emotion (before animation modulation)
         // Use universal filter to calculate intensity from color luminance
