@@ -46,11 +46,15 @@ export function parseAxisTravelConfig(config, resolveLandmark) {
     const axisTravel = config.axisTravel || {};
     const formation = config.formation || null;
 
+    // Support offset to adjust for ring radius (vertical rings need offset to anchor edge, not center)
+    const startOffset = axisTravel.startOffset ?? 0;
+    const endOffset = axisTravel.endOffset ?? 0;
+
     return {
         // Axis travel settings
         axis: axisTravel.axis || 'y',
-        startPos: resolveLandmark(axisTravel.start ?? 'bottom'),
-        endPos: resolveLandmark(axisTravel.end ?? 'top'),
+        startPos: resolveLandmark(axisTravel.start ?? 'bottom') + startOffset,
+        endPos: resolveLandmark(axisTravel.end ?? 'top') + endOffset,
         easing: getEasing(axisTravel.easing || 'easeInOut'),
         startScale: axisTravel.startScale ?? 1.0,
         endScale: axisTravel.endScale ?? 1.0,
@@ -148,13 +152,20 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
     const easedProgress = axisConfig.easing(travelProgress);
 
     // Interpolate position on axis
-    const axisPos = axisConfig.startPos + (axisConfig.endPos - axisConfig.startPos) * easedProgress;
+    let axisPos = axisConfig.startPos + (axisConfig.endPos - axisConfig.startPos) * easedProgress;
 
     // Interpolate uniform scale
     const scale = axisConfig.startScale + (axisConfig.endScale - axisConfig.startScale) * easedProgress;
 
     // Interpolate diameter
     const diameter = axisConfig.startDiameter + (axisConfig.endDiameter - axisConfig.startDiameter) * easedProgress;
+
+    // For vertical rings, offset so the bottom EDGE touches the landmark (not the center)
+    // Ring radius ≈ diameter * mascotRadius * scale * base_model_factor
+    if (axisConfig.ringOrientation === 'vertical' && axisConfig.axis === 'y') {
+        const ringRadius = diameter * mascotRadius * scale * 0.25;  // 0.25 empirical for ring model size
+        axisPos += ringRadius;
+    }
 
     // Position offset scaled by mascot radius
     const positionOffset = (formationData?.positionOffset || 0) * mascotRadius;

@@ -57,8 +57,8 @@ export class MascotSpatialRef {
             return;
         }
 
-        const geometry = coreMesh.geometry;
-        const scale = coreMesh.scale;
+        const {geometry} = coreMesh;
+        const {scale} = coreMesh;
 
         // Calculate bounding box
         if (!geometry.boundingBox) {
@@ -67,11 +67,13 @@ export class MascotSpatialRef {
 
         if (geometry.boundingBox) {
             const box = geometry.boundingBox;
+            // Use UNSCALED geometry bounds - the spawner container applies mascot scale,
+            // so element positions are in local space and will be scaled by the container
             this.bounds = {
-                minY: box.min.y * scale.y,
-                maxY: box.max.y * scale.y,
-                centerY: (box.min.y + box.max.y) * 0.5 * scale.y,
-                height: (box.max.y - box.min.y) * scale.y
+                minY: box.min.y,
+                maxY: box.max.y,
+                centerY: (box.min.y + box.max.y) * 0.5,
+                height: (box.max.y - box.min.y)
             };
         }
 
@@ -125,7 +127,7 @@ export class MascotSpatialRef {
             return landmark;
         }
 
-        if (typeof landmark === 'string' && this.landmarks.hasOwnProperty(landmark)) {
+        if (typeof landmark === 'string' && Object.hasOwn(this.landmarks, landmark)) {
             return this.landmarks[landmark];
         }
 

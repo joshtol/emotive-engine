@@ -522,29 +522,34 @@ export class AnimationState {
         }
 
         // ROTATE: Rotation animation (applied externally)
+        // Supports per-element config with musical timing (rotations per gesture)
         if (hold.rotate) {
             const r = hold.rotate;
-            const speed = r.speed * deltaTime;
 
-            // Gyroscope mode: each element rotates on a different axis based on index
-            // Element 0 = X axis, Element 1 = Y axis, Element 2 = Z axis, then repeats
-            let {axis} = r;
-            if (r.gyroscope) {
-                const axisIndex = this.index % 3;
-                axis = axisIndex === 0 ? [1, 0, 0] :  // X axis
-                    axisIndex === 1 ? [0, 1, 0] :  // Y axis
-                        [0, 0, 1];  // Z axis
-            }
+            // Get element-specific config (cycles if more elements than configs)
+            const elemConfig = r.elements[this.index % r.elements.length];
+            const { axis, rotations, phase, oscillate, range } = elemConfig;
 
-            if (r.oscillate) {
+            // Convert phase from degrees to radians
+            const phaseRad = (phase || 0) * Math.PI / 180;
+
+            if (oscillate) {
                 // Oscillating rotation
-                const phase = time * r.speed * 2;
-                const wave = Math.sin(phase);
-                this.rotationOffset.x = axis[0] * wave * r.range;
-                this.rotationOffset.y = axis[1] * wave * r.range;
-                this.rotationOffset.z = axis[2] * wave * r.range;
+                const oscPhase = time * (elemConfig.speed || r.speed || 0.1) * 2;
+                const wave = Math.sin(oscPhase);
+                this.rotationOffset.x = axis[0] * wave * range;
+                this.rotationOffset.y = axis[1] * wave * range;
+                this.rotationOffset.z = axis[2] * wave * range;
+            } else if (rotations !== null && rotations !== undefined) {
+                // Musical timing: rotation based on gesture progress
+                // rotations = full rotations over gesture duration
+                const rotation = this.gestureProgress * rotations * Math.PI * 2 + phaseRad;
+                this.rotationOffset.x = axis[0] * rotation;
+                this.rotationOffset.y = axis[1] * rotation;
+                this.rotationOffset.z = axis[2] * rotation;
             } else {
-                // Continuous rotation
+                // Legacy: speed-based continuous rotation
+                const speed = (elemConfig.speed || r.speed || 0.1) * deltaTime;
                 this.rotationOffset.x += axis[0] * speed;
                 this.rotationOffset.y += axis[1] * speed;
                 this.rotationOffset.z += axis[2] * speed;

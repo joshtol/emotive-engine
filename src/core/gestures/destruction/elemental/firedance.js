@@ -22,7 +22,8 @@
  * FEATURES:
  * - 3 flame rings with vertical orientation
  * - Rings travel from bottom to top
- * - GYROSCOPE rotation: each ring spins on different axis (X/Y/Z)
+ * - DANCING COINS rotation: all spin on Y axis, 120° phase offset (like spinning coins)
+ * - Musical timing: 1 full rotation per gesture duration
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -42,8 +43,8 @@ const FIREDANCE_CONFIG = {
     emoji: '💃',
     type: 'blending',
     description: 'Vertical flame rings dancing and rising',
-    duration: 3000,
-    beats: 5,
+    duration: 1500,
+    beats: 3,
     intensity: 1.3,
     category: 'radiating',
     temperature: 0.7,
@@ -53,7 +54,7 @@ const FIREDANCE_CONFIG = {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',
+            start: 'bottom',            // Start at mascot's feet
             end: 'top',
             easing: 'easeInOut',
             startScale: 1.8,
@@ -73,18 +74,18 @@ const FIREDANCE_CONFIG = {
         scale: 1.0,
         models: ['flame-ring'],
         animation: {
-            appearAt: 0.05,
-            disappearAt: 0.9,
+            appearAt: 0.02,
+            disappearAt: 0.5,           // Start fading at halfway point
             stagger: 0.02,
             enter: {
                 type: 'fade',
-                duration: 0.1,
+                duration: 0.08,
                 easing: 'easeOut'
             },
             exit: {
                 type: 'fade',
-                duration: 0.12,
-                easing: 'easeIn'
+                duration: 0.5,          // Fade over second half of gesture (gone by 100%)
+                easing: 'easeIn'        // Gradual then fast at end
             },
             procedural: {
                 scaleSmoothing: 0.08,
@@ -114,11 +115,12 @@ const FIREDANCE_CONFIG = {
                 frequency: 6,
                 pattern: 'sine'
             },
-            rotate: {
-                gyroscope: true,  // Each ring rotates on different axis (X/Y/Z)
-                speed: 1.5,
-                oscillate: false
-            },
+            // Dance partners: two mirror each other, one does a flourish
+            rotate: [
+                { axis: 'y', rotations: 2, phase: 0 },     // Lead: 2 rotations
+                { axis: 'y', rotations: -2, phase: 60 },   // Partner: counter-rotation!
+                { axis: 'y', rotations: 3, phase: 120 }    // Flourish: faster accent
+            ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'additive',
@@ -159,6 +161,7 @@ const FIREDANCE_CONFIG = {
  * - 3 flame-ring models travel from bottom to top
  * - Rings are VERTICAL (ringOrientation: 'vertical') for dance effect
  * - 120° arcOffset spreads rings around the mascot
- * - GYROSCOPE rotation: ring 0 spins on X, ring 1 on Y, ring 2 on Z
+ * - DANCING COINS rotation: all rings spin on Y axis, 120° phase apart
+ *   (like spinning coins at different starting angles)
  */
 export default buildFireEffectGesture(FIREDANCE_CONFIG);

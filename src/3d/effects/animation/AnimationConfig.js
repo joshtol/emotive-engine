@@ -133,14 +133,21 @@ export const DRIFT_DEFAULTS = {
 
 /**
  * Default rotate animation config
+ *
+ * Supports two formats:
+ * 1. Simple (all elements same): { axis: 'y', speed: 0.1 }
+ * 2. Per-element with musical timing: [{ axis: 'x', rotations: 1, phase: 0 }, ...]
+ *
+ * Musical timing: `rotations` = full rotations over gesture duration (more intuitive than speed)
  */
 export const ROTATE_DEFAULTS = {
     axis: 'y',
-    speed: 0.1,
+    speed: 0.1,           // Legacy: arbitrary speed units
+    rotations: null,      // Musical timing: full rotations per gesture (overrides speed if set)
+    phase: 0,             // Starting angle in degrees
     oscillate: false,
     range: Math.PI / 4,
-    easing: 'linear',
-    gyroscope: false  // When true, each element rotates on a different axis (X/Y/Z)
+    easing: 'linear'
 };
 
 /**
@@ -417,14 +424,41 @@ export class AnimationConfig {
 
     /**
      * Parse rotate animation
+     * Supports two formats:
+     * 1. Simple object: { axis: 'y', speed: 0.1 } - same config for all elements
+     * 2. Per-element array: [{ axis: 'x', rotations: 1, phase: 0 }, ...] - musical timing
      * @private
      */
     _parseRotate(rotate) {
-        // Check for gyroscope mode - each element rotates on different axis
-        const gyroscope = rotate.gyroscope ?? ROTATE_DEFAULTS.gyroscope;
+        // Check for per-element array format (new musical timing system)
+        if (Array.isArray(rotate)) {
+            const elements = rotate.map(elem => this._parseRotateElement(elem));
+            return {
+                isPerElement: true,
+                elements,
+                // Shared settings (use first element's values as defaults for compatibility)
+                oscillate: elements[0]?.oscillate ?? ROTATE_DEFAULTS.oscillate,
+                range: elements[0]?.range ?? ROTATE_DEFAULTS.range,
+                easing: elements[0]?.easing ?? getEasing(ROTATE_DEFAULTS.easing)
+            };
+        }
 
-        // Normalize axis to array format
-        let axis = rotate.axis ?? ROTATE_DEFAULTS.axis;
+        // Simple object format (legacy or single config for all elements)
+        const elem = this._parseRotateElement(rotate);
+        return {
+            isPerElement: false,
+            elements: [elem],  // Wrap in array for consistent access
+            ...elem
+        };
+    }
+
+    /**
+     * Parse a single rotation element config
+     * @private
+     */
+    _parseRotateElement(elem) {
+        // Normalize axis to array format [x, y, z]
+        let axis = elem.axis ?? ROTATE_DEFAULTS.axis;
         if (typeof axis === 'string') {
             axis = axis === 'x' ? [1, 0, 0] :
                 axis === 'y' ? [0, 1, 0] :
@@ -434,11 +468,12 @@ export class AnimationConfig {
 
         return {
             axis,
-            speed: rotate.speed ?? ROTATE_DEFAULTS.speed,
-            oscillate: rotate.oscillate ?? ROTATE_DEFAULTS.oscillate,
-            range: rotate.range ?? ROTATE_DEFAULTS.range,
-            easing: getEasing(rotate.easing ?? ROTATE_DEFAULTS.easing),
-            gyroscope  // When true, element index determines axis (0=X, 1=Y, 2=Z)
+            speed: elem.speed ?? ROTATE_DEFAULTS.speed,
+            rotations: elem.rotations ?? ROTATE_DEFAULTS.rotations,  // Musical timing (overrides speed)
+            phase: elem.phase ?? ROTATE_DEFAULTS.phase,              // Starting angle in degrees
+            oscillate: elem.oscillate ?? ROTATE_DEFAULTS.oscillate,
+            range: elem.range ?? ROTATE_DEFAULTS.range,
+            easing: getEasing(elem.easing ?? ROTATE_DEFAULTS.easing)
         };
     }
 
