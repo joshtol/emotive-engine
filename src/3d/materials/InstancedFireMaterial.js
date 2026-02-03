@@ -17,6 +17,9 @@
  *
  * This material is designed to work with ElementInstancePool for
  * GPU-efficient rendering of many fire elements with a single draw call.
+ *
+ * Core fire shader logic is imported from FireShaderCore.js for consistency
+ * with ProceduralFireMaterial.
  */
 
 import * as THREE from 'three';
@@ -25,130 +28,14 @@ import {
     INSTANCED_ATTRIBUTES_FRAGMENT,
     createInstancedUniforms
 } from './InstancedShaderUtils.js';
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// NOISE UTILITIES (GLSL) - Same as ProceduralFireMaterial
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-const NOISE_GLSL = /* glsl */`
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-
-float snoise(vec3 v) {
-    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-
-    vec3 i = floor(v + dot(v, C.yyy));
-    vec3 x0 = v - i + dot(i, C.xxx);
-
-    vec3 g = step(x0.yzx, x0.xyz);
-    vec3 l = 1.0 - g;
-    vec3 i1 = min(g.xyz, l.zxy);
-    vec3 i2 = max(g.xyz, l.zxy);
-
-    vec3 x1 = x0 - i1 + C.xxx;
-    vec3 x2 = x0 - i2 + C.yyy;
-    vec3 x3 = x0 - D.yyy;
-
-    i = mod289(i);
-    vec4 p = permute(permute(permute(
-        i.z + vec4(0.0, i1.z, i2.z, 1.0))
-        + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-        + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-
-    float n_ = 0.142857142857;
-    vec3 ns = n_ * D.wyz - D.xzx;
-
-    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-    vec4 x_ = floor(j * ns.z);
-    vec4 y_ = floor(j - 7.0 * x_);
-
-    vec4 x = x_ *ns.x + ns.yyyy;
-    vec4 y = y_ *ns.x + ns.yyyy;
-    vec4 h = 1.0 - abs(x) - abs(y);
-
-    vec4 b0 = vec4(x.xy, y.xy);
-    vec4 b1 = vec4(x.zw, y.zw);
-
-    vec4 s0 = floor(b0)*2.0 + 1.0;
-    vec4 s1 = floor(b1)*2.0 + 1.0;
-    vec4 sh = -step(h, vec4(0.0));
-
-    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-
-    vec3 p0 = vec3(a0.xy, h.x);
-    vec3 p1 = vec3(a0.zw, h.y);
-    vec3 p2 = vec3(a1.xy, h.z);
-    vec3 p3 = vec3(a1.zw, h.w);
-
-    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-    p0 *= norm.x;
-    p1 *= norm.y;
-    p2 *= norm.z;
-    p3 *= norm.w;
-
-    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-    m = m * m;
-    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-}
-
-float fbm3(vec3 p) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    float frequency = 1.0;
-
-    for (int i = 0; i < 3; i++) {
-        value += amplitude * snoise(p * frequency);
-        frequency *= 2.0;
-        amplitude *= 0.5;
-    }
-    return value;
-}
-
-float turbulence(vec3 p, int octaves) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    float frequency = 1.0;
-
-    for (int i = 0; i < 3; i++) {
-        if (i >= octaves) break;
-        value += amplitude * abs(snoise(p * frequency));
-        frequency *= 2.0;
-        amplitude *= 0.5;
-    }
-    return value;
-}
-`;
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// FIRE COLOR UTILITIES (GLSL)
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-const FIRE_COLOR_GLSL = /* glsl */`
-vec3 fireColor(float t, float temperature) {
-    float heat = t * (0.5 + temperature * 0.5);
-    vec3 color;
-
-    if (heat < 0.25) {
-        float f = heat / 0.25;
-        color = vec3(0.5 + f * 0.5, f * 0.2, 0.0);
-    } else if (heat < 0.5) {
-        float f = (heat - 0.25) / 0.25;
-        color = vec3(1.0, 0.2 + f * 0.6, f * 0.1);
-    } else if (heat < 0.75) {
-        float f = (heat - 0.5) / 0.25;
-        color = vec3(1.0, 0.8 + f * 0.2, 0.1 + f * 0.6);
-    } else {
-        float f = (heat - 0.75) / 0.25;
-        color = vec3(1.0 - f * 0.2, 1.0, 0.7 + f * 0.3);
-    }
-
-    return color;
-}
-`;
+import {
+    NOISE_GLSL,
+    FIRE_COLOR_GLSL,
+    FIRE_FLOOR_AND_DISCARD_GLSL,
+    lerp3,
+    deriveFireParameters,
+    FIRE_DEFAULTS
+} from './cores/FireShaderCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // INSTANCED VERTEX SHADER
@@ -407,9 +294,8 @@ void main() {
         alpha *= vArcVisibility;
     }
 
-    if (alpha < 0.12) discard;
-
-    color = max(color, vec3(0.6, 0.25, 0.0) * uIntensity * 0.7);
+    // Shared floor color and discard logic from FireShaderCore
+    ${FIRE_FLOOR_AND_DISCARD_GLSL}
 
     gl_FragColor = vec4(color, alpha);
 }
@@ -418,13 +304,6 @@ void main() {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // MATERIAL FACTORY
 // ═══════════════════════════════════════════════════════════════════════════════════════
-
-function lerp3(low, mid, high, t) {
-    if (t < 0.5) {
-        return low + (mid - low) * (t * 2);
-    }
-    return mid + (high - mid) * ((t - 0.5) * 2);
-}
 
 /**
  * Create an instanced procedural fire material
@@ -446,23 +325,25 @@ function lerp3(low, mid, high, t) {
  */
 export function createInstancedFireMaterial(options = {}) {
     const {
-        temperature = 0.5,
+        temperature = FIRE_DEFAULTS.temperature,
         intensity = null,
-        opacity = 0.85,
-        flameHeight = 0.08,
-        turbulence = 0.03,
-        displacementStrength = 0.04,
-        noiseScale = 4.0,
+        opacity = FIRE_DEFAULTS.opacity,
+        flameHeight = FIRE_DEFAULTS.flameHeight,
+        turbulence = FIRE_DEFAULTS.turbulence,
+        displacementStrength = FIRE_DEFAULTS.displacementStrength,
+        noiseScale = FIRE_DEFAULTS.noiseScale,
         flickerSpeed = null,
         flickerAmount = null,
-        edgeFade = 0.25,
-        fadeInDuration = 0.3,
-        fadeOutDuration = 0.5
+        edgeFade = FIRE_DEFAULTS.edgeFade,
+        fadeInDuration = FIRE_DEFAULTS.fadeInDuration,
+        fadeOutDuration = FIRE_DEFAULTS.fadeOutDuration
     } = options;
 
-    const finalIntensity = intensity ?? lerp3(1.5, 2.5, 4.0, temperature);
-    const finalFlickerSpeed = flickerSpeed ?? lerp3(0.001, 0.002, 0.003, temperature);
-    const finalFlickerAmount = flickerAmount ?? lerp3(0.15, 0.12, 0.08, temperature);
+    // Derive temperature-dependent parameters from shared core
+    const derived = deriveFireParameters(temperature, { intensity, flickerSpeed, flickerAmount });
+    const finalIntensity = derived.intensity;
+    const finalFlickerSpeed = derived.flickerSpeed;
+    const finalFlickerAmount = derived.flickerAmount;
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
@@ -555,10 +436,11 @@ export function setInstancedFireArcAnimation(material, config = {}) {
 export function setInstancedFireTemperature(material, temperature) {
     if (!material?.uniforms) return;
 
+    const derived = deriveFireParameters(temperature);
     material.uniforms.uTemperature.value = temperature;
-    material.uniforms.uIntensity.value = lerp3(1.5, 2.5, 4.0, temperature);
-    material.uniforms.uFlickerSpeed.value = lerp3(0.001, 0.002, 0.003, temperature);
-    material.uniforms.uFlickerAmount.value = lerp3(0.15, 0.12, 0.08, temperature);
+    material.uniforms.uIntensity.value = derived.intensity;
+    material.uniforms.uFlickerSpeed.value = derived.flickerSpeed;
+    material.uniforms.uFlickerAmount.value = derived.flickerAmount;
     material.userData.temperature = temperature;
 }
 

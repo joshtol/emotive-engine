@@ -1097,11 +1097,407 @@
         });
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // GPU MEMORY MONITOR - Enhanced diagnostic tool
+        // Features: peaks, FPS, trends, warnings, instance pools, copy to clipboard
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const gpuMonitor = {
+            // Persisted data (survives crash)
+            snapshots: JSON.parse(localStorage.getItem('gpu_snapshots') || '[]'),
+            peaks: JSON.parse(localStorage.getItem('gpu_peaks') || '{"geometries":0,"textures":0,"programs":0,"triangles":0}'),
+            gestureCount: parseInt(localStorage.getItem('gpu_gesture_count') || '0', 10),
+
+            // Runtime state
+            lastSnapshotTime: 0,
+            pendingTimeout: null,
+            visible: true,
+            expanded: false,
+
+            // Previous values for trend detection
+            previous: null,
+
+            // FPS tracking
+            fps: { frames: 0, lastTime: performance.now(), current: 0, min: Infinity, max: 0, avg: 0, samples: [] },
+
+            // Frame time tracking
+            frameTime: { current: 0, min: Infinity, max: 0, samples: [] },
+
+            // Gesture timing
+            gestureTimings: [],
+            currentGesture: null,
+
+            // Warning thresholds (adjust based on your hardware)
+            thresholds: { geometries: 100, textures: 100, programs: 50 },
+
+            getStats() {
+                const renderer = mascot.core3D?.renderer?.renderer;
+                if (!renderer) return null;
+                const info = renderer.info;
+                return {
+                    geometries: info.memory.geometries,
+                    textures: info.memory.textures,
+                    programs: info.programs?.length || 0,
+                    calls: info.render.calls,
+                    triangles: info.render.triangles
+                };
+            },
+
+            getInstancePoolStats() {
+                // Path: mascot.core3D.elementSpawner.pools (Map)
+                const spawner = mascot.core3D?.elementSpawner;
+                if (!spawner?.pools) return null;
+
+                const stats = {};
+                for (const [type, pool] of spawner.pools) {
+                    if (pool.mesh) {
+                        // pool.activeCount = active elements
+                        // pool.maxInstances = total capacity (usually 64)
+                        // pool.mesh.count = GPU instances currently rendered
+                        stats[type] = {
+                            active: pool.activeCount || 0,
+                            total: pool.maxInstances || 64,
+                            gpu: pool.mesh.count || 0
+                        };
+                    }
+                }
+                return Object.keys(stats).length > 0 ? stats : null;
+            },
+
+            getTrend(current, prev, key) {
+                if (!prev) return '→';
+                const diff = current[key] - prev[key];
+                if (diff > 0) return '↑';
+                if (diff < 0) return '↓';
+                return '→';
+            },
+
+            getWarningLevel(value, threshold) {
+                const ratio = value / threshold;
+                if (ratio >= 0.9) return 'critical';
+                if (ratio >= 0.8) return 'warning';
+                return 'normal';
+            },
+
+            estimateMemory(stats) {
+                // Rough estimates: geometry ~50KB avg, texture ~1MB avg, program ~10KB
+                const geoMB = (stats.geometries * 50) / 1024;
+                const texMB = stats.textures * 1;
+                const progMB = (stats.programs * 10) / 1024;
+                return (geoMB + texMB + progMB).toFixed(1);
+            },
+
+            updateFPS() {
+                this.fps.frames++;
+                const now = performance.now();
+                const elapsed = now - this.fps.lastTime;
+
+                if (elapsed >= 1000) {
+                    this.fps.current = Math.round((this.fps.frames * 1000) / elapsed);
+                    this.fps.frames = 0;
+                    this.fps.lastTime = now;
+
+                    // Track min/max/avg
+                    if (this.fps.current > 0) {
+                        this.fps.min = Math.min(this.fps.min, this.fps.current);
+                        this.fps.max = Math.max(this.fps.max, this.fps.current);
+                        this.fps.samples.push(this.fps.current);
+                        if (this.fps.samples.length > 60) this.fps.samples.shift();
+                        this.fps.avg = Math.round(this.fps.samples.reduce((a, b) => a + b, 0) / this.fps.samples.length);
+                    }
+                }
+
+                // Frame time
+                this.frameTime.current = elapsed / Math.max(this.fps.frames, 1);
+            },
+
+            snapshot(label) {
+                const now = Date.now();
+                if (now - this.lastSnapshotTime < 500) return;
+                this.lastSnapshotTime = now;
+
+                const stats = this.getStats();
+                if (!stats) return;
+
+                // Check for delta alerts (resource jump > 2)
+                if (this.previous) {
+                    const geoJump = stats.geometries - this.previous.geometries;
+                    const texJump = stats.textures - this.previous.textures;
+                    if (geoJump > 2 || texJump > 2) {
+                        this.flashWarning();
+                        console.warn(`[GPU] ⚠️ Resource jump: Δgeo=${geoJump} Δtex=${texJump}`);
+                    }
+                }
+
+                // Update peaks and persist
+                this.peaks.geometries = Math.max(this.peaks.geometries, stats.geometries);
+                this.peaks.textures = Math.max(this.peaks.textures, stats.textures);
+                this.peaks.programs = Math.max(this.peaks.programs, stats.programs);
+                this.peaks.triangles = Math.max(this.peaks.triangles, stats.triangles);
+                localStorage.setItem('gpu_peaks', JSON.stringify(this.peaks));
+
+                const entry = {
+                    label,
+                    time: new Date().toISOString(),
+                    gestureNum: this.gestureCount,
+                    ...stats,
+                    pools: this.getInstancePoolStats(),
+                    fps: this.fps.current,
+                    memoryEstMB: this.estimateMemory(stats)
+                };
+
+                this.snapshots.push(entry);
+                if (this.snapshots.length > 30) this.snapshots.shift();
+                localStorage.setItem('gpu_snapshots', JSON.stringify(this.snapshots));
+
+                this.updateDisplay(stats);
+                this.previous = { ...stats };
+
+                console.log(`[GPU] ${label}: geo=${stats.geometries} tex=${stats.textures} prog=${stats.programs} fps=${this.fps.current}`);
+            },
+
+            flashWarning() {
+                const display = document.getElementById('gpu-monitor-display');
+                if (display) {
+                    display.style.background = 'rgba(255,0,0,0.8)';
+                    setTimeout(() => {
+                        display.style.background = 'rgba(0,0,0,0.85)';
+                    }, 300);
+                }
+            },
+
+            createDisplay() {
+                let display = document.getElementById('gpu-monitor-display');
+                if (display) return display;
+
+                display = document.createElement('div');
+                display.id = 'gpu-monitor-display';
+                display.style.cssText = `
+                    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+                    background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
+                    font-size: 11px; padding: 8px 12px; border-radius: 6px; z-index: 9999;
+                    cursor: pointer; user-select: none; min-width: 300px;
+                    border: 1px solid rgba(0,255,0,0.3); transition: all 0.2s;
+                `;
+                display.onclick = () => this.toggleExpanded();
+                document.body.appendChild(display);
+                return display;
+            },
+
+            updateDisplay(stats) {
+                if (!this.visible) return;
+                const display = this.createDisplay();
+
+                const geoTrend = this.getTrend(stats, this.previous, 'geometries');
+                const texTrend = this.getTrend(stats, this.previous, 'textures');
+                const progTrend = this.getTrend(stats, this.previous, 'programs');
+
+                const geoLevel = this.getWarningLevel(stats.geometries, this.thresholds.geometries);
+                const texLevel = this.getWarningLevel(stats.textures, this.thresholds.textures);
+
+                const colorFor = (level) => level === 'critical' ? '#f00' : level === 'warning' ? '#ff0' : '#0f0';
+
+                let html = `<div style="display:flex;justify-content:space-between;align-items:center;">`;
+                html += `<span style="color:${colorFor(geoLevel)}">geo=${stats.geometries}${geoTrend}</span>`;
+                html += `<span style="color:${colorFor(texLevel)}">tex=${stats.textures}${texTrend}</span>`;
+                html += `<span>prog=${stats.programs}${progTrend}</span>`;
+                html += `<span style="color:#0ff">FPS:${this.fps.current || '--'}</span>`;
+                html += `<span style="color:#888">G#${this.gestureCount}</span>`;
+                html += `</div>`;
+
+                if (this.expanded) {
+                    html += `<div style="border-top:1px solid rgba(255,255,255,0.2);margin-top:6px;padding-top:6px;font-size:10px;">`;
+
+                    // Peaks
+                    html += `<div style="color:#f90">PEAKS: geo=${this.peaks.geometries} tex=${this.peaks.textures} prog=${this.peaks.programs}</div>`;
+
+                    // FPS details
+                    const fpsMin = this.fps.min === Infinity ? '--' : this.fps.min;
+                    const fpsMax = this.fps.max === 0 ? '--' : this.fps.max;
+                    html += `<div>FPS: min=${fpsMin} max=${fpsMax} avg=${this.fps.avg || '--'}</div>`;
+
+                    // Memory estimate
+                    html += `<div>Est. GPU: ~${this.estimateMemory(stats)} MB</div>`;
+
+                    // Instance pools
+                    const pools = this.getInstancePoolStats();
+                    if (pools) {
+                        const poolStr = Object.entries(pools).map(([k, v]) => `${k}:${v.active}/${v.total}(${v.gpu})`).join(' ');
+                        html += `<div style="color:#0ff">Pools: ${poolStr}</div>`;
+                    }
+
+                    // Recent gesture timings
+                    if (this.gestureTimings.length > 0) {
+                        const recent = this.gestureTimings.slice(-3).map(g => `${g.name}:${g.duration}ms`).join(', ');
+                        html += `<div style="color:#aaf">Timings: ${recent}</div>`;
+                    }
+
+                    // Action buttons
+                    html += `<div style="margin-top:6px;display:flex;gap:8px;">`;
+                    html += `<button onclick="event.stopPropagation();gpuMonitor.copyToClipboard()" style="font-size:9px;padding:2px 6px;cursor:pointer;">📋 Copy</button>`;
+                    html += `<button onclick="event.stopPropagation();gpuMonitor.resetPeaks()" style="font-size:9px;padding:2px 6px;cursor:pointer;">🔄 Reset Peaks</button>`;
+                    html += `<button onclick="event.stopPropagation();gpuMonitor.clear()" style="font-size:9px;padding:2px 6px;cursor:pointer;">🗑️ Clear</button>`;
+                    html += `</div>`;
+
+                    html += `</div>`;
+                }
+
+                display.innerHTML = html;
+            },
+
+            toggleExpanded() {
+                this.expanded = !this.expanded;
+                const stats = this.getStats();
+                if (stats) this.updateDisplay(stats);
+            },
+
+            toggle() {
+                this.visible = !this.visible;
+                const display = document.getElementById('gpu-monitor-display');
+                if (display) {
+                    display.style.display = this.visible ? 'block' : 'none';
+                }
+                console.log(`[GPU Monitor] ${this.visible ? 'Visible' : 'Hidden'} (press G to toggle)`);
+            },
+
+            resetPeaks() {
+                this.peaks = { geometries: 0, textures: 0, programs: 0, triangles: 0 };
+                localStorage.setItem('gpu_peaks', JSON.stringify(this.peaks));
+                this.fps.min = Infinity;
+                this.fps.max = 0;
+                this.fps.samples = [];
+                console.log('[GPU] Peaks reset');
+                const stats = this.getStats();
+                if (stats) this.updateDisplay(stats);
+            },
+
+            copyToClipboard() {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    current: this.getStats(),
+                    peaks: this.peaks,
+                    fps: { current: this.fps.current, min: this.fps.min === Infinity ? null : this.fps.min, max: this.fps.max, avg: this.fps.avg },
+                    pools: this.getInstancePoolStats(),
+                    gestureCount: this.gestureCount,
+                    recentTimings: this.gestureTimings.slice(-10),
+                    snapshots: this.snapshots
+                };
+                navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                    console.log('[GPU] Data copied to clipboard');
+                    // Brief visual feedback
+                    const display = document.getElementById('gpu-monitor-display');
+                    if (display) {
+                        display.style.borderColor = '#0f0';
+                        setTimeout(() => { display.style.borderColor = 'rgba(0,255,0,0.3)'; }, 300);
+                    }
+                });
+            },
+
+            report() {
+                console.log('═══════════════════════════════════════════════════════');
+                console.log('GPU MEMORY MONITOR REPORT');
+                console.log('═══════════════════════════════════════════════════════');
+                console.log(`Peaks: geo=${this.peaks.geometries} tex=${this.peaks.textures} prog=${this.peaks.programs}`);
+                console.log(`FPS: current=${this.fps.current} min=${this.fps.min} max=${this.fps.max} avg=${this.fps.avg}`);
+                console.log('───────────────────────────────────────────────────────');
+                this.snapshots.forEach((s, i) => {
+                    console.log(`[${i}] ${s.label} (#${s.gestureNum}): geo=${s.geometries} tex=${s.textures} prog=${s.programs} fps=${s.fps || '?'}`);
+                });
+                if (this.snapshots.length >= 2) {
+                    const first = this.snapshots[0];
+                    const last = this.snapshots[this.snapshots.length - 1];
+                    console.log('───────────────────────────────────────────────────────');
+                    console.log(`DELTA: Δgeo=${last.geometries - first.geometries} Δtex=${last.textures - first.textures} Δprog=${last.programs - first.programs}`);
+                }
+                console.log('═══════════════════════════════════════════════════════');
+            },
+
+            clear() {
+                this.snapshots = [];
+                this.gestureCount = 0;
+                this.gestureTimings = [];
+                this.resetPeaks();
+                localStorage.removeItem('gpu_snapshots');
+                localStorage.removeItem('gpu_peaks');
+                localStorage.removeItem('gpu_gesture_count');
+                console.log('[GPU] All data cleared');
+            },
+
+            // Start FPS tracking loop
+            startTracking() {
+                const tick = () => {
+                    this.updateFPS();
+                    if (this.visible && !this.pendingTimeout) {
+                        const stats = this.getStats();
+                        if (stats) this.updateDisplay(stats);
+                    }
+                    requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            }
+        };
+
+        // Expose globally
+        window.gpuMonitor = gpuMonitor;
+
+        // Keyboard toggle (G key)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'g' || e.key === 'G') {
+                if (!e.target.matches('input, textarea')) {
+                    gpuMonitor.toggle();
+                }
+            }
+        });
+
+        // Hook into gesture execution with timing
+        // Uses gestureController._state.currentModularGesture for accurate duration
+        const originalExpress = mascot.express.bind(mascot);
+        mascot.express = function(gestureName, ...args) {
+            gpuMonitor.gestureCount++;
+            localStorage.setItem('gpu_gesture_count', gpuMonitor.gestureCount.toString());
+            const startTime = performance.now();
+            gpuMonitor.snapshot(`before: ${gestureName}`);
+
+            const result = originalExpress(gestureName, ...args);
+
+            // Get actual gesture duration from gestureController state
+            const gestureState = mascot.gestureController?._state?.currentModularGesture;
+            const duration = gestureState?.duration || 1000; // fallback 1s
+
+            // Mid-gesture snapshot (at ~40% through - when instances are fully spawned)
+            // Force-save by temporarily clearing throttle
+            setTimeout(() => {
+                gpuMonitor.lastSnapshotTime = 0; // bypass throttle for critical snapshot
+                gpuMonitor.snapshot(`PEAK: ${gestureName}`);
+            }, Math.min(duration * 0.4, 400)); // 40% or 400ms max
+
+            // Schedule completion snapshot based on actual gesture duration
+            setTimeout(() => {
+                const elapsed = Math.round(performance.now() - startTime);
+                gpuMonitor.gestureTimings.push({ name: gestureName, duration: elapsed });
+                if (gpuMonitor.gestureTimings.length > 20) gpuMonitor.gestureTimings.shift();
+                gpuMonitor.lastSnapshotTime = 0; // bypass throttle
+                gpuMonitor.snapshot(`done: ${gestureName} (${elapsed}ms)`);
+            }, duration + 100); // +100ms buffer for cleanup
+
+            return result;
+        };
+
+        console.log('[GPU Monitor] Using gesture duration from gestureController state');
+
+        // Start FPS tracking
+        gpuMonitor.startTracking();
+
+        console.log('[GPU Monitor] Enhanced. Press G to toggle, click to expand.');
+        console.log('[GPU Monitor] Console: gpuMonitor.report() | gpuMonitor.copyToClipboard()');
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE
         // ═══════════════════════════════════════════════════════════════════════════
 
         setTimeout(() => {
             populateGestures();
+            // Initial snapshot
+            gpuMonitor.snapshot('initial');
         }, 100);
     </script>
 </body>

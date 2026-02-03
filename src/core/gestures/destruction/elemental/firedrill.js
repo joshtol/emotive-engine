@@ -54,13 +54,13 @@ const FIREDRILL_CONFIG = {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',
-            end: 'above',
-            easing: 'easeIn',       // Accelerating upward
-            startScale: 0.8,
-            endScale: 1.2,
-            startDiameter: 0.8,     // Tight radius
-            endDiameter: 1.0,
+            start: 'feet',
+            end: 'below',
+            easing: 'easeIn',       // Accelerating downward
+            startScale: 1.0,
+            endScale: 0.8,
+            startDiameter: 1.8,     // Wide at top
+            endDiameter: 1.4,       // Narrower at drill point
             orientation: 'vertical'
         },
         formation: {
@@ -132,6 +132,18 @@ const FIREDRILL_CONFIG = {
                     orientationOverride: 'vertical'
                 }
             }
+        }
+    },
+
+    // 3D mascot animation - spin like a drill
+    '3d': {
+        evaluate(progress, motion) {
+            const strength = motion?.strength || 1.0;
+            // 1 full rotation
+            const rotationY = progress * Math.PI * 2 * strength;
+            return {
+                rotation: [0, rotationY, 0]
+            };
         }
     },
 

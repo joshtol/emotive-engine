@@ -59,8 +59,8 @@ const FIREHELIX_CONFIG = {
             easing: 'easeInOut',
             startScale: 0.9,
             endScale: 1.1,
-            startDiameter: 1.2,
-            endDiameter: 1.4,
+            startDiameter: 1.8,
+            endDiameter: 2.0,
             orientation: 'vertical'
         },
         formation: {

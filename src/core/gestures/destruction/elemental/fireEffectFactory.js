@@ -93,9 +93,13 @@ export function buildFireEffectGesture(config) {
         /**
          * 3D core transformation for fire effect
          * Handles both burning (victim) and radiating (source) variants
+         * If config provides a custom '3d' evaluate, merge its rotation with fire effects
          */
         '3d': {
             evaluate(progress, motion) {
+                // Check for custom evaluate in config
+                const customEval = config['3d']?.evaluate;
+                const customResult = customEval ? customEval(progress, motion) : null;
                 const cfg = { ...config, ...motion };
                 const time = progress * cfg.duration / 1000;
                 const isRadiating = cfg.category === 'radiating';
@@ -225,11 +229,19 @@ export function buildFireEffectGesture(config) {
                 const glowBoost = (flickerValue * 0.7 + 0.3) * effectStrength * cfg.intensity;
 
                 // ═══════════════════════════════════════════════════════════════
+                // ROTATION - Use custom rotation if provided
+                // ═══════════════════════════════════════════════════════════════
+                const customRotation = customResult?.rotation || [0, 0, 0];
+                const rotX = customRotation[0] || 0;
+                const rotY = customRotation[1] || 0;
+                const rotZ = customRotation[2] || 0;
+
+                // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
                 // ═══════════════════════════════════════════════════════════════
                 return {
                     position: [posX, posY, posZ],
-                    rotation: [0, 0, 0],
+                    rotation: [rotX, rotY, rotZ],
                     scale,
                     glowIntensity,
                     glowBoost,

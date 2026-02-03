@@ -7,10 +7,60 @@
  * - Camera facing (billboard vs normal-aligned)
  * - Clustering (tight vs spread)
  *
+ * This module provides both:
+ * - Static utility functions for use by ElementInstancedSpawner
+ * - Class-based API for legacy ElementSpawner compatibility
+ *
  * @module spawn-modes/SurfaceMode
  */
 
 import { BaseSpawnMode } from './BaseSpawnMode.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATIC UTILITY FUNCTIONS - Used by ElementInstancedSpawner
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Parse surface configuration from spawn mode config.
+ * Normalizes string shorthand and object configs into consistent format.
+ * @param {Object|string} config - Raw spawn mode configuration
+ * @returns {Object} Parsed surface configuration
+ */
+export function parseSurfaceConfig(config) {
+    // Handle string shorthand (e.g., mode='surface')
+    if (typeof config === 'string') {
+        return {
+            pattern: 'shell',
+            embedDepth: 0.2,
+            cameraFacing: 0.3,
+            clustering: 0,
+            countOverride: null,
+            scaleMultiplier: 1.5,
+            minDistanceFactor: 0.18,
+            ephemeral: null,
+            models: [],
+        };
+    }
+
+    // Handle object config - support both config.surface and direct config
+    const surface = config.surface || config;
+
+    return {
+        pattern: surface.pattern || 'shell',
+        embedDepth: surface.embedDepth ?? 0.2,
+        cameraFacing: surface.cameraFacing ?? 0.3,
+        clustering: surface.clustering ?? 0,
+        countOverride: surface.count || config.count || null,
+        scaleMultiplier: surface.scale || config.scale || 1.5,
+        minDistanceFactor: surface.minDistance ?? 0.18,
+        ephemeral: surface.ephemeral || null,
+        models: config.models || [],
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLASS-BASED API - For legacy ElementSpawner compatibility
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Spawn mode for elements on mascot surface

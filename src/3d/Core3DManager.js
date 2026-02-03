@@ -2108,10 +2108,20 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._waterOverlayMesh.renderOrder = mesh.renderOrder + 1;
+                }
 
-                    // Spawn 3D water elements if gesture requests it via spawnMode
-                    const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.waterOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('water')) {
+                // Spawn 3D water elements - runs every frame but signature prevents respawn
+                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.waterOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    const spawnSignature = `water:${spawnMode}:${duration}:${animation?.type || 'default'}`;
+
+                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
+                    this._spawnedSignatures = this._spawnedSignatures || new Set();
+
+                    // Only spawn if this signature hasn't been spawned yet in this session
+                    if (!this._spawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit(); // Exit ALL elements (crossfade)
                         this.elementSpawner.spawn('water', {
                             intensity: blended.waterOverlay.strength || 0.8,
                             mode: spawnMode,
@@ -2122,6 +2132,8 @@ export class Core3DManager {
                             embedDepth,
                             gestureDuration: duration || 1500
                         });
+                        this._spawnedSignatures.add(spawnSignature);
+                        this._elementSpawnSignature = spawnSignature;
                     }
                 }
 
@@ -2150,10 +2162,14 @@ export class Core3DManager {
             }
             this._waterOverlayMesh = null;
 
-            // Despawn water elements
+            // Gracefully exit water elements (fade out)
             if (this.elementSpawner) {
-                this.elementSpawner.despawn('water');
+                this.elementSpawner.triggerExit('water');
             }
+
+            // Clear spawn tracking so next gesture session starts fresh
+            this._elementSpawnSignature = null;
+            this._spawnedSignatures = null;
 
             // Clear water progress tracking
             this._currentWaterProgress = null;
@@ -2191,10 +2207,21 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._fireOverlayMesh.renderOrder = mesh.renderOrder + 2;
+                }
 
-                    // Spawn 3D fire elements if gesture requests it via spawnMode
-                    const {spawnMode, animation, models, count, scale, embedDepth} = blended.fireOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('fire')) {
+                // Spawn 3D fire elements - runs every frame but signature prevents respawn
+                const {spawnMode, animation, models, count, scale, embedDepth} = blended.fireOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    const spawnSignature = `fire:${spawnMode}:${blended.fireOverlay.duration}:${animation?.type || 'default'}`;
+
+                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
+                    // This prevents: A runs, B interrupts, B ends, A's config returns → would respawn A
+                    this._spawnedSignatures = this._spawnedSignatures || new Set();
+
+                    // Only spawn if this signature hasn't been spawned yet in this session
+                    if (!this._spawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit(); // Exit ALL elements (crossfade)
                         this.elementSpawner.spawn('fire', {
                             intensity: blended.fireOverlay.strength || 0.8,
                             mode: spawnMode,
@@ -2205,6 +2232,8 @@ export class Core3DManager {
                             embedDepth,
                             gestureDuration: blended.fireOverlay.duration || 2000
                         });
+                        this._spawnedSignatures.add(spawnSignature);
+                        this._elementSpawnSignature = spawnSignature;
                     }
                 }
 
@@ -2234,10 +2263,14 @@ export class Core3DManager {
             }
             this._fireOverlayMesh = null;
 
-            // Despawn fire elements
+            // Gracefully exit fire elements (fade out)
             if (this.elementSpawner) {
-                this.elementSpawner.despawn('fire');
+                this.elementSpawner.triggerExit('fire');
             }
+
+            // Clear spawn tracking so next gesture session starts fresh
+            this._elementSpawnSignature = null;
+            this._spawnedSignatures = null;
 
             // Clear fire progress tracking
             this._currentFireProgress = null;
