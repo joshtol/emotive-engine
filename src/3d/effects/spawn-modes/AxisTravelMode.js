@@ -33,6 +33,7 @@ export function parseFormation(formation) {
         spacing: formation.spacing || 0.15,
         arcOffset: (formation.arcOffset || 60) * Math.PI / 180, // Convert to radians
         phaseOffset: formation.phaseOffset || 0,
+        strands: formation.strands || 1, // 1 = single helix, 2 = double helix (DNA-style)
     };
 }
 
@@ -120,11 +121,22 @@ export function expandFormation(parsedConfig) {
             elem.positionOffset = i * formation.spacing;
             break;
 
-        case 'spiral':
-            // Spiral - stack with rotation
-            elem.positionOffset = i * formation.spacing;
-            elem.rotationOffset = i * formation.arcOffset;
+        case 'spiral': {
+            // Spiral - stack with rotation, optionally interleaved across multiple strands
+            // With strands=2, elements alternate between two helices offset by 180°
+            const strands = formation.strands || 1;
+            const strandIndex = i % strands;
+            const indexWithinStrand = Math.floor(i / strands);
+
+            // Position offset based on index within strand (not global index)
+            elem.positionOffset = indexWithinStrand * formation.spacing;
+
+            // Rotation: base rotation for position + strand offset
+            const baseRotation = indexWithinStrand * formation.arcOffset;
+            const strandOffset = (strandIndex / strands) * Math.PI * 2; // 0°, 180° for 2 strands
+            elem.rotationOffset = baseRotation + strandOffset;
             break;
+        }
 
         case 'wave':
             // Wave - sinusoidal offset
