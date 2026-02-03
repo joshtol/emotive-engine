@@ -83,8 +83,10 @@ void main() {
     float trailDelay = max(0.0, aTrailIndex) * 0.05;
     float effectiveLocalTime = max(0.0, vLocalTime - trailDelay);
 
-    // Fade in/out
-    float fadeIn = clamp(effectiveLocalTime / uFadeInDuration, 0.0, 1.0);
+    // Fade in/out - now controlled entirely by aInstanceOpacity from AnimationState
+    // The shader's built-in fadeIn/fadeOut (based on spawn/exit time) is disabled
+    // so that AnimationState has full control over fade timing
+    float fadeIn = 1.0;  // Disabled - AnimationState controls via aInstanceOpacity
     float fadeOut = 1.0;
     if (aExitTime > 0.0) {
         float exitElapsed = uGlobalTime - aExitTime;
@@ -93,7 +95,8 @@ void main() {
 
     // Trail fade
     vTrailFade = aTrailIndex < 0.0 ? 1.0 : (1.0 - (aTrailIndex + 1.0) * 0.25);
-    vInstanceAlpha = fadeIn * fadeOut * aInstanceOpacity * vTrailFade;
+    // aInstanceOpacity now controls ALL fade timing (enter/hold/exit)
+    vInstanceAlpha = fadeOut * aInstanceOpacity * vTrailFade;
 
     // Pass velocity
     vVelocity = aVelocity;
@@ -128,9 +131,9 @@ void main() {
     vVerticalGradient = clamp(vVerticalGradient, 0.0, 1.0);
 
     // Use instance fade for displacement
-    // Combine shader fade with AnimationState fade (aInstanceOpacity)
     // aInstanceOpacity provides smooth, configurable fade timing from AnimationState
-    float fadeFactor = fadeIn * fadeOut * aInstanceOpacity;
+    // fadeIn is now always 1.0 (disabled), so fadeFactor = fadeOut * aInstanceOpacity
+    float fadeFactor = fadeOut * aInstanceOpacity;
 
     // Add random seed variation for per-instance uniqueness
     float instanceVariation = aRandomSeed * 0.3;

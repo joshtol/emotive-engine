@@ -156,7 +156,7 @@ export class AnimationState {
         // State machine
         switch (this.state) {
         case AnimationStates.WAITING:
-            this._updateWaiting(currentTime, appearTime);
+            this._updateWaiting(currentTime, appearTime, time);
             break;
 
         case AnimationStates.ENTERING:
@@ -240,10 +240,13 @@ export class AnimationState {
     /**
      * Update WAITING state - waiting for appear time
      * @private
+     * @param {number} currentTime - Current time (progress or ms depending on mode)
+     * @param {number} appearTime - Time when element should appear
+     * @param {number} absoluteTime - Spawner's absolute time (for state tracking)
      */
-    _updateWaiting(currentTime, appearTime) {
+    _updateWaiting(currentTime, appearTime, absoluteTime) {
         if (currentTime >= appearTime) {
-            this._transitionTo(AnimationStates.ENTERING);
+            this._transitionTo(AnimationStates.ENTERING, absoluteTime);
             this._fireEvent('onEnterStart');
         }
 
@@ -267,11 +270,20 @@ export class AnimationState {
         const elapsed = time - this.stateStartTime;
         this.progress = Math.min(elapsed / duration, 1);
 
+        // DEBUG: Log once per transition to see actual values
+        if (!this._loggedEntering) {
+            this._loggedEntering = true;
+            console.log(`[AnimState ENTERING] mode=${this.config.timing.mode}, enter.duration=${enter.duration}, gestureDuration=${this.config.gestureDuration}, calculatedDuration=${duration}s, time=${time.toFixed(3)}, stateStartTime=${this.stateStartTime.toFixed(3)}, elapsed=${elapsed.toFixed(3)}s`);
+        }
+
         // Apply easing
         const easedProgress = enter.easing(this.progress);
 
         // Apply enter animation type
         this._applyEnterAnimation(easedProgress);
+
+        // Apply rotation during enter (prevents snap when transitioning to hold)
+        this._applyRotation(time, deltaTime);
 
         // Check for transition to holding
         if (this.progress >= 1) {
@@ -521,44 +533,53 @@ export class AnimationState {
             }
         }
 
-        // ROTATE: Rotation animation (applied externally)
-        // Supports per-element config with musical timing (rotations per gesture)
-        if (hold.rotate) {
-            const r = hold.rotate;
-
-            // Get element-specific config (cycles if more elements than configs)
-            const elemConfig = r.elements[this.index % r.elements.length];
-            const { axis, rotations, phase, oscillate, range } = elemConfig;
-
-            // Convert phase from degrees to radians
-            const phaseRad = (phase || 0) * Math.PI / 180;
-
-            if (oscillate) {
-                // Oscillating rotation
-                const oscPhase = time * (elemConfig.speed || r.speed || 0.1) * 2;
-                const wave = Math.sin(oscPhase);
-                this.rotationOffset.x = axis[0] * wave * range;
-                this.rotationOffset.y = axis[1] * wave * range;
-                this.rotationOffset.z = axis[2] * wave * range;
-            } else if (rotations !== null && rotations !== undefined) {
-                // Musical timing: rotation based on gesture progress
-                // rotations = full rotations over gesture duration
-                const rotation = this.gestureProgress * rotations * Math.PI * 2 + phaseRad;
-                this.rotationOffset.x = axis[0] * rotation;
-                this.rotationOffset.y = axis[1] * rotation;
-                this.rotationOffset.z = axis[2] * rotation;
-            } else {
-                // Legacy: speed-based continuous rotation
-                const speed = (elemConfig.speed || r.speed || 0.1) * deltaTime;
-                this.rotationOffset.x += axis[0] * speed;
-                this.rotationOffset.y += axis[1] * speed;
-                this.rotationOffset.z += axis[2] * speed;
-            }
-        }
+        // ROTATE: Apply rotation animation (also applies during enter/exit)
+        this._applyRotation(time, deltaTime);
 
         // Apply modifiers to base values
         this.opacity = baseOpacity * opacityMod;
         this.scale = baseScale * scaleMod;
+    }
+
+    /**
+     * Apply rotation animation.
+     * Called during ENTERING, HOLDING, and EXITING to prevent snapping.
+     * @private
+     */
+    _applyRotation(time, deltaTime) {
+        const {hold} = this.config;
+        if (!hold.rotate) return;
+
+        const r = hold.rotate;
+
+        // Get element-specific config (cycles if more elements than configs)
+        const elemConfig = r.elements[this.index % r.elements.length];
+        const { axis, rotations, phase, oscillate, range } = elemConfig;
+
+        // Convert phase from degrees to radians
+        const phaseRad = (phase || 0) * Math.PI / 180;
+
+        if (oscillate) {
+            // Oscillating rotation
+            const oscPhase = time * (elemConfig.speed || r.speed || 0.1) * 2;
+            const wave = Math.sin(oscPhase);
+            this.rotationOffset.x = axis[0] * wave * range;
+            this.rotationOffset.y = axis[1] * wave * range;
+            this.rotationOffset.z = axis[2] * wave * range;
+        } else if (rotations !== null && rotations !== undefined) {
+            // Musical timing: rotation based on gesture progress
+            // rotations = full rotations over gesture duration
+            const rotation = this.gestureProgress * rotations * Math.PI * 2 + phaseRad;
+            this.rotationOffset.x = axis[0] * rotation;
+            this.rotationOffset.y = axis[1] * rotation;
+            this.rotationOffset.z = axis[2] * rotation;
+        } else {
+            // Legacy: speed-based continuous rotation
+            const speed = (elemConfig.speed || r.speed || 0.1) * deltaTime;
+            this.rotationOffset.x += axis[0] * speed;
+            this.rotationOffset.y += axis[1] * speed;
+            this.rotationOffset.z += axis[2] * speed;
+        }
     }
 
     /**
@@ -580,6 +601,9 @@ export class AnimationState {
 
         // Apply exit animation type
         this._applyExitAnimation(easedProgress);
+
+        // Continue rotation during exit
+        this._applyRotation(time, deltaTime);
 
         // Check for transition to dead
         if (this.progress >= 1) {
@@ -693,10 +717,23 @@ export class AnimationState {
     /**
      * Transition to a new state
      * @private
+     * @param {string} newState - New state to transition to
+     * @param {number} [currentTime] - Current time (required for ENTERING state)
      */
-    _transitionTo(newState) {
+    _transitionTo(newState, currentTime = null) {
         this.state = newState;
-        this.stateStartTime = this.exitStartTime || this.stateStartTime;
+
+        // Update stateStartTime based on the transition:
+        // - ENTERING: use the current time so elapsed calculation is correct
+        // - EXITING: use exitStartTime (set before calling _transitionTo)
+        // - Others: keep existing stateStartTime
+        if (newState === AnimationStates.ENTERING && currentTime !== null) {
+            this.stateStartTime = currentTime;
+        } else if (newState === AnimationStates.EXITING && this.exitStartTime > 0) {
+            this.stateStartTime = this.exitStartTime;
+        }
+        // Otherwise keep existing stateStartTime
+
         this.progress = 0;
     }
 

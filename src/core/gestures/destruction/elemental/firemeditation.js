@@ -116,7 +116,12 @@ const FIREMEDITATION_CONFIG = {
                 pattern: 'sine'
             },
             // Gentle slow rotation around Z (spin while facing camera)
-            rotate: { axis: 'z', rotations: 0.5, phase: 0 },
+            // Per-ring directions: 0=clockwise, 1=counter-clockwise, 2=clockwise
+            rotate: [
+                { axis: 'z', rotations: 0.5, phase: 0 },    // Ring 0: clockwise
+                { axis: 'z', rotations: -0.5, phase: 0 },   // Ring 1: counter-clockwise
+                { axis: 'z', rotations: 0.5, phase: 0 }     // Ring 2: clockwise
+            ],
             scaleVariance: 0,       // Uniform for meditation
             lifetimeVariance: 0,
             blending: 'additive',

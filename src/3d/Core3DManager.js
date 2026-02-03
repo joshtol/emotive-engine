@@ -3067,7 +3067,7 @@ export class Core3DManager {
                 ?? this._currentIceProgress
                 ?? this._currentVoidProgress
                 ?? null;
-            this.elementSpawner.update(deltaTime, gestureProgress);
+            this.elementSpawner.update(deltaTime / 1000, gestureProgress);  // Convert ms to seconds
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

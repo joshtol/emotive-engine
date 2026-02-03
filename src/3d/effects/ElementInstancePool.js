@@ -157,24 +157,26 @@ export class ElementInstancePool {
         });
 
         // Set up main instance
+        // Start with opacity 0 - AnimationState will control fade via updateInstanceOpacity
         this._setupInstance(mainSlot, position, rotation, scale, {
             spawnTime,
             exitTime: 0,
             modelIndex,
-            opacity: 1.0,
+            opacity: 0.0,  // Start invisible - AnimationState controls smooth fade
             trailParent: -1,
             trailIndex: -1,
             arcPhase
         });
 
         // Set up trail instances (slightly behind in time/position)
+        // Also start invisible
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = trailSlots[i];
             this._setupInstance(trailSlot, position, rotation, scale, {
                 spawnTime,
                 exitTime: 0,
                 modelIndex,
-                opacity: 1.0 - (i + 1) * 0.25,  // Fade: 0.75, 0.5, 0.25
+                opacity: 0.0,  // Start invisible - AnimationState controls fade
                 trailParent: mainSlot,
                 trailIndex: i,
                 arcPhase
