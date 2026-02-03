@@ -1330,32 +1330,6 @@ export class ThreeRenderer {
             return;
         }
 
-        // DEBUG: Check scene for null children before render and REMOVE them
-        // Also recursively check children of children
-        const validateObject = (obj, path) => {
-            if (!obj || !obj.children) return true;
-            for (let i = 0; i < obj.children.length; i++) {
-                const child = obj.children[i];
-                if (child === null || child === undefined) {
-                    console.error(`[ThreeRenderer] NULL CHILD at ${path}.children[${i}] - REMOVING!`);
-                    obj.children.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                if (child.visible === null || child.visible === undefined) {
-                    console.error(`[ThreeRenderer] child.visible is NULL at ${path}.children[${i}] name=${child.name} - REMOVING!`);
-                    obj.children.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                // Recursively validate children
-                validateObject(child, `${path}.children[${i}]`);
-            }
-            return true;
-        };
-        validateObject(this.scene, 'scene');
-
-
         const {
             position = [0, 0, 0],
             rotation = [0, 0, 0],
@@ -1443,7 +1417,14 @@ export class ThreeRenderer {
                 // Only update glowColor if the uniform exists (crystal uses emotionColor instead)
                 if (this.coreMesh.material.uniforms.glowColor) {
                     this._tempColor.setRGB(...glowColor);
-                    this.coreMesh.material.uniforms.glowColor.value.lerp(this._tempColor, 0.15);
+                    // Only lerp if color difference is significant (avoids unnecessary work when idle)
+                    const currentColor = this.coreMesh.material.uniforms.glowColor.value;
+                    const colorDiff = Math.abs(this._tempColor.r - currentColor.r) +
+                                     Math.abs(this._tempColor.g - currentColor.g) +
+                                     Math.abs(this._tempColor.b - currentColor.b);
+                    if (colorDiff > 0.001) {
+                        currentColor.lerp(this._tempColor, 0.15);
+                    }
                 }
 
                 // Normalize intensity to prevent huge brightness differences between emotions
@@ -1465,9 +1446,13 @@ export class ThreeRenderer {
                         }
                     }
                     const currentIntensity = this.coreMesh.material.uniforms.glowIntensity.value;
-                    // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
-                    const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
-                    this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
+                    // Only lerp if intensity difference is significant (avoids unnecessary work when idle)
+                    const intensityDiff = Math.abs(targetIntensity - currentIntensity);
+                    if (intensityDiff > 0.001) {
+                        // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
+                        const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
+                        this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
+                    }
                 }
 
                 // ═══════════════════════════════════════════════════════════════

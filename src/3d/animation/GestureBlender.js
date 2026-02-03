@@ -34,6 +34,135 @@ export class GestureBlender {
         // Track which animations have already triggered crack impacts
         // Key: animation id, Value: true if already triggered
         this._crackTriggeredAnimations = new Set();
+
+        // Pre-allocated accumulator object (reset each frame instead of recreating)
+        // This eliminates per-frame object allocation for ~30+ properties
+        this._accumulated = {
+            position: [0, 0, 0],
+            rotationQuat: this.accumulatedRotationQuat,
+            scale: 1.0,
+            nonUniformScale: [1.0, 1.0, 1.0],
+            glowIntensity: 1.0,
+            glowBoost: 0.0,
+            glowColorOverride: null,
+            electricOverlay: null,
+            waterOverlay: null,
+            fireOverlay: null,
+            smokeOverlay: null,
+            voidOverlay: null,
+            iceOverlay: null,
+            lightOverlay: null,
+            poisonOverlay: null,
+            earthOverlay: null,
+            natureOverlay: null,
+            meshOpacity: 1.0,
+            cameraRelativePosition: [0, 0, 0],
+            cameraRelativeRotation: [0, 0, 0],
+            positionBoost: [0, 0, 0],
+            rotationBoost: [0, 0, 0],
+            scaleBoost: 1.0,
+            hasAccentGestures: false,
+            hasAbsoluteGestures: false,
+            hasCameraRelativeGestures: false,
+            freezeRotation: 0,
+            freezeWobble: 0,
+            freezeGroove: 0,
+            freezeParticles: 0,
+            deformation: null,
+            shatter: null,
+            crack: null,
+            crackTriggers: null,
+            crackHealTrigger: false,
+            crackHealDuration: 1500
+        };
+
+        // Pre-allocated result object (avoids allocation on return)
+        this._result = {
+            position: null,
+            rotation: [0, 0, 0],
+            scale: 1.0,
+            nonUniformScale: null,
+            glowIntensity: 1.0,
+            glowBoost: 0.0,
+            glowColorOverride: null,
+            electricOverlay: null,
+            waterOverlay: null,
+            fireOverlay: null,
+            smokeOverlay: null,
+            voidOverlay: null,
+            iceOverlay: null,
+            lightOverlay: null,
+            poisonOverlay: null,
+            earthOverlay: null,
+            natureOverlay: null,
+            meshOpacity: 1.0,
+            cameraRelativePosition: null,
+            cameraRelativeRotation: null,
+            positionBoost: null,
+            rotationBoost: null,
+            scaleBoost: 1.0,
+            hasAccentGestures: false,
+            hasAbsoluteGestures: false,
+            hasCameraRelativeGestures: false,
+            freezeRotation: 0,
+            freezeWobble: 0,
+            freezeGroove: 0,
+            freezeParticles: 0,
+            deformation: null,
+            shatter: null,
+            crack: null,
+            crackTriggers: null,
+            crackHealTrigger: false,
+            crackHealDuration: 1500,
+            gestureQuaternion: null
+        };
+
+        // Pre-allocated arrays for non-uniform scale result
+        this._finalNonUniformScale = [1.0, 1.0, 1.0];
+    }
+
+    /**
+     * Reset accumulated values to defaults (called at start of blend)
+     * @private
+     */
+    _resetAccumulated() {
+        const a = this._accumulated;
+        a.position[0] = 0; a.position[1] = 0; a.position[2] = 0;
+        a.scale = 1.0;
+        a.nonUniformScale[0] = 1.0; a.nonUniformScale[1] = 1.0; a.nonUniformScale[2] = 1.0;
+        a.glowIntensity = 1.0;
+        a.glowBoost = 0.0;
+        a.glowColorOverride = null;
+        a.electricOverlay = null;
+        a.waterOverlay = null;
+        a.fireOverlay = null;
+        a.smokeOverlay = null;
+        a.voidOverlay = null;
+        a.iceOverlay = null;
+        a.lightOverlay = null;
+        a.poisonOverlay = null;
+        a.earthOverlay = null;
+        a.natureOverlay = null;
+        a.meshOpacity = 1.0;
+        a.cameraRelativePosition[0] = 0; a.cameraRelativePosition[1] = 0; a.cameraRelativePosition[2] = 0;
+        a.cameraRelativeRotation[0] = 0; a.cameraRelativeRotation[1] = 0; a.cameraRelativeRotation[2] = 0;
+        a.positionBoost[0] = 0; a.positionBoost[1] = 0; a.positionBoost[2] = 0;
+        a.rotationBoost[0] = 0; a.rotationBoost[1] = 0; a.rotationBoost[2] = 0;
+        a.scaleBoost = 1.0;
+        a.hasAccentGestures = false;
+        a.hasAbsoluteGestures = false;
+        a.hasCameraRelativeGestures = false;
+        a.freezeRotation = 0;
+        a.freezeWobble = 0;
+        a.freezeGroove = 0;
+        a.freezeParticles = 0;
+        a.deformation = null;
+        a.shatter = null;
+        a.crack = null;
+        a.crackTriggers = null;
+        a.crackHealTrigger = false;
+        a.crackHealDuration = 1500;
+        this.accumulatedRotationQuat.identity();
     }
 
     /**
@@ -53,65 +182,9 @@ export class GestureBlender {
      * @returns {Object} Blended gesture output
      */
     blend(animations, currentTime, baseEuler, baseScale, baseGlowIntensity) {
-        // Reset accumulated rotation quaternion to identity (reuse instead of allocate)
-        this.accumulatedRotationQuat.identity();
-
-        // Initialize accumulator with identity values
-        const accumulated = {
-            // ABSOLUTE channels (create motion)
-            position: [0, 0, 0],                               // Additive channel (world-space)
-            rotationQuat: this.accumulatedRotationQuat,        // Multiplicative channel (reused)
-            scale: 1.0,                                        // Multiplicative channel (uniform)
-            nonUniformScale: [1.0, 1.0, 1.0],                  // Multiplicative channel [x, y, z] for squash/stretch
-            glowIntensity: 1.0,                                // Multiplicative channel
-            glowBoost: 0.0,                                    // Additive channel (for glow layer)
-            glowColorOverride: null,                           // Temporary glow color override [r,g,b]
-            electricOverlay: null,                             // Electric shader overlay {enabled, charge, time}
-            waterOverlay: null,                                // Water shader overlay {enabled, wetness, time}
-            fireOverlay: null,                                 // Fire shader overlay {enabled, heat, temperature, time}
-            smokeOverlay: null,                                // Smoke shader overlay {enabled, thickness, density, time}
-            voidOverlay: null,                                 // Void shader overlay {enabled, strength, depth, time}
-            iceOverlay: null,                                  // Ice shader overlay {enabled, strength, frost, time}
-            lightOverlay: null,                                // Light shader overlay {enabled, strength, radiance, time}
-            poisonOverlay: null,                               // Poison shader overlay {enabled, strength, toxicity, time}
-            earthOverlay: null,                                // Earth shader overlay {enabled, strength, petrification, time}
-            natureOverlay: null,                               // Nature shader overlay {enabled, strength, growth, time}
-            meshOpacity: 1.0,                                  // Mesh opacity for fade effects (0=invisible, 1=visible)
-
-            // CAMERA-RELATIVE channels (transformed in Core3DManager)
-            // Position: Z = toward camera, Y = up, X = right (in view space)
-            cameraRelativePosition: [0, 0, 0],
-            // Rotation: Roll around view axis (Z = roll left/right as seen by camera)
-            cameraRelativeRotation: [0, 0, 0],
-
-            // ACCENT/BOOST channels (enhance groove without replacing it)
-            positionBoost: [0, 0, 0],                          // Additive boost to groove position
-            rotationBoost: [0, 0, 0],                          // Additive boost to groove rotation
-            scaleBoost: 1.0,                                   // Multiplicative boost (1.0 = no change)
-
-            // Track if we have any accent gestures (affects groove blending behavior)
-            hasAccentGestures: false,
-            hasAbsoluteGestures: false,
-            hasCameraRelativeGestures: false,
-
-            // FREEZE channels (0 = normal, 1 = frozen) - for hold gesture "pause button"
-            freezeRotation: 0,                                     // Stops rotation behavior
-            freezeWobble: 0,                                       // Stops episodic wobble
-            freezeGroove: 0,                                       // Stops rhythm groove
-            freezeParticles: 0,                                    // Stops particle motion
-
-            // DEFORMATION channel - localized vertex displacement for impacts
-            deformation: null,                                     // {enabled, type, strength, phase, direction, impactPoint, falloffRadius}
-
-            // SHATTER channel - geometry fragmentation
-            shatter: null,                                         // {enabled, impactPoint, intensity, variant}
-
-            // CRACK channel - post-processing crack overlay (PERSISTENT MODEL)
-            crack: null,                                           // Latest crack params for glow updates
-            crackTriggers: null,                                   // Array of new impacts to add this frame
-            crackHealTrigger: false,                               // True when heal gesture starts
-            crackHealDuration: 1500                                // Duration for heal animation
-        };
+        // Reset pre-allocated accumulator to defaults (avoids per-frame object allocation)
+        this._resetAccumulated();
+        const accumulated = this._accumulated;
 
         // Blend all active animations
         for (const animation of animations) {
@@ -521,67 +594,77 @@ export class GestureBlender {
         const hasNonUniformScale = accumulated.nonUniformScale[0] !== 1.0 ||
                                    accumulated.nonUniformScale[1] !== 1.0 ||
                                    accumulated.nonUniformScale[2] !== 1.0;
-        const finalNonUniformScale = hasNonUniformScale ? [
-            finalScale * accumulated.nonUniformScale[0],
-            finalScale * accumulated.nonUniformScale[1],
-            finalScale * accumulated.nonUniformScale[2]
-        ] : null;
 
-        return {
-            // Absolute gesture outputs
-            position: accumulated.position,
-            rotation: finalRotation,
-            scale: finalScale,
-            nonUniformScale: finalNonUniformScale,  // [x, y, z] or null for uniform
-            glowIntensity: finalGlowIntensity,
-            glowBoost: accumulated.glowBoost,
-            glowColorOverride: accumulated.glowColorOverride,
-            electricOverlay: accumulated.electricOverlay,
-            waterOverlay: accumulated.waterOverlay,
-            fireOverlay: accumulated.fireOverlay,
-            smokeOverlay: accumulated.smokeOverlay,
-            voidOverlay: accumulated.voidOverlay,
-            iceOverlay: accumulated.iceOverlay,
-            lightOverlay: accumulated.lightOverlay,
-            poisonOverlay: accumulated.poisonOverlay,
-            earthOverlay: accumulated.earthOverlay,
-            natureOverlay: accumulated.natureOverlay,
-            meshOpacity: accumulated.meshOpacity,
+        // Use pre-allocated non-uniform scale array when needed
+        let finalNonUniformScale = null;
+        if (hasNonUniformScale) {
+            this._finalNonUniformScale[0] = finalScale * accumulated.nonUniformScale[0];
+            this._finalNonUniformScale[1] = finalScale * accumulated.nonUniformScale[1];
+            this._finalNonUniformScale[2] = finalScale * accumulated.nonUniformScale[2];
+            finalNonUniformScale = this._finalNonUniformScale;
+        }
 
-            // Camera-relative channels (view-space, transformed in Core3DManager)
-            cameraRelativePosition: accumulated.cameraRelativePosition,
-            cameraRelativeRotation: accumulated.cameraRelativeRotation,
+        // Populate pre-allocated result object (avoids per-frame object allocation)
+        const r = this._result;
 
-            // Accent gesture outputs (for groove enhancement)
-            positionBoost: accumulated.positionBoost,
-            rotationBoost: accumulated.rotationBoost,
-            scaleBoost: accumulated.scaleBoost,
+        // Absolute gesture outputs
+        r.position = accumulated.position;
+        r.rotation[0] = finalRotation[0];
+        r.rotation[1] = finalRotation[1];
+        r.rotation[2] = finalRotation[2];
+        r.scale = finalScale;
+        r.nonUniformScale = finalNonUniformScale;
+        r.glowIntensity = finalGlowIntensity;
+        r.glowBoost = accumulated.glowBoost;
+        r.glowColorOverride = accumulated.glowColorOverride;
+        r.electricOverlay = accumulated.electricOverlay;
+        r.waterOverlay = accumulated.waterOverlay;
+        r.fireOverlay = accumulated.fireOverlay;
+        r.smokeOverlay = accumulated.smokeOverlay;
+        r.voidOverlay = accumulated.voidOverlay;
+        r.iceOverlay = accumulated.iceOverlay;
+        r.lightOverlay = accumulated.lightOverlay;
+        r.poisonOverlay = accumulated.poisonOverlay;
+        r.earthOverlay = accumulated.earthOverlay;
+        r.natureOverlay = accumulated.natureOverlay;
+        r.meshOpacity = accumulated.meshOpacity;
 
-            // Gesture type flags (for groove blending decisions)
-            hasAccentGestures: accumulated.hasAccentGestures,
-            hasAbsoluteGestures: accumulated.hasAbsoluteGestures,
-            hasCameraRelativeGestures: accumulated.hasCameraRelativeGestures,
+        // Camera-relative channels
+        r.cameraRelativePosition = accumulated.cameraRelativePosition;
+        r.cameraRelativeRotation = accumulated.cameraRelativeRotation;
 
-            // Freeze channels (0 = normal, 1 = frozen) - for hold gesture
-            freezeRotation: accumulated.freezeRotation,
-            freezeWobble: accumulated.freezeWobble,
-            freezeGroove: accumulated.freezeGroove,
-            freezeParticles: accumulated.freezeParticles,
+        // Accent gesture outputs
+        r.positionBoost = accumulated.positionBoost;
+        r.rotationBoost = accumulated.rotationBoost;
+        r.scaleBoost = accumulated.scaleBoost;
 
-            // Deformation channel for localized vertex displacement
-            deformation: accumulated.deformation,
+        // Gesture type flags
+        r.hasAccentGestures = accumulated.hasAccentGestures;
+        r.hasAbsoluteGestures = accumulated.hasAbsoluteGestures;
+        r.hasCameraRelativeGestures = accumulated.hasCameraRelativeGestures;
 
-            // Shatter channel for geometry fragmentation
-            shatter: accumulated.shatter,
+        // Freeze channels
+        r.freezeRotation = accumulated.freezeRotation;
+        r.freezeWobble = accumulated.freezeWobble;
+        r.freezeGroove = accumulated.freezeGroove;
+        r.freezeParticles = accumulated.freezeParticles;
 
-            // Crack channel for post-processing crack overlay (PERSISTENT MODEL)
-            crack: accumulated.crack,
-            crackTriggers: accumulated.crackTriggers,       // New impacts to add
-            crackHealTrigger: accumulated.crackHealTrigger, // Start healing animation
-            crackHealDuration: accumulated.crackHealDuration,
+        // Deformation channel
+        r.deformation = accumulated.deformation;
 
-            gestureQuaternion: accumulated.rotationQuat // For debugging/inspection
-        };
+        // Shatter channel
+        r.shatter = accumulated.shatter;
+
+        // Crack channel
+        r.crack = accumulated.crack;
+        r.crackTriggers = accumulated.crackTriggers;
+        r.crackHealTrigger = accumulated.crackHealTrigger;
+        r.crackHealDuration = accumulated.crackHealDuration;
+
+        // Debug
+        r.gestureQuaternion = accumulated.rotationQuat;
+
+        return r;
     }
 
     /**

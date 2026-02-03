@@ -114,8 +114,15 @@ const FIREPILLAR_CONFIG = {
                 frequency: 4,
                 pattern: 'sine'
             },
-            // All rings rotate together - unified pillar
-            rotate: { axis: 'z', rotations: 0.5, phase: 0 },
+            // Rings rotate with 120° phase offsets - breaks repeating pattern
+            rotate: [
+                { axis: 'z', rotations: 0.5, phase: 0 },
+                { axis: 'z', rotations: 0.5, phase: 120 },
+                { axis: 'z', rotations: 0.5, phase: 240 },
+                { axis: 'z', rotations: 0.5, phase: 0 },
+                { axis: 'z', rotations: 0.5, phase: 120 },
+                { axis: 'z', rotations: 0.5, phase: 240 }
+            ],
             scaleVariance: 0.03,    // Minimal variance for solid pillar
             lifetimeVariance: 0.02,
             blending: 'additive',
@@ -153,7 +160,7 @@ const FIREPILLAR_CONFIG = {
  * Uses axis-travel with stack formation:
  * - 6 flat flame-ring models stacked vertically
  * - Rise from below to above with expanding diameter
- * - All rings rotate together for unified pillar effect
+ * - Rings rotate with 120° phase offsets (3 groups of 2)
  * - Inverted pyramid shape (narrow base, wide top)
  */
 export default buildFireEffectGesture(FIREPILLAR_CONFIG);

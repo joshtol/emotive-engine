@@ -3054,8 +3054,10 @@ export class Core3DManager {
                 });
             }
 
-            // Update shatter system each frame
-            this.shatterSystem.update(deltaTime);
+            // Update shatter system only when actively shattering or reassembling
+            if (this.shatterSystem.isShattering() || this.shatterSystem.isReassembling()) {
+                this.shatterSystem.update(deltaTime);
+            }
         } // end if (this.enableShatter && this.shatterSystem)
 
         // Update element spawner (ice crystals, rocks, etc.)

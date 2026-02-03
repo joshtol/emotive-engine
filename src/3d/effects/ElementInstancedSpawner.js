@@ -191,6 +191,11 @@ export class ElementInstancedSpawner {
         // Initialization state
         this._initialized = new Set();  // Element types that have been initialized
         this._initializing = new Map();  // Element types currently initializing -> Promise
+
+        // Pool cleanup tracking (dispose pools after inactivity)
+        this._poolLastUsed = new Map();  // elementType -> timestamp
+        this._poolCleanupInterval = 30000;  // 30 seconds of inactivity before disposal
+        this._lastCleanupCheck = 0;
     }
 
     /**
@@ -401,6 +406,9 @@ export class ElementInstancedSpawner {
             return [];
         }
 
+        // Track pool usage time for cleanup (prevents premature disposal)
+        this._poolLastUsed.set(elementType, performance.now());
+
         // Clear existing elements of this type first
         this.despawn(elementType);
 
@@ -577,12 +585,13 @@ export class ElementInstancedSpawner {
     _generateSpawnRotation(pattern, position) {
         const quat = _temp.quaternion;
 
-        // Random rotation for most patterns
-        quat.setFromEuler(new THREE.Euler(
+        // Random rotation for most patterns (use shared _temp.euler to avoid allocation)
+        _temp.euler.set(
             Math.random() * Math.PI * 2,
             Math.random() * Math.PI * 2,
             Math.random() * Math.PI * 2
-        ));
+        );
+        quat.setFromEuler(_temp.euler);
 
         return quat.clone();
     }
@@ -645,8 +654,10 @@ export class ElementInstancedSpawner {
             break;
         }
 
+        // Return shared _temp.position - caller must copy if needed for persistence
+        // Avoids per-frame Vector3 allocation (was causing GC pressure/memory leak)
         return {
-            position: position.clone(),
+            position,
             scale: result.scale,
             diameter: result.diameter,
             rotationOffset: result.rotationOffset
@@ -723,10 +734,12 @@ export class ElementInstancedSpawner {
 
             // Apply initial scale and diameter
             const initialScale = baseScale * initialResult.scale;
+            // Scale XY (circular face) by diameter, Z (thickness) stays uniform
+            // Ring model is in XY plane - diameter affects the circular face
             _temp.scale.set(
                 initialScale * initialResult.diameter,
-                initialScale,
-                initialScale * initialResult.diameter
+                initialScale * initialResult.diameter,
+                initialScale
             );
 
             // Determine ring orientation:
@@ -738,7 +751,7 @@ export class ElementInstancedSpawner {
             console.log(`[ElementInstancedSpawner] Ring orientation for ${modelName}: config=${configOrientation}, model=${modelOrientation.mode}, resolved=${orientationMode}`);
 
             // Build rotation: first apply ring orientation, then formation arcOffset
-            // Note: flame-ring model is created flat in XZ plane (normal = +Y)
+            // Note: flame-ring model's circular face is in XY plane (faces -Z)
             //
             // IMPORTANT: The container copies mascot's quaternion in update(), so to keep
             // rings flat in WORLD space, we need to apply the INVERSE of the mascot's rotation.
@@ -1355,6 +1368,13 @@ export class ElementInstancedSpawner {
 
         this.time += deltaTime;
 
+        // OPTIMIZATION: When no elements are active but pools exist,
+        // skip expensive per-frame work and just check for pool cleanup
+        if (this.activeElements.size === 0) {
+            this._checkPoolCleanup();
+            return;
+        }
+
         // Sync container transform with mascot (position, rotation, scale)
         // This ensures surface-spawned elements follow mascot transformations
         // NOTE: For axis-travel elements with worldSpaceOrientation, we skip rotation
@@ -1437,12 +1457,13 @@ export class ElementInstancedSpawner {
                 // Apply calculated position
                 finalPosition = result.position;
 
-                // Apply scale with diameter (X/Z) and animation fadeProgress
+                // Apply scale with diameter (XY circular face) and animation fadeProgress
+                // Ring model is in XY plane - diameter affects the circular face, Z is thickness
                 const animScale = baseScale * result.scale * animState.fadeProgress;
                 _temp.scale.set(
                     animScale * result.diameter,
-                    animScale,
-                    animScale * result.diameter
+                    animScale * result.diameter,
+                    animScale
                 );
                 finalScale = animScale;
 
@@ -1510,7 +1531,7 @@ export class ElementInstancedSpawner {
             // Update instance transform in pool
             // Note: updateInstanceTransform accepts both scalar and Vector3 scale
             if (axisTravel && gestureProgress !== null) {
-                // Axis-travel uses non-uniform scale (diameter affects X/Z)
+                // Axis-travel uses non-uniform scale (diameter affects XY circular face)
                 pool.updateInstanceTransform(
                     elementId,
                     finalPosition,
@@ -1586,6 +1607,42 @@ export class ElementInstancedSpawner {
     }
 
     /**
+     * Check for and clean up inactive pools.
+     * Pools are disposed after _poolCleanupInterval of inactivity.
+     * @private
+     */
+    _checkPoolCleanup() {
+        const now = performance.now();
+
+        // Throttle cleanup checks to once per second
+        if (now - this._lastCleanupCheck < 1000) {
+            return;
+        }
+        this._lastCleanupCheck = now;
+
+        // Check each pool for inactivity
+        for (const [type, pool] of this.pools) {
+            const lastUsed = this._poolLastUsed.get(type) || 0;
+            if (now - lastUsed > this._poolCleanupInterval) {
+                // Pool has been inactive - dispose it
+                pool.dispose();
+                this.pools.delete(type);
+                this._poolLastUsed.delete(type);
+
+                // Also dispose the material
+                const material = this.materials.get(type);
+                if (material) {
+                    material.dispose();
+                    this.materials.delete(type);
+                }
+
+                // Clear from initialized set so it can be re-initialized later
+                this._initialized.delete(type);
+            }
+        }
+    }
+
+    /**
      * Disposes of all resources.
      */
     dispose() {
@@ -1623,6 +1680,7 @@ export class ElementInstancedSpawner {
 
         this._initialized.clear();
         this.activeElements.clear();
+        this._poolLastUsed.clear();
     }
 }
 

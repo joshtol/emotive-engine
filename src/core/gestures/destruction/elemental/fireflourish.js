@@ -43,7 +43,7 @@ const FIREFLOURISH_CONFIG = {
     emoji: '⚔️',
     type: 'blending',
     description: 'Spinning sword flourish with fire trail',
-    duration: 2400,             // Extended for dramatic flourish with trail
+    duration: 1200,             // Fast triplet flourish
     beats: 4,
     intensity: 1.3,
     category: 'radiating',

@@ -65,9 +65,14 @@ export class ElementInstancePool {
         this._position = new THREE.Vector3();
         this._quaternion = new THREE.Quaternion();
         this._scale = new THREE.Vector3(1, 1, 1);
+        this._identityQuaternion = new THREE.Quaternion();  // Reusable identity
+        this._unitScale = new THREE.Vector3(1, 1, 1);       // Reusable unit scale
 
         // Global time reference (set externally)
         this.globalTime = 0;
+
+        // Track pending timeouts for cleanup
+        this._pendingTimeouts = new Set();
     }
 
     /**
@@ -194,10 +199,10 @@ export class ElementInstancePool {
      * @private
      */
     _setupInstance(slot, position, rotation, scale, attrs) {
-        // Build transform matrix
+        // Build transform matrix (use reusable fallbacks to avoid allocation)
         this._position.copy(position);
-        this._quaternion.copy(rotation || new THREE.Quaternion());
-        this._scale.copy(scale || new THREE.Vector3(1, 1, 1));
+        this._quaternion.copy(rotation || this._identityQuaternion);
+        this._scale.copy(scale || this._unitScale);
         this._matrix.compose(this._position, this._quaternion, this._scale);
 
         // Set instance matrix
@@ -237,9 +242,10 @@ export class ElementInstancePool {
         const element = this.activeElements.get(elementId);
         if (!element) return;
 
-        // Calculate velocity if not provided
+        // Calculate velocity if not provided (using scratch object to avoid allocation)
         if (!velocity && element.position) {
-            velocity = position.clone().sub(element.position);
+            this._velocity = this._velocity || new THREE.Vector3();
+            velocity = this._velocity.copy(position).sub(element.position);
         }
         element.position.copy(position);
 
@@ -279,10 +285,12 @@ export class ElementInstancePool {
         const element = this.activeElements.get(elementId);
         if (!element) return;
 
-        // Store position for velocity calculation
+        // Calculate velocity if not provided (using scratch object to avoid allocation)
         if (element.position) {
             if (!velocity) {
-                velocity = position.clone().sub(element.position);
+                // Use _position as scratch for velocity calculation
+                this._velocity = this._velocity || new THREE.Vector3();
+                velocity = this._velocity.copy(position).sub(element.position);
             }
             element.position.copy(position);
         }
@@ -302,16 +310,24 @@ export class ElementInstancePool {
 
         // Update trail slots with slightly delayed transforms
         // Trails use progressively smaller scales and inherit rotation
+        // Store original scale for trail calculations (avoid clone allocation)
+        const origScaleX = this._scale.x;
+        const origScaleY = this._scale.y;
+        const origScaleZ = this._scale.z;
+
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = element.trailSlots[i];
-            const trailScale = typeof scale === 'number'
-                ? scale * (1 - (i + 1) * 0.15)  // Each trail 15% smaller
-                : this._scale.clone().multiplyScalar(1 - (i + 1) * 0.15);
+            const trailMultiplier = 1 - (i + 1) * 0.15;  // Each trail 15% smaller
 
-            if (typeof trailScale === 'number') {
-                this._scale.setScalar(trailScale);
+            if (typeof scale === 'number') {
+                this._scale.setScalar(scale * trailMultiplier);
             } else {
-                this._scale.copy(trailScale);
+                // Scale each component without cloning
+                this._scale.set(
+                    origScaleX * trailMultiplier,
+                    origScaleY * trailMultiplier,
+                    origScaleZ * trailMultiplier
+                );
             }
             this._matrix.compose(this._position, this._quaternion, this._scale);
             this.mesh.setMatrixAt(trailSlot, this._matrix);
@@ -373,9 +389,12 @@ export class ElementInstancePool {
         this.exitTimeAttr.needsUpdate = true;
 
         // Schedule actual removal after fade completes
-        setTimeout(() => {
+        // Track timeout for cleanup on dispose
+        const timeoutId = setTimeout(() => {
+            this._pendingTimeouts.delete(timeoutId);
             this._finalizeRemoval(elementId);
         }, fadeDuration * 1000);
+        this._pendingTimeouts.add(timeoutId);
     }
 
     /**
@@ -489,6 +508,12 @@ export class ElementInstancePool {
      * Disposes of all GPU resources.
      */
     dispose() {
+        // Cancel all pending despawn timeouts
+        for (const timeoutId of this._pendingTimeouts) {
+            clearTimeout(timeoutId);
+        }
+        this._pendingTimeouts.clear();
+
         this.clear();
         this.mesh.geometry.dispose();
         this.mesh.material.dispose();

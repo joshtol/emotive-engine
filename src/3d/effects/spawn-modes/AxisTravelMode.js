@@ -348,17 +348,18 @@ export class AxisTravelMode extends BaseSpawnMode {
             mesh.scale.setScalar(finalScale);
         }
 
-        // Interpolate diameter (XZ scale) for rings
+        // Interpolate diameter (XY circular face scale) for rings
+        // Ring model's circular face is in XY plane, Z is thickness
         if (at.startDiameter !== at.endDiameter) {
             const diamInterp = at.startDiameter + (at.endDiameter - at.startDiameter) * easedProgress;
-            // Apply diameter to X and Z while preserving Y scale
+            // Apply diameter to X and Y (circular face) while preserving Z scale (thickness)
             const baseScale = at.baseScale * (at.startScale !== at.endScale
                 ? at.startScale + (at.endScale - at.startScale) * easedProgress
                 : 1.0);
             mesh.scale.x = baseScale * diamInterp;
-            mesh.scale.z = baseScale * diamInterp;
-            // Y scale stays at baseScale (or interpolated scale)
-            mesh.scale.y = baseScale;
+            mesh.scale.y = baseScale * diamInterp;
+            // Z scale stays at baseScale (thickness)
+            mesh.scale.z = baseScale;
         }
 
         // Apply formation rotation offset to shader (for spiral arc alignment)
