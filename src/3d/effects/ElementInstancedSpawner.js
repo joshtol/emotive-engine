@@ -795,9 +795,21 @@ export class ElementInstancedSpawner {
             // Generate element ID
             const elementId = `${elementType}_${this._nextId++}`;
 
-            // Spawn in pool - pass rotationOffset as arc phase for shader arc visibility
-            // This allows each ring in a formation to show its arc at a different angle
-            const arcPhase = formationData.rotationOffset || 0;
+            // Spawn in pool - pass arc phase for shader arc visibility
+            // For staggered animations, use time-based offset so each ring's arc starts fresh
+            // when that ring appears (converts stagger timing to angle offset in shader)
+            let arcPhase = formationData.rotationOffset || 0;
+            const stagger = animation.stagger || 0;
+            const shaderAnim = modelOverrides[modelName]?.shaderAnimation;
+            if (stagger > 0 && shaderAnim?.arcSpeed) {
+                // Time offset: negative angle to delay arc start based on element index
+                // arcAngle in shader = gestureProgress * arcSpeed * 2π + arcPhase
+                // Setting arcPhase = -stagger * index * arcSpeed * 2π makes each element
+                // start its arc animation when it appears, not at gesture start
+                const timeOffset = stagger * i * shaderAnim.arcSpeed * Math.PI * 2;
+                arcPhase = -timeOffset;
+                console.log(`[ElementInstancedSpawner] Arc time offset for element ${i}: stagger=${stagger}, arcSpeed=${shaderAnim.arcSpeed}, arcPhase=${arcPhase.toFixed(3)}`);
+            }
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex, arcPhase);
 
             if (success) {

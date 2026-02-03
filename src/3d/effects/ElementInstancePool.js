@@ -211,8 +211,8 @@ export class ElementInstancePool {
         this.trailParentArray[slot] = attrs.trailParent;
         this.trailIndexArray[slot] = attrs.trailIndex;
         // For vortex effects, arcPhase overrides randomSeed to position arcs at different angles
-        // For surface spawning (arcPhase=0), keep the random seed for variation
-        if (attrs.arcPhase) {
+        // Use type check since arcPhase=0 is valid (element 0 should start at 0)
+        if (typeof attrs.arcPhase === 'number') {
             this.randomSeedArray[slot] = attrs.arcPhase;
             this.randomSeedAttr.needsUpdate = true;
         }
