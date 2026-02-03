@@ -5,87 +5,87 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Fireflourish gesture - theatrical flame sword flourish
+ * @fileoverview Fireflourish gesture - expanding spiral flourish
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/fireflourish
  * @complexity ⭐⭐ Intermediate
  *
  * VISUAL DIAGRAM:
- *            ═══
- *          ═══       ← Rings trail upward
- *        ═══           in sweeping arc
- *      ═══  ★        ← Like a sword flourish
- *        ═══
- *          ═══
+ *              🔥
+ *          🔥      🔥        ← Rings expand outward
+ *        🔥    ★    🔥        in spiral pattern
+ *          🔥      🔥        like drawing with fire
+ *              🔥
  *
  * FEATURES:
- * - 5 horizontal rings sweeping in trailing arc
- * - Sequential stagger creates blade trail effect
- * - Martial arts flourish motion
+ * - 5 camera-facing rings in kaleidoscope spiral
+ * - Expand outward from center while rotating
+ * - Like drawing a fire spiral in the air
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
  * - Theatrical fire displays
- * - Martial arts flame effects
- * - Sword flourish trails
- * - Combat celebration
+ * - Magic casting flourishes
+ * - Celebration effects
+ * - Artistic fire patterns
  */
 
 import { buildFireEffectGesture } from './fireEffectFactory.js';
 
 /**
  * Fireflourish gesture configuration
- * Theatrical flame sword flourish - rings sweep in trailing arc
+ * Expanding spiral flourish - rings bloom outward
  */
 const FIREFLOURISH_CONFIG = {
     name: 'fireflourish',
-    emoji: '⚔️',
+    emoji: '🌀',
     type: 'blending',
-    description: 'Theatrical flame sword flourish',
+    description: 'Expanding spiral flame flourish',
     duration: 2000,
     beats: 4,
     intensity: 1.2,
     category: 'radiating',
-    temperature: 0.6,  // Warm orange fire
+    temperature: 0.6,
 
-    // 3D Element spawning - trailing arc of rings
+    // 3D Element spawning - expanding spiral
     spawnMode: {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',
-            end: 'above',
-            easing: 'linear',
-            startScale: 1.0,
-            endScale: 1.0,
-            startDiameter: 1.8,
-            endDiameter: 1.8,
-            orientation: 'flat'
+            start: 'center',
+            end: 'center',              // Stay centered (expand via diameter)
+            easing: 'easeOut',
+            startScale: 0.3,            // Start small
+            endScale: 1.2,              // Grow larger
+            startDiameter: 0.5,         // Start tight
+            endDiameter: 2.5,           // Expand outward
+            orientation: 'camera'       // Always face camera
         },
         formation: {
-            type: 'stack',
+            type: 'spiral',
             count: 5,
-            spacing: 0.15
+            spacing: 0,                 // All at same position (kaleidoscope)
+            arcOffset: 72               // 72° between rings (360/5)
         },
         count: 5,
-        scale: 0.8,
+        scale: 0.9,
         models: ['flame-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.7,
-            stagger: 0.08,            // Sequential for trailing effect
+            disappearAt: 0.75,
+            stagger: 0.06,              // Sequential bloom
             enter: {
-                type: 'fade',
-                duration: 0.1,
+                type: 'scale',
+                duration: 0.2,
                 easing: 'easeOut'
             },
             exit: {
                 type: 'fade',
-                duration: 0.3,
+                duration: 0.25,
                 easing: 'easeIn'
             },
             procedural: {
-                scaleSmoothing: 0.1,
+                scaleSmoothing: 0.12,
                 geometryStability: true
             },
             parameterAnimation: {
@@ -97,58 +97,67 @@ const FIREFLOURISH_CONFIG = {
                 }
             },
             flicker: {
-                intensity: 0.2,
-                rate: 20,
+                intensity: 0.15,
+                rate: 15,
                 pattern: 'random'
             },
             pulse: {
-                amplitude: 0.08,
-                frequency: 8,
+                amplitude: 0.1,
+                frequency: 6,
                 easing: 'easeInOut'
             },
             emissive: {
-                min: 1.5,
-                max: 3.0,
-                frequency: 8,
+                min: 1.2,
+                max: 2.5,
+                frequency: 6,
                 pattern: 'sine'
             },
+            // Counter-rotating for flourish effect
+            rotate: [
+                { axis: 'z', rotations: 1.0, phase: 0 },
+                { axis: 'z', rotations: -1.0, phase: 72 },
+                { axis: 'z', rotations: 1.0, phase: 144 },
+                { axis: 'z', rotations: -1.0, phase: 216 },
+                { axis: 'z', rotations: 1.0, phase: 288 }
+            ],
             scaleVariance: 0.1,
-            lifetimeVariance: 0.1,
+            lifetimeVariance: 0.08,
             blending: 'additive',
             renderOrder: 12,
             modelOverrides: {
                 'flame-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.8,
-                        arcSpeed: 2.0,
+                        arcWidth: 0.6,      // Partial arcs for flourish look
+                        arcSpeed: 2.5,
                         arcCount: 2
-                    }
+                    },
+                    orientationOverride: 'camera'
                 }
             }
         }
     },
 
     // Mesh effects - warm fire glow
-    flickerFrequency: 15,
+    flickerFrequency: 12,
     flickerAmplitude: 0.008,
     flickerDecay: 0.2,
-    glowColor: [1.0, 0.6, 0.2],       // Warm orange
-    glowIntensityMin: 0.8,
-    glowIntensityMax: 1.5,
-    glowFlickerRate: 12,
+    glowColor: [1.0, 0.6, 0.2],
+    glowIntensityMin: 0.9,
+    glowIntensityMax: 1.6,
+    glowFlickerRate: 10,
     scaleVibration: 0.01,
-    scaleFrequency: 6,
-    scaleGrowth: 0.015,
+    scaleFrequency: 5,
+    scaleGrowth: 0.02,
     rotationEffect: false
 };
 
 /**
- * Fireflourish gesture - theatrical flame sword flourish.
+ * Fireflourish gesture - expanding spiral flourish.
  *
- * Uses axis-travel spawn mode with stack formation:
- * - 5 flame-ring models travel from bottom to above
- * - Sequential stagger creates trailing blade arc
- * - Like swinging a flaming sword in a martial arts pattern
+ * Uses axis-travel with camera-facing spiral:
+ * - 5 flame-ring models in kaleidoscope formation
+ * - Expand from center outward while rotating
+ * - Counter-rotating pairs create flourish motion
  */
 export default buildFireEffectGesture(FIREFLOURISH_CONFIG);

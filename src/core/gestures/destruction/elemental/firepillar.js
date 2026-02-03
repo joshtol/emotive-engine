@@ -5,79 +5,80 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Firepillar gesture - stacked horizontal rings rising together
+ * @fileoverview Firepillar gesture - majestic rising pillar of stacked flame rings
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/firepillar
  * @complexity ⭐⭐ Intermediate
  *
  * VISUAL DIAGRAM:
- *         ═══════        TOP
- *         ═══════
- *         ═══════        ← Stacked rings
- *         ═══════          rising as pillar
- *         ═══════
- *           ★            BOTTOM
+ *         ═══════════        ← Wide flat ring at top
+ *         ═══════════
+ *          ═════════         ← Stacked horizontal rings
+ *           ═══════            rising as unified pillar
+ *            ═════
+ *             ★              ← Mascot at base
  *
  * FEATURES:
- * - 5 horizontal flame rings stacked vertically
- * - Rise together as a unified pillar
- * - Maintains spacing while ascending
- * - Majestic pillar of flame effect
+ * - 6 flat horizontal rings stacked vertically
+ * - Rises from below mascot to above
+ * - Rings grow larger as pillar rises (pyramid shape)
+ * - All rings rotate together in same direction
+ * - Majestic pillar of divine flame
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
  * - Pillar of fire effects
- * - Summoning/rising power
+ * - Divine/summoning power
  * - Majestic fire displays
- * - Divine fire themes
+ * - Ascending power themes
  */
 
 import { buildFireEffectGesture } from './fireEffectFactory.js';
 
 /**
  * Firepillar gesture configuration
- * Stacked horizontal rings rising together as a pillar
+ * Majestic rising pillar of stacked flame rings
  */
 const FIREPILLAR_CONFIG = {
     name: 'firepillar',
     emoji: '🏛️',
     type: 'blending',
-    description: 'Stacked flame rings rising as pillar',
-    duration: 2500,
+    description: 'Majestic rising pillar of flame',
+    duration: 3000,             // Longer for majestic feel
     beats: 4,
-    intensity: 1.2,
+    intensity: 1.3,
     category: 'radiating',
-    temperature: 0.65,      // Warm powerful fire
+    temperature: 0.7,           // Hot white-orange
 
-    // 3D Element spawning - stacked rising rings
+    // 3D Element spawning - rising pillar
     spawnMode: {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',
-            end: 'above',
-            easing: 'easeOut',      // Decelerating rise (majestic)
-            startScale: 1.0,
-            endScale: 1.1,
-            startDiameter: 1.6,
-            endDiameter: 1.8,
-            orientation: 'flat'  // Flat stacked rings
+            start: 'below',         // Start below mascot
+            end: 'above',           // Rise to above
+            easing: 'easeOut',      // Decelerate for majestic feel
+            startScale: 0.6,        // Start smaller
+            endScale: 1.3,          // Grow larger at top
+            startDiameter: 1.2,     // Narrow at base
+            endDiameter: 2.2,       // Wide at top (inverted pyramid)
+            orientation: 'flat'     // Horizontal flat rings
         },
         formation: {
             type: 'stack',
-            count: 5,
-            spacing: 0.2            // Even vertical spacing
+            count: 6,
+            spacing: 0.25           // Even vertical spacing
         },
-        count: 5,
+        count: 6,
         scale: 1.0,
         models: ['flame-ring'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.7,
-            stagger: 0.04,          // Slight stagger for wave effect
+            stagger: 0.03,          // Slight wave from bottom
             enter: {
                 type: 'scale',
-                duration: 0.15,
+                duration: 0.2,
                 easing: 'easeOut'
             },
             exit: {
@@ -91,40 +92,40 @@ const FIREPILLAR_CONFIG = {
             },
             parameterAnimation: {
                 temperature: {
-                    start: 0.5,
-                    peak: 0.7,
-                    end: 0.6,
+                    start: 0.55,
+                    peak: 0.8,
+                    end: 0.65,
                     curve: 'bell'
                 }
             },
             flicker: {
-                intensity: 0.18,
-                rate: 10,
+                intensity: 0.12,
+                rate: 8,
                 pattern: 'sine'
             },
             pulse: {
-                amplitude: 0.07,
-                frequency: 4,
+                amplitude: 0.05,
+                frequency: 3,
                 easing: 'easeInOut'
             },
             emissive: {
-                min: 1.2,
-                max: 2.2,
-                frequency: 5,
+                min: 1.3,
+                max: 2.5,
+                frequency: 4,
                 pattern: 'sine'
             },
-            // Slow unified rotation for pillar cohesion
-            rotate: { axis: 'z', rotations: 0.75, phase: 0 },
-            scaleVariance: 0.05,    // Slight variation for organic feel
-            lifetimeVariance: 0.05,
+            // All rings rotate together - unified pillar
+            rotate: { axis: 'z', rotations: 0.5, phase: 0 },
+            scaleVariance: 0.03,    // Minimal variance for solid pillar
+            lifetimeVariance: 0.02,
             blending: 'additive',
             renderOrder: 15,
             modelOverrides: {
                 'flame-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.85,   // Wide arcs for solid rings
-                        arcSpeed: 1.0,
+                        arcWidth: 0.95,     // Nearly complete rings
+                        arcSpeed: 0.8,      // Slow majestic rotation
                         arcCount: 3
                     }
                 }
@@ -133,26 +134,26 @@ const FIREPILLAR_CONFIG = {
     },
 
     // Mesh effects - powerful warm glow
-    flickerFrequency: 8,
-    flickerAmplitude: 0.008,
+    flickerFrequency: 6,
+    flickerAmplitude: 0.006,
     flickerDecay: 0.25,
-    glowColor: [1.0, 0.6, 0.2],     // Warm orange fire
+    glowColor: [1.0, 0.65, 0.25],   // Warm orange-gold
     glowIntensityMin: 1.0,
-    glowIntensityMax: 1.8,
-    glowFlickerRate: 7,
-    scaleVibration: 0.01,
-    scaleFrequency: 4,
-    scaleGrowth: 0.02,
+    glowIntensityMax: 2.0,
+    glowFlickerRate: 5,
+    scaleVibration: 0.008,
+    scaleFrequency: 3,
+    scaleGrowth: 0.025,
     rotationEffect: false
 };
 
 /**
- * Firepillar gesture - stacked horizontal rings rising together.
+ * Firepillar gesture - majestic rising pillar of flame.
  *
- * Uses axis-travel spawn mode with stack formation:
- * - 5 flame-ring models stacked with even spacing
- * - Rise together from bottom to above
- * - Horizontal rings create pillar structure
- * - Majestic pillar of flame effect
+ * Uses axis-travel with stack formation:
+ * - 6 flat flame-ring models stacked vertically
+ * - Rise from below to above with expanding diameter
+ * - All rings rotate together for unified pillar effect
+ * - Inverted pyramid shape (narrow base, wide top)
  */
 export default buildFireEffectGesture(FIREPILLAR_CONFIG);

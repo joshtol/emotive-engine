@@ -5,21 +5,23 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Firewaltz gesture - counter-rotating dance partners in 3/4 time
+ * @fileoverview Firewaltz gesture - elegant spinning dance partners
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/firewaltz
  * @complexity ⭐⭐ Intermediate
  *
  * VISUAL DIAGRAM:
- *       🔥  →  ←  🔥
- *           ★           ← Counter-rotating pairs
- *       🔥  ←  →  🔥      orbiting mascot
+ *         ║        ║
+ *         ║   ★    ║       ← Vertical rings as dance partners
+ *         ║        ║         spinning around mascot
+ *
+ *      ↺    ↻    ↺    ↻    ← Counter-rotating pairs
  *
  * FEATURES:
- * - 4 flame rings orbiting at fixed height
- * - Pairs counter-rotate (2 clockwise, 2 counter-clockwise)
- * - 3/4 waltz time signature feel
- * - Elegant ballroom dance motion
+ * - 4 vertical flame rings positioned around mascot
+ * - Counter-rotating pairs (elegant dance motion)
+ * - 3/4 waltz timing with graceful pulse
+ * - Standing rings like ballroom dancers
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -33,42 +35,43 @@ import { buildFireEffectGesture } from './fireEffectFactory.js';
 
 /**
  * Firewaltz gesture configuration
- * Counter-rotating dance partners in orbital waltz
+ * Elegant spinning dance partners in waltz formation
  */
 const FIREWALTZ_CONFIG = {
     name: 'firewaltz',
     emoji: '💃',
     type: 'blending',
-    description: 'Counter-rotating flame dance partners',
+    description: 'Elegant flame dance partners',
     duration: 2500,
-    beats: 3,           // 3/4 time signature
+    beats: 3,                   // 3/4 time signature
     intensity: 1.0,
     category: 'radiating',
-    temperature: 0.55,  // Warm romantic glow
+    temperature: 0.55,          // Warm romantic glow
 
-    // 3D Element spawning - orbiting pairs
+    // 4 vertical rings around mascot
     spawnMode: {
         type: 'orbit',
         orbit: {
-            height: 0.5,            // Mid-height around mascot
-            radius: 1.6,            // Comfortable orbit distance
-            plane: 'horizontal'
+            height: 0.3,            // Slightly above center
+            radius: 1.4,            // Close orbit for intimacy
+            plane: 'horizontal',
+            orientation: 'vertical' // Standing rings (dance partners)
         },
         formation: {
-            type: 'pairs',
+            type: 'ring',           // Evenly distributed
             count: 4,
-            pairSpacing: 180        // Pairs opposite each other
+            startAngle: 45          // Offset from cardinal directions
         },
         count: 4,
-        scale: 0.9,
+        scale: 0.85,
         models: ['flame-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.7,
-            stagger: 0.05,
+            disappearAt: 0.75,
+            stagger: 0.08,          // Slight delay between partners
             enter: {
                 type: 'scale',
-                duration: 0.2,
+                duration: 0.25,
                 easing: 'easeOut'
             },
             exit: {
@@ -85,75 +88,73 @@ const FIREWALTZ_CONFIG = {
                     start: 0.45,
                     peak: 0.6,
                     end: 0.5,
-                    curve: 'bell'
+                    curve: 'sine'       // Smooth romantic curve
                 }
             },
             flicker: {
-                intensity: 0.15,
-                rate: 8,
+                intensity: 0.1,
+                rate: 6,
                 pattern: 'sine'
             },
+            // Waltz pulse - 3/4 time feel
             pulse: {
-                amplitude: 0.06,
-                frequency: 3,       // 3/4 time feel
+                amplitude: 0.08,
+                frequency: 2,           // 2 pulses over gesture = waltz feel
                 easing: 'easeInOut'
             },
             emissive: {
                 min: 1.0,
-                max: 1.8,
-                frequency: 3,
+                max: 1.6,
+                frequency: 2,
                 pattern: 'sine'
             },
-            // Counter-rotating pairs for dance effect
+            // Counter-rotating dance partners
+            // Partners 0,2 spin one way, 1,3 spin the other
             rotate: [
-                { axis: 'y', rotations: 1.5, phase: 0 },      // Partner A1: clockwise
-                { axis: 'y', rotations: -1.5, phase: 90 },    // Partner B1: counter
-                { axis: 'y', rotations: 1.5, phase: 180 },    // Partner A2: clockwise
-                { axis: 'y', rotations: -1.5, phase: 270 }    // Partner B2: counter
+                { axis: 'y', rotations: 2.0, phase: 0 },     // Partner 0: fast CW
+                { axis: 'y', rotations: -2.0, phase: 0 },    // Partner 1: fast CCW
+                { axis: 'y', rotations: 2.0, phase: 0 },     // Partner 2: fast CW
+                { axis: 'y', rotations: -2.0, phase: 0 }     // Partner 3: fast CCW
             ],
-            // Orbit rotation for the whole formation
-            orbitRotation: {
-                rotations: 1,
-                direction: 1
-            },
-            scaleVariance: 0.1,
-            lifetimeVariance: 0.1,
+            scaleVariance: 0.05,
+            lifetimeVariance: 0.05,
             blending: 'additive',
             renderOrder: 13,
             modelOverrides: {
                 'flame-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.7,
-                        arcSpeed: 1.0,
+                        arcWidth: 0.65,     // Partial arcs for dancer silhouette
+                        arcSpeed: 1.5,
                         arcCount: 2
                     },
-                    orientationOverride: 'vertical'  // Standing rings for dance partners
+                    orientationOverride: 'vertical'
                 }
             }
         }
     },
 
     // Mesh effects - warm romantic glow
-    flickerFrequency: 6,
-    flickerAmplitude: 0.006,
+    flickerFrequency: 5,
+    flickerAmplitude: 0.005,
     flickerDecay: 0.3,
-    glowColor: [1.0, 0.6, 0.25],     // Warm amber
+    glowColor: [1.0, 0.55, 0.2],    // Warm amber-orange
     glowIntensityMin: 0.8,
-    glowIntensityMax: 1.3,
-    glowFlickerRate: 6,
-    scaleVibration: 0.008,
-    scaleFrequency: 3,
-    scaleGrowth: 0.01,
+    glowIntensityMax: 1.4,
+    glowFlickerRate: 4,
+    scaleVibration: 0.006,
+    scaleFrequency: 2,
+    scaleGrowth: 0.008,
     rotationEffect: false
 };
 
 /**
- * Firewaltz gesture - counter-rotating dance partners.
+ * Firewaltz gesture - elegant spinning dance partners.
  *
- * Uses orbit spawn mode with pairs formation:
- * - 4 flame-ring models orbit at fixed height
- * - Pairs counter-rotate (clockwise vs counter-clockwise)
- * - 3/4 waltz timing creates elegant ballroom feel
+ * Uses orbit mode with ring formation:
+ * - 4 vertical flame-ring models around mascot
+ * - Counter-rotating pairs create dance motion
+ * - 3/4 waltz timing for elegant ballroom feel
+ * - Standing orientation like dancing partners
  */
 export default buildFireEffectGesture(FIREWALTZ_CONFIG);
