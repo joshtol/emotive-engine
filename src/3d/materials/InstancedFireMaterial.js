@@ -128,7 +128,9 @@ void main() {
     vVerticalGradient = clamp(vVerticalGradient, 0.0, 1.0);
 
     // Use instance fade for displacement
-    float fadeFactor = fadeIn * fadeOut;
+    // Combine shader fade with AnimationState fade (aInstanceOpacity)
+    // aInstanceOpacity provides smooth, configurable fade timing from AnimationState
+    float fadeFactor = fadeIn * fadeOut * aInstanceOpacity;
 
     // Add random seed variation for per-instance uniqueness
     float instanceVariation = aRandomSeed * 0.3;
@@ -277,6 +279,10 @@ void main() {
 
     vec3 color = fireColor(localIntensity, uTemperature);
     color *= uIntensity * (0.7 + localIntensity * 0.3);
+
+    // Scale color intensity by instance opacity for smooth fade
+    // This ensures fire dims during enter/exit, not just becomes transparent
+    color *= vInstanceAlpha;
 
     // Alpha calculation
     float alpha = localIntensity * uOpacity;

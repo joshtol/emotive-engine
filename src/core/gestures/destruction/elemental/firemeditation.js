@@ -54,36 +54,37 @@ const FIREMEDITATION_CONFIG = {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',
-            end: 'center',              // Short travel - stays low
+            start: 'center',
+            end: 'center',              // No travel - fixed in place
             easing: 'easeInOut',
             startScale: 1.0,
             endScale: 1.0,              // No scale change
             startDiameter: 1.8,
             endDiameter: 1.8,           // Constant diameter
-            orientation: 'flat'
+            orientation: 'camera'       // Billboard: always face camera
         },
         formation: {
-            type: 'stack',
+            type: 'spiral',             // Use spiral for arcOffset
             count: 3,
-            spacing: 0.25              // Vertical spacing between rings
+            spacing: 0,                 // All at same position (kaleidoscope)
+            arcOffset: 60               // 60° between rings for kaleidoscope
         },
         count: 3,
         scale: 1.2,
         models: ['flame-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.75,
-            stagger: 0.1,
+            disappearAt: 0.8,
+            stagger: 0,             // All appear together
             enter: {
-                type: 'scale',
-                duration: 0.3,      // Slow, calm entrance
-                easing: 'easeOut'
+                type: 'fade',
+                duration: 0.5,      // Slow, gentle fade in
+                easing: 'easeInOut'
             },
             exit: {
                 type: 'fade',
-                duration: 0.25,
-                easing: 'easeIn'
+                duration: 0.4,      // Slow, gentle fade out
+                easing: 'easeInOut'
             },
             procedural: {
                 scaleSmoothing: 0.15,
@@ -114,7 +115,7 @@ const FIREMEDITATION_CONFIG = {
                 frequency: 1.5,     // Synced with breath
                 pattern: 'sine'
             },
-            // Gentle slow rotation
+            // Gentle slow rotation around Z (spin while facing camera)
             rotate: { axis: 'z', rotations: 0.5, phase: 0 },
             scaleVariance: 0,       // Uniform for meditation
             lifetimeVariance: 0,
@@ -127,7 +128,8 @@ const FIREMEDITATION_CONFIG = {
                         arcWidth: 0.9,    // Wide arcs for full rings
                         arcSpeed: 0.5,    // Slow internal animation
                         arcCount: 2
-                    }
+                    },
+                    orientationOverride: 'camera'
                 }
             }
         }

@@ -767,10 +767,10 @@ export class ElementInstancedSpawner {
                 break;
 
             case 'camera':
-                // Camera-facing: ring always faces the camera
-                // Model already faces camera, identity is correct
+                // Camera-facing: ring always faces the camera (billboard)
+                // Start with identity, update loop will set to camera quaternion
                 rotation = _temp.quaternion.identity();
-                worldSpaceOrientation = false;  // Camera-facing is dynamic, handled elsewhere
+                worldSpaceOrientation = true;  // Need world-space for camera quaternion to work
                 break;
 
             default:
@@ -823,6 +823,8 @@ export class ElementInstancedSpawner {
                     // World-space orientation: if true, rotation is relative to world, not mascot
                     worldSpaceOrientation,
                     baseWorldRotation: worldSpaceOrientation ? baseWorldRotation : null,
+                    // Camera billboard: if true, element always faces camera
+                    cameraOrientation: orientationMode === 'camera',
                     // Axis-travel specific data
                     axisTravel: {
                         config: axisConfig,
@@ -1452,10 +1454,21 @@ export class ElementInstancedSpawner {
             // Apply rotation offset
             const rotOffset = animState.rotationOffset;
 
-            // For world-space orientations, use the base world rotation directly
-            // The container now has identity rotation when worldSpaceOrientation elements exist
-            if (data.worldSpaceOrientation && data.baseWorldRotation) {
-                // Use world rotation directly - container has identity rotation
+            // Camera billboard: always face the camera
+            if (data.cameraOrientation && this.camera) {
+                // Copy camera quaternion so element faces camera
+                _temp.quaternion.copy(this.camera.quaternion);
+
+                // Apply formation arcOffset as Z rotation (kaleidoscope effect)
+                // This keeps each ring at its unique angle while facing camera
+                const formationOffset = data.axisTravel?.formationData?.rotationOffset || 0;
+                if (formationOffset !== 0) {
+                    _temp.quaternion2.setFromAxisAngle(_temp.axis.set(0, 0, 1), formationOffset);
+                    _temp.quaternion.multiply(_temp.quaternion2);
+                }
+            } else if (data.worldSpaceOrientation && data.baseWorldRotation) {
+                // For world-space orientations, use the base world rotation directly
+                // The container now has identity rotation when worldSpaceOrientation elements exist
                 _temp.quaternion.copy(data.baseWorldRotation);
             } else {
                 _temp.quaternion.copy(rotation);
