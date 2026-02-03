@@ -145,6 +145,20 @@ export { default as radiate } from './radiate.js';
 export { default as fireRadiate } from './radiate.js';
 export { default as blaze } from './blaze.js';
 export { default as smolder } from './smolder.js';
+export { default as fireflourish } from './fireflourish.js';
+export { default as fireflourishGesture } from './fireflourish.js';
+export { default as firecrown } from './firecrown.js';
+export { default as firecrownGesture } from './firecrown.js';
+export { default as firewaltz } from './firewaltz.js';
+export { default as firewaltzGesture } from './firewaltz.js';
+export { default as firemeditation } from './firemeditation.js';
+export { default as firemeditationGesture } from './firemeditation.js';
+export { default as firedrill } from './firedrill.js';
+export { default as firedrillGesture } from './firedrill.js';
+export { default as firepillar } from './firepillar.js';
+export { default as firepillarGesture } from './firepillar.js';
+export { default as firehelix } from './firehelix.js';
+export { default as firehelixGesture } from './firehelix.js';
 
 // Fire effect variants list for discovery
 export const FIRE_EFFECT_VARIANTS = [
@@ -156,5 +170,12 @@ export const FIRE_EFFECT_VARIANTS = [
     'phoenix',
     'radiate',
     'blaze',
-    'smolder'
+    'smolder',
+    'fireflourish',
+    'firecrown',
+    'firewaltz',
+    'firemeditation',
+    'firedrill',
+    'firepillar',
+    'firehelix'
 ];

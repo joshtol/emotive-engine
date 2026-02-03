@@ -293,6 +293,13 @@ import fireSmolder from './destruction/elemental/smolder.js';
 import flameVortexGesture from './destruction/elemental/flameVortex.js';
 import firedanceGesture from './destruction/elemental/firedance.js';
 import phoenixGesture from './destruction/elemental/phoenix.js';
+import fireflourishGesture from './destruction/elemental/fireflourish.js';
+import firecrownGesture from './destruction/elemental/firecrown.js';
+import firewaltzGesture from './destruction/elemental/firewaltz.js';
+import firemeditationGesture from './destruction/elemental/firemeditation.js';
+import firedrillGesture from './destruction/elemental/firedrill.js';
+import firepillarGesture from './destruction/elemental/firepillar.js';
+import firehelixGesture from './destruction/elemental/firehelix.js';
 // destruction/elemental/ - Smoke effect gestures (no shatter, soft organic visuals)
 import {
     puff as smokePuff,
@@ -502,6 +509,20 @@ const flameVortex = flameVortexGesture;
 const firedance = firedanceGesture;
 // Phoenix - rising rebirth with gyroscoping vertical rings - has dedicated file
 const phoenix = phoenixGesture;
+// Fireflourish - theatrical flame sword flourish - has dedicated file
+const fireflourish = fireflourishGesture;
+// Firecrown - majestic flame crown above the head - has dedicated file
+const firecrown = firecrownGesture;
+// Firewaltz - counter-rotating dance partners in 3/4 time - has dedicated file
+const firewaltz = firewaltzGesture;
+// Firemeditation - static stacked rings with breathing pulse - has dedicated file
+const firemeditation = firemeditationGesture;
+// Firedrill - fast tight ascending helix - has dedicated file
+const firedrill = firedrillGesture;
+// Firepillar - stacked horizontal rings rising together - has dedicated file
+const firepillar = firepillarGesture;
+// Firehelix - DNA-style double helix ascending flame - has dedicated file
+const firehelix = firehelixGesture;
 // Radiating variants (source of fire)
 const radiate = fireRadiate;
 const blaze = fireBlaze;
@@ -907,6 +928,13 @@ const TRANSFORM_GESTURES = [
     flameVortex,    // Horizontal tornado rings
     firedance,      // Vertical dancing rings
     phoenix,        // Vertical gyroscope rings
+    fireflourish,   // Theatrical flame sword flourish
+    firecrown,      // Majestic flame crown at head
+    firewaltz,      // Counter-rotating dance partners
+    firemeditation, // Static rings with breathing pulse
+    firedrill,      // Fast tight ascending helix
+    firepillar,     // Stacked rings rising as pillar
+    firehelix,      // DNA-style double helix ascending
     // Fire - Radiating (source of fire)
     radiate,
     blaze,
@@ -1154,6 +1182,20 @@ export const GESTURE_CATEGORIES = {
         'flameVortex',
         // destruction/elemental/ - Fire (firedance - vertical dancing rings)
         'firedance',
+        // destruction/elemental/ - Fire (fireflourish - theatrical flame sword flourish)
+        'fireflourish',
+        // destruction/elemental/ - Fire (firecrown - majestic flame crown at head)
+        'firecrown',
+        // destruction/elemental/ - Fire (firewaltz - counter-rotating dance partners)
+        'firewaltz',
+        // destruction/elemental/ - Fire (firemeditation - static rings with breathing pulse)
+        'firemeditation',
+        // destruction/elemental/ - Fire (firedrill - fast tight ascending helix)
+        'firedrill',
+        // destruction/elemental/ - Fire (firepillar - stacked rings rising as pillar)
+        'firepillar',
+        // destruction/elemental/ - Fire (firehelix - DNA-style double helix)
+        'firehelix',
         // destruction/elemental/ - Fire (radiating - source of fire)
         'radiate', 'blaze', 'smolder',
         // destruction/elemental/ - Smoke (emanating - source of smoke)
