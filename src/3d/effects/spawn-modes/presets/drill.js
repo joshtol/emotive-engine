@@ -35,7 +35,7 @@
  * @param {number} [options.endScale=0.8] - Scale at end
  * @param {number} [options.spacing=0.1] - Vertical spacing between rings
  * @param {number} [options.phaseOffset=0.03] - Timing stagger (tight for fast drill)
- * @param {string} [options.ringOrientation='flat'] - Ring orientation
+ * @param {string} [options.orientation='flat'] - Ring orientation: flat, vertical, radial, camera
  * @param {Object} [options.shaderAnimation] - Arc visibility shader settings
  * @returns {Object} Spawn mode configuration for axis-travel
  */
@@ -53,7 +53,7 @@ export function createDrillConfig(options = {}) {
         endScale = 0.8,
         spacing = 0.1,
         phaseOffset = 0.03,
-        ringOrientation = 'flat',
+        orientation = 'flat',
         shaderAnimation = null,
     } = options;
 
@@ -68,7 +68,7 @@ export function createDrillConfig(options = {}) {
             endScale,
             startDiameter,
             endDiameter,
-            ringOrientation,
+            orientation,
         },
         formation: {
             type: 'spiral',
@@ -90,7 +90,7 @@ export function createDrillConfig(options = {}) {
         for (const model of models) {
             config.animation.modelOverrides[model] = {
                 shaderAnimation,
-                orientationOverride: ringOrientation,
+                orientationOverride: orientation,
             };
         }
     }

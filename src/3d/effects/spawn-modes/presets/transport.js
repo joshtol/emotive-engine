@@ -39,7 +39,7 @@
  * @param {number} [options.endScale=1.0] - Scale at end
  * @param {number} [options.spacing=0.2] - Vertical spacing between rings
  * @param {number} [options.phaseOffset=0] - Timing stagger (usually 0 for synchronized)
- * @param {string} [options.ringOrientation='flat'] - Ring orientation: flat, vertical, radial
+ * @param {string} [options.orientation='flat'] - Ring orientation: flat, vertical, radial, camera
  * @param {Object} [options.shaderAnimation] - Arc visibility shader settings
  * @returns {Object} Spawn mode configuration for axis-travel
  */
@@ -57,7 +57,7 @@ export function createTransportConfig(options = {}) {
         endScale = 1.0,
         spacing = 0.2,
         phaseOffset = 0,
-        ringOrientation = 'flat',
+        orientation = 'flat',
         shaderAnimation = null,
     } = options;
 
@@ -73,7 +73,7 @@ export function createTransportConfig(options = {}) {
             startDiameter,
             endDiameter,
             reverseAt,
-            ringOrientation,
+            orientation,
         },
         formation: {
             type: 'stack',
@@ -95,7 +95,7 @@ export function createTransportConfig(options = {}) {
         for (const model of models) {
             config.animation.modelOverrides[model] = {
                 shaderAnimation,
-                orientationOverride: ringOrientation,
+                orientationOverride: orientation,
             };
         }
     }

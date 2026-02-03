@@ -38,7 +38,7 @@
  * @param {number} [options.endScale=0.3] - Scale at end (fades out)
  * @param {number} [options.spacing=0.15] - Wave amplitude
  * @param {number} [options.phaseOffset=0.1] - Timing stagger between rings
- * @param {string} [options.ringOrientation='vertical'] - Ring orientation (gyroscope effect)
+ * @param {string} [options.orientation='vertical'] - Ring orientation: flat, vertical, radial, camera
  * @param {Object} [options.shaderAnimation] - Arc visibility shader settings
  * @returns {Object} Spawn mode configuration for axis-travel
  */
@@ -56,7 +56,7 @@ export function createPhoenixConfig(options = {}) {
         spacing = 0,            // All rings at same position (gyroscope)
         arcOffset = 120,        // 120 degrees between rings
         phaseOffset = 0,        // All rotate together
-        ringOrientation = 'vertical',
+        orientation = 'vertical',
         shaderAnimation = null,
     } = options;
 
@@ -71,7 +71,7 @@ export function createPhoenixConfig(options = {}) {
             endScale,
             startDiameter,
             endDiameter,
-            ringOrientation,
+            orientation,
         },
         formation: {
             type: 'spiral',     // Spiral for rotation offset
@@ -93,7 +93,7 @@ export function createPhoenixConfig(options = {}) {
         for (const model of models) {
             config.animation.modelOverrides[model] = {
                 shaderAnimation,
-                orientationOverride: ringOrientation,
+                orientationOverride: orientation,
             };
         }
     }

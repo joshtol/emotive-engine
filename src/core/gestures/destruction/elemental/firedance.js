@@ -61,7 +61,7 @@ const FIREDANCE_CONFIG = {
             endScale: 2.2,
             startDiameter: 1.6,
             endDiameter: 2.4,
-            ringOrientation: 'vertical'  // Standing rings for dance effect
+            orientation: 'vertical'  // Standing rings for dance effect
         },
         formation: {
             type: 'spiral',
@@ -159,7 +159,7 @@ const FIREDANCE_CONFIG = {
  *
  * Uses axis-travel spawn mode with spiral formation:
  * - 3 flame-ring models travel from bottom to top
- * - Rings are VERTICAL (ringOrientation: 'vertical') for dance effect
+ * - Rings are VERTICAL (orientation: 'vertical') for dance effect
  * - 120° arcOffset spreads rings around the mascot
  * - DANCING COINS rotation: all rings spin on Y axis, 120° phase apart
  *   (like spinning coins at different starting angles)

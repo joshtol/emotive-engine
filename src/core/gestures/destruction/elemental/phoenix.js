@@ -61,7 +61,7 @@ const PHOENIX_CONFIG = {
             endScale: 1.2,          // Still visible at top
             startDiameter: 1.4,     // Wider at start
             endDiameter: 1.0,       // Narrower as it rises (inverse funnel)
-            ringOrientation: 'camera'  // Rings face the camera as they rise
+            orientation: 'camera'  // Rings face the camera as they rise
         },
         formation: {
             type: 'spiral',         // Spiral for rotation offset
@@ -158,7 +158,7 @@ const PHOENIX_CONFIG = {
  *
  * Uses axis-travel spawn mode with spiral formation:
  * - 3 flame-ring models travel from bottom to above
- * - Rings are FLAT (ringOrientation: 'flat') for rising halo effect
+ * - Rings are FLAT (orientation: 'flat') for rising halo effect
  * - 120° arcOffset staggers the rings rotationally
  * - Inverse funnel shape (shrinks as it rises)
  */

@@ -34,7 +34,7 @@
  * @param {number} [options.endScale=1.1] - Scale at end
  * @param {number} [options.spacing=0.12] - Vertical spacing between rings
  * @param {number} [options.phaseOffset=0.05] - Timing stagger between rings
- * @param {string} [options.ringOrientation='flat'] - Ring orientation: flat, vertical, radial
+ * @param {string} [options.orientation='flat'] - Ring orientation: flat, vertical, radial, camera
  * @param {Object} [options.shaderAnimation] - Arc visibility shader settings
  * @returns {Object} Spawn mode configuration for axis-travel
  */
@@ -52,7 +52,7 @@ export function createVortexConfig(options = {}) {
         endScale = 1.1,
         spacing = 0,            // All rings at same position (tornado)
         phaseOffset = 0,        // All travel together
-        ringOrientation = 'flat',
+        orientation = 'flat',
         shaderAnimation = null,
     } = options;
 
@@ -67,7 +67,7 @@ export function createVortexConfig(options = {}) {
             endScale,
             startDiameter,
             endDiameter,
-            ringOrientation,
+            orientation,
         },
         formation: {
             type: 'spiral',
@@ -90,7 +90,7 @@ export function createVortexConfig(options = {}) {
         for (const model of models) {
             config.animation.modelOverrides[model] = {
                 shaderAnimation,
-                orientationOverride: ringOrientation,
+                orientationOverride: orientation,
             };
         }
     }

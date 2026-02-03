@@ -62,7 +62,7 @@ const FLAME_VORTEX_CONFIG = {
             endScale: 1.7,
             startDiameter: 0.6,     // Narrow at bottom for pronounced cone
             endDiameter: 1.2,       // Reduced top diameter
-            ringOrientation: 'flat' // Horizontal rings stacking upward
+            orientation: 'flat' // Horizontal rings stacking upward
         },
         // Formation: 3 rings at SAME position, offset by 120 degrees rotation
         formation: {
@@ -177,7 +177,7 @@ const FLAME_VORTEX_CONFIG = {
  *
  * Uses axis-travel spawn mode with spiral formation:
  * - 3 flame-ring models travel from bottom to top
- * - Rings are VERTICAL (ringOrientation: 'vertical') for tornado wall effect
+ * - Rings are VERTICAL (orientation: 'vertical') for tornado wall effect
  * - 120° arcOffset creates cage of fire around the mascot
  * - Funnel shape expands as rings travel upward
  */

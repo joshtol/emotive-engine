@@ -37,6 +37,20 @@ export function parseFormation(formation) {
 }
 
 /**
+ * Normalize orientation value - maps legacy names to canonical names
+ * @param {string} orientation - Orientation value (may be legacy)
+ * @returns {string} Canonical orientation name
+ */
+export function normalizeOrientation(orientation) {
+    const mapping = {
+        'horizontal': 'flat',    // Legacy: horizontal rings = flat
+        'upright': 'vertical',   // Legacy: upright = vertical
+        'billboard': 'camera',   // Legacy: billboard = camera
+    };
+    return mapping[orientation] || orientation || 'flat';
+}
+
+/**
  * Parse axis-travel configuration (without spatialRef - landmarks as raw values)
  * @param {Object} config - Raw configuration
  * @param {Function} resolveLandmark - Function to resolve landmark names to positions
@@ -50,6 +64,9 @@ export function parseAxisTravelConfig(config, resolveLandmark) {
     const startOffset = axisTravel.startOffset ?? 0;
     const endOffset = axisTravel.endOffset ?? 0;
 
+    // Orientation: prefer 'orientation', fall back to legacy 'ringOrientation'
+    const rawOrientation = axisTravel.orientation ?? axisTravel.ringOrientation;
+
     return {
         // Axis travel settings
         axis: axisTravel.axis || 'y',
@@ -62,8 +79,8 @@ export function parseAxisTravelConfig(config, resolveLandmark) {
         endDiameter: axisTravel.endDiameter ?? 1.0,
         reverseAt: axisTravel.reverseAt ?? null,
 
-        // Ring orientation for vortex effects
-        ringOrientation: axisTravel.ringOrientation || 'flat',
+        // Orientation (unified naming, normalized)
+        orientation: normalizeOrientation(rawOrientation),
 
         // Formation settings
         formation: parseFormation(formation),
@@ -162,7 +179,7 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
 
     // For vertical rings, offset so the bottom EDGE touches the landmark (not the center)
     // Ring radius ≈ diameter * mascotRadius * scale * base_model_factor
-    if (axisConfig.ringOrientation === 'vertical' && axisConfig.axis === 'y') {
+    if (axisConfig.orientation === 'vertical' && axisConfig.axis === 'y') {
         const ringRadius = diameter * mascotRadius * scale * 0.25;  // 0.25 empirical for ring model size
         axisPos += ringRadius;
     }

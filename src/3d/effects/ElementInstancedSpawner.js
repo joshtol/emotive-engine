@@ -47,22 +47,36 @@ import {
 import {
     sampleSurfacePoints,
     calculateOrientation,
-    calculateSurfacePosition,
-    calculateOrbitalPosition,
-    normalizeSurfaceConfig
+    calculateSurfacePosition
 } from './ElementPositioning.js';
 
 // Animation state machine for per-element lifecycle
 import { AnimationState, AnimationStates } from './animation/AnimationState.js';
 import { AnimationConfig } from './animation/AnimationConfig.js';
 
-// Easing functions for axis-travel mode
 // Axis-travel utilities from spawn-modes (shared with legacy spawner)
 import {
     parseAxisTravelConfig,
     expandFormation,
     calculateAxisTravelPosition
 } from './spawn-modes/AxisTravelMode.js';
+
+// Anchor utilities from spawn-modes
+import {
+    parseAnchorConfig,
+    calculateAnchorPosition,
+    getAnchorOrientation
+} from './spawn-modes/AnchorMode.js';
+
+// Orbit utilities from spawn-modes
+import {
+    parseOrbitConfig,
+    expandOrbitFormation,
+    calculateOrbitPosition
+} from './spawn-modes/OrbitMode.js';
+
+// Surface utilities from spawn-modes
+import { parseSurfaceConfig } from './spawn-modes/SurfaceMode.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -395,15 +409,11 @@ export class ElementInstancedSpawner {
             return [];
         }
 
-        // Get element config for scale multiplier
-        const elementConfig = ELEMENT_CONFIGS[elementType];
-
-        // Normalize surface config if in surface mode
-        const surfaceConfig = normalizeSurfaceConfig(mode);
+        // Determine spawn mode type
         const modeType = typeof mode === 'object' ? (mode.type || 'surface') : mode;
 
         // Debug: log spawn mode
-        console.log(`[ElementInstancedSpawner] spawn ${elementType}: modeType=${modeType}, hasCoreMesh=${!!this.coreMesh}, hasGeometry=${!!this.coreMesh?.geometry}`);
+        console.log(`[ElementInstancedSpawner] spawn ${elementType}: modeType=${modeType}`);
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
         // AXIS-TRAVEL MODE
@@ -412,94 +422,70 @@ export class ElementInstancedSpawner {
             return this._spawnAxisTravel(elementType, mode, models, animConfig, camera);
         }
 
-        // For surface mode, sample points from mascot geometry
-        let surfacePoints = null;
-        if (modeType === 'surface' && this.coreMesh?.geometry) {
-            // Sample surface points (local space - container handles world transform)
-            surfacePoints = sampleSurfacePoints(
-                this.coreMesh.geometry,
-                count,
-                this.mascotRadius,
-                surfaceConfig,
-                camera || this.camera,
-                null  // Don't scale - container syncs to coreMesh transform
-            );
-            // Debug: log sample info
-            if (surfacePoints.length > 0) {
-                const p = surfacePoints[0].position;
-                console.log(`[ElementInstancedSpawner] Surface sampling: ${surfacePoints.length} points, first=(${p.x.toFixed(3)}, ${p.y.toFixed(3)}, ${p.z.toFixed(3)}), meshScale=${this.coreMesh.scale.x.toFixed(3)}`);
-            }
-        } else if (modeType === 'surface') {
-            console.warn('[ElementInstancedSpawner] Surface mode requested but no coreMesh geometry available, falling back to orbit');
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        // ANCHOR MODE - Elements anchored at landmark positions (crowns, halos, etc.)
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        if (modeType === 'anchor') {
+            return this._spawnAnchor(elementType, mode, models, animConfig, camera);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        // ORBIT MODE - Elements orbit around mascot at fixed height
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        if (modeType === 'orbit') {
+            return this._spawnOrbit(elementType, mode, models, animConfig, camera);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        // SURFACE MODE - Elements spawn on mascot surface
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        if (modeType === 'surface') {
+            return this._spawnSurface(elementType, mode, count, models, animConfig, camera);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        // UNKNOWN MODE - Fall back to basic orbit positioning
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        console.warn(`[ElementInstancedSpawner] Unknown spawn mode: ${modeType}, falling back to orbit`);
+        return this._spawnOrbitFallback(elementType, count, models, animConfig, camera);
+    }
+
+    /**
+     * Fallback spawn for unknown modes - simple orbit positioning.
+     * @private
+     */
+    _spawnOrbitFallback(elementType, count, models, animConfig, camera) {
+        const pool = this.pools.get(elementType);
+        const merged = this.mergedGeometries.get(elementType);
+        const elementConfig = ELEMENT_CONFIGS[elementType];
+
+        if (!pool || !merged) {
+            return [];
         }
 
         const spawnedIds = [];
-        const actualCount = Math.min(
-            surfaceConfig?.countOverride || count,
-            pool.availableSlots,
-            surfacePoints?.length || count
-        );
+        const actualCount = Math.min(count, pool.availableSlots);
+        const availableModels = models || Array.from(merged.modelMap.keys());
 
         for (let i = 0; i < actualCount; i++) {
-            // Select model
-            const availableModels = models || Array.from(merged.modelMap.keys());
             const modelName = availableModels[Math.floor(Math.random() * availableModels.length)];
             const modelIndex = merged.modelMap.get(modelName) || 0;
 
-            // Calculate scale using shared Golden Ratio sizing system
-            const scaleMultiplier = surfaceConfig?.scaleMultiplier || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const scaleMultiplier = elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const scale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
             _temp.scale.setScalar(scale);
 
-            let position, rotation;
+            const position = this._generateSpawnPosition('orbit', i, actualCount);
+            const rotation = this._generateSpawnRotation('orbit', position);
 
-            if (modeType === 'surface' && surfacePoints && surfacePoints[i]) {
-                // SURFACE MODE: Use sampled surface points with proper orientation
-                const sample = surfacePoints[i];
-                const embedDepth = surfaceConfig?.embedDepth ?? 0.2;
-
-                // Calculate position with embed depth (local space - container handles world offset)
-                const surfaceResult = calculateSurfacePosition(
-                    sample.position,
-                    sample.normal,
-                    scale,
-                    embedDepth
-                );
-                ({ position } = surfaceResult);
-                // NOTE: Don't add coreMesh.position here - container is synced to it in update()
-
-                // Calculate orientation based on model type and surface normal
-                const cameraFacing = surfaceConfig?.cameraFacing ?? 0.3;
-                rotation = calculateOrientation(
-                    sample.normal,
-                    modelName,
-                    cameraFacing,
-                    camera || this.camera,
-                    position,
-                    null // velocity
-                ).clone();  // Clone since calculateOrientation returns temp pool object
-            } else {
-                // ORBIT/OTHER MODE: Use simple positioning (local space)
-                position = this._generateSpawnPosition(modeType, i, actualCount);
-                rotation = this._generateSpawnRotation(modeType, position);
-            }
-
-            // Generate element ID
             const elementId = `${elementType}_${this._nextId++}`;
-
-            // Spawn in pool
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
 
             if (success) {
-                // Create per-element animation state if animation config provided
                 let animState = null;
                 if (animConfig) {
                     animState = new AnimationState(animConfig, i);
                     animState.initialize(this.time);
-
-                    // CRITICAL: Set initial opacity/scale from animation state
-                    // AnimationState starts in WAITING with opacity=0, scale=0
-                    // Without this, elements would be visible before their appearAt time
                     pool.updateInstanceOpacity(elementId, animState.opacity);
                     pool.updateInstanceTransform(elementId, position, rotation, scale * animState.scale);
                 }
@@ -509,19 +495,18 @@ export class ElementInstancedSpawner {
                     modelName,
                     modelIndex,
                     spawnTime: this.time,
-                    basePosition: position.clone(),    // Original spawn position
-                    position: position.clone(),        // Current position (with drift)
-                    rotation: rotation.clone(),        // Current rotation
-                    baseScale: scale,                  // Original scale
-                    scale,                             // Current scale (with pulse)
-                    surfaceConfig: surfaceConfig ? { ...surfaceConfig } : null,
-                    animState                          // Per-element animation state
+                    basePosition: position.clone(),
+                    position: position.clone(),
+                    rotation: rotation.clone(),
+                    baseScale: scale,
+                    scale,
+                    animState
                 });
                 spawnedIds.push(elementId);
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} elements (mode: ${modeType})`);
+        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} elements (fallback orbit)`);
         return spawnedIds;
     }
 
@@ -742,9 +727,9 @@ export class ElementInstancedSpawner {
             );
 
             // Determine ring orientation:
-            // 1. Use ringOrientation from config if specified
+            // 1. Use orientation from config if specified
             // 2. Fall back to model's default orientation from ElementSizing
-            const configOrientation = axisConfig.ringOrientation;
+            const configOrientation = axisConfig.orientation;
             const modelOrientation = getModelOrientation(modelName);
             const orientationMode = configOrientation || modelOrientation.mode || 'outward';
             console.log(`[ElementInstancedSpawner] Ring orientation for ${modelName}: config=${configOrientation}, model=${modelOrientation.mode}, resolved=${orientationMode}`);
@@ -850,6 +835,418 @@ export class ElementInstancedSpawner {
         }
 
         console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} axis-travel elements`);
+        return spawnedIds;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // ANCHOR MODE - Elements anchored at landmark positions
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Spawn elements in anchor mode (crowns, halos, ground indicators).
+     * @param {string} elementType - Element type to spawn
+     * @param {Object} spawnMode - Spawn mode configuration
+     * @param {string[]} models - Model names to use
+     * @param {AnimationConfig} animConfig - Animation configuration
+     * @param {THREE.Camera} camera - Camera for orientation
+     * @returns {string[]} Array of spawned element IDs
+     * @private
+     */
+    _spawnAnchor(elementType, spawnMode, models, animConfig, _camera) {
+        const pool = this.pools.get(elementType);
+        const merged = this.mergedGeometries.get(elementType);
+        const elementConfig = ELEMENT_CONFIGS[elementType];
+
+        if (!pool || !merged) {
+            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
+            return [];
+        }
+
+        // Parse anchor configuration using shared utility
+        const anchorConfig = parseAnchorConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
+
+        // Check for arc animation configuration
+        const animation = spawnMode.animation || {};
+        const modelOverrides = animation.modelOverrides || {};
+        const material = this.materials.get(elementType);
+
+        // Apply arc animation settings if configured
+        for (const modelName of anchorConfig.models) {
+            const overrides = modelOverrides[modelName];
+            if (overrides?.shaderAnimation && material) {
+                console.log(`[ElementInstancedSpawner] Applying arc animation for ${modelName}:`, overrides.shaderAnimation);
+                setInstancedFireArcAnimation(material, overrides.shaderAnimation);
+                break;
+            }
+        }
+
+        console.log(`[ElementInstancedSpawner] anchor: landmark=${anchorConfig.landmark}, landmarkY=${anchorConfig.landmarkY.toFixed(3)}, offset=(${anchorConfig.offset.x}, ${anchorConfig.offset.y}, ${anchorConfig.offset.z}), orientation=${anchorConfig.orientation}`);
+
+        const spawnedIds = [];
+        const availableModels = anchorConfig.models.length > 0
+            ? anchorConfig.models
+            : (models || Array.from(merged.modelMap.keys()));
+
+        for (let i = 0; i < anchorConfig.count; i++) {
+            // Select model
+            const modelName = availableModels[i % availableModels.length];
+            const modelIndex = merged.modelMap.get(modelName);
+
+            if (modelIndex === undefined) {
+                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
+                continue;
+            }
+
+            // Calculate position at anchor point using shared utility
+            const anchorPos = calculateAnchorPosition(anchorConfig, 0);
+            const position = _temp.position.set(anchorPos.x, anchorPos.y, anchorPos.z).clone();
+
+            // Calculate scale
+            const scaleMultiplier = anchorConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
+            _temp.scale.setScalar(baseScale);
+
+            // Apply orientation using shared utility
+            const orientRot = getAnchorOrientation(anchorConfig.orientation);
+            _temp.euler.set(orientRot.x, orientRot.y, orientRot.z);
+            const rotation = _temp.quaternion.setFromEuler(_temp.euler).clone();
+
+            // Generate element ID
+            const elementId = `${elementType}_${this._nextId++}`;
+
+            // Spawn in pool
+            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
+
+            if (success) {
+                // Create per-element animation state
+                let animState = null;
+                if (animConfig) {
+                    animState = new AnimationState(animConfig, i);
+                    animState.initialize(this.time);
+
+                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                    pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
+                }
+
+                this.activeElements.set(elementId, {
+                    type: elementType,
+                    modelName,
+                    modelIndex,
+                    spawnTime: this.time,
+                    basePosition: position.clone(),
+                    position: position.clone(),
+                    rotation: rotation.clone(),
+                    baseScale,
+                    scale: baseScale,
+                    animState,
+                    // World-space orientation: anchor elements should maintain orientation
+                    worldSpaceOrientation: true,
+                    baseWorldRotation: rotation.clone(),
+                    // Anchor-specific data for bob animation
+                    anchor: {
+                        config: anchorConfig,
+                        baseY: anchorPos.baseY,
+                    }
+                });
+                spawnedIds.push(elementId);
+            }
+        }
+
+        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} anchor elements`);
+        return spawnedIds;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // ORBIT MODE - Elements orbit around mascot at fixed height
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Spawn elements in orbit mode (circling at fixed height around mascot).
+     * @param {string} elementType - Element type to spawn
+     * @param {Object} spawnMode - Spawn mode configuration
+     * @param {string[]} models - Model names to use
+     * @param {AnimationConfig} animConfig - Animation configuration
+     * @param {THREE.Camera} camera - Camera for orientation
+     * @returns {string[]} Array of spawned element IDs
+     * @private
+     */
+    _spawnOrbit(elementType, spawnMode, models, animConfig, _camera) {
+        const pool = this.pools.get(elementType);
+        const merged = this.mergedGeometries.get(elementType);
+        const elementConfig = ELEMENT_CONFIGS[elementType];
+
+        if (!pool || !merged) {
+            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
+            return [];
+        }
+
+        // Parse orbit configuration using utility from OrbitMode.js
+        const orbitConfig = parseOrbitConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
+
+        // Expand formation into per-element data
+        const formationElements = expandOrbitFormation(orbitConfig);
+
+        // Check for arc animation configuration in modelOverrides
+        const animation = spawnMode.animation || {};
+        const modelOverrides = animation.modelOverrides || {};
+        const material = this.materials.get(elementType);
+
+        // Apply arc animation settings if configured
+        for (const modelName of orbitConfig.models) {
+            const overrides = modelOverrides[modelName];
+            if (overrides?.shaderAnimation && material) {
+                console.log(`[ElementInstancedSpawner] Applying arc animation for ${modelName}:`, overrides.shaderAnimation);
+                setInstancedFireArcAnimation(material, overrides.shaderAnimation);
+                break;
+            }
+        }
+
+        console.log(`[ElementInstancedSpawner] orbit: ${formationElements.length} elements, radius=${orbitConfig.radius}, height=${orbitConfig.height}`);
+
+        const spawnedIds = [];
+        const availableModels = orbitConfig.models.length > 0
+            ? orbitConfig.models
+            : (models || Array.from(merged.modelMap.keys()));
+
+        for (let i = 0; i < formationElements.length; i++) {
+            const formationData = formationElements[i];
+
+            // Select model
+            const modelName = availableModels[i % availableModels.length];
+            const modelIndex = merged.modelMap.get(modelName);
+
+            if (modelIndex === undefined) {
+                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
+                continue;
+            }
+
+            // Calculate position
+            const posResult = calculateOrbitPosition(orbitConfig, formationData, 0, this.mascotRadius);
+            const position = _temp.position.set(posResult.x, posResult.y, posResult.z).clone();
+
+            // Calculate scale
+            const scaleMultiplier = orbitConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
+            _temp.scale.setScalar(baseScale);
+
+            // Determine ring orientation
+            const configOrientation = orbitConfig.orientation;
+            const modelOrientation = getModelOrientation(modelName);
+            const orientationMode = configOrientation || modelOrientation.mode || 'vertical';
+
+            // Build rotation based on orientation
+            let rotation;
+            const worldSpaceOrientation = true;
+
+            switch (orientationMode) {
+            case 'flat':
+            case 'horizontal':
+                // Flat: ring lies horizontal (XZ plane)
+                rotation = _temp.quaternion.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 2);
+                break;
+
+            case 'vertical':
+                // Vertical: ring stands upright, facing outward from center
+                // Rotate to face outward based on orbit angle
+                _temp.euler.set(0, posResult.angle + Math.PI / 2, 0);
+                rotation = _temp.quaternion.setFromEuler(_temp.euler);
+                break;
+
+            case 'radial':
+                // Tilted outward
+                rotation = _temp.quaternion.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 4);
+                break;
+
+            default:
+                rotation = _temp.quaternion.identity();
+            }
+
+            const baseWorldRotation = rotation.clone();
+
+            // Generate element ID
+            const elementId = `${elementType}_${this._nextId++}`;
+
+            // Spawn in pool
+            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
+
+            if (success) {
+                // Create per-element animation state
+                let animState = null;
+                if (animConfig) {
+                    animState = new AnimationState(animConfig, i);
+                    animState.initialize(this.time);
+
+                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                    pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
+                }
+
+                this.activeElements.set(elementId, {
+                    type: elementType,
+                    modelName,
+                    modelIndex,
+                    spawnTime: this.time,
+                    basePosition: position.clone(),
+                    position: position.clone(),
+                    rotation: rotation.clone(),
+                    baseScale,
+                    scale: baseScale,
+                    animState,
+                    worldSpaceOrientation,
+                    baseWorldRotation,
+                    // Orbit-specific data
+                    orbit: {
+                        config: orbitConfig,
+                        formationData,
+                        angle: posResult.angle
+                    }
+                });
+                spawnedIds.push(elementId);
+            }
+        }
+
+        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} orbit elements`);
+        return spawnedIds;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // SURFACE MODE - Elements spawn on mascot surface
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Spawn elements in surface mode (on mascot geometry).
+     * @param {string} elementType - Element type to spawn
+     * @param {Object} spawnMode - Spawn mode configuration
+     * @param {number} count - Number of elements to spawn
+     * @param {string[]} models - Model names to use
+     * @param {AnimationConfig} animConfig - Animation configuration
+     * @param {THREE.Camera} camera - Camera for orientation
+     * @returns {string[]} Array of spawned element IDs
+     * @private
+     */
+    _spawnSurface(elementType, spawnMode, count, models, animConfig, camera) {
+        const pool = this.pools.get(elementType);
+        const merged = this.mergedGeometries.get(elementType);
+        const elementConfig = ELEMENT_CONFIGS[elementType];
+
+        if (!pool || !merged) {
+            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
+            return [];
+        }
+
+        // Parse surface configuration using utility from SurfaceMode.js
+        const surfaceConfig = parseSurfaceConfig(spawnMode);
+
+        // Check for coreMesh geometry
+        if (!this.coreMesh?.geometry) {
+            console.warn('[ElementInstancedSpawner] Surface mode requested but no coreMesh geometry available');
+            return [];
+        }
+
+        // Sample surface points
+        const surfacePoints = sampleSurfacePoints(
+            this.coreMesh.geometry,
+            count,
+            this.mascotRadius,
+            surfaceConfig,
+            camera || this.camera,
+            null  // Don't scale - container syncs to coreMesh transform
+        );
+
+        if (surfacePoints.length === 0) {
+            console.warn('[ElementInstancedSpawner] No surface points sampled');
+            return [];
+        }
+
+        console.log(`[ElementInstancedSpawner] surface: ${surfacePoints.length} points sampled, pattern=${surfaceConfig.pattern}`);
+
+        const spawnedIds = [];
+        const availableModels = surfaceConfig.models.length > 0
+            ? surfaceConfig.models
+            : (models || Array.from(merged.modelMap.keys()));
+        const actualCount = Math.min(
+            surfaceConfig.countOverride || count,
+            pool.availableSlots,
+            surfacePoints.length
+        );
+
+        for (let i = 0; i < actualCount; i++) {
+            const sample = surfacePoints[i];
+
+            // Select model
+            const modelName = availableModels[Math.floor(Math.random() * availableModels.length)];
+            const modelIndex = merged.modelMap.get(modelName);
+
+            if (modelIndex === undefined) {
+                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
+                continue;
+            }
+
+            // Calculate scale
+            const scaleMultiplier = surfaceConfig.scaleMultiplier || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
+            _temp.scale.setScalar(baseScale);
+
+            // Calculate position with embed depth
+            const embedDepth = surfaceConfig.embedDepth ?? 0.2;
+            const surfaceResult = calculateSurfacePosition(
+                sample.position,
+                sample.normal,
+                baseScale,
+                embedDepth
+            );
+            const {position} = surfaceResult;
+
+            // Calculate orientation based on model type and surface normal
+            const cameraFacing = surfaceConfig.cameraFacing ?? 0.3;
+            const rotation = calculateOrientation(
+                sample.normal,
+                modelName,
+                cameraFacing,
+                camera || this.camera,
+                position,
+                null  // velocity
+            ).clone();
+
+            // Generate element ID
+            const elementId = `${elementType}_${this._nextId++}`;
+
+            // Spawn in pool
+            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
+
+            if (success) {
+                // Create per-element animation state
+                let animState = null;
+                if (animConfig) {
+                    animState = new AnimationState(animConfig, i);
+                    animState.initialize(this.time);
+
+                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                    pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
+                }
+
+                this.activeElements.set(elementId, {
+                    type: elementType,
+                    modelName,
+                    modelIndex,
+                    spawnTime: this.time,
+                    basePosition: position.clone(),
+                    position: position.clone(),
+                    rotation: rotation.clone(),
+                    baseScale,
+                    scale: baseScale,
+                    animState,
+                    // Surface-specific data
+                    surface: {
+                        config: surfaceConfig,
+                        normal: sample.normal.clone(),
+                        embedDepth
+                    }
+                });
+                spawnedIds.push(elementId);
+            }
+        }
+
+        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} surface elements`);
         return spawnedIds;
     }
 
@@ -1022,6 +1419,16 @@ export class ElementInstancedSpawner {
 
                 // Update base position for any drift effects
                 data.basePosition.copy(finalPosition);
+            } else if (data.anchor) {
+                // ANCHOR MODE: Apply bob animation using shared utility
+                const anchorPos = calculateAnchorPosition(data.anchor.config, this.time);
+                _temp.position.set(anchorPos.x, anchorPos.y, anchorPos.z);
+                finalPosition = _temp.position;
+
+                // Apply animated scale
+                finalScale = isProceduralElement
+                    ? baseScale * animState.fadeProgress
+                    : baseScale * animState.scale;
             } else {
                 // STANDARD MODE: Apply drift offset to position
                 const drift = animState.driftOffset;

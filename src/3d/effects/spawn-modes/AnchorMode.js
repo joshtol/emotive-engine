@@ -6,10 +6,102 @@
  * - Crown effects at the top
  * - Ground indicators at the feet
  *
+ * This module provides both:
+ * - Static utility functions for use by ElementInstancedSpawner
+ * - Class-based API for legacy ElementSpawner compatibility
+ *
  * @module spawn-modes/AnchorMode
  */
 
 import { BaseSpawnMode } from './BaseSpawnMode.js';
+import { normalizeOrientation } from './AxisTravelMode.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATIC UTILITY FUNCTIONS - Used by ElementInstancedSpawner
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Parse anchor configuration from spawn mode config.
+ * @param {Object} config - Raw spawn mode configuration
+ * @param {Function} resolveLandmark - Function to resolve landmark names to Y positions
+ * @returns {Object} Parsed anchor configuration
+ */
+export function parseAnchorConfig(config, resolveLandmark) {
+    const anchor = config.anchor || {};
+
+    return {
+        // Anchor settings
+        landmark: anchor.landmark || 'head',
+        landmarkY: resolveLandmark(anchor.landmark || 'head'),
+        offset: {
+            x: anchor.offset?.x || 0,
+            y: anchor.offset?.y || 0,
+            z: anchor.offset?.z || 0,
+        },
+        orientation: normalizeOrientation(anchor.orientation) || 'flat',
+        bob: anchor.bob ? {
+            amplitude: anchor.bob.amplitude || 0.02,
+            frequency: anchor.bob.frequency || 0.5,
+        } : null,
+
+        // Pass through other spawn options
+        count: config.count || 1,
+        models: config.models || [],
+        scale: config.scale ?? 1.0,
+    };
+}
+
+/**
+ * Calculate anchor position with optional bob animation.
+ * @param {Object} anchorConfig - Parsed anchor configuration
+ * @param {number} time - Current time in seconds (for bob animation)
+ * @returns {{ x: number, y: number, z: number, baseY: number }} Position coordinates
+ */
+export function calculateAnchorPosition(anchorConfig, time = 0) {
+    const baseY = anchorConfig.landmarkY + anchorConfig.offset.y;
+    let y = baseY;
+
+    // Apply bob animation if configured
+    if (anchorConfig.bob) {
+        const bobOffset = Math.sin(time * anchorConfig.bob.frequency * Math.PI * 2) * anchorConfig.bob.amplitude;
+        y = baseY + bobOffset;
+    }
+
+    return {
+        x: anchorConfig.offset.x,
+        y,
+        z: anchorConfig.offset.z,
+        baseY,  // Store for update loop
+    };
+}
+
+/**
+ * Get rotation values for anchor orientation.
+ * @param {string} orientation - Orientation type ('flat', 'vertical', 'camera', 'radial')
+ * @returns {{ x: number, y: number, z: number }} Euler rotation in radians
+ */
+export function getAnchorOrientation(orientation) {
+    switch (orientation) {
+    case 'flat':
+        // Horizontal ring (like a halo/crown) - rotate +90° around X
+        return { x: Math.PI / 2, y: 0, z: 0 };
+    case 'vertical':
+        // Standing upright
+        return { x: 0, y: 0, z: 0 };
+    case 'radial':
+        // Tilted outward ~45°
+        return { x: Math.PI / 4, y: 0, z: 0 };
+    case 'camera':
+        // Start upright, will be updated per-frame to face camera
+        return { x: 0, y: 0, z: 0 };
+    default:
+        return { x: 0, y: 0, z: 0 };
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLASS-BASED API - For legacy ElementSpawner compatibility
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Spawn mode for elements anchored at landmark positions
@@ -25,28 +117,8 @@ export class AnchorMode extends BaseSpawnMode {
      * @returns {Object} Parsed configuration with resolved landmarks
      */
     parseConfig(config) {
-        const anchor = config.anchor || {};
-
-        return {
-            // Anchor settings
-            landmark: anchor.landmark || 'head',
-            landmarkY: this.spatialRef.resolveLandmark(anchor.landmark || 'head'),
-            offset: {
-                x: anchor.offset?.x || 0,
-                y: anchor.offset?.y || 0,
-                z: anchor.offset?.z || 0,
-            },
-            orientation: anchor.orientation || 'flat',
-            bob: anchor.bob ? {
-                amplitude: anchor.bob.amplitude || 0.02,
-                frequency: anchor.bob.frequency || 0.5,
-            } : null,
-
-            // Pass through other spawn options
-            count: config.count || 1,
-            models: config.models || [],
-            scale: config.scale ?? 1.0,
-        };
+        // Delegate to static utility function
+        return parseAnchorConfig(config, name => this.spatialRef.resolveLandmark(name));
     }
 
     /**
@@ -57,9 +129,9 @@ export class AnchorMode extends BaseSpawnMode {
      */
     positionElement(mesh, config, index) {
         // Calculate final position
-        const x = config.offset.x;
+        const {x} = config.offset;
         const y = config.landmarkY + config.offset.y;
-        const z = config.offset.z;
+        const {z} = config.offset;
 
         mesh.position.set(x, y, z);
 
@@ -75,7 +147,7 @@ export class AnchorMode extends BaseSpawnMode {
 
         // Mark spawn mode type
         mesh.userData.spawnModeType = 'anchor';
-        mesh.userData.requiresSpawnModeUpdate = config.bob !== null || config.orientation === 'billboard';
+        mesh.userData.requiresSpawnModeUpdate = config.bob !== null || config.orientation === 'camera';
     }
 
     /**
@@ -85,33 +157,8 @@ export class AnchorMode extends BaseSpawnMode {
      * @private
      */
     _applyOrientation(mesh, orientation) {
-        switch (orientation) {
-        case 'flat':
-            // Lie flat (horizontal) - rotate 90 degrees around X
-            mesh.rotation.x = -Math.PI / 2;
-            mesh.rotation.y = 0;
-            mesh.rotation.z = 0;
-            break;
-
-        case 'upright':
-            // Default vertical orientation
-            mesh.rotation.x = 0;
-            mesh.rotation.y = 0;
-            mesh.rotation.z = 0;
-            break;
-
-        case 'billboard':
-            // Will be updated each frame to face camera
-            // Initial orientation is upright
-            mesh.rotation.x = 0;
-            mesh.rotation.y = 0;
-            mesh.rotation.z = 0;
-            break;
-
-        default:
-            // Unknown orientation, use default
-            break;
-        }
+        const rot = getAnchorOrientation(orientation);
+        mesh.rotation.set(rot.x, rot.y, rot.z);
     }
 
     /**
@@ -121,7 +168,7 @@ export class AnchorMode extends BaseSpawnMode {
      * @param {number} gestureProgress - Current gesture progress (0-1)
      */
     updateElement(mesh, deltaTime, gestureProgress) {
-        const anchor = mesh.userData.anchor;
+        const {anchor} = mesh.userData;
         if (!anchor) return;
 
         // Apply bob animation
@@ -131,8 +178,8 @@ export class AnchorMode extends BaseSpawnMode {
             mesh.position.y = anchor.baseY + bobOffset;
         }
 
-        // Update billboard orientation
-        if (anchor.orientation === 'billboard') {
+        // Update camera-facing orientation
+        if (anchor.orientation === 'camera') {
             const camera = this.spawner?.camera;
             if (camera) {
                 mesh.quaternion.copy(camera.quaternion);

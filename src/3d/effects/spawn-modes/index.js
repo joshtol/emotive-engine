@@ -12,9 +12,29 @@
  */
 
 export { BaseSpawnMode } from './BaseSpawnMode.js';
-export { OrbitMode } from './OrbitMode.js';
-export { SurfaceMode } from './SurfaceMode.js';
-export { AnchorMode } from './AnchorMode.js';
+
+// OrbitMode - class and static utilities
+export {
+    OrbitMode,
+    parseOrbitConfig,
+    parseOrbitFormation,
+    expandOrbitFormation,
+    calculateOrbitPosition
+} from './OrbitMode.js';
+
+// SurfaceMode - class and static utilities
+export {
+    SurfaceMode,
+    parseSurfaceConfig
+} from './SurfaceMode.js';
+
+// AnchorMode - class and static utilities
+export {
+    AnchorMode,
+    parseAnchorConfig,
+    calculateAnchorPosition,
+    getAnchorOrientation
+} from './AnchorMode.js';
 
 // AxisTravelMode - class and static utilities
 export {
@@ -23,7 +43,8 @@ export {
     parseFormation,
     parseAxisTravelConfig,
     expandFormation,
-    calculateAxisTravelPosition
+    calculateAxisTravelPosition,
+    normalizeOrientation  // Shared orientation value normalizer
 } from './AxisTravelMode.js';
 
 /**
@@ -36,10 +57,10 @@ import { AxisTravelMode } from './AxisTravelMode.js';
 import { AnchorMode } from './AnchorMode.js';
 
 export const SPAWN_MODES = {
-    // Note: 'orbit' and 'surface' are still handled inline in ElementSpawner.spawn()
-    // They have complex interactions with surface sampling that _spawnWithNewMode doesn't handle
     'axis-travel': AxisTravelMode,
     'anchor': AnchorMode,
+    'orbit': OrbitMode,
+    'surface': SurfaceMode,
 };
 
 /**
@@ -53,7 +74,7 @@ export function createSpawnMode(type, spawner, spatialRef) {
     const ModeClass = SPAWN_MODES[type];
 
     if (!ModeClass) {
-        // Return null for modes still handled inline (orbit, surface)
+        console.warn(`[SpawnModes] Unknown spawn mode type: ${type}`);
         return null;
     }
 
