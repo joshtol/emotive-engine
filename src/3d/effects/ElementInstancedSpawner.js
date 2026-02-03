@@ -391,14 +391,9 @@ export class ElementInstancedSpawner {
         } = options;
 
         // Parse animation config if provided
-        console.log(`[ElementInstancedSpawner] spawn ${elementType}: gestureDuration=${gestureDuration}, animation=${animation ? 'present' : 'null'}`);
         const animConfig = animation
             ? new AnimationConfig(animation, gestureDuration)
             : null;
-        if (animConfig) {
-            const enterDur = animConfig.enter.duration * animConfig.gestureDuration / 1000;
-            console.log(`[AnimConfig] enter.duration=${animConfig.enter.duration}, gestureDuration=${animConfig.gestureDuration}, calculated enter=${enterDur}s`);
-        }
 
         // Ensure pool is initialized
         const pool = await this.initializePool(elementType);
@@ -809,7 +804,6 @@ export class ElementInstancedSpawner {
                 // Create per-element animation state if animation config provided
                 let animState = null;
                 if (animConfig) {
-                    console.log(`[Spawn] Creating AnimState for ${elementId} at this.time=${this.time.toFixed(3)}`);
                     animState = new AnimationState(animConfig, i);
                     animState.initialize(this.time);
 
@@ -1526,14 +1520,6 @@ export class ElementInstancedSpawner {
             const instanceOpacity = isProceduralElement
                 ? animState.fadeProgress  // Smooth 0→1→0, shader handles flicker
                 : animState.opacity;      // Includes flicker/pulse effects
-
-            // DEBUG: Log fadeProgress values during animation
-            if (isProceduralElement && this._debugFadeCounter === undefined) {
-                this._debugFadeCounter = 0;
-            }
-            if (isProceduralElement && this._debugFadeCounter++ % 60 === 0) {
-                console.log(`[FadeDebug] ${elementId}: state=${animState.state}, fadeProgress=${animState.fadeProgress.toFixed(3)}, opacity=${instanceOpacity.toFixed(3)}, gestureProgress=${gestureProgress?.toFixed(3) ?? 'null'}`);
-            }
 
             pool.updateInstanceOpacity(elementId, instanceOpacity);
         }

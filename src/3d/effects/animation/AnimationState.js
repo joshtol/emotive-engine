@@ -270,12 +270,6 @@ export class AnimationState {
         const elapsed = time - this.stateStartTime;
         this.progress = Math.min(elapsed / duration, 1);
 
-        // DEBUG: Log once per transition to see actual values
-        if (!this._loggedEntering) {
-            this._loggedEntering = true;
-            console.log(`[AnimState ENTERING] mode=${this.config.timing.mode}, enter.duration=${enter.duration}, gestureDuration=${this.config.gestureDuration}, calculatedDuration=${duration}s, time=${time.toFixed(3)}, stateStartTime=${this.stateStartTime.toFixed(3)}, elapsed=${elapsed.toFixed(3)}s`);
-        }
-
         // Apply easing
         const easedProgress = enter.easing(this.progress);
 
