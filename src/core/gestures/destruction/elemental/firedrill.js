@@ -71,7 +71,7 @@ const FIREDRILL_CONFIG = {
             phaseOffset: 0
         },
         count: 6,
-        scale: 0.6,                 // Smaller elements for tight drill
+        scale: 0.8,                 // Slightly larger elements
         models: ['flame-ring'],
         animation: {
             appearAt: 0.0,

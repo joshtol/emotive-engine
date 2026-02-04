@@ -57,10 +57,10 @@ const FIREDANCE_CONFIG = {
             start: 'bottom',            // Start at mascot's feet
             end: 'top',
             easing: 'easeInOut',
-            startScale: 1.8,
-            endScale: 2.2,
-            startDiameter: 1.6,
-            endDiameter: 2.4,
+            startScale: 1.4,
+            endScale: 1.8,
+            startDiameter: 1.3,
+            endDiameter: 2.0,
             orientation: 'vertical'  // Standing rings for dance effect
         },
         formation: {

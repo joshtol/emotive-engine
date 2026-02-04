@@ -179,12 +179,11 @@ const SCORCH_CONFIG = {
                     frequency: 4,
                     pattern: 'sine'
                 },
-                // Radiate outward from center
+                // Radiate outward from center (horizontal only)
                 drift: {
-                    speed: 0.8,
-                    distance: 1.2,
-                    pattern: 'radial',
-                    accelerate: true
+                    direction: 'outward-flat',
+                    distance: 0.5,
+                    noise: 0.1
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.4, phase: 0 },
@@ -331,12 +330,11 @@ const SCORCH_CONFIG = {
                     frequency: 4,
                     pattern: 'sine'
                 },
-                // Slow outward expansion
+                // Slow outward expansion (horizontal)
                 drift: {
-                    speed: 0.2,
-                    distance: 0.3,
-                    pattern: 'radial',
-                    accelerate: false
+                    direction: 'outward-flat',
+                    distance: 0.2,
+                    noise: 0.05
                 },
                 scaleVariance: 0.15,
                 lifetimeVariance: 0.1,

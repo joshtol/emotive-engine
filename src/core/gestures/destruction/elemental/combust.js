@@ -117,6 +117,8 @@ const COMBUST_CONFIG = {
                 flickerIntensity: 1.6,
                 driftSpeed: 1.4
             },
+            // Varied sizes for fire-bursts (some huge, some small)
+            scalePerElement: [1.0, 0.5, 1.3, 0.6, 1.5, 0.4, 1.2, 0.7, 1.4, 0.55, 1.1, 0.65],
             // Model-specific behavior overrides
             modelOverrides: {
                 'fire-burst': {

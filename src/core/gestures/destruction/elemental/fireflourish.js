@@ -65,7 +65,7 @@ const FIREFLOURISH_CONFIG = {
                 endScale: 1.2,
                 startDiameter: 1.8,
                 endDiameter: 2.8,
-                orientation: 'camera'       // Face camera
+                orientation: 'camera'       // Billboard: always face camera
             },
             formation: {
                 type: 'spiral',

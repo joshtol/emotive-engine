@@ -65,7 +65,7 @@ const BLAZE_CONFIG = {
                 startAngle: 0
             },
             count: 5,
-            scale: 2.0,
+            scale: 2.4,
             models: ['flame-tongue'],
             animation: {
                 appearAt: 0.0,

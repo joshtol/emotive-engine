@@ -45,7 +45,7 @@ const PHOENIX_CONFIG = {
     type: 'blending',
     description: 'Ascending fire vortex - mixed flames spiral upward in rebirth',
     duration: 4000,
-    beats: 6,
+    beats: 4,
     intensity: 1.7,
     category: 'radiating',
     temperature: 0.85,              // Hot ascending flames

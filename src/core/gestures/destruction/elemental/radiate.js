@@ -142,33 +142,39 @@ const RADIATE_CONFIG = {
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Single fire-burst from center (combust-style explosion)
+        // LAYER 2: Central fire burst with flame tongues (realistic fire explosion)
+        // Mix of fire-burst and flame-tongues for organic fire look
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
-            type: 'anchor',
-            anchor: {
-                landmark: 'center',
-                offset: { x: 0, y: 0, z: 0 },
-                orientation: 'camera',
-                startScale: 0.1,
-                endScale: 5.0,
-                scaleEasing: 'burstImplode'
+            type: 'radial-burst',
+            radialBurst: {
+                startRadius: 0.1,
+                endRadius: 1.2,
+                height: 0,
+                easing: 'easeOutExpo'
             },
-            count: 1,
-            scale: 1.2,
-            models: ['fire-burst'],
+            formation: {
+                type: 'ring',
+                count: 6,
+                startAngle: 0
+            },
+            count: 6,
+            scale: 1.0,
+            models: ['flame-tongue', 'fire-burst', 'flame-tongue', 'fire-burst', 'flame-tongue', 'fire-burst'],
             animation: {
-                appearAt: 0.50,
-                disappearAt: 0.75,            // Start fade at implosion phase (50% of element lifetime)
+                appearAt: 0.45,
+                disappearAt: 0.80,
+                stagger: 0.02,
                 enter: {
-                    type: 'fade',
-                    duration: 0.02,
-                    easing: 'easeOut'
+                    type: 'scale',
+                    duration: 0.08,
+                    easing: 'easeOutBack'
                 },
                 exit: {
-                    type: 'fade',
-                    duration: 0.25,           // Fade during implosion (50-100% of element lifetime)
-                    easing: 'easeInCubic'     // Slow fade at first, accelerate at end
+                    type: 'burst-fade',
+                    duration: 0.2,
+                    easing: 'easeInCubic',
+                    burstScale: 1.3
                 },
                 procedural: {
                     scaleSmoothing: 0.06,
@@ -176,42 +182,31 @@ const RADIATE_CONFIG = {
                 },
                 parameterAnimation: {
                     temperature: {
-                        start: 0.6,
+                        start: 0.7,
                         peak: 0.95,
                         end: 0.5,
-                        curve: 'spike'
+                        curve: 'bell'
                     }
                 },
                 flicker: {
-                    intensity: 0.5,
-                    rate: 25,
+                    intensity: 0.4,
+                    rate: 18,
                     pattern: 'random'
                 },
                 pulse: {
-                    amplitude: 0.2,
-                    frequency: 12,
+                    amplitude: 0.15,
+                    frequency: 8,
                     easing: 'easeOut'
                 },
                 emissive: {
                     min: 2.0,
-                    max: 4.5,
-                    frequency: 15,
+                    max: 4.0,
+                    frequency: 10,
                     pattern: 'sine'
                 },
+                scalePerElement: [1.0, 0.8, 1.1, 0.75, 0.95, 0.85],
                 blending: 'additive',
-                renderOrder: 12,
-                modelOverrides: {
-                    'fire-burst': {
-                        scaling: {
-                            mode: 'non-uniform',
-                            axes: {
-                                x: { expand: true, rate: 1.8 },
-                                y: { expand: true, rate: 2.0 },
-                                z: { expand: true, rate: 1.8 }
-                            }
-                        }
-                    }
-                }
+                renderOrder: 12
             }
         }
     ],
