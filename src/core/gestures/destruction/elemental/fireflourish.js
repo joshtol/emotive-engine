@@ -63,8 +63,8 @@ const FIREFLOURISH_CONFIG = {
                 easing: 'linear',
                 startScale: 0.7,
                 endScale: 1.2,
-                startDiameter: 1.4,
-                endDiameter: 2.2,
+                startDiameter: 1.8,
+                endDiameter: 2.8,
                 orientation: 'camera'       // Face camera
             },
             formation: {
