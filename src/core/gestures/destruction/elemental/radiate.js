@@ -5,23 +5,23 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Radiate gesture - emitting heat waves, warm ambient glow
+ * @fileoverview Radiate gesture - expanding flame rings radiating outward
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/radiate
  * @complexity ⭐⭐ Standard
  *
  * VISUAL DIAGRAM:
- *         ☀️
- *        ╱ ╲
- *      ✧  ★  ✧      ← Gentle scattered embers
- *        ╲ ╱          warm ambient glow
- *         ✧
+ *         ═══════            ← Rings at center height
+ *        ╱       ╲
+ *       │    ★    │          ← 3 vertical rings at 120° apart
+ *        ╲       ╱             expanding diameter as they rise
+ *         ═══════
  *
  * FEATURES:
- * - Gentle ambient heat emanation
- * - Smooth breathing pulse (not chaotic)
- * - Warm orange glow
- * - Mascot is SOURCE of fire (radiating category)
+ * - 3 flame rings with vertical orientation
+ * - Rings travel from below center to above
+ * - Expanding diameter creates radiating effect
+ * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
  * - Warmth/comfort effects
@@ -33,136 +33,132 @@ import { buildFireEffectGesture } from './fireEffectFactory.js';
 
 /**
  * Radiate gesture configuration
- * Emitting heat waves, warm ambient glow
+ * Expanding flame rings radiating outward
  */
 const RADIATE_CONFIG = {
     name: 'radiate',
     emoji: '☀️',
     type: 'blending',
-    description: 'Emitting heat waves, warm ambient glow',
+    description: 'Expanding flame rings radiating outward',
     duration: 3000,
     beats: 4,
     intensity: 0.8,
     category: 'radiating',
-    temperature: 0.4,              // Warm, not hot
+    temperature: 0.4,
 
-    // 3D Element spawning - gentle ambient embers
+    // 3D Element spawning - RADIATING rings at feet level
+    // Key visual: flaming coins circling at mascot's feet, expanding outward
     spawnMode: {
-        type: 'surface',
-        pattern: 'scattered',       // Gentle scattered embers
-        embedDepth: 0.15,
-        cameraFacing: 0.3,
-        clustering: 0.2,
-        count: 5,
-        scale: 0.9,
-        models: ['ember-cluster', 'flame-wisp'],
-        minDistance: 0.18,          // Spread out for ambient feel
+        type: 'axis-travel',
+        axisTravel: {
+            axis: 'y',
+            start: 'bottom',              // Spawn at feet
+            end: 'bottom',                // STAY at feet (no vertical travel)
+            easing: 'linear',
+            startScale: 1.2,
+            endScale: 1.8,                // Grow slightly as they radiate
+            startDiameter: 1.2,           // Start circling close to mascot
+            endDiameter: 3.5,             // Expand outward dramatically
+            orientation: 'vertical'       // Standing rings (coins)
+        },
+        formation: {
+            type: 'spiral',
+            count: 3,
+            spacing: 0,
+            arcOffset: 120,               // 3 rings at 120° apart
+            phaseOffset: 0
+        },
+        count: 3,
+        scale: 1.0,
+        models: ['flame-ring'],
         animation: {
-            appearAt: 0.1,
-            disappearAt: 0.9,
-            stagger: 0.05,
+            appearAt: 0.02,
+            disappearAt: 0.70,            // Fade as they radiate out
+            stagger: 0.03,                // Near-simultaneous spawn
             enter: {
-                type: 'fade',       // Gentle fade in
-                duration: 0.12,
-                easing: 'easeOutQuad'
+                type: 'fade',
+                duration: 0.1,
+                easing: 'easeOut'
             },
             exit: {
                 type: 'fade',
-                duration: 0.15,
-                easing: 'easeInQuad'
+                duration: 0.30,
+                easing: 'easeIn'
             },
-            // Procedural shader config
             procedural: {
-                scaleSmoothing: 0.1,    // Very smooth for gentle radiating
+                scaleSmoothing: 0.08,
                 geometryStability: true
             },
-            // Temperature: gentle warmth pulse
             parameterAnimation: {
                 temperature: {
-                    start: 0.3,         // Warm start
-                    peak: 0.45,         // Gentle peak
-                    end: 0.3,           // Return to warmth
-                    curve: 'pulse'      // Smooth sine wave
+                    start: 0.7,           // Hot at center
+                    peak: 0.6,
+                    end: 0.35,            // Cool as they radiate out
+                    curve: 'linear'
                 }
             },
-            // Controlled emanation - smooth breathing
+            flicker: {
+                intensity: 0.25,
+                rate: 10,
+                pattern: 'smooth'
+            },
             pulse: {
                 amplitude: 0.12,
-                frequency: 1.5,     // Slow breathing
-                easing: 'easeInOut',
-                sync: 'global'      // All elements pulse together
+                frequency: 3,
+                easing: 'easeInOut'
             },
             emissive: {
-                min: 0.6,
-                max: 1.2,
-                frequency: 1.5,
+                min: 1.2,
+                max: 2.8,
+                frequency: 4,
                 pattern: 'sine'
             },
-            drift: {
-                direction: 'outward',
-                distance: 0.05,     // Subtle outward drift over gesture
-                noise: 0.005
-            },
-            rotate: {
-                axis: 'y',
-                speed: 0.02,
-                oscillate: true,
-                range: Math.PI / 6
-            },
-            scaleVariance: 0.2,
-            lifetimeVariance: 0.15,
+            // Coins spinning as they circle and radiate
+            rotate: [
+                { axis: 'y', rotations: 1.5, phase: 0 },
+                { axis: 'y', rotations: 1.5, phase: 120 },
+                { axis: 'y', rotations: 1.5, phase: 240 }
+            ],
+            scaleVariance: 0.1,
+            lifetimeVariance: 0.05,
             blending: 'additive',
             renderOrder: 8,
-            intensityScaling: {
-                scale: 1.2,
-                emissiveMax: 1.3,
-                pulseAmplitude: 1.2
-            },
-            // Model-specific behavior overrides
             modelOverrides: {
-                'ember-cluster': {
-                    scaling: { mode: 'uniform-pulse', amplitude: 0.15, frequency: 1.5 },
-                    drift: { direction: 'rising', speed: 0.015, noise: 0.1, buoyancy: true }
-                },
-                'flame-wisp': {
-                    scaling: {
-                        mode: 'non-uniform',
-                        axes: {
-                            x: { expand: false, rate: 0.8 },
-                            y: { expand: true, rate: 1.2 },
-                            z: { expand: false, rate: 0.8 }
-                        }
+                'flame-ring': {
+                    shaderAnimation: {
+                        type: 1,          // CRITICAL: must be 1
+                        arcWidth: 0.8,    // Fuller rings
+                        arcSpeed: 0.8,
+                        arcCount: 1       // CRITICAL: must be >= 1
                     },
-                    drift: { direction: 'rising', speed: 0.01, buoyancy: true }
+                    orientationOverride: 'vertical'
                 }
             }
         }
     },
 
-    // No jitter - controlled emission
-    flickerFrequency: 0,
-    flickerAmplitude: 0,
-    flickerDecay: 0.3,
-    // Glow - gentle warm pulsing
-    glowColor: [1.0, 0.7, 0.3],    // Warm orange
+    // Mesh effects
+    flickerFrequency: 8,
+    flickerAmplitude: 0.01,
+    flickerDecay: 0.2,
+    glowColor: [1.0, 0.7, 0.3],
     glowIntensityMin: 1.0,
-    glowIntensityMax: 1.6,
-    glowFlickerRate: 3,            // Slow breathing pulse
-    // Scale - gentle breathing
+    glowIntensityMax: 2.0,
+    glowFlickerRate: 6,
     scaleVibration: 0.015,
-    scaleFrequency: 1.5,
-    scalePulse: true,              // Smooth sine pulse
-    // Heat wave effect
-    heatWaves: true,
-    waveFrequency: 2
+    scaleFrequency: 3,
+    scaleGrowth: 0.02,
+    rotationEffect: true,
+    rotationSpeed: 0.3
 };
 
 /**
- * Radiate gesture - emitting heat waves, warm ambient glow.
+ * Radiate gesture - expanding flame rings radiating outward.
  *
- * Uses surface spawn mode with scattered pattern:
- * - Gentle ambient embers with smooth breathing pulse
- * - Mascot is the source of warmth
- * - Controlled, calm fire emanation
+ * Uses axis-travel spawn mode with spiral formation:
+ * - 3 flame-ring models travel from below to above
+ * - Rings are VERTICAL (orientation: 'vertical')
+ * - Expanding diameter creates radiating heat wave effect
+ * - 120° arcOffset spreads rings around the mascot
  */
 export default buildFireEffectGesture(RADIATE_CONFIG);
