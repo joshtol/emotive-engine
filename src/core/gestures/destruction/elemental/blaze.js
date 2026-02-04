@@ -12,15 +12,12 @@
  *
  * VISUAL DIAGRAM:
  *
- *               ✴️                ← Layer 1: Varied 5-point flame star
- *           ✦  ✦  ✦  ✦            ← Layer 2: Rising wisps
- *          · · · · · · ·           ← Layer 3: Base ember glow
+ *         ✴️              ← Pulsing 5-point flame star
+ *                           drifts upward as it pulses
  *
  * FEATURES:
- * - THREE SPAWN LAYERS for flagship fire effect
- * - Layer 1: Pulsing flame-tongue star with varied sizes/speeds (hero)
- * - Layer 2: Rising flame-wisps from below
- * - Layer 3: Base ember-cluster glow
+ * - SINGLE SPAWN LAYER for flagship fire effect
+ * - Pulsing flame-tongue star with upward drift
  * - Mascot is SOURCE of fire (radiating category)
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
@@ -42,23 +39,23 @@ const BLAZE_CONFIG = {
     emoji: '🔆',
     type: 'blending',
     description: 'Flagship fire aura with pulsing flame star',
-    duration: 2000,
-    beats: 4,
+    duration: 1200,
+    beats: 3,
     intensity: 1.3,
     category: 'radiating',
     temperature: 0.75,
 
-    // THREE LAYERS for flagship fire effect
+    // SINGLE LAYER for flagship fire effect
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 1: Pulsing flame-tongue star (the hero element)
-        // 5 flame-tongues in a star pattern with varied sizes and speeds
+        // 5 flame-tongues in a star pattern with upward drift
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'orbit',
             orbit: {
-                height: 0.1,
-                radius: 0.2,                    // Tight cluster at center
+                height: -0.35,                  // Start near feet
+                radius: 0.25,                   // Tight cluster
                 plane: 'horizontal',
                 orientation: 'radial'           // Point outward like star rays
             },
@@ -68,21 +65,29 @@ const BLAZE_CONFIG = {
                 startAngle: 0
             },
             count: 5,
-            scale: 1.6,
+            scale: 2.0,
             models: ['flame-tongue'],
             animation: {
                 appearAt: 0.0,
-                disappearAt: 0.85,
+                disappearAt: 0.75,
+                stagger: 0.08,                    // Staggered appearance
+                staggerExit: 0.06,                // Staggered exit
                 enter: {
                     type: 'scale',
-                    duration: 0.2,
+                    duration: 0.15,
                     easing: 'easeOutBack'
                 },
                 exit: {
                     type: 'burst-fade',
-                    duration: 0.2,
+                    duration: 0.18,
                     easing: 'easeInCubic',
-                    burstScale: 1.3
+                    burstScale: 1.2
+                },
+                // Drift upward during animation
+                drift: {
+                    direction: 'up',
+                    distance: 0.8,
+                    noise: 0.1
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
@@ -114,159 +119,18 @@ const BLAZE_CONFIG = {
                     frequency: 3,
                     pattern: 'sine'
                 },
-                // Varied rotation speeds for each star point
+                // Varied rotation speeds for each star point (reduced for triplet)
                 rotate: [
-                    { axis: 'y', rotations: 2.0, phase: 0 },
-                    { axis: 'y', rotations: 1.2, phase: 72 },
-                    { axis: 'y', rotations: 1.8, phase: 144 },
-                    { axis: 'y', rotations: 1.0, phase: 216 },
-                    { axis: 'y', rotations: 1.5, phase: 288 }
+                    { axis: 'y', rotations: 0.8, phase: 0 },
+                    { axis: 'y', rotations: 0.5, phase: 72 },
+                    { axis: 'y', rotations: 0.7, phase: 144 },
+                    { axis: 'y', rotations: 0.4, phase: 216 },
+                    { axis: 'y', rotations: 0.6, phase: 288 }
                 ],
                 // Varied scales for each star point
                 scalePerElement: [1.0, 0.7, 0.85, 0.6, 0.75],
                 blending: 'additive',
                 renderOrder: 16
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Rising flame wisps
-        // Small flames rising from below creating upward energy
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'orbit',
-            orbit: {
-                height: -0.3,               // Start below center
-                radius: 0.7,
-                plane: 'horizontal',
-                orientation: 'vertical'
-            },
-            formation: {
-                type: 'ring',
-                count: 8,
-                startAngle: 22.5
-            },
-            count: 8,
-            scale: 0.5,
-            models: ['flame-wisp'],
-            animation: {
-                appearAt: 0.08,
-                disappearAt: 0.75,
-                stagger: 0.04,
-                enter: {
-                    type: 'fade',
-                    duration: 0.1,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.2,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    temperature: {
-                        start: 0.4,
-                        peak: 0.65,
-                        end: 0.3,
-                        curve: 'bell'
-                    }
-                },
-                flicker: {
-                    intensity: 0.3,
-                    rate: 10,
-                    pattern: 'random'
-                },
-                emissive: {
-                    min: 1.2,
-                    max: 2.2,
-                    frequency: 4,
-                    pattern: 'sine'
-                },
-                // Rise upward dramatically
-                drift: {
-                    speed: 0.6,
-                    distance: 1.0,
-                    direction: { x: 0, y: 1, z: 0 },
-                    easing: 'easeOutQuad'
-                },
-                scaleVariance: 0.25,
-                lifetimeVariance: 0.15,
-                blending: 'additive',
-                renderOrder: 12
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Base ember glow
-        // Ground-level ambient heat
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'orbit',
-            orbit: {
-                height: -0.4,               // At base
-                radius: 1.3,
-                plane: 'horizontal',
-                orientation: 'camera'
-            },
-            formation: {
-                type: 'ring',
-                count: 8,
-                startAngle: 0
-            },
-            count: 8,
-            scale: 0.45,
-            models: ['ember-cluster'],
-            animation: {
-                appearAt: 0.0,
-                disappearAt: 0.90,
-                stagger: 0.03,
-                enter: {
-                    type: 'fade',
-                    duration: 0.15,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.15,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.1,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    temperature: {
-                        start: 0.35,
-                        peak: 0.55,
-                        end: 0.3,
-                        curve: 'sine'
-                    }
-                },
-                flicker: {
-                    intensity: 0.2,
-                    rate: 5,
-                    pattern: 'random'
-                },
-                pulse: {
-                    amplitude: 0.12,
-                    frequency: 2,
-                    easing: 'easeInOut',
-                    perElement: true
-                },
-                emissive: {
-                    min: 0.8,
-                    max: 1.5,
-                    frequency: 2,
-                    pattern: 'sine'
-                },
-                scaleVariance: 0.15,
-                lifetimeVariance: 0.1,
-                blending: 'additive',
-                renderOrder: 10
             }
         }
     ],
@@ -290,12 +154,11 @@ const BLAZE_CONFIG = {
 /**
  * Blaze gesture - flagship fire aura with pulsing flame star.
  *
- * Uses THREE SPAWN LAYERS:
- * - Layer 1: 5 flame-tongues in star pattern with varied sizes/speeds (hero)
- * - Layer 2: 8 rising flame-wisps from below
- * - Layer 3: 8 ember-clusters as base glow
+ * Uses SINGLE SPAWN LAYER:
+ * - 5 flame-tongues in star pattern with varied sizes/speeds
+ * - Drifts upward while pulsing
+ * - Staggered appearance and exit for dynamic feel
  *
- * Creates dramatic power aura with clear visual hierarchy:
- * base embers → rising wisps → central varied flame star.
+ * Creates dramatic power aura with a bold flame star.
  */
 export default buildFireEffectGesture(BLAZE_CONFIG);

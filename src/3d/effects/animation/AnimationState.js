@@ -465,7 +465,9 @@ export class AnimationState {
         if (hold.drift) {
             const d = hold.drift;
             // Calculate per-frame increment from total distance and gesture duration
-            const increment = (d.distance / d.gestureDuration) * deltaTime;
+            // Note: gestureDuration is in ms, deltaTime is in seconds
+            const gestureDurationSec = d.gestureDuration / 1000;
+            const increment = (d.distance / gestureDurationSec) * deltaTime;
 
             // Add noise if configured
             const noiseX = d.noise > 0 ? (Math.random() - 0.5) * d.noise * increment : 0;

@@ -53,8 +53,8 @@ const BURN_CONFIG = {
         cameraFacing: 0.3,
         clustering: 0.25,           // Some clustering for flame groups
         count: 8,
-        scale: 1.0,
-        models: ['flame-wisp', 'ember-cluster', 'flame-tongue'],
+        scale: 1.25,
+        models: ['flame-wisp', 'flame-tongue'],
         minDistance: 0.12,
         animation: {
             appearAt: 0.05,
