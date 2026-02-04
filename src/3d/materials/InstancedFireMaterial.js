@@ -61,6 +61,9 @@ uniform float uGestureProgress;  // 0-1 gesture progress
 // Per-instance attributes
 ${INSTANCED_ATTRIBUTES_VERTEX}
 
+// Velocity stretch uniform
+uniform float uVelocityStretch;
+
 // Varyings to fragment
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -69,6 +72,7 @@ varying vec3 vViewDir;
 varying float vDisplacement;
 varying float vVerticalGradient;
 varying float vArcVisibility;  // 0-1 visibility based on arc position
+varying float vRandomSeed;     // Pass random seed to fragment for per-instance variation
 
 ${NOISE_GLSL}
 
@@ -158,7 +162,28 @@ void main() {
     // Apply trail offset
     displaced += trailOffset;
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // VELOCITY-BASED STRETCHING
+    // ═══════════════════════════════════════════════════════════════════════════════
+    if (uVelocityStretch > 0.01 && length(aVelocity.xyz) > 0.01) {
+        vec3 velocityDir = normalize(aVelocity.xyz);
+        float speed = aVelocity.w;
+
+        // Project vertex onto velocity direction
+        float alongVelocity = dot(displaced, velocityDir);
+
+        // Stretch factor increases with speed
+        float stretchFactor = 1.0 + speed * uVelocityStretch * 0.5;
+
+        // Apply stretch along velocity direction (more at top of flame)
+        vec3 stretchOffset = velocityDir * alongVelocity * (stretchFactor - 1.0);
+        displaced += stretchOffset * heightFactor;
+    }
+
     vDisplacement = displacement;
+
+    // Pass random seed to fragment for per-instance flicker variation
+    vRandomSeed = aRandomSeed;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // CRITICAL: Apply instance matrix for per-instance transforms!
@@ -222,6 +247,10 @@ uniform float uFlickerSpeed;
 uniform float uFlickerAmount;
 uniform float uNoiseScale;
 uniform float uEdgeFade;
+// Enhanced visual uniforms
+uniform float uEdgeSoftness;
+uniform float uEmberDensity;
+uniform float uEmberBrightness;
 
 // Arc visibility uniforms
 uniform int uAnimationType;
@@ -236,6 +265,7 @@ varying vec3 vViewDir;
 varying float vDisplacement;
 varying float vVerticalGradient;
 varying float vArcVisibility;
+varying float vRandomSeed;
 
 ${NOISE_GLSL}
 ${FIRE_COLOR_GLSL}
@@ -250,49 +280,118 @@ void main() {
     // Use local time for animation
     float localTime = vLocalTime;
 
-    // Flame pattern generation (using local time for time-offset)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FLAME PATTERN (Layered multi-scale noise)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, -localTime * 0.00085, 0.0);
-    float flame = turbulence(noisePos, 3);
 
-    vec3 detailPos = noisePos * 2.0 + vec3(localTime * 0.00015, 0.0, localTime * 0.0001);
-    float detail = snoise(detailPos) * 0.5 + 0.5;
+    // Layered turbulence for organic, billowing flames
+    float flame = layeredTurbulence(noisePos, localTime);
 
+    // Position-based variation for non-uniform flames
     float posVariation = snoise(vPosition * 7.0) * 0.15 + 0.92;
-    flame = (flame * 0.7 + detail * 0.3) * posVariation;
+    flame *= posVariation;
 
-    // Vertical fade
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // VERTICAL FALLOFF
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     float verticalFade = 1.0 - pow(vVerticalGradient, 1.5);
     float tipBrightness = smoothstep(0.7, 0.9, vVerticalGradient) * flame * 0.5;
 
-    // Flicker (using local time)
-    float flickerOffset = snoise(vPosition * 3.0) * 2.0;
-    float flicker = 1.0 - uFlickerAmount + uFlickerAmount *
-        (snoise(vec3(localTime * uFlickerSpeed + flickerOffset, vPosition.y * 5.0, vPosition.x * 3.0)) * 0.5 + 0.5);
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ENHANCED PER-INSTANCE FLICKER
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    // Per-instance random phase and frequency for organic chaos
+    float instancePhase = vRandomSeed * 6.28318;
+    float instanceFreq = 0.8 + vRandomSeed * 0.4;
+
+    // Multi-frequency flicker (sin-based for smooth oscillation)
+    float f1 = sin(localTime * uFlickerSpeed * instanceFreq + instancePhase);
+    float f2 = sin(localTime * uFlickerSpeed * 2.3 * instanceFreq + instancePhase * 1.7) * 0.3;
+    float f3 = sin(localTime * uFlickerSpeed * 0.7 * instanceFreq + instancePhase * 0.5) * 0.2;
+
+    float flickerCombined = (f1 + f2 + f3) * 0.5 + 0.5;
+    float flicker = 1.0 - uFlickerAmount + uFlickerAmount * flickerCombined;
+
+    // Micro-flicker for fine detail
     float microFlicker = 0.95 + 0.05 * snoise(vec3(localTime * 0.004, vPosition.yz * 6.0));
     flicker *= microFlicker;
 
-    // Fresnel edge glow
-    float fresnel = 1.0 - abs(dot(normal, viewDir));
-    fresnel = pow(fresnel, 2.0);
-    float edgeGlow = fresnel * (0.5 + flame * 0.5);
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FRESNEL EDGE GLOW (Softer for ethereal look)
+    // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Color calculation
+    float fresnel = 1.0 - abs(dot(normal, viewDir));
+    float softFresnel = pow(fresnel, 2.5);  // Softer power
+    float edgeGlow = softFresnel * (0.5 + flame * 0.5);
+
+    // Edge factor for ethereal color tinting
+    float edgeFactor = softFresnel * (1.0 - flame * 0.3);
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COLOR CALCULATION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     float localIntensity = flame * verticalFade * flicker + tipBrightness + edgeGlow * 0.3;
     localIntensity = clamp(localIntensity, 0.0, 1.0);
 
-    vec3 color = fireColor(localIntensity, uTemperature);
+    // Fire color with ethereal edge tinting
+    vec3 color = fireColor(localIntensity, uTemperature, edgeFactor);
     color *= uIntensity * (0.7 + localIntensity * 0.3);
 
-    // Scale color intensity by instance opacity for smooth fade
-    // This ensures fire dims during enter/exit, not just becomes transparent
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EMBER/SPARK GENERATION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    if (uEmberDensity > 0.01) {
+        vec3 emberPos = vPosition * 15.0 + vec3(localTime * 0.002, -localTime * 0.008, localTime * 0.001);
+        float emberNoise = snoise(emberPos);
+
+        // Sparse bright spots via threshold
+        float emberThreshold = 0.75 - uEmberDensity * 0.3;
+        float embers = smoothstep(emberThreshold, emberThreshold + 0.1, emberNoise);
+
+        // Embers concentrate near top (rising sparks)
+        embers *= smoothstep(0.2, 0.8, vVerticalGradient);
+
+        // Flicker embers
+        float emberFlicker = 0.7 + 0.3 * snoise(vec3(localTime * 0.02, emberPos.xy));
+        embers *= emberFlicker;
+
+        // Add white-hot ember color
+        color += vec3(1.0, 0.9, 0.7) * embers * uEmberBrightness * uIntensity;
+    }
+
+    // Scale color by instance opacity for smooth fade
     color *= vInstanceAlpha;
 
-    // Alpha calculation
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ALPHA CALCULATION (With soft edge falloff)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     float alpha = localIntensity * uOpacity;
+
+    // Surface fade
     float surfaceFade = smoothstep(0.0, uEdgeFade, vDisplacement);
     alpha *= mix(1.0, surfaceFade, 0.5);
+
+    // Vertical fade
     alpha *= mix(1.0, 1.0 - vVerticalGradient * 0.5, 0.3);
-    alpha += fresnel * 0.2 * flame;
+
+    // Fresnel edge brightness
+    alpha += softFresnel * 0.2 * flame;
+
+    // Distance-based soft falloff (controlled by uEdgeSoftness)
+    float distanceFromCore = length(vPosition.xz) * 2.0;
+    float distanceGradient = 1.0 - smoothstep(0.0, 1.0, distanceFromCore);
+    alpha *= mix(1.0, distanceGradient * 0.4 + 0.6, uEdgeSoftness);
+
+    // Soft fresnel alpha
+    alpha *= mix(1.0, softFresnel * 0.3 + 0.7, uEdgeSoftness * 0.5);
+
     alpha = clamp(alpha, 0.0, 1.0);
 
     // Apply instance alpha (spawn/exit fade + trail fade)
@@ -328,6 +427,10 @@ void main() {
  * @param {number} [options.flickerSpeed=3.0] - Flicker speed
  * @param {number} [options.flickerAmount=0.2] - Flicker variance
  * @param {number} [options.edgeFade=0.25] - Edge fade distance
+ * @param {number} [options.edgeSoftness=0.5] - Alpha softness at edges (0=hard, 1=soft)
+ * @param {number} [options.emberDensity=0.3] - Density of spark hot spots
+ * @param {number} [options.emberBrightness=0.8] - Brightness of embers
+ * @param {number} [options.velocityStretch=0.5] - Flame stretch along velocity
  * @param {number} [options.fadeInDuration=0.3] - Spawn fade duration
  * @param {number} [options.fadeOutDuration=0.5] - Exit fade duration
  * @returns {THREE.ShaderMaterial}
@@ -344,15 +447,24 @@ export function createInstancedFireMaterial(options = {}) {
         flickerSpeed = null,
         flickerAmount = null,
         edgeFade = FIRE_DEFAULTS.edgeFade,
+        edgeSoftness = null,
+        emberDensity = null,
+        emberBrightness = null,
+        velocityStretch = FIRE_DEFAULTS.velocityStretch,
         fadeInDuration = FIRE_DEFAULTS.fadeInDuration,
         fadeOutDuration = FIRE_DEFAULTS.fadeOutDuration
     } = options;
 
     // Derive temperature-dependent parameters from shared core
-    const derived = deriveFireParameters(temperature, { intensity, flickerSpeed, flickerAmount });
+    const derived = deriveFireParameters(temperature, {
+        intensity, flickerSpeed, flickerAmount, edgeSoftness, emberDensity, emberBrightness
+    });
     const finalIntensity = derived.intensity;
     const finalFlickerSpeed = derived.flickerSpeed;
     const finalFlickerAmount = derived.flickerAmount;
+    const finalEdgeSoftness = derived.edgeSoftness;
+    const finalEmberDensity = derived.emberDensity;
+    const finalEmberBrightness = derived.emberBrightness;
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
@@ -377,7 +489,12 @@ export function createInstancedFireMaterial(options = {}) {
             uNoiseScale: { value: noiseScale },
             uFlickerSpeed: { value: finalFlickerSpeed },
             uFlickerAmount: { value: finalFlickerAmount },
-            uEdgeFade: { value: edgeFade }
+            uEdgeFade: { value: edgeFade },
+            // Enhanced visual uniforms
+            uEdgeSoftness: { value: finalEdgeSoftness },
+            uEmberDensity: { value: finalEmberDensity },
+            uEmberBrightness: { value: finalEmberBrightness },
+            uVelocityStretch: { value: velocityStretch }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
@@ -450,6 +567,9 @@ export function setInstancedFireTemperature(material, temperature) {
     material.uniforms.uIntensity.value = derived.intensity;
     material.uniforms.uFlickerSpeed.value = derived.flickerSpeed;
     material.uniforms.uFlickerAmount.value = derived.flickerAmount;
+    material.uniforms.uEdgeSoftness.value = derived.edgeSoftness;
+    material.uniforms.uEmberDensity.value = derived.emberDensity;
+    material.uniforms.uEmberBrightness.value = derived.emberBrightness;
     material.userData.temperature = temperature;
 }
 

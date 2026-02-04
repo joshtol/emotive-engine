@@ -121,6 +121,40 @@ float turbulence(vec3 p, int octaves) {
     }
     return value;
 }
+
+// Configurable octave FBM (3-5 octaves for quality control)
+float fbmConfigurable(vec3 p, int octaves) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+
+    for (int i = 0; i < 5; i++) {
+        if (i >= octaves) break;
+        value += amplitude * snoise(p * frequency);
+        frequency *= 2.0;
+        amplitude *= 0.5;
+    }
+    return value;
+}
+
+// Layered turbulence - multiple scales at different animation speeds
+// Creates more organic, billowing flame movement
+// BOOSTED: 5x faster speeds for visible movement
+float layeredTurbulence(vec3 p, float time) {
+    // Large-scale billowing (base movement) - visible slow roll
+    float large = turbulence(p * 0.5 + vec3(0.0, -time * 0.0025, 0.0), 3) * 0.4;
+
+    // Medium detail at medium speed (main flame movement)
+    float medium = turbulence(p + vec3(time * 0.0015, -time * 0.005, 0.0), 3) * 0.35;
+
+    // Fine detail fast movement (flickering wisps) - clearly visible
+    float fine = snoise(p * 2.5 + vec3(time * 0.003, -time * 0.01, time * 0.002)) * 0.25;
+
+    // Extra fast micro-detail for shimmer
+    float micro = snoise(p * 4.0 + vec3(0.0, -time * 0.02, 0.0)) * 0.1;
+
+    return large + medium + fine + micro;
+}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -128,33 +162,51 @@ float turbulence(vec3 p, int octaves) {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 /**
- * GLSL blackbody-inspired color ramp for realistic fire
- * Maps local intensity + global temperature to fire color
+ * GLSL blackbody-inspired color ramp for realistic fire with ethereal wisps
+ * Maps local intensity + global temperature + edge factor to fire color
+ *
+ * @param t - Local intensity (0-1)
+ * @param temperature - Global hotness (0-1)
+ * @param edgeFactor - How close to flame edge (0=core, 1=edge) for ethereal blue/violet tint
  */
 export const FIRE_COLOR_GLSL = /* glsl */`
-// Blackbody-inspired color ramp for realistic fire
-// t is local intensity (0-1), temperature is global hotness
-vec3 fireColor(float t, float temperature) {
+// Blackbody-inspired color ramp with ethereal outer wisps
+// t is local intensity (0-1), temperature is global hotness, edgeFactor for cool edge tint
+vec3 fireColor(float t, float temperature, float edgeFactor) {
     float heat = t * (0.5 + temperature * 0.5);
     vec3 color;
 
-    if (heat < 0.25) {
-        // Dark red to orange (embers)
-        float f = heat / 0.25;
-        color = vec3(0.5 + f * 0.5, f * 0.2, 0.0);
-    } else if (heat < 0.5) {
-        // Orange to yellow
-        float f = (heat - 0.25) / 0.25;
-        color = vec3(1.0, 0.2 + f * 0.6, f * 0.1);
-    } else if (heat < 0.75) {
-        // Yellow to white
-        float f = (heat - 0.5) / 0.25;
-        color = vec3(1.0, 0.8 + f * 0.2, 0.1 + f * 0.6);
+    // Refined 5-band blackbody curve with smoother transitions
+    if (heat < 0.2) {
+        // Dark red to deep orange (embers)
+        float f = heat / 0.2;
+        color = vec3(0.3 + f * 0.4, f * 0.15, 0.0);
+    } else if (heat < 0.4) {
+        // Deep orange to bright orange
+        float f = (heat - 0.2) / 0.2;
+        color = vec3(0.7 + f * 0.3, 0.15 + f * 0.45, f * 0.05);
+    } else if (heat < 0.6) {
+        // Orange-yellow to yellow
+        float f = (heat - 0.4) / 0.2;
+        color = vec3(1.0, 0.6 + f * 0.25, 0.05 + f * 0.15);
+    } else if (heat < 0.8) {
+        // Yellow to yellow-white
+        float f = (heat - 0.6) / 0.2;
+        color = vec3(1.0, 0.85 + f * 0.15, 0.2 + f * 0.5);
     } else {
         // White to blue-white (plasma)
-        float f = (heat - 0.75) / 0.25;
-        color = vec3(1.0 - f * 0.2, 1.0, 0.7 + f * 0.3);
+        float f = (heat - 0.8) / 0.2;
+        color = vec3(1.0 - f * 0.15, 1.0, 0.7 + f * 0.3);
     }
+
+    // ETHEREAL: Cool blue-violet tint at outer edges
+    // Creates magical/ethereal look visible at flame boundaries
+    // BOOSTED: Now visible even at high temperatures
+    vec3 etherealTint = vec3(0.5, 0.6, 1.0);  // Deeper blue
+    // Use sqrt to preserve more tint at high heat, boost multiplier to 0.5
+    float heatPreserve = max(0.3, 1.0 - heat * 0.7);  // Never fully suppress
+    float etherealAmount = edgeFactor * heatPreserve * 0.5;
+    color = mix(color, etherealTint * 0.6, etherealAmount);
 
     return color;
 }
@@ -166,10 +218,11 @@ vec3 fireColor(float t, float temperature) {
 
 /**
  * Core fire fragment processing: flame pattern, vertical fade, flicker,
- * fresnel glow, color calculation, and alpha handling.
+ * fresnel glow, embers, color calculation, and alpha handling.
  *
  * Expected uniforms: uTemperature, uIntensity, uOpacity, uNoiseScale,
- *                    uFlickerSpeed, uFlickerAmount, uEdgeFade
+ *                    uFlickerSpeed, uFlickerAmount, uEdgeFade,
+ *                    uEdgeSoftness, uEmberDensity, uEmberBrightness
  * Expected varyings: vPosition, vNormal, vViewDir, vDisplacement, vVerticalGradient
  * Required: localTime variable must be defined before including this
  *
@@ -180,24 +233,22 @@ export const FIRE_FRAGMENT_CORE = /* glsl */`
     vec3 viewDir = normalize(vViewDir);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // FLAME PATTERN GENERATION
+    // FLAME PATTERN GENERATION (Layered multi-scale noise)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Animated noise position - flames rise upward (very slow for realism)
+    // Animated noise position - flames rise upward
     vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, -localTime * 0.00085, 0.0);
 
-    // Primary flame pattern using turbulence (3 octaves for GPU performance)
-    float flame = turbulence(noisePos, 3);
-
-    // Secondary detail layer (very slow)
-    vec3 detailPos = noisePos * 2.0 + vec3(localTime * 0.00015, 0.0, localTime * 0.0001);
-    float detail = snoise(detailPos) * 0.5 + 0.5;
+    // Use layered turbulence for more organic, billowing flames
+    float flameRaw = layeredTurbulence(noisePos, localTime);
 
     // Position-based variation for non-uniform flames
     float posVariation = snoise(vPosition * 7.0) * 0.15 + 0.92;
+    flameRaw *= posVariation;
 
-    // Combine layers with position variation
-    flame = (flame * 0.7 + detail * 0.3) * posVariation;
+    // FIX: Remap flame to never go below 0.35 - prevents dark interiors
+    // Maps raw noise [0,1] to [0.35, 1.0] so fire is always bright
+    float flame = 0.35 + flameRaw * 0.65;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // VERTICAL FLAME FALLOFF
@@ -219,50 +270,99 @@ export const FIRE_FRAGMENT_CORE = /* glsl */`
     float flicker = 1.0 - uFlickerAmount + uFlickerAmount *
         (snoise(vec3(localTime * uFlickerSpeed + flickerOffset, vPosition.y * 5.0, vPosition.x * 3.0)) * 0.5 + 0.5);
 
-    // Gentle micro-flicker (very slow)
+    // Gentle micro-flicker
     float microFlicker = 0.95 + 0.05 * snoise(vec3(localTime * 0.004, vPosition.yz * 6.0));
     flicker *= microFlicker;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // FRESNEL EDGE GLOW
+    // CORE GLOW + FRESNEL EDGE (Fire is bright at center AND edges)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     float fresnel = 1.0 - abs(dot(normal, viewDir));
-    fresnel = pow(fresnel, 2.0);
+    float softFresnel = pow(fresnel, 2.5);  // Softer power for ethereal edges
 
-    // Edge flames - bright rim effect
-    float edgeGlow = fresnel * (0.5 + flame * 0.5);
+    // CORE GLOW: Center of flame is brightest (inverse fresnel)
+    // This prevents dark interiors - fire should glow from within
+    float coreGlow = (1.0 - fresnel) * 0.4;  // Bright at center where fresnel is low
+
+    // Edge flames - bright rim effect (but secondary to core)
+    float edgeGlow = softFresnel * (0.3 + flame * 0.3);
+
+    // Edge factor for ethereal color tinting (higher at edges)
+    float edgeFactor = softFresnel * (1.0 - flame * 0.3);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // COLOR CALCULATION
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Local intensity combines all factors
-    float localIntensity = flame * verticalFade * flicker + tipBrightness + edgeGlow * 0.3;
+    // Local intensity combines all factors - INCLUDES CORE GLOW for bright centers
+    float localIntensity = flame * verticalFade * flicker + tipBrightness + edgeGlow * 0.3 + coreGlow;
+
+    // FIX: Enforce minimum intensity to prevent dark spots
+    localIntensity = max(localIntensity, 0.4);
     localIntensity = clamp(localIntensity, 0.0, 1.0);
 
-    // Get fire color based on intensity and global temperature
-    vec3 color = fireColor(localIntensity, uTemperature);
+    // Get fire color with ethereal edge tinting
+    vec3 color = fireColor(localIntensity, uTemperature, edgeFactor);
 
     // Apply intensity multiplier for bloom
     color *= uIntensity * (0.7 + localIntensity * 0.3);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ALPHA CALCULATION
+    // EMBER/SPARK GENERATION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    // High-frequency noise for sparse bright spots (when density > 0)
+    if (uEmberDensity > 0.01) {
+        // FASTER animation for visible movement
+        vec3 emberPos = vPosition * 12.0 + vec3(localTime * 0.004, -localTime * 0.015, localTime * 0.003);
+        float emberNoise = snoise(emberPos);
+
+        // Lower threshold = more embers visible
+        float emberThreshold = 0.65 - uEmberDensity * 0.4;
+        float embers = smoothstep(emberThreshold, emberThreshold + 0.15, emberNoise);
+
+        // Embers throughout flame, concentrated near top
+        embers *= smoothstep(0.1, 0.6, vVerticalGradient);
+
+        // Faster, more dramatic flicker
+        float emberFlicker = 0.5 + 0.5 * snoise(vec3(localTime * 0.04, emberPos.xy * 1.5));
+        embers *= emberFlicker;
+
+        // CONTRASTING EMBERS: Orange-red core with bright white tip
+        // This creates visual contrast even against yellow-white hot fire
+        vec3 emberCore = vec3(1.0, 0.4, 0.1);   // Deep orange
+        vec3 emberTip = vec3(1.2, 1.1, 1.0);    // Bright white (over 1 for bloom)
+        float emberIntensity = embers * uEmberBrightness;
+        vec3 emberColor = mix(emberCore, emberTip, emberIntensity * 0.5);
+
+        // Add with higher multiplier for visibility
+        color += emberColor * emberIntensity * uIntensity * 1.5;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ALPHA CALCULATION (Simplified - no center dimming)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     // Base alpha from flame intensity
     float alpha = localIntensity * uOpacity;
 
-    // Soft edge fade based on distance from surface
+    // Soft edge fade based on distance from surface (keep - affects outer boundary only)
     float surfaceFade = smoothstep(0.0, uEdgeFade, vDisplacement);
-    alpha *= mix(1.0, surfaceFade, 0.5);
+    alpha *= mix(1.0, surfaceFade, 0.3);  // Reduced from 0.5
 
-    // Vertical fade - tips become more transparent
-    alpha *= mix(1.0, 1.0 - vVerticalGradient * 0.5, 0.3);
+    // Vertical fade - tips become slightly more transparent (reduced effect)
+    alpha *= mix(1.0, 1.0 - vVerticalGradient * 0.3, 0.2);  // Reduced
 
-    // Fresnel adds brightness at edges
-    alpha += fresnel * 0.2 * flame;
+    // Fresnel adds brightness at edges (keep)
+    alpha += softFresnel * 0.15 * flame;
+
+    // REMOVED: Distance-based center dimming (caused dark interiors)
+    // REMOVED: Fresnel-based center dimming (caused dark interiors)
+
+    // FIX: Enforce minimum alpha to prevent semi-transparent dark fragments
+    // Fire should be opaque enough to show its color, not the background
+    alpha = max(alpha, 0.6);
 
     // Final alpha clamp
     alpha = clamp(alpha, 0.0, 1.0);
@@ -276,10 +376,16 @@ export const FIRE_FRAGMENT_CORE = /* glsl */`
  * Lower thresholds render more semi-transparent pixels = higher GPU load
  */
 export const FIRE_FLOOR_AND_DISCARD_GLSL = /* glsl */`
-    // Temperature-dependent floor color: dark red (cold) → bright orange (hot)
-    // Applied BEFORE discard so floor color contributes to visibility
-    vec3 floorColor = mix(vec3(0.5, 0.15, 0.0), vec3(1.0, 0.5, 0.05), uTemperature);
-    color = max(color, floorColor * uIntensity * 0.6);
+    // Temperature-dependent floor color: orange (cold) → bright yellow-white (hot)
+    // BOOSTED: Higher base colors and 0.95 multiplier to eliminate dark interiors
+    vec3 floorColor = mix(vec3(0.8, 0.4, 0.1), vec3(1.0, 0.7, 0.3), uTemperature);
+    color = max(color, floorColor * uIntensity * 0.95);
+
+    // ETHEREAL EDGE TINT: Apply AFTER floor color so it's not overwritten
+    // Uses softFresnel (defined earlier) to add blue-violet to outer edges
+    vec3 etherealEdge = vec3(0.4, 0.5, 1.0);  // Blue-violet
+    float etherealStrength = softFresnel * 0.35;  // Visible at edges
+    color = mix(color, color + etherealEdge * 0.5, etherealStrength);
 
     // Threshold 0.08: balances GPU perf (many overlapping elements) with no dark lines
     if (alpha < 0.08) discard;
@@ -319,6 +425,11 @@ export function deriveFireParameters(temperature, overrides = {}) {
         intensity: overrides.intensity ?? lerp3(1.5, 2.5, 4.0, temperature),
         flickerSpeed: overrides.flickerSpeed ?? lerp3(0.001, 0.002, 0.003, temperature),
         flickerAmount: overrides.flickerAmount ?? lerp3(0.15, 0.12, 0.08, temperature),
+        // NEW: Temperature affects ember density and brightness
+        emberDensity: overrides.emberDensity ?? lerp3(0.1, 0.3, 0.5, temperature),
+        emberBrightness: overrides.emberBrightness ?? lerp3(0.5, 0.8, 1.2, temperature),
+        // NEW: Hotter fires have harder edges (more defined)
+        edgeSoftness: overrides.edgeSoftness ?? lerp3(0.6, 0.5, 0.3, temperature),
     };
 }
 
@@ -336,6 +447,11 @@ export const FIRE_DEFAULTS = {
     edgeFade: 0.25,
     fadeInDuration: 0.3,
     fadeOutDuration: 0.5,
+    // NEW: Enhanced visual parameters
+    edgeSoftness: 0.5,       // Alpha softness at edges (0=hard, 1=soft)
+    emberDensity: 0.3,       // Density of spark hot spots (0-1)
+    emberBrightness: 0.8,    // Brightness of embers (0-2)
+    velocityStretch: 0.5,    // Flame stretch along velocity (0-2)
 };
 
 export default {

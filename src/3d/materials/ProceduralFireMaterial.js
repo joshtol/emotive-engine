@@ -141,6 +141,10 @@ uniform float uFlickerSpeed;
 uniform float uFlickerAmount;
 uniform float uNoiseScale;
 uniform float uEdgeFade;
+// Enhanced visual uniforms
+uniform float uEdgeSoftness;
+uniform float uEmberDensity;
+uniform float uEmberBrightness;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -184,6 +188,9 @@ void main() {
  * @param {number} [options.flickerSpeed=3.0] - Flicker animation speed
  * @param {number} [options.flickerAmount=0.2] - Flicker intensity variance
  * @param {number} [options.edgeFade=0.1] - Soft edge fade distance
+ * @param {number} [options.edgeSoftness=0.5] - Alpha softness at edges (0=hard, 1=soft)
+ * @param {number} [options.emberDensity=0.3] - Density of spark hot spots
+ * @param {number} [options.emberBrightness=0.8] - Brightness of embers
  * @returns {THREE.ShaderMaterial}
  */
 export function createProceduralFireMaterial(options = {}) {
@@ -197,14 +204,22 @@ export function createProceduralFireMaterial(options = {}) {
         noiseScale = FIRE_DEFAULTS.noiseScale,
         flickerSpeed = null,
         flickerAmount = null,
-        edgeFade = FIRE_DEFAULTS.edgeFade
+        edgeFade = FIRE_DEFAULTS.edgeFade,
+        edgeSoftness = null,
+        emberDensity = null,
+        emberBrightness = null
     } = options;
 
     // Derive temperature-dependent parameters from shared core
-    const derived = deriveFireParameters(temperature, { intensity, flickerSpeed, flickerAmount });
+    const derived = deriveFireParameters(temperature, {
+        intensity, flickerSpeed, flickerAmount, edgeSoftness, emberDensity, emberBrightness
+    });
     const finalIntensity = derived.intensity;
     const finalFlickerSpeed = derived.flickerSpeed;
     const finalFlickerAmount = derived.flickerAmount;
+    const finalEdgeSoftness = derived.edgeSoftness;
+    const finalEmberDensity = derived.emberDensity;
+    const finalEmberBrightness = derived.emberBrightness;
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
@@ -219,7 +234,11 @@ export function createProceduralFireMaterial(options = {}) {
             uNoiseScale: { value: noiseScale },
             uFlickerSpeed: { value: finalFlickerSpeed },
             uFlickerAmount: { value: finalFlickerAmount },
-            uEdgeFade: { value: edgeFade }
+            uEdgeFade: { value: edgeFade },
+            // Enhanced visual uniforms
+            uEdgeSoftness: { value: finalEdgeSoftness },
+            uEmberDensity: { value: finalEmberDensity },
+            uEmberBrightness: { value: finalEmberBrightness }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
@@ -264,6 +283,9 @@ export function setProceduralFireTemperature(material, temperature) {
     material.uniforms.uIntensity.value = derived.intensity;
     material.uniforms.uFlickerSpeed.value = derived.flickerSpeed;
     material.uniforms.uFlickerAmount.value = derived.flickerAmount;
+    material.uniforms.uEdgeSoftness.value = derived.edgeSoftness;
+    material.uniforms.uEmberDensity.value = derived.emberDensity;
+    material.uniforms.uEmberBrightness.value = derived.emberBrightness;
     material.userData.temperature = temperature;
 }
 
