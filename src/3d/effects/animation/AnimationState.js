@@ -474,10 +474,16 @@ export class AnimationState {
 
             switch (d.direction) {
             case 'outward':
-                // Move away from origin (use element's initial position direction)
+                // Move away from origin in all 3 axes
                 this.driftOffset.x += (this.driftOffset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
                 this.driftOffset.y += (this.driftOffset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
                 this.driftOffset.z += (this.driftOffset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+                break;
+            case 'outward-flat':
+                // Move away from origin in XZ plane only (horizontal radiation)
+                this.driftOffset.x += (this.driftOffset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
+                this.driftOffset.z += (this.driftOffset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+                // No Y movement - stays at same height
                 break;
             case 'inward':
                 // Move toward origin

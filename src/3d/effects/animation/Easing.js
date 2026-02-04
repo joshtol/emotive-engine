@@ -128,6 +128,42 @@ export function easeInOutCubic(t) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
+// EXPONENTIAL EASING (power of 2^10 - very dramatic)
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Exponential ease in - very slow start, explosive acceleration
+ * @param {number} t - Progress 0-1
+ * @returns {number} Eased value
+ */
+export function easeInExpo(t) {
+    return t === 0 ? 0 : Math.pow(2, 10 * t - 10);
+}
+
+/**
+ * Exponential ease out - explosive start, gradual settle
+ * Perfect for fire bursts and explosions
+ * @param {number} t - Progress 0-1
+ * @returns {number} Eased value
+ */
+export function easeOutExpo(t) {
+    return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+}
+
+/**
+ * Exponential ease in-out - explosive both ways
+ * @param {number} t - Progress 0-1
+ * @returns {number} Eased value
+ */
+export function easeInOutExpo(t) {
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    return t < 0.5
+        ? Math.pow(2, 20 * t - 10) / 2
+        : (2 - Math.pow(2, -20 * t + 10)) / 2;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
 // ELASTIC EASING (springy overshoot)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
@@ -265,6 +301,30 @@ export function smootherstep(t) {
     return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
+/**
+ * Burst implode - explode, pause, then implode
+ * Perfect for explosion effects that collapse back in
+ * Phase 1 (0-30%): Rapid explosion to max
+ * Phase 2 (30-50%): Hold at max (pause)
+ * Phase 3 (50-100%): Implode back to zero
+ * @param {number} t - Progress 0-1
+ * @returns {number} Eased value (0 → 1 → 1 → 0)
+ */
+export function burstImplode(t) {
+    if (t < 0.3) {
+        // Phase 1: Rapid explosion (0 → 1)
+        const localT = t / 0.3;
+        return 1 - Math.pow(1 - localT, 3); // easeOutCubic
+    } else if (t < 0.5) {
+        // Phase 2: Pause at max
+        return 1;
+    } else {
+        // Phase 3: Implode back (1 → 0)
+        const localT = (t - 0.5) / 0.5;
+        return 1 - localT * localT * localT; // inverse easeInCubic
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // BACK EASING (anticipation/overshoot)
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -326,6 +386,11 @@ export const Easing = {
     easeOutCubic,
     easeInOutCubic,
 
+    // Exponential
+    easeInExpo,
+    easeOutExpo,
+    easeInOutExpo,
+
     // Elastic
     elastic,
     elasticOut,
@@ -341,6 +406,7 @@ export const Easing = {
     step,
     smoothstep,
     smootherstep,
+    burstImplode,
 
     // Back
     backIn,
@@ -404,16 +470,16 @@ export function createCustomEasing(type, params = {}) {
         const decay = params.decay ?? 0.5;
         return t => {
             let value = 0;
-            let bounce = 1;
+            let bounceScale = 1;
             for (let i = 0; i < bounces; i++) {
                 const start = i === 0 ? 0 : (1 - Math.pow(decay, i)) / (1 - decay) / bounces;
                 const end = (1 - Math.pow(decay, i + 1)) / (1 - decay) / bounces;
                 if (t >= start && t < end) {
                     const localT = (t - start) / (end - start);
-                    value = 4 * localT * (1 - localT) * bounce;
+                    value = 4 * localT * (1 - localT) * bounceScale;
                     break;
                 }
-                bounce *= decay;
+                bounceScale *= decay;
             }
             if (t >= 1) return 1;
             return Math.min(1, value);

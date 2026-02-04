@@ -48,6 +48,12 @@ export function parseAnchorConfig(config, resolveLandmark) {
         count: config.count || 1,
         models: config.models || [],
         scale: config.scale ?? 1.0,
+
+        // Scale animation over element lifetime (like axis-travel)
+        // If both are equal or only scale is set, no interpolation occurs
+        startScale: anchor.startScale ?? 1.0,
+        endScale: anchor.endScale ?? 1.0,
+        scaleEasing: anchor.scaleEasing || 'easeOutExpo',  // Default to explosive ease
     };
 }
 

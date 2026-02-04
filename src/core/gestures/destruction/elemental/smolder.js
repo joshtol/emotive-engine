@@ -12,11 +12,11 @@
  *
  * VISUAL DIAGRAM:
  *         ✦
- *        ★         ← Sparse embers
+ *        ★         ← Sparse embers on surface
  *         ✦          faint glow
  *
  * FEATURES:
- * - Very sparse ember placement
+ * - Very sparse ember placement on surface
  * - Slow, subtle pulsing
  * - Deep red ember glow
  * - Mascot is SOURCE of fire (radiating category)
@@ -42,63 +42,59 @@ const SMOLDER_CONFIG = {
     beats: 6,
     intensity: 0.4,
     category: 'radiating',
-    temperature: 0.15,             // Embers
+    temperature: 0.15,
 
-    // 3D Element spawning - sparse embers
+    // 3D Element spawning - sparse embers on surface
     spawnMode: {
         type: 'surface',
-        pattern: 'scattered',       // Sparse embers
+        pattern: 'scattered',
         embedDepth: 0.2,
         cameraFacing: 0.25,
         clustering: 0.3,
         count: 4,
         scale: 0.8,
         models: ['ember-cluster'],
-        minDistance: 0.2,           // Very sparse
+        minDistance: 0.2,
         animation: {
             appearAt: 0.1,
             disappearAt: 0.85,
-            stagger: 0.08,          // Slow stagger
+            stagger: 0.08,
             enter: {
                 type: 'fade',
-                duration: 0.25,     // Slow fade in for embers
+                duration: 0.25,
                 easing: 'easeOutQuad'
             },
             exit: {
                 type: 'fade',
-                duration: 0.3,      // Slow fade out
+                duration: 0.3,
                 easing: 'easeInQuad'
             },
-            // Procedural shader config
             procedural: {
-                scaleSmoothing: 0.12,   // Very smooth for slow embers
+                scaleSmoothing: 0.12,
                 geometryStability: true
             },
-            // Temperature: subtle ember glow
             parameterAnimation: {
                 temperature: {
-                    start: 0.1,         // Cool embers
-                    peak: 0.2,          // Gentle warmth
-                    end: 0.08,          // Dying down
-                    curve: 'pulse'      // Subtle breathing
+                    start: 0.1,
+                    peak: 0.2,
+                    end: 0.08,
+                    curve: 'pulse'
                 }
             },
-            // Subtle smoldering - very slow
             pulse: {
                 amplitude: 0.08,
-                frequency: 0.5,     // Very slow pulse
+                frequency: 0.5,
                 easing: 'easeInOut'
             },
             emissive: {
                 min: 0.3,
-                max: 0.8,           // Subtle ember glow
+                max: 0.8,
                 frequency: 0.7,
                 pattern: 'sine'
             },
-            // Minimal drift
             drift: {
                 direction: 'up',
-                distance: 0.02,     // Barely perceptible rise over gesture
+                distance: 0.02,
                 noise: 0.002
             },
             scaleVariance: 0.15,
@@ -109,7 +105,6 @@ const SMOLDER_CONFIG = {
                 scale: 1.1,
                 emissiveMax: 1.4
             },
-            // Model-specific behavior overrides
             modelOverrides: {
                 'ember-cluster': {
                     scaling: { mode: 'uniform-pulse', amplitude: 0.08, frequency: 0.5 },
@@ -125,10 +120,10 @@ const SMOLDER_CONFIG = {
     flickerAmplitude: 0,
     flickerDecay: 0.4,
     // Glow - deep red, subtle
-    glowColor: [0.9, 0.3, 0.1],    // Deep red
+    glowColor: [0.9, 0.3, 0.1],
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.2,
-    glowFlickerRate: 2,            // Very slow
+    glowFlickerRate: 2,
     // Scale - minimal
     scaleVibration: 0.005,
     scaleFrequency: 1,
@@ -141,7 +136,7 @@ const SMOLDER_CONFIG = {
  * Smolder gesture - low simmer, faint ember glow.
  *
  * Uses surface spawn mode with scattered pattern:
- * - Very sparse ember placement
+ * - Very sparse ember placement on surface
  * - Slow, subtle breathing pulse
  * - Deep red glow for dying fire effect
  */

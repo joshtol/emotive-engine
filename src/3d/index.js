@@ -2174,5 +2174,8 @@ export { CrystalSoul } from './effects/CrystalSoul.js';
 // Export AudioInterpreter for LLM-based audio semantic interpretation
 export { AudioInterpreter, audioInterpreter, ENGINE_VOCABULARY, LLM_ENDPOINTS } from '../core/audio/AudioInterpreter.js';
 
+// Export performance profiler for debugging
+export { profiler, PerformanceProfiler } from './debug/PerformanceProfiler.js';
+
 // SSR detection helper for framework integration
 export const isSSR = () => typeof window === 'undefined';

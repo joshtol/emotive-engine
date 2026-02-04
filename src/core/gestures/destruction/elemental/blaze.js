@@ -44,7 +44,7 @@ const BLAZE_CONFIG = {
     category: 'radiating',
     temperature: 0.7,              // Hot flame
 
-    // 3D Element spawning - powerful flame aura
+    // 3D Element spawning - powerful flame aura on surface
     spawnMode: {
         type: 'surface',
         pattern: 'shell',           // Full coverage aura
@@ -53,14 +53,14 @@ const BLAZE_CONFIG = {
         clustering: 0.1,
         count: 10,
         scale: 1.1,
-        models: ['flame-tongue', 'fire-burst', 'flame-wisp'],
+        models: ['flame-tongue', 'flame-wisp'],
         minDistance: 0.1,           // Dense aura
         animation: {
             appearAt: 0.05,
             disappearAt: 0.9,
             stagger: 0.02,
             enter: {
-                type: 'fade',       // Smooth fade for procedural fire
+                type: 'fade',
                 duration: 0.08,
                 easing: 'easeOutBack'
             },
@@ -69,21 +69,18 @@ const BLAZE_CONFIG = {
                 duration: 0.1,
                 easing: 'easeIn'
             },
-            // Procedural shader config
             procedural: {
                 scaleSmoothing: 0.08,
                 geometryStability: true
             },
-            // Temperature: powerful sustained heat with breathing
             parameterAnimation: {
                 temperature: {
-                    start: 0.55,        // Starting hot
-                    peak: 0.75,         // Powerful peak
-                    end: 0.6,           // Sustained warmth
-                    curve: 'bell'       // Controlled rise and fall
+                    start: 0.55,
+                    peak: 0.75,
+                    end: 0.6,
+                    curve: 'bell'
                 }
             },
-            // Powerful controlled flames
             pulse: {
                 amplitude: 0.15,
                 frequency: 2,
@@ -91,7 +88,7 @@ const BLAZE_CONFIG = {
                 sync: 'global'
             },
             flicker: {
-                intensity: 0.15,    // Subtle flicker, controlled
+                intensity: 0.15,
                 rate: 6,
                 pattern: 'sine'
             },
@@ -103,7 +100,7 @@ const BLAZE_CONFIG = {
             },
             drift: {
                 direction: 'up',
-                distance: 0.08,     // Controlled rise over gesture lifetime
+                distance: 0.08,
                 noise: 0.01
             },
             scaleVariance: 0.2,
@@ -115,7 +112,6 @@ const BLAZE_CONFIG = {
                 emissiveMax: 1.5,
                 pulseAmplitude: 1.3
             },
-            // Model-specific behavior overrides
             modelOverrides: {
                 'flame-tongue': {
                     scaling: {
@@ -128,18 +124,6 @@ const BLAZE_CONFIG = {
                         wobbleFrequency: 2, wobbleAmplitude: 0.1
                     },
                     drift: { direction: 'rising', speed: 0.03, buoyancy: true }
-                },
-                'fire-burst': {
-                    scaling: {
-                        mode: 'non-uniform',
-                        axes: {
-                            x: { expand: true, rate: 1.3 },
-                            y: { expand: true, rate: 1.4 },
-                            z: { expand: true, rate: 1.3 }
-                        }
-                    },
-                    drift: { direction: 'outward', speed: 0.025, noise: 0.05 },
-                    opacityLink: 'inverse-scale'
                 },
                 'flame-wisp': {
                     scaling: {
@@ -161,15 +145,15 @@ const BLAZE_CONFIG = {
     flickerAmplitude: 0,
     flickerDecay: 0.2,
     // Glow - strong sustained
-    glowColor: [1.0, 0.6, 0.15],   // Bright orange
+    glowColor: [1.0, 0.6, 0.15],
     glowIntensityMin: 1.5,
     glowIntensityMax: 2.8,
-    glowFlickerRate: 6,            // Medium pulse
+    glowFlickerRate: 6,
     // Scale - power breathing
     scaleVibration: 0.025,
     scaleFrequency: 2,
     scalePulse: true,
-    scaleGrowth: 0.04,             // Grows with power
+    scaleGrowth: 0.04,
     // Slight rise
     hover: true,
     hoverAmount: 0.008
@@ -179,7 +163,7 @@ const BLAZE_CONFIG = {
  * Blaze gesture - powerful fire aura, controlled intensity.
  *
  * Uses surface spawn mode with shell pattern:
- * - Dense fire aura coverage
+ * - Dense fire aura coverage on mascot
  * - Powerful but controlled flame behavior
  * - Mascot is the source of intense fire
  */

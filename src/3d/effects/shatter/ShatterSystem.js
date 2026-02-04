@@ -41,6 +41,7 @@ import {
     getElementalPhysics,
     isElementSupported
 } from '../../materials/ElementalMaterialFactory.js';
+import { easeInOutCubic } from '../animation/Easing.js';
 
 /**
  * States for the shatter state machine
@@ -1005,10 +1006,7 @@ class ShatterSystem {
             this._reassemblyProgress = Math.min(1, elapsed / this._reassemblyDuration);
 
             // Standard ease-in-out cubic for smooth reassembly
-            const t = this._reassemblyProgress;
-            const eased = t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            const eased = easeInOutCubic(this._reassemblyProgress);
 
             // Update shards with reassembly lerp and target mesh for dynamic tracking
             // Passing mesh directly avoids per-frame clone allocations

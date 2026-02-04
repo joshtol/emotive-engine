@@ -53,6 +53,7 @@ import {
 // Animation state machine for per-element lifecycle
 import { AnimationState, AnimationStates } from './animation/AnimationState.js';
 import { AnimationConfig } from './animation/AnimationConfig.js';
+import { getEasing } from './animation/Easing.js';
 
 // Axis-travel utilities from spawn-modes (shared with legacy spawner)
 import {
@@ -77,6 +78,13 @@ import {
 
 // Surface utilities from spawn-modes
 import { parseSurfaceConfig } from './spawn-modes/SurfaceMode.js';
+
+// RadialBurst utilities from spawn-modes
+import {
+    parseRadialBurstConfig,
+    calculateRadialBurstInitialState,
+    calculateRadialBurstUpdateState
+} from './spawn-modes/index.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -395,6 +403,41 @@ export class ElementInstancedSpawner {
             gestureDuration = 1000
         } = options;
 
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        // SPAWN LAYERS - If mode is an array, spawn each layer independently
+        // Each layer can have its own type, timing (appearAt/disappearAt), models, etc.
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        if (Array.isArray(mode)) {
+            console.log(`[ElementInstancedSpawner] spawn ${elementType}: ${mode.length} layers`);
+
+            // Ensure pool is initialized first
+            const pool = await this.initializePool(elementType);
+            if (!pool) {
+                return [];
+            }
+
+            // Track pool usage time for cleanup
+            this._poolLastUsed.set(elementType, performance.now());
+
+            // Clear existing elements (only once for all layers)
+            this.despawn(elementType);
+
+            // Spawn each layer
+            const allIds = [];
+            for (let layerIndex = 0; layerIndex < mode.length; layerIndex++) {
+                const layerConfig = mode[layerIndex];
+                const layerIds = await this._spawnLayer(elementType, layerConfig, {
+                    layerIndex,
+                    camera,
+                    gestureDuration,
+                    intensity
+                });
+                allIds.push(...layerIds);
+            }
+
+            return allIds;
+        }
+
         // Parse animation config if provided
         const animConfig = animation
             ? new AnimationConfig(animation, gestureDuration)
@@ -435,6 +478,14 @@ export class ElementInstancedSpawner {
         // ═══════════════════════════════════════════════════════════════════════════════════════
         if (modeType === 'anchor') {
             return this._spawnAnchor(elementType, mode, models, animConfig, camera);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        // RADIAL-BURST MODE - Elements burst outward radially from center
+        // Logic lives in RadialBurstMode.js - this just coordinates with pool
+        // ═══════════════════════════════════════════════════════════════════════════════════════
+        if (modeType === 'radial-burst') {
+            return this._spawnRadialBurst(elementType, mode, models, animConfig);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -671,6 +722,61 @@ export class ElementInstancedSpawner {
         };
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // SPAWN LAYERS SUPPORT
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Spawn a single layer of elements.
+     * Called by spawn() when mode is an array of layer configs.
+     * Each layer can have its own spawn type, models, timing, etc.
+     *
+     * @param {string} elementType - Element type to spawn
+     * @param {Object} layerConfig - Configuration for this layer
+     * @param {Object} options - Shared options (camera, gestureDuration, etc.)
+     * @returns {string[]} Array of spawned element IDs
+     * @private
+     */
+    _spawnLayer(elementType, layerConfig, options) {
+        const { layerIndex, camera, gestureDuration, intensity } = options;
+
+        // Extract layer-specific config
+        const layerType = layerConfig.type || 'surface';
+        const layerModels = layerConfig.models || null;
+        const layerAnimation = layerConfig.animation || {};
+
+        // Create animation config for this layer
+        const animConfig = new AnimationConfig(layerAnimation, gestureDuration);
+
+        // Tag spawned elements with layer index for debugging
+        const layerTag = `layer${layerIndex}`;
+
+        console.log(`[ElementInstancedSpawner] Layer ${layerIndex}: type=${layerType}, models=${layerModels?.join(',') || 'default'}`);
+
+        // Dispatch to appropriate spawn method based on layer type
+        // NOTE: We don't call despawn() here - already done once by spawn() for all layers
+        switch (layerType) {
+        case 'axis-travel':
+            return this._spawnAxisTravel(elementType, layerConfig, layerModels, animConfig, camera, layerTag);
+
+        case 'anchor':
+            return this._spawnAnchor(elementType, layerConfig, layerModels, animConfig, camera, layerTag);
+
+        case 'radial-burst':
+            return this._spawnRadialBurst(elementType, layerConfig, layerModels, animConfig, layerTag);
+
+        case 'orbit':
+            return this._spawnOrbit(elementType, layerConfig, layerModels, animConfig, camera, layerTag);
+
+        case 'surface':
+            return this._spawnSurface(elementType, layerConfig, layerConfig.count || 5, layerModels, animConfig, camera, layerTag);
+
+        default:
+            console.warn(`[ElementInstancedSpawner] Unknown layer type: ${layerType}, skipping`);
+            return [];
+        }
+    }
+
     /**
      * Spawn elements in axis-travel mode.
      * @param {string} elementType - Element type to spawn
@@ -678,10 +784,11 @@ export class ElementInstancedSpawner {
      * @param {string[]} models - Model names to use
      * @param {AnimationConfig} animConfig - Animation configuration
      * @param {THREE.Camera} camera - Camera for orientation
+     * @param {string} [layerTag] - Optional tag for layer identification (used with spawn layers)
      * @returns {Promise<string[]>} Array of spawned element IDs
      * @private
      */
-    _spawnAxisTravel(elementType, spawnMode, models, animConfig, _camera) {
+    _spawnAxisTravel(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
         const pool = this.pools.get(elementType);
         const merged = this.mergedGeometries.get(elementType);
         const elementConfig = ELEMENT_CONFIGS[elementType];
@@ -894,7 +1001,7 @@ export class ElementInstancedSpawner {
      * @returns {string[]} Array of spawned element IDs
      * @private
      */
-    _spawnAnchor(elementType, spawnMode, models, animConfig, _camera) {
+    _spawnAnchor(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
         const pool = this.pools.get(elementType);
         const merged = this.mergedGeometries.get(elementType);
         const elementConfig = ELEMENT_CONFIGS[elementType];
@@ -987,10 +1094,15 @@ export class ElementInstancedSpawner {
                     // World-space orientation: anchor elements should maintain orientation
                     worldSpaceOrientation: true,
                     baseWorldRotation: rotation.clone(),
-                    // Anchor-specific data for bob animation
+                    // Anchor-specific data for bob animation and scale interpolation
                     anchor: {
                         config: anchorConfig,
                         baseY: anchorPos.baseY,
+                        // Scale animation: interpolate from startScale to endScale over lifetime
+                        startScale: anchorConfig.startScale,
+                        endScale: anchorConfig.endScale,
+                        // Store exit duration for localProgress calculation (explosion effects)
+                        exitDuration: animConfig.exit.duration,
                     }
                 });
                 spawnedIds.push(elementId);
@@ -998,6 +1110,100 @@ export class ElementInstancedSpawner {
         }
 
         console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} anchor elements`);
+        return spawnedIds;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // RADIAL-BURST MODE - Elements burst outward radially from center
+    // All positioning logic lives in RadialBurstMode.js
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Spawn elements in radial-burst mode.
+     * Uses utility functions from RadialBurstMode.js for all positioning logic.
+     * @private
+     */
+    _spawnRadialBurst(elementType, spawnMode, models, animConfig, _layerTag = null) {
+        const pool = this.pools.get(elementType);
+        const merged = this.mergedGeometries.get(elementType);
+        const elementConfig = ELEMENT_CONFIGS[elementType];
+
+        if (!pool || !merged) {
+            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
+            return [];
+        }
+
+        // Parse config using RadialBurstMode utility
+        const burstConfig = parseRadialBurstConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
+
+        console.log(`[ElementInstancedSpawner] radial-burst: count=${burstConfig.count}, startRadius=${burstConfig.startRadius}, endRadius=${burstConfig.endRadius}`);
+
+        const spawnedIds = [];
+        const availableModels = burstConfig.models.length > 0
+            ? burstConfig.models
+            : (models || Array.from(merged.modelMap.keys()));
+
+        for (let i = 0; i < burstConfig.count; i++) {
+            const modelName = availableModels[i % availableModels.length];
+            const modelIndex = merged.modelMap.get(modelName);
+
+            if (modelIndex === undefined) {
+                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found`);
+                continue;
+            }
+
+            // Get initial state from RadialBurstMode utility
+            const initialState = calculateRadialBurstInitialState(burstConfig, i, this.mascotRadius);
+
+            const position = _temp.position.set(
+                initialState.position.x,
+                initialState.position.y,
+                initialState.position.z
+            ).clone();
+
+            const rotation = _temp.quaternion.set(
+                initialState.rotation.x,
+                initialState.rotation.y,
+                initialState.rotation.z,
+                initialState.rotation.w
+            ).clone();
+
+            const scaleMultiplier = burstConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
+            const initialScale = baseScale * initialState.scaleMultiplier;
+
+            const elementId = `${elementType}_${this._nextId++}`;
+            const success = pool.spawn(elementId, position, rotation, _temp.scale.setScalar(initialScale), modelIndex);
+
+            if (success) {
+                let animState = null;
+                if (animConfig) {
+                    animState = new AnimationState(animConfig, i);
+                    animState.initialize(this.time);
+                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                } else {
+                    pool.updateInstanceOpacity(elementId, 1.0);
+                }
+
+                this.activeElements.set(elementId, {
+                    type: elementType,
+                    modelName,
+                    modelIndex,
+                    spawnTime: this.time,
+                    basePosition: position.clone(),
+                    position: position.clone(),
+                    rotation: rotation.clone(),
+                    baseScale,
+                    scale: initialScale,
+                    animState,
+                    // Mode-specific data from RadialBurstMode
+                    ...initialState.modeData
+                });
+                spawnedIds.push(elementId);
+            }
+        }
+
+        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} radial-burst elements`);
         return spawnedIds;
     }
 
@@ -1015,7 +1221,7 @@ export class ElementInstancedSpawner {
      * @returns {string[]} Array of spawned element IDs
      * @private
      */
-    _spawnOrbit(elementType, spawnMode, models, animConfig, _camera) {
+    _spawnOrbit(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
         const pool = this.pools.get(elementType);
         const merged = this.mergedGeometries.get(elementType);
         const elementConfig = ELEMENT_CONFIGS[elementType];
@@ -1171,7 +1377,7 @@ export class ElementInstancedSpawner {
      * @returns {string[]} Array of spawned element IDs
      * @private
      */
-    _spawnSurface(elementType, spawnMode, count, models, animConfig, camera) {
+    _spawnSurface(elementType, spawnMode, count, models, animConfig, camera, _layerTag = null) {
         const pool = this.pools.get(elementType);
         const merged = this.mergedGeometries.get(elementType);
         const elementConfig = ELEMENT_CONFIGS[elementType];
@@ -1486,10 +1692,59 @@ export class ElementInstancedSpawner {
                 _temp.position.set(anchorPos.x, anchorPos.y, anchorPos.z);
                 finalPosition = _temp.position;
 
-                // Apply animated scale
+                // Calculate local progress for scale interpolation (0-1 within element's FULL visibility window)
+                // Include exit duration so scale animation syncs with fade for explosion effects
+                const appearAt = animState.elementConfig?.appearAt ?? 0;
+                const disappearAt = animState.elementConfig?.disappearAt ?? 1;
+                const exitDuration = data.anchor.exitDuration ?? 0;
+                const fullLifetimeEnd = disappearAt + exitDuration;
+                const visibleDuration = fullLifetimeEnd - appearAt;
+                const localProgress = (gestureProgress !== null && visibleDuration > 0)
+                    ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
+                    : 0;
+
+                // Interpolate scale from startScale to endScale over lifetime
+                // Use shared easing library for consistent behavior across all modes
+                const { startScale: anchorStartScale, endScale: anchorEndScale, config: anchorCfg } = data.anchor;
+                const scaleEasingFn = getEasing(anchorCfg?.scaleEasing || 'easeOutExpo');
+                const easedProgress = scaleEasingFn(localProgress);
+                const scaleInterp = anchorStartScale + (anchorEndScale - anchorStartScale) * easedProgress;
+
+                // Apply animated scale with interpolation
+                // For elements with explicit scale animation (startScale != endScale), don't multiply
+                // by fadeProgress - the scale should expand independently while opacity fades
+                // This enables explosion effects that expand AND fade simultaneously
+                const hasScaleAnimation = anchorStartScale !== anchorEndScale;
+                if (hasScaleAnimation) {
+                    finalScale = baseScale * scaleInterp;
+                } else {
+                    finalScale = isProceduralElement
+                        ? baseScale * scaleInterp * animState.fadeProgress
+                        : baseScale * scaleInterp * animState.scale;
+                }
+            } else if (data.radialBurst) {
+                // RADIAL-BURST MODE: Update position using RadialBurstMode utility
+                // Use LOCAL progress (0-1 within element's appearance window) not global gestureProgress
+                // This ensures elements start bursting from center when they appear, not partway through
+                const appearAt = animState.elementConfig?.appearAt ?? 0;
+                const disappearAt = animState.elementConfig?.disappearAt ?? 1;
+                const visibleDuration = disappearAt - appearAt;
+                const localProgress = visibleDuration > 0
+                    ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
+                    : gestureProgress;
+
+                const updateState = calculateRadialBurstUpdateState(
+                    { radialBurst: data.radialBurst },
+                    localProgress,
+                    this.mascotRadius
+                );
+                _temp.position.set(updateState.position.x, updateState.position.y, updateState.position.z);
+                finalPosition = _temp.position;
+
+                // Apply animated scale with burst scale multiplier
                 finalScale = isProceduralElement
-                    ? baseScale * animState.fadeProgress
-                    : baseScale * animState.scale;
+                    ? baseScale * updateState.scaleMultiplier * animState.fadeProgress
+                    : baseScale * updateState.scaleMultiplier * animState.scale;
             } else {
                 // STANDARD MODE: Apply drift offset to position
                 const drift = animState.driftOffset;

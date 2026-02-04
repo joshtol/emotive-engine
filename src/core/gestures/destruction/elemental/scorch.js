@@ -42,9 +42,9 @@ const SCORCH_CONFIG = {
     beats: 5,
     intensity: 1.3,
     category: 'burning',
-    temperature: 0.8,              // High heat
+    temperature: 0.8,
 
-    // 3D Element spawning - intense flame coverage
+    // 3D Element spawning - intense flame coverage on surface
     spawnMode: {
         type: 'surface',
         pattern: 'shell',           // Full heat coverage
@@ -54,13 +54,13 @@ const SCORCH_CONFIG = {
         count: 10,
         scale: 1.1,
         models: ['flame-tongue', 'flame-wisp', 'fire-burst'],
-        minDistance: 0.1,           // Dense flame coverage
+        minDistance: 0.1,
         animation: {
             appearAt: 0.03,
             disappearAt: 0.88,
             stagger: 0.02,
             enter: {
-                type: 'fade',       // Smooth fade for procedural fire
+                type: 'fade',
                 duration: 0.1,
                 easing: 'easeOutCubic'
             },
@@ -69,40 +69,37 @@ const SCORCH_CONFIG = {
                 duration: 0.12,
                 easing: 'easeInQuad'
             },
-            // Procedural shader config
             procedural: {
                 scaleSmoothing: 0.08,
                 geometryStability: true
             },
-            // Temperature: sustained high heat
             parameterAnimation: {
                 temperature: {
-                    start: 0.6,         // Already hot
-                    peak: 0.85,         // Intense sustained heat
-                    end: 0.7,           // Stays hot
-                    curve: 'sustained'  // Quick rise, hold at peak
+                    start: 0.6,
+                    peak: 0.85,
+                    end: 0.7,
+                    curve: 'sustained'
                 }
             },
-            // Sustained intense heat - less flicker, more emissive
             flicker: {
-                intensity: 0.2,     // Less chaotic than burn
+                intensity: 0.2,
                 rate: 6,
                 pattern: 'sine'
             },
             pulse: {
                 amplitude: 0.1,
-                frequency: 3,       // Slower, more intense
+                frequency: 3,
                 easing: 'easeInOut'
             },
             emissive: {
-                min: 1.2,           // Higher baseline
-                max: 3.0,           // Intense peak
+                min: 1.2,
+                max: 3.0,
                 frequency: 4,
                 pattern: 'sine'
             },
             drift: {
                 direction: 'up',
-                distance: 0.08,     // Total drift over gesture lifetime
+                distance: 0.08,
                 noise: 0.01
             },
             scaleVariance: 0.25,
@@ -114,7 +111,6 @@ const SCORCH_CONFIG = {
                 emissiveMax: 1.8,
                 pulseAmplitude: 1.3
             },
-            // Model-specific behavior overrides
             modelOverrides: {
                 'flame-tongue': {
                     scaling: {
@@ -160,14 +156,14 @@ const SCORCH_CONFIG = {
     flickerAmplitude: 0.008,
     flickerDecay: 0.25,
     // Glow - intense yellow/white
-    glowColor: [1.0, 0.8, 0.3],    // Yellow-white
+    glowColor: [1.0, 0.8, 0.3],
     glowIntensityMin: 1.5,
     glowIntensityMax: 3.5,
     glowFlickerRate: 8,
     // Scale - slight expansion from heat
     scaleVibration: 0.01,
     scaleFrequency: 3,
-    heatExpansion: 0.03,           // Grows slightly from heat
+    heatExpansion: 0.03,
     // Heat shimmer
     shimmerEffect: true,
     shimmerIntensity: 0.02

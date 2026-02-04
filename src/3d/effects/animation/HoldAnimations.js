@@ -183,7 +183,7 @@ export function calculateLayeredFlicker(config, time, layers = {}) {
  * Uses musical timing: distance = total drift over gesture lifetime
  *
  * @param {Object} config - Drift configuration
- * @param {string} config.direction - 'outward' | 'inward' | 'up' | 'down' | 'tangent' | 'random'
+ * @param {string} config.direction - 'outward' | 'outward-flat' | 'inward' | 'up' | 'down' | 'tangent' | 'random'
  * @param {number} config.distance - Total drift distance over gesture lifetime
  * @param {number} config.gestureDuration - Gesture duration in ms (for calculating per-frame movement)
  * @param {boolean} [config.bounce=false] - Bounce at boundary vs clamp
@@ -223,10 +223,19 @@ export function calculateDrift(config, currentOffset, deltaTime) {
     // Apply direction-based movement
     switch (direction) {
     case 'outward': {
-        // Move away from origin
+        // Move away from origin in all 3 axes
         offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
         offset.y += (offset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
         offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+        break;
+    }
+
+    case 'outward-flat': {
+        // Move away from origin in XZ plane only (horizontal radiation)
+        // Perfect for radiating heat waves, expanding ripples
+        offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
+        offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+        // No Y movement - stays at same height
         break;
     }
 

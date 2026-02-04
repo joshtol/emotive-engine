@@ -388,8 +388,8 @@ describe('Animation Easing Functions', () => {
             expect(Easing.backInOut).toBe(backInOut);
         });
 
-        it('should have 32 easing functions (including aliases)', () => {
-            expect(Object.keys(Easing).length).toBe(32);
+        it('should have 36 easing functions (including aliases)', () => {
+            expect(Object.keys(Easing).length).toBe(36);
         });
     });
 

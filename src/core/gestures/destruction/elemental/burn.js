@@ -18,6 +18,7 @@
  * FEATURES:
  * - Flames scattered across mascot surface
  * - Chaotic flickering motion
+ * - Drift upward from surface placement
  * - Multiple flame models for variety
  * - Mascot is VICTIM of fire (burning category)
  *
@@ -42,9 +43,9 @@ const BURN_CONFIG = {
     beats: 4,
     intensity: 1.0,
     category: 'burning',
-    temperature: 0.6,              // Active flame temperature
+    temperature: 0.6,
 
-    // 3D Element spawning - flames rising from surface
+    // 3D Element spawning - flames on surface that rise
     spawnMode: {
         type: 'surface',
         pattern: 'scattered',       // Flames scattered across surface
@@ -54,47 +55,42 @@ const BURN_CONFIG = {
         count: 8,
         scale: 1.0,
         models: ['flame-wisp', 'ember-cluster', 'flame-tongue'],
-        minDistance: 0.12,          // Flames can be fairly close
+        minDistance: 0.12,
         animation: {
-            // Timing - staggered flame appearance
             appearAt: 0.05,
             disappearAt: 0.85,
-            stagger: 0.03,          // Staggered ignition
-            // Enter - flames ignite with flash
+            stagger: 0.03,
             enter: {
-                type: 'fade',       // Smooth fade in for procedural fire
+                type: 'fade',
                 duration: 0.08,
                 easing: 'easeOut'
             },
-            // Exit - flames die down
             exit: {
-                type: 'fade',
+                type: 'burst-fade',
                 duration: 0.15,
-                easing: 'easeIn'
+                easing: 'easeIn',
+                burstScale: 1.15
             },
-            // Procedural shader config (universal for all procedural elements)
             procedural: {
-                scaleSmoothing: 0.08,    // Smooth scale lerping to avoid jitter
-                geometryStability: true  // Use fadeProgress for stable vertex displacement
+                scaleSmoothing: 0.08,
+                geometryStability: true
             },
-            // Parameter animation: animate shader uniforms over gesture lifetime
             parameterAnimation: {
                 temperature: {
-                    start: 0.4,         // Cool ignition
-                    peak: 0.65,         // Hot active flames
-                    end: 0.35,          // Dying embers
-                    curve: 'bell'       // Gradual rise and fall
+                    start: 0.4,
+                    peak: 0.65,
+                    end: 0.35,
+                    curve: 'bell'
                 }
             },
-            // Hold - flickering fire animation
             flicker: {
-                intensity: 0.35,    // Strong flicker
-                rate: 12,           // Fast fire flicker
+                intensity: 0.35,
+                rate: 12,
                 pattern: 'random'
             },
             pulse: {
                 amplitude: 0.15,
-                frequency: 8,       // Fast pulsing
+                frequency: 8,
                 easing: 'easeInOut'
             },
             emissive: {
@@ -103,26 +99,23 @@ const BURN_CONFIG = {
                 frequency: 10,
                 pattern: 'sine'
             },
+            // Key feature: flames rise from where they spawn on surface
             drift: {
-                direction: 'up',    // Flames rise
-                distance: 0.1,      // Total drift over gesture lifetime (musical timing)
-                noise: 0.02         // Subtle variation
+                direction: 'up',
+                distance: 0.12,
+                noise: 0.025
             },
-            // Variance - chaotic fire
             scaleVariance: 0.35,
             lifetimeVariance: 0.3,
             delayVariance: 0.1,
-            // Rendering
             blending: 'additive',
             renderOrder: 10,
-            // Intensity scaling
             intensityScaling: {
                 scale: 1.3,
                 pulseAmplitude: 1.5,
                 flickerIntensity: 1.4,
                 emissiveMax: 1.6
             },
-            // Model-specific behavior overrides
             modelOverrides: {
                 'ember-cluster': {
                     scaling: { mode: 'uniform-pulse', amplitude: 0.2, frequency: 4 },
@@ -158,18 +151,18 @@ const BURN_CONFIG = {
     },
 
     // Flame flicker motion
-    flickerFrequency: 12,          // Fast flickering
-    flickerAmplitude: 0.015,       // Subtle position jitter
+    flickerFrequency: 12,
+    flickerAmplitude: 0.015,
     flickerDecay: 0.2,
     // Glow - orange/red pulsing
-    glowColor: [1.0, 0.5, 0.1],    // Orange
+    glowColor: [1.0, 0.5, 0.1],
     glowIntensityMin: 1.2,
     glowIntensityMax: 2.5,
-    glowFlickerRate: 15,           // Fast erratic flicker
+    glowFlickerRate: 15,
     // Scale - slight pulsing with flames
     scaleVibration: 0.02,
     scaleFrequency: 8,
-    // Rise effect - flames rise
+    // Rise effect
     riseAmount: 0.01
 };
 
@@ -177,8 +170,8 @@ const BURN_CONFIG = {
  * Burn gesture - flames flickering across surface.
  *
  * Uses surface spawn mode with scattered pattern:
- * - Multiple flame models for visual variety
+ * - Flames placed on mascot surface
+ * - Drift upward from spawn points
  * - Chaotic flickering and rising motion
- * - Mascot is the victim of fire
  */
 export default buildFireEffectGesture(BURN_CONFIG);

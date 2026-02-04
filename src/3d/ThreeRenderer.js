@@ -454,9 +454,9 @@ export class ThreeRenderer {
         this.composer.addPass(renderPass);
 
         // Bloom pass - glow/bloom effect (Unreal Engine style)
-        // Reduce bloom resolution on mobile for better performance
-        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const bloomScale = isMobile ? 0.5 : 1.0; // Half resolution on mobile
+        // PERFORMANCE: Always use half resolution for bloom - barely visible difference
+        // since bloom is inherently blurry, but saves ~4x fill rate
+        const bloomScale = 0.5; // Half resolution on all platforms
         const bloomResolution = new THREE.Vector2(
             Math.floor(drawingBufferSize.x * bloomScale),
             Math.floor(drawingBufferSize.y * bloomScale)
@@ -1723,17 +1723,26 @@ export class ThreeRenderer {
 
             this.composer.setSize(drawingBufferSize.x, drawingBufferSize.y);
 
-            // Update bloom pass resolution to full drawing buffer size for sharp bloom
-            if (this.bloomPass && this.bloomPass.resolution) {
-                this.bloomPass.resolution.set(drawingBufferSize.x, drawingBufferSize.y);
+            // PERFORMANCE: Resize bloom passes to half resolution
+            // Bloom is inherently blurry so half resolution is visually identical
+            // This reduces GPU work by 4x for bloom (26 render passes at 1/4 pixel count)
+            const halfWidth = Math.floor(drawingBufferSize.x * 0.5);
+            const halfHeight = Math.floor(drawingBufferSize.y * 0.5);
+
+            // Main bloom pass - MUST use setSize() not resolution.set()
+            // resolution.set() only updates the Vector2 property, not the actual render targets
+            if (this.bloomPass) {
+                this.bloomPass.setSize(halfWidth, halfHeight);
             }
 
-            // Resize particle render target and bloom pass
+            // Resize particle render target (needs full resolution for sharp particles)
             if (this.particleRenderTarget) {
                 this.particleRenderTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
             }
+
+            // Particle bloom pass - also half resolution for performance
             if (this.particleBloomPass) {
-                this.particleBloomPass.setSize(drawingBufferSize.x, drawingBufferSize.y);
+                this.particleBloomPass.setSize(halfWidth, halfHeight);
             }
 
             // Resize soul render target for refraction

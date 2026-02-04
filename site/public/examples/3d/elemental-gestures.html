@@ -702,7 +702,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
+        import EmotiveMascot3D, { profiler } from '/emotive-engine-3d.bundled.js';
         import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -728,6 +728,10 @@
 
         mascot.init(container);
         mascot.start();
+
+        // Expose for console debugging
+        window.mascot = mascot;
+        window.profiler = profiler;
 
         // Setup shared toggles
         setupParticlesToggle(mascot);

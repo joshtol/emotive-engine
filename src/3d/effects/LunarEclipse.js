@@ -20,6 +20,8 @@
  * - Shadow moves across surface from one side to the other
  */
 
+import { easeInOutCubic } from './animation/Easing.js';
+
 /**
  * LunarEclipse Effect Manager
  * Animates Earth's shadow across the moon with color shift
@@ -137,7 +139,7 @@ export class LunarEclipse {
         const animProgress = Math.min(elapsed / this.animationDuration, 1.0);
 
         // Ease in-out for smooth, natural eclipse movement
-        const eased = this.easeInOutCubic(animProgress);
+        const eased = easeInOutCubic(animProgress);
 
         // Interpolate eclipse progress
         this.progress = this.progress + (this.targetProgress - this.progress) * eased;
@@ -179,15 +181,6 @@ export class LunarEclipse {
         if (animProgress >= 1.0) {
             this.animating = false;
         }
-    }
-
-    /**
-     * Ease in-out cubic for smooth animation
-     */
-    easeInOutCubic(t) {
-        return t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**

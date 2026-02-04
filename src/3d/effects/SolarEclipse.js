@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { ECLIPSE_TYPES, getEclipseConfig } from './EclipseTypes.js';
 import { BaileysBeads } from './BaileysBeads.js';
 import { blendModesGLSL } from '../shaders/utils/blendModes.js';
+import { easeInOutCubic } from './animation/Easing.js';
 
 export class SolarEclipse {
     /**
@@ -583,18 +584,6 @@ export class SolarEclipse {
     }
 
     /**
-     * Cubic ease in-out function for smooth transitions
-     * @param {number} t - Progress value (0-1)
-     * @returns {number} Eased value (0-1)
-     * @private
-     */
-    easeInOutCubic(t) {
-        return t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    }
-
-    /**
      * Manually set transition progress (for manual control via sliders)
      * @param {number} progress - Progress value (0-1, where 0 is start, 1 is totality)
      */
@@ -678,7 +667,7 @@ export class SolarEclipse {
             const scaledSunRadius = this.sunRadius * worldScale;
 
             // Use eased progress for smooth transitions
-            const easedProgress = this.easeInOutCubic(this.transitionProgress);
+            const easedProgress = easeInOutCubic(this.transitionProgress);
 
             // Calculate shadow size - only interpolate during 'switch' transitions (annular ↔ total)
             // For 'in' and 'out' transitions, shadow maintains its size (like real moon)

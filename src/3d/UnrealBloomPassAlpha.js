@@ -241,6 +241,9 @@ export class UnrealBloomPassAlpha extends Pass {
     }
 
     setSize(width, height) {
+        // Update resolution property for accurate diagnostics
+        this.resolution.set(width, height);
+
         // 75% resolution for sharp bloom with good performance
         let resx = Math.round(width * 0.75);
         let resy = Math.round(height * 0.75);

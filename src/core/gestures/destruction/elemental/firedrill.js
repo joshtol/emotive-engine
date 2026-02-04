@@ -135,18 +135,6 @@ const FIREDRILL_CONFIG = {
         }
     },
 
-    // 3D mascot animation - spin like a drill
-    '3d': {
-        evaluate(progress, motion) {
-            const strength = motion?.strength || 1.0;
-            // 1 full rotation
-            const rotationY = progress * Math.PI * 2 * strength;
-            return {
-                rotation: [0, rotationY, 0]
-            };
-        }
-    },
-
     // Mesh effects - intense hot fire
     flickerFrequency: 20,
     flickerAmplitude: 0.015,

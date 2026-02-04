@@ -36,6 +36,16 @@ export {
     getAnchorOrientation
 } from './AnchorMode.js';
 
+// RadialBurstMode - class and static utilities
+export {
+    RadialBurstMode,
+    parseRadialBurstConfig,
+    calculateRadialDirection,
+    calculateRadialBurstPosition,
+    calculateInitialState as calculateRadialBurstInitialState,
+    calculateUpdateState as calculateRadialBurstUpdateState
+} from './RadialBurstMode.js';
+
 // AxisTravelMode - class and static utilities
 export {
     AxisTravelMode,
@@ -55,12 +65,14 @@ import { OrbitMode } from './OrbitMode.js';
 import { SurfaceMode } from './SurfaceMode.js';
 import { AxisTravelMode } from './AxisTravelMode.js';
 import { AnchorMode } from './AnchorMode.js';
+import { RadialBurstMode } from './RadialBurstMode.js';
 
 export const SPAWN_MODES = {
     'axis-travel': AxisTravelMode,
     'anchor': AnchorMode,
     'orbit': OrbitMode,
     'surface': SurfaceMode,
+    'radial-burst': RadialBurstMode,
 };
 
 /**

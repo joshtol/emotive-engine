@@ -262,16 +262,51 @@ if (intensityDiff > 0.001) {
 
 ---
 
+## Fix 7: Bypass Bloom When Idle (CRITICAL - ACTUAL FIX)
+
+**File:** `src/3d/ThreeRenderer.js` render() method
+
+**Current Problem:** UnrealBloomPass runs EVERY frame even when idle:
+
+- 5 mip levels × 2 blur passes = 10 blur passes
+- Plus 3 overhead passes (brightness, composite, copy)
+- **13 render passes per frame** just for bloom
+
+**Solution:** Skip bloom entirely when `hasActiveGesture` is false.
+
+```javascript
+// === STEP 1: Render main scene (layer 0) ===
+this.camera.layers.set(0);
+
+// OPTIMIZATION: Bypass bloom when idle (no active gesture)
+// Saves ~13 render passes per frame when nothing is glowing
+if (!hasActiveGesture) {
+    // Direct render without post-processing (fast path)
+    this.renderer.render(this.scene, this.camera);
+} else {
+    // Full post-processing with bloom (gesture active)
+    this.composer.render();
+}
+```
+
+**Breaking Changes:** None - bloom still runs during gestures.
+
+**Expected Impact:** ~25-40ms savings per frame when idle (13 render passes
+skipped)
+
+---
+
 ## Implementation Order
 
-| Priority | Fix                          | Risk     | Time Est. |
-| -------- | ---------------------------- | -------- | --------- |
-| 1        | Remove validateObject        | Very Low | 5 min     |
-| 2        | Conditional render passes    | Low      | 30 min    |
-| 3        | Reuse GestureBlender object  | Low      | 45 min    |
-| 4        | Pool cleanup / idle skip     | Medium   | 1 hr      |
-| 5        | Conditional animator updates | Low      | 30 min    |
-| 6        | Material lerp threshold      | Very Low | 15 min    |
+| Priority | Fix                          | Risk     | Impact   | Status  |
+| -------- | ---------------------------- | -------- | -------- | ------- |
+| 1        | **Bypass bloom when idle**   | Very Low | **HIGH** | ✅ Done |
+| 2        | Remove validateObject        | Very Low | Medium   | ✅ Done |
+| 3        | Conditional render passes    | Low      | Low      | ✅ Done |
+| 4        | Reuse GestureBlender object  | Low      | Low      | ✅ Done |
+| 5        | Pool cleanup / idle skip     | Medium   | Low      | ✅ Done |
+| 6        | Conditional animator updates | Low      | Low      | ✅ Done |
+| 7        | Material lerp threshold      | Very Low | Minimal  | ✅ Done |
 
 ---
 
