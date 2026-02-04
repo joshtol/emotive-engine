@@ -34,6 +34,15 @@ export function parseFormation(formation) {
         arcOffset: (formation.arcOffset || 60) * Math.PI / 180, // Convert to radians
         phaseOffset: formation.phaseOffset || 0,
         strands: formation.strands || 1, // 1 = single helix, 2 = double helix (DNA-style)
+        // Mandala support: center formation around origin instead of stacking upward
+        centered: formation.centered || false,
+        // Per-element scale multipliers (e.g., [0.5, 0.75, 1.0, 0.75, 0.5] for mandala)
+        scales: formation.scales || null,
+        // Explicit XYZ positions for each element (overrides spacing-based positioning)
+        // e.g., [{ x: 0, y: 0.5, z: 0 }, { x: -0.4, y: 0, z: 0 }, ...]
+        positions: formation.positions || null,
+        // Mandala-specific: radius for auto-generated circular pattern
+        radius: formation.radius || 0.4,
     };
 }
 
@@ -102,50 +111,94 @@ export function expandFormation(parsedConfig) {
     const { formation } = parsedConfig;
 
     if (!formation) {
-        return [{ index: 0, positionOffset: 0, rotationOffset: 0, progressOffset: 0 }];
+        return [{ index: 0, positionOffset: { x: 0, y: 0, z: 0 }, rotationOffset: 0, progressOffset: 0, scaleMultiplier: 1.0 }];
     }
 
     const elements = [];
 
+    // Calculate centering offset if centered mode is enabled
+    const totalSpan = (formation.count - 1) * formation.spacing;
+    const centerOffset = formation.centered ? -totalSpan / 2 : 0;
+
     for (let i = 0; i < formation.count; i++) {
         const elem = {
             index: i,
-            positionOffset: 0,
+            positionOffset: { x: 0, y: 0, z: 0 },  // Now supports XYZ
             rotationOffset: 0,
             progressOffset: i * formation.phaseOffset,
+            // Per-element scale multiplier (defaults to 1.0)
+            scaleMultiplier: formation.scales?.[i] ?? 1.0,
         };
 
         switch (formation.type) {
         case 'stack':
-            // Vertical stack - offset Y position
-            elem.positionOffset = i * formation.spacing;
+            // Vertical stack - offset Y position only
+            elem.positionOffset = { x: 0, y: i * formation.spacing + centerOffset, z: 0 };
             break;
 
         case 'spiral': {
             // Spiral - stack with rotation, optionally interleaved across multiple strands
-            // With strands=2, elements alternate between two helices offset by 180°
             const strands = formation.strands || 1;
             const strandIndex = i % strands;
             const indexWithinStrand = Math.floor(i / strands);
 
-            // Position offset based on index within strand (not global index)
-            elem.positionOffset = indexWithinStrand * formation.spacing;
+            // Position offset based on index within strand (Y axis only)
+            elem.positionOffset = { x: 0, y: indexWithinStrand * formation.spacing + centerOffset, z: 0 };
 
             // Rotation: base rotation for position + strand offset
             const baseRotation = indexWithinStrand * formation.arcOffset;
-            const strandOffset = (strandIndex / strands) * Math.PI * 2; // 0°, 180° for 2 strands
+            const strandOffset = (strandIndex / strands) * Math.PI * 2;
             elem.rotationOffset = baseRotation + strandOffset;
             break;
         }
 
         case 'wave':
-            // Wave - sinusoidal offset
-            elem.positionOffset = Math.sin(i / formation.count * Math.PI) * formation.spacing;
+            // Wave - sinusoidal Y offset
+            elem.positionOffset = {
+                x: 0,
+                y: Math.sin(i / formation.count * Math.PI) * formation.spacing + centerOffset,
+                z: 0
+            };
             elem.progressOffset = i * (formation.phaseOffset || 0.08);
             break;
 
+        case 'mandala': {
+            // MANDALA: Rings positioned in a circular pattern around center
+            // First element is center, rest are arranged in a circle
+            if (i === 0) {
+                // Center ring
+                elem.positionOffset = { x: 0, y: 0, z: 0 };
+            } else {
+                // Outer rings arranged in circle
+                const outerCount = formation.count - 1;
+                const angle = ((i - 1) / outerCount) * Math.PI * 2;
+                const radius = formation.radius || 0.4;
+                elem.positionOffset = {
+                    x: Math.sin(angle) * radius,
+                    y: Math.cos(angle) * radius,
+                    z: 0
+                };
+            }
+            // Rotation offset for visual variety
+            elem.rotationOffset = i * formation.arcOffset;
+            break;
+        }
+
+        case 'positioned':
+            // EXPLICIT POSITIONS: Use positions array directly
+            if (formation.positions && formation.positions[i]) {
+                const pos = formation.positions[i];
+                elem.positionOffset = {
+                    x: pos.x || 0,
+                    y: pos.y || 0,
+                    z: pos.z || 0
+                };
+            }
+            elem.rotationOffset = i * formation.arcOffset;
+            break;
+
         default:
-            elem.positionOffset = i * formation.spacing;
+            elem.positionOffset = { x: 0, y: i * formation.spacing + centerOffset, z: 0 };
         }
 
         elements.push(elem);
@@ -196,8 +249,16 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
         axisPos += ringRadius;
     }
 
-    // Position offset scaled by mascot radius
-    const positionOffset = (formationData?.positionOffset || 0) * mascotRadius;
+    // Position offset scaled by mascot radius - now supports XYZ
+    const rawOffset = formationData?.positionOffset || { x: 0, y: 0, z: 0 };
+    // Handle both old format (number) and new format (object with x,y,z)
+    const positionOffset = typeof rawOffset === 'number'
+        ? { x: 0, y: rawOffset * mascotRadius, z: 0 }
+        : {
+            x: (rawOffset.x || 0) * mascotRadius,
+            y: (rawOffset.y || 0) * mascotRadius,
+            z: (rawOffset.z || 0) * mascotRadius
+        };
 
     return {
         axisPos,
@@ -205,7 +266,8 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
         positionOffset,
         scale,
         diameter,
-        rotationOffset: formationData?.rotationOffset || 0
+        rotationOffset: formationData?.rotationOffset || 0,
+        scaleMultiplier: formationData?.scaleMultiplier ?? 1.0,
     };
 }
 
@@ -271,6 +333,7 @@ export class AxisTravelMode extends BaseSpawnMode {
             positionOffset: fd.positionOffset,
             rotationOffset: fd.rotationOffset,
             progressOffset: fd.progressOffset,
+            scaleMultiplier: fd.scaleMultiplier ?? 1.0,
         };
 
         // Mark as requiring updates
@@ -336,15 +399,30 @@ export class AxisTravelMode extends BaseSpawnMode {
             break;
         }
 
-        // Apply formation position offset (for stacking)
+        // Apply formation position offset (for stacking/mandala)
+        // Supports both old format (number = Y only) and new format (object with x,y,z)
         if (formation?.positionOffset) {
-            mesh.position.y += formation.positionOffset;
+            const offset = formation.positionOffset;
+            if (typeof offset === 'number') {
+                mesh.position.y += offset;
+            } else {
+                mesh.position.x += offset.x || 0;
+                mesh.position.y += offset.y || 0;
+                mesh.position.z += offset.z || 0;
+            }
         }
+
+        // Per-element scale multiplier (for mandala/varied ring sizes)
+        const scaleMultiplier = formation?.scaleMultiplier ?? 1.0;
 
         // Interpolate uniform scale if configured
         if (at.startScale !== at.endScale) {
             const scaleInterp = at.startScale + (at.endScale - at.startScale) * easedProgress;
-            const finalScale = at.baseScale * scaleInterp;
+            const finalScale = at.baseScale * scaleInterp * scaleMultiplier;
+            mesh.scale.setScalar(finalScale);
+        } else if (scaleMultiplier !== 1.0) {
+            // Apply scale multiplier even without start/end scale interpolation
+            const finalScale = at.baseScale * scaleMultiplier;
             mesh.scale.setScalar(finalScale);
         }
 
@@ -353,7 +431,7 @@ export class AxisTravelMode extends BaseSpawnMode {
         if (at.startDiameter !== at.endDiameter) {
             const diamInterp = at.startDiameter + (at.endDiameter - at.startDiameter) * easedProgress;
             // Apply diameter to X and Y (circular face) while preserving Z scale (thickness)
-            const baseScale = at.baseScale * (at.startScale !== at.endScale
+            const baseScale = at.baseScale * scaleMultiplier * (at.startScale !== at.endScale
                 ? at.startScale + (at.endScale - at.startScale) * easedProgress
                 : 1.0);
             mesh.scale.x = baseScale * diamInterp;

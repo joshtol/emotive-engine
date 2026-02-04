@@ -639,20 +639,26 @@ export class ElementInstancedSpawner {
         const result = calculateAxisTravelPosition(axisConfig, formationData, gestureProgress, this.mascotRadius);
 
         // Build position vector from axis result
+        // positionOffset is now {x, y, z} for mandala/positioned formations
+        const offset = result.positionOffset;
         const position = _temp.position.set(0, 0, 0);
+
         switch (result.axis) {
         case 'y':
-            position.y = result.axisPos + result.positionOffset;
+            position.y = result.axisPos;
             break;
         case 'x':
             position.x = result.axisPos;
-            position.y = result.positionOffset;
             break;
         case 'z':
             position.z = result.axisPos;
-            position.y = result.positionOffset;
             break;
         }
+
+        // Apply XYZ position offset from formation
+        position.x += offset.x || 0;
+        position.y += offset.y || 0;
+        position.z += offset.z || 0;
 
         // Return shared _temp.position - caller must copy if needed for persistence
         // Avoids per-frame Vector3 allocation (was causing GC pressure/memory leak)
@@ -660,7 +666,8 @@ export class ElementInstancedSpawner {
             position,
             scale: result.scale,
             diameter: result.diameter,
-            rotationOffset: result.rotationOffset
+            rotationOffset: result.rotationOffset,
+            scaleMultiplier: result.scaleMultiplier
         };
     }
 
@@ -733,7 +740,9 @@ export class ElementInstancedSpawner {
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
 
             // Apply initial scale and diameter
-            const initialScale = baseScale * initialResult.scale;
+            // Include per-element scaleMultiplier from formation (for mandala varied ring sizes)
+            const formationScaleMultiplier = initialResult.scaleMultiplier ?? 1.0;
+            const initialScale = baseScale * initialResult.scale * formationScaleMultiplier;
             // Scale XY (circular face) by diameter, Z (thickness) stays uniform
             // Ring model is in XY plane - diameter affects the circular face
             _temp.scale.set(
@@ -1459,7 +1468,9 @@ export class ElementInstancedSpawner {
 
                 // Apply scale with diameter (XY circular face) and animation fadeProgress
                 // Ring model is in XY plane - diameter affects the circular face, Z is thickness
-                const animScale = baseScale * result.scale * animState.fadeProgress;
+                // Include per-element scaleMultiplier from formation (for mandala varied ring sizes)
+                const formationScaleMultiplier = result.scaleMultiplier ?? 1.0;
+                const animScale = baseScale * result.scale * formationScaleMultiplier * animState.fadeProgress;
                 _temp.scale.set(
                     animScale * result.diameter,
                     animScale * result.diameter,

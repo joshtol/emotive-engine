@@ -48,8 +48,8 @@ const FIREMEDITATION_CONFIG = {
     category: 'radiating',
     temperature: 0.5,       // Balanced warm
 
-    // 3D Element spawning - stacked rings with minimal travel (stationary feel)
-    // Using axis-travel because anchor mode doesn't support stack formation
+    // 3D Element spawning - MANDALA: 5 rings at different heights and sizes
+    // Creates a lotus/chakra-like meditation pattern
     spawnMode: {
         type: 'axis-travel',
         axisTravel: {
@@ -64,12 +64,14 @@ const FIREMEDITATION_CONFIG = {
             orientation: 'camera'       // Billboard: always face camera
         },
         formation: {
-            type: 'spiral',             // Use spiral for arcOffset
-            count: 3,
-            spacing: 0,                 // All at same position (kaleidoscope)
-            arcOffset: 60               // 60° between rings for kaleidoscope
+            type: 'mandala',            // Rings positioned in circular pattern
+            count: 5,                   // 1 center + 4 outer rings
+            radius: 0.5,                // Distance of outer rings from center
+            arcOffset: 45,              // 45° rotation between each ring
+            // Mandala scale: center large, outer rings smaller
+            scales: [1.0, 0.6, 0.6, 0.6, 0.6]
         },
-        count: 3,
+        count: 5,
         scale: 1.2,
         models: ['flame-ring'],
         animation: {
@@ -116,11 +118,13 @@ const FIREMEDITATION_CONFIG = {
                 pattern: 'sine'
             },
             // Gentle slow rotation around Z (spin while facing camera)
-            // Per-ring directions: 0=clockwise, 1=counter-clockwise, 2=clockwise
+            // 5 rings with alternating directions for mandala harmony
             rotate: [
-                { axis: 'z', rotations: 0.5, phase: 0 },    // Ring 0: clockwise
-                { axis: 'z', rotations: -0.5, phase: 0 },   // Ring 1: counter-clockwise
-                { axis: 'z', rotations: 0.5, phase: 0 }     // Ring 2: clockwise
+                { axis: 'z', rotations: 0.4, phase: 0 },     // Ring 0 (top, small): clockwise
+                { axis: 'z', rotations: -0.35, phase: 0 },   // Ring 1 (upper-mid): counter-clockwise
+                { axis: 'z', rotations: 0.25, phase: 0 },    // Ring 2 (center, large): slow clockwise
+                { axis: 'z', rotations: -0.35, phase: 0 },   // Ring 3 (lower-mid): counter-clockwise
+                { axis: 'z', rotations: 0.4, phase: 0 }      // Ring 4 (bottom, small): clockwise
             ],
             scaleVariance: 0,       // Uniform for meditation
             lifetimeVariance: 0,
