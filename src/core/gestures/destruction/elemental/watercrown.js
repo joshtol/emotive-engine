@@ -83,11 +83,14 @@ const WATERCROWN_CONFIG = {
             },
             // Cutout: creates cellular holes and flow streaks for organic look
             // Two-layer composable: CELLULAR (0) + STREAKS (1) multiplied together
+            // Angular travel makes the cutout sweep around the crown ring
             cutout: {
                 strength: 1.0,
                 primary: { pattern: 0, scale: 1.0, weight: 1.0 },    // CELLULAR
                 secondary: { pattern: 1, scale: 1.0, weight: 0.8 },  // STREAKS
-                blend: 'multiply'
+                blend: 'multiply',
+                travel: 'angular',
+                travelSpeed: 1.5  // Slower sweep for flowing water feel
             },
             parameterAnimation: {
                 turbulence: {

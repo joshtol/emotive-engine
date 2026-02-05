@@ -83,10 +83,13 @@ const FIRECROWN_CONFIG = {
             },
             // Cutout: creates burning ember holes for organic flame look
             // Pattern 5 = EMBERS (rising heat distortion with height bias)
+            // Angular travel makes the cutout sweep around the crown ring
             cutout: {
                 strength: 0.8,
                 pattern: 5,     // EMBERS pattern
-                scale: 1.2
+                scale: 1.2,
+                travel: 'angular',
+                travelSpeed: 2.0  // Two full sweeps per gesture
             },
             parameterAnimation: {
                 temperature: {

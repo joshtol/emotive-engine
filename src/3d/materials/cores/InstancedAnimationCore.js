@@ -101,6 +101,16 @@ export const CUTOUT_BLEND = {
     ADD: 3,               // Add masks together then clamp (smooth blend)
 };
 
+/**
+ * Cutout travel modes - how the cutout pattern moves across the geometry
+ * @enum {number}
+ */
+export const CUTOUT_TRAVEL = {
+    NONE: 0,              // Static cutout (default)
+    ANGULAR: 1,           // Sweep around ring geometry (atan2-based)
+    RADIAL: 2,            // Expand/contract from center
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GLSL UNIFORMS
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -157,6 +167,9 @@ uniform float uCutoutScale2;         // Secondary pattern scale
 uniform float uCutoutWeight2;        // Secondary pattern weight (0-1)
 // Blend mode
 uniform int uCutoutBlend;            // 0=multiply, 1=min, 2=max, 3=add
+// Travel animation (sweeps cutout around geometry)
+uniform int uCutoutTravel;           // 0=none, 1=angular, 2=radial
+uniform float uCutoutTravelSpeed;    // Rotations/expansions per gesture (default 1.0)
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -470,14 +483,31 @@ export const CUTOUT_GLSL = /* glsl */`
 if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
     float cutoutTime = localTime * 0.001 + uCutoutPhase;
 
-    // Calculate primary pattern mask
-    float mask1 = calcCutoutPattern(uCutoutPattern1, vPosition, uCutoutScale1, cutoutTime);
+    // Apply travel offset to position for pattern sampling
+    vec3 travelPos = vPosition;
+    if (uCutoutTravel == 1) {
+        // ANGULAR: Rotate position around Y axis based on gesture progress
+        // This makes the cutout pattern sweep around ring geometries
+        float travelAngle = uGestureProgress * uCutoutTravelSpeed * 6.28318;
+        float cosA = cos(travelAngle);
+        float sinA = sin(travelAngle);
+        travelPos.x = vPosition.x * cosA - vPosition.z * sinA;
+        travelPos.z = vPosition.x * sinA + vPosition.z * cosA;
+    } else if (uCutoutTravel == 2) {
+        // RADIAL: Scale position from center based on gesture progress
+        // This makes the cutout pattern expand/contract
+        float radialScale = 1.0 + (uGestureProgress * uCutoutTravelSpeed - 0.5) * 2.0;
+        travelPos.xz *= radialScale;
+    }
+
+    // Calculate primary pattern mask using travel-offset position
+    float mask1 = calcCutoutPattern(uCutoutPattern1, travelPos, uCutoutScale1, cutoutTime);
     mask1 = mix(1.0, mask1, uCutoutWeight1);
 
     // Calculate secondary pattern mask (if enabled)
     float mask2 = 1.0;
     if (uCutoutPattern2 >= 0) {
-        mask2 = calcCutoutPattern(uCutoutPattern2, vPosition, uCutoutScale2, cutoutTime);
+        mask2 = calcCutoutPattern(uCutoutPattern2, travelPos, uCutoutScale2, cutoutTime);
         mask2 = mix(1.0, mask2, uCutoutWeight2);
     }
 
@@ -543,6 +573,8 @@ export const ANIMATION_DEFAULTS = {
     cutoutScale2: 1.0,     // Secondary scale
     cutoutWeight2: 1.0,    // Secondary weight
     cutoutBlend: 0,        // MULTIPLY blend mode
+    cutoutTravel: 0,       // NONE travel mode
+    cutoutTravelSpeed: 1.0,// One full rotation/expansion per gesture
 };
 
 /**
@@ -579,6 +611,8 @@ export function createAnimationUniforms() {
         uCutoutScale2: { value: ANIMATION_DEFAULTS.cutoutScale2 },
         uCutoutWeight2: { value: ANIMATION_DEFAULTS.cutoutWeight2 },
         uCutoutBlend: { value: ANIMATION_DEFAULTS.cutoutBlend },
+        uCutoutTravel: { value: ANIMATION_DEFAULTS.cutoutTravel },
+        uCutoutTravelSpeed: { value: ANIMATION_DEFAULTS.cutoutTravelSpeed },
     };
 }
 
@@ -595,7 +629,9 @@ export function createAnimationUniforms() {
  *   phase: 0,                // Animation phase offset
  *   primary: { pattern: 0, scale: 1.0, weight: 1.0 },   // Primary layer
  *   secondary: { pattern: 1, scale: 1.0, weight: 0.7 }, // Secondary layer (optional)
- *   blend: 'multiply'        // 'multiply'|'min'|'max'|'add'
+ *   blend: 'multiply',       // 'multiply'|'min'|'max'|'add'
+ *   travel: 'angular',       // 'none'|'angular'|'radial' - how cutout sweeps
+ *   travelSpeed: 1.0         // Rotations per gesture (default 1.0)
  * }
  *
  * Legacy single-pattern format (still supported):
@@ -617,6 +653,15 @@ export function createAnimationUniforms() {
  *     secondary: { pattern: CUTOUT_PATTERNS.STREAKS, scale: 1.0, weight: 0.7 },
  *     blend: 'multiply'
  * });
+ *
+ * @example
+ * // Angular travel for crown rings (cutout sweeps around)
+ * setCutout(material, {
+ *     strength: 0.8,
+ *     pattern: CUTOUT_PATTERNS.EMBERS,
+ *     travel: 'angular',
+ *     travelSpeed: 2.0  // Two full rotations per gesture
+ * });
  */
 export function setCutout(material, config) {
     if (!material?.uniforms) return;
@@ -635,6 +680,8 @@ export function setCutout(material, config) {
         primary,
         secondary,
         blend = 'multiply',
+        travel = 'none',
+        travelSpeed = ANIMATION_DEFAULTS.cutoutTravelSpeed,
         // Legacy single-pattern support
         pattern,
         scale
@@ -644,9 +691,15 @@ export function setCutout(material, config) {
     const blendModes = { multiply: 0, min: 1, max: 2, add: 3 };
     const blendValue = typeof blend === 'number' ? blend : (blendModes[blend] ?? 0);
 
+    // Resolve travel mode
+    const travelModes = { none: 0, angular: 1, radial: 2 };
+    const travelValue = typeof travel === 'number' ? travel : (travelModes[travel] ?? 0);
+
     material.uniforms.uCutoutStrength.value = Math.max(0, Math.min(1, strength));
     material.uniforms.uCutoutPhase.value = phase;
     material.uniforms.uCutoutBlend.value = blendValue;
+    material.uniforms.uCutoutTravel.value = travelValue;
+    material.uniforms.uCutoutTravelSpeed.value = travelSpeed;
 
     // Handle two-layer format
     if (primary !== undefined) {
@@ -686,6 +739,8 @@ export function resetCutout(material) {
     material.uniforms.uCutoutScale2.value = ANIMATION_DEFAULTS.cutoutScale2;
     material.uniforms.uCutoutWeight2.value = ANIMATION_DEFAULTS.cutoutWeight2;
     material.uniforms.uCutoutBlend.value = ANIMATION_DEFAULTS.cutoutBlend;
+    material.uniforms.uCutoutTravel.value = ANIMATION_DEFAULTS.cutoutTravel;
+    material.uniforms.uCutoutTravelSpeed.value = ANIMATION_DEFAULTS.cutoutTravelSpeed;
 }
 
 /**
@@ -838,6 +893,7 @@ export default {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
     ANIMATION_UNIFORMS_VERTEX,
     ANIMATION_UNIFORMS_FRAGMENT,
     ANIMATION_VARYINGS,

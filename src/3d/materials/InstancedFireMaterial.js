@@ -40,6 +40,7 @@ import {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
     CUTOUT_PATTERN_FUNC_GLSL,
     CUTOUT_GLSL,
     ANIMATION_UNIFORMS_FRAGMENT,
@@ -280,6 +281,9 @@ uniform int uCutoutPattern2;
 uniform float uCutoutScale2;
 uniform float uCutoutWeight2;
 uniform int uCutoutBlend;
+uniform int uCutoutTravel;
+uniform float uCutoutTravelSpeed;
+uniform float uGestureProgress;
 
 // Instancing varyings
 ${INSTANCED_ATTRIBUTES_FRAGMENT}
@@ -636,7 +640,7 @@ export function setInstancedFireCutout(material, config) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
 
 export default {
     createInstancedFireMaterial,
@@ -652,5 +656,6 @@ export default {
     setCutout,
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
-    CUTOUT_BLEND
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL
 };

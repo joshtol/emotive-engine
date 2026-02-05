@@ -29,6 +29,7 @@ import {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
     CUTOUT_PATTERN_FUNC_GLSL,
     CUTOUT_GLSL,
     createAnimationUniforms,
@@ -246,10 +247,13 @@ uniform int uCutoutPattern2;
 uniform float uCutoutScale2;
 uniform float uCutoutWeight2;
 uniform int uCutoutBlend;
+uniform int uCutoutTravel;
+uniform float uCutoutTravelSpeed;
 uniform vec3 uTint;
 
 // Arc visibility uniforms
 uniform int uAnimationType;
+uniform float uGestureProgress;
 
 // Instancing varyings
 ${INSTANCED_ATTRIBUTES_FRAGMENT}
@@ -394,11 +398,14 @@ export function createInstancedWaterMaterial(options = {}) {
             uCutoutScale2: { value: 1.0 },
             uCutoutWeight2: { value: 1.0 },
             uCutoutBlend: { value: 0 },       // MULTIPLY
+            uCutoutTravel: { value: 0 },      // NONE
+            uCutoutTravelSpeed: { value: 1.0 },
             uTint: { value: tintColor }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
+        blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
     });
@@ -514,7 +521,7 @@ export function setInstancedWaterCutout(material, config) {
 export const setInstancedWaterArcAnimation = setShaderAnimation;
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
 
 export default {
     createInstancedWaterMaterial,
@@ -532,7 +539,8 @@ export default {
     setCutout,
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
-    CUTOUT_BLEND
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL
 };
 
 // Note: Water element is registered in ElementRegistrations.js to avoid
