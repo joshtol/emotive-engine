@@ -25,21 +25,15 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { ElementInstancePool, SLOTS_PER_ELEMENT } from './ElementInstancePool.js';
 import { MergedGeometryBuilder } from './MergedGeometryBuilder.js';
 
-// Instanced materials - GPU-efficient versions with time-offset animation
-import {
-    createInstancedFireMaterial,
-    updateInstancedFireMaterial,
-    setInstancedFireArcAnimation
-} from '../materials/InstancedFireMaterial.js';
+// Element type registry - decouples spawner from specific element implementations
+import { ElementTypeRegistry } from './ElementTypeRegistry.js';
 
 // Spatial reference for mascot-relative positioning
 import { MascotSpatialRef } from './MascotSpatialRef.js';
 
 // Shared sizing/orientation logic (Golden Ratio system from original ElementSpawner)
 import {
-    getModelSizeFraction,
     getModelOrientation,
-    calculateMascotRadius,
     calculateElementScale
 } from './ElementSizing.js';
 
@@ -90,31 +84,13 @@ import {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
+// Debug logging - set to true to enable verbose console output
+const DEBUG = false;
+
 const MAX_ELEMENTS_PER_TYPE = 16;  // Max logical elements per type (×4 for trails = 64 instances)
 
 // Default scale multiplier for surface mode elements (matches original ElementSpawner)
 const DEFAULT_SCALE_MULTIPLIER = 1.5;
-
-// Element types and their model paths (relative to assetsBasePath)
-const ELEMENT_CONFIGS = {
-    fire: {
-        basePath: 'models/Elements/Fire/',
-        models: [
-            'flame-wisp.glb',
-            'flame-tongue.glb',
-            'ember-cluster.glb',
-            'fire-burst.glb',
-            'flame-ring.glb'    // For vortex effect
-        ],
-        createMaterial: createInstancedFireMaterial,
-        updateMaterial: updateInstancedFireMaterial,
-        scaleMultiplier: 1.5  // Fire elements slightly larger
-    },
-    // Additional elements will be added as instanced materials are created
-    // ice: { ... },
-    // water: { ... },
-    // etc.
-};
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // TEMP OBJECT POOL (avoid per-frame allocations)
@@ -230,7 +206,7 @@ export class ElementInstancedSpawner {
         if (coreMesh) {
             this.spatialRef.initialize(coreMesh);
         }
-        console.log('[ElementInstancedSpawner] Initialized with coreMesh');
+        DEBUG && console.log('[ElementInstancedSpawner] Initialized with coreMesh');
     }
 
     /**
@@ -241,7 +217,7 @@ export class ElementInstancedSpawner {
      */
     async preloadModels(elementType) {
         // Only preload if we have config for this element type
-        if (!ELEMENT_CONFIGS[elementType]) {
+        if (!ElementTypeRegistry.get(elementType)) {
             // Silently skip unsupported elements for now
             // They'll use the old spawner until we add instanced materials
             return;
@@ -298,7 +274,7 @@ export class ElementInstancedSpawner {
      * @private
      */
     async _doInitializePool(elementType) {
-        const config = ELEMENT_CONFIGS[elementType];
+        const config = ElementTypeRegistry.get(elementType);
         if (!config) {
             console.warn(`[ElementInstancedSpawner] Unknown element type: ${elementType}`);
             return null;
@@ -338,7 +314,7 @@ export class ElementInstancedSpawner {
         // Add the instanced mesh to the container
         this.container.add(pool.mesh);
 
-        console.log(`[ElementInstancedSpawner] Initialized ${elementType} pool with ${geometries.length} models, ${MAX_ELEMENTS_PER_TYPE * SLOTS_PER_ELEMENT} max instances`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Initialized ${elementType} pool with ${geometries.length} models, ${MAX_ELEMENTS_PER_TYPE * SLOTS_PER_ELEMENT} max instances`);
 
         return pool;
     }
@@ -408,7 +384,7 @@ export class ElementInstancedSpawner {
         // Each layer can have its own type, timing (appearAt/disappearAt), models, etc.
         // ═══════════════════════════════════════════════════════════════════════════════════════
         if (Array.isArray(mode)) {
-            console.log(`[ElementInstancedSpawner] spawn ${elementType}: ${mode.length} layers`);
+            DEBUG && console.log(`[ElementInstancedSpawner] spawn ${elementType}: ${mode.length} layers`);
 
             // Ensure pool is initialized first
             const pool = await this.initializePool(elementType);
@@ -464,7 +440,7 @@ export class ElementInstancedSpawner {
         const modeType = typeof mode === 'object' ? (mode.type || 'surface') : mode;
 
         // Debug: log spawn mode
-        console.log(`[ElementInstancedSpawner] spawn ${elementType}: modeType=${modeType}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] spawn ${elementType}: modeType=${modeType}`);
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
         // AXIS-TRAVEL MODE
@@ -514,13 +490,10 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnOrbitFallback(elementType, count, models, animConfig, camera) {
-        const pool = this.pools.get(elementType);
-        const merged = this.mergedGeometries.get(elementType);
-        const elementConfig = ELEMENT_CONFIGS[elementType];
+        const ctx = this._getSpawnContext(elementType);
+        if (!ctx) return [];
 
-        if (!pool || !merged) {
-            return [];
-        }
+        const { pool, merged, config: elementConfig } = ctx;
 
         const spawnedIds = [];
         const actualCount = Math.min(count, pool.availableSlots);
@@ -528,7 +501,7 @@ export class ElementInstancedSpawner {
 
         for (let i = 0; i < actualCount; i++) {
             const modelName = availableModels[Math.floor(Math.random() * availableModels.length)];
-            const modelIndex = merged.modelMap.get(modelName) || 0;
+            const modelIndex = this._resolveModelIndex(merged, modelName) ?? 0;
 
             const scaleMultiplier = elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const scale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
@@ -541,15 +514,9 @@ export class ElementInstancedSpawner {
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
 
             if (success) {
-                let animState = null;
-                if (animConfig) {
-                    animState = new AnimationState(animConfig, i);
-                    animState.initialize(this.time);
-                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                const animState = this._initAnimState(pool, elementId, animConfig, i);
+                if (animState) {
                     pool.updateInstanceTransform(elementId, position, rotation, scale * animState.scale);
-                } else {
-                    // No animation config - make visible immediately
-                    pool.updateInstanceOpacity(elementId, 1.0);
                 }
 
                 this.activeElements.set(elementId, {
@@ -568,7 +535,7 @@ export class ElementInstancedSpawner {
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} elements (fallback orbit)`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} elements (fallback orbit)`);
         return spawnedIds;
     }
 
@@ -723,6 +690,90 @@ export class ElementInstancedSpawner {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════════════
+    // SPAWN HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Gets spawn context (pool, merged geometry, config) for an element type.
+     * Returns null if not ready, with warning logged.
+     * @param {string} elementType - Element type
+     * @returns {{ pool: ElementInstancePool, merged: Object, config: Object } | null}
+     * @private
+     */
+    _getSpawnContext(elementType) {
+        const pool = this.pools.get(elementType);
+        const merged = this.mergedGeometries.get(elementType);
+        const config = ElementTypeRegistry.get(elementType);
+
+        if (!pool || !merged) {
+            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
+            return null;
+        }
+
+        return { pool, merged, config };
+    }
+
+    /**
+     * Resolves model name to index, with warning if not found.
+     * @param {Object} merged - Merged geometry data
+     * @param {string} modelName - Model name to resolve
+     * @returns {number | undefined} Model index or undefined
+     * @private
+     */
+    _resolveModelIndex(merged, modelName) {
+        const modelIndex = merged.modelMap.get(modelName);
+        if (modelIndex === undefined) {
+            console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
+        }
+        return modelIndex;
+    }
+
+    /**
+     * Creates and initializes animation state for an element.
+     * @param {ElementInstancePool} pool - The pool
+     * @param {string} elementId - Element ID
+     * @param {AnimationConfig} animConfig - Animation config (or null)
+     * @param {number} index - Element index for stagger
+     * @returns {AnimationState | null}
+     * @private
+     */
+    _initAnimState(pool, elementId, animConfig, index) {
+        if (!animConfig) {
+            pool.updateInstanceOpacity(elementId, 1.0);
+            return null;
+        }
+
+        const animState = new AnimationState(animConfig, index);
+        animState.initialize(this.time);
+        pool.updateInstanceOpacity(elementId, animState.opacity);
+        return animState;
+    }
+
+    /**
+     * Applies shader animation overrides from modelOverrides config.
+     * @param {string} elementType - Element type for material lookup
+     * @param {string[]} modelNames - Model names to check for overrides
+     * @param {Object} modelOverrides - Animation modelOverrides config
+     * @param {Object} elementConfig - Element config from registry
+     * @private
+     */
+    _applyShaderAnimationOverrides(elementType, modelNames, modelOverrides, elementConfig) {
+        if (!modelOverrides || !elementConfig?.setShaderAnimation) return;
+
+        const material = this.materials.get(elementType);
+        if (!material) return;
+
+        for (const modelName of modelNames) {
+            const overrides = modelOverrides[modelName];
+            if (overrides?.shaderAnimation) {
+                DEBUG && console.log(`[ElementInstancedSpawner] Applying shader animation for ${modelName}:`, overrides.shaderAnimation);
+                elementConfig.setShaderAnimation(material, overrides.shaderAnimation);
+                break;  // Apply once per spawn (all elements use same settings)
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
     // SPAWN LAYERS SUPPORT
     // ═══════════════════════════════════════════════════════════════════════════════════════
 
@@ -738,7 +789,7 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnLayer(elementType, layerConfig, options) {
-        const { layerIndex, camera, gestureDuration, intensity } = options;
+        const { layerIndex, camera, gestureDuration } = options;
 
         // Extract layer-specific config
         const layerType = layerConfig.type || 'surface';
@@ -751,7 +802,7 @@ export class ElementInstancedSpawner {
         // Tag spawned elements with layer index for debugging
         const layerTag = `layer${layerIndex}`;
 
-        console.log(`[ElementInstancedSpawner] Layer ${layerIndex}: type=${layerType}, models=${layerModels?.join(',') || 'default'}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Layer ${layerIndex}: type=${layerType}, models=${layerModels?.join(',') || 'default'}`);
 
         // Dispatch to appropriate spawn method based on layer type
         // NOTE: We don't call despawn() here - already done once by spawn() for all layers
@@ -789,14 +840,10 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnAxisTravel(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
-        const pool = this.pools.get(elementType);
-        const merged = this.mergedGeometries.get(elementType);
-        const elementConfig = ELEMENT_CONFIGS[elementType];
+        const ctx = this._getSpawnContext(elementType);
+        if (!ctx) return [];
 
-        if (!pool || !merged) {
-            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
-            return [];
-        }
+        const { pool, merged, config: elementConfig } = ctx;
 
         // Parse axis-travel configuration
         const axisConfig = this._parseAxisTravelConfig(spawnMode);
@@ -807,19 +854,11 @@ export class ElementInstancedSpawner {
         // Check for arc animation configuration in modelOverrides
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
-        const material = this.materials.get(elementType);
 
-        // Apply arc animation settings if configured
-        for (const modelName of axisConfig.models) {
-            const overrides = modelOverrides[modelName];
-            if (overrides?.shaderAnimation && material) {
-                console.log(`[ElementInstancedSpawner] Applying arc animation for ${modelName}:`, overrides.shaderAnimation);
-                setInstancedFireArcAnimation(material, overrides.shaderAnimation);
-                break;  // Apply once per spawn (all rings use same settings)
-            }
-        }
+        // Apply shader animation settings if configured
+        this._applyShaderAnimationOverrides(elementType, axisConfig.models, modelOverrides, elementConfig);
 
-        console.log(`[ElementInstancedSpawner] axis-travel: ${formationElements.length} formation elements, models: ${axisConfig.models.join(', ')}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] axis-travel: ${formationElements.length} formation elements, models: ${axisConfig.models.join(', ')}`);
 
         const spawnedIds = [];
         const availableModels = axisConfig.models.length > 0
@@ -831,12 +870,8 @@ export class ElementInstancedSpawner {
 
             // Select model (for axis-travel, typically all the same model like flame-ring)
             const modelName = availableModels[i % availableModels.length];
-            const modelIndex = merged.modelMap.get(modelName);
-
-            if (modelIndex === undefined) {
-                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
-                continue;
-            }
+            const modelIndex = this._resolveModelIndex(merged, modelName);
+            if (modelIndex === undefined) continue;
 
             // Calculate initial position at gesture progress 0
             const initialResult = this._calculateAxisTravelPosition(axisConfig, formationData, 0);
@@ -864,7 +899,7 @@ export class ElementInstancedSpawner {
             const configOrientation = axisConfig.orientation;
             const modelOrientation = getModelOrientation(modelName);
             const orientationMode = configOrientation || modelOrientation.mode || 'outward';
-            console.log(`[ElementInstancedSpawner] Ring orientation for ${modelName}: config=${configOrientation}, model=${modelOrientation.mode}, resolved=${orientationMode}`);
+            DEBUG && console.log(`[ElementInstancedSpawner] Ring orientation for ${modelName}: config=${configOrientation}, model=${modelOrientation.mode}, resolved=${orientationMode}`);
 
             // Build rotation: first apply ring orientation, then formation arcOffset
             // Note: flame-ring model's circular face is in XY plane (faces -Z)
@@ -937,23 +972,14 @@ export class ElementInstancedSpawner {
                 // start its arc animation when it appears, not at gesture start
                 const timeOffset = stagger * i * shaderAnim.arcSpeed * Math.PI * 2;
                 arcPhase = -timeOffset;
-                console.log(`[ElementInstancedSpawner] Arc time offset for element ${i}: stagger=${stagger}, arcSpeed=${shaderAnim.arcSpeed}, arcPhase=${arcPhase.toFixed(3)}`);
+                DEBUG && console.log(`[ElementInstancedSpawner] Arc time offset for element ${i}: stagger=${stagger}, arcSpeed=${shaderAnim.arcSpeed}, arcPhase=${arcPhase.toFixed(3)}`);
             }
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex, arcPhase);
 
             if (success) {
-                // Create per-element animation state if animation config provided
-                let animState = null;
-                if (animConfig) {
-                    animState = new AnimationState(animConfig, i);
-                    animState.initialize(this.time);
-
-                    // Set initial opacity/scale from animation state
-                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                const animState = this._initAnimState(pool, elementId, animConfig, i);
+                if (animState) {
                     pool.updateInstanceTransform(elementId, position, rotation, initialScale * animState.scale);
-                } else {
-                    // No animation config - make visible immediately (backwards compatible)
-                    pool.updateInstanceOpacity(elementId, 1.0);
                 }
 
                 this.activeElements.set(elementId, {
@@ -983,7 +1009,7 @@ export class ElementInstancedSpawner {
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} axis-travel elements`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} axis-travel elements`);
         return spawnedIds;
     }
 
@@ -1002,14 +1028,10 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnAnchor(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
-        const pool = this.pools.get(elementType);
-        const merged = this.mergedGeometries.get(elementType);
-        const elementConfig = ELEMENT_CONFIGS[elementType];
+        const ctx = this._getSpawnContext(elementType);
+        if (!ctx) return [];
 
-        if (!pool || !merged) {
-            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
-            return [];
-        }
+        const { pool, merged, config: elementConfig } = ctx;
 
         // Parse anchor configuration using shared utility
         const anchorConfig = parseAnchorConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
@@ -1017,19 +1039,11 @@ export class ElementInstancedSpawner {
         // Check for arc animation configuration
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
-        const material = this.materials.get(elementType);
 
-        // Apply arc animation settings if configured
-        for (const modelName of anchorConfig.models) {
-            const overrides = modelOverrides[modelName];
-            if (overrides?.shaderAnimation && material) {
-                console.log(`[ElementInstancedSpawner] Applying arc animation for ${modelName}:`, overrides.shaderAnimation);
-                setInstancedFireArcAnimation(material, overrides.shaderAnimation);
-                break;
-            }
-        }
+        // Apply shader animation settings if configured
+        this._applyShaderAnimationOverrides(elementType, anchorConfig.models, modelOverrides, elementConfig);
 
-        console.log(`[ElementInstancedSpawner] anchor: landmark=${anchorConfig.landmark}, landmarkY=${anchorConfig.landmarkY.toFixed(3)}, offset=(${anchorConfig.offset.x}, ${anchorConfig.offset.y}, ${anchorConfig.offset.z}), orientation=${anchorConfig.orientation}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] anchor: landmark=${anchorConfig.landmark}, landmarkY=${anchorConfig.landmarkY.toFixed(3)}, offset=(${anchorConfig.offset.x}, ${anchorConfig.offset.y}, ${anchorConfig.offset.z}), orientation=${anchorConfig.orientation}`);
 
         const spawnedIds = [];
         const availableModels = anchorConfig.models.length > 0
@@ -1039,12 +1053,8 @@ export class ElementInstancedSpawner {
         for (let i = 0; i < anchorConfig.count; i++) {
             // Select model
             const modelName = availableModels[i % availableModels.length];
-            const modelIndex = merged.modelMap.get(modelName);
-
-            if (modelIndex === undefined) {
-                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
-                continue;
-            }
+            const modelIndex = this._resolveModelIndex(merged, modelName);
+            if (modelIndex === undefined) continue;
 
             // Calculate position at anchor point using shared utility
             const anchorPos = calculateAnchorPosition(anchorConfig, 0);
@@ -1067,17 +1077,9 @@ export class ElementInstancedSpawner {
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
 
             if (success) {
-                // Create per-element animation state
-                let animState = null;
-                if (animConfig) {
-                    animState = new AnimationState(animConfig, i);
-                    animState.initialize(this.time);
-
-                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                const animState = this._initAnimState(pool, elementId, animConfig, i);
+                if (animState) {
                     pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
-                } else {
-                    // No animation config - make visible immediately
-                    pool.updateInstanceOpacity(elementId, 1.0);
                 }
 
                 this.activeElements.set(elementId, {
@@ -1102,14 +1104,14 @@ export class ElementInstancedSpawner {
                         startScale: anchorConfig.startScale,
                         endScale: anchorConfig.endScale,
                         // Store exit duration for localProgress calculation (explosion effects)
-                        exitDuration: animConfig.exit.duration,
+                        exitDuration: animConfig?.exit?.duration ?? 0,
                     }
                 });
                 spawnedIds.push(elementId);
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} anchor elements`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} anchor elements`);
         return spawnedIds;
     }
 
@@ -1124,19 +1126,15 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnRadialBurst(elementType, spawnMode, models, animConfig, _layerTag = null) {
-        const pool = this.pools.get(elementType);
-        const merged = this.mergedGeometries.get(elementType);
-        const elementConfig = ELEMENT_CONFIGS[elementType];
+        const ctx = this._getSpawnContext(elementType);
+        if (!ctx) return [];
 
-        if (!pool || !merged) {
-            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
-            return [];
-        }
+        const { pool, merged, config: elementConfig } = ctx;
 
         // Parse config using RadialBurstMode utility
         const burstConfig = parseRadialBurstConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
 
-        console.log(`[ElementInstancedSpawner] radial-burst: count=${burstConfig.count}, startRadius=${burstConfig.startRadius}, endRadius=${burstConfig.endRadius}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] radial-burst: count=${burstConfig.count}, startRadius=${burstConfig.startRadius}, endRadius=${burstConfig.endRadius}`);
 
         const spawnedIds = [];
         const availableModels = burstConfig.models.length > 0
@@ -1145,12 +1143,8 @@ export class ElementInstancedSpawner {
 
         for (let i = 0; i < burstConfig.count; i++) {
             const modelName = availableModels[i % availableModels.length];
-            const modelIndex = merged.modelMap.get(modelName);
-
-            if (modelIndex === undefined) {
-                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found`);
-                continue;
-            }
+            const modelIndex = this._resolveModelIndex(merged, modelName);
+            if (modelIndex === undefined) continue;
 
             // Get initial state from RadialBurstMode utility
             const initialState = calculateRadialBurstInitialState(burstConfig, i, this.mascotRadius);
@@ -1176,14 +1170,7 @@ export class ElementInstancedSpawner {
             const success = pool.spawn(elementId, position, rotation, _temp.scale.setScalar(initialScale), modelIndex);
 
             if (success) {
-                let animState = null;
-                if (animConfig) {
-                    animState = new AnimationState(animConfig, i);
-                    animState.initialize(this.time);
-                    pool.updateInstanceOpacity(elementId, animState.opacity);
-                } else {
-                    pool.updateInstanceOpacity(elementId, 1.0);
-                }
+                const animState = this._initAnimState(pool, elementId, animConfig, i);
 
                 this.activeElements.set(elementId, {
                     type: elementType,
@@ -1203,7 +1190,7 @@ export class ElementInstancedSpawner {
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} radial-burst elements`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} radial-burst elements`);
         return spawnedIds;
     }
 
@@ -1222,14 +1209,10 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnOrbit(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
-        const pool = this.pools.get(elementType);
-        const merged = this.mergedGeometries.get(elementType);
-        const elementConfig = ELEMENT_CONFIGS[elementType];
+        const ctx = this._getSpawnContext(elementType);
+        if (!ctx) return [];
 
-        if (!pool || !merged) {
-            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
-            return [];
-        }
+        const { pool, merged, config: elementConfig } = ctx;
 
         // Parse orbit configuration using utility from OrbitMode.js
         const orbitConfig = parseOrbitConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
@@ -1240,19 +1223,11 @@ export class ElementInstancedSpawner {
         // Check for arc animation configuration in modelOverrides
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
-        const material = this.materials.get(elementType);
 
-        // Apply arc animation settings if configured
-        for (const modelName of orbitConfig.models) {
-            const overrides = modelOverrides[modelName];
-            if (overrides?.shaderAnimation && material) {
-                console.log(`[ElementInstancedSpawner] Applying arc animation for ${modelName}:`, overrides.shaderAnimation);
-                setInstancedFireArcAnimation(material, overrides.shaderAnimation);
-                break;
-            }
-        }
+        // Apply shader animation settings if configured
+        this._applyShaderAnimationOverrides(elementType, orbitConfig.models, modelOverrides, elementConfig);
 
-        console.log(`[ElementInstancedSpawner] orbit: ${formationElements.length} elements, radius=${orbitConfig.radius}, height=${orbitConfig.height}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] orbit: ${formationElements.length} elements, radius=${orbitConfig.radius}, height=${orbitConfig.height}`);
 
         const spawnedIds = [];
         const availableModels = orbitConfig.models.length > 0
@@ -1264,12 +1239,8 @@ export class ElementInstancedSpawner {
 
             // Select model
             const modelName = availableModels[i % availableModels.length];
-            const modelIndex = merged.modelMap.get(modelName);
-
-            if (modelIndex === undefined) {
-                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
-                continue;
-            }
+            const modelIndex = this._resolveModelIndex(merged, modelName);
+            if (modelIndex === undefined) continue;
 
             // Calculate position
             const posResult = calculateOrbitPosition(orbitConfig, formationData, 0, this.mascotRadius);
@@ -1321,17 +1292,9 @@ export class ElementInstancedSpawner {
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
 
             if (success) {
-                // Create per-element animation state
-                let animState = null;
-                if (animConfig) {
-                    animState = new AnimationState(animConfig, i);
-                    animState.initialize(this.time);
-
-                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                const animState = this._initAnimState(pool, elementId, animConfig, i);
+                if (animState) {
                     pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
-                } else {
-                    // No animation config - make visible immediately
-                    pool.updateInstanceOpacity(elementId, 1.0);
                 }
 
                 this.activeElements.set(elementId, {
@@ -1358,7 +1321,7 @@ export class ElementInstancedSpawner {
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} orbit elements`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} orbit elements`);
         return spawnedIds;
     }
 
@@ -1378,14 +1341,10 @@ export class ElementInstancedSpawner {
      * @private
      */
     _spawnSurface(elementType, spawnMode, count, models, animConfig, camera, _layerTag = null) {
-        const pool = this.pools.get(elementType);
-        const merged = this.mergedGeometries.get(elementType);
-        const elementConfig = ELEMENT_CONFIGS[elementType];
+        const ctx = this._getSpawnContext(elementType);
+        if (!ctx) return [];
 
-        if (!pool || !merged) {
-            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
-            return [];
-        }
+        const { pool, merged, config: elementConfig } = ctx;
 
         // Parse surface configuration using utility from SurfaceMode.js
         const surfaceConfig = parseSurfaceConfig(spawnMode);
@@ -1411,7 +1370,7 @@ export class ElementInstancedSpawner {
             return [];
         }
 
-        console.log(`[ElementInstancedSpawner] surface: ${surfacePoints.length} points sampled, pattern=${surfaceConfig.pattern}`);
+        DEBUG && console.log(`[ElementInstancedSpawner] surface: ${surfacePoints.length} points sampled, pattern=${surfaceConfig.pattern}`);
 
         const spawnedIds = [];
         const availableModels = surfaceConfig.models.length > 0
@@ -1428,12 +1387,8 @@ export class ElementInstancedSpawner {
 
             // Select model
             const modelName = availableModels[Math.floor(Math.random() * availableModels.length)];
-            const modelIndex = merged.modelMap.get(modelName);
-
-            if (modelIndex === undefined) {
-                console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
-                continue;
-            }
+            const modelIndex = this._resolveModelIndex(merged, modelName);
+            if (modelIndex === undefined) continue;
 
             // Calculate scale
             const scaleMultiplier = surfaceConfig.scaleMultiplier || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
@@ -1468,17 +1423,9 @@ export class ElementInstancedSpawner {
             const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
 
             if (success) {
-                // Create per-element animation state
-                let animState = null;
-                if (animConfig) {
-                    animState = new AnimationState(animConfig, i);
-                    animState.initialize(this.time);
-
-                    pool.updateInstanceOpacity(elementId, animState.opacity);
+                const animState = this._initAnimState(pool, elementId, animConfig, i);
+                if (animState) {
                     pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
-                } else {
-                    // No animation config - make visible immediately
-                    pool.updateInstanceOpacity(elementId, 1.0);
                 }
 
                 this.activeElements.set(elementId, {
@@ -1503,7 +1450,7 @@ export class ElementInstancedSpawner {
             }
         }
 
-        console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} surface elements`);
+        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} surface elements`);
         return spawnedIds;
     }
 
@@ -1618,7 +1565,7 @@ export class ElementInstancedSpawner {
             pool.setTime(this.time);
 
             // Update material uniforms (including gestureProgress for arc animation)
-            const config = ELEMENT_CONFIGS[type];
+            const config = ElementTypeRegistry.get(type);
             const material = this.materials.get(type);
             if (config?.updateMaterial && material) {
                 config.updateMaterial(material, this.time, gestureProgress ?? 0);
@@ -1658,7 +1605,7 @@ export class ElementInstancedSpawner {
             let finalScale;
 
             // Determine if this is a procedural element (used for opacity calculation)
-            const elementConfig = ELEMENT_CONFIGS[type];
+            const elementConfig = ElementTypeRegistry.get(type);
             const isProceduralElement = elementConfig?.createMaterial != null;
 
             if (axisTravel && gestureProgress !== null) {

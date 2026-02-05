@@ -53,8 +53,6 @@ import { createPoisonMaterial, updatePoisonMaterial } from './materials/PoisonMa
 import { createEarthMaterial, updateEarthMaterial } from './materials/EarthMaterial.js';
 import { createNatureMaterial, updateNatureMaterial } from './materials/NatureMaterial.js';
 import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
-// OLD: import { ElementSpawner } from './effects/ElementSpawner.js';
-// NEW: GPU-instanced spawner (fixes GPU memory leaks)
 import { ElementInstancedSpawner } from './effects/ElementInstancedSpawner.js';
 import { profiler } from './debug/PerformanceProfiler.js';
 
