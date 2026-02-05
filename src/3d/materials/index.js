@@ -26,7 +26,7 @@
  *
  * For realistic, shader-based elemental effects:
  * - ProceduralFireMaterial - Dynamic flames with blackbody colors
- * - ProceduralWaterMaterial - Waves, caustics, foam generation
+ * - InstancedWaterMaterial - Waves, caustics, foam, subsurface (GPU-instanced)
  * - ProceduralPoisonMaterial - Viscous toxic fluid (uses water models)
  * - ProceduralSmokeMaterial - Billowing rising smoke (uses void models)
  *
@@ -141,21 +141,19 @@ export {
 } from './ProceduralFireMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Procedural Water Material (advanced shader-based with animation types)
+// Instanced Water Material (GPU-efficient instanced version)
+// Note: ProceduralWaterMaterial was removed - use InstancedWaterMaterial instead
 // ═══════════════════════════════════════════════════════════════════════════
 export {
-    createProceduralWaterMaterial,
-    updateProceduralWaterMaterial,
-    setProceduralWaterTurbulence,
-    setProceduralWaterIntensity,
-    setProceduralWaterTint,
-    setProceduralWaterAnimation,
-    setRotatingArc,
-    setRipplePulse,
-    setFlowStream,
-    getProceduralWaterPhysics,
-    WATER_ANIMATION_TYPES
-} from './ProceduralWaterMaterial.js';
+    createInstancedWaterMaterial,
+    updateInstancedWaterMaterial,
+    setInstancedWaterTurbulence,
+    setInstancedWaterTint,
+    setInstancedWaterGlowScale,
+    setInstancedWaterGestureGlow,
+    setInstancedWaterArcAnimation,
+    ANIMATION_TYPES as WATER_ANIMATION_TYPES
+} from './InstancedWaterMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Procedural Poison Material (derived element - uses water models)
@@ -213,5 +211,22 @@ export {
 export {
     createInstancedFireMaterial,
     updateInstancedFireMaterial,
-    setInstancedFireTemperature
+    setInstancedFireTemperature,
+    setInstancedFireGlowScale,
+    setInstancedFireGestureGlow
 } from './InstancedFireMaterial.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Instanced Animation Core (shared animation system for all elements)
+// ═══════════════════════════════════════════════════════════════════════════
+export {
+    ANIMATION_TYPES,
+    ANIMATION_DEFAULTS,
+    createAnimationUniforms,
+    setShaderAnimation,
+    updateAnimationProgress,
+    resetAnimation,
+    setGestureGlow,
+    clearGestureGlow,
+    setGlowScale
+} from './cores/InstancedAnimationCore.js';

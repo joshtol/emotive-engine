@@ -72,6 +72,10 @@ coverage/
 tmp/
 temp/
 
+# Temporary upgrade plans (delete when done)
+UPGRADE_WATER.md
+DO-THIS.md
+
 # Testing/development HTML files (examples/ directory is tracked)
 # hero-*-capture.html  (moved to examples/)
 # hero-capture.html

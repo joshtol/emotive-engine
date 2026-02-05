@@ -1,0 +1,539 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *  ╔═○─┐ emotive
+ *    ●●  ENGINE - Instanced Water Material
+ *  └─○═╝
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * @fileoverview GPU-instanced version of ProceduralWaterMaterial
+ * @module materials/InstancedWaterMaterial
+ *
+ * Uses per-instance attributes for:
+ * - Time-offset animation (each instance has its own local time)
+ * - Model selection (merged geometry with multiple water model variants)
+ * - Trail rendering (main + 3 trail copies per logical element)
+ * - Spawn/exit fade transitions
+ * - Velocity for motion blur
+ *
+ * This material is designed to work with ElementInstancePool for
+ * GPU-efficient rendering of many water elements with a single draw call.
+ */
+
+import * as THREE from 'three';
+import {
+    INSTANCED_ATTRIBUTES_VERTEX,
+    INSTANCED_ATTRIBUTES_FRAGMENT,
+    createInstancedUniforms
+} from './InstancedShaderUtils.js';
+import {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_PATTERN_FUNC_GLSL,
+    CUTOUT_GLSL,
+    createAnimationUniforms,
+    setShaderAnimation,
+    updateAnimationProgress,
+    setGestureGlow,
+    setGlowScale,
+    setCutout
+} from './cores/InstancedAnimationCore.js';
+import {
+    NOISE_GLSL,
+    WATER_COLOR_GLSL,
+    WATER_FRAGMENT_CORE,
+    WATER_ARC_FOAM_GLSL,
+    WATER_DRIP_ANTICIPATION_GLSL,
+    WATER_FLOOR_AND_DISCARD_GLSL,
+    lerp3,
+    WATER_DEFAULTS
+} from './cores/WaterShaderCore.js';
+
+// GLSL code is imported from WaterShaderCore.js
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// INSTANCED VERTEX SHADER
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const VERTEX_SHADER = /* glsl */`
+// Standard uniforms
+uniform float uGlobalTime;
+uniform float uFadeInDuration;
+uniform float uFadeOutDuration;
+uniform float uTurbulence;
+uniform float uDisplacementStrength;
+uniform float uFlowSpeed;
+
+// Arc visibility uniforms (for vortex effects)
+uniform int uAnimationType;      // 0=none, 1=rotating arc
+uniform float uArcWidth;         // Arc width in radians
+uniform float uArcSpeed;         // Rotations per gesture
+uniform int uArcCount;           // Number of visible arcs
+uniform float uGestureProgress;  // 0-1 gesture progress
+
+// Per-instance attributes
+${INSTANCED_ATTRIBUTES_VERTEX}
+
+// Varyings to fragment
+varying vec3 vPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vViewDir;
+varying float vDisplacement;
+varying float vNoiseValue;
+varying float vRandomSeed;
+varying float vArcVisibility;  // 0-1 visibility based on arc position
+
+${NOISE_GLSL}
+
+void main() {
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // INSTANCING: Calculate local time and fade
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    vLocalTime = uGlobalTime - aSpawnTime;
+
+    // Trail instances have delayed local time
+    float trailDelay = max(0.0, aTrailIndex) * 0.05;
+    float effectiveLocalTime = max(0.0, vLocalTime - trailDelay);
+
+    // Fade in/out controlled by aInstanceOpacity from AnimationState
+    float fadeIn = 1.0;
+    float fadeOut = 1.0;
+    if (aExitTime > 0.0) {
+        float exitElapsed = uGlobalTime - aExitTime;
+        fadeOut = 1.0 - clamp(exitElapsed / uFadeOutDuration, 0.0, 1.0);
+    }
+
+    // Trail fade
+    vTrailFade = aTrailIndex < 0.0 ? 1.0 : (1.0 - (aTrailIndex + 1.0) * 0.25);
+    vInstanceAlpha = fadeOut * aInstanceOpacity * vTrailFade;
+
+    // Pass velocity
+    vVelocity = aVelocity;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MODEL SELECTION: Scale non-selected models to zero
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    float modelMatch = step(abs(aModelIndex - aSelectedModel), 0.5);
+    vec3 selectedPosition = position * modelMatch;
+    vec3 selectedNormal = normal * modelMatch;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TRAIL OFFSET: Position trails behind main along velocity
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    vec3 trailOffset = vec3(0.0);
+    if (aTrailIndex >= 0.0 && length(aVelocity.xyz) > 0.001) {
+        float trailDistance = (aTrailIndex + 1.0) * 0.05;
+        trailOffset = -normalize(aVelocity.xyz) * trailDistance * aVelocity.w;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // WATER DISPLACEMENT (using local time)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    vPosition = selectedPosition;
+    vRandomSeed = aRandomSeed;
+
+    // Animated noise for fluid wobble
+    float instanceVariation = aRandomSeed * 0.3;
+    vec3 noisePos = selectedPosition * 2.5 + vec3(
+        effectiveLocalTime * uFlowSpeed * 0.002 + instanceVariation,
+        effectiveLocalTime * uFlowSpeed * 0.001,
+        effectiveLocalTime * uFlowSpeed * 0.0015 + instanceVariation
+    );
+    float noiseValue = fbm4(noisePos);
+    vNoiseValue = noiseValue * 0.5 + 0.5;
+
+    // Position-based variation for asymmetric wobble
+    float posVariation = snoise(selectedPosition * 3.0 + vec3(aRandomSeed * 10.0)) * 0.4 + 0.8;
+
+    // Primary displacement along normal (fluid bulging)
+    float fadeFactor = fadeOut * aInstanceOpacity;
+    float baseDisplacement = noiseValue * uDisplacementStrength * (0.4 + uTurbulence * 0.6) * posVariation;
+
+    vec3 displaced = selectedPosition + selectedNormal * baseDisplacement * fadeFactor;
+
+    // Secondary wobble - perpendicular fluid motion
+    vec3 perpNoise = selectedPosition * 2.0 + vec3(
+        effectiveLocalTime * uFlowSpeed * 0.001,
+        effectiveLocalTime * uFlowSpeed * 0.0008,
+        0.0
+    );
+    float wobbleX = snoise(perpNoise + vec3(50.0, 0.0, 0.0)) * uDisplacementStrength * uTurbulence * 0.5 * fadeFactor;
+    float wobbleY = snoise(perpNoise + vec3(0.0, 50.0, 0.0)) * uDisplacementStrength * uTurbulence * 0.3 * fadeFactor;
+    float wobbleZ = snoise(perpNoise + vec3(0.0, 0.0, 50.0)) * uDisplacementStrength * uTurbulence * 0.5 * fadeFactor;
+    displaced.x += wobbleX;
+    displaced.y += wobbleY;
+    displaced.z += wobbleZ;
+
+    // Apply trail offset
+    displaced += trailOffset;
+
+    vDisplacement = baseDisplacement;
+
+    // Transform normal with instance matrix
+    vNormal = normalMatrix * mat3(instanceMatrix) * selectedNormal;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Apply instance matrix for per-instance transforms
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec4 instancePosition = instanceMatrix * vec4(displaced, 1.0);
+
+    vec4 worldPos = modelMatrix * instancePosition;
+    vWorldPosition = worldPos.xyz;
+    vViewDir = normalize(cameraPosition - worldPos.xyz);
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ARC VISIBILITY (for vortex ring effects)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vArcVisibility = 1.0;
+    if (uAnimationType == 1) {
+        // Calculate angle of this vertex in local XZ plane
+        float vertexAngle = atan(selectedPosition.z, selectedPosition.x);
+
+        // Arc center rotates based on gesture progress + per-instance phase offset
+        // aRandomSeed stores the arc phase (rotationOffset) for vortex effects
+        float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + aRandomSeed;
+
+        // Calculate arc visibility
+        float halfWidth = uArcWidth * 3.14159;  // Convert to radians
+        float arcSpacing = 6.28318 / float(max(1, uArcCount));
+
+        float maxVis = 0.0;
+        for (int i = 0; i < 4; i++) {
+            if (i >= uArcCount) break;
+            float thisArcAngle = arcAngle + float(i) * arcSpacing;
+
+            // Distance from vertex angle to arc center (wrapping around 2PI)
+            float angleDiff = vertexAngle - thisArcAngle;
+            angleDiff = mod(angleDiff + 3.14159, 6.28318) - 3.14159;  // Wrap to -PI to PI
+
+            // Smooth visibility falloff at arc edges
+            float vis = 1.0 - smoothstep(halfWidth * 0.7, halfWidth, abs(angleDiff));
+            maxVis = max(maxVis, vis);
+        }
+        vArcVisibility = maxVis;
+    }
+
+    gl_Position = projectionMatrix * modelViewMatrix * instancePosition;
+}
+`;
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// INSTANCED FRAGMENT SHADER
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const FRAGMENT_SHADER = /* glsl */`
+uniform float uGlobalTime;
+uniform float uTurbulence;
+uniform float uIntensity;
+uniform float uOpacity;
+uniform float uFlowSpeed;
+uniform float uNoiseScale;
+uniform float uEdgeFade;
+uniform float uGlowScale;
+uniform float uBloomThreshold;  // Mascot-specific bloom threshold for compression
+// Two-layer composable cutout system (shared across all element types)
+uniform float uCutoutStrength;
+uniform float uCutoutPhase;
+uniform int uCutoutPattern1;
+uniform float uCutoutScale1;
+uniform float uCutoutWeight1;
+uniform int uCutoutPattern2;
+uniform float uCutoutScale2;
+uniform float uCutoutWeight2;
+uniform int uCutoutBlend;
+uniform vec3 uTint;
+
+// Arc visibility uniforms
+uniform int uAnimationType;
+
+// Instancing varyings
+${INSTANCED_ATTRIBUTES_FRAGMENT}
+
+varying vec3 vPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vViewDir;
+varying float vDisplacement;
+varying float vNoiseValue;
+varying float vRandomSeed;
+varying float vArcVisibility;
+
+${NOISE_GLSL}
+${WATER_COLOR_GLSL}
+${CUTOUT_PATTERN_FUNC_GLSL}
+
+void main() {
+    // Early discard for fully faded instances
+    if (vInstanceAlpha < 0.01) discard;
+
+    // Use local time for animation
+    float localTime = vLocalTime;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // CORE WATER EFFECTS (from WaterShaderCore)
+    // Includes: patterns, caustics, fresnel, subsurface, specular, depth variation
+    // ═══════════════════════════════════════════════════════════════════════════════
+    ${WATER_FRAGMENT_CORE}
+
+    // Scale color by instance opacity
+    color *= vInstanceAlpha;
+
+    // Apply instance alpha
+    alpha *= vInstanceAlpha;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ARC VISIBILITY (for vortex effects)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    if (uAnimationType == 1) {
+        // Apply arc foam effect at edges
+        ${WATER_ARC_FOAM_GLSL}
+
+        // Apply arc visibility
+        alpha *= vArcVisibility;
+        // Fade color to avoid dark artifacts at edge
+        color *= mix(0.3, 1.0, vArcVisibility);
+        // Discard fully invisible fragments
+        if (vArcVisibility < 0.05) discard;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // CUTOUT EFFECT (shared pattern system from InstancedAnimationCore)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    ${CUTOUT_GLSL}
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // DRIP ANTICIPATION (surface tension bright spots)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    ${WATER_DRIP_ANTICIPATION_GLSL}
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FINAL OUTPUT
+    // ═══════════════════════════════════════════════════════════════════════════════
+    ${WATER_FLOOR_AND_DISCARD_GLSL}
+
+    gl_FragColor = vec4(color, alpha);
+}
+`;
+
+// Helper functions and defaults are imported from WaterShaderCore.js
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// MATERIAL FACTORY
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Create an instanced procedural water material
+ *
+ * @param {Object} options - Configuration options
+ * @param {number} [options.turbulence=0.5] - Water turbulence (0=calm, 0.5=flow, 1=storm)
+ * @param {number} [options.intensity=1.0] - Brightness multiplier
+ * @param {number} [options.opacity=0.85] - Base opacity
+ * @param {number} [options.displacementStrength=0.08] - Vertex displacement amount
+ * @param {number} [options.flowSpeed=1.0] - Flow animation speed
+ * @param {number} [options.noiseScale=3.0] - Noise detail level
+ * @param {number} [options.edgeFade=0.15] - Soft edge fade distance
+ * @param {number} [options.glowScale=1.0] - Scale for additive glow effects (0=off, 1=full)
+ * @param {THREE.Color|number} [options.tint=0xffffff] - Color tint
+ * @param {number} [options.fadeInDuration=0.3] - Spawn fade duration
+ * @param {number} [options.fadeOutDuration=0.5] - Exit fade duration
+ * @returns {THREE.ShaderMaterial}
+ */
+export function createInstancedWaterMaterial(options = {}) {
+    const {
+        turbulence = WATER_DEFAULTS.turbulence,
+        intensity = null,
+        opacity = WATER_DEFAULTS.opacity,
+        displacementStrength = null,
+        flowSpeed = null,
+        noiseScale = WATER_DEFAULTS.noiseScale,
+        edgeFade = WATER_DEFAULTS.edgeFade,
+        glowScale = WATER_DEFAULTS.glowScale,
+        tint = 0xffffff,
+        fadeInDuration = WATER_DEFAULTS.fadeInDuration,
+        fadeOutDuration = WATER_DEFAULTS.fadeOutDuration
+    } = options;
+
+    // Derive values from turbulence if not explicitly set
+    const finalIntensity = intensity ?? lerp3(0.8, 1.0, 1.2, turbulence);
+    const finalDisplacement = displacementStrength ?? lerp3(0.06, 0.1, 0.15, turbulence);
+    const finalFlowSpeed = flowSpeed ?? lerp3(0.8, 1.5, 3.0, turbulence);
+
+    // Convert tint to THREE.Color
+    const tintColor = tint instanceof THREE.Color ? tint : new THREE.Color(tint);
+
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            // Instancing uniforms
+            uGlobalTime: { value: 0 },
+            uFadeInDuration: { value: fadeInDuration },
+            uFadeOutDuration: { value: fadeOutDuration },
+            // Animation uniforms (shared across all elements)
+            ...createAnimationUniforms(),
+            // Water uniforms
+            uTurbulence: { value: turbulence },
+            uIntensity: { value: finalIntensity },
+            uOpacity: { value: opacity },
+            uDisplacementStrength: { value: finalDisplacement },
+            uFlowSpeed: { value: finalFlowSpeed },
+            uNoiseScale: { value: noiseScale },
+            uEdgeFade: { value: edgeFade },
+            uGlowScale: { value: glowScale },
+            uBloomThreshold: { value: 0.5 },  // Mascot bloom threshold (0.35 crystal, 0.85 moon)
+            // Two-layer cutout uniforms (shared system)
+            uCutoutStrength: { value: 0.0 },
+            uCutoutPhase: { value: 0.0 },
+            uCutoutPattern1: { value: -1 },   // Disabled by default
+            uCutoutScale1: { value: 1.0 },
+            uCutoutWeight1: { value: 1.0 },
+            uCutoutPattern2: { value: -1 },   // Disabled
+            uCutoutScale2: { value: 1.0 },
+            uCutoutWeight2: { value: 1.0 },
+            uCutoutBlend: { value: 0 },       // MULTIPLY
+            uTint: { value: tintColor }
+        },
+        vertexShader: VERTEX_SHADER,
+        fragmentShader: FRAGMENT_SHADER,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+
+    material.userData.turbulence = turbulence;
+    material.userData.elementalType = 'water';
+    material.userData.isProcedural = true;
+    material.userData.isInstanced = true;
+
+    return material;
+}
+
+/**
+ * Update the global time uniform for instanced water material
+ * Also handles gesture progress and glow ramping via shared animation system
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} time - Current global time in seconds
+ * @param {number} [gestureProgress=0] - Gesture progress 0-1 (for arc animation)
+ */
+export function updateInstancedWaterMaterial(material, time, gestureProgress = 0) {
+    if (material?.uniforms?.uGlobalTime) {
+        material.uniforms.uGlobalTime.value = time;
+    }
+    // Use shared animation system for gesture progress and glow ramping
+    updateAnimationProgress(material, gestureProgress);
+}
+
+/**
+ * Set turbulence on existing instanced water material
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} turbulence - New turbulence (0-1)
+ */
+export function setInstancedWaterTurbulence(material, turbulence) {
+    if (!material?.uniforms) return;
+
+    material.uniforms.uTurbulence.value = turbulence;
+    material.uniforms.uIntensity.value = lerp3(0.8, 1.0, 1.2, turbulence);
+    material.uniforms.uDisplacementStrength.value = lerp3(0.06, 0.1, 0.15, turbulence);
+    material.uniforms.uFlowSpeed.value = lerp3(0.8, 1.5, 3.0, turbulence);
+    material.userData.turbulence = turbulence;
+}
+
+/**
+ * Set tint color on existing instanced water material
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {THREE.Color|number} color - New tint color
+ */
+export function setInstancedWaterTint(material, color) {
+    if (!material?.uniforms?.uTint) return;
+
+    const tintColor = color instanceof THREE.Color ? color : new THREE.Color(color);
+    material.uniforms.uTint.value.copy(tintColor);
+}
+
+/**
+ * Set glow scale for additive glow effects (rim, inner glow, bloom hints)
+ * Use lower values (0.3-0.5) for crystal mascot, higher (1.0+) for moon/meditation
+ * Convenience wrapper around shared setGlowScale from InstancedAnimationCore
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} scale - Glow scale (0=off, 1=full, >1=bloom-heavy)
+ */
+export function setInstancedWaterGlowScale(material, scale) {
+    setGlowScale(material, scale);
+}
+
+/**
+ * Configure gesture-driven glow ramping for water effects.
+ * Convenience wrapper around shared setGestureGlow from InstancedAnimationCore
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {Object} config - Glow configuration (see InstancedAnimationCore.setGestureGlow)
+ */
+export function setInstancedWaterGestureGlow(material, config) {
+    setGestureGlow(material, config);
+}
+
+/**
+ * Set the bloom threshold for brightness compression.
+ * Should match the mascot's bloom threshold to prevent blowout.
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} threshold - Bloom threshold (0.35 for crystal/heart/rough, 0.85 for moon/star)
+ */
+export function setInstancedWaterBloomThreshold(material, threshold) {
+    if (material?.uniforms?.uBloomThreshold) {
+        material.uniforms.uBloomThreshold.value = threshold;
+    }
+}
+
+/**
+ * Configure cutout effect for water elements.
+ * Uses the shared cutout system from InstancedAnimationCore.
+ *
+ * @example
+ * // Simple: just set strength (uses default CELLULAR_STREAKS pattern)
+ * setInstancedWaterCutout(material, 0.8);
+ *
+ * @example
+ * // Waves pattern for interference effects
+ * setInstancedWaterCutout(material, { strength: 0.7, pattern: CUTOUT_PATTERNS.WAVES });
+ *
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number|Object} config - Cutout strength (0-1) or config object
+ */
+export function setInstancedWaterCutout(material, config) {
+    setCutout(material, config);
+}
+
+/**
+ * Configure arc visibility animation for vortex effects
+ * Now uses the shared animation system from InstancedAnimationCore.
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {Object} config - Animation config (see setShaderAnimation)
+ */
+export const setInstancedWaterArcAnimation = setShaderAnimation;
+
+// Re-export animation types and shared functions for convenience
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
+
+export default {
+    createInstancedWaterMaterial,
+    updateInstancedWaterMaterial,
+    setInstancedWaterTurbulence,
+    setInstancedWaterTint,
+    setInstancedWaterGlowScale,
+    setInstancedWaterGestureGlow,
+    setInstancedWaterBloomThreshold,
+    setInstancedWaterCutout,
+    setInstancedWaterArcAnimation,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND
+};
+
+// Note: Water element is registered in ElementRegistrations.js to avoid
+// circular dependency issues with the bundler.

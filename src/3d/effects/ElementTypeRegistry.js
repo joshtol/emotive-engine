@@ -126,29 +126,4 @@ export const ElementTypeRegistry = {
     }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// FIRE ELEMENT REGISTRATION
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-import {
-    createInstancedFireMaterial,
-    updateInstancedFireMaterial,
-    setInstancedFireArcAnimation
-} from '../materials/InstancedFireMaterial.js';
-
-ElementTypeRegistry.register('fire', {
-    basePath: 'models/Elements/Fire/',
-    models: [
-        'flame-wisp.glb',
-        'flame-tongue.glb',
-        'ember-cluster.glb',
-        'fire-burst.glb',
-        'flame-ring.glb'
-    ],
-    createMaterial: createInstancedFireMaterial,
-    updateMaterial: updateInstancedFireMaterial,
-    setShaderAnimation: setInstancedFireArcAnimation,
-    scaleMultiplier: 1.5
-});
-
 export default ElementTypeRegistry;

@@ -3212,6 +3212,18 @@ export class Core3DManager {
         const bloomTransitionSpeed = morphState.isTransitioning ? 0.3 : 0.1;
         this.renderer.updateBloom(effectiveGlowIntensity, bloomTransitionSpeed, this.geometryType);
 
+        // Update element material bloom thresholds to match mascot's bloom settings
+        // This prevents water/fire etc from blowing out on low-threshold geometries (crystal/heart)
+        if (this.elementSpawner) {
+            let elementBloomThreshold = 0.85;  // Default for moon/star/sphere
+            if (this.geometryType === 'sun') {
+                elementBloomThreshold = 0.3;
+            } else if (this.geometryType === 'crystal' || this.geometryType === 'rough' || this.geometryType === 'heart') {
+                elementBloomThreshold = 0.35;
+            }
+            this.elementSpawner.setElementBloomThreshold('water', elementBloomThreshold);
+        }
+
         // Update isolated glow layer for gesture effects (glow/flash)
         // This is a separate screen-space effect that doesn't affect baseline appearance
         if (this.glowBoost > 0 || (this.renderer.glowLayer && this.renderer.glowLayer.isActive())) {

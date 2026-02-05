@@ -75,6 +75,12 @@ const BURN_CONFIG = {
                 scaleSmoothing: 0.08,
                 geometryStability: true
             },
+            // Gesture glow: ramps embers/edge glow from subtle to intense
+            gestureGlow: {
+                baseGlow: 0.8,      // Start slightly dimmed
+                peakGlow: 2.5,      // Peak intensity at end
+                curve: 'easeIn'     // Slow build, dramatic peak
+            },
             parameterAnimation: {
                 temperature: {
                     start: 0.4,

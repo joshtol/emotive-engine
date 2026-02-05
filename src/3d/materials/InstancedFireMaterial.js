@@ -36,6 +36,20 @@ import {
     deriveFireParameters,
     FIRE_DEFAULTS
 } from './cores/FireShaderCore.js';
+import {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_PATTERN_FUNC_GLSL,
+    CUTOUT_GLSL,
+    ANIMATION_UNIFORMS_FRAGMENT,
+    createAnimationUniforms,
+    setShaderAnimation,
+    updateAnimationProgress,
+    setGestureGlow,
+    setGlowScale,
+    setCutout
+} from './cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // INSTANCED VERTEX SHADER
@@ -251,9 +265,21 @@ uniform float uEdgeFade;
 uniform float uEdgeSoftness;
 uniform float uEmberDensity;
 uniform float uEmberBrightness;
+uniform float uGlowScale;
 
 // Arc visibility uniforms
 uniform int uAnimationType;
+
+// Two-layer composable cutout system (shared across all element types)
+uniform float uCutoutStrength;
+uniform float uCutoutPhase;
+uniform int uCutoutPattern1;
+uniform float uCutoutScale1;
+uniform float uCutoutWeight1;
+uniform int uCutoutPattern2;
+uniform float uCutoutScale2;
+uniform float uCutoutWeight2;
+uniform int uCutoutBlend;
 
 // Instancing varyings
 ${INSTANCED_ATTRIBUTES_FRAGMENT}
@@ -269,6 +295,7 @@ varying float vRandomSeed;
 
 ${NOISE_GLSL}
 ${FIRE_COLOR_GLSL}
+${CUTOUT_PATTERN_FUNC_GLSL}
 
 void main() {
     // Early discard for fully faded instances
@@ -343,7 +370,7 @@ void main() {
     color *= uIntensity * (0.7 + localIntensity * 0.3);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // EMBER/SPARK GENERATION
+    // EMBER/SPARK GENERATION (scaled by uGlowScale)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     if (uEmberDensity > 0.01) {
@@ -361,9 +388,16 @@ void main() {
         float emberFlicker = 0.7 + 0.3 * snoise(vec3(localTime * 0.02, emberPos.xy));
         embers *= emberFlicker;
 
-        // Add white-hot ember color
-        color += vec3(1.0, 0.9, 0.7) * embers * uEmberBrightness * uIntensity;
+        // Add white-hot ember color (scaled by uGlowScale for gesture glow ramping)
+        color += vec3(1.0, 0.9, 0.7) * embers * uEmberBrightness * uIntensity * uGlowScale;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EDGE GLOW (scaled by uGlowScale)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    // Fresnel edge glow for ethereal effect
+    color += softFresnel * vec3(0.8, 0.6, 0.3) * uIntensity * 0.2 * uGlowScale;
 
     // Scale color by instance opacity for smooth fade
     color *= vInstanceAlpha;
@@ -404,6 +438,9 @@ void main() {
 
     // Shared floor color and discard logic from FireShaderCore
     ${FIRE_FLOOR_AND_DISCARD_GLSL}
+
+    // Shared cutout system from InstancedAnimationCore
+    ${CUTOUT_GLSL}
 
     gl_FragColor = vec4(color, alpha);
 }
@@ -472,13 +509,8 @@ export function createInstancedFireMaterial(options = {}) {
             uGlobalTime: { value: 0 },
             uFadeInDuration: { value: fadeInDuration },
             uFadeOutDuration: { value: fadeOutDuration },
-            // Arc visibility uniforms (for vortex effects)
-            uAnimationType: { value: 0 },      // 0=none, 1=rotating arc
-            uArcWidth: { value: 0.5 },         // Arc width (0.5 ≈ 29% visible)
-            uArcSpeed: { value: 1.0 },         // 1 rotation per gesture
-            uArcCount: { value: 1 },           // 1 arc per ring
-            uGestureProgress: { value: 0.0 },  // 0-1 gesture progress
-            // Note: Arc phase is now a per-instance attribute (aArcPhase), not a uniform
+            // Animation uniforms (shared across all elements)
+            ...createAnimationUniforms(),
             // Fire uniforms
             uTemperature: { value: temperature },
             uIntensity: { value: finalIntensity },
@@ -514,6 +546,7 @@ export function createInstancedFireMaterial(options = {}) {
 
 /**
  * Update the global time uniform for instanced fire material
+ * Also handles gesture progress and glow ramping via shared animation system
  * @param {THREE.ShaderMaterial} material - Instanced fire material
  * @param {number} time - Current global time in seconds
  * @param {number} [gestureProgress=0] - Gesture progress 0-1 (for arc animation)
@@ -522,37 +555,18 @@ export function updateInstancedFireMaterial(material, time, gestureProgress = 0)
     if (material?.uniforms?.uGlobalTime) {
         material.uniforms.uGlobalTime.value = time;
     }
-    if (material?.uniforms?.uGestureProgress) {
-        material.uniforms.uGestureProgress.value = gestureProgress;
-    }
+    // Use shared animation system for gesture progress and glow ramping
+    updateAnimationProgress(material, gestureProgress);
 }
 
 /**
- * Configure arc visibility animation for vortex effects
- * Note: Arc phase is now a per-instance attribute (aArcPhase), set via ElementInstancePool.
- * Each ring in a formation gets its own arc phase based on rotationOffset.
+ * Configure shader animation for fire elements.
+ * Uses the shared animation system from InstancedAnimationCore.
+ *
  * @param {THREE.ShaderMaterial} material - Instanced fire material
- * @param {Object} config - Arc animation config
- * @param {number} [config.type=1] - Animation type (0=none, 1=rotating arc)
- * @param {number} [config.arcWidth=0.5] - Arc width (0.5 ≈ 29% of ring visible)
- * @param {number} [config.arcSpeed=1.0] - Rotations per gesture
- * @param {number} [config.arcCount=1] - Number of visible arcs
+ * @param {Object} config - Animation config (see InstancedAnimationCore.setShaderAnimation)
  */
-export function setInstancedFireArcAnimation(material, config = {}) {
-    if (!material?.uniforms) return;
-
-    const {
-        type = 1,
-        arcWidth = 0.5,
-        arcSpeed = 1.0,
-        arcCount = 1
-    } = config;
-
-    material.uniforms.uAnimationType.value = type;
-    material.uniforms.uArcWidth.value = arcWidth;
-    material.uniforms.uArcSpeed.value = arcSpeed;
-    material.uniforms.uArcCount.value = arcCount;
-}
+export const setInstancedFireArcAnimation = setShaderAnimation;
 
 /**
  * Set temperature on existing instanced fire material
@@ -573,9 +587,70 @@ export function setInstancedFireTemperature(material, temperature) {
     material.userData.temperature = temperature;
 }
 
+/**
+ * Set glow scale for additive glow effects (embers, edge glow)
+ * Convenience wrapper around shared setGlowScale from InstancedAnimationCore
+ * @param {THREE.ShaderMaterial} material - Instanced fire material
+ * @param {number} scale - Glow scale (0=off, 1=normal, >1=bloom)
+ */
+export function setInstancedFireGlowScale(material, scale) {
+    setGlowScale(material, scale);
+}
+
+/**
+ * Configure gesture-driven glow ramping for fire effects.
+ * Convenience wrapper around shared setGestureGlow from InstancedAnimationCore
+ *
+ * @example
+ * // Flash on gesture onset (extrovert fire)
+ * setInstancedFireGestureGlow(material, { baseGlow: 0.3, peakGlow: 1.5, curve: 'easeOut' });
+ *
+ * @example
+ * // Extinguish effect (fire dies down)
+ * setInstancedFireGestureGlow(material, { baseGlow: 1.2, peakGlow: 0.0, curve: 'easeIn' });
+ *
+ * @param {THREE.ShaderMaterial} material - Instanced fire material
+ * @param {Object} config - Glow configuration (see InstancedAnimationCore.setGestureGlow)
+ */
+export function setInstancedFireGestureGlow(material, config) {
+    setGestureGlow(material, config);
+}
+
+/**
+ * Configure cutout effect for fire elements.
+ * Convenience wrapper around shared setCutout from InstancedAnimationCore.
+ *
+ * @example
+ * // Embers cutout pattern (recommended for fire)
+ * setInstancedFireCutout(material, { strength: 0.8, pattern: CUTOUT_PATTERNS.EMBERS });
+ *
+ * @example
+ * // Simple strength only
+ * setInstancedFireCutout(material, 0.6);
+ *
+ * @param {THREE.ShaderMaterial} material - Instanced fire material
+ * @param {number|Object} config - Cutout strength (0-1) or config object
+ */
+export function setInstancedFireCutout(material, config) {
+    setCutout(material, config);
+}
+
+// Re-export animation types and shared functions for convenience
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
+
 export default {
     createInstancedFireMaterial,
     updateInstancedFireMaterial,
     setInstancedFireTemperature,
-    setInstancedFireArcAnimation
+    setInstancedFireGlowScale,
+    setInstancedFireGestureGlow,
+    setInstancedFireCutout,
+    setInstancedFireArcAnimation,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND
 };

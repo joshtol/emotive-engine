@@ -1,52 +1,52 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Firecrown Gesture
+ *    ●●  ENGINE - Watercrown Gesture
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Firecrown gesture - majestic flame crown above the head
+ * @fileoverview Watercrown gesture - majestic water crown above the head
  * @author Emotive Engine Team
- * @module gestures/destruction/elemental/firecrown
+ * @module gestures/destruction/elemental/watercrown
  * @complexity ⭐⭐ Intermediate
  *
  * VISUAL DIAGRAM:
  *         ╭───────╮
- *        (  🔥🔥🔥  )    ← Horizontal ring spinning above head
+ *        (  💧💧💧  )    ← Horizontal ring spinning above head
  *         ╰───────╯
  *            ★           ← Mascot
  *           /|\
  *
  * FEATURES:
- * - Single horizontal flame ring anchored at head
+ * - Single horizontal splash ring anchored at head
  * - Slow majestic rotation (1 rotation per gesture)
  * - Gentle bob animation for floating effect
- * - Regal warm-gold color temperature
+ * - Regal cool-blue color
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
- * - Royal/majestic effects
+ * - Royal/majestic water effects
  * - Achievement celebrations
- * - Power-up indicators
- * - Divine/blessed states
+ * - Water mastery indicators
+ * - Blessed/divine states
  */
 
-import { buildFireEffectGesture } from './fireEffectFactory.js';
+import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
- * Firecrown gesture configuration
- * Majestic flame crown hovering above the head
+ * Watercrown gesture configuration
+ * Majestic water crown hovering above the head
  */
-const FIRECROWN_CONFIG = {
-    name: 'firecrown',
+const WATERCROWN_CONFIG = {
+    name: 'watercrown',
     emoji: '👑',
     type: 'blending',
-    description: 'Majestic flame crown above the head',
+    description: 'Majestic water crown above the head',
     duration: 3000,
     beats: 4,
     intensity: 1.0,
-    category: 'radiating',
-    temperature: 0.65,  // Warm gold
+    category: 'ambient',
+    turbulence: 0.2,
 
     // 3D Element spawning - anchored crown ring
     spawnMode: {
@@ -61,8 +61,8 @@ const FIRECROWN_CONFIG = {
             }
         },
         count: 1,
-        scale: 1.2,
-        models: ['flame-ring'],
+        scale: 1.5,
+        models: ['splash-ring'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.75,
@@ -81,45 +81,35 @@ const FIRECROWN_CONFIG = {
                 scaleSmoothing: 0.1,
                 geometryStability: true
             },
-            // Cutout: creates burning ember holes for organic flame look
-            // Pattern 5 = EMBERS (rising heat distortion with height bias)
+            // Cutout: creates cellular holes and flow streaks for organic look
+            // Two-layer composable: CELLULAR (0) + STREAKS (1) multiplied together
             cutout: {
-                strength: 0.8,
-                pattern: 5,     // EMBERS pattern
-                scale: 1.2
+                strength: 1.0,
+                primary: { pattern: 0, scale: 1.0, weight: 1.0 },    // CELLULAR
+                secondary: { pattern: 1, scale: 1.0, weight: 0.8 },  // STREAKS
+                blend: 'multiply'
             },
             parameterAnimation: {
-                temperature: {
-                    start: 0.5,
-                    peak: 0.7,
-                    end: 0.6,
+                turbulence: {
+                    start: 0.1,
+                    peak: 0.25,
+                    end: 0.15,
                     curve: 'bell'
                 }
-            },
-            flicker: {
-                intensity: 0.15,
-                rate: 8,
-                pattern: 'sine'
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 2,
                 easing: 'easeInOut'
             },
-            emissive: {
-                min: 1.2,
-                max: 2.0,
-                frequency: 3,
-                pattern: 'sine'
-            },
-            // Slow majestic rotation (Z axis because ring is flat - local Z points up)
+            // Slow majestic rotation (Z axis because ring is flat)
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             scaleVariance: 0,
             lifetimeVariance: 0,
-            blending: 'additive',
+            blending: 'normal',
             renderOrder: 15,
             modelOverrides: {
-                'flame-ring': {
+                'splash-ring': {
                     shaderAnimation: {
                         type: 1,
                         arcWidth: 0.9,    // Wide arcs for full crown
@@ -131,27 +121,28 @@ const FIRECROWN_CONFIG = {
         }
     },
 
-    // Mesh effects - warm golden glow
-    flickerFrequency: 6,
-    flickerAmplitude: 0.006,
-    flickerDecay: 0.25,
-    glowColor: [1.0, 0.7, 0.3],       // Warm gold
+    // Wobble - minimal for regal effect
+    wobbleFrequency: 1.5,
+    wobbleAmplitude: 0.005,
+    wobbleDecay: 0.3,
+    // Scale - gentle breathing
+    scaleWobble: 0.008,
+    scaleFrequency: 2,
+    scaleGrowth: 0.01,
+    // Glow - cool regal blue
+    glowColor: [0.3, 0.6, 1.0],
     glowIntensityMin: 0.9,
     glowIntensityMax: 1.4,
-    glowFlickerRate: 5,
-    scaleVibration: 0.008,
-    scaleFrequency: 3,
-    scaleGrowth: 0.01,
-    rotationEffect: false
+    glowPulseRate: 3
 };
 
 /**
- * Firecrown gesture - majestic flame crown.
+ * Watercrown gesture - majestic water crown.
  *
  * Uses anchor spawn mode at head landmark:
- * - Single flame-ring model hovering above head
+ * - Single splash-ring model hovering above head
  * - Horizontal orientation (flat crown)
- * - Slow Y-axis rotation for regal spinning
+ * - Slow Z-axis rotation for regal spinning
  * - Gentle bob for floating effect
  */
-export default buildFireEffectGesture(FIRECROWN_CONFIG);
+export default buildWaterEffectGesture(WATERCROWN_CONFIG);

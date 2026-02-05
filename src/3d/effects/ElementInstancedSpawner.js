@@ -26,7 +26,8 @@ import { ElementInstancePool, SLOTS_PER_ELEMENT } from './ElementInstancePool.js
 import { MergedGeometryBuilder } from './MergedGeometryBuilder.js';
 
 // Element type registry - decouples spawner from specific element implementations
-import { ElementTypeRegistry } from './ElementTypeRegistry.js';
+// Import from ElementRegistrations to ensure all element types are registered
+import { ElementTypeRegistry } from './ElementRegistrations.js';
 
 // Spatial reference for mascot-relative positioning
 import { MascotSpatialRef } from './MascotSpatialRef.js';
@@ -751,25 +752,42 @@ export class ElementInstancedSpawner {
 
     /**
      * Applies shader animation overrides from modelOverrides config.
+     * Also applies gestureGlow config if present in animation.
      * @param {string} elementType - Element type for material lookup
      * @param {string[]} modelNames - Model names to check for overrides
      * @param {Object} modelOverrides - Animation modelOverrides config
      * @param {Object} elementConfig - Element config from registry
+     * @param {Object} [animation] - Full animation config (may contain gestureGlow)
      * @private
      */
-    _applyShaderAnimationOverrides(elementType, modelNames, modelOverrides, elementConfig) {
-        if (!modelOverrides || !elementConfig?.setShaderAnimation) return;
-
+    _applyShaderAnimationOverrides(elementType, modelNames, modelOverrides, elementConfig, animation = null) {
         const material = this.materials.get(elementType);
         if (!material) return;
 
-        for (const modelName of modelNames) {
-            const overrides = modelOverrides[modelName];
-            if (overrides?.shaderAnimation) {
-                DEBUG && console.log(`[ElementInstancedSpawner] Applying shader animation for ${modelName}:`, overrides.shaderAnimation);
-                elementConfig.setShaderAnimation(material, overrides.shaderAnimation);
-                break;  // Apply once per spawn (all elements use same settings)
+        // Apply shader animation from modelOverrides
+        if (modelOverrides && elementConfig?.setShaderAnimation) {
+            for (const modelName of modelNames) {
+                const overrides = modelOverrides[modelName];
+                if (overrides?.shaderAnimation) {
+                    DEBUG && console.log(`[ElementInstancedSpawner] Applying shader animation for ${modelName}:`, overrides.shaderAnimation);
+                    elementConfig.setShaderAnimation(material, overrides.shaderAnimation);
+                    break;  // Apply once per spawn (all elements use same settings)
+                }
             }
+        }
+
+        // Apply gestureGlow from animation config
+        if (animation?.gestureGlow && elementConfig?.setGestureGlow) {
+            DEBUG && console.log(`[ElementInstancedSpawner] Applying gesture glow for ${elementType}:`, animation.gestureGlow);
+            elementConfig.setGestureGlow(material, animation.gestureGlow);
+        }
+
+        // Apply cutout from animation config (breaks up water shapes with holes)
+        // IMPORTANT: Always set cutout (default 0) to prevent bleeding from previous gestures
+        if (elementConfig?.setCutout) {
+            const cutoutValue = animation?.cutout !== undefined ? animation.cutout : 0;
+            DEBUG && console.log(`[ElementInstancedSpawner] Applying cutout for ${elementType}:`, cutoutValue);
+            elementConfig.setCutout(material, cutoutValue);
         }
     }
 
@@ -855,8 +873,8 @@ export class ElementInstancedSpawner {
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
 
-        // Apply shader animation settings if configured
-        this._applyShaderAnimationOverrides(elementType, axisConfig.models, modelOverrides, elementConfig);
+        // Apply shader animation settings and gesture glow if configured
+        this._applyShaderAnimationOverrides(elementType, axisConfig.models, modelOverrides, elementConfig, animation);
 
         DEBUG && console.log(`[ElementInstancedSpawner] axis-travel: ${formationElements.length} formation elements, models: ${axisConfig.models.join(', ')}`);
 
@@ -1040,8 +1058,8 @@ export class ElementInstancedSpawner {
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
 
-        // Apply shader animation settings if configured
-        this._applyShaderAnimationOverrides(elementType, anchorConfig.models, modelOverrides, elementConfig);
+        // Apply shader animation settings and gesture glow if configured
+        this._applyShaderAnimationOverrides(elementType, anchorConfig.models, modelOverrides, elementConfig, animation);
 
         DEBUG && console.log(`[ElementInstancedSpawner] anchor: landmark=${anchorConfig.landmark}, landmarkY=${anchorConfig.landmarkY.toFixed(3)}, offset=(${anchorConfig.offset.x}, ${anchorConfig.offset.y}, ${anchorConfig.offset.z}), orientation=${anchorConfig.orientation}`);
 
@@ -1134,6 +1152,13 @@ export class ElementInstancedSpawner {
         // Parse config using RadialBurstMode utility
         const burstConfig = parseRadialBurstConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
 
+        // Check for animation configuration (gesture glow, shader animations)
+        const animation = spawnMode.animation || {};
+        const modelOverrides = animation.modelOverrides || {};
+
+        // Apply shader animation settings and gesture glow if configured
+        this._applyShaderAnimationOverrides(elementType, burstConfig.models, modelOverrides, elementConfig, animation);
+
         DEBUG && console.log(`[ElementInstancedSpawner] radial-burst: count=${burstConfig.count}, startRadius=${burstConfig.startRadius}, endRadius=${burstConfig.endRadius}`);
 
         const spawnedIds = [];
@@ -1224,8 +1249,8 @@ export class ElementInstancedSpawner {
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
 
-        // Apply shader animation settings if configured
-        this._applyShaderAnimationOverrides(elementType, orbitConfig.models, modelOverrides, elementConfig);
+        // Apply shader animation settings and gesture glow if configured
+        this._applyShaderAnimationOverrides(elementType, orbitConfig.models, modelOverrides, elementConfig, animation);
 
         DEBUG && console.log(`[ElementInstancedSpawner] orbit: ${formationElements.length} elements, radius=${orbitConfig.radius}, height=${orbitConfig.height}`);
 
@@ -1348,6 +1373,13 @@ export class ElementInstancedSpawner {
 
         // Parse surface configuration using utility from SurfaceMode.js
         const surfaceConfig = parseSurfaceConfig(spawnMode);
+
+        // Check for animation configuration (gesture glow, shader animations)
+        const animation = spawnMode.animation || {};
+        const modelOverrides = animation.modelOverrides || {};
+
+        // Apply shader animation settings and gesture glow if configured
+        this._applyShaderAnimationOverrides(elementType, surfaceConfig.models, modelOverrides, elementConfig, animation);
 
         // Check for coreMesh geometry
         if (!this.coreMesh?.geometry) {
@@ -1852,6 +1884,20 @@ export class ElementInstancedSpawner {
                 // Clear from initialized set so it can be re-initialized later
                 this._initialized.delete(type);
             }
+        }
+    }
+
+    /**
+     * Sets the bloom threshold for an element type's material.
+     * Called when mascot geometry type changes to prevent bloom blowout.
+     * @param {string} elementType - Element type (e.g., 'water')
+     * @param {number} threshold - Bloom threshold (0.35 for crystal/heart/rough, 0.85 for moon/star)
+     */
+    setElementBloomThreshold(elementType, threshold) {
+        const material = this.materials.get(elementType);
+        const config = ElementTypeRegistry.get(elementType);
+        if (material && config?.setBloomThreshold) {
+            config.setBloomThreshold(material, threshold);
         }
     }
 

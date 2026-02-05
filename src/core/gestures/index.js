@@ -272,17 +272,24 @@ import {
     aura as electricAura,
     staticElectric as electricStatic
 } from './destruction/elemental/electricEffectFactory.js';
-// destruction/elemental/ - Water effect gestures (no shatter, just fluid visuals)
-import {
-    splash as waterSplash,
-    drench as waterDrench,
-    soak as waterSoak,
-    flow as waterFlow,
-    ripple as waterRipple,
-    tide as waterTide,
-    liquefy as waterLiquefy,
-    pool as waterPool
-} from './destruction/elemental/waterEffectFactory.js';
+// destruction/elemental/ - Water effect gestures (self-contained gesture files)
+import waterSplash from './destruction/elemental/watersplash.js';
+import waterDrench from './destruction/elemental/waterdrench.js';
+import waterSoak from './destruction/elemental/watersoak.js';
+import waterFlow from './destruction/elemental/waterflow.js';
+import waterRipple from './destruction/elemental/waterripple.js';
+import waterTide from './destruction/elemental/watertide.js';
+import waterLiquefy from './destruction/elemental/waterliquefy.js';
+import waterPool from './destruction/elemental/waterpool.js';
+import waterVortex from './destruction/elemental/watervortex.js';
+// destruction/elemental/ - Water effect gestures (new GPU-instanced gestures)
+import waterCrown from './destruction/elemental/watercrown.js';
+import waterDance from './destruction/elemental/waterdance.js';
+import waterDrill from './destruction/elemental/waterdrill.js';
+import waterHelix from './destruction/elemental/waterhelix.js';
+import waterMeditation from './destruction/elemental/watermeditation.js';
+import waterPillar from './destruction/elemental/waterpillar.js';
+import waterFlourish from './destruction/elemental/waterflourish.js';
 // destruction/elemental/ - Fire effect gestures (self-contained gesture files)
 import fireBurn from './destruction/elemental/burn.js';
 import fireScorch from './destruction/elemental/scorch.js';
@@ -489,6 +496,15 @@ const tide = waterTide;
 // Transform variants (becoming water)
 const liquefy = waterLiquefy;
 const poolWater = waterPool;
+const vortexWater = waterVortex;
+// Water axis-travel effects (new GPU-instanced gestures)
+const watercrown = waterCrown;
+const waterdance = waterDance;
+const waterdrill = waterDrill;
+const waterhelix = waterHelix;
+const watermeditation = waterMeditation;
+const waterpillar = waterPillar;
+const waterflourish = waterFlourish;
 // Smoke (effect-based - soft organic smoke, no angular shards)
 const smokebomb = smokeSmokebomb;
 const vanish = smokeVanish;
@@ -908,6 +924,15 @@ const TRANSFORM_GESTURES = [
     // Water - Transform (becoming water)
     liquefy,
     poolWater,
+    vortexWater,
+    // Water - Axis-travel effects (new GPU-instanced gestures)
+    watercrown,      // Majestic water crown at head
+    waterdance,      // Vertical dancing splash rings
+    waterdrill,      // Fast tight descending helix
+    waterhelix,      // DNA-style double helix
+    watermeditation, // Mandala rings with breathing pulse
+    waterpillar,     // Stacked rings rising as pillar
+    waterflourish,   // Theatrical water flourish
     // Smoke
     smokebomb,
     vanish,
@@ -1164,7 +1189,10 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Water (ambient)
         'flow', 'rippleWater', 'tide',
         // destruction/elemental/ - Water (transform)
-        'liquefy', 'poolWater',
+        'liquefy', 'poolWater', 'vortexWater',
+        // destruction/elemental/ - Water (axis-travel effects)
+        'watercrown', 'waterdance', 'waterdrill', 'waterhelix',
+        'watermeditation', 'waterpillar', 'waterflourish',
         // destruction/elemental/ - Smoke
         'smokebomb', 'vanish', 'materialize',
         // destruction/elemental/ - Fire
