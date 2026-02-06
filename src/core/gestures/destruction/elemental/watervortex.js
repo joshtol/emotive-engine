@@ -24,6 +24,8 @@
  * - Rings oriented FLAT (horizontal tornado funnel)
  * - Funnel shape: narrower at bottom, wider at top
  * - Arc visibility: portion of ring visible, sweeps around
+ * - SPIRAL + STREAKS cutout patterns for vortex motion
+ * - Trail dissolve: organic fade at ring bottoms as they rise
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -49,7 +51,7 @@ const WATER_VORTEX_CONFIG = {
     category: 'transform',
     turbulence: 0.75,
 
-    // 3D Element spawning - spiraling splash rings
+    // 3D Element spawning - spiraling splash rings with cutout patterns
     spawnMode: {
         type: 'axis-travel',
         // Axis travel: rings travel from bottom to top
@@ -85,9 +87,10 @@ const WATER_VORTEX_CONFIG = {
                 easing: 'easeOut'
             },
             exit: {
-                type: 'fade',
-                duration: 0.12,
-                easing: 'easeIn'
+                type: 'burst-fade',
+                duration: 0.15,
+                easing: 'easeIn',
+                burstScale: 1.1
             },
             // Procedural shader config
             procedural: {
@@ -101,6 +104,22 @@ const WATER_VORTEX_CONFIG = {
                     peak: 0.85,
                     end: 0.5,
                     curve: 'bell'
+                }
+            },
+            // Cutout patterns - spiral holes with streak overlay for vortex motion
+            cutout: {
+                strength: 0.5,
+                primary: { pattern: 6, scale: 1.2, weight: 1.0 },     // SPIRAL - vortex arms
+                secondary: { pattern: 1, scale: 0.8, weight: 0.6 },   // STREAKS - flow lines
+                blend: 'add',                                          // Smooth combine
+                travel: 3,                                             // SPIRAL travel mode
+                travelSpeed: 2.0,                                      // 2 rotations during gesture
+                strengthCurve: 'bell',                                 // Fade in/out
+                // Trail dissolve: organic fade at bottom as rings rise
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.4,        // Floor 0.4 units below instance center
+                    softness: 1.2        // Wide gradient for visible dissolve
                 }
             },
             pulse: {
@@ -164,5 +183,7 @@ const WATER_VORTEX_CONFIG = {
  * - Rings are FLAT (orientation: 'flat') for tornado funnel effect
  * - 120° arcOffset creates cage of water around the mascot
  * - Funnel shape expands as rings travel upward
+ * - SPIRAL cutout pattern with STREAKS overlay for dynamic vortex holes
+ * - Trail dissolve creates organic fade as rings rise
  */
 export default buildWaterEffectGesture(WATER_VORTEX_CONFIG);
