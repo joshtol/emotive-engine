@@ -88,6 +88,9 @@ export const CUTOUT_PATTERNS = {
     VORONOI: 3,           // Cracked/shattered pattern (earth, ice)
     WAVES: 4,             // Wave interference pattern (water, energy)
     EMBERS: 5,            // Burning ember holes (fire, heat)
+    SPIRAL: 6,            // Spiral arms pattern (meditation, vortex)
+    DISSOLVE: 7,          // Edge erosion inward (fade-outs)
+    CRACKS: 8,            // Branching fracture lines (shatter)
 };
 
 /**
@@ -109,6 +112,9 @@ export const CUTOUT_TRAVEL = {
     NONE: 0,              // Static cutout (default)
     ANGULAR: 1,           // Sweep around ring geometry (atan2-based)
     RADIAL: 2,            // Expand/contract from center
+    SPIRAL: 3,            // Rotate + expand simultaneously (hypnotic)
+    OSCILLATE: 4,         // Ping-pong back and forth (breathing)
+    WAVE: 5,              // Sine wave propagation (ripple)
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -168,8 +174,21 @@ uniform float uCutoutWeight2;        // Secondary pattern weight (0-1)
 // Blend mode
 uniform int uCutoutBlend;            // 0=multiply, 1=min, 2=max, 3=add
 // Travel animation (sweeps cutout around geometry)
-uniform int uCutoutTravel;           // 0=none, 1=angular, 2=radial
+uniform int uCutoutTravel;           // 0=none, 1=angular, 2=radial, 3=spiral, 4=oscillate, 5=wave
 uniform float uCutoutTravelSpeed;    // Rotations/expansions per gesture (default 1.0)
+uniform int uCutoutTravelDir;        // 0=forward, 1=reverse, 2=pingpong
+// Per-layer travel (secondary layer can have different travel)
+uniform int uCutoutTravel2;          // Travel mode for secondary layer (-1=same as primary)
+uniform float uCutoutTravelSpeed2;   // Travel speed for secondary layer
+// Strength animation
+uniform int uCutoutStrengthCurve;    // 0=constant, 1=fadeIn, 2=fadeOut, 3=bell, 4=pulse
+uniform float uCutoutFadeInDuration; // For fadeIn: fraction of gesture to reach full (0.33 = 1/3)
+uniform float uCutoutFadeOutDuration;// For fadeOut: fraction of gesture for fade (0.33 = last 1/3)
+uniform float uCutoutBellPeakAt;     // For bell: where peak occurs (0.5 = middle, 0.3 = early)
+// Trail dissolve - fades out bottom of each instance as it moves
+uniform int uTrailDissolveEnabled;   // 0=off, 1=enabled
+uniform float uTrailDissolveOffset;  // Y offset from instance position (negative = below)
+uniform float uTrailDissolveSoftness;// Gradient softness (higher = softer transition)
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -181,6 +200,8 @@ uniform float uCutoutTravelSpeed;    // Rotations/expansions per gesture (defaul
  */
 export const ANIMATION_VARYINGS = /* glsl */`
 varying float vAnimationMask;         // 0-1 visibility/intensity from animation
+varying vec3 vInstancePosition;       // Instance world position (for trail dissolve)
+varying vec3 vWorldPosition;          // Fragment world position (for trail dissolve)
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -449,6 +470,44 @@ float calcCutoutPattern(int pattern, vec3 pos, float scale, float time) {
         float emberPattern = ember1 * ember2 + heat;
         float heightBias = smoothstep(0.0, 1.0, pos.y + 0.5) * 0.3;
         return smoothstep(-0.2 - heightBias, 0.3 - heightBias, emberPattern);
+
+    } else if (pattern == 6) {
+        // SPIRAL: Spiral arms pattern (meditation, vortex)
+        float angle = atan(pos.z, pos.x);
+        float dist = length(pos.xz);
+        float spiralArms = 3.0;  // Number of spiral arms
+        float spiralTightness = 4.0 * scale;
+        float spiralPhase = angle * spiralArms + dist * spiralTightness - time * 2.0;
+        float spiral = sin(spiralPhase);
+        // Add noise for organic feel
+        float spiralNoise = snoise(scaledPos * 3.0 + vec3(time * 0.5)) * 0.3;
+        return smoothstep(-0.3, 0.4, spiral + spiralNoise);
+
+    } else if (pattern == 7) {
+        // DISSOLVE: Edge erosion inward (fade-outs)
+        // Uses noise to create eroding edge effect
+        vec3 dissolvePos = scaledPos * 5.0;
+        float noise1 = snoise(dissolvePos);
+        float noise2 = snoise(dissolvePos * 2.0 + vec3(100.0)) * 0.5;
+        float noise3 = snoise(dissolvePos * 4.0 + vec3(-100.0)) * 0.25;
+        float dissolveNoise = noise1 + noise2 + noise3;
+        // Edge distance factor - dissolve from edges
+        float edgeDist = 1.0 - length(pos.xz) * 0.5;
+        float dissolve = dissolveNoise + edgeDist * 0.5 + time * 0.3;
+        return smoothstep(-0.2, 0.4, dissolve);
+
+    } else if (pattern == 8) {
+        // CRACKS: Branching fracture lines (shatter)
+        vec3 crackPos = scaledPos * 4.0;
+        // Create multiple octaves of crack-like noise
+        float crack1 = abs(snoise(crackPos));
+        float crack2 = abs(snoise(crackPos * 2.0 + vec3(50.0))) * 0.5;
+        float crack3 = abs(snoise(crackPos * 4.0 + vec3(-50.0))) * 0.25;
+        // Cracks are thin lines (low absolute values)
+        float cracks = crack1 + crack2 + crack3;
+        // Animate crack spreading
+        float crackSpread = sin(time * 1.5) * 0.2;
+        return smoothstep(0.15 + crackSpread, 0.4, cracks);
     }
 
     return 1.0;  // Default: fully visible
@@ -480,24 +539,96 @@ export const CUTOUT_GLSL = /* glsl */`
 // TWO-LAYER COMPOSABLE CUTOUT SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
+// Declare at outer scope so element-specific foam/edge effects can access it
+float finalCutout = 1.0;
+float trailAlpha = 1.0;  // Trail dissolve alpha - available for materials to use
+
 if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
     float cutoutTime = localTime * 0.001 + uCutoutPhase;
 
-    // Apply travel offset to position for pattern sampling
+    // Apply strength curve to modulate cutout strength over gesture
+    float curvedStrength = uCutoutStrength;
+    if (uCutoutStrengthCurve == 1) {
+        // FADE_IN: Strength ramps up from 0 to full over fadeInDuration
+        // fadeInDuration=0.33 means reach full strength at 1/3 of gesture
+        float fadeProgress = uCutoutFadeInDuration > 0.01
+            ? min(1.0, uGestureProgress / uCutoutFadeInDuration)
+            : uGestureProgress;
+        curvedStrength *= fadeProgress;
+    } else if (uCutoutStrengthCurve == 2) {
+        // FADE_OUT: Strength stays full then ramps down over fadeOutDuration
+        // fadeOutDuration=0.33 means stay at full until 67%, then fade over last 33%
+        float fadeOutStart = 1.0 - uCutoutFadeOutDuration;
+        float fadeProgress = uGestureProgress < fadeOutStart
+            ? 0.0
+            : (uGestureProgress - fadeOutStart) / max(0.01, uCutoutFadeOutDuration);
+        curvedStrength *= (1.0 - fadeProgress);
+    } else if (uCutoutStrengthCurve == 3) {
+        // BELL: Strength peaks at bellPeakAt then fades
+        // bellPeakAt=0.5 is symmetric, bellPeakAt=0.3 peaks early
+        float peakAt = max(0.01, min(0.99, uCutoutBellPeakAt));
+        float bellValue;
+        if (uGestureProgress < peakAt) {
+            // Ramp up to peak
+            bellValue = uGestureProgress / peakAt;
+        } else {
+            // Ramp down from peak
+            bellValue = 1.0 - (uGestureProgress - peakAt) / (1.0 - peakAt);
+        }
+        curvedStrength *= bellValue;
+    } else if (uCutoutStrengthCurve == 4) {
+        // PULSE: Multiple pulses during gesture
+        curvedStrength *= 0.5 + 0.5 * sin(uGestureProgress * 12.566);  // 2 full pulses
+    }
+
+    // Trail dissolve is applied after finalCutout calculation (see below)
+
+    // Calculate travel progress with direction support
+    float travelProgress = uGestureProgress * uCutoutTravelSpeed;
+    if (uCutoutTravelDir == 1) {
+        // REVERSE: Run travel backwards
+        travelProgress = (1.0 - uGestureProgress) * uCutoutTravelSpeed;
+    } else if (uCutoutTravelDir == 2) {
+        // PINGPONG: Forward then reverse
+        float pingpongT = uGestureProgress * 2.0;
+        travelProgress = (pingpongT < 1.0 ? pingpongT : (2.0 - pingpongT)) * uCutoutTravelSpeed;
+    }
+
+    // Apply travel offset to position for primary pattern sampling
     vec3 travelPos = vPosition;
     if (uCutoutTravel == 1) {
-        // ANGULAR: Rotate position around Y axis based on gesture progress
-        // This makes the cutout pattern sweep around ring geometries
-        float travelAngle = uGestureProgress * uCutoutTravelSpeed * 6.28318;
+        // ANGULAR: Rotate position around Y axis
+        float travelAngle = travelProgress * 6.28318;
         float cosA = cos(travelAngle);
         float sinA = sin(travelAngle);
         travelPos.x = vPosition.x * cosA - vPosition.z * sinA;
         travelPos.z = vPosition.x * sinA + vPosition.z * cosA;
     } else if (uCutoutTravel == 2) {
-        // RADIAL: Scale position from center based on gesture progress
-        // This makes the cutout pattern expand/contract
-        float radialScale = 1.0 + (uGestureProgress * uCutoutTravelSpeed - 0.5) * 2.0;
+        // RADIAL: Scale position from center
+        float radialScale = 1.0 + (travelProgress - 0.5) * 2.0;
         travelPos.xz *= radialScale;
+    } else if (uCutoutTravel == 3) {
+        // SPIRAL: Rotate + expand simultaneously (hypnotic)
+        float spiralAngle = travelProgress * 6.28318;
+        float spiralScale = 1.0 + travelProgress * 0.5;
+        float cosA = cos(spiralAngle);
+        float sinA = sin(spiralAngle);
+        travelPos.x = (vPosition.x * cosA - vPosition.z * sinA) * spiralScale;
+        travelPos.z = (vPosition.x * sinA + vPosition.z * cosA) * spiralScale;
+    } else if (uCutoutTravel == 4) {
+        // OSCILLATE: Ping-pong back and forth (breathing)
+        float oscillateT = sin(travelProgress * 6.28318) * 0.5 + 0.5;
+        float oscillateAngle = oscillateT * 3.14159;  // Half rotation oscillation
+        float cosA = cos(oscillateAngle);
+        float sinA = sin(oscillateAngle);
+        travelPos.x = vPosition.x * cosA - vPosition.z * sinA;
+        travelPos.z = vPosition.x * sinA + vPosition.z * cosA;
+    } else if (uCutoutTravel == 5) {
+        // WAVE: Sine wave propagation (ripple)
+        float wavePhase = travelProgress * 6.28318;
+        float dist = length(vPosition.xz);
+        float waveOffset = sin(dist * 4.0 - wavePhase) * 0.3;
+        travelPos.xz *= 1.0 + waveOffset;
     }
 
     // Calculate primary pattern mask using travel-offset position
@@ -507,7 +638,48 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
     // Calculate secondary pattern mask (if enabled)
     float mask2 = 1.0;
     if (uCutoutPattern2 >= 0) {
-        mask2 = calcCutoutPattern(uCutoutPattern2, travelPos, uCutoutScale2, cutoutTime);
+        // Per-layer travel: secondary can have different travel mode
+        vec3 travelPos2 = vPosition;
+        int travel2Mode = uCutoutTravel2 < 0 ? uCutoutTravel : uCutoutTravel2;
+        float travel2Speed = uCutoutTravel2 < 0 ? uCutoutTravelSpeed : uCutoutTravelSpeed2;
+        float travel2Progress = uGestureProgress * travel2Speed;
+
+        // Apply direction to secondary travel too
+        if (uCutoutTravelDir == 1) {
+            travel2Progress = (1.0 - uGestureProgress) * travel2Speed;
+        } else if (uCutoutTravelDir == 2) {
+            float pingpongT = uGestureProgress * 2.0;
+            travel2Progress = (pingpongT < 1.0 ? pingpongT : (2.0 - pingpongT)) * travel2Speed;
+        }
+
+        if (travel2Mode == 1) {
+            float angle2 = travel2Progress * 6.28318;
+            float c2 = cos(angle2); float s2 = sin(angle2);
+            travelPos2.x = vPosition.x * c2 - vPosition.z * s2;
+            travelPos2.z = vPosition.x * s2 + vPosition.z * c2;
+        } else if (travel2Mode == 2) {
+            float scale2 = 1.0 + (travel2Progress - 0.5) * 2.0;
+            travelPos2.xz *= scale2;
+        } else if (travel2Mode == 3) {
+            float angle2 = travel2Progress * 6.28318;
+            float scale2 = 1.0 + travel2Progress * 0.5;
+            float c2 = cos(angle2); float s2 = sin(angle2);
+            travelPos2.x = (vPosition.x * c2 - vPosition.z * s2) * scale2;
+            travelPos2.z = (vPosition.x * s2 + vPosition.z * c2) * scale2;
+        } else if (travel2Mode == 4) {
+            float osc2 = sin(travel2Progress * 6.28318) * 0.5 + 0.5;
+            float angle2 = osc2 * 3.14159;
+            float c2 = cos(angle2); float s2 = sin(angle2);
+            travelPos2.x = vPosition.x * c2 - vPosition.z * s2;
+            travelPos2.z = vPosition.x * s2 + vPosition.z * c2;
+        } else if (travel2Mode == 5) {
+            float phase2 = travel2Progress * 6.28318;
+            float dist2 = length(vPosition.xz);
+            float wave2 = sin(dist2 * 4.0 - phase2) * 0.3;
+            travelPos2.xz *= 1.0 + wave2;
+        }
+
+        mask2 = calcCutoutPattern(uCutoutPattern2, travelPos2, uCutoutScale2, cutoutTime);
         mask2 = mix(1.0, mask2, uCutoutWeight2);
     }
 
@@ -527,10 +699,26 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
         cutoutMask = clamp(mask1 + mask2 - 1.0, 0.0, 1.0);
     }
 
-    // Apply overall cutout strength
-    float finalCutout = mix(1.0, cutoutMask, uCutoutStrength);
+    // Apply curved cutout strength
+    finalCutout = mix(1.0, cutoutMask, curvedStrength);
 
-    // Binary discard - no semi-transparency to avoid black outlines
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TRAIL DISSOLVE: Fade alpha at bottom of each instance
+    // Uses ALPHA (not discard) so the existing cutout pattern edges remain organic
+    // No hard horizontal line - just a smooth fade that works WITH the pattern
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    if (uTrailDissolveEnabled == 1) {
+        // Distance from this fragment to the instance's floor
+        float instanceFloor = vInstancePosition.y + uTrailDissolveOffset;
+        float distFromFloor = vWorldPosition.y - instanceFloor;
+
+        // trailAlpha: 0 at floor, 1 at softness distance above
+        // This creates a SMOOTH FADE - no hard edge
+        trailAlpha = smoothstep(0.0, uTrailDissolveSoftness, distFromFloor);
+    }
+
+    // Binary discard for cutout pattern holes (creates organic edges)
     if (finalCutout < 0.5) {
         discard;
     }
@@ -575,6 +763,17 @@ export const ANIMATION_DEFAULTS = {
     cutoutBlend: 0,        // MULTIPLY blend mode
     cutoutTravel: 0,       // NONE travel mode
     cutoutTravelSpeed: 1.0,// One full rotation/expansion per gesture
+    cutoutTravelDir: 0,    // Forward direction
+    cutoutTravel2: -1,     // Secondary uses same as primary (-1)
+    cutoutTravelSpeed2: 1.0,// Secondary travel speed
+    cutoutStrengthCurve: 0,// Constant strength (no animation)
+    cutoutFadeInDuration: 1.0, // Full gesture duration for fadeIn (1.0 = 100%)
+    cutoutFadeOutDuration: 1.0, // Full gesture duration for fadeOut (1.0 = 100%)
+    cutoutBellPeakAt: 0.5,  // Bell peak at middle (0.5 = 50%)
+    // Trail dissolve - organic fade at bottom of each instance
+    trailDissolveEnabled: 0,     // Off by default
+    trailDissolveOffset: -0.3,   // Default offset below instance position
+    trailDissolveSoftness: 0.25, // Default softness for gradient
 };
 
 /**
@@ -613,6 +812,17 @@ export function createAnimationUniforms() {
         uCutoutBlend: { value: ANIMATION_DEFAULTS.cutoutBlend },
         uCutoutTravel: { value: ANIMATION_DEFAULTS.cutoutTravel },
         uCutoutTravelSpeed: { value: ANIMATION_DEFAULTS.cutoutTravelSpeed },
+        uCutoutTravelDir: { value: ANIMATION_DEFAULTS.cutoutTravelDir },
+        uCutoutTravel2: { value: ANIMATION_DEFAULTS.cutoutTravel2 },
+        uCutoutTravelSpeed2: { value: ANIMATION_DEFAULTS.cutoutTravelSpeed2 },
+        uCutoutStrengthCurve: { value: ANIMATION_DEFAULTS.cutoutStrengthCurve },
+        uCutoutFadeInDuration: { value: ANIMATION_DEFAULTS.cutoutFadeInDuration },
+        uCutoutFadeOutDuration: { value: ANIMATION_DEFAULTS.cutoutFadeOutDuration },
+        uCutoutBellPeakAt: { value: ANIMATION_DEFAULTS.cutoutBellPeakAt },
+        // Trail dissolve
+        uTrailDissolveEnabled: { value: ANIMATION_DEFAULTS.trailDissolveEnabled },
+        uTrailDissolveOffset: { value: ANIMATION_DEFAULTS.trailDissolveOffset },
+        uTrailDissolveSoftness: { value: ANIMATION_DEFAULTS.trailDissolveSoftness },
     };
 }
 
@@ -628,10 +838,12 @@ export function createAnimationUniforms() {
  *   strength: 0.8,           // Overall cutout intensity (0-1)
  *   phase: 0,                // Animation phase offset
  *   primary: { pattern: 0, scale: 1.0, weight: 1.0 },   // Primary layer
- *   secondary: { pattern: 1, scale: 1.0, weight: 0.7 }, // Secondary layer (optional)
+ *   secondary: { pattern: 1, scale: 1.0, weight: 0.7, travel: 'radial', travelSpeed: 0.5 },
  *   blend: 'multiply',       // 'multiply'|'min'|'max'|'add'
- *   travel: 'angular',       // 'none'|'angular'|'radial' - how cutout sweeps
- *   travelSpeed: 1.0         // Rotations per gesture (default 1.0)
+ *   travel: 'angular',       // 'none'|'angular'|'radial'|'spiral'|'oscillate'|'wave'
+ *   travelSpeed: 1.0,        // Rotations per gesture (default 1.0)
+ *   travelDir: 'forward',    // 'forward'|'reverse'|'pingpong'
+ *   strengthCurve: 'constant' // 'constant'|'fadeIn'|'fadeOut'|'bell'|'pulse'
  * }
  *
  * Legacy single-pattern format (still supported):
@@ -662,6 +874,26 @@ export function createAnimationUniforms() {
  *     travel: 'angular',
  *     travelSpeed: 2.0  // Two full rotations per gesture
  * });
+ *
+ * @example
+ * // Spiral travel with bell strength curve (meditation effect)
+ * setCutout(material, {
+ *     strength: 1.0,
+ *     pattern: CUTOUT_PATTERNS.SPIRAL,
+ *     travel: 'spiral',
+ *     travelSpeed: 1.5,
+ *     strengthCurve: 'bell'  // Cutout fades in, peaks, then fades out
+ * });
+ *
+ * @example
+ * // Per-layer travel (primary angular, secondary radial at different speed)
+ * setCutout(material, {
+ *     strength: 0.8,
+ *     primary: { pattern: CUTOUT_PATTERNS.CELLULAR },
+ *     secondary: { pattern: CUTOUT_PATTERNS.RADIAL, travel: 'radial', travelSpeed: 0.5 },
+ *     travel: 'angular',
+ *     travelSpeed: 2.0
+ * });
  */
 export function setCutout(material, config) {
     if (!material?.uniforms) return;
@@ -682,6 +914,13 @@ export function setCutout(material, config) {
         blend = 'multiply',
         travel = 'none',
         travelSpeed = ANIMATION_DEFAULTS.cutoutTravelSpeed,
+        travelDir = 'forward',
+        strengthCurve = 'constant',
+        fadeInDuration = ANIMATION_DEFAULTS.cutoutFadeInDuration,  // Fraction of gesture for fadeIn to reach full
+        fadeOutDuration = ANIMATION_DEFAULTS.cutoutFadeOutDuration, // Fraction of gesture for fadeOut (last N%)
+        bellPeakAt = ANIMATION_DEFAULTS.cutoutBellPeakAt,  // Where bell curve peaks (0.5 = middle)
+        // Trail dissolve - fades bottom of each instance using cutout patterns
+        trailDissolve,
         // Legacy single-pattern support
         pattern,
         scale
@@ -692,14 +931,40 @@ export function setCutout(material, config) {
     const blendValue = typeof blend === 'number' ? blend : (blendModes[blend] ?? 0);
 
     // Resolve travel mode
-    const travelModes = { none: 0, angular: 1, radial: 2 };
+    const travelModes = { none: 0, angular: 1, radial: 2, spiral: 3, oscillate: 4, wave: 5 };
     const travelValue = typeof travel === 'number' ? travel : (travelModes[travel] ?? 0);
+
+    // Resolve travel direction
+    const travelDirs = { forward: 0, reverse: 1, pingpong: 2 };
+    const travelDirValue = typeof travelDir === 'number' ? travelDir : (travelDirs[travelDir] ?? 0);
+
+    // Resolve strength curve
+    const strengthCurves = { constant: 0, fadeIn: 1, fadeOut: 2, bell: 3, pulse: 4 };
+    const strengthCurveValue = typeof strengthCurve === 'number' ? strengthCurve : (strengthCurves[strengthCurve] ?? 0);
 
     material.uniforms.uCutoutStrength.value = Math.max(0, Math.min(1, strength));
     material.uniforms.uCutoutPhase.value = phase;
     material.uniforms.uCutoutBlend.value = blendValue;
     material.uniforms.uCutoutTravel.value = travelValue;
     material.uniforms.uCutoutTravelSpeed.value = travelSpeed;
+    material.uniforms.uCutoutTravelDir.value = travelDirValue;
+    material.uniforms.uCutoutStrengthCurve.value = strengthCurveValue;
+    material.uniforms.uCutoutFadeInDuration.value = Math.max(0.01, Math.min(1.0, fadeInDuration));
+    material.uniforms.uCutoutFadeOutDuration.value = Math.max(0.01, Math.min(1.0, fadeOutDuration));
+    material.uniforms.uCutoutBellPeakAt.value = Math.max(0.01, Math.min(0.99, bellPeakAt));
+
+    // Trail dissolve - organic fade at bottom of each instance
+    if (trailDissolve) {
+        material.uniforms.uTrailDissolveEnabled.value = trailDissolve.enabled !== false ? 1 : 0;
+        if (trailDissolve.offset !== undefined) {
+            material.uniforms.uTrailDissolveOffset.value = trailDissolve.offset;
+        }
+        if (trailDissolve.softness !== undefined) {
+            material.uniforms.uTrailDissolveSoftness.value = Math.max(0.01, trailDissolve.softness);
+        }
+    } else {
+        material.uniforms.uTrailDissolveEnabled.value = 0;
+    }
 
     // Handle two-layer format
     if (primary !== undefined) {
@@ -711,8 +976,18 @@ export function setCutout(material, config) {
             material.uniforms.uCutoutPattern2.value = secondary.pattern ?? CUTOUT_PATTERNS.NONE;
             material.uniforms.uCutoutScale2.value = secondary.scale ?? 1.0;
             material.uniforms.uCutoutWeight2.value = secondary.weight ?? 1.0;
+
+            // Per-layer travel for secondary
+            if (secondary.travel !== undefined) {
+                const travel2Value = typeof secondary.travel === 'number' ? secondary.travel : (travelModes[secondary.travel] ?? -1);
+                material.uniforms.uCutoutTravel2.value = travel2Value;
+                material.uniforms.uCutoutTravelSpeed2.value = secondary.travelSpeed ?? 1.0;
+            } else {
+                material.uniforms.uCutoutTravel2.value = -1;  // Same as primary
+            }
         } else {
             material.uniforms.uCutoutPattern2.value = CUTOUT_PATTERNS.NONE;
+            material.uniforms.uCutoutTravel2.value = -1;
         }
     }
     // Handle legacy single-pattern format
@@ -721,6 +996,7 @@ export function setCutout(material, config) {
         material.uniforms.uCutoutScale1.value = scale ?? 1.0;
         material.uniforms.uCutoutWeight1.value = 1.0;
         material.uniforms.uCutoutPattern2.value = CUTOUT_PATTERNS.NONE;
+        material.uniforms.uCutoutTravel2.value = -1;
     }
 }
 
@@ -741,6 +1017,17 @@ export function resetCutout(material) {
     material.uniforms.uCutoutBlend.value = ANIMATION_DEFAULTS.cutoutBlend;
     material.uniforms.uCutoutTravel.value = ANIMATION_DEFAULTS.cutoutTravel;
     material.uniforms.uCutoutTravelSpeed.value = ANIMATION_DEFAULTS.cutoutTravelSpeed;
+    material.uniforms.uCutoutTravelDir.value = ANIMATION_DEFAULTS.cutoutTravelDir;
+    material.uniforms.uCutoutTravel2.value = ANIMATION_DEFAULTS.cutoutTravel2;
+    material.uniforms.uCutoutTravelSpeed2.value = ANIMATION_DEFAULTS.cutoutTravelSpeed2;
+    material.uniforms.uCutoutStrengthCurve.value = ANIMATION_DEFAULTS.cutoutStrengthCurve;
+    material.uniforms.uCutoutFadeInDuration.value = ANIMATION_DEFAULTS.cutoutFadeInDuration;
+    material.uniforms.uCutoutFadeOutDuration.value = ANIMATION_DEFAULTS.cutoutFadeOutDuration;
+    material.uniforms.uCutoutBellPeakAt.value = ANIMATION_DEFAULTS.cutoutBellPeakAt;
+    // Trail dissolve
+    material.uniforms.uTrailDissolveEnabled.value = ANIMATION_DEFAULTS.trailDissolveEnabled;
+    material.uniforms.uTrailDissolveOffset.value = ANIMATION_DEFAULTS.trailDissolveOffset;
+    material.uniforms.uTrailDissolveSoftness.value = ANIMATION_DEFAULTS.trailDissolveSoftness;
 }
 
 /**

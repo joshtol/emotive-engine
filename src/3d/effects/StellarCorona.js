@@ -243,7 +243,14 @@ export class StellarCorona {
 
                     // Output with opacity falloff (quadratic for smoother fade)
                     float alpha = opacity * radialGlow * radialGlow;
-                    gl_FragColor = vec4(glow, alpha);
+
+                    // Discard faint fragments to prevent CSS background darkening
+                    if (alpha < 0.05) discard;
+
+                    // CRITICAL: Set alpha to 1.0 for visible fragments
+                    // With premultipliedAlpha: false, medium alpha causes CSS background blending
+                    // that darkens the result. Alpha = 1.0 means full replacement, no darkening.
+                    gl_FragColor = vec4(glow, 1.0);
                 }
             `,
             transparent: true,

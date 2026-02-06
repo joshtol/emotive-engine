@@ -23,7 +23,8 @@
  * - 3 splash rings with vertical orientation
  * - Rings travel from bottom to top
  * - DANCING COINS rotation: all spin on Y axis, 120° phase offset
- * - Musical timing: varied rotations per gesture duration
+ * - Two-layer cutout: WAVES + CELLULAR with wave travel
+ * - Bell strength curve peaks mid-gesture
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -90,6 +91,27 @@ const WATERDANCE_CONFIG = {
             procedural: {
                 scaleSmoothing: 0.08,
                 geometryStability: true
+            },
+            // Cutout: CELLULAR + STREAKS for organic water texture (like watercrown)
+            // Angular travel with slow sweep for flowing effect
+            // fadeIn with short duration so cutout reaches full before rings fade out at 50%
+            cutout: {
+                strength: 0.7,
+                primary: { pattern: 0, scale: 0.8, weight: 1.0 },   // CELLULAR - organic holes
+                secondary: { pattern: 1, scale: 0.6, weight: 0.5 }, // STREAKS - subtle flow
+                blend: 'multiply',
+                travel: 'angular',
+                travelSpeed: 0.3,        // Slow sweep like watercrown
+                strengthCurve: 'fadeIn',
+                fadeInDuration: 0.167,   // Reach full strength at 1/6 of gesture (very quick ramp)
+                // Trail dissolve: bottoms of rings fade as they rise
+                // Negative offset = floor below instance, softness must be large (threshold compresses gradient)
+                // Binary threshold (0.5) compresses gradient - need softness ~2x wider than desired visual effect
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.8,        // Floor 0.8 units below instance center (well below ring geometry)
+                    softness: 2.0        // Very wide gradient to compensate for threshold compression
+                }
             },
             parameterAnimation: {
                 turbulence: {

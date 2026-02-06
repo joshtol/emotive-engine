@@ -22,6 +22,9 @@
  * - Slow majestic rotation (1 rotation per gesture)
  * - Gentle bob animation for floating effect
  * - Regal cool-blue color
+ * - Two-layer cutout: CELLULAR + STREAKS for organic breaks
+ * - Angular travel sweeps cutout around the ring
+ * - Constant cutout strength (water always has texture)
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -82,15 +85,17 @@ const WATERCROWN_CONFIG = {
                 geometryStability: true
             },
             // Cutout: creates cellular holes and flow streaks for organic look
-            // Two-layer composable: CELLULAR (0) + STREAKS (1) multiplied together
-            // Angular travel makes the cutout sweep around the crown ring
+            // Two-layer composable: CELLULAR + STREAKS multiplied together
+            // Very slow angular travel for majestic, regal movement
+            // Constant strength - water should ALWAYS have texture, never solid
             cutout: {
-                strength: 1.0,
-                primary: { pattern: 0, scale: 1.0, weight: 1.0 },    // CELLULAR
-                secondary: { pattern: 1, scale: 1.0, weight: 0.8 },  // STREAKS
+                strength: 0.7,
+                primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR (smaller scale = larger cells)
+                secondary: { pattern: 1, scale: 0.6, weight: 0.5 },  // STREAKS (subtle)
                 blend: 'multiply',
                 travel: 'angular',
-                travelSpeed: 1.5  // Slower sweep for flowing water feel
+                travelSpeed: 0.3,            // Very slow sweep for regal effect
+                strengthCurve: 'constant'    // Always textured, never solid
             },
             parameterAnimation: {
                 turbulence: {

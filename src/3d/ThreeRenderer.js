@@ -42,7 +42,7 @@ export class ThreeRenderer {
             canvas,
             alpha: true, // Transparent background
             premultipliedAlpha: false, // Required for CSS backgrounds to blend correctly
-            antialias: true,
+            antialias: false,  // DIAGNOSTIC: Disabled to test if MSAA causes dark edges
             powerPreference: 'high-performance',
             preserveDrawingBuffer: false,
             precision: 'highp', // High precision float for smoother gradients
@@ -428,8 +428,8 @@ export class ThreeRenderer {
             drawingBufferSize.y, {
                 format: THREE.RGBAFormat,
                 type: THREE.HalfFloatType,  // HDR: Allow values > 1.0 for proper bloom
-                minFilter: THREE.LinearFilter,
-                magFilter: THREE.LinearFilter,
+                minFilter: THREE.NearestFilter,  // DIAGNOSTIC: Prevent bilinear blending with transparent black at edges
+                magFilter: THREE.NearestFilter,
                 stencilBuffer: false,
                 depthBuffer: true
             });
@@ -448,8 +448,9 @@ export class ThreeRenderer {
 
         // Render pass - base scene render
         const renderPass = new RenderPass(this.scene, this.camera);
-        // CRITICAL: Set clear color to transparent for CSS background blending
-        renderPass.clearColor = new THREE.Color(0x000000);
+        // Clear to transparent black - the standard for compositing
+        // Dark halo fix is in UnrealBloomPassAlpha: bloom adds RGB only, preserves alpha
+        renderPass.clearColor = new THREE.Color(0, 0, 0);
         renderPass.clearAlpha = 0;  // Transparent background
         this.composer.addPass(renderPass);
 

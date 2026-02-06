@@ -105,6 +105,19 @@ const WATERFLOURISH_CONFIG = {
                         curve: 'bell'
                     }
                 },
+                // Cutout with trail dissolve - cellular holes fade at ring bottoms
+                cutout: {
+                    strength: 0.6,
+                    primary: { pattern: 0, scale: 1.0, weight: 1.0 },   // CELLULAR
+                    blend: 'multiply',
+                    strengthCurve: 'constant',
+                    // Trail dissolve: organic fade at bottom of camera-facing rings
+                    trailDissolve: {
+                        enabled: true,
+                        offset: -0.6,        // Floor 0.6 units below instance center
+                        softness: 1.5        // Wide gradient for visible dissolve
+                    }
+                },
                 pulse: {
                     amplitude: 0.15,
                     frequency: 5,

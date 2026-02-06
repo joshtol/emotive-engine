@@ -26,7 +26,8 @@ import {
     updateInstancedFireMaterial,
     setInstancedFireArcAnimation,
     setInstancedFireGestureGlow,
-    setInstancedFireCutout
+    setInstancedFireCutout,
+    resetCutout as resetFireCutout
 } from '../materials/InstancedFireMaterial.js';
 
 import {
@@ -35,7 +36,8 @@ import {
     setInstancedWaterArcAnimation,
     setInstancedWaterGestureGlow,
     setInstancedWaterBloomThreshold,
-    setInstancedWaterCutout
+    setInstancedWaterCutout,
+    resetCutout as resetWaterCutout
 } from '../materials/InstancedWaterMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -56,6 +58,7 @@ ElementTypeRegistry.register('fire', {
     setShaderAnimation: setInstancedFireArcAnimation,
     setGestureGlow: setInstancedFireGestureGlow,
     setCutout: setInstancedFireCutout,
+    resetCutout: resetFireCutout,
     scaleMultiplier: 1.5
 });
 
@@ -74,6 +77,7 @@ ElementTypeRegistry.register('water', {
     setGestureGlow: setInstancedWaterGestureGlow,
     setBloomThreshold: setInstancedWaterBloomThreshold,
     setCutout: setInstancedWaterCutout,
+    resetCutout: resetWaterCutout,
     scaleMultiplier: 1.2
 });
 

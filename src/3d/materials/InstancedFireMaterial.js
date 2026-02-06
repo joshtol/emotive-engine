@@ -49,7 +49,8 @@ import {
     updateAnimationProgress,
     setGestureGlow,
     setGlowScale,
-    setCutout
+    setCutout,
+    resetCutout
 } from './cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -82,6 +83,7 @@ uniform float uVelocityStretch;
 // Varyings to fragment
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
+varying vec3 vInstancePosition;  // Instance origin in world space (for trail dissolve)
 varying vec3 vNormal;
 varying vec3 vViewDir;
 varying float vDisplacement;
@@ -213,6 +215,10 @@ void main() {
     vWorldPosition = worldPos.xyz;
     vViewDir = normalize(cameraPosition - worldPos.xyz);
 
+    // Instance origin in world space (for trail dissolve - uses cutout at instance floor)
+    vec4 instanceOrigin = modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+    vInstancePosition = instanceOrigin.xyz;
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // ARC VISIBILITY (for vortex ring effects)
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -266,30 +272,16 @@ uniform float uEdgeFade;
 uniform float uEdgeSoftness;
 uniform float uEmberDensity;
 uniform float uEmberBrightness;
-uniform float uGlowScale;
 
-// Arc visibility uniforms
-uniform int uAnimationType;
-
-// Two-layer composable cutout system (shared across all element types)
-uniform float uCutoutStrength;
-uniform float uCutoutPhase;
-uniform int uCutoutPattern1;
-uniform float uCutoutScale1;
-uniform float uCutoutWeight1;
-uniform int uCutoutPattern2;
-uniform float uCutoutScale2;
-uniform float uCutoutWeight2;
-uniform int uCutoutBlend;
-uniform int uCutoutTravel;
-uniform float uCutoutTravelSpeed;
-uniform float uGestureProgress;
+// Animation system uniforms (glow, cutout, travel, etc.) from shared core
+${ANIMATION_UNIFORMS_FRAGMENT}
 
 // Instancing varyings
 ${INSTANCED_ATTRIBUTES_FRAGMENT}
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
+varying vec3 vInstancePosition;  // Instance origin in world space (for trail dissolve)
 varying vec3 vNormal;
 varying vec3 vViewDir;
 varying float vDisplacement;
@@ -640,7 +632,7 @@ export function setInstancedFireCutout(material, config) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout };
 
 export default {
     createInstancedFireMaterial,

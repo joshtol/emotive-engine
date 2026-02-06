@@ -399,6 +399,13 @@ export class ElementInstancedSpawner {
             // Clear existing elements (only once for all layers)
             this.despawn(elementType);
 
+            // Reset cutout to default state to prevent bleeding from previous gesture
+            const elementConfig = ElementTypeRegistry.get(elementType);
+            const material = this.materials.get(elementType);
+            if (elementConfig?.resetCutout && material) {
+                elementConfig.resetCutout(material);
+            }
+
             // Spawn each layer
             const allIds = [];
             for (let layerIndex = 0; layerIndex < mode.length; layerIndex++) {
@@ -431,6 +438,13 @@ export class ElementInstancedSpawner {
 
         // Clear existing elements of this type first
         this.despawn(elementType);
+
+        // Reset cutout to default state to prevent bleeding from previous gesture
+        const elementConfig = ElementTypeRegistry.get(elementType);
+        const material = this.materials.get(elementType);
+        if (elementConfig?.resetCutout && material) {
+            elementConfig.resetCutout(material);
+        }
 
         const merged = this.mergedGeometries.get(elementType);
         if (!merged) {
@@ -783,11 +797,11 @@ export class ElementInstancedSpawner {
         }
 
         // Apply cutout from animation config (breaks up water shapes with holes)
-        // IMPORTANT: Always set cutout (default 0) to prevent bleeding from previous gestures
-        if (elementConfig?.setCutout) {
-            const cutoutValue = animation?.cutout !== undefined ? animation.cutout : 0;
-            DEBUG && console.log(`[ElementInstancedSpawner] Applying cutout for ${elementType}:`, cutoutValue);
-            elementConfig.setCutout(material, cutoutValue);
+        // Only set if explicitly defined - don't reset to 0 (that's done at gesture start in spawn())
+        // This allows multi-layer gestures where only some layers define cutout
+        if (elementConfig?.setCutout && animation?.cutout !== undefined) {
+            DEBUG && console.log(`[ElementInstancedSpawner] Applying cutout for ${elementType}:`, animation.cutout);
+            elementConfig.setCutout(material, animation.cutout);
         }
     }
 
@@ -967,6 +981,13 @@ export class ElementInstancedSpawner {
             // This rotates each ring around the Y axis to spread them out
             if (formationData.rotationOffset) {
                 _temp.quaternion2.setFromAxisAngle(_temp.up, formationData.rotationOffset);
+                rotation = rotation.clone().premultiply(_temp.quaternion2);
+            }
+
+            // Apply mesh rotation offset (for breaking up noise patterns)
+            // This is a physical Y-axis rotation separate from shader arcOffset
+            if (formationData.meshRotationOffset) {
+                _temp.quaternion2.setFromAxisAngle(_temp.up, formationData.meshRotationOffset);
                 rotation = rotation.clone().premultiply(_temp.quaternion2);
             }
 

@@ -43,6 +43,9 @@ export function parseFormation(formation) {
         positions: formation.positions || null,
         // Mandala-specific: radius for auto-generated circular pattern
         radius: formation.radius || 0.4,
+        // Mesh rotation offset (degrees) - rotates each element's mesh around Y axis
+        // e.g., meshRotationOffset: 120 → rings at 0°, 120°, 240° to break up noise pattern
+        meshRotationOffset: formation.meshRotationOffset ? (formation.meshRotationOffset * Math.PI / 180) : 0,
     };
 }
 
@@ -66,6 +69,30 @@ export function normalizeOrientation(orientation) {
  * @param {Function} resolveLandmark - Function to resolve landmark names to positions
  * @returns {Object} Parsed configuration with resolved landmarks
  */
+/**
+ * Speed curve functions for dynamic axis-travel speed
+ * @type {Object.<string, function(number): number>}
+ */
+const SPEED_CURVES = {
+    // Linear - constant speed (default)
+    linear: t => t,
+    // Splash - fast start, slow settle (water splashing outward)
+    splash: t => 1 - Math.pow(1 - t, 3),  // Ease out cubic
+    // Surge - slow start, fast middle, slow end (wave surge)
+    surge: t => t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2,  // Ease in-out cubic
+    // Burst - very fast start, gradual slow (explosion)
+    burst: t => 1 - Math.pow(1 - t, 4),  // Ease out quartic
+    // Settle - slow start, accelerate, then slow settle
+    settle: t => {
+        // Custom curve: slow-fast-slow with emphasis on settle
+        if (t < 0.3) return t * t * 3.33;  // Slow start
+        if (t < 0.7) return 0.3 + (t - 0.3) * 1.75;  // Fast middle
+        return 0.7 + (1 - Math.pow(1 - (t - 0.7) / 0.3, 2)) * 0.3;  // Slow settle
+    },
+};
+
 export function parseAxisTravelConfig(config, resolveLandmark) {
     const axisTravel = config.axisTravel || {};
     const formation = config.formation || null;
@@ -77,12 +104,17 @@ export function parseAxisTravelConfig(config, resolveLandmark) {
     // Orientation: prefer 'orientation', fall back to legacy 'ringOrientation'
     const rawOrientation = axisTravel.orientation ?? axisTravel.ringOrientation;
 
+    // Speed curve for dynamic travel speed
+    const speedCurveName = axisTravel.speedCurve || 'linear';
+    const speedCurve = SPEED_CURVES[speedCurveName] || SPEED_CURVES.linear;
+
     return {
         // Axis travel settings
         axis: axisTravel.axis || 'y',
         startPos: resolveLandmark(axisTravel.start ?? 'bottom') + startOffset,
         endPos: resolveLandmark(axisTravel.end ?? 'top') + endOffset,
         easing: getEasing(axisTravel.easing || 'easeInOut'),
+        speedCurve,  // Dynamic speed curve (applied before easing)
         startScale: axisTravel.startScale ?? 1.0,
         endScale: axisTravel.endScale ?? 1.0,
         startDiameter: axisTravel.startDiameter ?? 1.0,
@@ -111,7 +143,7 @@ export function expandFormation(parsedConfig) {
     const { formation } = parsedConfig;
 
     if (!formation) {
-        return [{ index: 0, positionOffset: { x: 0, y: 0, z: 0 }, rotationOffset: 0, progressOffset: 0, scaleMultiplier: 1.0 }];
+        return [{ index: 0, positionOffset: { x: 0, y: 0, z: 0 }, rotationOffset: 0, meshRotationOffset: 0, progressOffset: 0, scaleMultiplier: 1.0 }];
     }
 
     const elements = [];
@@ -125,6 +157,8 @@ export function expandFormation(parsedConfig) {
             index: i,
             positionOffset: { x: 0, y: 0, z: 0 },  // Now supports XYZ
             rotationOffset: 0,
+            // Mesh rotation offset (radians) - for physical Y-axis rotation to break up noise patterns
+            meshRotationOffset: i * (formation.meshRotationOffset || 0),
             progressOffset: i * formation.phaseOffset,
             // Per-element scale multiplier (defaults to 1.0)
             scaleMultiplier: formation.scales?.[i] ?? 1.0,
@@ -230,6 +264,11 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
         travelProgress = 1 - reverseProgress;
     }
 
+    // Apply speed curve first (for dynamic speed like splash/surge)
+    if (axisConfig.speedCurve) {
+        travelProgress = axisConfig.speedCurve(travelProgress);
+    }
+
     // Apply easing
     const easedProgress = axisConfig.easing(travelProgress);
 
@@ -267,6 +306,7 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
         scale,
         diameter,
         rotationOffset: formationData?.rotationOffset || 0,
+        meshRotationOffset: formationData?.meshRotationOffset || 0,
         scaleMultiplier: formationData?.scaleMultiplier ?? 1.0,
     };
 }

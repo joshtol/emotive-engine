@@ -858,6 +858,18 @@ void main() {
     float finalAlpha = min(baseAlpha + rimAlpha + glowAlpha, 0.95) * opacity;
 
     // ═══════════════════════════════════════════════════════════════════════
+    // ALPHA FIX FOR DARK FRAGMENTS
+    // With NormalBlending, dark color + partial alpha creates darkening artifacts
+    // (result = dark * alpha + bg * (1-alpha) can be DARKER than background!)
+    // Fix: Make dark fragments fully opaque so they replace background, not blend
+    // ═══════════════════════════════════════════════════════════════════════
+    float luminance = dot(finalColor, vec3(0.299, 0.587, 0.114));
+    // Dark fragments (luminance < 0.3) get alpha boosted toward 1.0
+    // Bright fragments keep their calculated alpha for glowing edges
+    float darkBoost = 1.0 - smoothstep(0.0, 0.3, luminance);  // 1.0 when dark, 0.0 when bright
+    finalAlpha = mix(finalAlpha, 1.0, darkBoost * 0.8);  // Boost dark fragments to near-opaque
+
+    // ═══════════════════════════════════════════════════════════════════════
     // REFRACTED SOUL - Add the soul visible through the crystal
     // This is the actual soul mesh rendered to texture and sampled with refraction
     // ═══════════════════════════════════════════════════════════════════════

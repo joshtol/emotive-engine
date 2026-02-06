@@ -30,6 +30,7 @@ import {
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
+    ANIMATION_UNIFORMS_FRAGMENT,
     CUTOUT_PATTERN_FUNC_GLSL,
     CUTOUT_GLSL,
     createAnimationUniforms,
@@ -37,13 +38,15 @@ import {
     updateAnimationProgress,
     setGestureGlow,
     setGlowScale,
-    setCutout
+    setCutout,
+    resetCutout
 } from './cores/InstancedAnimationCore.js';
 import {
     NOISE_GLSL,
     WATER_COLOR_GLSL,
     WATER_FRAGMENT_CORE,
     WATER_ARC_FOAM_GLSL,
+    WATER_CUTOUT_FOAM_GLSL,
     WATER_DRIP_ANTICIPATION_GLSL,
     WATER_FLOOR_AND_DISCARD_GLSL,
     lerp3,
@@ -78,6 +81,7 @@ ${INSTANCED_ATTRIBUTES_VERTEX}
 // Varyings to fragment
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
+varying vec3 vInstancePosition;  // Instance origin in world space (for trail dissolve)
 varying vec3 vNormal;
 varying vec3 vViewDir;
 varying float vDisplacement;
@@ -187,6 +191,10 @@ void main() {
     vWorldPosition = worldPos.xyz;
     vViewDir = normalize(cameraPosition - worldPos.xyz);
 
+    // Instance origin in world space (for trail dissolve - uses cutout at instance floor)
+    vec4 instanceOrigin = modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+    vInstancePosition = instanceOrigin.xyz;
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // ARC VISIBILITY (for vortex ring effects)
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -235,31 +243,23 @@ uniform float uOpacity;
 uniform float uFlowSpeed;
 uniform float uNoiseScale;
 uniform float uEdgeFade;
-uniform float uGlowScale;
 uniform float uBloomThreshold;  // Mascot-specific bloom threshold for compression
-// Two-layer composable cutout system (shared across all element types)
-uniform float uCutoutStrength;
-uniform float uCutoutPhase;
-uniform int uCutoutPattern1;
-uniform float uCutoutScale1;
-uniform float uCutoutWeight1;
-uniform int uCutoutPattern2;
-uniform float uCutoutScale2;
-uniform float uCutoutWeight2;
-uniform int uCutoutBlend;
-uniform int uCutoutTravel;
-uniform float uCutoutTravelSpeed;
 uniform vec3 uTint;
 
-// Arc visibility uniforms
-uniform int uAnimationType;
-uniform float uGestureProgress;
+// Enhanced water system uniforms
+uniform float uDepthGradient;      // Depth-based color variation strength (0=off, 1=full)
+uniform float uInternalFlowSpeed;  // Internal spiral/flow animation speed multiplier
+uniform float uSparkleIntensity;   // Specular sparkle highlight intensity
+
+// Animation system uniforms (glow, cutout, travel, etc.) from shared core
+${ANIMATION_UNIFORMS_FRAGMENT}
 
 // Instancing varyings
 ${INSTANCED_ATTRIBUTES_FRAGMENT}
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
+varying vec3 vInstancePosition;  // Instance origin in world space (for trail dissolve)
 varying vec3 vNormal;
 varying vec3 vViewDir;
 varying float vDisplacement;
@@ -309,6 +309,18 @@ void main() {
     // CUTOUT EFFECT (shared pattern system from InstancedAnimationCore)
     // ═══════════════════════════════════════════════════════════════════════════════
     ${CUTOUT_GLSL}
+
+    // Apply trail dissolve alpha (smooth fade at instance bottom - no hard edge)
+    // With AdditiveBlending: only fade ALPHA, keep color bright
+    // result = color * alpha + background
+    // If color is bright and alpha is low, we get a dim ADDITIVE contribution
+    // If color is dark and alpha is low, we get nearly nothing (but no darkening either)
+    alpha *= trailAlpha;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // WATER CUTOUT FOAM (brightens edges to prevent dark artifacts)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    ${WATER_CUTOUT_FOAM_GLSL}
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // DRIP ANTICIPATION (surface tension bright spots)
@@ -376,8 +388,10 @@ export function createInstancedWaterMaterial(options = {}) {
             uGlobalTime: { value: 0 },
             uFadeInDuration: { value: fadeInDuration },
             uFadeOutDuration: { value: fadeOutDuration },
-            // Animation uniforms (shared across all elements)
+            // Animation uniforms (cutout, glow, etc. from shared core)
             ...createAnimationUniforms(),
+            // Override glowScale if provided in options
+            uGlowScale: { value: glowScale },
             // Water uniforms
             uTurbulence: { value: turbulence },
             uIntensity: { value: finalIntensity },
@@ -386,26 +400,23 @@ export function createInstancedWaterMaterial(options = {}) {
             uFlowSpeed: { value: finalFlowSpeed },
             uNoiseScale: { value: noiseScale },
             uEdgeFade: { value: edgeFade },
-            uGlowScale: { value: glowScale },
             uBloomThreshold: { value: 0.5 },  // Mascot bloom threshold (0.35 crystal, 0.85 moon)
-            // Two-layer cutout uniforms (shared system)
-            uCutoutStrength: { value: 0.0 },
-            uCutoutPhase: { value: 0.0 },
-            uCutoutPattern1: { value: -1 },   // Disabled by default
-            uCutoutScale1: { value: 1.0 },
-            uCutoutWeight1: { value: 1.0 },
-            uCutoutPattern2: { value: -1 },   // Disabled
-            uCutoutScale2: { value: 1.0 },
-            uCutoutWeight2: { value: 1.0 },
-            uCutoutBlend: { value: 0 },       // MULTIPLY
-            uCutoutTravel: { value: 0 },      // NONE
-            uCutoutTravelSpeed: { value: 1.0 },
-            uTint: { value: tintColor }
+            uTint: { value: tintColor },
+            // Enhanced water system uniforms
+            uDepthGradient: { value: 0.3 },      // Depth color variation
+            uInternalFlowSpeed: { value: 1.0 },  // Internal flow speed multiplier
+            uSparkleIntensity: { value: 0.4 }    // Specular sparkle intensity
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
-        blending: THREE.AdditiveBlending,
+        // CRITICAL: Use CustomBlending with src=ONE, dst=ONE for pure additive
+        // AdditiveBlending uses SrcAlpha which darkens edges when MSAA creates partial alpha
+        // Pure additive (ONE, ONE) means: result = src + dst - no alpha involvement
+        blending: THREE.CustomBlending,
+        blendSrc: THREE.OneFactor,
+        blendDst: THREE.OneFactor,
+        blendEquation: THREE.AddEquation,
         depthWrite: false,
         side: THREE.DoubleSide
     });
@@ -520,8 +531,42 @@ export function setInstancedWaterCutout(material, config) {
  */
 export const setInstancedWaterArcAnimation = setShaderAnimation;
 
+/**
+ * Set depth gradient intensity for water depth color variation.
+ * Higher values make the center-to-edge color transition more pronounced.
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} intensity - Depth gradient intensity (0=off, 0.3=subtle, 1=full)
+ */
+export function setInstancedWaterDepthGradient(material, intensity) {
+    if (material?.uniforms?.uDepthGradient) {
+        material.uniforms.uDepthGradient.value = intensity;
+    }
+}
+
+/**
+ * Set internal flow animation speed for spiral/current effects.
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} speed - Flow speed multiplier (0.5=slow, 1.0=normal, 2.0=fast)
+ */
+export function setInstancedWaterFlowSpeed(material, speed) {
+    if (material?.uniforms?.uInternalFlowSpeed) {
+        material.uniforms.uInternalFlowSpeed.value = speed;
+    }
+}
+
+/**
+ * Set sparkle intensity for specular highlights and caustic sparkles.
+ * @param {THREE.ShaderMaterial} material - Instanced water material
+ * @param {number} intensity - Sparkle intensity (0=off, 0.4=normal, 1.0=high)
+ */
+export function setInstancedWaterSparkle(material, intensity) {
+    if (material?.uniforms?.uSparkleIntensity) {
+        material.uniforms.uSparkleIntensity.value = intensity;
+    }
+}
+
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout };
 
 export default {
     createInstancedWaterMaterial,
@@ -533,6 +578,9 @@ export default {
     setInstancedWaterBloomThreshold,
     setInstancedWaterCutout,
     setInstancedWaterArcAnimation,
+    setInstancedWaterDepthGradient,
+    setInstancedWaterFlowSpeed,
+    setInstancedWaterSparkle,
     setShaderAnimation,
     setGestureGlow,
     setGlowScale,

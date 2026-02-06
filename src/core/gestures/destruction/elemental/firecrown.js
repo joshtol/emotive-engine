@@ -22,6 +22,8 @@
  * - Slow majestic rotation (1 rotation per gesture)
  * - Gentle bob animation for floating effect
  * - Regal warm-gold color temperature
+ * - Two-layer cutout: EMBERS + CRACKS for organic flame breaks
+ * - Angular travel with bell strength curve (peaks mid-gesture)
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -82,14 +84,16 @@ const FIRECROWN_CONFIG = {
                 geometryStability: true
             },
             // Cutout: creates burning ember holes for organic flame look
-            // Pattern 5 = EMBERS (rising heat distortion with height bias)
-            // Angular travel makes the cutout sweep around the crown ring
+            // Two-layer: EMBERS (rising heat) + CRACKS (fracture lines)
+            // Angular travel sweeps around the crown, bell curve peaks mid-gesture
             cutout: {
-                strength: 0.8,
-                pattern: 5,     // EMBERS pattern
-                scale: 1.2,
+                strength: 0.9,
+                primary: { pattern: 5, scale: 1.2, weight: 1.0 },    // EMBERS
+                secondary: { pattern: 8, scale: 0.8, weight: 0.4 },  // CRACKS (subtle)
+                blend: 'multiply',
                 travel: 'angular',
-                travelSpeed: 2.0  // Two full sweeps per gesture
+                travelSpeed: 2.0,        // Two full sweeps per gesture
+                strengthCurve: 'bell'    // Peak intensity mid-gesture
             },
             parameterAnimation: {
                 temperature: {

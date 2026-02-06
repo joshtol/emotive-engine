@@ -129,14 +129,18 @@ const vec3 WATER_SUBSURFACE = vec3(0.2, 0.5, 0.7);    // Subsurface scatter colo
 
 // Water color based on local intensity and turbulence
 vec3 waterColor(float intensity, float turbulence) {
-    // Mix based on intensity
+    // Mix based on intensity - biased toward blue colors
+    // Only very high intensities should reach white/foam
     vec3 color;
-    if (intensity < 0.33) {
-        color = mix(WATER_DEEP, WATER_MID, intensity * 3.0);
-    } else if (intensity < 0.66) {
-        color = mix(WATER_MID, WATER_BRIGHT, (intensity - 0.33) * 3.0);
+    if (intensity < 0.5) {
+        // 0-0.5: Deep blue to ocean blue (most of the water)
+        color = mix(WATER_DEEP, WATER_MID, intensity * 2.0);
+    } else if (intensity < 0.8) {
+        // 0.5-0.8: Ocean blue to bright cyan
+        color = mix(WATER_MID, WATER_BRIGHT, (intensity - 0.5) * 3.33);
     } else {
-        color = mix(WATER_BRIGHT, WATER_FOAM, (intensity - 0.66) * 3.0);
+        // 0.8-1.0: Bright cyan to foam (only extreme highlights)
+        color = mix(WATER_BRIGHT, WATER_FOAM, (intensity - 0.8) * 5.0);
     }
 
     return color;
@@ -152,7 +156,8 @@ vec3 waterColor(float intensity, float turbulence) {
  * color calculation, and alpha handling.
  *
  * Expected uniforms: uTurbulence, uIntensity, uOpacity, uNoiseScale,
- *                    uFlowSpeed, uEdgeFade, uTint, uGlowScale
+ *                    uFlowSpeed, uEdgeFade, uTint, uGlowScale,
+ *                    uDepthGradient, uInternalFlowSpeed, uSparkleIntensity
  * Expected varyings: vPosition, vNormal, vViewDir, vDisplacement, vNoiseValue
  * Required: localTime variable must be defined before including this
  *
@@ -160,6 +165,11 @@ vec3 waterColor(float intensity, float turbulence) {
  */
 export const WATER_FRAGMENT_CORE = /* glsl */`
     vec3 normal = normalize(vNormal);
+    // Fix for DoubleSide rendering: flip normal for back-facing fragments
+    // Without this, back faces have inverted Fresnel/specular causing dark patches
+    if (!gl_FrontFacing) {
+        normal = -normal;
+    }
     vec3 viewDir = normalize(vViewDir);
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -183,13 +193,13 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     // Per-instance variation
     float posVariation = snoise(vPosition * 4.0 + vec3(vRandomSeed * 10.0)) * 0.15 + 0.92;
 
-    // Combine patterns
+    // Combine patterns - heavily biased toward deep blue
     float pattern = (flow * 0.5 + ripple * 0.5) * posVariation;
-    pattern = pattern * 0.5 + 0.5;
-    pattern = pow(pattern, 0.8);
+    pattern = pattern * 0.25 + 0.15;  // Range ~0.05-0.40 - strongly biased toward deep blue
+    pattern = clamp(pattern, 0.0, 1.0);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // CAUSTIC LIGHT PATTERNS (enhanced refraction simulation)
+    // CAUSTIC LIGHT PATTERNS (enhanced refraction simulation with sparkles)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     // Primary caustics - overlapping sine waves create light focusing effect
@@ -202,8 +212,16 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     float caustic4 = sin(pattern * 9.42478 - localTime * 0.0025);
     float causticDetail = abs(caustic3 * caustic4) * 0.5;
 
-    // Combine with sharpening
-    float caustic = pow(causticBase, 1.5) * 0.45 + pow(causticDetail, 2.0) * 0.25;
+    // Tertiary caustic - very fine, fast-moving for sparkle effect
+    float caustic5 = sin(flow * 25.0 + localTime * 0.005);
+    float caustic6 = sin(ripple * 20.0 - localTime * 0.004);
+    float causticFine = pow(abs(caustic5 * caustic6), 3.0);  // Sharp threshold for sparkles
+
+    // Combine with sharpening - sharper powers for more defined caustic lines
+    float causticSharp = pow(causticBase, 2.0) * 0.4;  // Sharper base caustics
+    float causticSoft = pow(causticDetail, 1.5) * 0.25;
+    float causticSparkle = causticFine * 0.35 * uSparkleIntensity;
+    float caustic = causticSharp + causticSoft + causticSparkle;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // ENHANCED RIM GLOW (Stronger Fresnel for meditation aesthetic)
@@ -242,16 +260,29 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     float subsurface = pow(max(0.0, dot(viewDir, -normal)), 2.0) * 0.3;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ANIMATED SPECULAR HIGHLIGHTS
+    // ANIMATED SPECULAR HIGHLIGHTS WITH SPARKLE LAYER
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Moving glints across surface
+    // Primary light direction
     vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3));
     vec3 halfVec = normalize(lightDir + viewDir);
-    float specular = pow(max(0.0, dot(normal, halfVec)), 32.0);
-    // Animate specular position
-    float specShift = sin(localTime * 0.003 + vPosition.x * 8.0) * 0.5 + 0.5;
-    specular *= specShift * 0.5;
+
+    // Soft specular base
+    float specularBase = pow(max(0.0, dot(normal, halfVec)), 32.0);
+
+    // Sharp specular sparkles - high power for tight, bright points
+    float specularSharp = pow(max(0.0, dot(normal, halfVec)), 128.0);
+
+    // Animate specular position with multiple frequencies
+    float specShift1 = sin(localTime * 0.003 + vPosition.x * 8.0) * 0.5 + 0.5;
+    float specShift2 = sin(localTime * 0.005 - vPosition.z * 12.0) * 0.5 + 0.5;
+    float specShift3 = sin(localTime * 0.007 + vPosition.y * 10.0) * 0.5 + 0.5;
+
+    // Combine for twinkling effect
+    float specularAnim = specShift1 * specShift2 * specShift3;
+
+    // Final specular: soft base + sharp sparkles
+    float specular = specularBase * 0.4 + specularSharp * specularAnim * 1.2 * uSparkleIntensity;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // FLOW ANIMATION (subtle pulsing)
@@ -266,72 +297,88 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     flowPulse *= microShimmer;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ENHANCED INTERNAL SPIRAL FLOW
+    // ENHANCED INTERNAL SPIRAL FLOW (configurable speed)
     // ═══════════════════════════════════════════════════════════════════════════════
 
+    // Internal flow speed scaling
+    float flowTimeScale = localTime * uInternalFlowSpeed;
+
     // Create visible internal currents with spiral pattern
-    float spiralAngle = atan(vPosition.y, vPosition.x) + localTime * 0.001;
+    float spiralAngle = atan(vPosition.y, vPosition.x) + flowTimeScale * 0.001;
     float spiralRadius = length(vPosition.xy);
-    float spiralFlow = sin(spiralAngle * 3.0 - spiralRadius * 4.0 + localTime * 0.002);
+    float spiralFlow = sin(spiralAngle * 3.0 - spiralRadius * 4.0 + flowTimeScale * 0.002);
     spiralFlow = spiralFlow * 0.5 + 0.5;  // Normalize to 0-1
 
     // Secondary counter-rotating spiral for depth
-    float spiral2 = sin(-spiralAngle * 2.0 + spiralRadius * 3.0 + localTime * 0.0015);
+    float spiral2 = sin(-spiralAngle * 2.0 + spiralRadius * 3.0 + flowTimeScale * 0.0015);
     spiral2 = spiral2 * 0.5 + 0.5;
 
-    // Combined internal flow visibility
-    float internalFlow = mix(spiralFlow, spiral2, 0.4) * 0.15;
+    // Tertiary spiral layer - finer detail
+    float spiral3 = sin(spiralAngle * 5.0 + spiralRadius * 6.0 - flowTimeScale * 0.0025);
+    spiral3 = spiral3 * 0.5 + 0.5;
+
+    // Combined internal flow visibility with depth layers
+    float internalFlow = spiralFlow * 0.4 + spiral2 * 0.35 + spiral3 * 0.25;
+    internalFlow *= 0.18;  // Overall intensity
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // COLOR CALCULATION
+    // COLOR CALCULATION WITH DEPTH GRADIENT
     // ═══════════════════════════════════════════════════════════════════════════════
 
     float localIntensity = pattern * flowPulse + edgeShimmer * 0.25;
     localIntensity = clamp(localIntensity, 0.0, 1.0);
 
-    // Get water color
+    // Get base water color
     vec3 color = waterColor(localIntensity, uTurbulence);
 
-    // Add caustic highlights
-    color += caustic * WATER_BRIGHT;
+    // Depth-based color gradient: deeper areas are more saturated blue
+    // Uses view-normal alignment as proxy for depth (center = deep, edges = shallow)
+    float depthProxy = abs(dot(normal, viewDir));
+    vec3 deepColor = WATER_DEEP * 1.2;  // Slightly enhanced deep blue
+    vec3 shallowColor = mix(WATER_MID, WATER_BRIGHT, 0.3);  // Brighter cyan at edges
+    vec3 depthTint = mix(shallowColor, deepColor, depthProxy);
+    color = mix(color, color * depthTint / WATER_MID, uDepthGradient);
+
+    // Add caustic highlights - minimal to prevent white washout
+    color += caustic * WATER_MID * 0.2;
 
     // Add subsurface scattering
-    color += subsurface * WATER_SUBSURFACE;
+    color += subsurface * WATER_SUBSURFACE * 0.7;
 
-    // Add specular highlights
-    color += specular * vec3(1.0, 1.0, 1.0);
+    // Add specular highlights - subtle cyan tint
+    color += specular * WATER_MID * 0.3;
 
     // Apply iridescent rim shimmer
     color += iridescent * iridescentStrength * uGlowScale;
 
-    // Apply internal spiral flow - brightens along flow lines
-    color += internalFlow * WATER_BRIGHT * uIntensity;
+    // Apply internal spiral flow - subtle brightening along flow lines
+    color += internalFlow * WATER_MID * uIntensity * 0.5;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // INNER GLOW / SELF-ILLUMINATION (scaled by uGlowScale)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     // Water appears to glow from within - tied to noise pattern
-    // Low base values so glowScale=1.0 is "normal", higher values push into bloom
-    float innerGlow = pattern * 0.12 + flowPulse * 0.05;
-    vec3 glowColor = vec3(0.3, 0.55, 0.8);  // Softer blue (less saturated)
+    // Reduced to prevent washing out the blue color
+    float innerGlow = pattern * 0.06 + flowPulse * 0.02;
+    vec3 glowColor = WATER_MID;  // Use ocean blue for inner glow
     color += innerGlow * glowColor * uIntensity * uGlowScale;
 
-    // Rim glow - significantly reduced so it doesn't blow out
-    color += rimGlow * WATER_BRIGHT * uIntensity * 0.15 * uGlowScale;
+    // Rim glow - subtle edge highlight
+    color += rimGlow * WATER_MID * uIntensity * 0.08 * uGlowScale;
 
     // Apply tint
     color *= uTint;
 
-    // Apply intensity multiplier
-    color *= uIntensity * (0.7 + localIntensity * 0.3);
+    // Apply intensity multiplier - significantly reduced to prevent white washout
+    color *= uIntensity * (0.4 + localIntensity * 0.2);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // BLOOM HINT (values > 1.0 for post-processing bloom to catch)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Sharp edge highlight - very subtle at base, gestureGlow ramps it up
-    color += rimSharp * vec3(0.1, 0.18, 0.25) * uIntensity * uGlowScale;
+    // Sharp edge highlight - minimal to avoid white washout
+    color += rimSharp * vec3(0.02, 0.04, 0.06) * uIntensity * uGlowScale;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // DEPTH VARIATION (thicker interior, transparent edges)
@@ -457,10 +504,28 @@ export const WATER_CUTOUT_GLSL = /* glsl */`
             discard;
         }
 
-        // Brighten edges of holes (foam rim effect)
-        float holeEdge = smoothstep(cutoutThreshold, cutoutThreshold + 0.15, finalCutout)
-                       * (1.0 - smoothstep(cutoutThreshold + 0.15, cutoutThreshold + 0.3, finalCutout));
-        color += holeEdge * WATER_FOAM * 0.5 * uCutoutStrength;
+        // Enhanced foam rim effect at hole edges - multiple layers for depth
+        float nearEdge = smoothstep(cutoutThreshold, cutoutThreshold + 0.1, finalCutout);
+        float farEdge = smoothstep(cutoutThreshold + 0.25, cutoutThreshold + 0.4, finalCutout);
+
+        // Sharp inner rim (bright foam line at cutout boundary)
+        float innerRim = nearEdge * (1.0 - smoothstep(cutoutThreshold + 0.1, cutoutThreshold + 0.2, finalCutout));
+
+        // Softer outer glow (wider, subtler foam aura)
+        float outerGlow = nearEdge * (1.0 - farEdge) * 0.5;
+
+        // Animated sparkles along the foam edge
+        float foamSparkle = sin(localTime * 0.008 + vPosition.x * 15.0 + vPosition.z * 12.0) * 0.5 + 0.5;
+        foamSparkle *= sin(localTime * 0.006 - vPosition.y * 18.0) * 0.5 + 0.5;
+        foamSparkle = pow(foamSparkle, 3.0) * innerRim;
+
+        // Apply foam effects
+        color += innerRim * WATER_FOAM * 0.7 * uCutoutStrength;
+        color += outerGlow * WATER_BRIGHT * 0.4 * uCutoutStrength;
+        color += foamSparkle * vec3(1.0, 1.0, 1.0) * 0.5 * uCutoutStrength * uSparkleIntensity;
+
+        // Foam edges are slightly more opaque
+        alpha = mix(alpha, min(1.0, alpha + 0.1), innerRim * uCutoutStrength);
     }
 `;
 
@@ -473,40 +538,107 @@ export const WATER_CUTOUT_GLSL = /* glsl */`
  */
 export const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
     // ═══════════════════════════════════════════════════════════════════════════════
-    // DRIP ANTICIPATION (bright spots suggesting surface tension)
+    // ENHANCED DRIP ANTICIPATION (surface tension hotspots with visible gathering)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     // Create multiple potential drip points using spatial hash
     float dripHash1 = snoise(vPosition * 8.0 + vec3(12.34, 56.78, 90.12));
     float dripHash2 = snoise(vPosition * 8.0 + vec3(98.76, 54.32, 10.98));
+    float dripHash3 = snoise(vPosition * 6.0 + vec3(45.67, 23.45, 67.89));
 
     // Only some areas become drip points (threshold creates sparse points)
-    float dripPoint1 = smoothstep(0.7, 0.85, dripHash1);
-    float dripPoint2 = smoothstep(0.7, 0.85, dripHash2);
+    float dripPoint1 = smoothstep(0.65, 0.85, dripHash1);
+    float dripPoint2 = smoothstep(0.7, 0.88, dripHash2);
+    float dripPoint3 = smoothstep(0.72, 0.9, dripHash3);
 
     // Each drip point has its own pulse timing (offset by position hash)
     float dripPhase1 = localTime * 0.003 + dripHash1 * 6.28318;
     float dripPhase2 = localTime * 0.0025 + dripHash2 * 6.28318;
+    float dripPhase3 = localTime * 0.002 + dripHash3 * 6.28318;
 
     // Pulse pattern: slow build, quick release (like water gathering then almost falling)
-    // Uses sawtooth-like wave that builds slowly then drops
-    float dripPulse1 = pow(fract(dripPhase1 * 0.15), 3.0);  // Slow cubic build
+    float dripPulse1 = pow(fract(dripPhase1 * 0.15), 3.0);
     float dripPulse2 = pow(fract(dripPhase2 * 0.12), 3.0);
+    float dripPulse3 = pow(fract(dripPhase3 * 0.1), 2.5);
 
     // Occasional bright flash at peak (surface tension breaking point)
     float dripFlash1 = smoothstep(0.85, 0.95, dripPulse1) * (1.0 - smoothstep(0.95, 1.0, dripPulse1));
     float dripFlash2 = smoothstep(0.85, 0.95, dripPulse2) * (1.0 - smoothstep(0.95, 1.0, dripPulse2));
+    float dripFlash3 = smoothstep(0.88, 0.96, dripPulse3) * (1.0 - smoothstep(0.96, 1.0, dripPulse3));
 
-    // Combine drip effects
-    float dripIntensity = dripPoint1 * (dripPulse1 * 0.3 + dripFlash1 * 0.7)
-                        + dripPoint2 * (dripPulse2 * 0.3 + dripFlash2 * 0.7);
+    // Surface tension bulge effect - visible gathering before flash
+    float tensionBulge1 = smoothstep(0.5, 0.85, dripPulse1) * dripPoint1;
+    float tensionBulge2 = smoothstep(0.5, 0.85, dripPulse2) * dripPoint2;
+    float tensionBulge = (tensionBulge1 + tensionBulge2) * 0.5;
 
-    // Apply drip highlights - bright white-cyan flash
-    vec3 dripColor = mix(WATER_BRIGHT, WATER_FOAM, dripFlash1 + dripFlash2);
-    color += dripIntensity * dripColor * 0.4 * uGlowScale;
+    // Combine drip effects with enhanced visibility
+    float dripIntensity = dripPoint1 * (dripPulse1 * 0.35 + dripFlash1 * 0.65)
+                        + dripPoint2 * (dripPulse2 * 0.35 + dripFlash2 * 0.65)
+                        + dripPoint3 * (dripPulse3 * 0.3 + dripFlash3 * 0.7);
 
-    // Drips are slightly more opaque at gathering points
-    alpha = mix(alpha, min(1.0, alpha + 0.1), dripIntensity);
+    // Apply drip highlights - bright white-cyan flash with subtle rainbow
+    float flashTotal = dripFlash1 + dripFlash2 + dripFlash3;
+    vec3 dripColor = mix(WATER_BRIGHT, WATER_FOAM, min(1.0, flashTotal));
+
+    // Add subtle rainbow shimmer to the flash (refraction effect)
+    float rainbowPhase = localTime * 0.002 + vPosition.x * 5.0;
+    vec3 rainbowTint = vec3(
+        0.5 + 0.5 * sin(rainbowPhase),
+        0.5 + 0.5 * sin(rainbowPhase + 2.094),
+        0.5 + 0.5 * sin(rainbowPhase + 4.189)
+    );
+    dripColor = mix(dripColor, dripColor * rainbowTint, flashTotal * 0.15);
+
+    color += dripIntensity * dripColor * 0.25 * uGlowScale;
+
+    // Surface tension bulge adds subtle brightness
+    color += tensionBulge * WATER_BRIGHT * 0.15;
+
+    // Drips are more opaque at gathering points
+    alpha = mix(alpha, min(1.0, alpha + 0.15), dripIntensity);
+    alpha = mix(alpha, min(1.0, alpha + 0.08), tensionBulge);
+`;
+
+/**
+ * Foam edge effects for water cutout holes.
+ * Uses finalCutout from CUTOUT_GLSL (must be included before this).
+ * Adds bright foam rim at hole edges and boosts alpha to prevent dark artifacts.
+ *
+ * Expected: finalCutout (from CUTOUT_GLSL), color, alpha, localTime, vPosition, uCutoutStrength
+ */
+export const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // WATER CUTOUT FOAM EDGES (brightens cutout boundaries to prevent dark artifacts)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    if (uCutoutStrength > 0.01 && finalCutout < 0.99) {
+        float cutoutThreshold = 0.5;
+
+        // Enhanced foam rim effect at hole edges - multiple layers for depth
+        float nearEdge = smoothstep(cutoutThreshold, cutoutThreshold + 0.15, finalCutout);
+        float farEdge = smoothstep(cutoutThreshold + 0.3, cutoutThreshold + 0.5, finalCutout);
+
+        // Sharp inner rim (bright foam line at cutout boundary)
+        float innerRim = nearEdge * (1.0 - smoothstep(cutoutThreshold + 0.15, cutoutThreshold + 0.25, finalCutout));
+
+        // Softer outer glow (wider, subtler foam aura)
+        float outerGlow = nearEdge * (1.0 - farEdge) * 0.4;
+
+        // Animated sparkles along the foam edge
+        float foamSparkle = sin(localTime * 0.008 + vPosition.x * 15.0 + vPosition.z * 12.0) * 0.5 + 0.5;
+        foamSparkle *= sin(localTime * 0.006 - vPosition.y * 18.0) * 0.5 + 0.5;
+        foamSparkle = pow(foamSparkle, 3.0) * innerRim;
+
+        // Apply foam effects - subtle cyan/white highlights at edges
+        // Reduced significantly to prevent all-white water with alpha=1.0 fix
+        color += innerRim * WATER_BRIGHT * 0.25 * uCutoutStrength;
+        color += outerGlow * WATER_MID * 0.15 * uCutoutStrength;
+        color += foamSparkle * WATER_FOAM * 0.2 * uCutoutStrength * uSparkleIntensity;
+
+        // Foam edges are more opaque to prevent dark semi-transparency
+        alpha = mix(alpha, min(1.0, alpha + 0.15), innerRim * uCutoutStrength);
+        alpha = mix(alpha, min(1.0, alpha + 0.08), outerGlow * uCutoutStrength);
+    }
 `;
 
 /**
@@ -514,9 +646,6 @@ export const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
  * Prevents water from becoming too transparent
  */
 export const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
-    // Minimum brightness floor - subtle blue
-    color = max(color, vec3(0.1, 0.2, 0.4) * uIntensity * 0.4);
-
     // Soft brightness compression - preserves color variation while controlling bloom
     // Uses exponential rolloff above threshold instead of hard clamp
     // uBloomThreshold is set per-mascot: 0.35 for crystal/heart/rough, 0.85 for moon/star
@@ -533,6 +662,13 @@ export const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
 
     // Discard faint fragments
     if (alpha < 0.1) discard;
+
+    // CRITICAL: Set alpha to 1.0 for visible fragments to prevent CSS background blending
+    // With premultipliedAlpha: false, browser does: result = canvas * alpha + css_bg * (1-alpha)
+    // If alpha < 1, dark water fragments DARKEN the CSS background (dark * 0.5 + bg * 0.5 < bg)
+    // By setting alpha = 1.0, the water fully replaces the background - no darkening possible
+    // The additive "glow" effect comes from the bloom pass, not from alpha blending
+    alpha = 1.0;
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -595,6 +731,7 @@ export default {
     WATER_FRAGMENT_CORE,
     WATER_ARC_FOAM_GLSL,
     WATER_CUTOUT_GLSL,
+    WATER_CUTOUT_FOAM_GLSL,
     WATER_DRIP_ANTICIPATION_GLSL,
     WATER_FLOOR_AND_DISCARD_GLSL,
     lerp3,

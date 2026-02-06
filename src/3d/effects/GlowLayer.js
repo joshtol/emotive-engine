@@ -124,7 +124,8 @@ export class GlowLayer {
                     // Use HDR values (>1.0) for bloom pickup
                     vec3 color = glowColor * intensity * 2.0;
 
-                    // Alpha for blending
+                    // Alpha for blending - GlowLayer needs true alpha transparency
+                    // for its overlay effect (unlike water which uses opaque additive)
                     float alpha = intensity * 0.6;
 
                     gl_FragColor = vec4(color, alpha);

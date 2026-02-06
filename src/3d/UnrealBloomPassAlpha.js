@@ -13,17 +13,22 @@
  */
 
 import {
+    AddEquation,
     AdditiveBlending,
     Color,
+    CustomBlending,
     HalfFloatType,
     LinearFilter,
     MeshBasicMaterial,
+    NoBlending,
+    OneFactor,
     RGBAFormat,
     ShaderMaterial,
     // UniformsUtils - available for uniform cloning if needed
     Vector2,
     Vector3,
-    WebGLRenderTarget
+    WebGLRenderTarget,
+    ZeroFactor
 } from 'three';
 import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 
@@ -169,11 +174,32 @@ export class UnrealBloomPassAlpha extends Pass {
         this.oldClearAlpha = 1;
         this.clearColor = new Color(0, 0, 0); // CRITICAL: Initialize clear color
 
-        this.basic = new MeshBasicMaterial({
-            transparent: true,
+        // Custom shader for base copy that explicitly preserves alpha
+        // Using ShaderMaterial instead of MeshBasicMaterial for full control
+        this.basicShader = new ShaderMaterial({
+            uniforms: {
+                'tDiffuse': { value: null }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }`,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                varying vec2 vUv;
+                void main() {
+                    // Directly output texture RGBA - preserves alpha channel
+                    gl_FragColor = texture2D(tDiffuse, vUv);
+                }`,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
+            blending: NoBlending  // Direct copy, no blending
         });
+
+        // Keep the old basic material for compatibility, but we'll use basicShader
+        this.basic = this.basicShader;
 
         this.fsQuad = new FullScreenQuad(null);
     }
