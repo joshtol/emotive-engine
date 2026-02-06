@@ -58,8 +58,8 @@ export class UnrealBloomPassAlpha extends Pass {
         this.nMips = 5;
 
         // 75% resolution for sharp bloom with good performance
-        let resx = Math.round(this.resolution.x * 0.75);
-        let resy = Math.round(this.resolution.y * 0.75);
+        let resx = Math.round(this.resolution.x * 1.0);
+        let resy = Math.round(this.resolution.y * 1.0);
 
         this.renderTargetBright = new WebGLRenderTarget(resx, resy, pars);
         this.renderTargetBright.texture.name = 'UnrealBloomPassAlpha.bright';
@@ -118,8 +118,8 @@ export class UnrealBloomPassAlpha extends Pass {
         this.separableBlurMaterials = [];
         const kernelSizeArray = [3, 5, 7, 9, 11];
         // 75% resolution for sharp bloom with good performance
-        resx = Math.round(this.resolution.x * 0.75);
-        resy = Math.round(this.resolution.y * 0.75);
+        resx = Math.round(this.resolution.x * 1.0);
+        resy = Math.round(this.resolution.y * 1.0);
 
         for (let i = 0; i < this.nMips; i++) {
             this.separableBlurMaterials.push(this.getSeperableBlurMaterial(kernelSizeArray[i]));
@@ -144,7 +144,8 @@ export class UnrealBloomPassAlpha extends Pass {
         this.bloomTintColors = [new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1)];
         this.compositeMaterial.uniforms['bloomTintColors'].value = this.bloomTintColors;
 
-        // Copy material with additive blending (like working implementation)
+        // Copy material with CustomBlending: RGB additive, Alpha preserve destination
+        // With premultipliedAlpha: true, this avoids double-darkening on CSS composite
         this.materialCopy = new ShaderMaterial({
             uniforms: {
                 'tDiffuse': { value: null }
@@ -161,7 +162,11 @@ export class UnrealBloomPassAlpha extends Pass {
                 void main() {
                     gl_FragColor = texture2D(tDiffuse, vUv);
                 }`,
-            blending: AdditiveBlending,
+            blending: CustomBlending,
+            blendSrc: OneFactor,       // RGB: src * 1
+            blendDst: OneFactor,       // RGB: + dst * 1 (additive)
+            blendSrcAlpha: ZeroFactor, // Alpha: src * 0 (ignore bloom alpha)
+            blendDstAlpha: OneFactor,  // Alpha: + dst * 1 (preserve scene alpha)
             depthTest: false,
             depthWrite: false,
             transparent: true
@@ -174,32 +179,15 @@ export class UnrealBloomPassAlpha extends Pass {
         this.oldClearAlpha = 1;
         this.clearColor = new Color(0, 0, 0); // CRITICAL: Initialize clear color
 
-        // Custom shader for base copy that explicitly preserves alpha
-        // Using ShaderMaterial instead of MeshBasicMaterial for full control
-        this.basicShader = new ShaderMaterial({
-            uniforms: {
-                'tDiffuse': { value: null }
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }`,
-            fragmentShader: `
-                uniform sampler2D tDiffuse;
-                varying vec2 vUv;
-                void main() {
-                    // Directly output texture RGBA - preserves alpha channel
-                    gl_FragColor = texture2D(tDiffuse, vUv);
-                }`,
+        // CRITICAL: Use NoBlending to copy pixels directly without alpha-blending with destination
+        // NormalBlending causes dark halos: result = src * srcAlpha + dst * (1 - srcAlpha)
+        // If dst is black and srcAlpha < 1 at edges, edges get darkened
+        this.basic = new MeshBasicMaterial({
+            transparent: false,
             depthTest: false,
             depthWrite: false,
-            blending: NoBlending  // Direct copy, no blending
+            blending: NoBlending  // Just copy pixels, don't blend
         });
-
-        // Keep the old basic material for compatibility, but we'll use basicShader
-        this.basic = this.basicShader;
 
         this.fsQuad = new FullScreenQuad(null);
     }
@@ -271,8 +259,8 @@ export class UnrealBloomPassAlpha extends Pass {
         this.resolution.set(width, height);
 
         // 75% resolution for sharp bloom with good performance
-        let resx = Math.round(width * 0.75);
-        let resy = Math.round(height * 0.75);
+        let resx = Math.round(width * 1.0);
+        let resy = Math.round(height * 1.0);
 
         this.renderTargetBright.setSize(resx, resy);
 

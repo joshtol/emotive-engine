@@ -41,7 +41,7 @@ export class ThreeRenderer {
         this.renderer = new THREE.WebGLRenderer({
             canvas,
             alpha: true, // Transparent background
-            premultipliedAlpha: false, // Required for CSS backgrounds to blend correctly
+            premultipliedAlpha: true, // With CustomBlending on bloom, avoids double-darkening on CSS composite
             antialias: false,  // DIAGNOSTIC: Disabled to test if MSAA causes dark edges
             powerPreference: 'high-performance',
             preserveDrawingBuffer: false,
@@ -464,9 +464,9 @@ export class ThreeRenderer {
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
-            1.2, // strength - moderate glow
-            0.8, // radius - wider spread for stronger bloom
-            0.3  // threshold - preserve texture detail
+            0.35, // strength - subtle glow that doesn't wash out detail
+            0.3,  // radius - tight for crisp glow edges
+            0.75  // threshold - very high to only catch HDR peaks
         );
         this.bloomPass.name = 'bloomPass';
         this.bloomPass.enabled = true; // Using proven working blur shader approach

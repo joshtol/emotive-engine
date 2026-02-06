@@ -958,13 +958,13 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     // Crystal appearance (tuned for crystal.obj)
     frostiness: 0.55,           // Frosted translucency (slightly less opaque)
     fresnelPower: 2.8,          // Edge brightness falloff (slightly sharper)
-    fresnelIntensity: 0.35,     // Edge brightness strength (more visible rim)
+    fresnelIntensity: 0.25,     // Edge brightness strength (subtle rim, less bloom blowout)
     innerGlowStrength: 0.55,    // How much soul shows through (boosted)
     surfaceRoughness: 0.12,     // Surface texture variation (subtler)
 
     // Enhanced lighting
     shadowDarkness: 0.60,       // How dark shadows can get (0-1) - strong shadows
-    specularIntensity: 0.9,     // Edge highlight brightness
+    specularIntensity: 0.5,     // Edge highlight brightness (reduced to prevent bloom blowout)
     specularPower: 28.0,        // Specular falloff sharpness
     transmissionContrast: 1.0,  // Thin/thick brightness ratio
     minBrightness: 0.005,       // Minimum brightness floor (near-black for gemstones)
