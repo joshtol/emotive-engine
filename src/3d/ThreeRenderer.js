@@ -52,8 +52,10 @@ export class ThreeRenderer {
 
         // Force higher color depth if available
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        this.renderer.toneMapping = THREE.NoToneMapping;
-        this.renderer.toneMappingExposure = 1.0;
+        // ACES Filmic tone mapping compresses HDR highlights gracefully
+        // Prevents blown-out whites and preserves color saturation in bright areas
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.0;  // Neutral exposure, let ACES curve do the work
 
         // Set clear color with full alpha transparency for CSS backgrounds
         this.renderer.setClearColor(0x000000, 0);
@@ -464,9 +466,9 @@ export class ThreeRenderer {
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
-            0.35, // strength - subtle glow that doesn't wash out detail
-            0.3,  // radius - tight for crisp glow edges
-            0.75  // threshold - very high to only catch HDR peaks
+            1.5,  // strength - strong glow for HDR elements (threshold filters what glows)
+            0.4,  // radius - moderate spread for soft halo
+            0.9   // threshold - very high so only HDR peaks (>0.9) trigger bloom
         );
         this.bloomPass.name = 'bloomPass';
         this.bloomPass.enabled = true; // Using proven working blur shader approach
@@ -1144,16 +1146,16 @@ export class ThreeRenderer {
             const normalized = this.normalizeIntensity(targetIntensity);
             let targetThreshold, targetStrength, targetRadius;
 
-            // Sun geometry needs controlled bloom for NASA-quality photosphere detail
+            // Sun geometry needs controlled bloom for photosphere glow
             if (geometryType === 'sun') {
-                targetStrength = 1.5;   // Slightly stronger glow
+                targetStrength = 1.5;   // Moderate glow
                 targetRadius = 0.4;     // Lower radius prevents pixelation from low-res mips
-                targetThreshold = 0.3;  // Higher threshold to preserve texture detail
+                targetThreshold = 0.3;  // Lower threshold for sun glow effect
             } else if (geometryType === 'crystal' || geometryType === 'rough' || geometryType === 'heart') {
-                // Crystal/rough/heart need strong bloom for light emission effect
-                targetStrength = 1.8;   // Strong bloom with HDR
-                targetRadius = 0.7;     // Wide spread for glow halo
-                targetThreshold = 0.35; // Low threshold to catch HDR glow
+                // Crystal/rough/heart need bloom for light emission effect
+                targetStrength = 1.5;   // Moderate bloom - 2.5 was way too intense
+                targetRadius = 0.5;     // Moderate spread
+                targetThreshold = 0.5;  // Mid threshold - catches speculars without blowing out
             } else if (this.materialMode === 'glass') {
                 // Glass mode needs much lower bloom strength to avoid haziness
                 // Since we're using white emissive at fixed intensity for uniformity
