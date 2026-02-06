@@ -436,6 +436,11 @@ export class ElementInstancedSpawner {
         // Track pool usage time for cleanup (prevents premature disposal)
         this._poolLastUsed.set(elementType, performance.now());
 
+        // Apply renderOrder from animation config to mesh (affects depth sorting)
+        if (animConfig?.rendering?.renderOrder !== undefined) {
+            pool.mesh.renderOrder = animConfig.rendering.renderOrder;
+        }
+
         // Clear existing elements of this type first
         this.despawn(elementType);
 

@@ -129,7 +129,7 @@ const FIREMEDITATION_CONFIG = {
             scaleVariance: 0,       // Uniform for meditation
             lifetimeVariance: 0,
             blending: 'additive',
-            renderOrder: 14,
+            renderOrder: -5,    // Render before mascot (behind)
             modelOverrides: {
                 'flame-ring': {
                     shaderAnimation: {

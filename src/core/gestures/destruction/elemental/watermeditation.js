@@ -18,9 +18,10 @@
  *           ○
  *
  * FEATURES:
- * - 5 splash rings in mandala formation (1 center + 4 outer)
+ * - 3 splash rings in mandala formation (1 center + 2 outer)
  * - Anchored at center (no travel)
  * - Synchronized breathing pulse animation
+ * - CELLULAR + STREAKS cutout with angular travel (like watercrown)
  * - Calm meditative water energy
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
@@ -44,11 +45,11 @@ const WATERMEDITATION_CONFIG = {
     description: 'Meditative water rings with breathing pulse',
     duration: 4000,         // Longer for meditation feel
     beats: 4,
-    intensity: 0.7,         // Calmer intensity
+    intensity: 0.5,         // Calmer intensity (reduced to prevent white buildup)
     category: 'ambient',
     turbulence: 0.1,
 
-    // 3D Element spawning - MANDALA: 5 rings at different heights and sizes
+    // 3D Element spawning - MANDALA: 3 rings (1 center + 2 outer)
     spawnMode: {
         type: 'axis-travel',
         axisTravel: {
@@ -64,13 +65,13 @@ const WATERMEDITATION_CONFIG = {
         },
         formation: {
             type: 'mandala',            // Rings positioned in circular pattern
-            count: 5,                   // 1 center + 4 outer rings
+            count: 3,                   // 1 center + 2 outer rings
             radius: 0.5,                // Distance of outer rings from center
-            arcOffset: 45,              // 45° rotation between each ring
+            arcOffset: 60,              // 60° rotation between each ring
             // Mandala scale: center large, outer rings smaller
-            scales: [1.0, 0.6, 0.6, 0.6, 0.6]
+            scales: [1.0, 0.7, 0.7]
         },
-        count: 5,
+        count: 3,
         scale: 1.5,
         models: ['splash-ring'],
         animation: {
@@ -99,6 +100,22 @@ const WATERMEDITATION_CONFIG = {
                     curve: 'sine'   // Smooth breathing curve
                 }
             },
+            // Organic cellular holes with flow streaks (like watercrown)
+            cutout: {
+                strength: 0.6,
+                primary: { pattern: 0, scale: 0.8, weight: 1.0 },   // CELLULAR - organic bubbles
+                secondary: { pattern: 1, scale: 0.6, weight: 0.5 }, // STREAKS - subtle flow
+                blend: 'multiply',
+                travel: 'angular',                                   // Sweep around ring
+                travelSpeed: 0.5,                                    // Slow meditative sweep
+                strengthCurve: 'constant',                           // Always textured
+                // Trail dissolve: organic fade at bottom of camera-facing rings
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.5,        // Floor below ring center
+                    softness: 1.8        // Wide soft gradient for ethereal look
+                }
+            },
             // Strong breathing pulse - the key feature
             pulse: {
                 amplitude: 0.15,    // Noticeable breathing
@@ -106,18 +123,16 @@ const WATERMEDITATION_CONFIG = {
                 easing: 'easeInOut'
             },
             // Gentle slow rotation around Z (spin while facing camera)
-            // 5 rings with alternating directions for mandala harmony
+            // 3 rings with alternating directions for mandala harmony
             rotate: [
                 { axis: 'z', rotations: 0.4, phase: 0 },      // Ring 0: clockwise
                 { axis: 'z', rotations: -0.35, phase: 0 },    // Ring 1: counter-clockwise
-                { axis: 'z', rotations: 0.25, phase: 0 },     // Ring 2: slow clockwise
-                { axis: 'z', rotations: -0.35, phase: 0 },    // Ring 3: counter-clockwise
-                { axis: 'z', rotations: 0.4, phase: 0 }       // Ring 4: clockwise
+                { axis: 'z', rotations: 0.3, phase: 0 }       // Ring 2: slow clockwise
             ],
             scaleVariance: 0,       // Uniform for meditation
             lifetimeVariance: 0,
-            blending: 'normal',
-            renderOrder: 14,
+            blending: 'additive',
+            renderOrder: -5,    // Render before mascot (behind)
             modelOverrides: {
                 'splash-ring': {
                     shaderAnimation: {
@@ -151,8 +166,9 @@ const WATERMEDITATION_CONFIG = {
  * Watermeditation gesture - mandala rings with breathing pulse.
  *
  * Uses axis-travel with mandala formation:
- * - 5 splash-ring models in mandala pattern
+ * - 3 splash-ring models in mandala pattern
  * - Synchronized breathing pulse (scale + emissive)
+ * - CELLULAR + STREAKS cutout with angular travel for organic texture
  * - Calm meditative water energy
  */
 export default buildWaterEffectGesture(WATERMEDITATION_CONFIG);

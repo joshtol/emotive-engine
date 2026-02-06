@@ -5,267 +5,155 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Waterdrench gesture - combust-style 60/40 buildup/burst
+ * @fileoverview Waterdrench gesture - concentric ripples expanding outward
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/waterdrench
- * @complexity ⭐⭐⭐ Advanced
+ * @complexity ⭐ Basic
  *
- * VISUAL DIAGRAM (COMBUST-STYLE):
+ * VISUAL DIAGRAM:
  *
- *    BUILDUP (60%)          BURST (40%)
- *        💧                  💧 💧 💧
- *       💧💧          →     💧 BOOM 💧
- *      💧💧💧                💧 💧 💧
+ *        ╭───────╮
+ *       ╭─────────╮
+ *      ╭───────────╮     ← Concentric rings expanding outward
+ *         ★              ← Mascot at center
+ *      ╰───────────╯
+ *       ╰─────────╯
+ *        ╰───────╯
  *
  * FEATURES:
- * - TWO-PHASE: 60% buildup + 40% explosive burst
- * - Layer 1: Orbiting droplets gathering (buildup phase)
- * - Layer 2: Radial burst explosion (release phase)
- * - Combust-style timing with dramatic payoff
- * - GPU-instanced rendering via ElementInstancedSpawner
+ * - 4 concentric splash rings expanding outward
+ * - Staggered appearance for ripple wave effect
+ * - Camera-facing rings for clean visibility
+ * - CELLULAR cutout for organic water texture
+ * - Simple, classic water ripple effect
  *
  * USED BY:
- * - Water explosion effects
- * - Dramatic deluge visuals
- * - Water bomb reactions
+ * - Water impact effects
+ * - Splash reactions
+ * - Ripple emanation
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Waterdrench gesture configuration
- * Combust-style 60/40 buildup/burst water explosion
+ * Concentric ripples expanding from center
  */
 const WATERDRENCH_CONFIG = {
     name: 'drench',
     emoji: '🌊',
     type: 'blending',
-    description: 'Combust-style 60/40 buildup/burst water explosion',
-    duration: 2000,
+    description: 'Concentric water ripples expanding outward',
+    duration: 1500,
     beats: 3,
-    intensity: 1.4,
+    intensity: 1.0,
     category: 'impact',
-    turbulence: 0.7,
+    turbulence: 0.4,
 
-    // 3D Element spawning - COMBUST-STYLE: 60% buildup, 40% burst
-    spawnMode: [
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Orbiting droplets gathering (BUILDUP PHASE - 60%)
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'orbit',
-            orbit: {
-                radius: 1.2,            // Start wide
-                height: 0,
-                speed: 0.8,             // Moderate orbit speed
-                direction: 'cw',
-                shrink: {
+    // 3D Element spawning - CONCENTRIC RIPPLES
+    spawnMode: {
+        type: 'axis-travel',
+        axisTravel: {
+            axis: 'y',
+            start: 'center',
+            end: 'center',              // Stay at center
+            easing: 'linear',
+            startScale: 0.3,
+            endScale: 2.0,              // Expand dramatically
+            startDiameter: 0.4,
+            endDiameter: 2.8,           // Wide ripple spread
+            orientation: 'camera'        // Face camera for visibility
+        },
+        formation: {
+            type: 'stack',
+            count: 3,
+            spacing: 0                  // All at same position, stagger does the work
+        },
+        count: 3,
+        scale: 1.0,
+        models: ['splash-ring'],
+        animation: {
+            appearAt: 0.0,
+            disappearAt: 0.85,
+            stagger: 0.15,              // Each ring appears after previous - creates ripple wave
+            enter: {
+                type: 'scale',
+                duration: 0.1,
+                easing: 'easeOutBack'
+            },
+            exit: {
+                type: 'fade',
+                duration: 0.25,
+                easing: 'easeIn'
+            },
+            procedural: {
+                scaleSmoothing: 0.06,
+                geometryStability: true
+            },
+            parameterAnimation: {
+                turbulence: {
+                    start: 0.5,
+                    peak: 0.3,
+                    end: 0.1,
+                    curve: 'bell'
+                }
+            },
+            // Cutout: organic cellular water texture
+            cutout: {
+                strength: 0.5,
+                primary: { pattern: 0, scale: 0.9, weight: 1.0 },   // CELLULAR - bubbles
+                blend: 'multiply',
+                travel: 'radial',           // Expand outward with ring
+                travelSpeed: 1.0,
+                strengthCurve: 'fadeOut',   // Fade as ripple dissipates
+                trailDissolve: {
                     enabled: true,
-                    startRadius: 1.5,
-                    endRadius: 0.3,     // Compress inward during buildup
-                    easing: 'easeInQuad'
+                    offset: -0.3,
+                    softness: 1.2
                 }
             },
-            formation: {
-                type: 'ring',
-                count: 6
+            pulse: {
+                amplitude: 0.05,
+                frequency: 2,
+                easing: 'easeOut'
             },
-            count: 6,
-            scale: 0.8,
-            models: ['droplet-large', 'droplet-small', 'droplet-large', 'droplet-small', 'droplet-large', 'droplet-small'],
-            animation: {
-                appearAt: 0.0,
-                disappearAt: 0.58,      // Disappear just before burst (60% mark)
-                stagger: 0.08,
-                enter: {
-                    type: 'scale',
-                    duration: 0.15,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'implode',     // Collapse inward before burst
-                    duration: 0.1,
-                    easing: 'easeInQuad'
-                },
-                procedural: {
-                    scaleSmoothing: 0.1,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.3,
-                        peak: 0.7,       // Build tension
-                        end: 0.9,        // Maximum at burst
-                        curve: 'exponential'
-                    }
-                },
-                // Accelerating pulse as tension builds
-                pulse: {
-                    amplitude: 0.15,
-                    frequency: 4,        // Gets faster feeling with orbit
-                    easing: 'easeInOut'
-                },
-                blending: 'normal',
-                renderOrder: 8,
-                modelOverrides: {
-                    'droplet-large': {
-                        scaling: {
-                            mode: 'uniform-pulse',
-                            amplitude: 0.12,
-                            frequency: 5
-                        }
+            blending: 'additive',
+            renderOrder: 10,
+            modelOverrides: {
+                'splash-ring': {
+                    shaderAnimation: {
+                        type: 1,
+                        arcWidth: 0.95,     // Nearly complete ring
+                        arcSpeed: 0.3,
+                        arcCount: 1
                     },
-                    'droplet-small': {
-                        scaling: {
-                            mode: 'uniform-pulse',
-                            amplitude: 0.08,
-                            frequency: 6
-                        }
-                    }
-                }
-            }
-        },
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Radial burst explosion (BURST PHASE - 40%)
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'radial-burst',
-            radialBurst: {
-                startRadius: 0.2,       // Explode from center
-                endRadius: 2.5,         // Expand dramatically
-                height: 0,
-                easing: 'easeOutExpo'   // Fast initial burst, slowing
-            },
-            formation: {
-                type: 'ring',
-                count: 10               // Dense ring of droplets
-            },
-            count: 10,
-            scale: 1.2,
-            models: ['droplet-large', 'droplet-small', 'splash-ring', 'droplet-large', 'droplet-small', 'splash-ring', 'droplet-large', 'droplet-small', 'splash-ring', 'droplet-large'],
-            animation: {
-                appearAt: 0.58,         // Start at 60% mark (burst phase)
-                disappearAt: 0.95,
-                stagger: 0.02,          // Rapid cascade
-                enter: {
-                    type: 'explode',
-                    duration: 0.08,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.2,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.05,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 1.0,      // Maximum at burst
-                        peak: 0.8,
-                        end: 0.2,
-                        curve: 'bell'
-                    }
-                },
-                pulse: {
-                    amplitude: 0.1,
-                    frequency: 8,        // Rapid post-burst vibration
-                    easing: 'easeOut'
-                },
-                blending: 'normal',
-                renderOrder: 12,
-                modelOverrides: {
-                    'droplet-large': {
-                        scaling: {
-                            mode: 'velocity-stretch',
-                            stretchFactor: 1.8,
-                            maxStretch: 2.2
-                        }
-                    },
-                    'splash-ring': {
-                        opacityLink: 'inverse-scale',
-                        shaderAnimation: {
-                            type: 1,
-                            arcWidth: 0.6,
-                            arcSpeed: 2.0,
-                            arcCount: 2
-                        }
-                    }
-                }
-            }
-        },
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Expanding shockwave ring (BURST ACCENT)
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'axis-travel',
-            axisTravel: {
-                axis: 'y',
-                start: 'center',
-                end: 'center',
-                startDiameter: 0.3,
-                endDiameter: 3.0,        // Expand dramatically
-                orientation: 'flat'
-            },
-            count: 1,
-            scale: 1.0,
-            models: ['splash-ring'],
-            animation: {
-                appearAt: 0.58,          // Sync with burst
-                disappearAt: 0.85,
-                enter: {
-                    type: 'scale',
-                    duration: 0.05,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.25,
-                    easing: 'easeIn'
-                },
-                blending: 'normal',
-                renderOrder: 6,
-                modelOverrides: {
-                    'splash-ring': {
-                        opacityLink: 'inverse-scale',
-                        shaderAnimation: {
-                            type: 1,
-                            arcWidth: 0.95,
-                            arcSpeed: 0.5,
-                            arcCount: 1
-                        }
-                    }
+                    orientationOverride: 'camera'
                 }
             }
         }
-    ],
+    },
 
-    // Wobble - dramatic for explosion
-    wobbleFrequency: 3,
-    wobbleAmplitude: 0.02,
-    wobbleDecay: 0.4,
-    // Scale - compression then expansion
-    scaleWobble: 0.05,
-    scaleFrequency: 4,
-    scaleGrowth: 0.02,
-    // Glow - intense burst
-    glowColor: [0.2, 0.5, 0.95],
-    glowIntensityMin: 1.0,
-    glowIntensityMax: 2.5,
-    glowPulseRate: 5,
-    // Drench-specific
-    burstPhase: 0.6,                    // 60% buildup, 40% burst
-    explosionIntensity: 1.5
+    // Wobble - ripple impact
+    wobbleFrequency: 2,
+    wobbleAmplitude: 0.01,
+    wobbleDecay: 0.6,
+    // Scale
+    scaleWobble: 0.02,
+    scaleFrequency: 2,
+    scaleGrowth: 0,
+    // Glow - water blue
+    glowColor: [0.2, 0.5, 0.9],
+    glowIntensityMin: 0.7,
+    glowIntensityMax: 1.3,
+    glowPulseRate: 2
 };
 
 /**
- * Waterdrench gesture - combust-style 60/40 buildup/burst.
+ * Waterdrench gesture - concentric ripples.
  *
- * Uses multi-layer spawn mode:
- * - Layer 1: Orbiting droplets compressing inward (buildup)
- * - Layer 2: Radial burst explosion (release)
- * - Layer 3: Expanding shockwave ring (accent)
+ * Simple single-layer effect:
+ * - 4 splash rings at center, staggered appearance
+ * - Each ring expands outward as it ages
+ * - Creates classic ripple-in-water effect
  */
 export default buildWaterEffectGesture(WATERDRENCH_CONFIG);

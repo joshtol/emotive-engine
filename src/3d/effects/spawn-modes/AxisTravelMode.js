@@ -46,6 +46,8 @@ export function parseFormation(formation) {
         // Mesh rotation offset (degrees) - rotates each element's mesh around Y axis
         // e.g., meshRotationOffset: 120 → rings at 0°, 120°, 240° to break up noise pattern
         meshRotationOffset: formation.meshRotationOffset ? (formation.meshRotationOffset * Math.PI / 180) : 0,
+        // Z-offset for pushing elements behind/in front of mascot (negative = behind)
+        zOffset: formation.zOffset || 0,
     };
 }
 
@@ -199,9 +201,11 @@ export function expandFormation(parsedConfig) {
         case 'mandala': {
             // MANDALA: Rings positioned in a circular pattern around center
             // First element is center, rest are arranged in a circle
+            // zOffset: negative values push rings behind mascot (for camera-facing rings)
+            const zOff = formation.zOffset || 0;
             if (i === 0) {
                 // Center ring
-                elem.positionOffset = { x: 0, y: 0, z: 0 };
+                elem.positionOffset = { x: 0, y: 0, z: zOff };
             } else {
                 // Outer rings arranged in circle
                 const outerCount = formation.count - 1;
@@ -210,7 +214,7 @@ export function expandFormation(parsedConfig) {
                 elem.positionOffset = {
                     x: Math.sin(angle) * radius,
                     y: Math.cos(angle) * radius,
-                    z: 0
+                    z: zOff
                 };
             }
             // Rotation offset for visual variety
