@@ -5,141 +5,152 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Watersoak gesture - pulsing 5-point water star with upward drift
+ * @fileoverview Watersoak gesture - contracting shockwave (reverse drench)
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/watersoak
- * @complexity ⭐⭐ Intermediate
+ * @complexity ⭐ Basic
  *
- * VISUAL DIAGRAM (BLAZE-STYLE):
- *             💧
- *           ↑   ↑
- *        💧   ★   💧       ← 5-point star formation
- *           ↑   ↑            with upward drift
- *          💧   💧
+ * VISUAL DIAGRAM:
+ *
+ *      ╰─────────────╯       ← Ring starts large
+ *       ╰───────────╯
+ *        ╰─────────╯         ← Contracts inward
+ *           ★                ← Mascot absorbs water
  *
  * FEATURES:
- * - 5 large droplets in star formation (like fire blaze)
- * - Strong synchronized pulsing (breathing)
- * - Gentle upward drift over lifetime
- * - Orbit mode anchored below center
+ * - Single camera-facing ring contracting to center
+ * - Reverse of waterdrench - water being absorbed
+ * - CELLULAR cutout for bubbly water texture
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
  * - Water absorption effects
- * - Gradual saturation visuals
- * - Calm water aura effects
+ * - Soaking/absorbing visuals
+ * - Pulling water inward
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Watersoak gesture configuration
- * Blaze-style pulsing 5-point water star with upward drift
+ * Contracting shockwave (reverse drench)
  */
 const WATERSOAK_CONFIG = {
     name: 'soak',
     emoji: '💧',
     type: 'blending',
-    description: 'Pulsing 5-point water star with upward drift',
-    duration: 2500,
-    beats: 4,
-    intensity: 0.9,
-    category: 'ambient',
-    turbulence: 0.2,
+    description: 'Contracting water shockwave (reverse drench)',
+    duration: 1000,
+    beats: 2,
+    intensity: 1.0,
+    category: 'impact',
+    turbulence: 0.4,
 
-    // 3D Element spawning - BLAZE-STYLE: 5-point star with upward drift
+    // 3D Element spawning - contracting shockwave
     spawnMode: {
-        type: 'orbit',
-        orbit: {
-            height: -0.35,              // Start below mascot center
-            radius: 0.25,               // Tight star formation
-            plane: 'horizontal',
-            orientation: 'radial'       // Point outward from center
+        type: 'axis-travel',
+        axisTravel: {
+            axis: 'y',
+            start: 'center',
+            end: 'center',
+            easing: 'linear',
+            startScale: 1.8,            // Start moderately large (not too big)
+            endScale: 0.3,              // Contract to small
+            startDiameter: 2.0,
+            endDiameter: 0.4,
+            orientation: 'camera'
         },
         formation: {
-            type: 'ring',
-            count: 5,                   // 5-point star
-            startAngle: 0
+            type: 'stack',
+            count: 1,
+            spacing: 0
         },
-        count: 5,
-        scale: 2.0,                     // Large droplets for presence
-        models: ['droplet-large'],
+        count: 1,
+        scale: 1.2,
+        models: ['splash-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.75,
-            stagger: 0.04,              // Quick cascade appearance
+            disappearAt: 0.85,
+            stagger: 0,
             enter: {
-                type: 'scale',
-                duration: 0.2,
-                easing: 'easeOutBack'
+                type: 'fade',
+                duration: 0.08,
+                easing: 'easeOut'
             },
             exit: {
-                type: 'fade',
-                duration: 0.25,
+                type: 'scale',
+                duration: 0.15,
                 easing: 'easeIn'
             },
             procedural: {
-                scaleSmoothing: 0.12,
+                scaleSmoothing: 0.06,
                 geometryStability: true
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.1,
-                    peak: 0.25,
-                    end: 0.15,
+                    peak: 0.35,
+                    end: 0.5,
                     curve: 'bell'
                 }
             },
-            // Strong synchronized pulsing - key blaze feature
+            // CELLULAR cutout
+            cutout: {
+                strength: 0.5,
+                primary: { pattern: 0, scale: 0.8, weight: 1.0 },
+                blend: 'multiply',
+                travel: 'radial',
+                travelSpeed: 1.5,
+                strengthCurve: 'fadeIn',
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.3,
+                    softness: 1.4
+                }
+            },
             pulse: {
-                amplitude: 0.35,        // Very noticeable pulse
-                frequency: 3,           // Rhythmic breathing
-                easing: 'easeInOut',
-                perElement: true        // Each element pulses
+                amplitude: 0.05,
+                frequency: 2,
+                easing: 'easeIn'
             },
-            // Upward drift over lifetime
-            drift: {
-                direction: 'up',
-                distance: 0.8,          // Significant upward travel
-                easing: 'easeOut'
-            },
-            scaleVariance: 0.1,
-            lifetimeVariance: 0.05,
-            blending: 'normal',
-            renderOrder: 8,
+            blending: 'additive',
+            renderOrder: 10,
             modelOverrides: {
-                'droplet-large': {
-                    scaling: {
-                        mode: 'uniform-pulse',
-                        amplitude: 0.1,
-                        frequency: 3
-                    }
+                'splash-ring': {
+                    shaderAnimation: {
+                        type: 1,
+                        arcWidth: 0.95,
+                        arcSpeed: 0.4,
+                        arcCount: 1
+                    },
+                    orientationOverride: 'camera'
                 }
             }
         }
     },
 
-    // Wobble - gentle for calm absorption
+    // Wobble
     wobbleFrequency: 2,
-    wobbleAmplitude: 0.008,
-    wobbleDecay: 0.3,
-    // Scale - breathing expansion
-    scaleWobble: 0.015,
-    scaleFrequency: 3,
-    scaleGrowth: 0.03,
-    // Glow - soft blue absorption
-    glowColor: [0.3, 0.55, 0.85],
+    wobbleAmplitude: 0.01,
+    wobbleDecay: 0.6,
+    // Scale
+    scaleWobble: 0.01,
+    scaleFrequency: 2,
+    scaleGrowth: 0,
+    // Glow
+    glowColor: [0.2, 0.5, 0.9],
     glowIntensityMin: 0.8,
-    glowIntensityMax: 1.5,
-    glowPulseRate: 3
+    glowIntensityMax: 1.3,
+    glowPulseRate: 2
 };
 
 /**
- * Watersoak gesture - blaze-style pulsing 5-point water star.
+ * Watersoak gesture - contracting shockwave (reverse drench).
  *
- * Uses orbit spawn mode:
- * - 5 droplet-large in star formation
- * - Strong synchronized pulsing
- * - Gentle upward drift
+ * Uses axis-travel spawn mode:
+ * - Single camera-facing splash-ring at center
+ * - Contracts from large (1.8) to small (0.3)
+ * - CELLULAR cutout for bubbly texture
+ * - Quick absorption feel
  */
 export default buildWaterEffectGesture(WATERSOAK_CONFIG);

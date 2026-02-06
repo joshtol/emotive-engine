@@ -5,358 +5,271 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Watersplash gesture - scorch-style 4-layer water geyser
+ * @fileoverview Watersplash gesture - explosive water splash with multiple elements
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/watersplash
  * @complexity ⭐⭐⭐ Advanced
  *
- * VISUAL DIAGRAM (SCORCH-STYLE 4-LAYER):
+ * VISUAL DIAGRAM:
  *
- *         💧💧💧💧         ← Layer 4: Radial droplet burst at peak
- *        ╭───────────╮
- *       (  ═══════  )      ← Layer 3: Horizontal expanding ring
- *        ╰───────────╯
- *           │ │ │          ← Layer 2: Rising vertical columns
- *           │ ★ │
- *        ═══════════       ← Layer 1: Ground splash rings
+ *              💧              ← Center droplet shoots UP
+ *           💧    💧           ← Side droplets arc up/out
+ *         •  •  •  •  •        ← Tiny spray particles (radial)
+ *        ═══════════════       ← Expanding ring (crown base)
+ *            ○○○               ← Bubble foam at impact
  *
  * FEATURES:
- * - FOUR SPAWN LAYERS for intense water geyser
- * - Layer 1: Ground splash rings expanding outward
- * - Layer 2: Rising vertical splash columns
- * - Layer 3: Horizontal ring at peak height
- * - Layer 4: Radial droplet burst spray
+ * - Central expanding splash-ring (RADIAL cutout)
+ * - 5 large droplets shooting UP and OUT like splash crown arms
+ * - 8 medium droplets in radial burst (CELLULAR cutout)
+ * - 12 tiny spray particles for fine mist (DISSOLVE cutout)
+ * - Bubble foam cluster at impact base
+ * - TRUE SPLASH: centered burst, not trailing
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
- * - Powerful water impact effects
- * - Geyser eruption visuals
- * - Water explosion reactions
+ * - Water impact effects
+ * - Splash reactions
+ * - Dramatic water bursts
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Watersplash gesture configuration
- * Scorch-style 4-layer water geyser
+ * Explosive splash - wave-curls bursting outward with droplet spray
  */
 const WATERSPLASH_CONFIG = {
     name: 'splash',
     emoji: '💦',
     type: 'blending',
-    description: 'Scorch-style 4-layer water geyser',
-    duration: 1200,
+    description: 'Explosive water splash with curling waves and spray',
+    duration: 1000,
     beats: 2,
     intensity: 1.3,
     category: 'impact',
-    turbulence: 0.9,
+    turbulence: 0.8,
 
-    // 3D Element spawning - SCORCH-STYLE: 4 layers for intense geyser
+    // 3D Element spawning - TRUE SPLASH: centered burst of droplets
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Ground splash rings expanding outward
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'axis-travel',
-            axisTravel: {
-                axis: 'y',
-                start: 'bottom',
-                end: 'bottom',              // Stay at ground level
-                startDiameter: 0.4,
-                endDiameter: 2.5,           // Expand outward
-                orientation: 'flat'
-            },
-            formation: {
-                type: 'ring',
-                count: 2,
-                phaseOffset: 0.1
-            },
-            count: 2,
-            scale: 1.0,
-            models: ['splash-ring'],
-            animation: {
-                appearAt: 0.0,
-                disappearAt: 0.6,
-                stagger: 0.08,
-                enter: {
-                    type: 'scale',
-                    duration: 0.06,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.15,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.06,
-                    geometryStability: true
-                },
-                // Gesture glow: wet sheen intensifies during splash impact
-                // Base values reduced in shader, so we can use wider range here
-                gestureGlow: {
-                    baseGlow: 0.6,      // Start subtle
-                    peakGlow: 2.2,      // Ramp up dramatically for impact
-                    curve: 'easeOut'    // Quick intensity burst then settle
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.7,
-                        peak: 0.9,
-                        end: 0.4,
-                        curve: 'bell'
-                    }
-                },
-                blending: 'normal',
-                renderOrder: 5,
-                modelOverrides: {
-                    'splash-ring': {
-                        opacityLink: 'inverse-scale',
-                        shaderAnimation: {
-                            type: 1,
-                            arcWidth: 0.8,
-                            arcSpeed: 1.0,
-                            arcCount: 2
-                        }
-                    }
-                }
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Rising vertical splash columns
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'axis-travel',
-            axisTravel: {
-                axis: 'y',
-                start: 'bottom',
-                end: 'above',
-                easing: 'easeOutQuad',
-                startDiameter: 0.6,
-                endDiameter: 1.2,
-                startScale: 0.7,
-                endScale: 1.3,
-                orientation: 'vertical'     // Standing rings for column effect
-            },
-            formation: {
-                type: 'spiral',
-                count: 3,
-                arcOffset: 120,
-                phaseOffset: 0.04
-            },
-            count: 3,
-            scale: 0.8,
-            models: ['splash-ring'],
-            animation: {
-                appearAt: 0.02,
-                disappearAt: 0.75,
-                stagger: 0.05,
-                enter: {
-                    type: 'grow',
-                    duration: 0.08,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.2,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.07,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.8,
-                        peak: 1.0,
-                        end: 0.4,
-                        curve: 'bell'
-                    }
-                },
-                pulse: {
-                    amplitude: 0.1,
-                    frequency: 5,
-                    easing: 'easeInOut'
-                },
-                rotate: [
-                    { axis: 'y', rotations: 1.5, phase: 0 },
-                    { axis: 'y', rotations: -1.5, phase: 120 },
-                    { axis: 'y', rotations: 1.5, phase: 240 }
-                ],
-                blending: 'normal',
-                renderOrder: 8,
-                modelOverrides: {
-                    'splash-ring': {
-                        shaderAnimation: {
-                            type: 1,
-                            arcWidth: 0.5,
-                            arcSpeed: 2.0,
-                            arcCount: 2
-                        },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Horizontal ring at peak height
+        // LAYER 1: Central expanding ring - the splash "crown" base
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
             anchor: {
-                landmark: 'top',
-                offset: { x: 0, y: 0.2, z: 0 },
-                orientation: 'flat',
-                startScale: 0.4,
-                endScale: 1.6,
-                scaleEasing: 'easeOutExpo'
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.1 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 2.0,
+                scaleEasing: 'easeOutQuad'
             },
             count: 1,
-            scale: 1.2,
+            scale: 1.5,
             models: ['splash-ring'],
             animation: {
-                appearAt: 0.25,
-                disappearAt: 0.8,
-                enter: {
-                    type: 'scale',
-                    duration: 0.1,
-                    easing: 'easeOutBack'
+                appearAt: 0.0,
+                disappearAt: 0.4,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.03, geometryStability: true },
+                cutout: {
+                    strength: 0.6,
+                    primary: { pattern: 2, scale: 1.8, weight: 1.0 },    // RADIAL - burst lines
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 4.0,
+                    strengthCurve: 'fadeOut'
                 },
-                exit: {
-                    type: 'fade',
-                    duration: 0.2,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.6,
-                        peak: 0.9,
-                        end: 0.3,
-                        curve: 'bell'
-                    }
-                },
-                pulse: {
-                    amplitude: 0.12,
-                    frequency: 4,
-                    easing: 'easeInOut'
-                },
-                rotate: { axis: 'z', rotations: 0.8, phase: 0 },
-                blending: 'normal',
-                renderOrder: 10,
+                blending: 'additive',
+                renderOrder: 8,
                 modelOverrides: {
                     'splash-ring': {
-                        shaderAnimation: {
-                            type: 1,
-                            arcWidth: 0.7,
-                            arcSpeed: 1.2,
-                            arcCount: 3
-                        }
+                        shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 3.0, arcCount: 1 },
+                        orientationOverride: 'camera'
                     }
                 }
             }
         },
-
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 4: Radial droplet burst spray at peak
+        // LAYER 2: BIG droplets shooting UP and OUT - the main splash arms (5 directions)
+        // ═══════════════════════════════════════════════════════════════════════════════════
+        {
+            type: 'anchor',
+            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.3, endScale: 1.6, scaleEasing: 'easeOutQuad' },
+            count: 1, scale: 1.2, models: ['droplet-large'],
+            animation: {
+                appearAt: 0.0, disappearAt: 0.5,
+                enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.03, geometryStability: true },
+                cutout: { strength: 0.4, primary: { pattern: 4, scale: 1.0, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 2.0, strengthCurve: 'fadeOut' },
+                drift: { speed: 1.4, distance: 0.8, direction: { x: 0, y: 1.0, z: 0 }, easing: 'easeOutQuad' },
+                blending: 'additive', renderOrder: 12,
+                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 1.0, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        {
+            type: 'anchor',
+            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.25, endScale: 1.3, scaleEasing: 'easeOutQuad' },
+            count: 1, scale: 1.0, models: ['droplet-large'],
+            animation: {
+                appearAt: 0.02, disappearAt: 0.5,
+                enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.03, geometryStability: true },
+                cutout: { strength: 0.45, primary: { pattern: 0, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 2.5, strengthCurve: 'fadeOut' },
+                drift: { speed: 1.3, distance: 0.75, direction: { x: -0.7, y: 0.85, z: 0 }, easing: 'easeOutQuad' },
+                blending: 'additive', renderOrder: 12,
+                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 1.2, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        {
+            type: 'anchor',
+            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.25, endScale: 1.3, scaleEasing: 'easeOutQuad' },
+            count: 1, scale: 1.0, models: ['droplet-large'],
+            animation: {
+                appearAt: 0.02, disappearAt: 0.5,
+                enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.03, geometryStability: true },
+                cutout: { strength: 0.45, primary: { pattern: 0, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 2.5, strengthCurve: 'fadeOut' },
+                drift: { speed: 1.3, distance: 0.75, direction: { x: 0.7, y: 0.85, z: 0 }, easing: 'easeOutQuad' },
+                blending: 'additive', renderOrder: 12,
+                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 1.2, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        {
+            type: 'anchor',
+            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.2, endScale: 1.1, scaleEasing: 'easeOutQuad' },
+            count: 1, scale: 0.85, models: ['droplet-large'],
+            animation: {
+                appearAt: 0.03, disappearAt: 0.45,
+                enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.18, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.03, geometryStability: true },
+                cutout: { strength: 0.4, primary: { pattern: 4, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 2.0, strengthCurve: 'fadeOut' },
+                drift: { speed: 1.1, distance: 0.6, direction: { x: -0.95, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
+                blending: 'additive', renderOrder: 11,
+                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 1.3, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        {
+            type: 'anchor',
+            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.2, endScale: 1.1, scaleEasing: 'easeOutQuad' },
+            count: 1, scale: 0.85, models: ['droplet-large'],
+            animation: {
+                appearAt: 0.03, disappearAt: 0.45,
+                enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.18, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.03, geometryStability: true },
+                cutout: { strength: 0.4, primary: { pattern: 4, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 2.0, strengthCurve: 'fadeOut' },
+                drift: { speed: 1.1, distance: 0.6, direction: { x: 0.95, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
+                blending: 'additive', renderOrder: 11,
+                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 1.3, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        // ═══════════════════════════════════════════════════════════════════════════════════
+        // LAYER 3: MEDIUM droplets - secondary splash (radial burst, 8 directions)
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'radial-burst',
             radialBurst: {
-                startRadius: 0.2,
-                endRadius: 1.8,
-                height: 0.5,                // Above mascot
-                easing: 'easeOutExpo'
+                count: 8,
+                radius: 0.05,
+                endRadius: 0.65,
+                angleSpread: 360,
+                startAngle: 22,               // Offset to not align with big droplets
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 0.9,
+                scaleEasing: 'easeOutQuad'
             },
-            formation: {
-                type: 'ring',
-                count: 8
-            },
-            count: 8,
-            scale: 0.9,
-            models: ['droplet-small', 'droplet-large', 'droplet-small', 'droplet-large', 'droplet-small', 'droplet-large', 'droplet-small', 'droplet-large'],
+            count: 8, scale: 0.6, models: ['droplet-small'],
             animation: {
-                appearAt: 0.3,
-                disappearAt: 0.9,
-                stagger: 0.02,
-                enter: {
-                    type: 'scale',
-                    duration: 0.06,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.18,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.05,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.9,
-                        peak: 0.7,
-                        end: 0.2,
-                        curve: 'bell'
-                    }
-                },
-                // Arc trajectory - droplets fly up then down
-                arcTrajectory: {
-                    peakHeight: 0.4,
-                    easing: 'parabolic'
-                },
-                blending: 'normal',
-                renderOrder: 12,
-                modelOverrides: {
-                    'droplet-large': {
-                        scaling: {
-                            mode: 'velocity-stretch',
-                            stretchFactor: 1.5,
-                            maxStretch: 2.0
-                        }
-                    },
-                    'droplet-small': {
-                        scaling: {
-                            mode: 'velocity-stretch',
-                            stretchFactor: 1.2
-                        }
-                    }
-                }
+                appearAt: 0.02, disappearAt: 0.4, stagger: 0.008,
+                enter: { type: 'scale', duration: 0.03, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.02, geometryStability: true },
+                cutout: { strength: 0.35, primary: { pattern: 0, scale: 0.7, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 3.0, strengthCurve: 'fadeOut' },
+                scaleVariance: 0.3, lifetimeVariance: 0.15,
+                blending: 'additive', renderOrder: 14,
+                modelOverrides: { 'droplet-small': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 2.0, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        // ═══════════════════════════════════════════════════════════════════════════════════
+        // LAYER 4: TINY spray particles - fine mist (radial burst, 12 particles)
+        // ═══════════════════════════════════════════════════════════════════════════════════
+        {
+            type: 'radial-burst',
+            radialBurst: {
+                count: 12,
+                radius: 0.03,
+                endRadius: 0.5,
+                angleSpread: 360,
+                startAngle: 0,
+                orientation: 'camera',
+                startScale: 0.1,
+                endScale: 0.35,
+                scaleEasing: 'easeOutQuad'
+            },
+            count: 12, scale: 0.2, models: ['droplet-small'],
+            animation: {
+                appearAt: 0.01, disappearAt: 0.3, stagger: 0.005,
+                enter: { type: 'scale', duration: 0.02, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.1, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.02, geometryStability: true },
+                cutout: { strength: 0.25, primary: { pattern: 7, scale: 0.5, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 5.0, strengthCurve: 'fadeOut' },
+                scaleVariance: 0.5, lifetimeVariance: 0.25,
+                blending: 'additive', renderOrder: 16,
+                modelOverrides: { 'droplet-small': { shaderAnimation: { type: 1, arcWidth: 0.98, arcSpeed: 3.0, arcCount: 1 }, orientationOverride: 'camera' } }
+            }
+        },
+        // ═══════════════════════════════════════════════════════════════════════════════════
+        // LAYER 5: Bubble foam at base - impact foam
+        // ═══════════════════════════════════════════════════════════════════════════════════
+        {
+            type: 'anchor',
+            anchor: { landmark: 'center', offset: { x: 0, y: -0.1, z: 0.12 }, orientation: 'camera', startScale: 0.2, endScale: 0.9, scaleEasing: 'easeOutQuad' },
+            count: 1, scale: 0.7, models: ['bubble-cluster'],
+            animation: {
+                appearAt: 0.05, disappearAt: 0.6,
+                enter: { type: 'scale', duration: 0.08, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.05, geometryStability: true },
+                cutout: { strength: 0.5, primary: { pattern: 0, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 1.0, strengthCurve: 'constant' },
+                pulse: { amplitude: 0.1, frequency: 8, easing: 'easeInOut' },
+                blending: 'additive', renderOrder: 6,
+                modelOverrides: { 'bubble-cluster': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0.8, arcCount: 2 }, orientationOverride: 'camera' } }
             }
         }
     ],
 
-    // Wobble parameters - energetic
-    wobbleFrequency: 4,
-    wobbleAmplitude: 0.02,
-    wobbleDecay: 0.5,
-    // Scale - expansion burst
-    scaleWobble: 0.08,
-    scaleFrequency: 6,
-    scaleGrowth: 0.02,
-    // Glow - bright wet sheen
-    glowColor: [0.3, 0.6, 1.0],
+    // Wobble - punchy impact
+    wobbleFrequency: 6,
+    wobbleAmplitude: 0.018,
+    wobbleDecay: 0.4,
+    // Scale - burst expansion
+    scaleWobble: 0.035,
+    scaleFrequency: 7,
+    scaleGrowth: 0.015,
+    // Glow - bright impact
+    glowColor: [0.35, 0.65, 1.0],
     glowIntensityMin: 1.2,
-    glowIntensityMax: 2.0,
-    glowPulseRate: 5,
-    // Splash-specific
-    impactBurst: true,
-    burstDuration: 0.15
+    glowIntensityMax: 2.2,
+    glowPulseRate: 6
 };
 
 /**
- * Watersplash gesture - scorch-style 4-layer water geyser.
+ * Watersplash gesture - centered impact burst.
  *
- * Uses multi-layer spawn mode:
- * - Layer 1: Ground splash rings expanding outward
- * - Layer 2: Rising vertical splash columns
- * - Layer 3: Horizontal ring at peak height
- * - Layer 4: Radial droplet burst spray
+ * TRUE SPLASH design - droplets bursting from center point:
+ * - Layer 1: Expanding splash-ring crown base (RADIAL cutout)
+ * - Layer 2: 5 large droplets shooting UP and OUT (crown arms)
+ * - Layer 3: 8 medium droplets in radial burst (CELLULAR cutout)
+ * - Layer 4: 12 tiny spray particles (DISSOLVE cutout)
+ * - Layer 5: Bubble foam at impact base (CELLULAR cutout)
+ * All elements burst FROM center OUTWARD - no trailing.
  */
 export default buildWaterEffectGesture(WATERSPLASH_CONFIG);

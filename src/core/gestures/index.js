@@ -277,7 +277,6 @@ import waterSplash from './destruction/elemental/watersplash.js';
 import waterDrench from './destruction/elemental/waterdrench.js';
 import waterSoak from './destruction/elemental/watersoak.js';
 import waterFlow from './destruction/elemental/waterflow.js';
-import waterRipple from './destruction/elemental/waterripple.js';
 import waterTide from './destruction/elemental/watertide.js';
 import waterLiquefy from './destruction/elemental/waterliquefy.js';
 import waterPool from './destruction/elemental/waterpool.js';
@@ -491,7 +490,6 @@ const drench = waterDrench;
 const soak = waterSoak;
 // Ambient variants (emanating water)
 const flow = waterFlow;
-const rippleWater = waterRipple;
 const tide = waterTide;
 // Transform variants (becoming water)
 const liquefy = waterLiquefy;
@@ -919,7 +917,6 @@ const TRANSFORM_GESTURES = [
     soak,
     // Water - Ambient (emanating water)
     flow,
-    rippleWater,
     tide,
     // Water - Transform (becoming water)
     liquefy,
@@ -1187,7 +1184,7 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Water (impact)
         'splash', 'drench', 'soak',
         // destruction/elemental/ - Water (ambient)
-        'flow', 'rippleWater', 'tide',
+        'flow', 'tide',
         // destruction/elemental/ - Water (transform)
         'liquefy', 'poolWater', 'vortexWater',
         // destruction/elemental/ - Water (axis-travel effects)

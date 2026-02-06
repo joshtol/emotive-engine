@@ -21,6 +21,7 @@
  * FEATURES:
  * - 6 splash elements in tight spiral formation
  * - Fast descending helix (like a drill bit)
+ * - SPIRAL + STREAKS cutout for drilling motion
  * - High rotation speed for drilling effect
  * - Energetic intense water
  * - GPU-instanced rendering via ElementInstancedSpawner
@@ -98,6 +99,16 @@ const WATERDRILL_CONFIG = {
                     end: 0.5,
                     curve: 'bell'
                 }
+            },
+            // SPIRAL cutout for drilling effect
+            cutout: {
+                strength: 0.55,
+                primary: { pattern: 6, scale: 1.5, weight: 1.0 },    // SPIRAL - drilling motion
+                secondary: { pattern: 1, scale: 0.8, weight: 0.35 }, // STREAKS - speed lines
+                blend: 'add',
+                travel: 'vertical',
+                travelSpeed: 3.0,           // Fast drilling travel
+                strengthCurve: 'constant'
             },
             pulse: {
                 amplitude: 0.08,

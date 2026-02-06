@@ -21,8 +21,8 @@
  * FEATURES:
  * - 6 splash elements in double helix formation (strands: 2)
  * - DNA-style interleaved spiral ascending
- * - Graceful twisting water effect
- * - Medium pace for visual clarity
+ * - SPIRAL + CELLULAR cutout for helix texture
+ * - Graceful twisting water effect with trail dissolve
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -100,13 +100,28 @@ const WATERHELIX_CONFIG = {
                     curve: 'bell'
                 }
             },
+            // SPIRAL cutout for DNA helix effect
+            cutout: {
+                strength: 0.5,
+                primary: { pattern: 6, scale: 1.3, weight: 1.0 },    // SPIRAL - helix motion
+                secondary: { pattern: 0, scale: 0.7, weight: 0.3 },  // CELLULAR - organic gaps
+                blend: 'multiply',
+                travel: 'vertical',
+                travelSpeed: 1.2,
+                strengthCurve: 'constant',
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.4,
+                    softness: 1.0
+                }
+            },
             pulse: {
-                amplitude: 0.06,
-                frequency: 4,
+                amplitude: 0.08,
+                frequency: 3,
                 easing: 'easeInOut'
             },
-            // Moderate rotation to show the helix structure
-            rotate: { axis: 'y', rotations: 2, phase: 0 },
+            // Rotation to show the helix structure
+            rotate: { axis: 'y', rotations: 2.5, phase: 0 },
             scaleVariance: 0.1,
             lifetimeVariance: 0.1,
             blending: 'normal',

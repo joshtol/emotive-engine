@@ -5,52 +5,52 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Waterdrench gesture - concentric ripples expanding outward
+ * @fileoverview Waterdrench gesture - expanding shockwave from center
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/waterdrench
  * @complexity ⭐ Basic
  *
  * VISUAL DIAGRAM:
  *
- *        ╭───────╮
- *       ╭─────────╮
- *      ╭───────────╮     ← Concentric rings expanding outward
- *         ★              ← Mascot at center
- *      ╰───────────╯
- *       ╰─────────╯
- *        ╰───────╯
+ *        ╭─────────╮
+ *       ╭───────────╮        ← Ring expands outward from center
+ *      ╭─────────────╮
+ *           ★                ← Mascot at center
+ *      ╰─────────────╯
+ *       ╰───────────╯
+ *        ╰─────────╯
  *
  * FEATURES:
- * - 4 concentric splash rings expanding outward
- * - Staggered appearance for ripple wave effect
- * - Camera-facing rings for clean visibility
- * - CELLULAR cutout for organic water texture
- * - Simple, classic water ripple effect
+ * - Single camera-facing ring expanding from center
+ * - Quick shockwave/splash impact feel
+ * - CELLULAR cutout for bubbly water texture
+ * - Simple, dramatic expansion
+ * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
  * - Water impact effects
  * - Splash reactions
- * - Ripple emanation
+ * - Getting drenched visuals
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Waterdrench gesture configuration
- * Concentric ripples expanding from center
+ * Expanding shockwave from center
  */
 const WATERDRENCH_CONFIG = {
     name: 'drench',
     emoji: '🌊',
     type: 'blending',
-    description: 'Concentric water ripples expanding outward',
-    duration: 1500,
-    beats: 3,
+    description: 'Expanding water shockwave',
+    duration: 1000,
+    beats: 2,
     intensity: 1.0,
     category: 'impact',
     turbulence: 0.4,
 
-    // 3D Element spawning - CONCENTRIC RIPPLES
+    // 3D Element spawning - expanding shockwave
     spawnMode: {
         type: 'axis-travel',
         axisTravel: {
@@ -58,28 +58,28 @@ const WATERDRENCH_CONFIG = {
             start: 'center',
             end: 'center',              // Stay at center
             easing: 'linear',
-            startScale: 0.3,
-            endScale: 2.0,              // Expand dramatically
-            startDiameter: 0.4,
-            endDiameter: 2.8,           // Wide ripple spread
-            orientation: 'camera'        // Face camera for visibility
+            startScale: 0.2,
+            endScale: 2.5,              // Dramatic expansion
+            startDiameter: 0.3,
+            endDiameter: 2.5,
+            orientation: 'camera'       // Face camera
         },
         formation: {
             type: 'stack',
-            count: 3,
-            spacing: 0                  // All at same position, stagger does the work
+            count: 1,
+            spacing: 0
         },
-        count: 3,
-        scale: 1.0,
+        count: 1,
+        scale: 1.2,
         models: ['splash-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.85,
-            stagger: 0.15,              // Each ring appears after previous - creates ripple wave
+            disappearAt: 0.8,
+            stagger: 0,
             enter: {
                 type: 'scale',
-                duration: 0.1,
-                easing: 'easeOutBack'
+                duration: 0.08,
+                easing: 'easeOut'
             },
             exit: {
                 type: 'fade',
@@ -98,18 +98,18 @@ const WATERDRENCH_CONFIG = {
                     curve: 'bell'
                 }
             },
-            // Cutout: organic cellular water texture
+            // CELLULAR cutout for bubbly texture
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 0, scale: 0.9, weight: 1.0 },   // CELLULAR - bubbles
+                primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR
                 blend: 'multiply',
-                travel: 'radial',           // Expand outward with ring
-                travelSpeed: 1.0,
-                strengthCurve: 'fadeOut',   // Fade as ripple dissipates
+                travel: 'radial',            // Expand outward
+                travelSpeed: 1.5,
+                strengthCurve: 'fadeOut',    // Fade as it expands
                 trailDissolve: {
                     enabled: true,
                     offset: -0.3,
-                    softness: 1.2
+                    softness: 1.4
                 }
             },
             pulse: {
@@ -123,8 +123,8 @@ const WATERDRENCH_CONFIG = {
                 'splash-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.95,     // Nearly complete ring
-                        arcSpeed: 0.3,
+                        arcWidth: 0.95,      // Nearly full ring
+                        arcSpeed: 0.4,
                         arcCount: 1
                     },
                     orientationOverride: 'camera'
@@ -133,27 +133,28 @@ const WATERDRENCH_CONFIG = {
         }
     },
 
-    // Wobble - ripple impact
+    // Wobble - impact
     wobbleFrequency: 2,
     wobbleAmplitude: 0.01,
     wobbleDecay: 0.6,
     // Scale
-    scaleWobble: 0.02,
+    scaleWobble: 0.01,
     scaleFrequency: 2,
     scaleGrowth: 0,
     // Glow - water blue
     glowColor: [0.2, 0.5, 0.9],
-    glowIntensityMin: 0.7,
+    glowIntensityMin: 0.8,
     glowIntensityMax: 1.3,
     glowPulseRate: 2
 };
 
 /**
- * Waterdrench gesture - concentric ripples.
+ * Waterdrench gesture - expanding shockwave.
  *
- * Simple single-layer effect:
- * - 4 splash rings at center, staggered appearance
- * - Each ring expands outward as it ages
- * - Creates classic ripple-in-water effect
+ * Uses axis-travel spawn mode:
+ * - Single camera-facing splash-ring at center
+ * - Expands dramatically outward
+ * - CELLULAR cutout for bubbly texture
+ * - Quick splash impact feel
  */
 export default buildWaterEffectGesture(WATERDRENCH_CONFIG);

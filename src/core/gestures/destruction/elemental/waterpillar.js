@@ -21,9 +21,9 @@
  * FEATURES:
  * - 6 flat horizontal rings stacked vertically
  * - Rises from below mascot to above
+ * - WAVES + CELLULAR cutout for rippling texture
  * - Rings grow larger as pillar rises (inverted pyramid shape)
  * - All rings rotate together with phase offsets
- * - Majestic pillar of water
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -98,9 +98,19 @@ const WATERPILLAR_CONFIG = {
                     curve: 'bell'
                 }
             },
+            // WAVES cutout for rippling pillar texture
+            cutout: {
+                strength: 0.45,
+                primary: { pattern: 4, scale: 1.0, weight: 1.0 },    // WAVES - ripple texture
+                secondary: { pattern: 0, scale: 0.6, weight: 0.25 }, // CELLULAR - organic gaps
+                blend: 'multiply',
+                travel: 'vertical',
+                travelSpeed: 0.8,
+                strengthCurve: 'fadeOut'
+            },
             pulse: {
-                amplitude: 0.05,
-                frequency: 3,
+                amplitude: 0.06,
+                frequency: 2.5,
                 easing: 'easeInOut'
             },
             // Rings rotate with 120° phase offsets - breaks repeating pattern

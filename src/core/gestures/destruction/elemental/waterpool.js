@@ -5,26 +5,24 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Waterpool gesture - expanding pool rings with rising bubbles
+ * @fileoverview Waterpool gesture - expanding pool rings with ripple texture
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/waterpool
- * @complexity ⭐⭐ Intermediate
+ * @complexity ⭐ Basic
  *
  * VISUAL DIAGRAM:
- *            ○  ○           ← Rising bubbles
- *           ○    ○
+ *
  *             ★             ← Mascot
  *            /|\
  *        ═══════════        ← Expanding pool rings
  *       ═════════════
+ *      ═══════════════
  *
  * FEATURES:
- * - Two-layer effect: expanding rings + rising bubbles
- * - axis-travel for horizontal pool rings
- * - Spiral formation for rising bubbles
- * - Non-uniform scaling for ring expansion
- * - Two-layer cutout: WAVES + DISSOLVE for rippling, fading edges
- * - Radial travel expands cutout with the ring
+ * - 4 horizontal rings expanding outward at feet
+ * - WAVES cutout for ripple interference patterns
+ * - Staggered expansion for wave effect
+ * - SURFACE_SHIMMER shader for caustic patterns
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -37,169 +35,116 @@ import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Waterpool gesture configuration
- * Expanding pool rings with rising bubbles
+ * Expanding pool rings at feet with ripple texture
  */
 const WATERPOOL_CONFIG = {
     name: 'pool',
     emoji: '🫗',
     type: 'blending',
-    description: 'Cascade - expanding pool rings with rising bubbles',
-    duration: 2000,
+    description: 'Expanding pool rings with ripple texture',
+    duration: 2500,
     beats: 4,
-    intensity: 0.8,
+    intensity: 0.7,
     category: 'transform',
-    turbulence: 0.1,
+    turbulence: 0.15,
 
-    // 3D Element spawning - TWO LAYERS: expanding rings + rising bubbles
-    spawnMode: [
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Expanding pool rings at feet
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'axis-travel',
-            axisTravel: {
-                axis: 'y',
-                start: 'bottom',
-                end: 'bottom',
-                startDiameter: 0.5,
-                endDiameter: 3.0,
-                orientation: 'horizontal',
-                speedCurve: 'splash'        // Fast start, slow settle - water splashing out
-            },
-            // meshRotationOffset: 120° rotates each ring to show different noise patterns
-            formation: { type: 'ring', count: 3, phaseOffset: 0.15, meshRotationOffset: 120 },
-            count: 3,
-            models: ['splash-ring'],
-            animation: {
-                appearAt: 0.1,
-                disappearAt: 0.92,
-                stagger: 0.12,
-                enter: {
-                    type: 'grow',
-                    duration: 0.1,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.12,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.12,
-                    geometryStability: true
-                },
-                // Cutout: WAVES for ripple texture + CELLULAR for organic breakup
-                // Oscillate travel creates pulsing ripple movement
-                cutout: {
-                    strength: 0.75,
-                    primary: { pattern: 4, scale: 1.2, weight: 1.0 },    // WAVES - interference ripples
-                    secondary: { pattern: 0, scale: 0.6, weight: 0.4 },  // CELLULAR - organic gaps
-                    blend: 'multiply',
-                    travel: 'oscillate',        // Pulsing ripple movement
-                    travelSpeed: 2.0,           // Two pulses per gesture
-                    strengthCurve: 'fadeOut'    // Ripples fade as they expand
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.3,
-                        peak: 0.2,
-                        end: 0.05,
-                        curve: 'linear'
-                    }
-                },
-                blending: 'normal',
-                renderOrder: 5,
-                modelOverrides: {
-                    'splash-ring': {
-                        opacityLink: 'inverse-scale',
-                        // No arc animation - pool ripples are complete circles
-                        // SURFACE_SHIMMER adds caustic patterns to water surface
-                        shaderAnimation: {
-                            type: 5             // SURFACE_SHIMMER - caustic water patterns
-                        }
-                    }
-                }
-            }
+    // 3D Element spawning - expanding pool rings
+    spawnMode: {
+        type: 'axis-travel',
+        axisTravel: {
+            axis: 'y',
+            start: 'bottom',
+            end: 'bottom',
+            startDiameter: 0.4,
+            endDiameter: 3.5,
+            orientation: 'horizontal',
+            speedCurve: 'splash'        // Fast start, slow settle
         },
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Rising bubbles from pool (larger, with spiral twist)
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'axis-travel',
-            axisTravel: {
-                axis: 'y',
-                start: 'bottom',
-                end: 'center',
-                easing: 'easeOutQuad',
-                startDiameter: 0.8,
-                endDiameter: 1.2,
-                startScale: 0.5,
-                endScale: 0.8
+        formation: {
+            type: 'ring',
+            count: 4,
+            phaseOffset: 0.18,
+            meshRotationOffset: 90      // Rotates each ring for variety
+        },
+        count: 4,
+        scale: 1.0,
+        models: ['splash-ring'],
+        animation: {
+            appearAt: 0.0,
+            disappearAt: 0.9,
+            stagger: 0.15,
+            enter: {
+                type: 'scale',
+                duration: 0.1,
+                easing: 'easeOut'
             },
-            formation: { type: 'spiral', count: 6, arcOffset: 60, phaseOffset: 0.04 },
-            count: 6,
-            models: ['bubble-cluster'],
-            animation: {
-                appearAt: 0.25,
-                disappearAt: 0.9,
-                stagger: 0.05,
-                enter: {
-                    type: 'grow',
-                    duration: 0.08,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.1,
-                    easing: 'easeIn'
-                },
-                // Cutout: Strong DISSOLVE for dramatic bubble breakup
-                cutout: {
-                    strength: 0.85,
-                    primary: { pattern: 7, scale: 1.0, weight: 1.0 },    // DISSOLVE - strong breakup
-                    secondary: { pattern: 0, scale: 0.8, weight: 0.5 },  // CELLULAR - bubble gaps
-                    blend: 'multiply',
-                    travel: 'wave',             // Wobbling motion as they rise
-                    travelSpeed: 1.5,
-                    strengthCurve: 'constant'   // Consistent texture throughout
-                },
-                blending: 'normal',
-                renderOrder: 7,
-                modelOverrides: {
-                    'bubble-cluster': {
-                        shaderAnimation: {
-                            type: 6,            // SPIRAL_TWIST - helical spiral distortion
-                            spiralSpeed: 1.5,   // Twist rotation speed
-                            spiralTightness: 3.0  // How tight the spiral coils
-                        }
+            exit: {
+                type: 'fade',
+                duration: 0.15,
+                easing: 'easeIn'
+            },
+            procedural: {
+                scaleSmoothing: 0.1,
+                geometryStability: true
+            },
+            // WAVES cutout for ripple interference patterns
+            cutout: {
+                strength: 0.6,
+                primary: { pattern: 4, scale: 1.4, weight: 1.0 },    // WAVES - interference ripples
+                secondary: { pattern: 0, scale: 0.5, weight: 0.25 }, // CELLULAR - subtle gaps
+                blend: 'multiply',
+                travel: 'radial',
+                travelSpeed: 1.2,
+                strengthCurve: 'fadeOut'
+            },
+            parameterAnimation: {
+                turbulence: {
+                    start: 0.25,
+                    peak: 0.15,
+                    end: 0.05,
+                    curve: 'linear'
+                }
+            },
+            pulse: {
+                amplitude: 0.06,
+                frequency: 1.5,
+                easing: 'easeInOut',
+                sync: 'staggered'
+            },
+            blending: 'normal',
+            renderOrder: 5,
+            modelOverrides: {
+                'splash-ring': {
+                    opacityLink: 'inverse-scale',
+                    shaderAnimation: {
+                        type: 5             // SURFACE_SHIMMER - caustic patterns
                     }
                 }
             }
         }
-    ],
+    },
 
-    // Wobble - gentle settling ripples
-    wobbleFrequency: 2,
-    wobbleAmplitude: 0.015,
-    wobbleDecay: 0.5,
-    // Scale - squash (flatten)
-    scaleWobble: 0.01,
-    scaleFrequency: 1,
-    scaleSquash: 0.08,           // Flatten vertically
-    // Glow - still water reflection
+    // Wobble - settling ripples
+    wobbleFrequency: 1.5,
+    wobbleAmplitude: 0.01,
+    wobbleDecay: 0.4,
+    // Scale - subtle breathing
+    scaleWobble: 0.008,
+    scaleFrequency: 1.5,
+    scaleSquash: 0.06,
+    // Glow - calm water
     glowColor: [0.25, 0.5, 0.85],
-    glowIntensityMin: 0.8,
-    glowIntensityMax: 1.3,
-    glowPulseRate: 1,
-    // Pool-specific
-    settleDown: 0.02
+    glowIntensityMin: 0.7,
+    glowIntensityMax: 1.2,
+    glowPulseRate: 1.5
 };
 
 /**
- * Waterpool gesture - expanding pool rings with rising bubbles.
+ * Waterpool gesture - expanding pool rings.
  *
- * Uses multi-layer spawn mode:
- * - Layer 1: axis-travel horizontal pool rings
- * - Layer 2: axis-travel rising bubbles
+ * Uses axis-travel spawn mode:
+ * - 4 horizontal rings expanding at feet
+ * - WAVES cutout for ripple interference
+ * - Staggered appearance for wave effect
  */
 export default buildWaterEffectGesture(WATERPOOL_CONFIG);

@@ -56,15 +56,15 @@ const WATERCROWN_CONFIG = {
         type: 'anchor',
         anchor: {
             landmark: 'top',
-            offset: { x: 0, y: 0.05, z: 0 },  // Slight hover above mascot top
+            offset: { x: 0, y: 0.1, z: 0 },   // Higher hover for larger crown
             orientation: 'flat',              // Horizontal ring
             bob: {
-                amplitude: 0.02,
+                amplitude: 0.025,
                 frequency: 0.3                // Slow gentle bob
             }
         },
         count: 1,
-        scale: 1.5,
+        scale: 2.0,
         models: ['splash-ring'],
         animation: {
             appearAt: 0.0,

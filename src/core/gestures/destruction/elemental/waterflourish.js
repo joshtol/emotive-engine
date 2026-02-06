@@ -12,7 +12,7 @@
  *
  * VISUAL DIAGRAM (front view):
  *
- *        ╲     ╱           ← Layer 2: Crossing wave curls (X sweep)
+ *        ╲     ╱           ← Layer 2: Crossing accent rings (X sweep)
  *         ╲   ╱
  *      ────★────           ← Layer 1: Spinning splash rings (bigger)
  *         ╱   ╲
@@ -20,8 +20,8 @@
  *
  * FEATURES:
  * - THREE SPAWN LAYERS for dramatic water flourish
- * - Layer 1: 5 camera-facing spinning splash rings (enlarged)
- * - Layer 2: 2 crossing wave-curls creating X sweep
+ * - Layer 1: 5 camera-facing spinning splash rings with CELLULAR cutout
+ * - Layer 2: 2 crossing splash-rings with STREAKS cutout (X sweep)
  * - Layer 3: 2 tilted splash-ring arcs at ±45° angles
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
@@ -170,34 +170,34 @@ const WATERFLOURISH_CONFIG = {
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Crossing wave curls (diagonal X sweep)
-        // Two wave-curls that sweep across in an X pattern
+        // LAYER 2: Crossing accent rings (diagonal X sweep)
+        // Two splash-rings that sweep across in an X pattern with cutouts
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: -0.8, y: 0.5, z: 0.3 },   // Start top-left
+                offset: { x: -0.7, y: 0.4, z: 0.2 },   // Start top-left
                 orientation: 'camera',
-                startScale: 0.3,
-                endScale: 1.4,
+                startScale: 0.4,
+                endScale: 1.2,
                 scaleEasing: 'easeOutCubic'
             },
             count: 1,
-            scale: 1.0,
-            models: ['wave-curl'],
+            scale: 0.7,
+            models: ['splash-ring'],
             animation: {
-                appearAt: 0.15,
-                disappearAt: 0.55,
+                appearAt: 0.12,
+                disappearAt: 0.5,
                 enter: {
-                    type: 'fade',
-                    duration: 0.08,
-                    easing: 'easeOut'
+                    type: 'scale',
+                    duration: 0.06,
+                    easing: 'easeOutBack'
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.35,
-                    easing: 'easeOutQuad'
+                    duration: 0.3,
+                    easing: 'easeIn'
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
@@ -205,51 +205,71 @@ const WATERFLOURISH_CONFIG = {
                 },
                 parameterAnimation: {
                     turbulence: {
-                        start: 0.5,
-                        peak: 0.8,
-                        end: 0.3,
+                        start: 0.4,
+                        peak: 0.6,
+                        end: 0.2,
                         curve: 'bell'
                     }
                 },
+                // STREAKS cutout for motion blur effect
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },    // STREAKS - motion blur
+                    blend: 'multiply',
+                    travel: 'angular',
+                    travelSpeed: 2.0,
+                    strengthCurve: 'fadeOut'
+                },
                 // Diagonal sweep: top-left to bottom-right
                 drift: {
-                    speed: 0.8,
-                    distance: 0.4,
-                    direction: { x: 1.2, y: -0.8, z: -0.2 },  // Diagonal down-right
+                    speed: 0.9,
+                    distance: 0.35,
+                    direction: { x: 1.0, y: -0.7, z: -0.15 },
                     easing: 'easeInOutCubic'
                 },
                 rotate: [
-                    { axis: 'z', rotations: 0.5, phase: -45 }  // Tilt along slash direction
+                    { axis: 'z', rotations: 1.0, phase: -45 }
                 ],
-                blending: 'normal',
-                renderOrder: 14
+                blending: 'additive',
+                renderOrder: 14,
+                modelOverrides: {
+                    'splash-ring': {
+                        shaderAnimation: {
+                            type: 1,
+                            arcWidth: 0.6,
+                            arcSpeed: 2.0,
+                            arcCount: 1
+                        },
+                        orientationOverride: 'camera'
+                    }
+                }
             }
         },
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0.8, y: 0.5, z: 0.3 },    // Start top-right
+                offset: { x: 0.7, y: 0.4, z: 0.2 },    // Start top-right
                 orientation: 'camera',
-                startScale: 0.3,
-                endScale: 1.4,
+                startScale: 0.4,
+                endScale: 1.2,
                 scaleEasing: 'easeOutCubic'
             },
             count: 1,
-            scale: 1.0,
-            models: ['wave-curl'],
+            scale: 0.7,
+            models: ['splash-ring'],
             animation: {
-                appearAt: 0.15,
-                disappearAt: 0.55,
+                appearAt: 0.12,
+                disappearAt: 0.5,
                 enter: {
-                    type: 'fade',
-                    duration: 0.08,
-                    easing: 'easeOut'
+                    type: 'scale',
+                    duration: 0.06,
+                    easing: 'easeOutBack'
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.35,
-                    easing: 'easeOutQuad'
+                    duration: 0.3,
+                    easing: 'easeIn'
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
@@ -257,24 +277,44 @@ const WATERFLOURISH_CONFIG = {
                 },
                 parameterAnimation: {
                     turbulence: {
-                        start: 0.5,
-                        peak: 0.8,
-                        end: 0.3,
+                        start: 0.4,
+                        peak: 0.6,
+                        end: 0.2,
                         curve: 'bell'
                     }
                 },
+                // STREAKS cutout for motion blur effect
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },    // STREAKS - motion blur
+                    blend: 'multiply',
+                    travel: 'angular',
+                    travelSpeed: 2.0,
+                    strengthCurve: 'fadeOut'
+                },
                 // Diagonal sweep: top-right to bottom-left
                 drift: {
-                    speed: 0.8,
-                    distance: 0.4,
-                    direction: { x: -1.2, y: -0.8, z: -0.2 },  // Diagonal down-left
+                    speed: 0.9,
+                    distance: 0.35,
+                    direction: { x: -1.0, y: -0.7, z: -0.15 },
                     easing: 'easeInOutCubic'
                 },
                 rotate: [
-                    { axis: 'z', rotations: 0.5, phase: 45 }   // Tilt along slash direction
+                    { axis: 'z', rotations: 1.0, phase: 45 }
                 ],
-                blending: 'normal',
-                renderOrder: 14
+                blending: 'additive',
+                renderOrder: 14,
+                modelOverrides: {
+                    'splash-ring': {
+                        shaderAnimation: {
+                            type: 1,
+                            arcWidth: 0.6,
+                            arcSpeed: 2.0,
+                            arcCount: 1
+                        },
+                        orientationOverride: 'camera'
+                    }
+                }
             }
         },
 
@@ -415,9 +455,9 @@ const WATERFLOURISH_CONFIG = {
  * Waterflourish gesture - dramatic water flourish with X arch.
  *
  * Uses THREE SPAWN LAYERS:
- * - Layer 1: Spinning splash rings (enlarged) for central flourish
- * - Layer 2: Crossing wave curls sweeping in X pattern
- * - Layer 3: Tilted splash-ring arcs at ±45° for blade slashes
+ * - Layer 1: Spinning splash rings with CELLULAR cutout
+ * - Layer 2: Crossing accent rings with STREAKS cutout (X sweep)
+ * - Layer 3: Tilted splash-ring arcs at ±45° angles
  *
  * Creates theatrical trident-flourish water effect with crossing arcs.
  */
