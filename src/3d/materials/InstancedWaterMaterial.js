@@ -30,16 +30,21 @@ import {
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
     ANIMATION_UNIFORMS_FRAGMENT,
     CUTOUT_PATTERN_FUNC_GLSL,
     CUTOUT_GLSL,
+    GRAIN_GLSL,
     createAnimationUniforms,
     setShaderAnimation,
     updateAnimationProgress,
     setGestureGlow,
     setGlowScale,
     setCutout,
-    resetCutout
+    resetCutout,
+    setGrain,
+    resetGrain
 } from './cores/InstancedAnimationCore.js';
 import {
     NOISE_GLSL,
@@ -323,6 +328,11 @@ void main() {
     ${WATER_CUTOUT_FOAM_GLSL}
 
     // ═══════════════════════════════════════════════════════════════════════════════
+    // GRAIN EFFECT (noise texture overlay for gritty realism)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    ${GRAIN_GLSL}
+
+    // ═══════════════════════════════════════════════════════════════════════════════
     // DRIP ANTICIPATION (surface tension bright spots)
     // ═══════════════════════════════════════════════════════════════════════════════
     ${WATER_DRIP_ANTICIPATION_GLSL}
@@ -566,7 +576,7 @@ export function setInstancedWaterSparkle(material, intensity) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain };
 
 export default {
     createInstancedWaterMaterial,
@@ -585,10 +595,13 @@ export default {
     setGestureGlow,
     setGlowScale,
     setCutout,
+    setGrain,
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
-    CUTOUT_TRAVEL
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND
 };
 
 // Note: Water element is registered in ElementRegistrations.js to avoid

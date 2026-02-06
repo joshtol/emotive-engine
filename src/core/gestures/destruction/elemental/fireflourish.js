@@ -124,6 +124,14 @@ const FIREFLOURISH_CONFIG = {
                     decayOnExit: true,
                     perElementScale: [1.0, 0.95, 0.88, 0.8, 0.72]
                 },
+                // Grain: adds gritty texture to flames
+                grain: {
+                    type: 0,              // PERLIN - smooth flowing noise
+                    strength: 0.5,        // STRONG for testing
+                    scale: 0.3,           // Coarser texture
+                    speed: 2.0,           // Fast animation
+                    blend: 'overlay'      // Increases contrast for fire
+                },
                 drift: {
                     speed: 0.3,
                     distance: 0.18,

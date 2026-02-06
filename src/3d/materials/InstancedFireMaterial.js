@@ -41,8 +41,11 @@ import {
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
     CUTOUT_PATTERN_FUNC_GLSL,
     CUTOUT_GLSL,
+    GRAIN_GLSL,
     ANIMATION_UNIFORMS_FRAGMENT,
     createAnimationUniforms,
     setShaderAnimation,
@@ -50,7 +53,9 @@ import {
     setGestureGlow,
     setGlowScale,
     setCutout,
-    resetCutout
+    resetCutout,
+    setGrain,
+    resetGrain
 } from './cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -438,6 +443,9 @@ void main() {
     // Shared cutout system from InstancedAnimationCore
     ${CUTOUT_GLSL}
 
+    // Grain effect (noise texture overlay for gritty realism)
+    ${GRAIN_GLSL}
+
     gl_FragColor = vec4(color, alpha);
 }
 `;
@@ -632,7 +640,7 @@ export function setInstancedFireCutout(material, config) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain };
 
 export default {
     createInstancedFireMaterial,
@@ -646,8 +654,11 @@ export default {
     setGestureGlow,
     setGlowScale,
     setCutout,
+    setGrain,
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
-    CUTOUT_TRAVEL
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND
 };

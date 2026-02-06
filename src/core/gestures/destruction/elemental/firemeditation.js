@@ -117,6 +117,14 @@ const FIREMEDITATION_CONFIG = {
                 frequency: 1.5,     // Synced with breath
                 pattern: 'sine'
             },
+            // Grain: WHITE noise for sharp, granular texture
+            grain: {
+                type: 2,              // WHITE - sharp granular noise
+                strength: 0.5,        // Moderate - not too many holes
+                scale: 0.5,           // Medium grain size
+                speed: 0.5,           // Moderate animation
+                blend: 'multiply'     // Creates holes for gritty texture
+            },
             // Gentle slow rotation around Z (spin while facing camera)
             // 5 rings with alternating directions for mandala harmony
             rotate: [

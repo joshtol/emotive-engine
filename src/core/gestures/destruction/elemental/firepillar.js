@@ -114,6 +114,15 @@ const FIREPILLAR_CONFIG = {
                 frequency: 4,
                 pattern: 'sine'
             },
+            // Grain: white noise for sharp, gritty fire texture
+            // NOTE: Uses MULTIPLY blend (not overlay) because overlay has no effect on bright fire colors
+            grain: {
+                type: 2,              // WHITE - sharp granular noise for gritty texture
+                strength: 0.5,        // Strong grain for visible grit
+                scale: 0.15,          // Fine grain for dense texture
+                speed: 2.5,           // Fast flickering for dynamic grit
+                blend: 'multiply'     // Darkens bright areas for visible grit
+            },
             // Rings rotate with 120° phase offsets - breaks repeating pattern
             rotate: [
                 { axis: 'z', rotations: 0.5, phase: 0 },

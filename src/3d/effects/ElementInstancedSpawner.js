@@ -399,11 +399,14 @@ export class ElementInstancedSpawner {
             // Clear existing elements (only once for all layers)
             this.despawn(elementType);
 
-            // Reset cutout to default state to prevent bleeding from previous gesture
+            // Reset cutout and grain to default state to prevent bleeding from previous gesture
             const elementConfig = ElementTypeRegistry.get(elementType);
             const material = this.materials.get(elementType);
             if (elementConfig?.resetCutout && material) {
                 elementConfig.resetCutout(material);
+            }
+            if (elementConfig?.resetGrain && material) {
+                elementConfig.resetGrain(material);
             }
 
             // Spawn each layer
@@ -444,11 +447,14 @@ export class ElementInstancedSpawner {
         // Clear existing elements of this type first
         this.despawn(elementType);
 
-        // Reset cutout to default state to prevent bleeding from previous gesture
+        // Reset cutout and grain to default state to prevent bleeding from previous gesture
         const elementConfig = ElementTypeRegistry.get(elementType);
         const material = this.materials.get(elementType);
         if (elementConfig?.resetCutout && material) {
             elementConfig.resetCutout(material);
+        }
+        if (elementConfig?.resetGrain && material) {
+            elementConfig.resetGrain(material);
         }
 
         const merged = this.mergedGeometries.get(elementType);
@@ -807,6 +813,13 @@ export class ElementInstancedSpawner {
         if (elementConfig?.setCutout && animation?.cutout !== undefined) {
             DEBUG && console.log(`[ElementInstancedSpawner] Applying cutout for ${elementType}:`, animation.cutout);
             elementConfig.setCutout(material, animation.cutout);
+        }
+
+        // Apply grain from animation config (noise texture for gritty realism)
+        // Only set if explicitly defined - don't reset to 0 (that's done at gesture start in spawn())
+        if (elementConfig?.setGrain && animation?.grain !== undefined) {
+            DEBUG && console.log(`[ElementInstancedSpawner] Applying grain for ${elementType}:`, animation.grain);
+            elementConfig.setGrain(material, animation.grain);
         }
     }
 

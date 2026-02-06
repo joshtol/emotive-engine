@@ -95,6 +95,15 @@ const FIRECROWN_CONFIG = {
                 travelSpeed: 2.0,        // Two full sweeps per gesture
                 strengthCurve: 'bell'    // Peak intensity mid-gesture
             },
+            // Grain: perlin noise for gritty, organic flame texture
+            // NOTE: Uses MULTIPLY blend (not overlay) because overlay has no effect on bright fire colors
+            grain: {
+                type: 0,              // PERLIN - smooth flowing noise
+                strength: 0.35,       // Visible grain (0.18 was too subtle)
+                scale: 0.25,          // Coarser texture for more visible variation
+                speed: 1.5,           // Faster for flickering
+                blend: 'multiply'     // Darkens bright areas for visible grit
+            },
             parameterAnimation: {
                 temperature: {
                     start: 0.5,

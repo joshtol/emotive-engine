@@ -118,6 +118,33 @@ export const CUTOUT_TRAVEL = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
+// GRAIN TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Grain noise types - different noise algorithms for texture
+ * @enum {number}
+ */
+export const GRAIN_TYPES = {
+    NONE: -1,             // No grain (disabled)
+    PERLIN: 0,            // Smooth flowing noise (water shimmer)
+    SIMPLEX: 1,           // Similar to perlin, slightly different (fire embers)
+    WHITE: 2,             // Random pixel noise (film grain, electricity)
+    FILM: 3,              // Perlin + white hybrid (cinematic)
+};
+
+/**
+ * Grain blend modes - how grain composites with element color
+ * @enum {number}
+ */
+export const GRAIN_BLEND = {
+    MULTIPLY: 0,          // Darkens - creates grit/dirt effect
+    ADD: 1,               // Brightens - creates sparkle/shimmer
+    OVERLAY: 2,           // Increases contrast - dramatic texture
+    SCREEN: 3,            // Soft brightening - ethereal glow
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
 // GLSL UNIFORMS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
@@ -189,6 +216,12 @@ uniform float uCutoutBellPeakAt;     // For bell: where peak occurs (0.5 = middl
 uniform int uTrailDissolveEnabled;   // 0=off, 1=enabled
 uniform float uTrailDissolveOffset;  // Y offset from instance position (negative = below)
 uniform float uTrailDissolveSoftness;// Gradient softness (higher = softer transition)
+// Grain system - noise-based texture overlay
+uniform int uGrainType;              // -1=none, 0=perlin, 1=simplex, 2=white, 3=film
+uniform float uGrainStrength;        // 0-1 grain visibility
+uniform float uGrainScale;           // Pattern scale (0.1=fine, 2.0=coarse)
+uniform float uGrainSpeed;           // Animation speed (0=static)
+uniform int uGrainBlend;             // 0=multiply, 1=add, 2=overlay, 3=screen
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -726,6 +759,102 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
+// GRAIN SYSTEM GLSL
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Grain noise calculation GLSL code for fragment shader.
+ * Applies noise-based texture on top of cutout, before final color output.
+ *
+ * REQUIRED: Include after CUTOUT_GLSL in fragment shader.
+ *
+ * REQUIRED VARIABLES:
+ * - vec3 vPosition: Local vertex position
+ * - float localTime: Local time for animation
+ * - vec3 color: Fragment color (will be modified)
+ * - snoise(vec3): Simplex noise function
+ *
+ * OUTPUT:
+ * - color: Modified by grain texture
+ */
+export const GRAIN_GLSL = /* glsl */`
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// GRAIN SYSTEM - NOISE TEXTURE OVERLAY
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+if (uGrainType >= 0 && uGrainStrength > 0.01) {
+    float grainTime = localTime * 0.001 * uGrainSpeed;
+    vec3 grainPos = vPosition * uGrainScale * 10.0;
+
+    float grain = 0.0;
+
+    if (uGrainType == 0) {
+        // PERLIN: Smooth flowing noise
+        grain = snoise(grainPos + vec3(grainTime, 0.0, 0.0));
+        grain = grain * 0.5 + 0.5;  // Normalize to 0-1
+
+    } else if (uGrainType == 1) {
+        // SIMPLEX: Similar character, offset sampling
+        vec3 offset = vec3(100.0, grainTime * 1.5, 50.0);
+        grain = snoise(grainPos + offset);
+        grain = grain * 0.5 + 0.5;
+
+    } else if (uGrainType == 2) {
+        // WHITE: Random pixel noise (fast changing)
+        // Use fract-based pseudo-random
+        vec3 whitePos = grainPos * 100.0 + vec3(grainTime * 50.0);
+        grain = fract(sin(dot(whitePos.xy, vec2(12.9898, 78.233))) * 43758.5453);
+
+    } else if (uGrainType == 3) {
+        // FILM: Perlin + white hybrid (cinematic)
+        float perlin = snoise(grainPos + vec3(grainTime, 0.0, 0.0));
+        perlin = perlin * 0.5 + 0.5;
+        vec3 whitePos = grainPos * 80.0 + vec3(grainTime * 30.0);
+        float white = fract(sin(dot(whitePos.xy, vec2(12.9898, 78.233))) * 43758.5453);
+        grain = mix(perlin, white, 0.3);  // 70% perlin, 30% white
+    }
+
+    // Boost noise contrast - push values toward 0 or 1 for visible grain
+    grain = smoothstep(0.3, 0.7, grain);  // Increase contrast
+
+    // Apply grain based on blend mode
+    float grainEffect = mix(1.0, grain, uGrainStrength);
+
+    if (uGrainBlend == 0) {
+        // MULTIPLY: Creates noise holes for gritty texture
+        // Uses pre-computed grain value from type system (PERLIN, SIMPLEX, WHITE, FILM)
+
+        // Discard pixels where grain is below threshold (creates holes)
+        float threshold = 0.5 * uGrainStrength;
+        if (grain < threshold) {
+            discard;
+        }
+        // Darken remaining pixels based on grain
+        color *= 0.7 + grain * 0.3;
+
+    } else if (uGrainBlend == 1) {
+        // ADD: Brightens (sparkle/shimmer)
+        color += (grain - 0.5) * uGrainStrength * 0.5;
+
+    } else if (uGrainBlend == 2) {
+        // OVERLAY: Increases contrast
+        vec3 overlay;
+        for (int i = 0; i < 3; i++) {
+            float c = color[i];
+            float g = grain;
+            overlay[i] = c < 0.5 ? 2.0 * c * g : 1.0 - 2.0 * (1.0 - c) * (1.0 - g);
+        }
+        color = mix(color, overlay, uGrainStrength);
+
+    } else if (uGrainBlend == 3) {
+        // SCREEN: Soft brightening (ethereal)
+        vec3 screened = 1.0 - (1.0 - color) * (1.0 - vec3(grain * 0.5));
+        color = mix(color, screened, uGrainStrength);
+    }
+}
+`;
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
 // JAVASCRIPT UTILITIES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
@@ -774,6 +903,12 @@ export const ANIMATION_DEFAULTS = {
     trailDissolveEnabled: 0,     // Off by default
     trailDissolveOffset: -0.3,   // Default offset below instance position
     trailDissolveSoftness: 0.25, // Default softness for gradient
+    // Grain - noise texture overlay
+    grainType: -1,               // Off by default (-1=none)
+    grainStrength: 0.0,          // Grain visibility (0-1)
+    grainScale: 0.5,             // Pattern scale (0.1=fine, 2.0=coarse)
+    grainSpeed: 1.0,             // Animation speed (0=static)
+    grainBlend: 0,               // MULTIPLY blend mode
 };
 
 /**
@@ -823,6 +958,12 @@ export function createAnimationUniforms() {
         uTrailDissolveEnabled: { value: ANIMATION_DEFAULTS.trailDissolveEnabled },
         uTrailDissolveOffset: { value: ANIMATION_DEFAULTS.trailDissolveOffset },
         uTrailDissolveSoftness: { value: ANIMATION_DEFAULTS.trailDissolveSoftness },
+        // Grain
+        uGrainType: { value: ANIMATION_DEFAULTS.grainType },
+        uGrainStrength: { value: ANIMATION_DEFAULTS.grainStrength },
+        uGrainScale: { value: ANIMATION_DEFAULTS.grainScale },
+        uGrainSpeed: { value: ANIMATION_DEFAULTS.grainSpeed },
+        uGrainBlend: { value: ANIMATION_DEFAULTS.grainBlend },
     };
 }
 
@@ -1030,6 +1171,81 @@ export function resetCutout(material) {
     material.uniforms.uTrailDissolveSoftness.value = ANIMATION_DEFAULTS.trailDissolveSoftness;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// GRAIN FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Configure grain effect on a material.
+ * Grain adds organic noise texture to elements for gritty realism.
+ *
+ * @param {THREE.ShaderMaterial} material - The material to configure
+ * @param {Object} config - Grain configuration
+ * @param {number} [config.type=0] - Grain type: PERLIN(0), SIMPLEX(1), WHITE(2), FILM(3)
+ * @param {number} [config.strength=0.15] - Grain intensity (0-1)
+ * @param {number} [config.scale=0.5] - Grain texture scale (0.1=coarse, 1.0=fine)
+ * @param {number} [config.speed=1.0] - Animation speed multiplier
+ * @param {number|string} [config.blend='multiply'] - Blend mode: 'multiply'(0), 'add'(1), 'overlay'(2), 'screen'(3)
+ *
+ * @example
+ * // Subtle film grain for water
+ * setGrain(material, { type: GRAIN_TYPES.FILM, strength: 0.1, scale: 0.8 });
+ *
+ * @example
+ * // Heavy perlin grain for fire grit
+ * setGrain(material, { type: GRAIN_TYPES.PERLIN, strength: 0.25, scale: 0.4, blend: 'overlay' });
+ */
+export function setGrain(material, config = {}) {
+    if (!material?.uniforms) return;
+
+    const {
+        type = GRAIN_TYPES.PERLIN,
+        strength = 0.15,
+        scale = 0.5,
+        speed = 1.0,
+        blend = 'multiply'
+    } = config;
+
+    // Map blend mode strings to enum values
+    const blendModes = {
+        'multiply': GRAIN_BLEND.MULTIPLY,
+        'add': GRAIN_BLEND.ADD,
+        'overlay': GRAIN_BLEND.OVERLAY,
+        'screen': GRAIN_BLEND.SCREEN
+    };
+
+    material.uniforms.uGrainType.value = type;
+    material.uniforms.uGrainStrength.value = strength;
+    material.uniforms.uGrainScale.value = scale;
+    material.uniforms.uGrainSpeed.value = speed;
+
+    // Resolve blend mode
+    let blendValue = GRAIN_BLEND.MULTIPLY;
+    if (typeof blend === 'number') {
+        blendValue = blend;
+    } else if (blend in blendModes) {
+        blendValue = blendModes[/** @type {keyof typeof blendModes} */ (blend)];
+    }
+    material.uniforms.uGrainBlend.value = blendValue;
+}
+
+/**
+ * Reset grain to default (off) state
+ * @param {THREE.ShaderMaterial} material - The material to reset
+ */
+export function resetGrain(material) {
+    if (!material?.uniforms) return;
+    material.uniforms.uGrainType.value = ANIMATION_DEFAULTS.grainType;
+    material.uniforms.uGrainStrength.value = ANIMATION_DEFAULTS.grainStrength;
+    material.uniforms.uGrainScale.value = ANIMATION_DEFAULTS.grainScale;
+    material.uniforms.uGrainSpeed.value = ANIMATION_DEFAULTS.grainSpeed;
+    material.uniforms.uGrainBlend.value = ANIMATION_DEFAULTS.grainBlend;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// SHADER ANIMATION FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
 /**
  * Configure animation on a material.
  * This is the shared function used by all element types.
@@ -1181,6 +1397,8 @@ export default {
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
     ANIMATION_UNIFORMS_VERTEX,
     ANIMATION_UNIFORMS_FRAGMENT,
     ANIMATION_VARYINGS,
@@ -1188,6 +1406,7 @@ export default {
     ANIMATION_FRAGMENT_APPLY,
     CUTOUT_PATTERN_FUNC_GLSL,
     CUTOUT_GLSL,
+    GRAIN_GLSL,
     ANIMATION_DEFAULTS,
     createAnimationUniforms,
     setShaderAnimation,
@@ -1197,5 +1416,7 @@ export default {
     clearGestureGlow,
     setGlowScale,
     setCutout,
-    resetCutout
+    resetCutout,
+    setGrain,
+    resetGrain
 };

@@ -82,6 +82,14 @@ const WATERSPLASH_CONFIG = {
                     travelSpeed: 4.0,
                     strengthCurve: 'fadeOut'
                 },
+                // Grain: cinematic film grain for realistic water
+                grain: {
+                    type: 3,              // FILM - perlin + white hybrid
+                    strength: 0.5,        // STRONG for testing
+                    scale: 0.3,           // Coarser texture
+                    speed: 1.5,           // Faster animation
+                    blend: 'multiply'     // Darkens for depth
+                },
                 blending: 'additive',
                 renderOrder: 8,
                 modelOverrides: {

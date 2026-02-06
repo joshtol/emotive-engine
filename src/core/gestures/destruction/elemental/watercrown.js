@@ -97,6 +97,14 @@ const WATERCROWN_CONFIG = {
                 travelSpeed: 0.3,            // Very slow sweep for regal effect
                 strengthCurve: 'constant'    // Always textured, never solid
             },
+            // Grain: cinematic film grain for realistic water crown
+            grain: {
+                type: 3,              // FILM - perlin + white hybrid
+                strength: 0.3,        // Visible grain (0.08 was too subtle)
+                scale: 0.4,           // Coarser for visible texture
+                speed: 0.5,           // Slow, majestic
+                blend: 'multiply'     // Darkens for depth and texture
+            },
             parameterAnimation: {
                 turbulence: {
                     start: 0.1,
