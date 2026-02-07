@@ -112,6 +112,14 @@ const SCORCH_CONFIG = {
                     frequency: 5,
                     pattern: 'sine'
                 },
+                // Cutout: EMBERS for burning core
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 5, scale: 1.5, weight: 1.0 },    // EMBERS - burning core
+                    blend: 'multiply',
+                    travel: 'oscillate',
+                    travelSpeed: 6.0
+                },
                 blending: 'additive',
                 renderOrder: 16
             }
@@ -178,6 +186,20 @@ const SCORCH_CONFIG = {
                     max: 3.5,
                     frequency: 4,
                     pattern: 'sine'
+                },
+                // Two-layer cutout: DISSOLVE + EMBERS for radiating flames
+                cutout: {
+                    strength: 0.6,
+                    primary: { pattern: 7, scale: 1.0, weight: 1.0 },    // DISSOLVE
+                    secondary: { pattern: 5, scale: 1.5, weight: 0.5 },  // EMBERS
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 3.0,
+                    geometricMask: {
+                        type: 'tip-boost',
+                        core: 0.0,
+                        tip: 0.15
+                    }
                 },
                 // Radiate outward from center (horizontal only)
                 drift: {
@@ -252,6 +274,18 @@ const SCORCH_CONFIG = {
                     max: 2.5,
                     frequency: 6,
                     pattern: 'sine'
+                },
+                // Cutout: DISSOLVE for escaping wisps
+                cutout: {
+                    strength: 0.55,
+                    primary: { pattern: 7, scale: 1.5, weight: 1.0 },    // DISSOLVE - escaping
+                    blend: 'add',
+                    travel: 'angular',
+                    travelSpeed: 2.0,
+                    trailDissolve: {
+                        offset: -0.1,
+                        softness: 0.25
+                    }
                 },
                 // Rise upward like escaping heat
                 drift: {
@@ -329,6 +363,14 @@ const SCORCH_CONFIG = {
                     max: 1.8,
                     frequency: 4,
                     pattern: 'sine'
+                },
+                // Grain: film grain for ambient heat shimmer
+                grain: {
+                    type: 3,
+                    strength: 0.08,
+                    scale: 0.2,
+                    speed: 0.8,
+                    blend: 'multiply'
                 },
                 // Slow outward expansion (horizontal)
                 drift: {

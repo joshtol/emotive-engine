@@ -125,12 +125,13 @@ const FIREFLOURISH_CONFIG = {
                     perElementScale: [1.0, 0.95, 0.88, 0.8, 0.72]
                 },
                 // Grain: adds gritty texture to flames
+                // NOTE: Uses MULTIPLY (not overlay) because overlay has no effect on bright fire
                 grain: {
                     type: 0,              // PERLIN - smooth flowing noise
-                    strength: 0.5,        // STRONG for testing
+                    strength: 0.35,       // Visible but not overwhelming
                     scale: 0.3,           // Coarser texture
                     speed: 2.0,           // Fast animation
-                    blend: 'overlay'      // Increases contrast for fire
+                    blend: 'multiply'     // Actually visible on bright colors
                 },
                 // SPIRAL cutout with spiral travel - interesting flicker
                 cutout: {

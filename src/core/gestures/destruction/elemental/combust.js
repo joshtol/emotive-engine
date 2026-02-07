@@ -101,6 +101,30 @@ const COMBUST_CONFIG = {
                 frequency: 20,
                 pattern: 'sine'
             },
+            // Two-layer cutout: VORONOI + CRACKS for shattered explosion
+            cutout: {
+                strength: 0.75,
+                primary: { pattern: 3, scale: 2.5, weight: 1.0 },    // VORONOI - shattered cells
+                secondary: { pattern: 8, scale: 2.0, weight: 0.6 },  // CRACKS - fracture lines
+                blend: 'multiply',
+                travel: 'radial',
+                travelSpeed: 6.0,        // Fast explosive expansion
+                strengthCurve: 'fadeIn',
+                fadeInDuration: 0.15,    // Quick appearance with burst
+                geometricMask: {
+                    type: 'tip-boost',
+                    core: 0.0,
+                    tip: 0.2
+                }
+            },
+            // Grain: white noise for chaotic explosion texture
+            grain: {
+                type: 2,              // WHITE - chaotic explosion texture
+                strength: 0.15,
+                scale: 0.1,
+                speed: 4.0,           // Very fast for chaos
+                blend: 'multiply'
+            },
             drift: {
                 direction: 'outward', // Explodes outward
                 distance: 0.15,       // Total expansion over gesture lifetime

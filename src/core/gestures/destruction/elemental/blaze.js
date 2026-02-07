@@ -126,7 +126,7 @@ const BLAZE_CONFIG = {
                     pattern: 'random'     // Random for erratic brightness
                 },
                 // Two-layer cutout: DISSOLVE + EMBERS for edge erosion
-                // inverted-distance mask ensures tips get eroded from the start
+                // tip-boost mask ensures tips get eroded from the start
                 cutout: {
                     strength: 0.55,
                     primary: { pattern: 7, scale: 0.8, weight: 1.0 },    // DISSOLVE - erodes from edges
@@ -134,6 +134,9 @@ const BLAZE_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 6.0,
+                    strengthCurve: 'bell',
+                    bellPeakAt: 0.6,      // Peak slightly late
+                    bellWidth: 0.4,       // Moderate plateau
                     // Boost erosion at tips while keeping body dissolve intact
                     geometricMask: {
                         type: 'tip-boost',

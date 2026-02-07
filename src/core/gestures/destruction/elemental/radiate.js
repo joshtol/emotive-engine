@@ -118,6 +118,28 @@ const RADIATE_CONFIG = {
                     frequency: 4,
                     pattern: 'sine'
                 },
+                // Two-layer cutout: WAVES + SPIRAL for radiating energy
+                cutout: {
+                    strength: 0.6,
+                    primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - radiating energy
+                    secondary: { pattern: 6, scale: 1.5, weight: 0.4 },  // SPIRAL - rotation
+                    blend: 'add',
+                    travel: 'radial',
+                    travelSpeed: 2.0,
+                    geometricMask: {
+                        type: 'distance',
+                        core: 0.1,
+                        tip: 0.25
+                    }
+                },
+                // Grain: subtle film grain
+                grain: {
+                    type: 3,
+                    strength: 0.05,
+                    scale: 0.15,
+                    speed: 1.0,
+                    blend: 'multiply'
+                },
                 rotate: [
                     { axis: 'y', rotations: 1.5, phase: 0 },
                     { axis: 'y', rotations: 1.5, phase: 120 },
@@ -203,6 +225,20 @@ const RADIATE_CONFIG = {
                     max: 4.0,
                     frequency: 10,
                     pattern: 'sine'
+                },
+                // Two-layer cutout: RADIAL + EMBERS for central burst
+                cutout: {
+                    strength: 0.7,
+                    primary: { pattern: 2, scale: 2.5, weight: 1.0 },    // RADIAL - burst
+                    secondary: { pattern: 5, scale: 1.5, weight: 0.6 },  // EMBERS
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 4.0,
+                    geometricMask: {
+                        type: 'tip-boost',
+                        core: 0.0,
+                        tip: 0.15
+                    }
                 },
                 scalePerElement: [1.0, 0.8, 1.1, 0.75, 0.95, 0.85],
                 blending: 'additive',

@@ -114,6 +114,22 @@ const FIREPILLAR_CONFIG = {
                 frequency: 4,
                 pattern: 'sine'
             },
+            // Two-layer cutout: WAVES + DISSOLVE for rising energy erosion
+            cutout: {
+                strength: 0.65,
+                primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - rising energy
+                secondary: { pattern: 7, scale: 1.5, weight: 0.5 },  // DISSOLVE - edge erosion
+                blend: 'add',
+                travel: 'angular',
+                travelSpeed: 1.5,
+                strengthCurve: 'fadeIn',
+                fadeInDuration: 0.3,
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.1,
+                    tip: 0.25
+                }
+            },
             // Grain: white noise for sharp, gritty fire texture
             // NOTE: Uses MULTIPLY blend (not overlay) because overlay has no effect on bright fire colors
             grain: {

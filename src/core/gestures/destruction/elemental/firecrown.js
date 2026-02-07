@@ -83,13 +83,22 @@ const FIRECROWN_CONFIG = {
                 scaleSmoothing: 0.1,
                 geometryStability: true
             },
-            // Cutout: creates burning ember holes for organic flame look
+            // Two-layer cutout: EMBERS + SPIRAL for organic crown erosion
             cutout: {
-                strength: 0.7,
-                pattern: 5,           // EMBERS
-                scale: 1.2,
+                strength: 0.65,
+                primary: { pattern: 5, scale: 1.5, weight: 1.0 },    // EMBERS - burning holes
+                secondary: { pattern: 6, scale: 2.0, weight: 0.4 },  // SPIRAL - crown rotation
+                blend: 'add',
                 travel: 'angular',
-                travelSpeed: 2.0
+                travelSpeed: 1.5,
+                strengthCurve: 'bell',
+                bellPeakAt: 0.5,
+                bellWidth: 0.6,
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.15,
+                    tip: 0.3
+                }
             },
             // Grain: perlin noise for gritty, organic flame texture
             // NOTE: Uses MULTIPLY blend (not overlay) because overlay has no effect on bright fire colors

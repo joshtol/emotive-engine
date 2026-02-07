@@ -132,6 +132,14 @@ const FIREDANCE_CONFIG = {
                     tip: 0.28
                 }
             },
+            // Grain: subtle film grain for dance texture
+            grain: {
+                type: 3,              // FILM - cinematic
+                strength: 0.06,
+                scale: 0.15,
+                speed: 1.0,
+                blend: 'multiply'
+            },
             // Dance partners: two mirror each other, one does a flourish
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },     // Lead: 2 rotations

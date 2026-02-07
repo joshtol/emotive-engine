@@ -133,6 +133,14 @@ const FIREHELIX_CONFIG = {
                     tip: 0.25
                 }
             },
+            // Grain: subtle perlin for DNA energy texture
+            grain: {
+                type: 0,              // PERLIN - smooth flowing
+                strength: 0.08,
+                scale: 0.2,
+                speed: 1.5,
+                blend: 'multiply'
+            },
             // Moderate rotation to show the helix structure
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,

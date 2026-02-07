@@ -128,7 +128,20 @@ const FIREDRILL_CONFIG = {
                     type: 'distance',
                     core: 0.08,
                     tip: 0.2
+                },
+                // Trail dissolve: leading edge dissolves as drill advances
+                trailDissolve: {
+                    offset: 0.1,          // Positive - dissolve at leading edge
+                    softness: 0.25
                 }
+            },
+            // Grain: white noise for sharp drilling texture
+            grain: {
+                type: 2,              // WHITE - sharp granular
+                strength: 0.1,
+                scale: 0.1,
+                speed: 3.0,           // Fast for intense drilling
+                blend: 'multiply'
             },
             // Fast unified rotation for drill effect
             rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations

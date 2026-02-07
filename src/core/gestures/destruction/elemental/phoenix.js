@@ -119,6 +119,31 @@ const PHOENIX_CONFIG = {
                 frequency: 6,
                 pattern: 'sine'
             },
+            // Two-layer cutout: DISSOLVE + EMBERS for rebirth erosion
+            cutout: {
+                strength: 0.65,
+                primary: { pattern: 7, scale: 1.5, weight: 1.0 },    // DISSOLVE - rebirth erosion
+                secondary: { pattern: 5, scale: 2.0, weight: 0.5 },  // EMBERS - phoenix flames
+                blend: 'add',
+                travel: 'angular',
+                travelSpeed: 2.0,
+                strengthCurve: 'bell',
+                bellPeakAt: 0.5,
+                bellWidth: 0.5,
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.1,
+                    tip: 0.3
+                }
+            },
+            // Grain: perlin for smooth ascending energy
+            grain: {
+                type: 0,              // PERLIN - smooth ascending energy
+                strength: 0.1,
+                scale: 0.25,
+                speed: 1.5,
+                blend: 'multiply'
+            },
             // All rotate together in spiral
             rotate: { axis: 'y', rotations: 1.5, phase: 0 },
             scaleVariance: 0.2,

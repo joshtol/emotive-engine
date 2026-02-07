@@ -120,6 +120,31 @@ const FLAME_VORTEX_CONFIG = {
                 frequency: 8,
                 pattern: 'sine'
             },
+            // Two-layer cutout: SPIRAL + WAVES for tornado vortex effect
+            cutout: {
+                strength: 0.7,
+                primary: { pattern: 6, scale: 2.5, weight: 1.0 },    // SPIRAL - vortex swirl
+                secondary: { pattern: 4, scale: 1.8, weight: 0.5 },  // WAVES - flowing energy
+                blend: 'add',
+                travel: 'spiral',
+                travelSpeed: 4.0,        // Fast tornado rotation
+                strengthCurve: 'bell',
+                bellPeakAt: 0.5,
+                bellWidth: 0.5,
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.1,
+                    tip: 0.25
+                }
+            },
+            // Grain: white noise for intense vortex texture
+            grain: {
+                type: 2,              // WHITE - intense vortex texture
+                strength: 0.12,
+                scale: 0.15,
+                speed: 2.5,
+                blend: 'multiply'
+            },
             // Arc animation handles visual rotation - no mesh rotation needed
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
