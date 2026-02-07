@@ -93,6 +93,7 @@ varying float vDisplacement;
 varying float vNoiseValue;
 varying float vRandomSeed;
 varying float vArcVisibility;  // 0-1 visibility based on arc position
+varying float vVerticalGradient;  // Normalized vertical position (0=bottom, 1=top) for tip effects
 
 ${NOISE_GLSL}
 
@@ -146,6 +147,11 @@ void main() {
 
     vPosition = selectedPosition;
     vRandomSeed = aRandomSeed;
+
+    // Calculate vertical gradient for tip-based effects
+    // Normalize Y position to 0-1 range (assuming model centered at y=0)
+    float modelHeight = 1.0;  // Water models are typically unit-sized
+    vVerticalGradient = clamp((selectedPosition.y + 0.5) / modelHeight, 0.0, 1.0);
 
     // Animated noise for fluid wobble
     float instanceVariation = aRandomSeed * 0.3;
@@ -271,6 +277,7 @@ varying float vDisplacement;
 varying float vNoiseValue;
 varying float vRandomSeed;
 varying float vArcVisibility;
+varying float vVerticalGradient;
 
 ${NOISE_GLSL}
 ${WATER_COLOR_GLSL}

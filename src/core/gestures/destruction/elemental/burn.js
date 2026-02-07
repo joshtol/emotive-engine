@@ -105,6 +105,36 @@ const BURN_CONFIG = {
                 frequency: 10,
                 pattern: 'sine'
             },
+            // Two-layer cutout: EMBERS + WAVES for organic burning with flow
+            cutout: {
+                strength: 0.7,
+                primary: { pattern: 5, scale: 2.0, weight: 1.0 },    // EMBERS - burning holes
+                secondary: { pattern: 4, scale: 1.5, weight: 0.5 },  // WAVES - flowing interference
+                blend: 'multiply',
+                travel: 'radial',
+                travelSpeed: 2.5,
+                strengthCurve: 'fadeIn',      // Cutouts gradually appear
+                fadeInDuration: 0.4,          // Takes 40% of gesture to fully appear
+                // Trail dissolve: fade bottom of rising flames
+                trailDissolve: {
+                    offset: -0.15,
+                    softness: 0.3
+                },
+                // Geometric mask: focus cutouts at flame tips
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.08,
+                    tip: 0.18
+                }
+            },
+            // Grain: subtle film grain for organic texture
+            grain: {
+                type: 3,                  // FILM - cinematic grain
+                strength: 0.04,           // Very subtle
+                scale: 0.1,
+                speed: 0.5,
+                blend: 'multiply'
+            },
             // Key feature: flames rise from where they spawn on surface
             drift: {
                 direction: 'up',

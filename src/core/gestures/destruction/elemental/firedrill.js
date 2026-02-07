@@ -115,6 +115,21 @@ const FIREDRILL_CONFIG = {
                 frequency: 12,
                 pattern: 'random'
             },
+            // Two-layer: CRACKS + VORONOI for drilling/breaking effect
+            cutout: {
+                strength: 0.85,
+                primary: { pattern: 8, scale: 2.5, weight: 1.0 },    // CRACKS - fracture lines
+                secondary: { pattern: 3, scale: 3.0, weight: 0.7 },  // VORONOI - shattered cells
+                blend: 'multiply',        // More holes where patterns overlap
+                travel: 'oscillate',
+                travelSpeed: 5.0,         // Fast pulsing
+                // Geometric mask: focus at ring edges
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.08,
+                    tip: 0.2
+                }
+            },
             // Fast unified rotation for drill effect
             rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations
             scaleVariance: 0.15,

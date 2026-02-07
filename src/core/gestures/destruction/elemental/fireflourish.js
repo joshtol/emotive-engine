@@ -132,6 +132,14 @@ const FIREFLOURISH_CONFIG = {
                     speed: 2.0,           // Fast animation
                     blend: 'overlay'      // Increases contrast for fire
                 },
+                // SPIRAL cutout with spiral travel - interesting flicker
+                cutout: {
+                    strength: 0.85,
+                    pattern: 6,           // SPIRAL
+                    scale: 2.5,
+                    travel: 'spiral',
+                    travelSpeed: 2.0
+                },
                 drift: {
                     speed: 0.3,
                     distance: 0.18,

@@ -116,6 +116,23 @@ const FIREHELIX_CONFIG = {
                 frequency: 6,
                 pattern: 'smooth'
             },
+            // Two-layer: WAVES + SPIRAL for DNA energy flow
+            cutout: {
+                strength: 0.8,
+                primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - energy flow
+                secondary: { pattern: 6, scale: 1.8, weight: 0.6 },  // SPIRAL - helix arms
+                blend: 'max',             // Smoother blend
+                travel: 'angular',
+                travelSpeed: 3.0,
+                strengthCurve: 'bell',    // Fade in and out
+                bellPeakAt: 0.5,
+                // Geometric mask: cutouts at ring edges
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.1,
+                    tip: 0.25
+                }
+            },
             // Moderate rotation to show the helix structure
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,

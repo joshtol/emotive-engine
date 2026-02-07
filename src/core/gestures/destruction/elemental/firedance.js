@@ -115,6 +115,23 @@ const FIREDANCE_CONFIG = {
                 frequency: 6,
                 pattern: 'sine'
             },
+            // Two-layer: SPIRAL + DISSOLVE for swirling erosion dance
+            cutout: {
+                strength: 0.75,
+                primary: { pattern: 6, scale: 2.0, weight: 1.0 },    // SPIRAL - swirling arms
+                secondary: { pattern: 7, scale: 1.5, weight: 0.6 },  // DISSOLVE - edge erosion
+                blend: 'add',             // Smooth combined effect
+                travel: 'spiral',         // Matches the dance theme
+                travelSpeed: 2.5,
+                strengthCurve: 'bell',    // Dance peaks in middle
+                bellPeakAt: 0.5,
+                // Geometric mask: cutouts at ring edges
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.12,
+                    tip: 0.28
+                }
+            },
             // Dance partners: two mirror each other, one does a flourish
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },     // Lead: 2 rotations

@@ -117,6 +117,23 @@ const FIREMEDITATION_CONFIG = {
                 frequency: 1.5,     // Synced with breath
                 pattern: 'sine'
             },
+            // Ethereal WAVES - flowing meditation energy
+            cutout: {
+                strength: 0.6,
+                primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - flowing energy
+                secondary: { pattern: 6, scale: 1.5, weight: 0.5 },  // SPIRAL - meditation swirl
+                blend: 'add',
+                travel: 'angular',
+                travelSpeed: 0.6,         // Slow meditative rotation
+                strengthCurve: 'bell',
+                bellPeakAt: 0.5,
+                bellWidth: 1.0,               // Full plateau - effectively constant
+                geometricMask: {
+                    type: 'distance',
+                    core: 0.1,
+                    tip: 0.3
+                }
+            },
             // Grain: WHITE noise for sharp, granular texture
             grain: {
                 type: 2,              // WHITE - sharp granular noise

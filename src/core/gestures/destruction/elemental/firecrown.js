@@ -84,16 +84,12 @@ const FIRECROWN_CONFIG = {
                 geometryStability: true
             },
             // Cutout: creates burning ember holes for organic flame look
-            // Two-layer: EMBERS (rising heat) + CRACKS (fracture lines)
-            // Angular travel sweeps around the crown, bell curve peaks mid-gesture
             cutout: {
-                strength: 0.9,
-                primary: { pattern: 5, scale: 1.2, weight: 1.0 },    // EMBERS
-                secondary: { pattern: 8, scale: 0.8, weight: 0.4 },  // CRACKS (subtle)
-                blend: 'multiply',
+                strength: 0.7,
+                pattern: 5,           // EMBERS
+                scale: 1.2,
                 travel: 'angular',
-                travelSpeed: 2.0,        // Two full sweeps per gesture
-                strengthCurve: 'bell'    // Peak intensity mid-gesture
+                travelSpeed: 2.0
             },
             // Grain: perlin noise for gritty, organic flame texture
             // NOTE: Uses MULTIPLY blend (not overlay) because overlay has no effect on bright fire colors

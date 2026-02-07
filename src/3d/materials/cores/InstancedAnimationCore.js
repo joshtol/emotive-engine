@@ -91,6 +91,9 @@ export const CUTOUT_PATTERNS = {
     SPIRAL: 6,            // Spiral arms pattern (meditation, vortex)
     DISSOLVE: 7,          // Edge erosion inward (fade-outs)
     CRACKS: 8,            // Branching fracture lines (shatter)
+    // Pattern 9 removed - use geometricMask: { type: 'distance' } instead
+    BURN: 10,             // Consumption line traveling up with noisy edge
+    // Pattern 11 removed - use geometricMask: { type: 'distance' } with any pattern
 };
 
 /**
@@ -115,6 +118,8 @@ export const CUTOUT_TRAVEL = {
     SPIRAL: 3,            // Rotate + expand simultaneously (hypnotic)
     OSCILLATE: 4,         // Ping-pong back and forth (breathing)
     WAVE: 5,              // Sine wave propagation (ripple)
+    VERTICAL: 6,          // Progress travels bottom→top along vertical gradient
+    CONSUME: 7,           // Burns inward from tips, eating the flame
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -131,6 +136,7 @@ export const GRAIN_TYPES = {
     SIMPLEX: 1,           // Similar to perlin, slightly different (fire embers)
     WHITE: 2,             // Random pixel noise (film grain, electricity)
     FILM: 3,              // Perlin + white hybrid (cinematic)
+    TIP_WEIGHTED: 4,      // Noise multiplied by vertical position (stronger at tips)
 };
 
 /**
@@ -212,6 +218,7 @@ uniform int uCutoutStrengthCurve;    // 0=constant, 1=fadeIn, 2=fadeOut, 3=bell,
 uniform float uCutoutFadeInDuration; // For fadeIn: fraction of gesture to reach full (0.33 = 1/3)
 uniform float uCutoutFadeOutDuration;// For fadeOut: fraction of gesture for fade (0.33 = last 1/3)
 uniform float uCutoutBellPeakAt;     // For bell: where peak occurs (0.5 = middle, 0.3 = early)
+uniform float uCutoutBellWidth;      // For bell: plateau width (0=sharp peak, 0.5=50% at full, 0.8=80% at full)
 // Trail dissolve - fades out bottom of each instance as it moves
 uniform int uTrailDissolveEnabled;   // 0=off, 1=enabled
 uniform float uTrailDissolveOffset;  // Y offset from instance position (negative = below)
@@ -222,6 +229,10 @@ uniform float uGrainStrength;        // 0-1 grain visibility
 uniform float uGrainScale;           // Pattern scale (0.1=fine, 2.0=coarse)
 uniform float uGrainSpeed;           // Animation speed (0=static)
 uniform int uGrainBlend;             // 0=multiply, 1=add, 2=overlay, 3=screen
+// Geometric mask - restricts cutout to specific regions of the model geometry
+uniform int uCutoutGeoMaskType;      // 0=none, 1=distance (length(pos) for tips)
+uniform float uCutoutGeoMaskCore;    // Radius where geometry is fully solid (no cutout)
+uniform float uCutoutGeoMaskTip;     // Radius where cutout is fully applied
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -447,7 +458,8 @@ if (uAnimationType == 1) {
  */
 export const CUTOUT_PATTERN_FUNC_GLSL = /* glsl */`
 // Calculate cutout mask for a single pattern
-float calcCutoutPattern(int pattern, vec3 pos, float scale, float time) {
+// vertGradient: normalized vertical position (0=bottom, 1=top) for tip-based effects
+float calcCutoutPattern(int pattern, vec3 pos, float scale, float time, float vertGradient) {
     if (pattern < 0) return 1.0;  // NONE pattern = fully visible
 
     vec3 scaledPos = pos * scale;
@@ -541,7 +553,27 @@ float calcCutoutPattern(int pattern, vec3 pos, float scale, float time) {
         // Animate crack spreading
         float crackSpread = sin(time * 1.5) * 0.2;
         return smoothstep(0.15 + crackSpread, 0.4, cracks);
+
+    // Pattern 9 (TIPS) removed - use geometricMask: { type: 'distance' } instead
+
+    } else if (pattern == 10) {
+        // BURN: Consumption line traveling with organic noisy edge
+        // Enhanced: Multi-octave noise for organic burning
+
+        // Burn line progresses over time
+        float burnProgress = time * 0.5;
+
+        // Multi-octave noise for organic burning edge
+        float noise1 = snoise(vec3(pos.xz * scale * 2.0, time * 0.5)) * 0.12;
+        float noise2 = snoise(vec3(pos.xz * scale * 4.0 + 10.0, time * 0.8)) * 0.06;
+        float noiseEdge = noise1 + noise2;
+
+        // Burn from top down: pixels above burnLine get consumed
+        float burn = smoothstep(burnProgress - 0.1 + noiseEdge, burnProgress + 0.1 + noiseEdge, 1.0 - vertGradient);
+        return 1.0 - burn;
     }
+
+    // Pattern 11 (FRINGE) removed - use geometricMask: { type: 'distance' } with any pattern
 
     return 1.0;  // Default: fully visible
 }
@@ -597,21 +629,45 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
             : (uGestureProgress - fadeOutStart) / max(0.01, uCutoutFadeOutDuration);
         curvedStrength *= (1.0 - fadeProgress);
     } else if (uCutoutStrengthCurve == 3) {
-        // BELL: Strength peaks at bellPeakAt then fades
+        // BELL: Strength peaks at bellPeakAt with configurable plateau width
         // bellPeakAt=0.5 is symmetric, bellPeakAt=0.3 peaks early
+        // bellWidth controls how long it stays at full strength:
+        //   0.0 = sharp peak (immediate ramp up/down)
+        //   0.5 = 50% of gesture at full strength
+        //   0.8 = 80% of gesture at full strength (very flat)
         float peakAt = max(0.01, min(0.99, uCutoutBellPeakAt));
+        float halfWidth = uCutoutBellWidth * 0.5;
+        float plateauStart = max(0.0, peakAt - halfWidth);
+        float plateauEnd = min(1.0, peakAt + halfWidth);
+
         float bellValue;
-        if (uGestureProgress < peakAt) {
-            // Ramp up to peak
-            bellValue = uGestureProgress / peakAt;
+        if (uGestureProgress < plateauStart) {
+            // Ramping up to plateau
+            bellValue = uGestureProgress / max(0.01, plateauStart);
+        } else if (uGestureProgress > plateauEnd) {
+            // Ramping down from plateau
+            bellValue = 1.0 - (uGestureProgress - plateauEnd) / max(0.01, 1.0 - plateauEnd);
         } else {
-            // Ramp down from peak
-            bellValue = 1.0 - (uGestureProgress - peakAt) / (1.0 - peakAt);
+            // At plateau (full strength)
+            bellValue = 1.0;
         }
         curvedStrength *= bellValue;
     } else if (uCutoutStrengthCurve == 4) {
         // PULSE: Multiple pulses during gesture
         curvedStrength *= 0.5 + 0.5 * sin(uGestureProgress * 12.566);  // 2 full pulses
+    } else if (uCutoutStrengthCurve == 5) {
+        // TOP_HEAVY: Strength increases toward top of element
+        float topFactor = smoothstep(0.0, 1.0, vVerticalGradient);
+        curvedStrength *= topFactor;
+    } else if (uCutoutStrengthCurve == 6) {
+        // TIPS: Only affects the very tips (top 25%)
+        float tipsFactor = smoothstep(0.75, 1.0, vVerticalGradient);
+        curvedStrength *= tipsFactor;
+    } else if (uCutoutStrengthCurve == 7) {
+        // CONSUME: Progressive eating from top down over gesture time
+        float consumeProgress = uGestureProgress;
+        float consumeFactor = smoothstep(1.0 - consumeProgress, 1.0 - consumeProgress + 0.2, vVerticalGradient);
+        curvedStrength *= consumeFactor;
     }
 
     // Trail dissolve is applied after finalCutout calculation (see below)
@@ -662,10 +718,20 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
         float dist = length(vPosition.xz);
         float waveOffset = sin(dist * 4.0 - wavePhase) * 0.3;
         travelPos.xz *= 1.0 + waveOffset;
+    } else if (uCutoutTravel == 6) {
+        // VERTICAL: Progress travels bottom→top along vertical gradient
+        // Shifts the pattern sampling based on Y position and progress
+        float verticalShift = travelProgress * 2.0 - 1.0; // -1 to 1
+        travelPos.y += verticalShift;
+    } else if (uCutoutTravel == 7) {
+        // CONSUME: Burns inward from tips, eating the flame
+        // Modifies Y to create consumption from top
+        float consumeLine = 1.0 - travelProgress; // Starts at 1.0, goes to 0
+        travelPos.y = vPosition.y - consumeLine;
     }
 
     // Calculate primary pattern mask using travel-offset position
-    float mask1 = calcCutoutPattern(uCutoutPattern1, travelPos, uCutoutScale1, cutoutTime);
+    float mask1 = calcCutoutPattern(uCutoutPattern1, travelPos, uCutoutScale1, cutoutTime, vVerticalGradient);
     mask1 = mix(1.0, mask1, uCutoutWeight1);
 
     // Calculate secondary pattern mask (if enabled)
@@ -710,9 +776,17 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
             float dist2 = length(vPosition.xz);
             float wave2 = sin(dist2 * 4.0 - phase2) * 0.3;
             travelPos2.xz *= 1.0 + wave2;
+        } else if (travel2Mode == 6) {
+            // VERTICAL
+            float verticalShift2 = travel2Progress * 2.0 - 1.0;
+            travelPos2.y += verticalShift2;
+        } else if (travel2Mode == 7) {
+            // CONSUME
+            float consumeLine2 = 1.0 - travel2Progress;
+            travelPos2.y = vPosition.y - consumeLine2;
         }
 
-        mask2 = calcCutoutPattern(uCutoutPattern2, travelPos2, uCutoutScale2, cutoutTime);
+        mask2 = calcCutoutPattern(uCutoutPattern2, travelPos2, uCutoutScale2, cutoutTime, vVerticalGradient);
         mask2 = mix(1.0, mask2, uCutoutWeight2);
     }
 
@@ -734,6 +808,41 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
 
     // Apply curved cutout strength
     finalCutout = mix(1.0, cutoutMask, curvedStrength);
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // GEOMETRIC MASK: Restrict cutout to specific regions of the model
+    // Type 1 (distance): Uses length(pos) to target tips (far from model origin)
+    //                    Core is solid, tips have the cutout pattern
+    // Type 2 (inverted-distance): Inverts the mask for models with origin at tip
+    //                    Core has cutout pattern, tips are solid
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    if (uCutoutGeoMaskType == 1) {
+        // Distance-based mask: length(pos) identifies tips (vertices far from origin)
+        float geoDist = length(vPosition);
+        // geoMask: 0 at core (solid), 1 at tips (full cutout effect)
+        float geoMask = smoothstep(uCutoutGeoMaskCore, uCutoutGeoMaskTip, geoDist);
+        // Mix: core gets 1.0 (no holes), tips get the cutout pattern
+        finalCutout = mix(1.0, finalCutout, geoMask);
+    } else if (uCutoutGeoMaskType == 2) {
+        // INVERTED distance mask: for models with origin at tip (like flame-tongue)
+        // Core (near origin = tip) gets cutout, far regions (body) are solid
+        float geoDist = length(vPosition);
+        // geoMask: 1 at core (full cutout), 0 at far regions (solid)
+        float geoMask = 1.0 - smoothstep(uCutoutGeoMaskCore, uCutoutGeoMaskTip, geoDist);
+        // Mix: core gets the cutout pattern, far regions get 1.0 (no holes)
+        finalCutout = mix(1.0, finalCutout, geoMask);
+    } else if (uCutoutGeoMaskType == 3) {
+        // TIP-BOOST: Amplifies erosion near origin WITHOUT removing body pattern
+        // For models with origin at tip - boosts cutout there while keeping body intact
+        float geoDist = length(vPosition);
+        // tipBoost: 1 at origin (tips), 0 at body
+        float tipBoost = 1.0 - smoothstep(uCutoutGeoMaskCore, uCutoutGeoMaskTip, geoDist);
+        // Multiply pattern by factor to push tips toward holes
+        // At tips: factor ~0.3 (more holes), At body: factor = 1.0 (unchanged)
+        float boostFactor = mix(1.0, 0.3, tipBoost);
+        finalCutout = finalCutout * boostFactor;
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // TRAIL DISSOLVE: Fade alpha at bottom of each instance
@@ -812,6 +921,14 @@ if (uGrainType >= 0 && uGrainStrength > 0.01) {
         vec3 whitePos = grainPos * 80.0 + vec3(grainTime * 30.0);
         float white = fract(sin(dot(whitePos.xy, vec2(12.9898, 78.233))) * 43758.5453);
         grain = mix(perlin, white, 0.3);  // 70% perlin, 30% white
+
+    } else if (uGrainType == 4) {
+        // TIP_WEIGHTED: Noise multiplied by vertical position (stronger at tips)
+        float baseNoise = snoise(grainPos + vec3(grainTime, 0.0, 0.0));
+        baseNoise = baseNoise * 0.5 + 0.5;
+        // Weight by vertical position - more grain at top (uses vVerticalGradient)
+        float tipWeight = smoothstep(0.0, 1.0, vVerticalGradient);
+        grain = baseNoise * tipWeight + (1.0 - tipWeight) * 0.8;  // Less effect at bottom
     }
 
     // Boost noise contrast - push values toward 0 or 1 for visible grain
@@ -899,6 +1016,7 @@ export const ANIMATION_DEFAULTS = {
     cutoutFadeInDuration: 1.0, // Full gesture duration for fadeIn (1.0 = 100%)
     cutoutFadeOutDuration: 1.0, // Full gesture duration for fadeOut (1.0 = 100%)
     cutoutBellPeakAt: 0.5,  // Bell peak at middle (0.5 = 50%)
+    cutoutBellWidth: 0.0,   // Bell plateau width (0=sharp, 0.5=50% at full, 0.8=80% at full)
     // Trail dissolve - organic fade at bottom of each instance
     trailDissolveEnabled: 0,     // Off by default
     trailDissolveOffset: -0.3,   // Default offset below instance position
@@ -909,6 +1027,10 @@ export const ANIMATION_DEFAULTS = {
     grainScale: 0.5,             // Pattern scale (0.1=fine, 2.0=coarse)
     grainSpeed: 1.0,             // Animation speed (0=static)
     grainBlend: 0,               // MULTIPLY blend mode
+    // Geometric mask - restricts cutout to specific regions
+    cutoutGeoMaskType: 0,        // 0=none, 1=distance (length(pos) for tips)
+    cutoutGeoMaskCore: 0.3,      // Default core radius (solid region)
+    cutoutGeoMaskTip: 0.4,       // Default tip radius (full effect region)
 };
 
 /**
@@ -954,6 +1076,7 @@ export function createAnimationUniforms() {
         uCutoutFadeInDuration: { value: ANIMATION_DEFAULTS.cutoutFadeInDuration },
         uCutoutFadeOutDuration: { value: ANIMATION_DEFAULTS.cutoutFadeOutDuration },
         uCutoutBellPeakAt: { value: ANIMATION_DEFAULTS.cutoutBellPeakAt },
+        uCutoutBellWidth: { value: ANIMATION_DEFAULTS.cutoutBellWidth },
         // Trail dissolve
         uTrailDissolveEnabled: { value: ANIMATION_DEFAULTS.trailDissolveEnabled },
         uTrailDissolveOffset: { value: ANIMATION_DEFAULTS.trailDissolveOffset },
@@ -964,6 +1087,10 @@ export function createAnimationUniforms() {
         uGrainScale: { value: ANIMATION_DEFAULTS.grainScale },
         uGrainSpeed: { value: ANIMATION_DEFAULTS.grainSpeed },
         uGrainBlend: { value: ANIMATION_DEFAULTS.grainBlend },
+        // Geometric mask
+        uCutoutGeoMaskType: { value: ANIMATION_DEFAULTS.cutoutGeoMaskType },
+        uCutoutGeoMaskCore: { value: ANIMATION_DEFAULTS.cutoutGeoMaskCore },
+        uCutoutGeoMaskTip: { value: ANIMATION_DEFAULTS.cutoutGeoMaskTip },
     };
 }
 
@@ -1060,8 +1187,11 @@ export function setCutout(material, config) {
         fadeInDuration = ANIMATION_DEFAULTS.cutoutFadeInDuration,  // Fraction of gesture for fadeIn to reach full
         fadeOutDuration = ANIMATION_DEFAULTS.cutoutFadeOutDuration, // Fraction of gesture for fadeOut (last N%)
         bellPeakAt = ANIMATION_DEFAULTS.cutoutBellPeakAt,  // Where bell curve peaks (0.5 = middle)
+        bellWidth = ANIMATION_DEFAULTS.cutoutBellWidth,   // Bell plateau width (0=sharp, 0.5=50% at full)
         // Trail dissolve - fades bottom of each instance using cutout patterns
         trailDissolve,
+        // Geometric mask - restricts cutout to specific regions of geometry
+        geometricMask,
         // Legacy single-pattern support
         pattern,
         scale
@@ -1072,7 +1202,7 @@ export function setCutout(material, config) {
     const blendValue = typeof blend === 'number' ? blend : (blendModes[blend] ?? 0);
 
     // Resolve travel mode
-    const travelModes = { none: 0, angular: 1, radial: 2, spiral: 3, oscillate: 4, wave: 5 };
+    const travelModes = { none: 0, angular: 1, radial: 2, spiral: 3, oscillate: 4, wave: 5, vertical: 6, consume: 7 };
     const travelValue = typeof travel === 'number' ? travel : (travelModes[travel] ?? 0);
 
     // Resolve travel direction
@@ -1080,7 +1210,7 @@ export function setCutout(material, config) {
     const travelDirValue = typeof travelDir === 'number' ? travelDir : (travelDirs[travelDir] ?? 0);
 
     // Resolve strength curve
-    const strengthCurves = { constant: 0, fadeIn: 1, fadeOut: 2, bell: 3, pulse: 4 };
+    const strengthCurves = { constant: 0, fadeIn: 1, fadeOut: 2, bell: 3, pulse: 4, topHeavy: 5, tips: 6, consume: 7 };
     const strengthCurveValue = typeof strengthCurve === 'number' ? strengthCurve : (strengthCurves[strengthCurve] ?? 0);
 
     material.uniforms.uCutoutStrength.value = Math.max(0, Math.min(1, strength));
@@ -1093,6 +1223,7 @@ export function setCutout(material, config) {
     material.uniforms.uCutoutFadeInDuration.value = Math.max(0.01, Math.min(1.0, fadeInDuration));
     material.uniforms.uCutoutFadeOutDuration.value = Math.max(0.01, Math.min(1.0, fadeOutDuration));
     material.uniforms.uCutoutBellPeakAt.value = Math.max(0.01, Math.min(0.99, bellPeakAt));
+    material.uniforms.uCutoutBellWidth.value = Math.max(0.0, Math.min(0.95, bellWidth));
 
     // Trail dissolve - organic fade at bottom of each instance
     if (trailDissolve) {
@@ -1105,6 +1236,32 @@ export function setCutout(material, config) {
         }
     } else {
         material.uniforms.uTrailDissolveEnabled.value = 0;
+    }
+
+    // Geometric mask - restricts cutout to specific regions of geometry
+    // { type: 'distance', core: 0.15, tip: 0.2 }           - Core solid, tips eroded
+    // { type: 'inverted-distance', core: 0.0, tip: 0.1 }   - Core eroded, tips solid (for flame-tongue)
+    // { type: 'tip-boost', core: 0.0, tip: 0.15 }          - Boost erosion at core, keep body pattern
+    if (geometricMask) {
+        let geoType = 0;
+        if (typeof geometricMask.type === 'number') {
+            geoType = geometricMask.type;
+        } else if (geometricMask.type === 'distance') {
+            geoType = 1;
+        } else if (geometricMask.type === 'inverted-distance') {
+            geoType = 2;
+        } else if (geometricMask.type === 'tip-boost') {
+            geoType = 3;
+        }
+        material.uniforms.uCutoutGeoMaskType.value = geoType;
+        if (geometricMask.core !== undefined) {
+            material.uniforms.uCutoutGeoMaskCore.value = geometricMask.core;
+        }
+        if (geometricMask.tip !== undefined) {
+            material.uniforms.uCutoutGeoMaskTip.value = geometricMask.tip;
+        }
+    } else {
+        material.uniforms.uCutoutGeoMaskType.value = 0;  // None
     }
 
     // Handle two-layer format
@@ -1165,10 +1322,15 @@ export function resetCutout(material) {
     material.uniforms.uCutoutFadeInDuration.value = ANIMATION_DEFAULTS.cutoutFadeInDuration;
     material.uniforms.uCutoutFadeOutDuration.value = ANIMATION_DEFAULTS.cutoutFadeOutDuration;
     material.uniforms.uCutoutBellPeakAt.value = ANIMATION_DEFAULTS.cutoutBellPeakAt;
+    material.uniforms.uCutoutBellWidth.value = ANIMATION_DEFAULTS.cutoutBellWidth;
     // Trail dissolve
     material.uniforms.uTrailDissolveEnabled.value = ANIMATION_DEFAULTS.trailDissolveEnabled;
     material.uniforms.uTrailDissolveOffset.value = ANIMATION_DEFAULTS.trailDissolveOffset;
     material.uniforms.uTrailDissolveSoftness.value = ANIMATION_DEFAULTS.trailDissolveSoftness;
+    // Geometric mask
+    material.uniforms.uCutoutGeoMaskType.value = ANIMATION_DEFAULTS.cutoutGeoMaskType;
+    material.uniforms.uCutoutGeoMaskCore.value = ANIMATION_DEFAULTS.cutoutGeoMaskCore;
+    material.uniforms.uCutoutGeoMaskTip.value = ANIMATION_DEFAULTS.cutoutGeoMaskTip;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
