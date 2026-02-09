@@ -94,19 +94,28 @@ const WATERSOAK_CONFIG = {
                     curve: 'bell'
                 }
             },
-            // CELLULAR cutout
+            // Two-layer cutout: CELLULAR + VORONOI for chunky irregular edge
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 0, scale: 0.8, weight: 1.0 },
+                primary: { pattern: 0, scale: 1.3, weight: 1.0 },    // CELLULAR - larger bubbles
+                secondary: { pattern: 3, scale: 0.6, weight: 0.7 },  // VORONOI - chunky edge bites
                 blend: 'multiply',
                 travel: 'radial',
                 travelSpeed: 1.5,
-                strengthCurve: 'fadeIn',
+                strengthCurve: 'fadeIn',         // Builds up as it contracts
                 trailDissolve: {
                     enabled: true,
-                    offset: -0.3,
+                    offset: -0.3,                // Same as drench
                     softness: 1.4
                 }
+            },
+            // Grain: film grain for spray texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.2,
+                scale: 0.25,
+                speed: 2.5,
+                blend: 'multiply'
             },
             pulse: {
                 amplitude: 0.05,

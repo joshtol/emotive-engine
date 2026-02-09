@@ -23,8 +23,9 @@
  * FEATURES:
  * - Single camera-facing ring expanding from center
  * - Quick shockwave/splash impact feel
- * - CELLULAR cutout for bubbly water texture
- * - Simple, dramatic expansion
+ * - Two-layer cutout: CELLULAR + RIPPLES for bubbly expanding waves
+ * - Film grain for spray texture
+ * - FadeOut curve + trail dissolve creates umbrella silhouette
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -98,19 +99,28 @@ const WATERDRENCH_CONFIG = {
                     curve: 'bell'
                 }
             },
-            // CELLULAR cutout for bubbly texture
+            // Two-layer cutout: CELLULAR + VORONOI for chunky irregular edge
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR
+                primary: { pattern: 0, scale: 1.3, weight: 1.0 },    // CELLULAR - larger bubbles
+                secondary: { pattern: 3, scale: 0.6, weight: 0.7 },  // VORONOI - chunky edge bites
                 blend: 'multiply',
-                travel: 'radial',            // Expand outward
+                travel: 'radial',            // Expand outward (original)
                 travelSpeed: 1.5,
                 strengthCurve: 'fadeOut',    // Fade as it expands
                 trailDissolve: {
                     enabled: true,
                     offset: -0.3,
-                    softness: 1.4
+                    softness: 1.4            // Original values that hid bottom
                 }
+            },
+            // Grain: film grain for spray texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.2,
+                scale: 0.25,
+                speed: 2.5,
+                blend: 'multiply'
             },
             pulse: {
                 amplitude: 0.05,
@@ -154,7 +164,7 @@ const WATERDRENCH_CONFIG = {
  * Uses axis-travel spawn mode:
  * - Single camera-facing splash-ring at center
  * - Expands dramatically outward
- * - CELLULAR cutout for bubbly texture
- * - Quick splash impact feel
+ * - Two-layer cutout: CELLULAR + RIPPLES
+ * - FadeOut + trail dissolve creates umbrella silhouette
  */
 export default buildWaterEffectGesture(WATERDRENCH_CONFIG);
