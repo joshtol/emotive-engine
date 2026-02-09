@@ -409,6 +409,20 @@ export class ElementInstancedSpawner {
                 elementConfig.resetGrain(material);
             }
 
+            // Apply minimum renderOrder from all layers (most negative = furthest back)
+            let minRenderOrder = undefined;
+            for (const layerConfig of mode) {
+                const layerRenderOrder = layerConfig.animation?.renderOrder;
+                if (layerRenderOrder !== undefined) {
+                    if (minRenderOrder === undefined || layerRenderOrder < minRenderOrder) {
+                        minRenderOrder = layerRenderOrder;
+                    }
+                }
+            }
+            if (minRenderOrder !== undefined) {
+                pool.mesh.renderOrder = minRenderOrder;
+            }
+
             // Spawn each layer
             const allIds = [];
             for (let layerIndex = 0; layerIndex < mode.length; layerIndex++) {
@@ -1084,7 +1098,7 @@ export class ElementInstancedSpawner {
      * @returns {string[]} Array of spawned element IDs
      * @private
      */
-    _spawnAnchor(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
+    _spawnAnchor(elementType, spawnMode, models, animConfig, camera, _layerTag = null) {
         const ctx = this._getSpawnContext(elementType);
         if (!ctx) return [];
 
@@ -1122,10 +1136,17 @@ export class ElementInstancedSpawner {
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
             _temp.scale.setScalar(baseScale);
 
-            // Apply orientation using shared utility
-            const orientRot = getAnchorOrientation(anchorConfig.orientation);
-            _temp.euler.set(orientRot.x, orientRot.y, orientRot.z);
-            const rotation = _temp.quaternion.setFromEuler(_temp.euler).clone();
+            // Apply orientation - use camera quaternion directly for camera-facing elements
+            let rotation;
+            if (anchorConfig.orientation === 'camera' && camera) {
+                // Billboard: copy camera quaternion so element faces toward camera
+                rotation = camera.quaternion.clone();
+            } else {
+                // Use static orientation from shared utility
+                const orientRot = getAnchorOrientation(anchorConfig.orientation);
+                _temp.euler.set(orientRot.x, orientRot.y, orientRot.z);
+                rotation = _temp.quaternion.setFromEuler(_temp.euler).clone();
+            }
 
             // Generate element ID
             const elementId = `${elementType}_${this._nextId++}`;
@@ -1150,7 +1171,10 @@ export class ElementInstancedSpawner {
                     baseScale,
                     scale: baseScale,
                     animState,
-                    // World-space orientation: anchor elements should maintain orientation
+                    // Camera billboard: if true, element always faces camera
+                    cameraOrientation: anchorConfig.orientation === 'camera',
+                    // World-space orientation: needed for camera-facing AND for static orientations
+                    // Camera-facing needs world-space so container rotation doesn't interfere
                     worldSpaceOrientation: true,
                     baseWorldRotation: rotation.clone(),
                     // Anchor-specific data for bob animation and scale interpolation
@@ -1191,6 +1215,9 @@ export class ElementInstancedSpawner {
         // Parse config using RadialBurstMode utility
         const burstConfig = parseRadialBurstConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
 
+        // Parse orientation from radialBurst config
+        const orientationMode = spawnMode.radialBurst?.orientation || 'vertical';
+
         // Check for animation configuration (gesture glow, shader animations)
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
@@ -1219,12 +1246,19 @@ export class ElementInstancedSpawner {
                 initialState.position.z
             ).clone();
 
-            const rotation = _temp.quaternion.set(
-                initialState.rotation.x,
-                initialState.rotation.y,
-                initialState.rotation.z,
-                initialState.rotation.w
-            ).clone();
+            // Apply orientation - use camera quaternion for camera-facing elements
+            let rotation;
+            if (orientationMode === 'camera' && this.camera) {
+                // Billboard: copy camera quaternion so element faces toward camera
+                rotation = this.camera.quaternion.clone();
+            } else {
+                rotation = _temp.quaternion.set(
+                    initialState.rotation.x,
+                    initialState.rotation.y,
+                    initialState.rotation.z,
+                    initialState.rotation.w
+                ).clone();
+            }
 
             const scaleMultiplier = burstConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
@@ -1247,6 +1281,11 @@ export class ElementInstancedSpawner {
                     baseScale,
                     scale: initialScale,
                     animState,
+                    // Camera billboard: if true, element always faces camera
+                    cameraOrientation: orientationMode === 'camera',
+                    // World-space orientation: needed for camera-facing to work correctly
+                    worldSpaceOrientation: true,
+                    baseWorldRotation: rotation.clone(),
                     // Mode-specific data from RadialBurstMode
                     ...initialState.modeData
                 });
