@@ -168,7 +168,7 @@ export const MODEL_ORIENTATIONS = {
     'droplet-large':   { mode: 'falling', tiltAngle: 0.05, fallFactor: 0.8 },
     'splash-ring':     { mode: 'flat',    tiltAngle: 0.05 },
     'bubble-cluster':  { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.5 },
-    'wave-curl':       { mode: 'tangent', tiltAngle: 0.1 },
+    'wave-curl':       { mode: 'vertical', tiltAngle: 0 },
 
     // Void
     'void-crack':       { mode: 'outward-flat', tiltAngle: 0.05 },

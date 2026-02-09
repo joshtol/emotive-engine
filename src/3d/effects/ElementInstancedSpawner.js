@@ -1138,9 +1138,9 @@ export class ElementInstancedSpawner {
 
             // Apply orientation - use camera quaternion directly for camera-facing elements
             let rotation;
-            if (anchorConfig.orientation === 'camera' && camera) {
+            if (anchorConfig.orientation === 'camera' && this.camera) {
                 // Billboard: copy camera quaternion so element faces toward camera
-                rotation = camera.quaternion.clone();
+                rotation = this.camera.quaternion.clone();
             } else {
                 // Use static orientation from shared utility
                 const orientRot = getAnchorOrientation(anchorConfig.orientation);
@@ -1829,6 +1829,15 @@ export class ElementInstancedSpawner {
             if (data.cameraOrientation && this.camera) {
                 // Copy camera quaternion so element faces camera
                 _temp.quaternion.copy(this.camera.quaternion);
+
+                // Model-specific geometry corrections:
+                // Some models have geometry that faces a different axis than -Z (camera default)
+                // Apply correction rotations so they face the camera properly
+                if (data.modelName === 'wave-curl') {
+                    // Wave-curl geometry needs 90° X rotation to face camera
+                    _temp.quaternion2.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 2);
+                    _temp.quaternion.multiply(_temp.quaternion2);
+                }
 
                 // Apply formation arcOffset as Z rotation (kaleidoscope effect)
                 // This keeps each ring at its unique angle while facing camera

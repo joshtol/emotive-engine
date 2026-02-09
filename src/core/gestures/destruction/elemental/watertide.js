@@ -5,145 +5,123 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Watertide gesture - orbiting wave rings with tidal rhythm
+ * @fileoverview Watertide gesture - single large wave with animated cutout texture
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/watertide
- * @complexity ⭐⭐ Intermediate
+ * @complexity ⭐ Simple
  *
  * VISUAL DIAGRAM:
- *         ○      ○
- *       ↻          ↺       ← Orbiting splash rings
- *     ○      ★      ○
- *           /|\
- *         ○      ○
+ *
+ *        ╭─────────╮
+ *        │  〰️〰️〰️  │         <- Single wave-curl
+ *        │    ★    │            Camera-locked
+ *        │  〰️〰️〰️  │            Cutout animated
+ *        ╰─────────╯
  *
  * FEATURES:
- * - orbit mode with 6 camera-facing splash-rings
- * - WAVES + CELLULAR cutout for tidal texture
- * - Tidal rhythm pulsing and bobbing
- * - Angular cutout travel
+ * - Single large wave-curl locked to camera
+ * - Fast-moving WAVES cutout creates tidal motion
+ * - Breathing pulse for scale rhythm
+ * - Clean, focused, minimal GPU
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
  * - Ocean/sea effects
- * - Tidal wave visuals
- * - Surge reactions
+ * - Tidal rhythm visuals
+ * - Simple water ambiance
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Watertide gesture configuration
- * Orbiting wave rings with tidal rhythm
+ * Single large wave with animated cutout texture
  */
 const WATERTIDE_CONFIG = {
     name: 'tide',
     emoji: '🌊',
     type: 'blending',
-    description: 'Orbiting wave rings with tidal rhythm',
-    duration: 3000,
-    beats: 4,
-    intensity: 0.9,
+    description: 'Single wave with animated tidal cutout',
+    duration: 1500,
+    beats: 2,
+    intensity: 0.8,
     category: 'ambient',
-    turbulence: 0.4,
+    turbulence: 0.3,
 
-    // 3D Element spawning - orbiting waves
+    // 3D Element spawning - single large wave-curl using axis-travel (stationary)
     spawnMode: {
-        type: 'orbit',
-        orbit: {
-            radius: 1.4,
-            height: 0,
-            speed: 0.4,
-            direction: 'cw'
+        type: 'axis-travel',
+        axisTravel: {
+            axis: 'y',
+            start: 'center',
+            end: 'center',
+            startOffset: 0,
+            endOffset: 0,
+            easing: 'linear',
+            startScale: 1.0,
+            endScale: 1.0,
+            startDiameter: 1.0,
+            endDiameter: 1.0,
+            orientation: 'camera'
         },
-        formation: { type: 'ring', count: 6 },
-        count: 6,
-        scale: 0.9,
-        models: ['splash-ring'],
+        formation: { type: 'ring', count: 1, phaseOffset: 0 },
+        count: 1,
+        scale: 4.4,
+        models: ['wave-curl'],
         animation: {
-            appearAt: 0.05,
-            disappearAt: 0.85,
-            stagger: 0.06,
-            enter: {
-                type: 'scale',
-                duration: 0.12,
-                easing: 'easeOut'
-            },
-            exit: {
-                type: 'fade',
-                duration: 0.15,
-                easing: 'easeIn'
-            },
-            procedural: {
-                scaleSmoothing: 0.08,
-                geometryStability: true
-            },
-            parameterAnimation: {
-                turbulence: {
-                    start: 0.25,
-                    peak: 0.45,
-                    end: 0.2,
-                    curve: 'bell'
-                }
-            },
-            // WAVES cutout for tidal texture
+            appearAt: 0.0,
+            disappearAt: 0.9,
+            stagger: 0,
+            enter: { type: 'grow', duration: 0.3, easing: 'easeOut' },
+            exit: { type: 'fade', duration: 0.35, easing: 'easeIn' },
+            procedural: { scaleSmoothing: 0.15, geometryStability: true },
+            // Rotating wave cutout - angular sweep creates swirling tide
             cutout: {
-                strength: 0.5,
-                primary: { pattern: 4, scale: 1.2, weight: 1.0 },    // WAVES - tidal texture
-                secondary: { pattern: 0, scale: 0.6, weight: 0.3 },  // CELLULAR - organic gaps
+                strength: 0.55,
+                primary: { pattern: 4, scale: 1.2, weight: 1.0 },    // WAVES
+                secondary: { pattern: 0, scale: 0.6, weight: 0.25 }, // CELLULAR - organic texture
                 blend: 'multiply',
                 travel: 'angular',
-                travelSpeed: 0.6,
+                travelSpeed: -1.5,          // Clockwise rotating sweep
                 strengthCurve: 'constant'
             },
-            pulse: {
-                amplitude: 0.15,
-                frequency: 1.0,
-                easing: 'easeInOut',
-                sync: 'global'
-            },
-            // Elements bob up and down with tidal rhythm
-            bob: {
-                amplitude: 0.08,
-                frequency: 0.8,
-                sync: 'wave'            // Wave pattern around the ring
-            },
+            grain: { type: 3, strength: 0.2, scale: 0.25, speed: 1.0, blend: 'multiply' },
+            rotate: { axis: 'z', rotations: -0.25, phase: 0 },  // Clockwise rotation
+            // Breathing pulse for tidal rhythm
+            pulse: { amplitude: 0.15, frequency: 0.6, easing: 'easeInOut' },
             blending: 'additive',
             renderOrder: 6,
             modelOverrides: {
-                'splash-ring': {
-                    shaderAnimation: {
-                        type: 1,
-                        arcWidth: 0.75,
-                        arcSpeed: 0.8,
-                        arcCount: 2
-                    },
+                'wave-curl': {
+                    // Slower, wider arc sweep for flowing wave motion
+                    shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.8, arcCount: 2 },
                     orientationOverride: 'camera'
                 }
             }
         }
     },
 
-    // Tide motion - slow sway
-    flowFrequency: 0.5,
-    flowAmplitude: 0.025,
-    flowPhaseOffset: 0,
-    // Scale - gentle breathing
-    scaleWobble: 0.018,
-    scaleFrequency: 1.0,
+    // Wobble - gentle sway
+    wobbleFrequency: 0.8,
+    wobbleAmplitude: 0.005,
+    wobbleDecay: 0.4,
+    // Scale - tidal breathing
+    scaleWobble: 0.008,
+    scaleFrequency: 0.8,
     // Glow - ocean blue
     glowColor: [0.15, 0.45, 0.85],
-    glowIntensityMin: 0.9,
-    glowIntensityMax: 1.5,
-    glowPulseRate: 1.0
+    glowIntensityMin: 0.85,
+    glowIntensityMax: 1.4,
+    glowPulseRate: 0.8
 };
 
 /**
- * Watertide gesture - orbiting wave rings with tidal rhythm.
+ * Watertide gesture - single wave with animated cutout.
  *
- * Uses orbit spawn mode:
- * - 6 camera-facing splash-rings orbiting clockwise
- * - WAVES cutout for tidal texture
- * - Bobbing animation for tidal feel
+ * Uses axis-travel mode (stationary) with single element:
+ * - 1 large wave-curl locked to camera
+ * - Fast horizontal WAVES cutout travel creates tidal motion
+ * - Breathing pulse for rhythm
+ * - Clean, focused, minimal GPU overhead
  */
 export default buildWaterEffectGesture(WATERTIDE_CONFIG);
