@@ -401,8 +401,9 @@ void main() {
     // Fresnel edge glow for ethereal effect
     color += softFresnel * vec3(0.8, 0.6, 0.3) * uIntensity * 0.2 * uGlowScale;
 
-    // Scale color by instance opacity for smooth fade
-    color *= vInstanceAlpha;
+    // Instance fade is applied through alpha only (not color).
+    // With AdditiveBlending (src.rgb * src.a + dst.rgb), applying vInstanceAlpha
+    // to both color AND alpha would cause squared attenuation (vInstanceAlpha²).
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // ALPHA CALCULATION (With soft edge falloff)
