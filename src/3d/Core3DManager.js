@@ -2436,30 +2436,47 @@ export class Core3DManager {
             if (mesh && scene) {
                 if (!this._iceOverlayMesh) {
                     this._iceMaterial = createIceMaterial({
-                        frost: blended.iceOverlay.frost || 0.7,
-                        opacity: 0.25
+                        opacity: 0.5,
+                        overlay: true    // Use additive blending like water overlay
                     });
                     this._iceOverlayMesh = new THREE.Mesh(mesh.geometry, this._iceMaterial);
-                    this._iceOverlayMesh.scale.setScalar(1.02);
+                    this._iceOverlayMesh.scale.setScalar(1.01);
                     mesh.add(this._iceOverlayMesh);
-                    this._iceOverlayMesh.renderOrder = mesh.renderOrder + 3;
+                    this._iceOverlayMesh.renderOrder = mesh.renderOrder + 1;
+                }
 
-                    // Spawn 3D ice crystals only if gesture explicitly requests it via spawnMode
-                    // spawnMode: 'orbit' | 'impact' | 'burst' | 'none' (default)
-                    const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.iceOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('ice')) {
+                // Spawn 3D ice crystals - matching fire spawn pattern with signature tracking
+                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.iceOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    // Handle array spawnMode (spawn layers) by stringifying for reliable signature
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+                    const spawnSignature = `ice:${modeSignature}:${duration}:${animation?.type || 'default'}`;
+
+                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
+                    this._iceSpawnedSignatures = this._iceSpawnedSignatures || new Set();
+
+                    // Only spawn if this signature hasn't been spawned yet in this session
+                    if (!this._iceSpawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit('ice'); // Exit ice elements (crossfade)
                         this.elementSpawner.spawn('ice', {
                             intensity: blended.iceOverlay.strength || 0.8,
                             mode: spawnMode,
-                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            animation,      // Pass animation config with modelOverrides
                             models,
                             count,
                             scale,
                             embedDepth,
                             gestureDuration: duration || 2000
                         });
+                        this._iceSpawnedSignatures.add(spawnSignature);
+                        this._iceSpawnSignature = spawnSignature;
                     }
                 }
+
+                // Update ice overlay material each frame
                 if (this._iceMaterial?.uniforms?.uTime) {
                     this._iceMaterial.uniforms.uTime.value = blended.iceOverlay.time;
                 }
@@ -2467,7 +2484,61 @@ export class Core3DManager {
                     this._iceMaterial.uniforms.uFrost.value = blended.iceOverlay.frost || 0.7;
                 }
                 if (this._iceMaterial?.uniforms?.uOpacity) {
-                    this._iceMaterial.uniforms.uOpacity.value = Math.min(0.25, blended.iceOverlay.strength);
+                    this._iceMaterial.uniforms.uOpacity.value = Math.min(0.8, blended.iceOverlay.strength);
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // ICE TINT: Modify the mascot's OWN material to look frozen
+                // Different mascot shaders need different tinting approaches
+                // This ensures ice looks the same regardless of mascot shader type
+                // ═══════════════════════════════════════════════════════════════════
+                const iceStrength = blended.iceOverlay.strength || 0.8;
+                const mascotMat = mesh.material;
+                if (mascotMat) {
+                    // Save original values on first ice frame for restoration
+                    if (!this._iceOriginalMaterial) {
+                        this._iceOriginalMaterial = {};
+                        if (mascotMat.uniforms) {
+                            if (mascotMat.uniforms.glowColor) {
+                                this._iceOriginalMaterial.glowColor = mascotMat.uniforms.glowColor.value.clone();
+                            }
+                            if (mascotMat.uniforms.coreColor) {
+                                this._iceOriginalMaterial.coreColor = mascotMat.uniforms.coreColor.value.clone();
+                            }
+                            if (mascotMat.uniforms.glowIntensity) {
+                                this._iceOriginalMaterial.glowIntensity = mascotMat.uniforms.glowIntensity.value;
+                            }
+                        }
+                        if (mascotMat.emissive) {
+                            this._iceOriginalMaterial.emissive = mascotMat.emissive.clone();
+                            this._iceOriginalMaterial.emissiveIntensity = mascotMat.emissiveIntensity;
+                        }
+                        if (mascotMat.color) {
+                            this._iceOriginalMaterial.color = mascotMat.color.clone();
+                        }
+                    }
+
+                    // Apply ice blue tint to mascot's own material
+                    const iceBlue = this._iceTintColor || (this._iceTintColor = new THREE.Color(0.3, 0.5, 0.8));
+
+                    if (mascotMat.uniforms) {
+                        // ShaderMaterial (glow, crystal, moon)
+                        if (mascotMat.uniforms.glowColor) {
+                            mascotMat.uniforms.glowColor.value.lerp(iceBlue, 0.3 * iceStrength);
+                        }
+                        if (mascotMat.uniforms.coreColor) {
+                            mascotMat.uniforms.coreColor.value.lerp(iceBlue, 0.4 * iceStrength);
+                        }
+                    }
+                    if (mascotMat.emissive) {
+                        // MeshPhysicalMaterial (glass/crystal)
+                        mascotMat.emissive.lerp(iceBlue, 0.3 * iceStrength);
+                        mascotMat.emissiveIntensity = Math.max(mascotMat.emissiveIntensity, 0.3 * iceStrength);
+                    }
+                    if (mascotMat.color && !mascotMat.uniforms) {
+                        // Standard materials - tint the base color
+                        mascotMat.color.lerp(iceBlue, 0.2 * iceStrength);
+                    }
                 }
 
                 // Store gesture progress for element spawner animation
@@ -2484,10 +2555,39 @@ export class Core3DManager {
             }
             this._iceOverlayMesh = null;
 
-            // Despawn ice crystals
-            if (this.elementSpawner) {
-                this.elementSpawner.despawn('ice');
+            // Restore mascot's original material values
+            if (this._iceOriginalMaterial && mesh?.material) {
+                const mascotMat = mesh.material;
+                const orig = this._iceOriginalMaterial;
+                if (mascotMat.uniforms) {
+                    if (orig.glowColor && mascotMat.uniforms.glowColor) {
+                        mascotMat.uniforms.glowColor.value.copy(orig.glowColor);
+                    }
+                    if (orig.coreColor && mascotMat.uniforms.coreColor) {
+                        mascotMat.uniforms.coreColor.value.copy(orig.coreColor);
+                    }
+                    if (orig.glowIntensity !== undefined && mascotMat.uniforms.glowIntensity) {
+                        mascotMat.uniforms.glowIntensity.value = orig.glowIntensity;
+                    }
+                }
+                if (orig.emissive && mascotMat.emissive) {
+                    mascotMat.emissive.copy(orig.emissive);
+                    mascotMat.emissiveIntensity = orig.emissiveIntensity;
+                }
+                if (orig.color && mascotMat.color && !mascotMat.uniforms) {
+                    mascotMat.color.copy(orig.color);
+                }
             }
+            this._iceOriginalMaterial = null;
+
+            // Gracefully exit ice crystals (fade out)
+            if (this.elementSpawner) {
+                this.elementSpawner.triggerExit('ice');
+            }
+
+            // Clear spawn tracking so next gesture session starts fresh
+            this._iceSpawnSignature = null;
+            this._iceSpawnedSignatures = null;
 
             // Clear ice progress tracking
             this._currentIceProgress = null;
@@ -3222,6 +3322,7 @@ export class Core3DManager {
                 elementBloomThreshold = 0.35;
             }
             this.elementSpawner.setElementBloomThreshold('water', elementBloomThreshold);
+            this.elementSpawner.setElementBloomThreshold('ice', elementBloomThreshold);
         }
 
         // Update isolated glow layer for gesture effects (glow/flash)

@@ -113,6 +113,14 @@ const WATERDANCE_CONFIG = {
                     softness: 2.0        // Very wide gradient to compensate for threshold compression
                 }
             },
+            // Grain: film grain for spray texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.2,
+                scale: 0.25,
+                speed: 2.5,
+                blend: 'multiply'
+            },
             parameterAnimation: {
                 turbulence: {
                     start: 0.2,

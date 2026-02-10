@@ -115,6 +115,14 @@ const WATERHELIX_CONFIG = {
                     softness: 1.0
                 }
             },
+            // Grain: film grain for mystical water texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.2,
+                scale: 0.25,
+                speed: 1.5,
+                blend: 'multiply'
+            },
             pulse: {
                 amplitude: 0.08,
                 frequency: 3,

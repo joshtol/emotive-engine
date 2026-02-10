@@ -12,17 +12,13 @@
  *
  * VISUAL DIAGRAM:
  *
- *            ╲ 🔥 ╱
- *          🔥  💥  🔥        ← Fire emanating from center
- *            ╱ 🔥 ╲            like internal heat escaping
- *         ·  ·  ·  ·  ·      ← Surface embers
+ *        🔥 🔥 🔥
+ *       🔥  ★  🔥      ← Fire on mascot surface
+ *        🔥 🔥 🔥        internal heat escaping
  *
  * FEATURES:
- * - FOUR SPAWN LAYERS for core meltdown effect
- * - Layer 1: Central fire-burst core (intense heat source)
- * - Layer 2: Flame-tongues radiating outward from center
- * - Layer 3: Flame-wisps escaping at surface
- * - Layer 4: Ember-clusters as ambient heat glow
+ * - Surface-spawned flames on mascot body
+ * - Multiple fire model types for variety
  * - Mascot is VICTIM of fire (burning category)
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
@@ -50,341 +46,85 @@ const SCORCH_CONFIG = {
     category: 'burning',
     temperature: 0.8,
 
-    // FOUR LAYERS for core meltdown effect
-    spawnMode: [
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Central fire-burst core (the heat source)
-        // Intense bursts at center that pulse with energy
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'anchor',
-            anchor: {
-                landmark: 'center',
-                offset: { x: 0, y: 0, z: 0.3 },      // Push forward to be visible
-                orientation: 'camera',
-                startScale: 0.5,
-                endScale: 1.5,
-                scaleEasing: 'easeOutExpo'
+    // Surface spawn - flames on mascot body
+    spawnMode: {
+        type: 'surface',
+        pattern: 'shell',
+        embedDepth: 0.1,
+        cameraFacing: 0.3,
+        clustering: 0.2,
+        count: 12,
+        scale: 0.9,
+        models: ['flame-wisp', 'ember-cluster'],
+        minDistance: 0.12,
+        animation: {
+            appearAt: 0.05,
+            disappearAt: 0.85,
+            stagger: 0.03,
+            enter: {
+                type: 'fade',
+                duration: 0.12,
+                easing: 'easeOut'
             },
-            count: 3,
-            scale: 1.2,
-            models: ['fire-burst'],
-            animation: {
-                appearAt: 0.0,
-                disappearAt: 0.70,
-                stagger: 0.15,              // Pulsing core bursts
-                enter: {
-                    type: 'scale',
-                    duration: 0.12,
-                    easing: 'easeOutExpo'
-                },
-                exit: {
-                    type: 'burst-fade',
-                    duration: 0.3,
-                    easing: 'easeInCubic',
-                    burstScale: 1.4
-                },
-                procedural: {
-                    scaleSmoothing: 0.04,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    temperature: {
-                        start: 0.85,
-                        peak: 0.95,
-                        end: 0.6,
-                        curve: 'bell'
-                    }
-                },
-                flicker: {
-                    intensity: 0.25,
-                    rate: 10,
-                    pattern: 'random'
-                },
-                pulse: {
-                    amplitude: 0.2,
-                    frequency: 4,
-                    easing: 'easeInOut'
-                },
-                emissive: {
-                    min: 3.0,
-                    max: 5.0,
-                    frequency: 5,
-                    pattern: 'sine'
-                },
-                // Cutout: EMBERS for burning core
-                cutout: {
-                    strength: 0.5,
-                    primary: { pattern: 5, scale: 1.5, weight: 1.0 },    // EMBERS - burning core
-                    blend: 'multiply',
-                    travel: 'oscillate',
-                    travelSpeed: 6.0
-                },
-                blending: 'additive',
-                renderOrder: 16
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Flame-tongues radiating outward from center
-        // Fire escaping in all directions
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'orbit',
-            orbit: {
-                height: 0,
-                radius: 0.6,                    // Start closer to center
-                plane: 'horizontal',
-                orientation: 'radial'           // Point outward from center
+            exit: {
+                type: 'fade',
+                duration: 0.15,
+                easing: 'easeIn'
             },
-            formation: {
-                type: 'ring',
-                count: 8,
-                startAngle: 0
+            procedural: {
+                scaleSmoothing: 0.08,
+                geometryStability: true
             },
-            count: 8,
-            scale: 1.4,
-            models: ['flame-tongue'],
-            animation: {
-                appearAt: 0.05,
-                disappearAt: 0.80,
-                stagger: 0.04,
-                enter: {
-                    type: 'scale',
-                    duration: 0.15,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.2,
-                    easing: 'easeInCubic'
-                },
-                procedural: {
-                    scaleSmoothing: 0.06,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    temperature: {
-                        start: 0.7,
-                        peak: 0.85,
-                        end: 0.5,
-                        curve: 'sustained'
-                    }
-                },
-                flicker: {
-                    intensity: 0.2,
-                    rate: 8,
-                    pattern: 'sine'
-                },
-                pulse: {
-                    amplitude: 0.12,
-                    frequency: 3,
-                    easing: 'easeInOut'
-                },
-                emissive: {
-                    min: 2.0,
-                    max: 3.5,
-                    frequency: 4,
-                    pattern: 'sine'
-                },
-                // Two-layer cutout: DISSOLVE + EMBERS for radiating flames
-                cutout: {
-                    strength: 0.6,
-                    primary: { pattern: 7, scale: 1.0, weight: 1.0 },    // DISSOLVE
-                    secondary: { pattern: 5, scale: 1.5, weight: 0.5 },  // EMBERS
-                    blend: 'multiply',
-                    travel: 'radial',
-                    travelSpeed: 3.0,
-                    geometricMask: {
-                        type: 'tip-boost',
-                        core: 0.0,
-                        tip: 0.15
-                    }
-                },
-                // Radiate outward from center (horizontal only)
-                drift: {
-                    direction: 'outward-flat',
-                    distance: 0.5,
-                    noise: 0.1
-                },
-                rotate: [
-                    { axis: 'z', rotations: 0.4, phase: 0 },
-                    { axis: 'z', rotations: -0.4, phase: 45 },
-                    { axis: 'z', rotations: 0.4, phase: 90 },
-                    { axis: 'z', rotations: -0.4, phase: 135 },
-                    { axis: 'z', rotations: 0.4, phase: 180 },
-                    { axis: 'z', rotations: -0.4, phase: 225 },
-                    { axis: 'z', rotations: 0.4, phase: 270 },
-                    { axis: 'z', rotations: -0.4, phase: 315 }
-                ],
-                scaleVariance: 0.15,
-                lifetimeVariance: 0.1,
-                blending: 'additive',
-                renderOrder: 14
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Flame-wisps escaping at surface
-        // Smaller flames breaking through, rising upward
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'surface',
-            pattern: 'shell',
-            embedDepth: 0.1,
-            cameraFacing: 0.3,
-            clustering: 0.2,
-            count: 10,
-            scale: 0.9,
-            models: ['flame-wisp'],
-            minDistance: 0.15,
-            animation: {
-                appearAt: 0.10,
-                disappearAt: 0.85,
-                stagger: 0.03,
-                enter: {
-                    type: 'fade',
-                    duration: 0.12,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.15,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    temperature: {
-                        start: 0.5,
-                        peak: 0.7,
-                        end: 0.4,
-                        curve: 'sine'
-                    }
-                },
-                flicker: {
-                    intensity: 0.3,
-                    rate: 12,
-                    pattern: 'random'
-                },
-                emissive: {
-                    min: 1.5,
-                    max: 2.5,
-                    frequency: 6,
-                    pattern: 'sine'
-                },
-                // Cutout: DISSOLVE for escaping wisps
-                cutout: {
-                    strength: 0.55,
-                    primary: { pattern: 7, scale: 1.5, weight: 1.0 },    // DISSOLVE - escaping
-                    blend: 'add',
-                    travel: 'angular',
-                    travelSpeed: 2.0,
-                    trailDissolve: {
-                        offset: -0.1,
-                        softness: 0.25
-                    }
-                },
-                // Rise upward like escaping heat
-                drift: {
-                    speed: 0.4,
-                    distance: 0.4,
-                    direction: { x: 0, y: 1, z: 0 },
-                    easing: 'easeOutCubic'
-                },
-                scaleVariance: 0.25,
-                lifetimeVariance: 0.2,
-                blending: 'additive',
-                renderOrder: 12
-            }
-        },
-
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 4: Ember-clusters as ambient heat glow
-        // Surrounding heat shimmer effect
-        // ═══════════════════════════════════════════════════════════════════════════════════
-        {
-            type: 'orbit',
-            orbit: {
-                height: 0,
-                radius: 1.5,
-                plane: 'horizontal',
-                orientation: 'camera'
+            parameterAnimation: {
+                temperature: {
+                    start: 0.5,
+                    peak: 0.8,
+                    end: 0.4,
+                    curve: 'sustained'
+                }
             },
-            formation: {
-                type: 'ring',
-                count: 10,
-                startAngle: 18
+            flicker: {
+                intensity: 0.3,
+                rate: 12,
+                pattern: 'random'
             },
-            count: 10,
-            scale: 0.5,
-            models: ['ember-cluster'],
-            animation: {
-                appearAt: 0.08,
-                disappearAt: 0.90,
-                stagger: 0.02,
-                enter: {
-                    type: 'fade',
-                    duration: 0.2,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.15,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.1,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    temperature: {
-                        start: 0.4,
-                        peak: 0.6,
-                        end: 0.35,
-                        curve: 'sine'
-                    }
-                },
-                flicker: {
-                    intensity: 0.2,
-                    rate: 8,
-                    pattern: 'random'
-                },
-                pulse: {
-                    amplitude: 0.15,
-                    frequency: 3,
-                    easing: 'easeInOut',
-                    perElement: true
-                },
-                emissive: {
-                    min: 1.0,
-                    max: 1.8,
-                    frequency: 4,
-                    pattern: 'sine'
-                },
-                // Grain: film grain for ambient heat shimmer
-                grain: {
-                    type: 3,
-                    strength: 0.08,
-                    scale: 0.2,
-                    speed: 0.8,
-                    blend: 'multiply'
-                },
-                // Slow outward expansion (horizontal)
-                drift: {
-                    direction: 'outward-flat',
-                    distance: 0.2,
-                    noise: 0.05
-                },
-                scaleVariance: 0.15,
-                lifetimeVariance: 0.1,
-                blending: 'additive',
-                renderOrder: 10
-            }
+            emissive: {
+                min: 1.5,
+                max: 3.0,
+                frequency: 6,
+                pattern: 'sine'
+            },
+            cutout: {
+                strength: 0.55,
+                primary: { pattern: 7, scale: 1.5, weight: 1.0 },    // DISSOLVE
+                secondary: { pattern: 5, scale: 1.2, weight: 0.4 },  // EMBERS
+                blend: 'multiply',
+                travel: 'angular',
+                travelSpeed: 2.0,
+                trailDissolve: {
+                    offset: -0.1,
+                    softness: 0.25
+                }
+            },
+            grain: {
+                type: 3,
+                strength: 0.08,
+                scale: 0.2,
+                speed: 0.8,
+                blend: 'multiply'
+            },
+            drift: {
+                speed: 0.3,
+                distance: 0.3,
+                direction: { x: 0, y: 1, z: 0 },
+                easing: 'easeOutCubic'
+            },
+            scaleVariance: 0.25,
+            lifetimeVariance: 0.2,
+            blending: 'additive',
+            renderOrder: 12
         }
-    ],
+    },
 
     // Mesh effects - intense yellow/white heat
     flickerFrequency: 6,
@@ -404,13 +144,9 @@ const SCORCH_CONFIG = {
 /**
  * Scorch gesture - core meltdown effect.
  *
- * Uses FOUR SPAWN LAYERS:
- * - Layer 1: 3 fire-bursts as pulsing central core
- * - Layer 2: 8 flame-tongues radiating outward (larger, visible)
- * - Layer 3: 10 flame-wisps escaping at surface
- * - Layer 4: 10 ember-clusters as ambient heat glow
- *
- * Creates intense internal combustion effect with heat
- * emanating from the center outward.
+ * Uses surface spawn mode:
+ * - 12 flame-wisps and ember-clusters on mascot surface
+ * - DISSOLVE + EMBERS cutout for burning texture
+ * - Gentle upward drift as heat escapes
  */
 export default buildFireEffectGesture(SCORCH_CONFIG);

@@ -92,6 +92,24 @@ const WATERRIPPLE_CONFIG = {
                     curve: 'bell'
                 }
             },
+            // Two-layer cutout: RIPPLES + CELLULAR for concentric water texture
+            cutout: {
+                strength: 0.5,
+                primary: { pattern: 1, scale: 1.5, weight: 1.0 },    // RIPPLES - concentric rings
+                secondary: { pattern: 0, scale: 0.8, weight: 0.4 },  // CELLULAR - organic breaks
+                blend: 'multiply',
+                travel: 'radial',
+                travelSpeed: 1.5,
+                strengthCurve: 'fadeOut'
+            },
+            // Grain: film grain for water surface texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.2,
+                scale: 0.3,
+                speed: 1.0,
+                blend: 'multiply'
+            },
             pulse: {
                 amplitude: 0.12,
                 frequency: 3,

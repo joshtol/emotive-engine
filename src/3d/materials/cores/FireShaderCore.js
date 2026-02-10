@@ -422,12 +422,12 @@ export function lerp3(low, mid, high, t) {
  */
 export function deriveFireParameters(temperature, overrides = {}) {
     return {
-        intensity: overrides.intensity ?? lerp3(1.5, 2.5, 4.0, temperature),
+        intensity: overrides.intensity ?? lerp3(3.0, 5.0, 7.0, temperature),
         flickerSpeed: overrides.flickerSpeed ?? lerp3(0.001, 0.002, 0.003, temperature),
         flickerAmount: overrides.flickerAmount ?? lerp3(0.15, 0.12, 0.08, temperature),
         // NEW: Temperature affects ember density and brightness
         emberDensity: overrides.emberDensity ?? lerp3(0.1, 0.3, 0.5, temperature),
-        emberBrightness: overrides.emberBrightness ?? lerp3(0.5, 0.8, 1.2, temperature),
+        emberBrightness: overrides.emberBrightness ?? lerp3(0.8, 1.2, 2.0, temperature),
         // NEW: Hotter fires have harder edges (more defined)
         edgeSoftness: overrides.edgeSoftness ?? lerp3(0.6, 0.5, 0.3, temperature),
     };

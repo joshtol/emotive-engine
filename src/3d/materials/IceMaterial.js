@@ -45,19 +45,19 @@ function getIceColor(melt) {
     const color = new THREE.Color();
 
     if (melt < 0.3) {
-        // Solid ice - cool blue tint (darker for overlay use)
-        color.setRGB(0.4, 0.6, 0.85);
+        // Solid ice - saturated blue (visible frosted tint over mascot)
+        color.setRGB(0.3, 0.5, 0.75);
     } else if (melt < 0.7) {
-        // Melting - lighter blue
+        // Melting - shifts toward cyan
         const t = (melt - 0.3) / 0.4;
         color.setRGB(
-            lerp(0.4, 0.45, t),
-            lerp(0.6, 0.7, t),
-            lerp(0.85, 0.9, t)
+            lerp(0.3, 0.35, t),
+            lerp(0.5, 0.55, t),
+            lerp(0.75, 0.78, t)
         );
     } else {
-        // Nearly water - blue
-        color.setRGB(0.45, 0.65, 0.9);
+        // Nearly water - lighter cyan
+        color.setRGB(0.35, 0.55, 0.78);
     }
 
     return color;
@@ -78,7 +78,8 @@ export function createIceMaterial(options = {}) {
     const {
         melt = 0.0,
         color = null,
-        opacity = 0.9
+        opacity = 0.85,
+        overlay = false  // When true, use additive blending for overlay effect
     } = options;
 
     // Phase transition: high melt = water
@@ -111,7 +112,8 @@ export function createIceMaterial(options = {}) {
             uSubsurfaceScatter: { value: subsurfaceScatter },
             uOpacity: { value: opacity },
             uTime: { value: 0 },
-            uMelt: { value: melt }
+            uMelt: { value: melt },
+            uOverlay: { value: overlay ? 1.0 : 0.0 }
         },
 
         vertexShader: /* glsl */`
@@ -142,6 +144,7 @@ export function createIceMaterial(options = {}) {
             uniform float uOpacity;
             uniform float uTime;
             uniform float uMelt;
+            uniform float uOverlay;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
@@ -192,59 +195,99 @@ export function createIceMaterial(options = {}) {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
 
-                // Base ice color
-                vec3 baseColor = uColor;
-
-                // Fresnel effect - rim highlighting
+                // Fresnel effect
                 float fresnel = pow(1.0 - abs(dot(normal, viewDir)), 3.0);
 
-                // Frost crystals on surface (frozen ice only)
+                // Frost pattern (UV-space for geometry independence)
+                float frostMask = 0.0;
                 if (uFrostAmount > 0.01) {
-                    float frost = voronoi(vPosition * 15.0);
+                    float frost = voronoi(vec3(vUv * 8.0, 0.0));
                     frost = smoothstep(0.1, 0.3, frost);
-                    // Frost adds pale blue crystalline patterns (not white)
-                    vec3 frostColor = vec3(0.7, 0.85, 1.0);
-                    baseColor = mix(baseColor, frostColor, (1.0 - frost) * uFrostAmount * 0.25);
+                    frostMask = (1.0 - frost) * uFrostAmount;
                 }
 
-                // Internal crack patterns
+                // Crack pattern (UV-space for geometry independence)
+                float crackIntensity = 0.0;
                 if (uInternalCracks > 0.01) {
-                    vec3 crackPos = vPosition * 8.0;
-                    float cracks = voronoi(crackPos);
+                    float cracks = voronoi(vec3(vUv * 5.0, 0.5));
                     cracks = smoothstep(0.02, 0.08, cracks);
-                    // Cracks are darker inside
-                    float crackIntensity = (1.0 - cracks) * uInternalCracks;
-                    baseColor = mix(baseColor, baseColor * 0.7, crackIntensity * 0.3);
-                    // But have bright edges (light refraction)
-                    float crackEdge = smoothstep(0.08, 0.12, cracks) - smoothstep(0.12, 0.2, cracks);
-                    baseColor += crackEdge * uInternalCracks * 0.2;
+                    crackIntensity = (1.0 - cracks) * uInternalCracks;
                 }
 
-                // Subsurface scattering approximation
-                vec3 scatterColor = uColor * 1.2;
-                float scatter = uSubsurfaceScatter * (1.0 - abs(dot(normal, viewDir)));
-                baseColor = mix(baseColor, scatterColor, scatter * 0.3);
+                float alpha;
+                vec3 finalColor;
 
-                // Specular highlights (sharper when frozen) - reduced intensity
-                float specPower = mix(64.0, 16.0, uMelt);
-                float spec = pow(max(dot(reflect(-viewDir, normal), vec3(0.5, 1.0, 0.5)), 0.0), specPower);
-                baseColor += spec * (1.0 - uRoughness) * 0.15;
+                if (uOverlay > 0.5) {
+                    // OVERLAY MODE: Sparse highlights via additive blending
+                    // Only show frost patches, crack edges, and fresnel rim
+                    // No uniform wash - geometry-independent appearance
 
-                // Rim glow from fresnel - reduced and more blue
-                vec3 rimColor = vec3(0.5, 0.7, 0.9);
-                baseColor = mix(baseColor, rimColor, fresnel * 0.2);
+                    // Fresnel gives strong rim/edge highlights
+                    float rimAlpha = pow(fresnel, 2.0) * 0.7;
 
-                // Alpha based on transmission
-                float alpha = uOpacity * (1.0 - uTransmission * 0.2);
-                alpha = mix(alpha, min(1.0, alpha + 0.2), fresnel);
+                    // Frost patches give bright frost sparkle
+                    float frostAlpha = frostMask * 0.5;
 
-                gl_FragColor = vec4(baseColor, alpha);
+                    // Crack edges give subtle structure
+                    float crackAlpha = crackIntensity * 0.3;
+
+                    // Combine
+                    alpha = rimAlpha + frostAlpha + crackAlpha;
+
+                    // Color: icy blue-white, brightened for additive blending
+                    finalColor = mix(uColor, vec3(0.5, 0.7, 0.9), fresnel * 0.6);
+                    finalColor += vec3(0.15, 0.25, 0.4) * frostMask;
+                    finalColor += vec3(0.05, 0.1, 0.2) * crackIntensity;
+
+                    // Discard near-invisible pixels to avoid uniform wash
+                    if (alpha < 0.05) discard;
+
+                    // Clamp below bloom threshold
+                    finalColor = min(finalColor, vec3(0.78));
+                    alpha = clamp(alpha, 0.0, 0.7);
+                } else {
+                    // STANDALONE MODE: Full opaque ice material
+                    finalColor = uColor;
+
+                    // Frost whitens patches
+                    vec3 frostWhite = vec3(0.6, 0.72, 0.82);
+                    finalColor = mix(finalColor, frostWhite, frostMask * 0.5);
+
+                    // Cracks darken
+                    vec3 crackColor = uColor * 0.3;
+                    finalColor = mix(finalColor, crackColor, crackIntensity * 0.55);
+
+                    // Subsurface scattering
+                    vec3 scatterColor = vec3(0.4, 0.6, 0.8);
+                    float scatter = uSubsurfaceScatter * (1.0 - abs(dot(normal, viewDir)));
+                    finalColor = mix(finalColor, scatterColor, scatter * 0.25);
+
+                    // Specular highlights
+                    float specPower = mix(64.0, 16.0, uMelt);
+                    float spec = pow(max(dot(reflect(-viewDir, normal), vec3(0.5, 1.0, 0.5)), 0.0), specPower);
+                    vec3 specColor = vec3(0.6, 0.72, 0.85);
+                    finalColor = mix(finalColor, specColor, spec * (1.0 - uRoughness) * 0.35);
+
+                    // Fresnel rim
+                    vec3 rimColor = vec3(0.5, 0.65, 0.82);
+                    finalColor = mix(finalColor, rimColor, fresnel * 0.3);
+
+                    // Clamp below bloom threshold
+                    finalColor = min(finalColor, vec3(0.78));
+
+                    float baseAlpha = uOpacity * 0.85;
+                    float fresnelAlpha = fresnel * 0.3;
+                    alpha = clamp(baseAlpha + fresnelAlpha, 0.5, 0.95);
+                }
+
+                gl_FragColor = vec4(finalColor, alpha);
             }
         `,
 
         transparent: true,
         side: THREE.DoubleSide,
-        depthWrite: true
+        blending: overlay ? THREE.AdditiveBlending : THREE.NormalBlending,
+        depthWrite: overlay ? false : true
     });
 
     // Store parameters for external access

@@ -5,222 +5,199 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Waterliquefy gesture - gravity drips with velocity stretch
+ * @fileoverview Waterliquefy gesture - dramatic tears falling with dissolve trails
  * @author Emotive Engine Team
  * @module gestures/destruction/elemental/waterliquefy
- * @complexity ⭐⭐⭐ Advanced
+ * @complexity ⭐⭐ Intermediate
  *
  * VISUAL DIAGRAM:
- *            ★              ← Mascot melting
- *           /|\
- *          💧 💧            ← Drips falling with velocity stretch
- *         ↓   ↓
- *        💧   💧
- *       ↓     ↓
- *      〰️ 〰️ 〰️            ← Chaotic dissolve effects
+ *
+ *            ★              <- Mascot weeping
+ *          💧  💧
+ *         ↓    ↓
+ *        💧 •  💧           <- Large and small tears
+ *       ↓  •   ↓
+ *      ···  · ···           <- Trail dissolve streaks
  *
  * FEATURES:
- * - Two-layer effect: falling drips + chaotic dissolve
- * - axis-travel with gravity easing (top to bottom)
- * - Velocity-stretch scaling for teardrop effect
- * - DRIP_FALL shader animation
+ * - Mixed large and small droplets falling
+ * - Trail dissolve effect for emotional tear streaks
+ * - Gravity easing (accelerating fall)
+ * - DISSOLVE cutout that increases as tears fall
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
- * - Melting/dissolution effects
- * - Liquefaction visuals
- * - Form loss reactions
+ * - Sadness/crying effects
+ * - Melting visuals
+ * - Emotional water reactions
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
 
 /**
  * Waterliquefy gesture configuration
- * Gravity drips with velocity stretch
+ * Dramatic tears - mixed droplets with trail dissolve
  */
 const WATERLIQUEFY_CONFIG = {
     name: 'liquefy',
     emoji: '💧',
     type: 'blending',
-    description: 'Melting dissolution - gravity drips with velocity stretch',
-    duration: 2500,
-    beats: 4,
-    intensity: 1.0,
+    description: 'Dramatic tears falling with dissolve trails',
+    duration: 2200,
+    beats: 3,
+    intensity: 0.9,
     category: 'transform',
-    turbulence: 0.8,              // High turbulence - chaotic melting
+    turbulence: 0.4,
 
-    // 3D Element spawning - TWO LAYERS: falling drips + chaotic dissolve
+    // 3D Element spawning - two layers: large prominent tears + small accent drops
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Gravity-falling drips with velocity-stretch
+        // LAYER 1: Large dramatic tears
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
             axisTravel: {
                 axis: 'y',
-                start: 'top',         // Drips fall from top
+                start: 'top',
                 end: 'bottom',
-                easing: 'easeInQuad', // Accelerating fall (gravity)
-                startDiameter: 0.6,
-                endDiameter: 0.9,     // Spread out as they fall
-                startScale: 0.7,
-                endScale: 1.0
+                startOffset: 0.15,
+                endOffset: -0.3,
+                easing: 'easeInQuad',       // Gravity acceleration
+                startScale: 0.5,
+                endScale: 1.3,              // Grow as they fall
+                startDiameter: 0.7,
+                endDiameter: 1.1,
+                orientation: 'camera'
             },
             formation: {
                 type: 'ring',
-                count: 5              // 5 drips falling around circumference
+                count: 4,
+                phaseOffset: 0.15
             },
-            count: 5,
-            scale: 0.9,
-            models: ['droplet-large', 'droplet-small', 'droplet-large', 'droplet-small', 'droplet-large'],
+            count: 4,
+            scale: 1.1,
+            models: ['droplet-large'],
             animation: {
-                appearAt: 0.05,
-                disappearAt: 0.75,
-                stagger: 0.06,
-                enter: {
-                    type: 'grow',
-                    duration: 0.08,
-                    easing: 'easeOutQuad'
-                },
-                exit: {
-                    type: 'shrink',
-                    duration: 0.1,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.06,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.2,
-                        peak: 0.9,
-                        end: 0.7,
-                        curve: 'sustained'
+                appearAt: 0.0,
+                disappearAt: 0.9,
+                stagger: 0.12,
+                enter: { type: 'grow', duration: 0.12, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.08, geometryStability: true },
+                // DISSOLVE cutout with trail
+                cutout: {
+                    strength: 0.55,
+                    primary: { pattern: 7, scale: 1.3, weight: 1.0 },    // DISSOLVE
+                    secondary: { pattern: 0, scale: 0.5, weight: 0.25 }, // CELLULAR
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 1.8,
+                    strengthCurve: 'fadeIn',
+                    // Trail dissolve - emotional tear streaks
+                    trailDissolve: {
+                        enabled: true,
+                        offset: -0.5,
+                        softness: 1.8
                     }
                 },
-                scaleVariance: 0.25,
-                lifetimeVariance: 0.15,
-                blending: 'normal',
-                renderOrder: 7,
-                // Model-specific velocity-stretch for falling drips
+                grain: { type: 3, strength: 0.25, scale: 0.2, speed: 2.0, blend: 'multiply' },
+                rotate: { axis: 'z', rotations: 0, phase: 0 },  // No rotation
+                scaleVariance: 0.15,
+                lifetimeVariance: 0.1,
+                blending: 'additive',
+                renderOrder: 8,
                 modelOverrides: {
                     'droplet-large': {
-                        scaling: {
-                            mode: 'velocity-stretch',
-                            stretchFactor: 1.6,
-                            minSpeed: 0.02,
-                            maxStretch: 2.2
-                        },
-                        shaderAnimation: {
-                            type: 3  // DRIP_FALL
-                        }
-                    },
-                    'droplet-small': {
-                        scaling: {
-                            mode: 'velocity-stretch',
-                            stretchFactor: 2.0,
-                            minSpeed: 0.02,
-                            maxStretch: 2.8
-                        },
-                        shaderAnimation: {
-                            type: 3  // DRIP_FALL
-                        }
+                        shaderAnimation: { type: 3, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera'
                     }
                 }
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Chaotic dissolve wave-curls
+        // LAYER 2: Small accent drops (faster, more numerous)
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
-            type: 'surface',
-            pattern: 'scattered',
-            embedDepth: 0.15,
-            cameraFacing: 0.4,
-            clustering: 0.35,
-            count: 4,
-            scale: 0.8,
-            models: ['wave-curl', 'bubble-cluster'],
-            minDistance: 0.12,
+            type: 'axis-travel',
+            axisTravel: {
+                axis: 'y',
+                start: 'top',
+                end: 'bottom',
+                startOffset: 0.05,
+                endOffset: -0.15,
+                easing: 'easeInCubic',      // Faster gravity
+                startScale: 0.4,
+                endScale: 0.9,
+                startDiameter: 0.6,
+                endDiameter: 0.9,
+                orientation: 'camera'
+            },
+            formation: {
+                type: 'ring',
+                count: 6,
+                phaseOffset: 0.1
+            },
+            count: 6,
+            scale: 0.6,
+            models: ['droplet-small'],
             animation: {
-                appearAt: 0.15,
-                disappearAt: 0.9,
+                appearAt: 0.08,
+                disappearAt: 0.85,
                 stagger: 0.08,
-                enter: {
-                    type: 'fade',
-                    duration: 0.1,
-                    easing: 'easeOut'
-                },
-                exit: {
-                    type: 'fade',
-                    duration: 0.12,
-                    easing: 'easeIn'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                parameterAnimation: {
-                    turbulence: {
-                        start: 0.3,
-                        peak: 1.0,
-                        end: 0.8,
-                        curve: 'sustained'
-                    },
-                    transparency: {
-                        start: 0.0,
-                        peak: 0.7,
-                        end: 0.9,
-                        curve: 'linear'
+                enter: { type: 'grow', duration: 0.08, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
+                procedural: { scaleSmoothing: 0.06, geometryStability: true },
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 7, scale: 1.0, weight: 1.0 },
+                    secondary: { pattern: 0, scale: 0.4, weight: 0.2 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 2.5,
+                    strengthCurve: 'fadeIn',
+                    trailDissolve: {
+                        enabled: true,
+                        offset: -0.4,
+                        softness: 1.2
                     }
                 },
-                pulse: {
-                    amplitude: 0.12,
-                    frequency: 2.5,
-                    easing: 'easeInOut'
-                },
-                scaleVariance: 0.3,
+                grain: { type: 3, strength: 0.2, scale: 0.15, speed: 2.5, blend: 'multiply' },
+                rotate: { axis: 'z', rotations: 0, phase: 0 },
+                scaleVariance: 0.25,
                 lifetimeVariance: 0.2,
-                blending: 'normal',
-                renderOrder: 8,
+                blending: 'additive',
+                renderOrder: 10,
                 modelOverrides: {
-                    'wave-curl': {
-                        scaling: { mode: 'uniform-pulse', amplitude: 0.18, frequency: 2.5 },
-                        drift: { direction: 'tangent', speed: 0.015, noise: 0.03 }
-                    },
-                    'bubble-cluster': {
-                        enter: { type: 'pop', duration: 0.03 },
-                        drift: { direction: 'rising', speed: 0.025, buoyancy: true, noise: 0.04 }
+                    'droplet-small': {
+                        shaderAnimation: { type: 3, arcWidth: 0.98, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera'
                     }
                 }
             }
         }
     ],
 
-    // Wobble - minimal for fluid motion
+    // Wobble - minimal for falling motion
     wobbleFrequency: 2,
-    wobbleAmplitude: 0.01,
+    wobbleAmplitude: 0.006,
     wobbleDecay: 0.2,
-    // Scale - irregular wobbling
-    scaleWobble: 0.04,
+    // Scale - subtle variation
+    scaleWobble: 0.02,
     scaleFrequency: 3,
-    // Glow - becoming translucent
-    glowColor: [0.3, 0.6, 0.95],
-    glowIntensityMin: 1.0,
-    glowIntensityMax: 2.0,
-    glowPulseRate: 5,
-    // Liquefy-specific
-    meltDown: true,              // Slight downward drift
-    formLoss: true,              // Increasing wobble amplitude
-    stretchVertical: 0.03        // Vertical stretch (dripping)
+    // Glow - emotional blue
+    glowColor: [0.25, 0.5, 0.9],
+    glowIntensityMin: 0.9,
+    glowIntensityMax: 1.6,
+    glowPulseRate: 3
 };
 
 /**
- * Waterliquefy gesture - gravity drips with velocity stretch.
+ * Waterliquefy gesture - dramatic tears.
  *
- * Uses multi-layer spawn mode:
- * - Layer 1: axis-travel falling drips with velocity-stretch
- * - Layer 2: surface chaotic dissolve effects
+ * Uses two-layer axis-travel:
+ * - Layer 1: 4 large prominent tears falling slowly
+ * - Layer 2: 6 small accent drops falling faster
+ * - Both have trail dissolve for tear streak effect
+ * - DISSOLVE+CELLULAR cutout increasing as they fall
  */
 export default buildWaterEffectGesture(WATERLIQUEFY_CONFIG);

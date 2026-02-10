@@ -1,13 +1,13 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Waterdrill Gesture
+ *    ●●  ENGINE - Icedrill Gesture
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Waterdrill gesture - fast tight descending water helix
+ * @fileoverview Icedrill gesture - fast tight descending ice spiral
  * @author Emotive Engine Team
- * @module gestures/destruction/elemental/waterdrill
+ * @module gestures/destruction/elemental/icedrill
  * @complexity ⭐⭐⭐ Advanced
  *
  * VISUAL DIAGRAM:
@@ -19,36 +19,36 @@
  *            ●        BOTTOM (narrow)
  *
  * FEATURES:
- * - 6 splash elements in tight spiral formation
- * - Fast descending helix (like a drill bit)
- * - SPIRAL + STREAKS cutout for drilling motion
+ * - 6 ice-ring elements in tight spiral formation
+ * - Fast descending helix (like an ice drill bit)
+ * - VORONOI + CRACKS cutout for crystalline drilling motion
  * - High rotation speed for drilling effect
- * - Energetic intense water
+ * - Energetic intense ice
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
- * - Piercing water effects
+ * - Piercing ice effects
  * - Drill/bore attacks
- * - Intense energy buildups
- * - Breaking through obstacles
+ * - Intense frozen energy buildups
+ * - Breaking through obstacles with ice
  */
 
-import { buildWaterEffectGesture } from './waterEffectFactory.js';
+import { buildIceEffectGesture } from './iceEffectFactory.js';
 
 /**
- * Waterdrill gesture configuration
- * Fast tight descending helix - drilling water spiral
+ * Icedrill gesture configuration
+ * Fast tight descending helix - drilling ice spiral
  */
-const WATERDRILL_CONFIG = {
-    name: 'waterdrill',
+const ICEDRILL_CONFIG = {
+    name: 'icedrill',
     emoji: '🔩',
     type: 'blending',
-    description: 'Fast tight descending water helix',
+    description: 'Fast tight descending ice helix',
     duration: 1200,         // Quick intense burst
     beats: 2,
     intensity: 1.5,         // High intensity
     category: 'transform',
-    turbulence: 0.6,
+    frost: 0.7,
 
     // 3D Element spawning - tight spiral helix
     spawnMode: {
@@ -72,8 +72,8 @@ const WATERDRILL_CONFIG = {
             phaseOffset: 0
         },
         count: 6,
-        scale: 0.8,
-        models: ['splash-ring'],
+        scale: 1.4,
+        models: ['ice-ring'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.6,
@@ -93,24 +93,24 @@ const WATERDRILL_CONFIG = {
                 geometryStability: true
             },
             parameterAnimation: {
-                turbulence: {
-                    start: 0.3,
-                    peak: 0.7,
+                frost: {
+                    start: 0.4,
+                    peak: 0.8,
                     end: 0.5,
                     curve: 'bell'
                 }
             },
-            // SPIRAL cutout for drilling effect
+            // VORONOI cutout for crystalline drilling
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 6, scale: 1.5, weight: 1.0 },    // SPIRAL - drilling motion
-                secondary: { pattern: 1, scale: 0.8, weight: 0.35 }, // STREAKS - speed lines
+                primary: { pattern: 3, scale: 1.5, weight: 1.0 },    // VORONOI - crystalline
+                secondary: { pattern: 8, scale: 0.8, weight: 0.35 }, // CRACKS - fracture lines
                 blend: 'add',
                 travel: 'vertical',
                 travelSpeed: 3.0,           // Fast drilling travel
                 strengthCurve: 'constant'
             },
-            // Grain: intense film grain for drilling spray
+            // Grain: film grain for drilling ice spray
             grain: {
                 type: 3,              // FILM
                 strength: 0.3,        // Stronger for intense effect
@@ -130,7 +130,7 @@ const WATERDRILL_CONFIG = {
             blending: 'normal',
             renderOrder: 16,
             modelOverrides: {
-                'splash-ring': {
+                'ice-ring': {
                     shaderAnimation: {
                         type: 1,
                         arcWidth: 0.5,    // Narrow arcs for drill bits
@@ -143,30 +143,27 @@ const WATERDRILL_CONFIG = {
         }
     },
 
-    // Wobble - minimal for focused drill
-    wobbleFrequency: 8,
-    wobbleAmplitude: 0.01,
-    wobbleDecay: 0.15,
-    // Scale - tight control
-    scaleWobble: 0.02,
-    scaleFrequency: 8,
-    scaleGrowth: 0.03,
-    // Glow - intense blue
-    glowColor: [0.2, 0.5, 1.0],
+    // Glow - intense ice blue
+    glowColor: [0.4, 0.75, 1.0],
     glowIntensityMin: 1.3,
     glowIntensityMax: 2.8,
-    glowPulseRate: 10,
-    // Drill-specific
-    rotationFlow: 0.05
+    glowFlickerRate: 10,
+    // Scale - tight control
+    scaleVibration: 0.02,
+    scaleFrequency: 8,
+    scaleGrowth: 0.03,
+    // Tremor - drilling energy
+    tremor: 0.006,
+    tremorFrequency: 8
 };
 
 /**
- * Waterdrill gesture - fast tight descending helix.
+ * Icedrill gesture - fast tight descending helix.
  *
  * Uses axis-travel spawn mode with spiral formation:
- * - 6 splash elements in tight 60° spiral
+ * - 6 ice-ring elements in tight 60° spiral
  * - Fast travel from feet to below
  * - High rotation speed (4 full rotations)
- * - Drilling/piercing water effect
+ * - Drilling/piercing ice effect
  */
-export default buildWaterEffectGesture(WATERDRILL_CONFIG);
+export default buildIceEffectGesture(ICEDRILL_CONFIG);

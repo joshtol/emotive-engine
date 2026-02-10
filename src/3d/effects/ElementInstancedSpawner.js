@@ -308,6 +308,9 @@ export class ElementInstancedSpawner {
         const material = config.createMaterial();
         this.materials.set(elementType, material);
 
+        // Store original depthWrite so it can be restored between gestures
+        material.userData._originalDepthWrite = material.depthWrite;
+
         // Create pool
         const pool = new ElementInstancePool(mergedGeometry, material, MAX_ELEMENTS_PER_TYPE);
         this.pools.set(elementType, pool);
@@ -399,7 +402,7 @@ export class ElementInstancedSpawner {
             // Clear existing elements (only once for all layers)
             this.despawn(elementType);
 
-            // Reset cutout and grain to default state to prevent bleeding from previous gesture
+            // Reset cutout, grain, and shader animation to default state to prevent bleeding from previous gesture
             const elementConfig = ElementTypeRegistry.get(elementType);
             const material = this.materials.get(elementType);
             if (elementConfig?.resetCutout && material) {
@@ -408,9 +411,13 @@ export class ElementInstancedSpawner {
             if (elementConfig?.resetGrain && material) {
                 elementConfig.resetGrain(material);
             }
+            if (elementConfig?.resetShaderAnimation && material) {
+                elementConfig.resetShaderAnimation(material);
+            }
 
             // Apply minimum renderOrder from all layers (most negative = furthest back)
             let minRenderOrder = undefined;
+            let layerDepthWrite = undefined;
             for (const layerConfig of mode) {
                 const layerRenderOrder = layerConfig.animation?.renderOrder;
                 if (layerRenderOrder !== undefined) {
@@ -418,9 +425,21 @@ export class ElementInstancedSpawner {
                         minRenderOrder = layerRenderOrder;
                     }
                 }
+                if (layerConfig.animation?.depthWrite !== undefined) {
+                    layerDepthWrite = layerConfig.animation.depthWrite;
+                }
             }
             if (minRenderOrder !== undefined) {
                 pool.mesh.renderOrder = minRenderOrder;
+            }
+
+            // Apply per-gesture depthWrite override from layers
+            if (material) {
+                if (layerDepthWrite !== undefined) {
+                    material.depthWrite = layerDepthWrite;
+                } else if (material.userData._originalDepthWrite !== undefined) {
+                    material.depthWrite = material.userData._originalDepthWrite;
+                }
             }
 
             // Spawn each layer
@@ -461,14 +480,26 @@ export class ElementInstancedSpawner {
         // Clear existing elements of this type first
         this.despawn(elementType);
 
-        // Reset cutout and grain to default state to prevent bleeding from previous gesture
+        // Reset cutout, grain, and shader animation to default state to prevent bleeding from previous gesture
         const elementConfig = ElementTypeRegistry.get(elementType);
         const material = this.materials.get(elementType);
+
+        // Apply per-gesture depthWrite override (e.g. icemeditation needs false to not occlude mascot)
+        if (material) {
+            if (animation && animation.depthWrite !== undefined) {
+                material.depthWrite = animation.depthWrite;
+            } else if (material.userData._originalDepthWrite !== undefined) {
+                material.depthWrite = material.userData._originalDepthWrite;
+            }
+        }
         if (elementConfig?.resetCutout && material) {
             elementConfig.resetCutout(material);
         }
         if (elementConfig?.resetGrain && material) {
             elementConfig.resetGrain(material);
+        }
+        if (elementConfig?.resetShaderAnimation && material) {
+            elementConfig.resetShaderAnimation(material);
         }
 
         const merged = this.mergedGeometries.get(elementType);
@@ -1802,6 +1833,39 @@ export class ElementInstancedSpawner {
                 finalScale = isProceduralElement
                     ? baseScale * updateState.scaleMultiplier * animState.fadeProgress
                     : baseScale * updateState.scaleMultiplier * animState.scale;
+            } else if (data.orbit && data.orbit.config.speed !== 0 && gestureProgress !== null) {
+                // ORBIT MODE: Recalculate position with orbital rotation + radius/height interpolation
+                const orbitCfg = data.orbit.config;
+
+                // Use local progress (0-1 within element's appearance window)
+                const appearAt = animState.elementConfig?.appearAt ?? 0;
+                const disappearAt = animState.elementConfig?.disappearAt ?? 1;
+                const visibleDuration = disappearAt - appearAt;
+                const localProgress = visibleDuration > 0
+                    ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
+                    : gestureProgress;
+
+                // Get easing function for orbit travel
+                const orbitEasingFn = getEasing(orbitCfg.easing || 'linear');
+
+                const result = calculateOrbitPosition(
+                    orbitCfg,
+                    data.orbit.formationData,
+                    localProgress,
+                    this.mascotRadius,
+                    orbitEasingFn
+                );
+
+                _temp.position.set(result.x, result.y, result.z);
+                finalPosition = _temp.position;
+
+                // Apply scale with orbit scale interpolation and fade
+                const orbitScale = result.scale ?? 1.0;
+                finalScale = isProceduralElement
+                    ? baseScale * orbitScale * animState.fadeProgress
+                    : baseScale * orbitScale * animState.scale;
+
+                data.basePosition.copy(finalPosition);
             } else {
                 // STANDARD MODE: Apply drift offset to position
                 const drift = animState.driftOffset;

@@ -63,7 +63,7 @@ const WATER_VORTEX_CONFIG = {
             startScale: 1.4,
             endScale: 1.7,
             startDiameter: 0.6,     // Narrow at bottom for pronounced cone
-            endDiameter: 1.2,       // Wider at top
+            endDiameter: 2.0,       // Wider at top for dramatic funnel
             orientation: 'flat'     // Horizontal rings stacking upward
         },
         // Formation: 3 rings at SAME position, offset by 120 degrees rotation
@@ -121,6 +121,14 @@ const WATER_VORTEX_CONFIG = {
                     offset: -0.4,        // Floor 0.4 units below instance center
                     softness: 1.2        // Wide gradient for visible dissolve
                 }
+            },
+            // Grain: film grain for spray texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.25,
+                scale: 0.3,
+                speed: 3.0,           // Faster for vortex energy
+                blend: 'multiply'
             },
             pulse: {
                 amplitude: 0.12,

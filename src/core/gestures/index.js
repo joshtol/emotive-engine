@@ -289,6 +289,10 @@ import waterHelix from './destruction/elemental/waterhelix.js';
 import waterMeditation from './destruction/elemental/watermeditation.js';
 import waterPillar from './destruction/elemental/waterpillar.js';
 import waterFlourish from './destruction/elemental/waterflourish.js';
+import waterBarrage from './destruction/elemental/waterbarrage.js';
+import waterImpact from './destruction/elemental/waterimpact.js';
+import waterCrush from './destruction/elemental/watercrush.js';
+import waterDragon from './destruction/elemental/waterdragon.js';
 // destruction/elemental/ - Fire effect gestures (self-contained gesture files)
 import fireBurn from './destruction/elemental/burn.js';
 import fireScorch from './destruction/elemental/scorch.js';
@@ -304,6 +308,9 @@ import firemeditationGesture from './destruction/elemental/firemeditation.js';
 import firedrillGesture from './destruction/elemental/firedrill.js';
 import firepillarGesture from './destruction/elemental/firepillar.js';
 import firehelixGesture from './destruction/elemental/firehelix.js';
+import firebarrageGesture from './destruction/elemental/firebarrage.js';
+import fireimpactGesture from './destruction/elemental/fireimpact.js';
+import fireblastGesture from './destruction/elemental/fireblast.js';
 // destruction/elemental/ - Smoke effect gestures (no shatter, soft organic visuals)
 import {
     puff as smokePuff,
@@ -329,17 +336,24 @@ import {
     singularity as voidSingularity
 } from './destruction/elemental/voidEffectFactory.js';
 // destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
+// Matches fire/water pattern: axis-travel, anchor, radial-burst spawn modes
 import {
-    freeze as iceEffectFreeze,
-    chill as iceChill,
-    frostbite as iceFrostbite,
-    thaw as iceThaw,
-    frost as iceFrost,
-    crystallize as iceCrystallize,
-    glacial as iceGlacial,
-    shatter as iceEffectShatter,
-    encase as iceEncase
+    crown as iceCrown,
+    dance as iceDance,
+    pillar as icePillar,
+    helix as iceHelix,
+    meditation as iceMeditation,
+    vortex as iceVortex,
+    splash as iceSplash,
+    encase as iceEncase,
+    drill as iceDrill,
+    flourish as iceFlourish,
+    barrage as iceBarrage,
+    impact as iceImpact
 } from './destruction/elemental/iceEffectFactory.js';
+import iceMist from './destruction/elemental/icemist.js';
+import iceShiver from './destruction/elemental/iceshiver.js';
+import iceDragon from './destruction/elemental/icedragon.js';
 // destruction/elemental/ - Light effect gestures (radiance/holy visuals)
 import {
     blind as lightBlind,
@@ -470,7 +484,6 @@ const shatterPunchLeft = createShatterGesture('punchLeft');
 const shatterPunchRight = createShatterGesture('punchRight');
 const shatterPunchFront = createShatterGesture('punchFront');
 const shatterSuspend = createShatterGesture('suspend');
-const shatterFreeze = createShatterGesture('freeze');
 // Dual-mode shatter gestures (work on IDLE or FROZEN state)
 const shatterImplode = createShatterGesture('implode');
 const shatterGravity = createShatterGesture('gravity');
@@ -503,6 +516,10 @@ const waterhelix = waterHelix;
 const watermeditation = waterMeditation;
 const waterpillar = waterPillar;
 const waterflourish = waterFlourish;
+const waterbarrage = waterBarrage;
+const waterimpact = waterImpact;
+const watercrush = waterCrush;
+const waterdragon = waterDragon;
 // Smoke (effect-based - soft organic smoke, no angular shards)
 const smokebomb = smokeSmokebomb;
 const vanish = smokeVanish;
@@ -533,6 +550,12 @@ const firedrill = firedrillGesture;
 const firepillar = firepillarGesture;
 // Firehelix - DNA-style double helix ascending flame - has dedicated file
 const firehelix = firehelixGesture;
+// Firebarrage - orbiting flames launching upward - has dedicated file
+const firebarrage = firebarrageGesture;
+// Fireimpact - fire orbits then crashes inward - has dedicated file
+const fireimpact = fireimpactGesture;
+// Fireblast - explosive fire burst (splash equivalent) - has dedicated file
+const fireblast = fireblastGesture;
 // Radiating variants (source of fire)
 const radiate = fireRadiate;
 const blaze = fireBlaze;
@@ -898,7 +921,6 @@ const TRANSFORM_GESTURES = [
     shatterPunchRight,
     shatterPunchFront,
     shatterSuspend,
-    shatterFreeze,
     // Dual-mode shatter gestures (work on IDLE or FROZEN state)
     shatterImplode,
     shatterGravity,
@@ -930,6 +952,10 @@ const TRANSFORM_GESTURES = [
     watermeditation, // Mandala rings with breathing pulse
     waterpillar,     // Stacked rings rising as pillar
     waterflourish,   // Theatrical water flourish
+    waterbarrage,    // Orbiting water launching upward
+    waterimpact,     // Water orbits then crashes inward
+    watercrush,      // Heavy wave crushing from above
+    waterdragon,     // Ascending water serpent
     // Smoke
     smokebomb,
     vanish,
@@ -951,6 +977,9 @@ const TRANSFORM_GESTURES = [
     firedrill,      // Fast tight ascending helix
     firepillar,     // Stacked rings rising as pillar
     firehelix,      // DNA-style double helix ascending
+    firebarrage,    // Orbiting flames launching upward
+    fireimpact,     // Fire orbits then crashes inward
+    fireblast,      // Explosive fire burst (splash equivalent)
     // Fire - Radiating (source of fire)
     radiate,
     blaze,
@@ -987,18 +1016,22 @@ const TRANSFORM_GESTURES = [
     shroud,
     hazeSmoke,
     chokeSmoke,
-    // Ice Effect - Afflicted (being frozen)
-    iceEffectFreeze,
-    iceChill,
-    iceFrostbite,
-    iceThaw,
-    // Ice Effect - Emanating (projecting cold)
-    iceFrost,
-    // Ice Effect - Transform (becoming ice)
-    iceCrystallize,
-    iceGlacial,
-    iceEffectShatter,
+    // Ice Effect - Matching fire/water pattern
+    iceCrown,
+    iceDance,
+    icePillar,
+    iceHelix,
+    iceMeditation,
+    iceVortex,
+    iceSplash,
     iceEncase,
+    iceDrill,
+    iceFlourish,
+    iceBarrage,
+    iceImpact,
+    iceMist,         // Cold mist emanating
+    iceShiver,       // Convulsive cold with frost
+    iceDragon,       // Ascending ice serpent
     // Light Effect - Afflicted (overwhelmed by light)
     lightBlind,
     lightPurify,
@@ -1178,7 +1211,7 @@ export const GESTURE_CATEGORIES = {
         // destruction/shatter/
         'shatter', 'shatterMesh', 'shatterExplosive', 'shatterCrumble', 'shatterReform',
         'shatterPunchLeft', 'shatterPunchRight', 'shatterPunchFront',
-        'shatterSuspend', 'shatterFreeze', 'shatterImplode', 'shatterGravity', 'shatterOrbit',
+        'shatterSuspend', 'shatterImplode', 'shatterGravity', 'shatterOrbit',
         // destruction/dissolve/
         'dissolveUp', 'dissolveDown', 'dissolveLeft', 'dissolveRight', 'dissolveAway', 'dissolveToward',
         // destruction/elemental/ - Water (impact)
@@ -1190,6 +1223,9 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Water (axis-travel effects)
         'watercrown', 'waterdance', 'waterdrill', 'waterhelix',
         'watermeditation', 'waterpillar', 'waterflourish',
+        'waterbarrage', 'waterimpact',
+        // destruction/elemental/ - Water (crush + dragon)
+        'watercrush', 'waterdragon',
         // destruction/elemental/ - Smoke
         'smokebomb', 'vanish', 'materialize',
         // destruction/elemental/ - Fire
@@ -1212,6 +1248,12 @@ export const GESTURE_CATEGORIES = {
         'firepillar',
         // destruction/elemental/ - Fire (firehelix - DNA-style double helix)
         'firehelix',
+        // destruction/elemental/ - Fire (firebarrage - orbiting flames launching upward)
+        'firebarrage',
+        // destruction/elemental/ - Fire (fireimpact - fire orbits then crashes inward)
+        'fireimpact',
+        // destruction/elemental/ - Fire (fireblast - explosive fire burst)
+        'fireblast',
         // destruction/elemental/ - Fire (radiating - source of fire)
         'radiate', 'blaze',
         // destruction/elemental/ - Smoke (emanating - source of smoke)
@@ -1226,9 +1268,11 @@ export const GESTURE_CATEGORIES = {
         'crackle', 'chargeUp', 'electricAuraEffect', 'staticDischarge',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
-        // destruction/elemental/ - Ice Effect (afflicted, emanating, transform)
-        'iceFreeze', 'iceChill', 'iceFrostbite', 'iceThaw', 'iceFrost',
-        'iceCrystallize', 'iceGlacial', 'iceShatter', 'iceEncase',
+        // destruction/elemental/ - Ice Effect (matching fire/water pattern)
+        'iceCrown', 'iceDance', 'icePillar', 'iceHelix', 'iceMeditation',
+        'iceVortex', 'iceSplash', 'iceEncase', 'iceDrill', 'iceFlourish',
+        'iceBarrage', 'iceImpact',
+        'icemist', 'iceshiver', 'icedragon',
         // destruction/elemental/ - Light Effect (afflicted, emanating, transform)
         'lightBlind', 'lightPurify', 'lightCleanse', 'lightRadiate', 'lightGlow', 'lightBeacon',
         'lightAscend', 'lightIlluminate', 'lightDissolve',

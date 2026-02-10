@@ -29,7 +29,8 @@ import {
     setInstancedFireCutout,
     resetCutout as resetFireCutout,
     setGrain as setFireGrain,
-    resetGrain as resetFireGrain
+    resetGrain as resetFireGrain,
+    resetAnimation as resetFireAnimation
 } from '../materials/InstancedFireMaterial.js';
 
 import {
@@ -41,8 +42,22 @@ import {
     setInstancedWaterCutout,
     resetCutout as resetWaterCutout,
     setGrain as setWaterGrain,
-    resetGrain as resetWaterGrain
+    resetGrain as resetWaterGrain,
+    resetAnimation as resetWaterAnimation
 } from '../materials/InstancedWaterMaterial.js';
+
+import {
+    createInstancedIceMaterial,
+    updateInstancedIceMaterial,
+    setInstancedIceArcAnimation,
+    setInstancedIceGestureGlow,
+    setInstancedIceBloomThreshold,
+    setInstancedIceCutout,
+    resetCutout as resetIceCutout,
+    setGrain as setIceGrain,
+    resetGrain as resetIceGrain,
+    resetAnimation as resetIceAnimation
+} from '../materials/InstancedIceMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELEMENT REGISTRATIONS (after all imports are resolved)
@@ -65,6 +80,7 @@ ElementTypeRegistry.register('fire', {
     resetCutout: resetFireCutout,
     setGrain: setFireGrain,
     resetGrain: resetFireGrain,
+    resetShaderAnimation: resetFireAnimation,
     scaleMultiplier: 1.5
 });
 
@@ -86,6 +102,29 @@ ElementTypeRegistry.register('water', {
     resetCutout: resetWaterCutout,
     setGrain: setWaterGrain,
     resetGrain: resetWaterGrain,
+    resetShaderAnimation: resetWaterAnimation,
+    scaleMultiplier: 1.2
+});
+
+ElementTypeRegistry.register('ice', {
+    basePath: 'models/Elements/Ice/',
+    models: [
+        'crystal-small.glb',
+        'crystal-medium.glb',
+        'crystal-cluster.glb',
+        'ice-spike.glb',
+        'ice-ring.glb'
+    ],
+    createMaterial: createInstancedIceMaterial,
+    updateMaterial: updateInstancedIceMaterial,
+    setShaderAnimation: setInstancedIceArcAnimation,
+    setGestureGlow: setInstancedIceGestureGlow,
+    setBloomThreshold: setInstancedIceBloomThreshold,
+    setCutout: setInstancedIceCutout,
+    resetCutout: resetIceCutout,
+    setGrain: setIceGrain,
+    resetGrain: resetIceGrain,
+    resetShaderAnimation: resetIceAnimation,
     scaleMultiplier: 1.2
 });
 

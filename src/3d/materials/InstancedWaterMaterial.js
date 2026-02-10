@@ -44,7 +44,8 @@ import {
     setCutout,
     resetCutout,
     setGrain,
-    resetGrain
+    resetGrain,
+    resetAnimation
 } from './cores/InstancedAnimationCore.js';
 import {
     NOISE_GLSL,
@@ -583,7 +584,7 @@ export function setInstancedWaterSparkle(material, intensity) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain };
+export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
 
 export default {
     createInstancedWaterMaterial,

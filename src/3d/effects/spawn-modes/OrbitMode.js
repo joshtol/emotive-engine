@@ -36,14 +36,36 @@ export function parseOrbitConfig(config, resolveLandmark) {
         ({ height } = orbit);
     }
 
+    // Resolve endHeight - can be a landmark name or a number (defaults to height)
+    let endHeight = height;
+    if (orbit.endHeight !== undefined) {
+        if (typeof orbit.endHeight === 'string') {
+            endHeight = resolveLandmark(orbit.endHeight);
+        } else if (typeof orbit.endHeight === 'number') {
+            endHeight = orbit.endHeight;
+        }
+    }
+
     // Orientation: prefer 'orientation', fall back to legacy 'ringOrientation'
     const rawOrientation = orbit.orientation ?? orbit.ringOrientation;
+
+    const radius = orbit.radius ?? 1.5;
 
     return {
         // Orbit geometry
         height,
-        radius: orbit.radius ?? 1.5,
+        radius,
+        endHeight,
+        endRadius: orbit.endRadius ?? radius,
         plane: orbit.plane || 'horizontal',
+
+        // Dynamic orbital motion
+        speed: orbit.speed ?? 0,             // Revolutions during gesture (0 = static)
+        easing: orbit.easing || 'linear',    // Easing for orbital travel
+
+        // Scale interpolation over lifetime
+        startScale: orbit.startScale ?? config.scale ?? 1.0,
+        endScale: orbit.endScale ?? orbit.startScale ?? config.scale ?? 1.0,
 
         // Orientation (unified naming, normalized) - default to vertical for orbit
         orientation: normalizeOrientation(rawOrientation) || 'vertical',
@@ -133,20 +155,32 @@ export function expandOrbitFormation(parsedConfig) {
  * @param {Object} formationData - Per-element formation data
  * @param {number} gestureProgress - Current gesture progress (0-1)
  * @param {number} mascotRadius - Mascot radius for scaling
- * @returns {{ x: number, y: number, z: number, angle: number }}
+ * @param {Function} [easingFn] - Optional easing function for progress
+ * @returns {{ x: number, y: number, z: number, angle: number, scale: number }}
  */
-export function calculateOrbitPosition(orbitConfig, formationData, gestureProgress, mascotRadius = 1) {
-    const radius = orbitConfig.radius * mascotRadius;
-    const height = orbitConfig.height * mascotRadius;
+export function calculateOrbitPosition(orbitConfig, formationData, gestureProgress, mascotRadius = 1, easingFn = null) {
     const {angle} = formationData;
 
-    // For orbit, position is fixed (no travel based on progress)
-    // Progress could be used for orbital rotation if desired
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
+    // Apply easing to progress for radius/height interpolation
+    const t = easingFn ? easingFn(gestureProgress) : gestureProgress;
+
+    // Interpolate radius and height over gesture lifetime
+    const radius = (orbitConfig.radius + (orbitConfig.endRadius - orbitConfig.radius) * t) * mascotRadius;
+    const startH = orbitConfig.height * mascotRadius;
+    const endH = orbitConfig.endHeight * mascotRadius;
+    const height = startH + (endH - startH) * t;
+
+    // Rotate angle based on progress and speed (revolutions)
+    const rotatedAngle = angle + gestureProgress * orbitConfig.speed * Math.PI * 2;
+
+    const x = Math.cos(rotatedAngle) * radius;
+    const z = Math.sin(rotatedAngle) * radius;
     const y = height + (formationData.heightOffset || 0);
 
-    return { x, y, z, angle };
+    // Interpolate scale
+    const scale = orbitConfig.startScale + (orbitConfig.endScale - orbitConfig.startScale) * t;
+
+    return { x, y, z, angle: rotatedAngle, scale };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

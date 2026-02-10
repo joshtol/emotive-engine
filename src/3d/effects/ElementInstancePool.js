@@ -310,19 +310,20 @@ export class ElementInstancePool {
 
         // Update trail slots with slightly delayed transforms
         // Trails use progressively smaller scales and inherit rotation
-        // Store original scale for trail calculations (avoid clone allocation)
+        // When stationary (no velocity), trails scale to 0 — they'd overlap the
+        // main instance at different sizes creating visible concentric ring artifacts
         const origScaleX = this._scale.x;
         const origScaleY = this._scale.y;
         const origScaleZ = this._scale.z;
+        const hasMotion = velocity && velocity.lengthSq() > 0.0001;
 
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = element.trailSlots[i];
-            const trailMultiplier = 1 - (i + 1) * 0.15;  // Each trail 15% smaller
+            const trailMultiplier = hasMotion ? (1 - (i + 1) * 0.15) : 0;
 
             if (typeof scale === 'number') {
                 this._scale.setScalar(scale * trailMultiplier);
             } else {
-                // Scale each component without cloning
                 this._scale.set(
                     origScaleX * trailMultiplier,
                     origScaleY * trailMultiplier,

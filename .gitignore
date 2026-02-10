@@ -113,3 +113,5 @@ _pages/
 *.hdr
 !public/hdri/studio_1k.hdr
 nul
+DARK-FIX.md
+TRAIL-FIX.md

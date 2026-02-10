@@ -1,58 +1,58 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Waterflourish Gesture
+ *    ●●  ENGINE - Iceflourish Gesture
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Waterflourish gesture - spinning water flourish with wave trails
+ * @fileoverview Iceflourish gesture - spinning ice flourish with crystal trails
  * @author Emotive Engine Team
- * @module gestures/destruction/elemental/waterflourish
+ * @module gestures/destruction/elemental/iceflourish
  * @complexity ⭐⭐⭐ Advanced
  *
  * VISUAL DIAGRAM (front view):
  *
  *        ╲     ╱           ← Layer 2: Crossing accent rings (X sweep)
  *         ╲   ╱
- *      ────★────           ← Layer 1: Spinning splash rings (bigger)
+ *      ────★────           ← Layer 1: Spinning ice rings (bigger)
  *         ╱   ╲
  *        ╱     ╲           ← Layer 3: Diagonal arc rings (tilted)
  *
  * FEATURES:
- * - THREE SPAWN LAYERS for dramatic water flourish
- * - Layer 1: 5 camera-facing spinning splash rings with CELLULAR cutout
- * - Layer 2: 2 crossing splash-rings with STREAKS cutout (X sweep)
- * - Layer 3: 2 tilted splash-ring arcs at ±45° angles
+ * - THREE SPAWN LAYERS for dramatic ice flourish
+ * - Layer 1: 5 camera-facing spinning ice rings with VORONOI cutout
+ * - Layer 2: 2 crossing ice-rings with CRACKS cutout (X sweep)
+ * - Layer 3: 2 tilted ice-ring arcs at ±45° angles
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
- * - Theatrical water displays
- * - Martial arts water effects
- * - Trident flourish trails
- * - Aquatic celebration
+ * - Theatrical ice displays
+ * - Martial arts ice effects
+ * - Crystal flourish trails
+ * - Frozen celebration
  */
 
-import { buildWaterEffectGesture } from './waterEffectFactory.js';
+import { buildIceEffectGesture } from './iceEffectFactory.js';
 
 /**
- * Waterflourish gesture configuration
- * Spinning water flourish - arcs trace circular blade path
+ * Iceflourish gesture configuration
+ * Spinning ice flourish - arcs trace circular blade path
  */
-const WATERFLOURISH_CONFIG = {
-    name: 'waterflourish',
-    emoji: '🔱',
+const ICEFLOURISH_CONFIG = {
+    name: 'iceflourish',
+    emoji: '❄',
     type: 'blending',
-    description: 'Spinning water flourish with wave trails',
+    description: 'Spinning ice flourish with crystal trails',
     duration: 1200,             // Fast triplet flourish
     beats: 4,
     intensity: 1.3,
     category: 'ambient',
-    turbulence: 0.5,
+    frost: 0.6,
 
-    // 3D Element spawning - THREE LAYERS for dramatic water flourish
+    // 3D Element spawning - THREE LAYERS for dramatic ice flourish
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Spinning splash rings (made bigger)
+        // LAYER 1: Spinning ice rings (made bigger)
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -73,11 +73,11 @@ const WATERFLOURISH_CONFIG = {
                 spacing: 0,
                 arcOffset: 72,
                 phaseOffset: 0.05,
-                zOffset: 0                  // No z offset - use renderOrder only
+                zOffset: 0
             },
             count: 5,
-            scale: 0.9,
-            models: ['splash-ring'],
+            scale: 1.5,
+            models: ['ice-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.45,
@@ -98,28 +98,27 @@ const WATERFLOURISH_CONFIG = {
                     geometryStability: true
                 },
                 parameterAnimation: {
-                    turbulence: {
+                    frost: {
                         start: 0.35,
                         peak: 0.7,
                         end: 0.2,
                         curve: 'bell'
                     }
                 },
-                // Cutout with trail dissolve - cellular holes fade at ring bottoms
+                // VORONOI cutout for crystalline holes
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 0, scale: 1.0, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 3, scale: 0.6, weight: 0.5 },  // VORONOI - chunky edges
+                    primary: { pattern: 3, scale: 1.0, weight: 1.0 },    // VORONOI - crystalline
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.5 },  // CRACKS - fracture edges
                     blend: 'multiply',
                     strengthCurve: 'constant',
-                    // Trail dissolve: organic fade at bottom of camera-facing rings
                     trailDissolve: {
                         enabled: true,
-                        offset: -0.6,        // Floor 0.6 units below instance center
-                        softness: 1.5        // Wide gradient for visible dissolve
+                        offset: -0.6,
+                        softness: 1.5
                     }
                 },
-                // Grain: film grain for flourish spray texture
+                // Grain: film grain for icy spray texture
                 grain: {
                     type: 3,              // FILM
                     strength: 0.2,
@@ -163,9 +162,10 @@ const WATERFLOURISH_CONFIG = {
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.15,
                 blending: 'normal',
+                depthWrite: false,
                 renderOrder: -8,    // Behind mascot
                 modelOverrides: {
-                    'splash-ring': {
+                    'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.5,
@@ -180,7 +180,7 @@ const WATERFLOURISH_CONFIG = {
 
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Crossing accent rings (diagonal X sweep)
-        // Two splash-rings that sweep across in an X pattern with cutouts
+        // Two ice-rings that sweep across in an X pattern
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
@@ -193,8 +193,8 @@ const WATERFLOURISH_CONFIG = {
                 scaleEasing: 'easeOutCubic'
             },
             count: 1,
-            scale: 0.7,
-            models: ['splash-ring'],
+            scale: 1.2,
+            models: ['ice-ring'],
             animation: {
                 appearAt: 0.12,
                 disappearAt: 0.5,
@@ -213,18 +213,18 @@ const WATERFLOURISH_CONFIG = {
                     geometryStability: true
                 },
                 parameterAnimation: {
-                    turbulence: {
+                    frost: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
                         curve: 'bell'
                     }
                 },
-                // STREAKS cutout for motion blur effect
+                // CRACKS cutout for motion blur effect
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },    // STREAKS - motion blur
-                    secondary: { pattern: 0, scale: 0.7, weight: 0.4 },  // CELLULAR - organic breaks
+                    primary: { pattern: 8, scale: 1.0, weight: 1.0 },    // CRACKS - fracture motion
+                    secondary: { pattern: 3, scale: 0.7, weight: 0.4 },  // VORONOI - crystalline breaks
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
@@ -243,10 +243,11 @@ const WATERFLOURISH_CONFIG = {
                 rotate: [
                     { axis: 'z', rotations: 1.0, phase: -45 }
                 ],
-                blending: 'additive',
+                blending: 'normal',
+                depthWrite: false,
                 renderOrder: -6,    // Behind mascot
                 modelOverrides: {
-                    'splash-ring': {
+                    'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.6,
@@ -269,8 +270,8 @@ const WATERFLOURISH_CONFIG = {
                 scaleEasing: 'easeOutCubic'
             },
             count: 1,
-            scale: 0.7,
-            models: ['splash-ring'],
+            scale: 1.2,
+            models: ['ice-ring'],
             animation: {
                 appearAt: 0.12,
                 disappearAt: 0.5,
@@ -289,18 +290,18 @@ const WATERFLOURISH_CONFIG = {
                     geometryStability: true
                 },
                 parameterAnimation: {
-                    turbulence: {
+                    frost: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
                         curve: 'bell'
                     }
                 },
-                // STREAKS cutout for motion blur effect
+                // CRACKS cutout for motion blur effect
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },    // STREAKS - motion blur
-                    secondary: { pattern: 0, scale: 0.7, weight: 0.4 },  // CELLULAR - organic breaks
+                    primary: { pattern: 8, scale: 1.0, weight: 1.0 },    // CRACKS
+                    secondary: { pattern: 3, scale: 0.7, weight: 0.4 },  // VORONOI
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
@@ -319,10 +320,11 @@ const WATERFLOURISH_CONFIG = {
                 rotate: [
                     { axis: 'z', rotations: 1.0, phase: 45 }
                 ],
-                blending: 'additive',
+                blending: 'normal',
+                depthWrite: false,
                 renderOrder: -6,    // Behind mascot
                 modelOverrides: {
-                    'splash-ring': {
+                    'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.6,
@@ -336,22 +338,22 @@ const WATERFLOURISH_CONFIG = {
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Diagonal slash arcs (tilted splash-rings at ±45° angles)
-        // Two splash-rings creating an X - camera-facing with fixed Z tilt
+        // LAYER 3: Diagonal slash arcs (tilted ice-rings at ±45° angles)
+        // Two ice-rings creating an X - camera-facing with fixed Z tilt
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0, y: 0, z: 0 },          // No z offset - use renderOrder only
-                orientation: 'camera',                 // Face camera (tidally locked)
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'camera',
                 startScale: 0.5,
                 endScale: 1.8,
                 scaleEasing: 'easeOutExpo'
             },
             count: 1,
-            scale: 0.9,
-            models: ['splash-ring'],
+            scale: 1.5,
+            models: ['ice-ring'],
             animation: {
                 appearAt: 0.30,
                 disappearAt: 0.70,
@@ -370,18 +372,18 @@ const WATERFLOURISH_CONFIG = {
                     geometryStability: true
                 },
                 parameterAnimation: {
-                    turbulence: {
+                    frost: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
                         curve: 'bell'
                     }
                 },
-                // Two-layer cutout for slash arc texture
+                // VORONOI + CRACKS for slash arc texture
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 },  // STREAKS
+                    primary: { pattern: 3, scale: 0.8, weight: 1.0 },    // VORONOI
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.4 },  // CRACKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
@@ -390,19 +392,20 @@ const WATERFLOURISH_CONFIG = {
                 grain: {
                     type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
                 },
-                // Tilted 45° clockwise (Z rotation on top of camera-facing)
+                // Tilted 45° clockwise
                 rotate: [
-                    { axis: 'z', rotations: 0.001, phase: 45 }   // Near-static 45° tilt
+                    { axis: 'z', rotations: 0.001, phase: 45 }
                 ],
                 blending: 'normal',
+                depthWrite: false,
                 renderOrder: -10,   // Behind mascot
                 modelOverrides: {
-                    'splash-ring': {
+                    'ice-ring': {
                         shaderAnimation: {
                             type: 1,
-                            arcWidth: 0.35,           // Narrow slash arc
-                            arcSpeed: 1.5,            // Fast sweep
-                            arcCount: 1               // Single blade
+                            arcWidth: 0.35,
+                            arcSpeed: 1.5,
+                            arcCount: 1
                         },
                         orientationOverride: 'camera'
                     }
@@ -413,15 +416,15 @@ const WATERFLOURISH_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0, y: 0, z: 0 },          // No z offset - use renderOrder only
-                orientation: 'camera',                 // Face camera (tidally locked)
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'camera',
                 startScale: 0.5,
                 endScale: 1.8,
                 scaleEasing: 'easeOutExpo'
             },
             count: 1,
-            scale: 0.9,
-            models: ['splash-ring'],
+            scale: 1.5,
+            models: ['ice-ring'],
             animation: {
                 appearAt: 0.30,
                 disappearAt: 0.70,
@@ -440,18 +443,18 @@ const WATERFLOURISH_CONFIG = {
                     geometryStability: true
                 },
                 parameterAnimation: {
-                    turbulence: {
+                    frost: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
                         curve: 'bell'
                     }
                 },
-                // Two-layer cutout for slash arc texture
+                // VORONOI + CRACKS for slash arc texture
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 },  // STREAKS
+                    primary: { pattern: 3, scale: 0.8, weight: 1.0 },    // VORONOI
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.4 },  // CRACKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
@@ -460,14 +463,15 @@ const WATERFLOURISH_CONFIG = {
                 grain: {
                     type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
                 },
-                // Tilted 45° counter-clockwise (Z rotation on top of camera-facing)
+                // Tilted 45° counter-clockwise
                 rotate: [
-                    { axis: 'z', rotations: 0.001, phase: -45 }  // Near-static -45° tilt
+                    { axis: 'z', rotations: 0.001, phase: -45 }
                 ],
                 blending: 'normal',
+                depthWrite: false,
                 renderOrder: -10,   // Behind mascot
                 modelOverrides: {
-                    'splash-ring': {
+                    'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.35,
@@ -481,27 +485,28 @@ const WATERFLOURISH_CONFIG = {
         }
     ],
 
-    // Mesh effects - bright water display
-    wobbleFrequency: 2,
-    wobbleAmplitude: 0.01,
-    wobbleDecay: 0.15,
-    glowColor: [0.3, 0.6, 1.0],     // Cool blue
+    // Glow - bright ice display
+    glowColor: [0.5, 0.8, 1.0],
     glowIntensityMin: 1.0,
     glowIntensityMax: 2.0,
-    glowPulseRate: 6,
-    scaleWobble: 0.012,
+    glowFlickerRate: 6,
+    // Scale
+    scaleVibration: 0.012,
     scaleFrequency: 8,
-    scaleGrowth: 0.015
+    scaleGrowth: 0.015,
+    // Tremor
+    tremor: 0.003,
+    tremorFrequency: 4
 };
 
 /**
- * Waterflourish gesture - dramatic water flourish with X arch.
+ * Iceflourish gesture - dramatic ice flourish with X arch.
  *
  * Uses THREE SPAWN LAYERS:
- * - Layer 1: Spinning splash rings with CELLULAR cutout
- * - Layer 2: Crossing accent rings with STREAKS cutout (X sweep)
- * - Layer 3: Tilted splash-ring arcs at ±45° angles
+ * - Layer 1: Spinning ice rings with VORONOI cutout
+ * - Layer 2: Crossing accent rings with CRACKS cutout (X sweep)
+ * - Layer 3: Tilted ice-ring arcs at ±45° angles
  *
- * Creates theatrical trident-flourish water effect with crossing arcs.
+ * Creates theatrical crystal-flourish ice effect with crossing arcs.
  */
-export default buildWaterEffectGesture(WATERFLOURISH_CONFIG);
+export default buildIceEffectGesture(ICEFLOURISH_CONFIG);

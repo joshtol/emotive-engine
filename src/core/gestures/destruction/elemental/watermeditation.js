@@ -57,10 +57,10 @@ const WATERMEDITATION_CONFIG = {
             start: 'center',
             end: 'center',              // No travel - fixed in place
             easing: 'easeInOut',
-            startScale: 1.0,
-            endScale: 1.0,              // No scale change
-            startDiameter: 1.8,
-            endDiameter: 1.8,           // Constant diameter
+            startScale: 1.3,
+            endScale: 1.3,              // No scale change
+            startDiameter: 2.2,
+            endDiameter: 2.2,           // Constant diameter
             orientation: 'camera'       // Billboard: always face camera
         },
         formation: {
@@ -72,7 +72,7 @@ const WATERMEDITATION_CONFIG = {
             scales: [1.0, 0.7, 0.7]
         },
         count: 3,
-        scale: 1.5,
+        scale: 1.8,
         models: ['splash-ring'],
         animation: {
             appearAt: 0.0,
@@ -115,6 +115,14 @@ const WATERMEDITATION_CONFIG = {
                     offset: -0.5,        // Floor below ring center
                     softness: 1.8        // Wide soft gradient for ethereal look
                 }
+            },
+            // Grain: subtle film grain for serene water texture
+            grain: {
+                type: 3,              // FILM
+                strength: 0.15,       // Subtle for meditation calm
+                scale: 0.3,
+                speed: 0.8,           // Slow for meditative feel
+                blend: 'multiply'
             },
             // Strong breathing pulse - the key feature
             pulse: {
