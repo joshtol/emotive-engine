@@ -805,19 +805,249 @@ export function createElectricEffectGesture(variant) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// PRE-BUILT GESTURES
+// NEW FACTORY: buildElectricEffectGesture(config) — Matches fire/water/ice pattern
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-// Electrocution variants (being shocked)
-export const shock = createElectricEffectGesture('shock');
-export const overload = createElectricEffectGesture('overload');
-export const glitch = createElectricEffectGesture('glitch');
+/**
+ * Build an electric effect gesture from a full config object.
+ * This is the modern pattern matching fire/water/ice.
+ *
+ * @param {Object} config - Full gesture configuration
+ * @returns {Object} Gesture configuration
+ */
+export function buildElectricEffectGesture(config) {
+    return {
+        name: config.name,
+        emoji: config.emoji,
+        type: config.type,
+        description: config.description,
 
-// Powered variants (emanating energy)
-export const crackle = createElectricEffectGesture('crackle');
-export const charge = createElectricEffectGesture('charge');
-export const aura = createElectricEffectGesture('aura');
-export const staticElectric = createElectricEffectGesture('static');  // 'static' is reserved word
+        config: {
+            duration: config.duration,
+            beats: config.beats,
+            intensity: config.intensity,
+            ...config
+        },
+
+        rhythm: {
+            enabled: true,
+            syncMode: 'beat',
+            amplitudeSync: {
+                onBeat: 1.5,
+                offBeat: 1.0,
+                curve: config.category === 'powered' ? 'smooth' : 'sharp'
+            }
+        },
+
+        '3d': {
+            evaluate(progress, motion) {
+                const cfg = { ...config, ...motion };
+                const time = progress * cfg.duration / 1000;
+                const isPowered = cfg.category === 'powered';
+
+                // ═══════════════════════════════════════════════════════════════
+                // PHASE CALCULATION
+                // ═══════════════════════════════════════════════════════════════
+                let effectStrength = 1.0;
+
+                if (cfg.buildupPhase && progress < cfg.buildupPhase) {
+                    effectStrength = progress / cfg.buildupPhase;
+                    if (cfg.buildupGlowRamp) {
+                        effectStrength = Math.pow(effectStrength, 0.5);
+                    }
+                }
+
+                if (cfg.rampUp) {
+                    effectStrength = Math.pow(progress, 0.7);
+                }
+
+                if (progress > (1 - cfg.jitterDecay)) {
+                    const decayProgress = (progress - (1 - cfg.jitterDecay)) / cfg.jitterDecay;
+                    effectStrength *= (1 - decayProgress);
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // POSITION - Jitter (electrocution) or controlled (powered)
+                // ═══════════════════════════════════════════════════════════════
+                let posX = 0, posY = 0, posZ = 0;
+
+                if (cfg.jitterAmplitude > 0) {
+                    const jitterTime = time * cfg.jitterFrequency;
+
+                    let holdMultiplier = 1.0;
+                    if (cfg.holdFrames) {
+                        const holdCheck = hash(Math.floor(jitterTime * 3));
+                        if (holdCheck < cfg.holdProbability) {
+                            holdMultiplier = 0.1;
+                        }
+                    }
+
+                    posX = (
+                        noise1D(jitterTime) - 0.5 +
+                        (noise1D(jitterTime * 2.3 + 50) - 0.5) * 0.5 +
+                        (noise1D(jitterTime * 4.7 + 100) - 0.5) * 0.25
+                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
+
+                    posY = (
+                        noise1D(jitterTime + 33) - 0.5 +
+                        (noise1D(jitterTime * 2.1 + 83) - 0.5) * 0.5 +
+                        (noise1D(jitterTime * 5.3 + 133) - 0.5) * 0.25
+                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
+
+                    posZ = (
+                        noise1D(jitterTime + 66) - 0.5 +
+                        (noise1D(jitterTime * 1.9 + 116) - 0.5) * 0.5 +
+                        (noise1D(jitterTime * 3.7 + 166) - 0.5) * 0.25
+                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier * 0.5;
+                }
+
+                if (cfg.hover && cfg.hoverAmount) {
+                    posY += Math.sin(time * Math.PI * 0.5) * cfg.hoverAmount * effectStrength;
+                }
+                if (cfg.riseAmount) {
+                    posY += cfg.riseAmount * effectStrength;
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // ROTATION
+                // ═══════════════════════════════════════════════════════════════
+                let rotX = 0, rotY = 0, rotZ = 0;
+
+                if (!isPowered && cfg.jitterAmplitude > 0) {
+                    const jitterTime = time * cfg.jitterFrequency;
+                    const rotJitterAmt = cfg.jitterAmplitude * 2;
+                    rotX = (noise1D(jitterTime * 1.3 + 200) - 0.5) * rotJitterAmt * effectStrength;
+                    rotY = (noise1D(jitterTime * 1.7 + 250) - 0.5) * rotJitterAmt * effectStrength;
+                    rotZ = (noise1D(jitterTime * 2.1 + 300) - 0.5) * rotJitterAmt * effectStrength * 0.5;
+                } else if (cfg.rotationDrift) {
+                    rotY = time * cfg.rotationDrift * effectStrength;
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // SCALE
+                // ═══════════════════════════════════════════════════════════════
+                let scale = 1.0;
+                const scaleTime = time * cfg.scaleFrequency;
+
+                if (cfg.scalePulse) {
+                    const breathe = Math.sin(scaleTime * Math.PI * 2) * 0.5 + 0.5;
+                    scale = 1.0 + breathe * cfg.scaleVibration * effectStrength;
+                    if (cfg.scaleGrowth) {
+                        scale += cfg.scaleGrowth * effectStrength;
+                    }
+                } else {
+                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.5 +
+                                      Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
+                    scale = 1.0 + scaleNoise * cfg.scaleVibration * effectStrength;
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // GLOW
+                // ═══════════════════════════════════════════════════════════════
+                const flickerTime = time * cfg.glowFlickerRate;
+                let flickerValue;
+
+                if (isPowered) {
+                    flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.3 + 0.7;
+                    if (cfg.sparkBursts && hash(Math.floor(time * 10)) < cfg.sparkProbability) {
+                        flickerValue = 1.0;
+                    }
+                } else {
+                    const flicker1 = Math.sin(flickerTime * Math.PI * 2);
+                    const flicker2 = Math.sin(flickerTime * Math.PI * 5.3 + 1.7);
+                    const flicker3 = hash(Math.floor(flickerTime * 2)) > 0.7 ? 1 : 0;
+                    flickerValue = (flicker1 * 0.4 + flicker2 * 0.3 + flicker3 * 0.5 + 0.5);
+                }
+
+                const glowIntensity = cfg.glowIntensityMin +
+                    (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
+                const glowBoost = (flickerValue * 0.8 + 0.2) * effectStrength * cfg.intensity;
+
+                // ═══════════════════════════════════════════════════════════════
+                // RETURN — with new instanced spawner fields
+                // ═══════════════════════════════════════════════════════════════
+                return {
+                    position: [posX, posY, posZ],
+                    rotation: [rotX, rotY, rotZ],
+                    scale,
+                    glowIntensity,
+                    glowBoost,
+                    glowColorOverride: cfg.glowColor,
+                    electricOverlay: {
+                        enabled: effectStrength > 0.1,
+                        strength: effectStrength * cfg.intensity,
+                        charge: effectStrength * cfg.intensity,
+                        category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
+                        duration: cfg.duration,
+                        progress,
+                        time,
+                        // Pass animation config to ElementSpawner
+                        animation: config.spawnMode?.animation,
+                        models: config.spawnMode?.models,
+                        count: config.spawnMode?.count,
+                        scale: config.spawnMode?.scale,
+                        embedDepth: config.spawnMode?.embedDepth
+                    }
+                };
+            }
+        }
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// INDIVIDUAL GESTURE IMPORTS (modern pattern — each gesture in its own file)
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+// Character gestures (surface spawn — electrocution/powered reactions)
+import shockGesture from './electricshock.js';
+import overloadGesture from './electricoverload.js';
+import glitchGesture from './electricglitch.js';
+import crackleGesture from './electriccrackle.js';
+import chargeGesture from './electriccharge.js';
+import auraGesture from './electricaura.js';
+import staticGesture from './electricstatic.js';
+
+// Ring gestures (lightning-ring/plasma-ring — spectacle effects)
+import crownGesture from './electriccrown.js';
+import danceGesture from './electricdance.js';
+import helixGesture from './electrichelix.js';
+import pillarGesture from './electricpillar.js';
+import drillGesture from './electricdrill.js';
+import flourishGesture from './electricflourish.js';
+import vortexGesture from './electricvortex.js';
+import barrageGesture from './electricbarrage.js';
+import impactGesture from './electricimpact.js';
+import blastGesture from './electricblast.js';
+import surgeGesture from './electricsurge.js';
+import thunderbirdGesture from './electricthunderbird.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// EXPORTS — Both legacy and new pattern
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+// Character gesture exports
+export const shock = shockGesture;
+export const overload = overloadGesture;
+export const glitch = glitchGesture;
+export const crackle = crackleGesture;
+export const charge = chargeGesture;
+export const aura = auraGesture;
+export const staticElectric = staticGesture;
+
+// Ring gesture exports
+export const electricCrown = crownGesture;
+export const electricDance = danceGesture;
+export const electricHelix = helixGesture;
+export const electricPillar = pillarGesture;
+export const electricDrill = drillGesture;
+export const electricFlourish = flourishGesture;
+export const electricVortex = vortexGesture;
+export const electricBarrage = barrageGesture;
+export const electricImpact = impactGesture;
+export const electricBlast = blastGesture;
+export const electricSurge = surgeGesture;
+export const electricThunderbird = thunderbirdGesture;
 
 export {
     ELECTRIC_EFFECT_VARIANTS
@@ -833,7 +1063,21 @@ export default {
     charge,
     aura,
     static: staticElectric,
-    // Factory
+    // Ring gestures
+    electricCrown,
+    electricDance,
+    electricHelix,
+    electricPillar,
+    electricDrill,
+    electricFlourish,
+    electricVortex,
+    electricBarrage,
+    electricImpact,
+    electricBlast,
+    electricSurge,
+    electricThunderbird,
+    // Factories
     createElectricEffectGesture,
+    buildElectricEffectGesture,
     ELECTRIC_EFFECT_VARIANTS
 };

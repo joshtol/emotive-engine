@@ -821,10 +821,11 @@
                 return 'ice';
             }
 
-            // Electric keywords
+            // Electric keywords (use exact match for ambiguous terms to avoid false positives)
             if (name.includes('shock') || name.includes('zap') ||
-                name.includes('crackle') || name.includes('charge') || name.includes('volt') ||
-                name.includes('spark') || name.includes('lightning') || name.includes('static') ||
+                name === 'crackle' || name === 'chargeup' || name.includes('volt') ||
+                name.includes('lightning') || name.includes('thunder') ||
+                name === 'staticdischarge' ||
                 name.includes('overload') || name.includes('glitch')) {
                 return 'electric';
             }

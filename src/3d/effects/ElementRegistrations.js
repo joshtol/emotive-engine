@@ -59,6 +59,19 @@ import {
     resetAnimation as resetIceAnimation
 } from '../materials/InstancedIceMaterial.js';
 
+import {
+    createInstancedElectricMaterial,
+    updateInstancedElectricMaterial,
+    setInstancedElectricArcAnimation,
+    setInstancedElectricGestureGlow,
+    setInstancedElectricBloomThreshold,
+    setInstancedElectricCutout,
+    resetCutout as resetElectricCutout,
+    setGrain as setElectricGrain,
+    resetGrain as resetElectricGrain,
+    resetAnimation as resetElectricAnimation
+} from '../materials/InstancedElectricMaterial.js';
+
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELEMENT REGISTRATIONS (after all imports are resolved)
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -126,6 +139,31 @@ ElementTypeRegistry.register('ice', {
     resetGrain: resetIceGrain,
     resetShaderAnimation: resetIceAnimation,
     scaleMultiplier: 1.2
+});
+
+ElementTypeRegistry.register('electricity', {
+    basePath: 'models/Elements/Electricity/',
+    models: [
+        'arc-small.glb',
+        'arc-medium.glb',
+        'arc-cluster.glb',
+        'spark-node.glb',
+        'lightning-ring.glb',
+        'plasma-ring.glb',
+        'arc-ring-small.glb',
+        'spark-spike.glb'
+    ],
+    createMaterial: createInstancedElectricMaterial,
+    updateMaterial: updateInstancedElectricMaterial,
+    setShaderAnimation: setInstancedElectricArcAnimation,
+    setGestureGlow: setInstancedElectricGestureGlow,
+    setBloomThreshold: setInstancedElectricBloomThreshold,
+    setCutout: setInstancedElectricCutout,
+    resetCutout: resetElectricCutout,
+    setGrain: setElectricGrain,
+    resetGrain: resetElectricGrain,
+    resetShaderAnimation: resetElectricAnimation,
+    scaleMultiplier: 1.3
 });
 
 // Export for explicit import (side-effect import also works)

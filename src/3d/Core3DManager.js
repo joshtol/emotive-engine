@@ -2054,14 +2054,35 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._electricOverlayMesh.renderOrder = mesh.renderOrder + 1;
+                }
 
-                    // Spawn 3D electricity elements if gesture requests it via spawnMode
-                    const {spawnMode} = blended.electricOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('electricity')) {
+                // Spawn 3D electricity elements - runs every frame but signature prevents respawn
+                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.electricOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+                    const spawnSignature = `electricity:${modeSignature}:${duration}:${animation?.type || 'default'}`;
+
+                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
+                    this._electricSpawnedSignatures = this._electricSpawnedSignatures || new Set();
+
+                    // Only spawn if this signature hasn't been spawned yet in this session
+                    if (!this._electricSpawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit('electricity'); // Exit electricity elements (crossfade)
                         this.elementSpawner.spawn('electricity', {
                             intensity: blended.electricOverlay.strength || 0.8,
-                            mode: spawnMode
+                            mode: spawnMode,
+                            animation,
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: duration || 2000
                         });
+                        this._electricSpawnedSignatures.add(spawnSignature);
+                        this._electricSpawnSignature = spawnSignature;
                     }
                 }
 
@@ -2073,6 +2094,9 @@ export class Core3DManager {
                 if (this._electricMaterial?.uniforms?.uCharge) {
                     this._electricMaterial.uniforms.uCharge.value = Math.min(1.0, blended.electricOverlay.charge);
                 }
+
+                // Store gesture progress for element spawner animation
+                this._currentElectricProgress = blended.electricOverlay.progress ?? null;
             }
         } else if (this._electricOverlayMesh) {
             // Remove overlay mesh when electric effect ends
@@ -2087,10 +2111,17 @@ export class Core3DManager {
             }
             this._electricOverlayMesh = null;
 
-            // Despawn electricity elements
+            // Gracefully exit electricity elements (fade out)
             if (this.elementSpawner) {
-                this.elementSpawner.despawn('electricity');
+                this.elementSpawner.triggerExit('electricity');
             }
+
+            // Clear spawn tracking so next gesture session starts fresh
+            this._electricSpawnSignature = null;
+            this._electricSpawnedSignatures = null;
+
+            // Clear electric progress tracking
+            this._currentElectricProgress = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -3191,6 +3222,7 @@ export class Core3DManager {
             const gestureProgress = this._currentFireProgress
                 ?? this._currentWaterProgress
                 ?? this._currentIceProgress
+                ?? this._currentElectricProgress
                 ?? this._currentVoidProgress
                 ?? null;
             this.elementSpawner.update(deltaTime / 1000, gestureProgress);  // Convert ms to seconds
@@ -3325,6 +3357,7 @@ export class Core3DManager {
             }
             this.elementSpawner.setElementBloomThreshold('water', elementBloomThreshold);
             this.elementSpawner.setElementBloomThreshold('ice', elementBloomThreshold);
+            this.elementSpawner.setElementBloomThreshold('electricity', elementBloomThreshold);
         }
 
         // Update isolated glow layer for gesture effects (glow/flash)

@@ -270,7 +270,19 @@ import {
     crackle as electricCrackle,
     charge as electricCharge,
     aura as electricAura,
-    staticElectric as electricStatic
+    staticElectric as electricStatic,
+    electricCrown,
+    electricDance,
+    electricHelix,
+    electricPillar,
+    electricDrill,
+    electricFlourish,
+    electricVortex,
+    electricBarrage,
+    electricImpact,
+    electricBlast,
+    electricSurge,
+    electricThunderbird
 } from './destruction/elemental/electricEffectFactory.js';
 // destruction/elemental/ - Water effect gestures (self-contained gesture files)
 import waterSplash from './destruction/elemental/watersplash.js';
@@ -582,6 +594,19 @@ const crackle = electricCrackle;
 const chargeUp = electricCharge;
 const electricAuraEffect = electricAura;
 const staticDischarge = electricStatic;
+// Ring/spectacle variants (GPU-instanced lightning ring gestures)
+const electriccrown = electricCrown;
+const electricdance = electricDance;
+const electrichelix = electricHelix;
+const electricpillar = electricPillar;
+const electricdrill = electricDrill;
+const electricflourish = electricFlourish;
+const electricvortex = electricVortex;
+const electricbarrage = electricBarrage;
+const electricimpact = electricImpact;
+const electricblast = electricBlast;
+const electricsurge = electricSurge;
+const electricthunderbird = electricThunderbird;
 // Void effect gestures (no shatter, absorption/corruption visuals)
 // Absorption variants (becoming void)
 const drain = voidDrain;
@@ -996,6 +1021,19 @@ const TRANSFORM_GESTURES = [
     chargeUp,
     electricAuraEffect,
     staticDischarge,
+    // Electric - Ring/Spectacle
+    electriccrown,
+    electricdance,
+    electrichelix,
+    electricpillar,
+    electricdrill,
+    electricflourish,
+    electricvortex,
+    electricbarrage,
+    electricimpact,
+    electricblast,
+    electricsurge,
+    electricthunderbird,
     // Void - Absorption (becoming void)
     drain,
     siphon,
@@ -1266,6 +1304,10 @@ export const GESTURE_CATEGORIES = {
         'shock', 'overload', 'glitch',
         // destruction/elemental/ - Electric (powered)
         'crackle', 'chargeUp', 'electricAuraEffect', 'staticDischarge',
+        // destruction/elemental/ - Electric (ring/spectacle gestures)
+        'electriccrown', 'electricdance', 'electrichelix', 'electricpillar',
+        'electricdrill', 'electricflourish', 'electricvortex', 'electricbarrage',
+        'electricimpact', 'electricblast', 'electricsurge', 'electricthunderbird',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
         // destruction/elemental/ - Ice Effect (matching fire/water pattern)
