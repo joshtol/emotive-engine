@@ -302,6 +302,7 @@ export class ElementInstancedSpawner {
             builder.addGeometry(geometry, name);
         }
         const { geometry: mergedGeometry, modelMap } = builder.build();
+        builder.dispose(); // Clean up cloned geometries
         this.mergedGeometries.set(elementType, { geometry: mergedGeometry, modelMap });
 
         // Create instanced material

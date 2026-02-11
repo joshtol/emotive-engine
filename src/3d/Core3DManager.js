@@ -2519,25 +2519,27 @@ export class Core3DManager {
                     }
 
                     // Apply ice blue tint to mascot's own material
+                    // Lerp from SAVED ORIGINALS (not current value) to avoid cumulative drift
                     const iceBlue = this._iceTintColor || (this._iceTintColor = new THREE.Color(0.3, 0.5, 0.8));
+                    const orig = this._iceOriginalMaterial;
 
                     if (mascotMat.uniforms) {
                         // ShaderMaterial (glow, crystal, moon)
-                        if (mascotMat.uniforms.glowColor) {
-                            mascotMat.uniforms.glowColor.value.lerp(iceBlue, 0.3 * iceStrength);
+                        if (mascotMat.uniforms.glowColor && orig.glowColor) {
+                            mascotMat.uniforms.glowColor.value.copy(orig.glowColor).lerp(iceBlue, 0.3 * iceStrength);
                         }
-                        if (mascotMat.uniforms.coreColor) {
-                            mascotMat.uniforms.coreColor.value.lerp(iceBlue, 0.4 * iceStrength);
+                        if (mascotMat.uniforms.coreColor && orig.coreColor) {
+                            mascotMat.uniforms.coreColor.value.copy(orig.coreColor).lerp(iceBlue, 0.4 * iceStrength);
                         }
                     }
-                    if (mascotMat.emissive) {
+                    if (mascotMat.emissive && orig.emissive) {
                         // MeshPhysicalMaterial (glass/crystal)
-                        mascotMat.emissive.lerp(iceBlue, 0.3 * iceStrength);
-                        mascotMat.emissiveIntensity = Math.max(mascotMat.emissiveIntensity, 0.3 * iceStrength);
+                        mascotMat.emissive.copy(orig.emissive).lerp(iceBlue, 0.3 * iceStrength);
+                        mascotMat.emissiveIntensity = Math.max(orig.emissiveIntensity, 0.3 * iceStrength);
                     }
-                    if (mascotMat.color && !mascotMat.uniforms) {
+                    if (mascotMat.color && !mascotMat.uniforms && orig.color) {
                         // Standard materials - tint the base color
-                        mascotMat.color.lerp(iceBlue, 0.2 * iceStrength);
+                        mascotMat.color.copy(orig.color).lerp(iceBlue, 0.2 * iceStrength);
                     }
                 }
 

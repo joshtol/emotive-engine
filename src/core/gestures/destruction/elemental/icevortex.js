@@ -112,6 +112,27 @@ const ICE_VORTEX_CONFIG = {
                 frequency: 5,
                 pattern: 'sine'
             },
+            cutout: {
+                strength: 0.5,
+                primary: { pattern: 3, scale: 1.2, weight: 1.0 },     // VORONOI - crystalline cells
+                secondary: { pattern: 8, scale: 0.8, weight: 0.5 },   // CRACKS - fracture lines
+                blend: 'add',
+                travel: 'angular',
+                travelSpeed: 2.0,
+                strengthCurve: 'bell',
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.4,
+                    softness: 1.2
+                }
+            },
+            grain: {
+                type: 3,
+                strength: 0.2,
+                scale: 0.3,
+                speed: 2.5,
+                blend: 'multiply'
+            },
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'normal',

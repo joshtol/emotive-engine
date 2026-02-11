@@ -172,20 +172,18 @@ export function createIceMaterial(options = {}) {
                 );
             }
 
-            // Voronoi for crystalline frost pattern
-            float voronoi(vec3 p) {
-                vec3 i = floor(p);
-                vec3 f = fract(p);
+            // 2D Voronoi for crystalline frost pattern (9 samples vs 27 for 3D)
+            float voronoi(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
                 float minDist = 1.0;
 
                 for (int x = -1; x <= 1; x++) {
                     for (int y = -1; y <= 1; y++) {
-                        for (int z = -1; z <= 1; z++) {
-                            vec3 neighbor = vec3(float(x), float(y), float(z));
-                            vec3 point = neighbor + hash(i + neighbor) * 0.8;
-                            float dist = length(f - point);
-                            minDist = min(minDist, dist);
-                        }
+                        vec2 neighbor = vec2(float(x), float(y));
+                        vec2 point = neighbor + hash(vec3(i + neighbor, 0.0)) * 0.8;
+                        float dist = length(f - point);
+                        minDist = min(minDist, dist);
                     }
                 }
                 return minDist;
@@ -201,7 +199,7 @@ export function createIceMaterial(options = {}) {
                 // Frost pattern (UV-space for geometry independence)
                 float frostMask = 0.0;
                 if (uFrostAmount > 0.01) {
-                    float frost = voronoi(vec3(vUv * 8.0, 0.0));
+                    float frost = voronoi(vUv * 8.0);
                     frost = smoothstep(0.1, 0.3, frost);
                     frostMask = (1.0 - frost) * uFrostAmount;
                 }
@@ -209,7 +207,7 @@ export function createIceMaterial(options = {}) {
                 // Crack pattern (UV-space for geometry independence)
                 float crackIntensity = 0.0;
                 if (uInternalCracks > 0.01) {
-                    float cracks = voronoi(vec3(vUv * 5.0, 0.5));
+                    float cracks = voronoi(vUv * 5.0 + 0.5);
                     cracks = smoothstep(0.02, 0.08, cracks);
                     crackIntensity = (1.0 - cracks) * uInternalCracks;
                 }

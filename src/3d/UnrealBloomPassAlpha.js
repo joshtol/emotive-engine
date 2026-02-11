@@ -57,9 +57,11 @@ export class UnrealBloomPassAlpha extends Pass {
         this.renderTargetsVertical = [];
         this.nMips = 5;
 
-        // 75% resolution for sharp bloom with good performance
-        let resx = Math.round(this.resolution.x * 1.0);
-        let resy = Math.round(this.resolution.y * 1.0);
+        // All bloom targets at 75% resolution — bloom is inherently blurry, saves ~44%
+        // fill rate. Bicubic (B-spline) upsampling in the copy pass smoothly upscales
+        // to canvas, eliminating the pixel grid visible with bilinear-only upsampling.
+        let resx = Math.round(this.resolution.x * 0.75);
+        let resy = Math.round(this.resolution.y * 0.75);
 
         this.renderTargetBright = new WebGLRenderTarget(resx, resy, pars);
         this.renderTargetBright.texture.name = 'UnrealBloomPassAlpha.bright';
@@ -86,7 +88,7 @@ export class UnrealBloomPassAlpha extends Pass {
         this.highPassUniforms = {
             tDiffuse: { value: null },
             luminosityThreshold: { value: threshold },
-            smoothWidth: { value: 0.01 }
+            smoothWidth: { value: 0.1 }
         };
 
         this.materialHighPassFilter = new ShaderMaterial({
@@ -117,9 +119,9 @@ export class UnrealBloomPassAlpha extends Pass {
         // Gaussian blur materials with alpha preservation
         this.separableBlurMaterials = [];
         const kernelSizeArray = [3, 5, 7, 9, 11];
-        // 75% resolution for sharp bloom with good performance
-        resx = Math.round(this.resolution.x * 1.0);
-        resy = Math.round(this.resolution.y * 1.0);
+        // 75% resolution — matches render target sizes above
+        resx = Math.round(this.resolution.x * 0.75);
+        resy = Math.round(this.resolution.y * 0.75);
 
         for (let i = 0; i < this.nMips; i++) {
             this.separableBlurMaterials.push(this.getSeperableBlurMaterial(kernelSizeArray[i]));
@@ -144,11 +146,13 @@ export class UnrealBloomPassAlpha extends Pass {
         this.bloomTintColors = [new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1)];
         this.compositeMaterial.uniforms['bloomTintColors'].value = this.bloomTintColors;
 
-        // Copy material with CustomBlending: RGB additive, Alpha preserve destination
-        // With premultipliedAlpha: true, this avoids double-darkening on CSS composite
+        // Copy material with bicubic (B-spline) upsampling for smooth bloom edges.
+        // CustomBlending: RGB additive, Alpha preserve destination.
+        // With premultipliedAlpha: true, this avoids double-darkening on CSS composite.
         this.materialCopy = new ShaderMaterial({
             uniforms: {
-                'tDiffuse': { value: null }
+                'tDiffuse': { value: null },
+                'texelSize': { value: new Vector2(1.0 / 256, 1.0 / 256) }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -158,9 +162,49 @@ export class UnrealBloomPassAlpha extends Pass {
                 }`,
             fragmentShader: `
                 uniform sampler2D tDiffuse;
+                uniform vec2 texelSize;
                 varying vec2 vUv;
                 void main() {
-                    gl_FragColor = texture2D(tDiffuse, vUv);
+                    // B-spline bicubic upsampling — 4 bilinear taps, all-positive weights.
+                    // Smoothly upscales 0.75-resolution bloom to canvas without pixel grid
+                    // artifacts or ringing. Slightly smoother than Catmull-Rom (no negative
+                    // lobes) which is ideal for bloom halos.
+                    vec2 coord = vUv / texelSize - 0.5;
+                    vec2 f = fract(coord);
+                    coord = floor(coord);
+
+                    vec2 f2 = f * f;
+                    vec2 f3 = f2 * f;
+                    vec2 omf = 1.0 - f;
+
+                    // B-spline weights (unnormalized — divided out via s0/s1 pairs)
+                    vec2 w0 = omf * omf * omf;
+                    vec2 w1 = 3.0 * f3 - 6.0 * f2 + 4.0;
+                    vec2 w2 = -3.0 * f3 + 3.0 * f2 + 3.0 * f + 1.0;
+                    vec2 w3 = f3;
+
+                    // Pair sums normalized to [0,1] range (weights sum to 6 per axis)
+                    vec2 s0 = (w0 + w1) / 6.0;
+                    vec2 s1 = (w2 + w3) / 6.0;
+
+                    // Bilinear tap offsets within each pair
+                    vec2 f0 = w1 / (w0 + w1);
+                    vec2 f1 = w3 / max(w2 + w3, 1e-4);
+
+                    // 4 sample positions
+                    vec2 t0 = (coord - 0.5 + f0) * texelSize;
+                    vec2 t1 = (coord + 1.5 + f1) * texelSize;
+
+                    vec4 color =
+                        (texture2D(tDiffuse, vec2(t0.x, t0.y)) * s0.x +
+                         texture2D(tDiffuse, vec2(t1.x, t0.y)) * s1.x) * s0.y +
+                        (texture2D(tDiffuse, vec2(t0.x, t1.y)) * s0.x +
+                         texture2D(tDiffuse, vec2(t1.x, t1.y)) * s1.x) * s1.y;
+
+                    // Interleaved Gradient Noise dithering (Jimenez 2014)
+                    // Breaks 8-bit display banding into imperceptible noise
+                    float ign = fract(52.9829189 * fract(0.06711056 * gl_FragCoord.x + 0.00583715 * gl_FragCoord.y));
+                    gl_FragColor = color + (ign - 0.5) / 255.0;
                 }`,
             blending: CustomBlending,
             blendSrc: OneFactor,       // RGB: src * 1
@@ -258,9 +302,9 @@ export class UnrealBloomPassAlpha extends Pass {
         // Update resolution property for accurate diagnostics
         this.resolution.set(width, height);
 
-        // 75% resolution for sharp bloom with good performance
-        let resx = Math.round(width * 1.0);
-        let resy = Math.round(height * 1.0);
+        // All bloom targets at 75% resolution (bicubic copy pass handles smooth upscaling)
+        let resx = Math.round(width * 0.75);
+        let resy = Math.round(height * 0.75);
 
         this.renderTargetBright.setSize(resx, resy);
 
@@ -327,7 +371,9 @@ export class UnrealBloomPassAlpha extends Pass {
             inputRenderTarget = this.renderTargetsVertical[i];
         }
 
-        // Composite all the mips
+        // Composite all blur mips into renderTargetsHorizontal[0] (reusable since blur
+        // already consumed its data). All at 0.75 resolution — the bicubic copy pass
+        // smoothly upscales to canvas resolution.
         this.fsQuad.material = this.compositeMaterial;
         this.compositeMaterial.uniforms['bloomStrength'].value = this.strength;
         this.compositeMaterial.uniforms['bloomRadius'].value = this.radius;
@@ -337,9 +383,11 @@ export class UnrealBloomPassAlpha extends Pass {
         renderer.clear();
         this.fsQuad.render(renderer);
 
-        // Blend bloom additively (like working implementation)
+        // Bicubic (B-spline) upsample bloom to canvas — eliminates pixel grid artifacts
+        const compositeRT = this.renderTargetsHorizontal[0];
         this.fsQuad.material = this.materialCopy;
-        this.materialCopy.uniforms['tDiffuse'].value = this.renderTargetsHorizontal[0].texture;
+        this.materialCopy.uniforms['tDiffuse'].value = compositeRT.texture;
+        this.materialCopy.uniforms['texelSize'].value.set(1.0 / compositeRT.width, 1.0 / compositeRT.height);
 
         if (maskActive) renderer.state.buffers.stencil.setTest(true);
 
