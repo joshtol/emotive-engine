@@ -377,7 +377,6 @@ export const FIRE_FRAGMENT_CORE = /* glsl */`
  */
 export const FIRE_FLOOR_AND_DISCARD_GLSL = /* glsl */`
     // Temperature-dependent floor color: orange (cold) → bright yellow-white (hot)
-    // BOOSTED: Higher base colors and 0.95 multiplier to eliminate dark interiors
     vec3 floorColor = mix(vec3(0.8, 0.4, 0.1), vec3(1.0, 0.7, 0.3), uTemperature);
     color = max(color, floorColor * uIntensity * 0.95);
 
@@ -422,12 +421,12 @@ export function lerp3(low, mid, high, t) {
  */
 export function deriveFireParameters(temperature, overrides = {}) {
     return {
-        intensity: overrides.intensity ?? lerp3(3.0, 5.0, 7.0, temperature),
+        intensity: overrides.intensity ?? lerp3(1.5, 2.5, 4.0, temperature),
         flickerSpeed: overrides.flickerSpeed ?? lerp3(0.001, 0.002, 0.003, temperature),
         flickerAmount: overrides.flickerAmount ?? lerp3(0.15, 0.12, 0.08, temperature),
         // NEW: Temperature affects ember density and brightness
         emberDensity: overrides.emberDensity ?? lerp3(0.1, 0.3, 0.5, temperature),
-        emberBrightness: overrides.emberBrightness ?? lerp3(0.8, 1.2, 2.0, temperature),
+        emberBrightness: overrides.emberBrightness ?? lerp3(0.5, 0.8, 1.2, temperature),
         // NEW: Hotter fires have harder edges (more defined)
         edgeSoftness: overrides.edgeSoftness ?? lerp3(0.6, 0.5, 0.3, temperature),
     };
@@ -439,7 +438,7 @@ export function deriveFireParameters(temperature, overrides = {}) {
  */
 export const FIRE_DEFAULTS = {
     temperature: 0.5,
-    opacity: 0.85,
+    opacity: 0.45,
     flameHeight: 0.08,
     turbulence: 0.03,
     displacementStrength: 0.04,

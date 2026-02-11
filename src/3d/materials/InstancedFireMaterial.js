@@ -367,9 +367,12 @@ void main() {
     float localIntensity = flame * verticalFade * flicker + tipBrightness + edgeGlow * 0.3;
     localIntensity = clamp(localIntensity, 0.0, 1.0);
 
-    // Fire color with ethereal edge tinting
-    vec3 color = fireColor(localIntensity, uTemperature, edgeFactor);
-    color *= uIntensity * (0.7 + localIntensity * 0.3);
+    // DECOUPLED: Color ramp always in warm-to-hot range (0.5–1.0).
+    // Noise shifts hue (orange→yellow-white) but color is NEVER dark/brown.
+    // Visibility is controlled by alpha alone, not color darkness.
+    float colorIntensity = 0.5 + localIntensity * 0.5;
+    vec3 color = fireColor(colorIntensity, uTemperature, edgeFactor);
+    color *= uIntensity;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // EMBER/SPARK GENERATION (scaled by uGlowScale)
@@ -406,28 +409,19 @@ void main() {
     // to both color AND alpha would cause squared attenuation (vInstanceAlpha²).
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ALPHA CALCULATION (With soft edge falloff)
+    // ALPHA CALCULATION — noise is the sole visibility driver
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    float alpha = localIntensity * uOpacity;
+    // Wide smoothstep range: only the hottest spots reach full alpha.
+    // Most of the surface is partially transparent, so additive stacking
+    // builds up gradually (orange → yellow → white-hot) instead of instant white.
+    float alpha = smoothstep(0.1, 0.85, localIntensity) * uOpacity;
 
-    // Surface fade
-    float surfaceFade = smoothstep(0.0, uEdgeFade, vDisplacement);
-    alpha *= mix(1.0, surfaceFade, 0.5);
+    // Vertical fade — tips become slightly more transparent
+    alpha *= mix(1.0, 1.0 - vVerticalGradient * 0.4, 0.3);
 
-    // Vertical fade
-    alpha *= mix(1.0, 1.0 - vVerticalGradient * 0.5, 0.3);
-
-    // Fresnel edge brightness
-    alpha += softFresnel * 0.2 * flame;
-
-    // Distance-based soft falloff (controlled by uEdgeSoftness)
-    float distanceFromCore = length(vPosition.xz) * 2.0;
-    float distanceGradient = 1.0 - smoothstep(0.0, 1.0, distanceFromCore);
-    alpha *= mix(1.0, distanceGradient * 0.4 + 0.6, uEdgeSoftness);
-
-    // Soft fresnel alpha
-    alpha *= mix(1.0, softFresnel * 0.3 + 0.7, uEdgeSoftness * 0.5);
+    // Fresnel adds brightness at edges
+    alpha += softFresnel * 0.15 * flame;
 
     alpha = clamp(alpha, 0.0, 1.0);
 
@@ -439,8 +433,9 @@ void main() {
         alpha *= vArcVisibility;
     }
 
-    // Shared floor color and discard logic from FireShaderCore
-    ${FIRE_FLOOR_AND_DISCARD_GLSL}
+    // No floor color needed — color is always warm (colorIntensity >= 0.5).
+    // Low-noise areas are invisible via alpha, not dark via color.
+    if (alpha < 0.08) discard;
 
     // Shared cutout system from InstancedAnimationCore
     ${CUTOUT_GLSL}
