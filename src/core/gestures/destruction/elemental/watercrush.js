@@ -59,7 +59,7 @@ const WATERCRUSH_CONFIG = {
             axisTravel: {
                 axis: 'y',
                 start: 'below',
-                end: 'above',
+                end: 'center',
                 easing: 'linear',
                 startScale: 2.2,                 // Start huge
                 endScale: 0.3,                   // Crush to nothing

@@ -477,6 +477,7 @@ uniform float uFlickerSpeed;
 uniform float uFlickerAmount;
 uniform float uSparkDensity;
 uniform float uBloomThreshold;
+uniform float uFlashIntensity;
 
 // Animation system uniforms (glow, cutout, travel, etc.) from shared core
 ${ANIMATION_UNIFORMS_FRAGMENT}
@@ -608,6 +609,17 @@ void main() {
 
     ${GRAIN_GLSL}
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // LIGHTNING FLASH — opt-in per-gesture dramatic strike effect
+    // When uFlashIntensity > 0: boost brightness, shift toward white, force alpha high
+    // ═══════════════════════════════════════════════════════════════════════════════
+    if (uFlashIntensity > 0.01) {
+        float flashBoost = 1.0 + uFlashIntensity * 3.0;
+        color *= flashBoost;
+        color = mix(color, vec3(flashBoost), uFlashIntensity * 0.4);
+        alpha = min(alpha * flashBoost, 0.95);
+    }
+
     gl_FragColor = vec4(color, alpha);
 }
 `;
@@ -662,7 +674,8 @@ export function createInstancedElectricMaterial(options = {}) {
             uFlickerSpeed: { value: derived.flickerSpeed },
             uFlickerAmount: { value: derived.flickerAmount },
             uSparkDensity: { value: derived.sparkDensity },
-            uBloomThreshold: { value: 0.85 }
+            uBloomThreshold: { value: 0.85 },
+            uFlashIntensity: { value: 0 }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
@@ -693,6 +706,22 @@ export function updateInstancedElectricMaterial(material, time, gestureProgress 
     }
     // Use shared animation system for gesture progress and glow ramping
     updateAnimationProgress(material, gestureProgress);
+
+    // Flash computation — opt-in per-gesture lightning strike effect
+    const flashConfig = material?.userData?.flashConfig;
+    if (flashConfig && material.uniforms?.uFlashIntensity) {
+        let maxFlash = 0;
+        const {events} = flashConfig;
+        const decay = flashConfig.decay || 0.03;
+        for (let i = 0; i < events.length; i++) {
+            if (gestureProgress >= events[i].at) {
+                const elapsed = gestureProgress - events[i].at;
+                const flash = events[i].intensity * Math.exp(-elapsed / decay);
+                if (flash > maxFlash) maxFlash = flash;
+            }
+        }
+        material.uniforms.uFlashIntensity.value = maxFlash;
+    }
 }
 
 /**
@@ -751,6 +780,38 @@ export function setInstancedElectricCutout(material, config) {
     setCutout(material, config);
 }
 
+/**
+ * Configure lightning flash effect for electric elements.
+ * Flash events trigger at specific gesture progress points with exponential decay.
+ *
+ * @param {THREE.ShaderMaterial} material - Instanced electric material
+ * @param {Object} config - Flash configuration
+ * @param {Array<{at: number, intensity: number}>} config.events - Flash events
+ *   - at: gesture progress (0-1) when flash triggers
+ *   - intensity: flash brightness multiplier (1-5 typical)
+ * @param {number} [config.decay=0.03] - Exponential decay in progress-space
+ *   (0.03 = decays over ~3% of gesture, e.g. 60ms for a 2s gesture)
+ */
+export function setFlash(material, config) {
+    if (!material) return;
+    material.userData.flashConfig = config;
+    if (material.uniforms?.uFlashIntensity) {
+        material.uniforms.uFlashIntensity.value = 0;
+    }
+}
+
+/**
+ * Reset flash effect — clears stored config and sets intensity to 0.
+ * @param {THREE.ShaderMaterial} material - Instanced electric material
+ */
+export function resetFlash(material) {
+    if (!material) return;
+    material.userData.flashConfig = null;
+    if (material.uniforms?.uFlashIntensity) {
+        material.uniforms.uFlashIntensity.value = 0;
+    }
+}
+
 // Re-export animation types and shared functions for convenience
 export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
 
@@ -762,6 +823,8 @@ export default {
     setInstancedElectricGestureGlow,
     setInstancedElectricCutout,
     setInstancedElectricArcAnimation,
+    setFlash,
+    resetFlash,
     setShaderAnimation,
     setGestureGlow,
     setGlowScale,

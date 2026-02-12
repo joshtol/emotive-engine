@@ -233,6 +233,8 @@ uniform int uGrainBlend;             // 0=multiply, 1=add, 2=overlay, 3=screen
 uniform int uCutoutGeoMaskType;      // 0=none, 1=distance (length(pos) for tips)
 uniform float uCutoutGeoMaskCore;    // Radius where geometry is fully solid (no cutout)
 uniform float uCutoutGeoMaskTip;     // Radius where cutout is fully applied
+// Edge mask - restricts cutout to visual silhouette edges (screen-space anisotropy, any geometry)
+uniform float uCutoutEdgeMask;       // 0=disabled, 0.3=narrow silhouette, 0.6=wide band
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -845,6 +847,37 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
+    // EDGE MASK: Restrict cutout to visual silhouette edges
+    // Uses screen-space derivative anisotropy — at silhouette edges, one derivative
+    // of vWorldPosition is much longer than the other (surface grazes the view ray).
+    // Unlike NdotV, this works on ANY geometry: torus, sphere, crystal, concave, etc.
+    // Composable with any travel mode — pattern+travel determine WHAT to cut,
+    // edge mask determines WHERE (only at the visual silhouette boundary).
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    if (uCutoutEdgeMask > 0.0) {
+        // Derivative ratio: how foreshortened is this fragment?
+        // ratio ≈ 1.0 face-on, high at silhouette edges (surface grazes view ray)
+        float lenX = length(dFdx(vWorldPosition));
+        float lenY = length(dFdy(vWorldPosition));
+        float edgeRatio = max(lenX, lenY) / max(min(lenX, lenY), 0.00001);
+
+        // Edge band: edgeMask controls tightness (0=wide band, 1=narrow edge only)
+        float lowThresh = mix(1.1, 2.5, uCutoutEdgeMask);
+        float highThresh = lowThresh + 0.8;
+        float edgeFactor = smoothstep(lowThresh, highThresh, edgeRatio);
+
+        // Two-step edge mask:
+        // 1) Suppress center: push cutout toward 1.0 (solid) away from edges
+        float maskedCutout = mix(1.0, finalCutout, edgeFactor);
+        // 2) Widen cracks at edges: pow squeezes near-crack values past the
+        //    0.5 discard threshold. pow(0.7, 3) = 0.34 → discarded.
+        //    Solid areas (1.0) stay at 1.0 regardless of power.
+        float widenPower = mix(1.0, 3.0, edgeFactor);
+        finalCutout = pow(maskedCutout, widenPower);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
     // TRAIL DISSOLVE: Fade alpha at bottom of each instance
     // Uses ALPHA (not discard) so the existing cutout pattern edges remain organic
     // No hard horizontal line - just a smooth fade that works WITH the pattern
@@ -1031,6 +1064,8 @@ export const ANIMATION_DEFAULTS = {
     cutoutGeoMaskType: 0,        // 0=none, 1=distance (length(pos) for tips)
     cutoutGeoMaskCore: 0.3,      // Default core radius (solid region)
     cutoutGeoMaskTip: 0.4,       // Default tip radius (full effect region)
+    // Edge mask - restricts cutout to silhouette edges
+    cutoutEdgeMask: 0.0,         // 0=disabled, >0=NdotV threshold (0.3=narrow, 0.6=wide)
 };
 
 /**
@@ -1091,6 +1126,8 @@ export function createAnimationUniforms() {
         uCutoutGeoMaskType: { value: ANIMATION_DEFAULTS.cutoutGeoMaskType },
         uCutoutGeoMaskCore: { value: ANIMATION_DEFAULTS.cutoutGeoMaskCore },
         uCutoutGeoMaskTip: { value: ANIMATION_DEFAULTS.cutoutGeoMaskTip },
+        // Edge mask
+        uCutoutEdgeMask: { value: ANIMATION_DEFAULTS.cutoutEdgeMask },
     };
 }
 
@@ -1111,7 +1148,8 @@ export function createAnimationUniforms() {
  *   travel: 'angular',       // 'none'|'angular'|'radial'|'spiral'|'oscillate'|'wave'
  *   travelSpeed: 1.0,        // Rotations per gesture (default 1.0)
  *   travelDir: 'forward',    // 'forward'|'reverse'|'pingpong'
- *   strengthCurve: 'constant' // 'constant'|'fadeIn'|'fadeOut'|'bell'|'pulse'
+ *   strengthCurve: 'constant', // 'constant'|'fadeIn'|'fadeOut'|'bell'|'pulse'
+ *   edgeMask: 0.3,           // NdotV threshold: 0=off, 0.3=narrow silhouette, 0.6=wide (composable with travel)
  * }
  *
  * Legacy single-pattern format (still supported):
@@ -1192,6 +1230,8 @@ export function setCutout(material, config) {
         trailDissolve,
         // Geometric mask - restricts cutout to specific regions of geometry
         geometricMask,
+        // Edge mask - restricts cutout to silhouette edges (composable with any travel)
+        edgeMask = 0,
         // Legacy single-pattern support
         pattern,
         scale
@@ -1264,6 +1304,12 @@ export function setCutout(material, config) {
         material.uniforms.uCutoutGeoMaskType.value = 0;  // None
     }
 
+    // Edge mask - restricts cutout to silhouette edges (NdotV-based)
+    // edgeMask: 0.3 = narrow silhouette band, 0.6 = wide band
+    if (material.uniforms.uCutoutEdgeMask) {
+        material.uniforms.uCutoutEdgeMask.value = Math.max(0, Math.min(1, edgeMask));
+    }
+
     // Handle two-layer format
     if (primary !== undefined) {
         material.uniforms.uCutoutPattern1.value = primary.pattern ?? CUTOUT_PATTERNS.CELLULAR;
@@ -1331,6 +1377,10 @@ export function resetCutout(material) {
     material.uniforms.uCutoutGeoMaskType.value = ANIMATION_DEFAULTS.cutoutGeoMaskType;
     material.uniforms.uCutoutGeoMaskCore.value = ANIMATION_DEFAULTS.cutoutGeoMaskCore;
     material.uniforms.uCutoutGeoMaskTip.value = ANIMATION_DEFAULTS.cutoutGeoMaskTip;
+    // Edge mask
+    if (material.uniforms.uCutoutEdgeMask) {
+        material.uniforms.uCutoutEdgeMask.value = ANIMATION_DEFAULTS.cutoutEdgeMask;
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

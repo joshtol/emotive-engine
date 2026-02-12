@@ -58,6 +58,7 @@ const ELECTRICIMPACT_CONFIG = {
             enter: { type: 'fade', duration: 0.06, easing: 'easeOut' },
             exit: { type: 'burst-fade', duration: 0.05, easing: 'easeOut', burstScale: 0.2 },
             procedural: { scaleSmoothing: 0.04, geometryStability: true },
+            grain: { type: 3, strength: 0.15, scale: 0.3, speed: 2.5, blend: 'multiply' },
             pulse: { amplitude: 0.12, frequency: 8, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 3.0, frequency: 9, pattern: 'sine' },
             rotate: [

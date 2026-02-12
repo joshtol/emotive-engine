@@ -63,10 +63,10 @@ import {
 const ICE_DEFAULTS = {
     melt: 0.0,
     intensity: 1.0,
-    opacity: 0.55,
+    opacity: 0.70,
     frostAmount: 1.0,
     internalCracks: 0.8,
-    subsurfaceScatter: 0.3,
+    subsurfaceScatter: 0.15,
     glowScale: 0.1,
     fadeInDuration: 0.2,
     fadeOutDuration: 0.4
@@ -143,11 +143,55 @@ const ICE_COLOR_GLSL = /* glsl */`
 // thickness: how much ice light passes through (0=surface, 1=deep)
 // melt: softens the absorption (melting ice is more transparent)
 vec3 iceAbsorption(float thickness, float melt) {
-    // Absorption coefficients: strong contrast — thin=bright white, thick=deep blue
-    float absR = mix(3.0, 0.8, melt);   // red absorbed aggressively — thick areas go deep blue
-    float absG = mix(1.1, 0.3, melt);   // green moderate-strong for visible blue shift
-    float absB = mix(0.08, 0.03, melt); // blue passes through almost freely
-    return vec3(exp(-thickness * absR), exp(-thickness * absG), exp(-thickness * absB));
+    // Absorption: visible blue-grey tint at typical viewing angles.
+    // With QUADRATIC NdotV and thickness max 2.5:
+    //   NdotV=0.7 → thickness=1.27 → R=exp(-1.02)=0.36, G=exp(-0.44)=0.64, B=exp(-0.13)=0.88
+    //   NdotV=0.5 → thickness=0.66 → R=exp(-0.53)=0.59, G=exp(-0.23)=0.79, B=exp(-0.07)=0.93
+    // Grey-blue body, not pale white clay, not opaque dark quartz.
+    float absR = mix(0.80, 0.40, melt);  // strong red removal → clearly blue
+    float absG = mix(0.35, 0.18, melt);  // moderate green removal → grey-blue
+    float absB = mix(0.10, 0.05, melt);  // slight blue attenuation → desaturated
+    vec3 a = vec3(exp(-thickness * absR), exp(-thickness * absG), exp(-thickness * absB));
+    // Floor: deep ice scatters ambient — never pure black void.
+    // Cap at 0.98: zero-thickness glass is NOT pure white. Even a thin sheet
+    // has a hint of absorption. Without this, tips read as lit white plastic.
+    return clamp(a, vec3(0.02, 0.05, 0.10), vec3(0.98));
+}
+
+// Organic surface undulation — the "Wet" look.
+// Low-frequency noise that flows over time, breaking perfect polygon refraction.
+// Applied to SMOOTH view-space normals for refraction ONLY (not specular).
+// Perturbs XY only (screen-right/up) since it targets view-space normals.
+vec3 applyMeltRipple(vec3 n, vec3 worldPos, float seed, float melt) {
+    float flow = uGlobalTime * 0.1;
+    vec3 noisePos = worldPos * 2.0 + vec3(seed * 13.7, flow, seed * 7.3);
+    float nA = snoise(noisePos);
+    float nB = snoise(noisePos + vec3(12.5, 0.0, 12.5));
+    float strength = 0.05 + melt * 0.15;
+    return normalize(n + vec3(nA, nB, 0.0) * strength);
+}
+
+// Voronoi edge-distance for dendritic frost crystal patterns
+// Returns F2-F1: thin at cell boundaries (frost veins), wide at cell centers (clear)
+// Euclidean distance → organic rounded dendrites (vs Chebyshev in cracks → angular)
+float voronoiFrost(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float d1 = 10.0, d2 = 10.0;
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            vec2 nb = vec2(float(x), float(y));
+            vec2 cell = i + nb;
+            vec2 pt = nb + fract(sin(vec2(
+                dot(cell, vec2(127.1, 311.7)),
+                dot(cell, vec2(269.5, 183.3))
+            )) * 43758.5453);
+            float d = length(f - pt);
+            if (d < d1) { d2 = d1; d1 = d; }
+            else if (d < d2) { d2 = d; }
+        }
+    }
+    return d2 - d1;
 }
 
 // Perturb normal using noise gradient for crystalline sparkle
@@ -187,7 +231,9 @@ varying vec3 vPosition;
 varying vec3 vWorldPosition;
 varying vec3 vInstancePosition;
 varying vec3 vNormal;
+varying vec3 vWorldNormal;
 varying vec3 vViewDir;
+varying vec3 vViewPosition;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
@@ -250,15 +296,47 @@ void main() {
     float modelHeight = 1.0;
     vVerticalGradient = clamp((selectedPosition.y + 0.5) / modelHeight, 0.0, 1.0);
 
-    // Ice is rigid - no vertex displacement (displacement creates visible
-    // ripple artifacts on ring geometry)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SILHOUETTE BREAKUP — Voronoi vertex displacement at edges
+    // Uses the same Voronoi cell pattern as our cutout/crack system.
+    // Only active at silhouette edges (low NdotV) → jagged crystal outlines.
+    // Face-on vertices stay put, preserving the clean faceted interior.
+    // Per-instance random offset breaks repetition between identical models.
+    // ═══════════════════════════════════════════════════════════════════════════════
     vec3 displaced = selectedPosition;
+
+    if (modelMatch > 0.5 && length(selectedNormal) > 0.1) {
+        // Edge factor: how close is this vertex to the silhouette?
+        vec4 approxWorldPos = modelMatrix * instanceMatrix * vec4(selectedPosition, 1.0);
+        vec3 approxViewDir = normalize(cameraPosition - approxWorldPos.xyz);
+        vec3 worldNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * selectedNormal);
+        float edgeNdotV = abs(dot(worldNormal, approxViewDir));
+        float edgeFactor = pow(1.0 - edgeNdotV, 2.0); // Quadratic — wider influence band
+
+        // Voronoi cell distance — crystalline breakup matching our crack aesthetic
+        // Per-instance offset so each crystal has unique edges
+        // Low frequency (1.5) → broad heavy warps, not tiny bumps
+        // Ring looks "bent" not "vibrating" — big surface undulations
+        float vor = voronoi(selectedPosition * 1.5 + vec3(aRandomSeed * 7.13, 0.0, aRandomSeed * 3.71));
+        float displ = (vor - 0.4) * 2.0;
+
+        // QUANTIZE into terraces — "chiseled ice plates" not smooth waves.
+        // floor() cuts the smooth displacement into hard steps so flat shading
+        // creates clean geometric plateaus instead of folded-paper look.
+        float steppedDispl = floor(displ * 4.0) / 4.0; // 4 terrace levels
+        float finalDispl = mix(displ, steppedDispl, 0.8); // 80% stepped, 20% smooth anti-aliasing
+
+        displaced += normalize(selectedNormal) * finalDispl * 0.08 * edgeFactor;
+    }
 
     // Apply trail offset
     displaced += trailOffset;
 
     // Transform normal with instance matrix
     vNormal = normalMatrix * mat3(instanceMatrix) * selectedNormal;
+    // Ensure we use the 0.0 w-component to isolate rotation from scale/translation
+    vec3 transformedNormal = (instanceMatrix * vec4(selectedNormal, 0.0)).xyz;
+    vWorldNormal = normalize(mat3(modelMatrix) * transformedNormal);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // Apply instance matrix for per-instance transforms
@@ -295,7 +373,12 @@ void main() {
         vArcVisibility = maxVis;
     }
 
-    gl_Position = projectionMatrix * modelViewMatrix * instancePosition;
+    // View-space position: camera is at origin, so mvPosition IS the
+    // vector from camera to surface — used directly as incident ray for refract()
+    vec4 mvPosition = modelViewMatrix * instancePosition;
+    vViewPosition = mvPosition.xyz;
+
+    gl_Position = projectionMatrix * mvPosition;
 }
 `;
 
@@ -315,6 +398,12 @@ uniform vec3 uTint;
 uniform float uGlowIntensity;
 uniform float uBloomThreshold;
 
+// Screen-space refraction uniforms
+uniform sampler2D uBackgroundTexture;
+uniform vec2 uResolution;
+uniform int uHasBackground;
+uniform float uIOR;
+
 // Animation system uniforms (glow, cutout, travel, etc.) from shared core
 ${ANIMATION_UNIFORMS_FRAGMENT}
 
@@ -325,7 +414,9 @@ varying vec3 vPosition;
 varying vec3 vWorldPosition;
 varying vec3 vInstancePosition;
 varying vec3 vNormal;
+varying vec3 vWorldNormal;
 varying vec3 vViewDir;
+varying vec3 vViewPosition;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
@@ -342,84 +433,209 @@ void main() {
     float localTime = vLocalTime;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // NORMALS — smooth for shading, flat for facet glints
-    // Smooth: interpolated vertex normals → soft fresnel, absorption, rim
-    // Flat: screen-space derivatives → each polygon catches light independently
+    // HYBRID NORMALS — split flat/smooth for crystal shell vs liquid interior
+    // FLAT faceNormal: specular, fresnel, NdotV → sharp chiseled crystal facets
+    // SMOOTH vNormal + wet ripple: refraction → organic liquid warp through volume
+    // This kills the "fun house kaleidoscope" without losing the faceted look.
     // ═══════════════════════════════════════════════════════════════════════════════
-    vec3 normal = normalize(vNormal);
     vec3 faceNormal = normalize(cross(dFdx(vWorldPosition), dFdy(vWorldPosition)));
     vec3 viewDir = normalize(vViewDir);
 
-    float NdotV = abs(dot(normal, viewDir));
-    float fresnel = pow(1.0 - NdotV, 3.0);
+    // World normal with faceforward for DoubleSide geometry
+    vec3 worldNormal = normalize(vWorldNormal);
+
+    // If normal buffer corrupted/zeroed, fallback to view direction
+    if (length(vWorldNormal) < 0.01) {
+        worldNormal = viewDir;
+    }
+
+    // faceforward: flip normal for back faces so dot(N, viewDir) > 0
+    worldNormal = faceforward(worldNormal, -viewDir, worldNormal);
+
+    float smoothNdotV = max(0.0, dot(worldNormal, viewDir));
+    float fresnel = pow(1.0 - smoothNdotV, 4.0);
+    vec3 normal = faceNormal; // specular only
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // BEER'S LAW ABSORPTION
+    // SURFACE FROST — opaque white rime patches that block refraction
+    // Creates visual contrast: clear glass zones vs frosted matte zones.
+    // Frost is surface scattering — kills specular, blocks see-through.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float thickness = mix(0.05, 1.0, NdotV);
-
-    vec3 absorption = iceAbsorption(thickness, uMelt);
-    vec3 baseLight = vec3(0.90, 0.92, 0.95) * uTint;
-    vec3 color = baseLight * absorption;
+    // Dendritic frost — Voronoi edge-distance (F2-F1) creates crystal vein patterns.
+    // THIN VEINS ONLY — no broadFill. Frost is sharp crystalline lines, not sheets.
+    // broadFill was covering 60% of rings in opaque white → "plastic sheet" look.
+    float frostVein = voronoiFrost(vPosition.xz * 4.0 + vec2(vRandomSeed * 5.2));
+    float thinVein = 1.0 - smoothstep(0.0, 0.06, frostVein); // Thinner veins = sharper crystal lines
+    float frostRaw = thinVein; // No broadFill — veins, not sheets
+    // Break mask — TIGHT so frost appears in rare clusters, not everywhere.
+    // Low frequency (0.4x) → each break patch spans ~10 Voronoi cells → coherent crystal clusters.
+    float frostBreak = noise(vec3(vPosition.xz * 0.4, 0.0));
+    frostRaw *= smoothstep(0.50, 0.75, frostBreak);
+    float frostMask = frostRaw * uFrostAmount;
+    frostMask *= (1.0 - smoothstep(0.1, 0.4, uMelt)); // Melt kills frost first
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // FRESNEL RIM (bright edge glow - the glassy look)
+    // BEER'S LAW ABSORPTION — defines how light is colored passing through ice
     // ═══════════════════════════════════════════════════════════════════════════════
-    vec3 rimColor = baseLight * iceAbsorption(0.1, uMelt);
-    color = mix(color, rimColor, fresnel * 0.6);
-
-    color *= uIntensity;
+    // STABLE THICKNESS & CLARITY MASK (Iteration 100)
+    // Linear transition ensures the teal tint doesn't "snap" to geometry
+    float distFromCenter = length(vPosition);
+    float isTip = smoothstep(0.4, 1.2, distFromCenter);
+    float thickness = smoothstep(0.0, 1.0, smoothNdotV) * 0.65 * (1.0 - isTip);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // BLOOM COMPRESSION (wider knee to preserve color variation)
+    // SCHLICK FRESNEL — dielectric reflection coefficient
+    // Head-on: mostly transmitted (see through). Glancing: mostly reflected.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float knee = 0.25 + uGlowScale * 0.08;
-    float maxChannel = max(color.r, max(color.g, color.b));
+    float F0 = 0.02; // ice IOR ~1.31
+    float schlick = F0 + (1.0 - F0) * fresnel;
 
-    if (maxChannel > uBloomThreshold) {
-        float excess = maxChannel - uBloomThreshold;
-        float compressed = uBloomThreshold + knee * (1.0 - exp(-excess / knee));
-        color *= compressed / maxChannel;
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // LIGHT DIRECTION — used ONLY for frost diffuse shading.
+    // Glass body has ZERO diffuse. It's invisible until it refracts or reflects.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 mainLight = normalize(vec3(0.3, 1.0, 0.5));
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SCREEN-SPACE REFRACTION — sample background through distorted UVs
+    // The background was rendered to a texture without ice meshes.
+    // Normal-based UV distortion simulates light bending through ice volume.
+    // The refracted result is composited at FULL OPACITY — the "transparency"
+    // is already baked into transmittedLight via Beer's Law absorption.
+    // Using partial alpha would blend warped with un-warped = ghostly weak warp.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ─── GRAND UNIFIED GLASS MODEL ───
+    // Glass has ZERO diffuse. It is invisible until it refracts something
+    // or reflects a specular highlight. In a vacuum it is BLACK.
+    // Final = (refractedBackground × absorption) + specular. Nothing else.
+    //
+    // Three DECOUPLED properties:
+    // 1. absorptionDepth (= thickness) → Controls COLOR only. Tips = clear (white).
+    // 2. Refraction distortion → INDEPENDENT of thickness. Tips still bend light.
+    // 3. Alpha = 1.0 → We ALWAYS see the warped background. "Transparency"
+    //    is in the absorption color, not the alpha channel.
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // REFRACTION — View-space vectors for screen-aligned UV distortion
+    // I_vs = incident ray (camera→surface in view space) = normalize(vViewPosition)
+    // N_vs = view-space normal with faceforward for DoubleSide geometry
+    // refract() .xy maps directly to screen right/up — no camera rotation artifacts.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 transmittedLight;
+    vec3 voidColor = vec3(0.08, 0.12, 0.18);
+
+    // Ice body color — "average environment as seen through ice volume."
+    // Acts as ambient fill where refracted background is too dark.
+    vec3 iceBodyColor = vec3(0.30, 0.48, 0.58) * uTint;
+
+    if (uHasBackground == 1) {
+        vec2 screenUV = gl_FragCoord.xy / uResolution;
+
+        // View-space vectors for refraction
+        vec3 I_vs = normalize(vViewPosition);
+        vec3 N_vs = faceforward(normalize(vNormal), I_vs, normalize(vNormal));
+
+        float distortion = 0.04 + (thickness * 0.15);
+        vec3 refDir = refract(I_vs, N_vs, 0.75);
+
+        // TIR fallback: use incident direction (minimal distortion)
+        if (length(refDir) < 0.1) refDir = I_vs;
+
+        vec2 uvBase = clamp(screenUV + refDir.xy * distortion, 0.0, 1.0);
+        vec3 refractedBg = texture2D(uBackgroundTexture, uvBase).rgb;
+
+        // Screen-blend lift: adds light to dark areas, barely touches bright areas.
+        // Dark pixel (0.1) → 0.1 + 0.15*0.9 = 0.235 (visible shadow detail)
+        // Bright pixel (0.8) → 0.8 + 0.15*0.2 = 0.83 (unchanged)
+        // This is the "ambient environment light entering through the glass."
+        vec3 ambientLift = vec3(0.10, 0.15, 0.22);
+        refractedBg += ambientLift * (vec3(1.0) - refractedBg);
+
+        // LERP absorption: blend lifted background toward ice body color.
+        transmittedLight = mix(refractedBg, iceBodyColor, thickness * 0.4);
+    } else {
+        transmittedLight = mix(voidColor, iceBodyColor, thickness * 0.4);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SUBSURFACE SCATTERING (light passing through ice)
-    // Back-lit areas get blue internal glow
+    // ENERGY CONSERVATION — softer teeter-totter (×0.3 not ×0.5).
+    // At edges fresnel≈0.8: multiplier = 0.76 (gentle dim, not black).
     // ═══════════════════════════════════════════════════════════════════════════════
-    vec3 sssLight1 = normalize(vec3(0.3, -0.6, 0.5));
-    vec3 sssLight2 = normalize(vec3(-0.5, -0.3, -0.4));
-    float sss1 = pow(max(dot(viewDir, -sssLight1), 0.0), 2.5);
-    float sss2 = pow(max(dot(viewDir, -sssLight2), 0.0), 2.5) * 0.6;
-    float sssStrength = (sss1 + sss2) * uSubsurfaceScatter * (1.0 - uMelt);
-    sssStrength *= mix(0.5, 1.0, fresnel);
-    vec3 sssColor = vec3(0.7, 0.8, 0.95) * sssStrength;
-    color += sssColor;
+    transmittedLight *= (1.0 - fresnel * 0.3);
+
+    // Ambient reflection at glancing angles (Schlick-driven edge brightness)
+    vec3 envReflection = vec3(0.15, 0.25, 0.35) * uTint;
+    transmittedLight += envReflection * schlick;
+
+    // Internal scatter — faint volumetric glow at edges
+    transmittedLight += vec3(0.04, 0.1, 0.14) * fresnel;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SPECULAR (bright glossy highlights — the #1 visual cue for ice)
-    // Uses FLAT face normals so each polygon facet catches light independently,
-    // creating the sharp glints that make ice look crystalline.
+    // FROST — opaque rime veins over clear glass
+    // Applied after energy conservation so frost isn't dimmed at edges.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float specPower = mix(128.0, 24.0, uMelt);
+    float frostLuma = min(0.65, uBloomThreshold + 0.25);
+    vec3 frostColor = vec3(frostLuma, frostLuma * 1.02, frostLuma * 1.05);
+    float frostDiffuse = max(0.4, dot(normal, mainLight));
+    frostColor *= frostDiffuse;
+    transmittedLight = mix(transmittedLight, frostColor, frostMask);
 
-    vec3 reflDir = reflect(-viewDir, faceNormal);
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PIXEL MATH — transmission + specular only. No boost, no scatter, no Schlick.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 color = transmittedLight;
+    color *= uIntensity;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TRAPPED AIR BUBBLES — bright dots inside the ice volume
+    // Visible against the neutral body, catching light for internal depth
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 bubbleParallax = viewDir * 0.08 / max(smoothNdotV, 0.25);
+    float bubbleNoise = noise((vPosition + bubbleParallax) * 42.0 + vec3(0.0, localTime * 0.02, 0.0));
+    float bubbleMask = step(0.985, bubbleNoise); // Top 1.5% — rare diamond sparkles, not dust
+    color += vec3(2.0) * bubbleMask; // Single-pixel sparks — high brightness OK, too sparse to bloom
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SPECULAR — sharp concentrated glints for the wet/glossy look
+    // Uses FLAT face normals: each polygon catches light independently
+    // 4 lights for good coverage, high power for sharp points
+    // ═══════════════════════════════════════════════════════════════════════════════
+    float specPower = mix(128.0, 32.0, uMelt); // Broader highlights — glossy glass, not pinpoint diamond
+
+    // 3 lights — enough coverage for visible glints on the now-darker body.
+    // Sparse deep scratches: only top 5% of noise peaks become cuts.
+    // 95% of surface is perfectly smooth glass. Where a scratch exists,
+    // perturbation is strong (0.3) → visible specular scatter without
+    // the "sandpaper everywhere" problem of low-strength global noise.
+    float scratchNoise = noise(vWorldPosition * 20.0 + vec3(vRandomSeed * 17.3));
+    float scratchMask = step(0.95, scratchNoise); // Only top 5% become scratches
+    float scrAngle = noise(vWorldPosition * 3.0 + vec3(vRandomSeed * 5.1)) * 6.28;
+    vec3 scratchDir = vec3(sin(scrAngle), cos(scrAngle), 0.0);
+    vec3 scratchedNormal = normalize(normal + scratchDir * scratchMask * 0.3);
+    vec3 reflDir = reflect(-viewDir, scratchedNormal);
     float spec1 = pow(max(dot(reflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), specPower);
-    float spec2 = pow(max(dot(reflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), specPower) * 0.7;
-    float spec3 = pow(max(dot(reflDir, normalize(vec3(-0.3, 0.6, 0.7))), 0.0), specPower) * 0.5;
-    float spec4 = pow(max(dot(reflDir, normalize(vec3(0.6, 0.3, -0.6))), 0.0), specPower) * 0.4;
-    float spec = spec1 + spec2 + spec3 + spec4;
+    float spec2 = pow(max(dot(reflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), specPower) * 0.6;
+    float spec3 = pow(max(dot(reflDir, normalize(vec3(-0.3, 0.6, 0.7))), 0.0), specPower) * 0.4;
+    float spec = spec1 + spec2 + spec3;
 
-    vec3 specContrib = vec3(0.95, 0.97, 1.0) * spec * (1.0 - uMelt * 0.5);
-    // No per-component cap — soft clamp below handles bounding while
-    // preserving relative brightness between facets
+    vec3 specContrib = mix(vec3(1.0), vec3(0.9, 0.95, 1.0), fresnel) * spec * 2.5 * (1.0 - uMelt * 0.5);
+    specContrib *= (1.0 - frostMask); // Frost is matte — kills specular completely
     color += specContrib;
 
+    // Wet film specular — secondary tighter highlight on smooth surface.
+    // Creates the "water on glass" look. Uses smooth world normal, not flat facets.
+    // Power 120 = very sharp pinpoints. Layered on top of the broader faceted spec.
+    vec3 wetReflDir = reflect(-viewDir, worldNormal);
+    float wetSpec = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 120.0);
+    wetSpec += pow(max(dot(wetReflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 120.0) * 0.5;
+    color += vec3(1.0) * wetSpec * 0.5 * (1.0 - frostMask);
+
     // ═══════════════════════════════════════════════════════════════════════════════
-    // FINAL SOFT CLAMP — bound total after SSS + specular additions
-    // Preserves relative brightness (glinting facets stay brighter than flat ones)
-    // while preventing absolute blowout to white
+    // SOFT CLAMP — cap the smooth glass BASE before adding bright features
+    // Cracks/specular/bubbles are added AFTER this so they can exceed the cap
+    // and trigger bloom glow. The smooth glass body stays within bounds.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float softCap = uBloomThreshold + 0.7;
+    float softCap = uBloomThreshold + 0.30;
     float finalMax = max(color.r, max(color.g, color.b));
     if (finalMax > softCap) {
         color *= softCap / finalMax;
@@ -427,15 +643,38 @@ void main() {
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // INTERNAL CRACK LINES (two-scale Voronoi with Chebyshev distance)
-    // Coarse pass: major fracture planes (thick, dark, angular)
-    // Fine pass: secondary cracks (thin, subtle, varied)
-    // Per-cell shade variation breaks the uniform monotone look
-    // Applied AFTER soft clamp so cracks are always visible (color is bounded)
+    // Three realism layers:
+    //   1. LOW-FREQ MASK: breaks continuous loops into isolated jagged segments
+    //   2. DARK FRACTURES: occlusion planes that block light (applied first)
+    //   3. BRIGHT SCATTER: reflection planes that catch light (applied on top)
+    // Plus view-dependent sparkle: fracture brightness shifts with camera angle.
     // ═══════════════════════════════════════════════════════════════════════════════
+    // Crack values hoisted for edge-breakup discard (used after crack coloring)
+    float coarseCrack = 0.0;
+    float fineCrack = 0.0;
+
     if (uInternalCracks > 0.01) {
 
-        // ─── COARSE FRACTURE PLANES (scale 2.0 — large angular shards) ───
-        vec2 coarsePos = vPosition.xz * 2.0;
+        // ─── PARALLAX INTERIOR OFFSET ───
+        // Offset crack sampling by view direction to create depth illusion.
+        // Cracks shift as you rotate, looking like they're INSIDE the volume.
+        float parallaxScale = 0.12;
+        vec2 parallaxDir = viewDir.xz / max(smoothNdotV, 0.25);
+        vec2 coarseParallax = parallaxDir * parallaxScale;        // shallow layer
+        vec2 fineParallax = parallaxDir * parallaxScale * 1.8;    // deeper layer
+
+        // ─── BREAK-THE-WEB MASK ───
+        // Low-frequency noise erases ~75% of crack lines. Most of the surface
+        // is PERFECTLY CLEAR glass — only 20-25% has dramatic fractures.
+        // Frequency 0.4 → large smooth patches, not small noisy spots.
+        float breakMask = noise(vec3(vPosition.xz * 0.4, 0.0));
+        float coarseMask = smoothstep(0.55, 0.78, breakMask); // ~75% erased — huge quiet zones
+        float fineMask = smoothstep(0.48, 0.72, breakMask);   // fine cracks slightly more visible
+
+        // ─── COARSE FRACTURE PLANES (scale 0.7 — MASSIVE structural cleaves) ───
+        // Very low frequency → 3-4 fractures spanning the entire object.
+        // Ring torus gets 2-3 dramatic cracks, not 1000 tiny scratches.
+        vec2 coarsePos = (vPosition.xz + coarseParallax) * 0.7;
         vec2 cci = floor(coarsePos);
         vec2 ccf = fract(coarsePos);
         float cd1 = 10.0, cd2 = 10.0;
@@ -457,17 +696,50 @@ void main() {
         }
 
         float coarseEdge = cd2 - cd1;
-        // Variable width: hash the cell pair so each crack has its own thickness
         float coarsePairHash = fract(sin(dot(cCell1 + cCell2, vec2(78.233, 143.71))) * 43758.5453);
-        float coarseWidth = mix(0.08, 0.20, coarsePairHash);
-        float coarseCrack = 1.0 - smoothstep(0.0, coarseWidth, coarseEdge);
-        // Bright refraction edge: just outside the dark crack, light refracts at crack surface
+        float coarseWidth = mix(0.008, 0.025, coarsePairHash); // Slightly wider — dramatic structural cleaves
+        coarseCrack = (1.0 - smoothstep(0.0, coarseWidth, coarseEdge)) * coarseMask;
+        // Halo band just outside crack — refraction brightening
         float coarseBrightEdge = smoothstep(0.0, coarseWidth, coarseEdge) * (1.0 - smoothstep(coarseWidth, coarseWidth + 0.08, coarseEdge));
-        // Depth variation: major fractures are bold and deep
-        float coarseDepth = mix(0.8, 1.0, coarsePairHash);
+        float coarseDepth = mix(0.75, 1.0, coarsePairHash);
 
-        // ─── FINE CRACKS (scale 6.0 — small secondary fractures) ───
-        vec2 finePos = vPosition.xz * 6.0;
+        // ─── VIEW-DEPENDENT SPARKLE ───
+        // Each fracture plane has a pseudo-normal derived from its cell hash.
+        // Planes facing the camera flash bright; planes facing away go dim.
+        // This makes cracks "twinkle" as the object rotates — like diamond facets.
+        vec2 coarsePlaneDir = normalize(vec2(coarsePairHash * 2.0 - 1.0, fract(coarsePairHash * 7.13) * 2.0 - 1.0));
+        float coarseSparkle = abs(dot(coarsePlaneDir, viewDir.xz)); // 0=edge-on (dim), 1=face-on (flash)
+        coarseSparkle = mix(0.05, 1.0, coarseSparkle); // Wide range: TIR flicker — some nearly vanish
+
+        // ─── DARK FRACTURES (occlusion planes — slightly offset from bright) ───
+        // A second crack layer at offset parallax simulates fracture planes that
+        // BLOCK light instead of scattering it. Dark blue-grey occlusion lines.
+        vec2 darkParallax = parallaxDir * parallaxScale * 0.5; // shallower depth — different plane
+        vec2 darkPos = (vPosition.xz + darkParallax + vec2(0.13, -0.09)) * 0.7; // offset breaks alignment, same scale as coarse
+        vec2 dci = floor(darkPos);
+        vec2 dcf = fract(darkPos);
+        float dd1 = 10.0, dd2 = 10.0;
+
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                vec2 nb = vec2(float(x), float(y));
+                vec2 cell = dci + nb;
+                vec2 pt = nb + fract(sin(vec2(
+                    dot(cell, vec2(127.1, 311.7)),
+                    dot(cell, vec2(269.5, 183.3))
+                )) * 43758.5453);
+                vec2 diff = dcf - pt;
+                float d = max(abs(diff.x), abs(diff.y));
+                if (d < dd1) { dd2 = dd1; dd1 = d; }
+                else if (d < dd2) { dd2 = d; }
+            }
+        }
+
+        float darkEdge = dd2 - dd1;
+        float darkCrack = (1.0 - smoothstep(0.0, 0.012, darkEdge)) * coarseMask;
+
+        // ─── FINE CRACKS (scale 2.0 — secondary fractures, still large) ───
+        vec2 finePos = (vPosition.xz + fineParallax) * 2.0;
         vec2 fci = floor(finePos);
         vec2 fcf = fract(finePos);
         float fd1 = 10.0, fd2 = 10.0;
@@ -490,38 +762,87 @@ void main() {
 
         float fineEdge = fd2 - fd1;
         float finePairHash = fract(sin(dot(fCell1 + fCell2, vec2(78.233, 143.71))) * 43758.5453);
-        float fineWidth = mix(0.04, 0.12, finePairHash);
-        float fineCrack = 1.0 - smoothstep(0.0, fineWidth, fineEdge);
-        float fineDepth = mix(0.3, 0.7, finePairHash);
+        float fineWidth = mix(0.003, 0.012, finePairHash); // Thin secondary fractures
+        fineCrack = (1.0 - smoothstep(0.0, fineWidth, fineEdge)) * fineMask;
+        float fineDepth = mix(0.5, 0.9, finePairHash);
 
-        // ─── PER-CELL SHADE VARIATION ───
-        // Hash the nearest fine cell to shift each shard's apparent thickness
-        // Some shards clearly whiter (thinner ice), others clearly deeper blue (thicker)
-        float cellShade = fract(sin(dot(fCell1, vec2(93.97, 214.63))) * 43758.5453);
-        float shadeShift = mix(-0.4, 0.4, cellShade);
-        color *= 1.0 + shadeShift * uInternalCracks;
+        // Fine sparkle (independent plane direction)
+        vec2 finePlaneDir = normalize(vec2(finePairHash * 2.0 - 1.0, fract(finePairHash * 11.3) * 2.0 - 1.0));
+        float fineSparkle = abs(dot(finePlaneDir, viewDir.xz));
+        fineSparkle = mix(0.05, 1.0, fineSparkle); // Wide range: TIR flicker — some cracks nearly vanish
 
-        // ─── COMPOSITE: coarse cracks (major, dominant) then fine cracks (subtle) ───
+        // ─── CRACK SPECULAR GLINTS (physical grooves catch light) ───
+        // Use dFdx/dFdy of edge distances to get crack surface gradient.
+        // This perturbs the normal WHERE cracks exist, so fracture lines
+        // physically interact with specular — they glint like real grooves.
+        // Both coarse AND fine cracks get their own specular pass.
+        float crackSpecGlint = 0.0;
+        if (coarseCrack > 0.05) {
+            float dex = dFdx(coarseEdge);
+            float dey = dFdy(coarseEdge);
+            vec3 crackGrad = vec3(dex, 0.0, dey);
+            vec3 crackNorm = normalize(normal + crackGrad * 10.0); // Strong groove perturbation
+            vec3 crackRefl = reflect(-viewDir, crackNorm);
+            float cSpec = pow(max(dot(crackRefl, normalize(vec3(0.3, 1.0, 0.5))), 0.0), 48.0);
+            cSpec += pow(max(dot(crackRefl, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 48.0) * 0.6;
+            cSpec += pow(max(dot(crackRefl, normalize(vec3(0.6, 0.3, -0.6))), 0.0), 48.0) * 0.3;
+            crackSpecGlint += cSpec * coarseCrack * coarseSparkle;
+        }
+        if (fineCrack > 0.05) {
+            float fdex = dFdx(fineEdge);
+            float fdey = dFdy(fineEdge);
+            vec3 fineGrad = vec3(fdex, 0.0, fdey);
+            vec3 fineNorm = normalize(normal + fineGrad * 12.0);
+            vec3 fineRefl = reflect(-viewDir, fineNorm);
+            float fSpec = pow(max(dot(fineRefl, normalize(vec3(0.3, 1.0, 0.5))), 0.0), 48.0);
+            crackSpecGlint += fSpec * fineCrack * fineSparkle * 0.4;
+        }
 
-        // Coarse: deep dark fracture lines — the primary structural feature
-        vec3 deepCrackColor = mix(vec3(0.04, 0.05, 0.08), color * vec3(0.15, 0.18, 0.25), 0.2);
-        color = mix(color, deepCrackColor, coarseCrack * coarseDepth * uInternalCracks);
+        // ─── COMPOSITE ───
+        // 1. Dark occlusion fractures FIRST (subtractive — blocks light)
+        color = mix(color, vec3(0.0, 0.1, 0.3), darkCrack * 0.25 * uInternalCracks);
 
-        // Coarse bright edge: refraction highlight adjacent to dark crack
-        vec3 brightEdgeColor = min(color * 1.3, vec3(0.9));
-        color = mix(color, brightEdgeColor, coarseBrightEdge * 0.35 * uInternalCracks);
+        // 2. Coarse bright scatter ON TOP (additive — catches light)
+        //    Sparkle modulates brightness: some planes flash, others nearly vanish.
+        color = mix(color, vec3(1.15), coarseCrack * coarseDepth * coarseSparkle * uInternalCracks * 0.7);
 
-        // Fine: secondary fractures — visible but not competing with coarse
-        vec3 fineCrackColor = mix(vec3(0.08, 0.10, 0.14), color * vec3(0.30, 0.35, 0.45), 0.35);
-        color = mix(color, fineCrackColor, fineCrack * fineDepth * uInternalCracks * 0.5);
+        // 3. Crack specular glints — physical groove highlights (the "shattered glass" flash)
+        color += vec3(1.0) * crackSpecGlint * 2.5 * uInternalCracks;
+
+        // 4. Refraction halo: subtle brightening adjacent to fracture
+        color = mix(color, vec3(1.3), coarseBrightEdge * coarseMask * 0.25 * uInternalCracks);
+
+        // 5. Fine: hairline secondary scratches with their own sparkle
+        color = mix(color, vec3(1.05), fineCrack * fineDepth * fineSparkle * uInternalCracks * 0.3);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ALPHA (translucent — you should see through ice)
-    // Low base opacity, fresnel makes edges more opaque (natural dielectric)
+    // EDGE BREAKUP — discard at silhouette edges where cracks exist
+    // Uses the SAME Voronoi cracks already computed above, so holes perfectly
+    // match the visible crack lines. Only active when gesture opts in via edgeMask.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float alpha = uOpacity;
-    alpha = mix(alpha, min(1.0, alpha + 0.4), fresnel);
+    if (uCutoutEdgeMask > 0.0) {
+        float eLenX = length(dFdx(vWorldPosition));
+        float eLenY = length(dFdy(vWorldPosition));
+        float eRatio = max(eLenX, eLenY) / max(min(eLenX, eLenY), 0.00001);
+
+        float eLow = mix(1.1, 2.5, uCutoutEdgeMask);
+        float eHigh = eLow + 0.8;
+        float eFactor = smoothstep(eLow, eHigh, eRatio);
+
+        // Combined crack mask — coarse dominates, fine contributes
+        float crackMask = max(coarseCrack, fineCrack * 0.7);
+
+        // At edges where cracks exist → discard for jagged silhouette
+        if (eFactor * crackMask > 0.2) discard;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ALPHA — SOLID CRYSTAL. Always 1.0.
+    // "Transparency" comes from the refracted background painted onto the surface,
+    // NOT from alpha blending. Alpha<1.0 blends warped+unwarped = ghost artifact.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    float alpha = 1.0;
 
     // Instance fade (spawn/exit)
     alpha *= vInstanceAlpha;
@@ -625,7 +946,12 @@ export function createInstancedIceMaterial(options = {}) {
             uSubsurfaceScatter: { value: subsurfaceScatter },
             uTint: { value: tintColor },
             uGlowIntensity: { value: 1.0 },
-            uBloomThreshold: { value: 0.5 }
+            uBloomThreshold: { value: 0.5 },
+            // Screen-space refraction
+            uBackgroundTexture: { value: null },
+            uResolution: { value: new THREE.Vector2(1, 1) },
+            uHasBackground: { value: 0 },
+            uIOR: { value: 1.31 }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
@@ -638,6 +964,7 @@ export function createInstancedIceMaterial(options = {}) {
     material.userData.elementalType = 'ice';
     material.userData.isProcedural = true;
     material.userData.isInstanced = true;
+    material.userData.needsRefraction = true;
 
     return material;
 }

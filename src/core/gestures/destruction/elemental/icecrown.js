@@ -85,8 +85,6 @@ const ICECROWN_CONFIG = {
                 frequency: 2,
                 easing: 'easeInOut'
             },
-            // Crack lines are shader-level (Voronoi darkening in InstancedIceMaterial)
-            // No cutout needed — cracks are visual, not geometric holes
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             scaleVariance: 0,
             lifetimeVariance: 0,

@@ -58,8 +58,18 @@ const ELECTRICBARRAGE_CONFIG = {
             enter: { type: 'scale', duration: 0.08, easing: 'easeOutBack' },
             exit: { type: 'burst-fade', duration: 0.15, easing: 'easeIn', burstScale: 1.3 },
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
+            flicker: { intensity: 0.4, rate: 16, pattern: 'random' },
+            grain: { type: 3, strength: 0.12, scale: 0.3, speed: 2.0, blend: 'multiply' },
+            flash: {
+                events: [
+                    { at: 0.10, intensity: 1.5 },
+                    { at: 0.30, intensity: 2.5 },
+                    { at: 0.50, intensity: 3.0 }
+                ],
+                decay: 0.02
+            },
             pulse: { amplitude: 0.12, frequency: 6, easing: 'easeInOut' },
-            emissive: { min: 1.0, max: 2.2, frequency: 6, pattern: 'sine' },
+            emissive: { min: 1.2, max: 3.0, frequency: 8, pattern: 'sine' },
             rotate: [
                 { axis: 'x', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -3, phase: 40 },
@@ -77,10 +87,10 @@ const ELECTRICBARRAGE_CONFIG = {
     jitterFrequency: 10,
     jitterAmplitude: 0.005,
     jitterDecay: 0.2,
-    glowColor: [0.3, 0.9, 1.0],
-    glowIntensityMin: 1.2,
-    glowIntensityMax: 2.0,
-    glowFlickerRate: 8,
+    glowColor: [0.4, 0.9, 1.0],
+    glowIntensityMin: 1.5,
+    glowIntensityMax: 3.0,
+    glowFlickerRate: 12,
     scaleVibration: 0.015,
     scaleFrequency: 4,
     scaleGrowth: 0.02,

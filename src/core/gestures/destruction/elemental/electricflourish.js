@@ -8,19 +8,20 @@
  * @fileoverview Electricflourish gesture - spinning sword flourish with lightning trails
  * @module gestures/destruction/elemental/electricflourish
  *
- * VISUAL DIAGRAM:
- *      ⚡─────⚡
- *       ╲   ╱          ← Layer 1: 5 rings spinning camera-facing
- *        ★ ╱
- *       ╱ ╲            ← Layer 2: 2 X-sweep arcs
- *      ⚡───⚡
+ * VISUAL DIAGRAM (front view):
+ *
+ *        ╲     ╱           ← Layer 2: Crossing plasma-rings (X sweep)
+ *         ╲   ╱
+ *      ────★────           ← Layer 1: 3 spinning lightning-rings (bigger)
+ *         ╱   ╲
+ *        ╱     ╲           ← Layer 3: Diagonal slash arcs (tilted rings)
  *
  * FEATURES:
- * - Layer 1: 5 lightning-rings spinning around mascot (camera-facing)
- * - Layer 2: 2 plasma-rings in diagonal X sweep arcs
- * - Layer 3: 2 arc-ring-small tilted accent rings
- * - Per-element rotation with varied phases for dynamic layering
- * - STREAKS + CRACKS cutout for branching slash trails
+ * - THREE SPAWN LAYERS for dramatic lightning flourish
+ * - Layer 1: 3 camera-facing spinning lightning-rings
+ * - Layer 2: 2 crossing plasma-rings creating X sweep
+ * - Layer 3: 2 tilted lightning-ring arcs at ±45° angles
+ * - GPU-instanced rendering via ElementInstancedSpawner
  */
 
 import { buildElectricEffectGesture } from './electricEffectFactory.js';
@@ -31,91 +32,169 @@ const ELECTRICFLOURISH_CONFIG = {
     type: 'blending',
     description: 'Spinning lightning flourish with electric trails',
     duration: 1200,
-    beats: 2,
+    beats: 4,
     intensity: 1.3,
     category: 'powered',
 
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════
-        // Layer 1: 5 rings spinning around mascot (camera-facing)
+        // LAYER 1: 3 spinning lightning-rings at center (camera-facing)
+        // Matches fire/water/ice flourish Layer 1 structure
         // ═══════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
             axisTravel: {
-                axis: 'y', start: 'bottom', end: 'top',
-                easing: 'easeInOut',
-                startScale: 0.9, endScale: 1.2,
-                startDiameter: 1.3, endDiameter: 1.6,
+                axis: 'y',
+                start: 'center',
+                end: 'center',
+                easing: 'linear',
+                startScale: 0.7,
+                endScale: 1.2,
+                startDiameter: 1.8,
+                endDiameter: 2.8,
                 orientation: 'camera'
             },
             formation: {
                 type: 'spiral',
-                count: 5,
+                count: 3,
                 spacing: 0,
-                arcOffset: 72,
-                phaseOffset: 0
+                arcOffset: 120,
+                phaseOffset: 0.05,
+                zOffset: 0
             },
-            count: 5, scale: 1.3, models: ['lightning-ring'],
+            count: 3,
+            scale: 2.0,
+            models: ['lightning-ring'],
             animation: {
-                appearAt: 0.0, disappearAt: 0.85, stagger: 0.03,
-                enter: { type: 'scale', duration: 0.06, easing: 'easeOut' },
-                exit: { type: 'burst-fade', duration: 0.12, easing: 'easeIn', burstScale: 1.1 },
-                procedural: { scaleSmoothing: 0.05, geometryStability: true },
-                pulse: { amplitude: 0.1, frequency: 6, easing: 'easeInOut' },
-                emissive: { min: 1.0, max: 2.2, frequency: 7, pattern: 'sine' },
-                cutout: {
-                    strength: 0.5,
-                    primary: { pattern: 1, scale: 1.0, weight: 0.65 },
-                    secondary: { pattern: 8, scale: 0.8, weight: 0.35 },
-                    blend: 'multiply',
-                    travel: 'angular',
-                    travelSpeed: 2.5,
-                    strengthCurve: 'bell'
+                appearAt: 0.0,
+                disappearAt: 0.45,
+                stagger: 0.12,
+                enter: {
+                    type: 'fade',
+                    duration: 0.03,
+                    easing: 'easeOut'
                 },
-                grain: { type: 3, strength: 0.2, scale: 0.3, speed: 2.5, blend: 'multiply' },
+                exit: {
+                    type: 'burst-fade',
+                    duration: 0.85,
+                    easing: 'easeIn',
+                    burstScale: 1.15
+                },
+                procedural: {
+                    scaleSmoothing: 0.05,
+                    geometryStability: true
+                },
+                flicker: {
+                    intensity: 0.3,
+                    rate: 14,
+                    pattern: 'random'
+                },
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 5,
+                    easing: 'easeInOut',
+                    perElement: true
+                },
+                emissive: {
+                    min: 1.0,
+                    max: 2.2,
+                    frequency: 6,
+                    pattern: 'sine'
+                },
+                cutout: {
+                    strength: 0.6,
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.5 },
+                    blend: 'multiply',
+                    strengthCurve: 'constant'
+                },
+                grain: {
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply'
+                },
+                drift: {
+                    speed: 0.3,
+                    distance: 0.18,
+                    pattern: 'radial',
+                    accelerate: true
+                },
+                opacityGradient: [1.0, 0.85, 0.7],
                 rotate: [
-                    { axis: 'z', rotations: 3, phase: 0 },
-                    { axis: 'z', rotations: -2, phase: 45 },
-                    { axis: 'z', rotations: 3, phase: 90 },
-                    { axis: 'z', rotations: -2.5, phase: 135 },
-                    { axis: 'z', rotations: 2, phase: 180 }
+                    { axis: 'z', rotations: 2.5, phase: 0 },
+                    { axis: 'z', rotations: -2.0, phase: 120 },
+                    { axis: 'z', rotations: 1.8, phase: 240 }
                 ],
-                opacityGradient: [1.0, 0.85, 0.7, 0.55, 0.4],
+                tilt: {
+                    axis: 'y',
+                    oscillate: true,
+                    range: 0.4,
+                    speed: 3.5
+                },
+                wobble: {
+                    axis: 'x',
+                    oscillate: true,
+                    range: 0.15,
+                    speed: 2.0,
+                    phase: 90
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
                 blending: 'additive',
-                renderOrder: 12
+                renderOrder: 12,
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: {
+                            type: 1,
+                            arcWidth: 0.5,
+                            arcSpeed: 1.0,
+                            arcCount: 2
+                        },
+                        orientationOverride: 'camera'
+                    }
+                }
             }
         },
+
         // ═══════════════════════════════════════════════════════════════════════════
-        // Layer 2: X-sweep diagonal arcs (2 plasma-rings)
+        // LAYER 2: Crossing plasma-rings (diagonal X sweep)
         // ═══════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0, y: 0, z: 0.05 },
+                offset: { x: -0.7, y: 0.4, z: 0.05 },
                 orientation: 'camera',
-                startScale: 0.5, endScale: 1.4,
-                scaleEasing: 'easeOutQuad'
+                startScale: 0.4,
+                endScale: 1.2,
+                scaleEasing: 'easeOutCubic'
             },
-            count: 1, scale: 1.2, models: ['plasma-ring'],
+            count: 1, scale: 1.8, models: ['plasma-ring'],
             animation: {
-                appearAt: 0.05, disappearAt: 0.7,
-                enter: { type: 'scale', duration: 0.05, easing: 'easeOutBack' },
-                exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
+                appearAt: 0.12,
+                disappearAt: 0.5,
+                enter: { type: 'scale', duration: 0.06, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.04, geometryStability: true },
                 cutout: {
-                    strength: 0.45,
-                    primary: { pattern: 8, scale: 1.2, weight: 0.7 },
-                    secondary: { pattern: 3, scale: 0.8, weight: 0.3 },
+                    strength: 0.5,
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },
+                    secondary: { pattern: 8, scale: 0.7, weight: 0.4 },
                     blend: 'multiply',
-                    travel: 'oscillate',
+                    travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'bell'
+                    strengthCurve: 'fadeOut'
                 },
-                grain: { type: 3, strength: 0.15, scale: 0.35, speed: 2.0, blend: 'multiply' },
-                drift: { speed: 0.6, distance: 0.5, direction: { x: 0.7, y: 0.7, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: 2, phase: 0 },
-                tilt: { angle: Math.PI / 4, wobble: 0.05, wobbleFreq: 3 },
+                grain: { type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply' },
+                drift: {
+                    speed: 0.9,
+                    distance: 0.35,
+                    direction: { x: 1.0, y: -0.7, z: -0.15 },
+                    easing: 'easeInOutCubic'
+                },
+                rotate: [{ axis: 'z', rotations: 1.0, phase: -45 }],
                 blending: 'additive',
                 renderOrder: 14,
                 modelOverrides: {
@@ -130,35 +209,135 @@ const ELECTRICFLOURISH_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0, y: 0, z: 0.05 },
+                offset: { x: 0.7, y: 0.4, z: 0.05 },
                 orientation: 'camera',
-                startScale: 0.5, endScale: 1.4,
-                scaleEasing: 'easeOutQuad'
+                startScale: 0.4,
+                endScale: 1.2,
+                scaleEasing: 'easeOutCubic'
             },
-            count: 1, scale: 1.2, models: ['plasma-ring'],
+            count: 1, scale: 1.8, models: ['plasma-ring'],
             animation: {
-                appearAt: 0.05, disappearAt: 0.7,
-                enter: { type: 'scale', duration: 0.05, easing: 'easeOutBack' },
-                exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
+                appearAt: 0.12,
+                disappearAt: 0.5,
+                enter: { type: 'scale', duration: 0.06, easing: 'easeOutBack' },
+                exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.04, geometryStability: true },
                 cutout: {
-                    strength: 0.45,
-                    primary: { pattern: 8, scale: 1.2, weight: 0.7 },
-                    secondary: { pattern: 3, scale: 0.8, weight: 0.3 },
+                    strength: 0.5,
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },
+                    secondary: { pattern: 8, scale: 0.7, weight: 0.4 },
                     blend: 'multiply',
-                    travel: 'oscillate',
+                    travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'bell'
+                    strengthCurve: 'fadeOut'
                 },
-                grain: { type: 3, strength: 0.15, scale: 0.35, speed: 2.0, blend: 'multiply' },
-                drift: { speed: 0.6, distance: 0.5, direction: { x: -0.7, y: 0.7, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: -2, phase: 90 },
-                tilt: { angle: -Math.PI / 4, wobble: 0.05, wobbleFreq: 3 },
+                grain: { type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply' },
+                drift: {
+                    speed: 0.9,
+                    distance: 0.35,
+                    direction: { x: -1.0, y: -0.7, z: -0.15 },
+                    easing: 'easeInOutCubic'
+                },
+                rotate: [{ axis: 'z', rotations: 1.0, phase: 45 }],
                 blending: 'additive',
                 renderOrder: 14,
                 modelOverrides: {
                     'plasma-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 4.0, arcCount: 1 },
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // LAYER 3: Diagonal slash arcs (tilted lightning-rings at ±45°)
+        // ═══════════════════════════════════════════════════════════════════════════
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.5,
+                endScale: 1.8,
+                scaleEasing: 'easeOutExpo'
+            },
+            count: 1, scale: 2.0, models: ['lightning-ring'],
+            animation: {
+                appearAt: 0.30,
+                disappearAt: 0.70,
+                enter: { type: 'fade', duration: 0.06, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.28, easing: 'easeInCubic' },
+                procedural: { scaleSmoothing: 0.05, geometryStability: true },
+                flicker: { intensity: 0.25, rate: 12, pattern: 'random' },
+                emissive: { min: 1.0, max: 2.2, frequency: 6, pattern: 'sine' },
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 8, scale: 0.8, weight: 1.0 },
+                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 },
+                    blend: 'multiply',
+                    travel: 'angular',
+                    travelSpeed: 1.5,
+                    strengthCurve: 'constant'
+                },
+                grain: { type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply' },
+                rotate: [{ axis: 'z', rotations: 0.001, phase: 45 }],
+                blending: 'additive',
+                renderOrder: 10,
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: {
+                            type: 1,
+                            arcWidth: 0.35,
+                            arcSpeed: 1.5,
+                            arcCount: 1
+                        },
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.5,
+                endScale: 1.8,
+                scaleEasing: 'easeOutExpo'
+            },
+            count: 1, scale: 2.0, models: ['lightning-ring'],
+            animation: {
+                appearAt: 0.30,
+                disappearAt: 0.70,
+                enter: { type: 'fade', duration: 0.06, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.28, easing: 'easeInCubic' },
+                procedural: { scaleSmoothing: 0.05, geometryStability: true },
+                flicker: { intensity: 0.25, rate: 12, pattern: 'random' },
+                emissive: { min: 1.0, max: 2.2, frequency: 6, pattern: 'sine' },
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 8, scale: 0.8, weight: 1.0 },
+                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 },
+                    blend: 'multiply',
+                    travel: 'angular',
+                    travelSpeed: 1.5,
+                    strengthCurve: 'constant'
+                },
+                grain: { type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply' },
+                rotate: [{ axis: 'z', rotations: 0.001, phase: -45 }],
+                blending: 'additive',
+                renderOrder: 10,
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: {
+                            type: 1,
+                            arcWidth: 0.35,
+                            arcSpeed: 1.5,
+                            arcCount: 1
+                        },
                         orientationOverride: 'camera'
                     }
                 }

@@ -75,6 +75,14 @@ const ELECTRICOVERLOAD_CONFIG = {
                 strengthCurve: 'fadeIn'
             },
             grain: { type: 3, strength: 0.3, scale: 0.25, speed: 2.5, blend: 'multiply' },
+            flash: {
+                events: [
+                    { at: 0.30, intensity: 1.5 },
+                    { at: 0.55, intensity: 2.5 },
+                    { at: 0.75, intensity: 3.5 }
+                ],
+                decay: 0.02
+            },
             scaleVariance: 0.35,
             lifetimeVariance: 0.4,
             blending: 'additive',

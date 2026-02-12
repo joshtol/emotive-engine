@@ -68,6 +68,13 @@ const ELECTRICSHOCK_CONFIG = {
                 strengthCurve: 'bell'
             },
             grain: { type: 3, strength: 0.25, scale: 0.3, speed: 3.0, blend: 'multiply' },
+            flash: {
+                events: [
+                    { at: 0.15, intensity: 2.0 },
+                    { at: 0.50, intensity: 3.0 }
+                ],
+                decay: 0.02
+            },
             scaleVariance: 0.4,
             lifetimeVariance: 0.5,
             delayVariance: 0.2,

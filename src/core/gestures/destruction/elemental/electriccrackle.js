@@ -5,20 +5,14 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Electric crackle gesture - dramatic whip-crack lightning bolt
+ * @fileoverview Electric crackle gesture - rapid stuttering bolts on mascot surface
  * @module gestures/destruction/elemental/electriccrackle
  *
- * VISUAL DIAGRAM:
- *          ╲
- *        ★──╱     ← Big dramatic arc + aftershock
- *          ╲        Single whip crack, no respawn
+ * CONCEPT: Spark-spikes and arc-smalls on the mascot surface with aggressive
+ * high-rate flicker (rate 20) and flash events that create actual crackling —
+ * rapid on/off stuttering like static discharge.
  *
- * FEATURES:
- * - Surface/spikes spawn: dramatic outward arcs
- * - Ephemeral whip crack: ONE flash + aftershock, no respawn
- * - No jitter (powered category) - controlled energy
- * - CRACKS cutout for branching fracture patterns
- * - RADIAL secondary for expanding discharge wave
+ * Uses spark-spike (underused model) for spiky crackle geometry.
  */
 
 import { buildElectricEffectGesture } from './electricEffectFactory.js';
@@ -27,7 +21,7 @@ const ELECTRICCRACKLE_CONFIG = {
     name: 'crackle',
     emoji: '✨',
     type: 'blending',
-    description: 'Ambient electrical energy crackling across surface',
+    description: 'Rapid stuttering bolts crackling across surface',
     duration: 2000,
     beats: 3,
     intensity: 0.8,
@@ -39,54 +33,52 @@ const ELECTRICCRACKLE_CONFIG = {
         embedDepth: 0.08,
         cameraFacing: 0.5,
         clustering: 0.3,
-        count: 2,
-        scale: 1.3,
-        models: ['arc-medium', 'arc-cluster'],
+        count: 3,
+        scale: 1.2,
+        models: ['spark-spike', 'arc-small', 'spark-spike'],
         minDistance: 0.2,
-        ephemeral: {
-            lifetime: { min: 250, max: 400 },
-            flashIn: 15,
-            fadeOut: 150,
-            respawn: false,
-            initialDelay: 333,
-            stagger: 100
-        },
         animation: {
-            appearAt: 0.15,
+            appearAt: 0.1,
             disappearAt: 0.85,
-            stagger: 0.05,
+            stagger: 0.08,
             enter: { type: 'pop', duration: 0.015, easing: 'elasticOut', overshoot: 1.3 },
             exit: { type: 'fade', duration: 0.15, easing: 'easeOutCubic' },
-            pulse: { amplitude: 0.15, frequency: 4, easing: 'snap', sync: 'global' },
-            emissive: { min: 0.8, max: 2.5, frequency: 6, pattern: 'sine' },
+            flicker: { intensity: 0.5, rate: 20, pattern: 'random' },
+            emissive: { min: 0.8, max: 2.5, frequency: 8, pattern: 'sine' },
             cutout: {
                 strength: 0.5,
                 primary: { pattern: 8, scale: 1.2, weight: 0.7 },
                 secondary: { pattern: 2, scale: 0.8, weight: 0.3 },
                 blend: 'multiply',
                 travel: 'angular',
-                travelSpeed: 1.0,
+                travelSpeed: 1.5,
                 strengthCurve: 'fadeOut'
             },
-            grain: { type: 3, strength: 0.1, scale: 0.4, speed: 1.5, blend: 'multiply' },
-            scaleVariance: 0.2,
+            grain: { type: 3, strength: 0.15, scale: 0.4, speed: 2.0, blend: 'multiply' },
+            flash: {
+                events: [
+                    { at: 0.20, intensity: 2.0 },
+                    { at: 0.35, intensity: 1.5 },
+                    { at: 0.50, intensity: 2.5 },
+                    { at: 0.65, intensity: 1.0 },
+                    { at: 0.75, intensity: 1.8 }
+                ],
+                decay: 0.015
+            },
+            scaleVariance: 0.3,
             lifetimeVariance: 0.15,
             blending: 'additive',
-            renderOrder: 12,
-            intensityScaling: { scale: 1.25, emissiveMax: 1.5 }
+            renderOrder: 12
         }
     },
 
-    // No jitter - controlled energy
     jitterFrequency: 0,
     jitterAmplitude: 0,
     jitterDecay: 0.2,
-    // Glow - pulsing with energy
     glowColor: [0.4, 0.9, 1.0],
     glowIntensityMin: 1.0,
     glowIntensityMax: 1.8,
-    glowFlickerRate: 8,
-    // Scale breathing
+    glowFlickerRate: 10,
     scaleVibration: 0.02,
     scaleFrequency: 2,
     scalePulse: true,

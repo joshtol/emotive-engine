@@ -13,11 +13,11 @@
  *       │ │ │
  *      │  ★  │         ← Horizontal lightning rings
  *       │ │ │            spinning in funnel
- *        ╲│╱           ← 3 rings at 120° offsets
+ *        ╲│╱           ← 2 rings at 180° offsets
  *                      BOTTOM (narrower)
  *
  * FEATURES:
- * - 3 lightning-rings in spiral formation (120° apart)
+ * - 2 lightning-rings in spiral formation (180° apart)
  * - Horizontal orientation — tornado funnel shape
  * - Narrower at bottom, wider at top
  * - STREAKS + VORONOI cutout for electric vortex
@@ -46,26 +46,31 @@ const ELECTRICVORTEX_CONFIG = {
             startScale: 1.2,
             endScale: 1.5,
             startDiameter: 0.6,
-            endDiameter: 2.0,
+            endDiameter: 1.6,
             orientation: 'flat'
         },
         formation: {
             type: 'spiral',
-            count: 3,
+            count: 2,
             spacing: 0,
-            arcOffset: 120,
+            arcOffset: 180,
             phaseOffset: 0
         },
-        count: 3,
-        scale: 1.5,
+        count: 2,
+        scale: 2.0,
         models: ['lightning-ring'],
         animation: {
             appearAt: 0.05,
-            disappearAt: 0.9,
+            disappearAt: 0.7,
             stagger: 0.02,
             enter: { type: 'fade', duration: 0.1, easing: 'easeOut' },
-            exit: { type: 'burst-fade', duration: 0.15, easing: 'easeIn', burstScale: 1.1 },
+            exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
+            flicker: {
+                intensity: 0.35,
+                rate: 14,
+                pattern: 'random'
+            },
             pulse: { amplitude: 0.12, frequency: 6, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 2.0, frequency: 5, pattern: 'sine' },
             cutout: {
@@ -83,6 +88,14 @@ const ELECTRICVORTEX_CONFIG = {
                 }
             },
             grain: { type: 3, strength: 0.2, scale: 0.3, speed: 2.5, blend: 'multiply' },
+            flash: {
+                events: [
+                    { at: 0.20, intensity: 2.0 },
+                    { at: 0.45, intensity: 3.0 },
+                    { at: 0.60, intensity: 1.5 }
+                ],
+                decay: 0.02
+            },
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'additive',

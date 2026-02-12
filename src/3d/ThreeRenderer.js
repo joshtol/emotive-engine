@@ -535,6 +535,27 @@ export class ThreeRenderer {
         this.renderer.clear();
         this.renderer.setRenderTarget(null);
 
+        // === ICE REFRACTION RENDER TARGET ===
+        // Scene is rendered WITHOUT ice meshes to this texture, then ice shader
+        // samples it with normal-distorted UVs for screen-space refraction
+        this.iceRefractionTarget = new THREE.WebGLRenderTarget(
+            drawingBufferSize.x,
+            drawingBufferSize.y, {
+                format: THREE.RGBAFormat,
+                type: THREE.HalfFloatType,
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                stencilBuffer: false,
+                depthBuffer: true
+            });
+
+        this.renderer.setRenderTarget(this.iceRefractionTarget);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(null);
+
+        // Meshes that need screen-space refraction (ice instanced meshes)
+        this._refractionMeshes = new Set();
+
         // Composite shader to blend particle bloom onto main scene
         this.particleCompositeShader = {
             uniforms: {
@@ -1577,6 +1598,39 @@ export class ThreeRenderer {
                 this.renderer.setRenderTarget(null);
             }
 
+            // === STEP 0.5: Render scene WITHOUT ice to texture for refraction ===
+            // Ice shader samples this texture with normal-distorted UVs to bend
+            // the background through the ice volume (screen-space refraction).
+            // Ice outputs at full opacity — the refraction is baked into the color.
+            if (this.iceRefractionTarget && this._refractionMeshes && this._refractionMeshes.size > 0) {
+                // Hide refraction meshes
+                for (const mesh of this._refractionMeshes) {
+                    mesh.visible = false;
+                }
+
+                // Render scene (layer 0) without ice to refraction target
+                // Alpha=0 clear so shader can distinguish geometry from empty sky
+                this.renderer.setRenderTarget(this.iceRefractionTarget);
+                this.renderer.setClearColor(0x000000, 0);
+                this.renderer.clear();
+                this.camera.layers.set(0);
+                this.renderer.render(this.scene, this.camera);
+                this.renderer.setRenderTarget(null);
+
+                // Restore refraction meshes and pass texture to their materials
+                for (const mesh of this._refractionMeshes) {
+                    mesh.visible = true;
+                    if (mesh.material?.uniforms?.uBackgroundTexture) {
+                        mesh.material.uniforms.uBackgroundTexture.value = this.iceRefractionTarget.texture;
+                        mesh.material.uniforms.uResolution.value.set(
+                            this.iceRefractionTarget.width,
+                            this.iceRefractionTarget.height
+                        );
+                        mesh.material.uniforms.uHasBackground.value = 1;
+                    }
+                }
+            }
+
             // === STEP 1: Render main scene (layer 0) through bloom to screen ===
             this.camera.layers.set(0);
             this.composer.render();
@@ -1651,6 +1705,28 @@ export class ThreeRenderer {
             if (this.crackLayer && this.crackLayer.isActive()) {
                 this.crackLayer.render(this.renderer);
             }
+        }
+    }
+
+    /**
+     * Register a mesh for screen-space refraction (ice instanced meshes).
+     * During rendering, registered meshes are hidden for a background pass,
+     * and their materials receive the background texture for refraction sampling.
+     * @param {THREE.Mesh} mesh - The mesh to register
+     */
+    addRefractionMesh(mesh) {
+        if (mesh && this._refractionMeshes) {
+            this._refractionMeshes.add(mesh);
+        }
+    }
+
+    /**
+     * Unregister a mesh from screen-space refraction.
+     * @param {THREE.Mesh} mesh - The mesh to unregister
+     */
+    removeRefractionMesh(mesh) {
+        if (this._refractionMeshes) {
+            this._refractionMeshes.delete(mesh);
         }
     }
 
@@ -1751,6 +1827,11 @@ export class ThreeRenderer {
             // Resize soul render target for refraction
             if (this.soulRenderTarget) {
                 this.soulRenderTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
+            }
+
+            // Resize ice refraction render target
+            if (this.iceRefractionTarget) {
+                this.iceRefractionTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
             }
 
             // Update resolution uniform for crystal shader refraction
@@ -1878,6 +1959,16 @@ export class ThreeRenderer {
         if (this.soulRenderTarget) {
             this.soulRenderTarget.dispose();
             this.soulRenderTarget = null;
+        }
+
+        // Dispose ice refraction render target
+        if (this.iceRefractionTarget) {
+            this.iceRefractionTarget.dispose();
+            this.iceRefractionTarget = null;
+        }
+        if (this._refractionMeshes) {
+            this._refractionMeshes.clear();
+            this._refractionMeshes = null;
         }
 
         // Dispose glow layer

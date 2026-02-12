@@ -69,7 +69,9 @@ import {
     resetCutout as resetElectricCutout,
     setGrain as setElectricGrain,
     resetGrain as resetElectricGrain,
-    resetAnimation as resetElectricAnimation
+    resetAnimation as resetElectricAnimation,
+    setFlash as setElectricFlash,
+    resetFlash as resetElectricFlash
 } from '../materials/InstancedElectricMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -162,6 +164,8 @@ ElementTypeRegistry.register('electricity', {
     resetCutout: resetElectricCutout,
     setGrain: setElectricGrain,
     resetGrain: resetElectricGrain,
+    setFlash: setElectricFlash,
+    resetFlash: resetElectricFlash,
     resetShaderAnimation: resetElectricAnimation,
     scaleMultiplier: 1.3
 });

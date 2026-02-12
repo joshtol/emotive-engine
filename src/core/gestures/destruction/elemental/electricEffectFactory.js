@@ -1020,7 +1020,7 @@ import barrageGesture from './electricbarrage.js';
 import impactGesture from './electricimpact.js';
 import blastGesture from './electricblast.js';
 import surgeGesture from './electricsurge.js';
-import thunderbirdGesture from './electricthunderbird.js';
+import thunderbirdGesture from './thunderbird.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // EXPORTS — Both legacy and new pattern
@@ -1048,6 +1048,7 @@ export const electricImpact = impactGesture;
 export const electricBlast = blastGesture;
 export const electricSurge = surgeGesture;
 export const electricThunderbird = thunderbirdGesture;
+export const thunderbird = thunderbirdGesture;
 
 export {
     ELECTRIC_EFFECT_VARIANTS

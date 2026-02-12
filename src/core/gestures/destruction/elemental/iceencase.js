@@ -99,6 +99,12 @@ const ICEENCASE_CONFIG = {
                 frequency: 1.5,
                 pattern: 'sine'
             },
+            // Edge breakup: ice shader's own Voronoi cracks become actual geometry
+            // holes at silhouette edges, creating jagged crystalline outlines.
+            // Only edgeMask needed — the ice shader uses its own crack computation.
+            cutout: {
+                edgeMask: 0.3
+            },
             // Very slow oscillating rotation
             rotate: {
                 axis: 'y',

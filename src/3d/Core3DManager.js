@@ -503,7 +503,8 @@ export class Core3DManager {
         // Uses instanced rendering to fix GPU memory leaks from material cloning
         this.elementSpawner = new ElementInstancedSpawner({
             scene: this.renderer.scene,
-            assetsBasePath: this.assetBasePath
+            assetsBasePath: this.assetBasePath,
+            renderer: this.renderer
         });
 
         // Initialize with core mesh and camera if available

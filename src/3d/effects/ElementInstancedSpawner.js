@@ -122,13 +122,15 @@ export class ElementInstancedSpawner {
      * @param {THREE.Mesh} [options.coreMesh] - Mascot mesh for spatial reference
      * @param {THREE.Camera} [options.camera] - Camera for orientation calculations
      * @param {string} [options.assetsBasePath=''] - Base path for model assets
+     * @param {Object} [options.renderer] - ThreeRenderer for refraction mesh registration
      */
     constructor(options = {}) {
         const {
             scene,
             coreMesh = null,
             camera = null,
-            assetsBasePath = ''
+            assetsBasePath = '',
+            renderer = null
         } = options;
 
         if (!scene) {
@@ -139,6 +141,7 @@ export class ElementInstancedSpawner {
         this.coreMesh = coreMesh;
         this.camera = camera;
         this.assetsBasePath = assetsBasePath;
+        this._renderer = renderer;
 
         // Container for all element meshes
         this.container = new THREE.Group();
@@ -319,6 +322,11 @@ export class ElementInstancedSpawner {
         // Add the instanced mesh to the container
         this.container.add(pool.mesh);
 
+        // Register mesh for screen-space refraction if material requests it
+        if (this._renderer && material.userData.needsRefraction) {
+            this._renderer.addRefractionMesh(pool.mesh);
+        }
+
         DEBUG && console.log(`[ElementInstancedSpawner] Initialized ${elementType} pool with ${geometries.length} models, ${MAX_ELEMENTS_PER_TYPE * SLOTS_PER_ELEMENT} max instances`);
 
         return pool;
@@ -412,6 +420,9 @@ export class ElementInstancedSpawner {
             if (elementConfig?.resetGrain && material) {
                 elementConfig.resetGrain(material);
             }
+            if (elementConfig?.resetFlash && material) {
+                elementConfig.resetFlash(material);
+            }
             if (elementConfig?.resetShaderAnimation && material) {
                 elementConfig.resetShaderAnimation(material);
             }
@@ -498,6 +509,9 @@ export class ElementInstancedSpawner {
         }
         if (elementConfig?.resetGrain && material) {
             elementConfig.resetGrain(material);
+        }
+        if (elementConfig?.resetFlash && material) {
+            elementConfig.resetFlash(material);
         }
         if (elementConfig?.resetShaderAnimation && material) {
             elementConfig.resetShaderAnimation(material);
@@ -866,6 +880,11 @@ export class ElementInstancedSpawner {
         if (elementConfig?.setGrain && animation?.grain !== undefined) {
             DEBUG && console.log(`[ElementInstancedSpawner] Applying grain for ${elementType}:`, animation.grain);
             elementConfig.setGrain(material, animation.grain);
+        }
+
+        // Apply flash from animation config (opt-in lightning strike effect for electric elements)
+        if (elementConfig?.setFlash && animation?.flash !== undefined) {
+            elementConfig.setFlash(material, animation.flash);
         }
     }
 
@@ -2021,6 +2040,10 @@ export class ElementInstancedSpawner {
         for (const [type, pool] of this.pools) {
             const lastUsed = this._poolLastUsed.get(type) || 0;
             if (now - lastUsed > this._poolCleanupInterval) {
+                // Unregister from refraction before disposal
+                if (this._renderer && pool.mesh?.material?.userData?.needsRefraction) {
+                    this._renderer.removeRefractionMesh(pool.mesh);
+                }
                 // Pool has been inactive - dispose it
                 pool.dispose();
                 this.pools.delete(type);
@@ -2060,8 +2083,11 @@ export class ElementInstancedSpawner {
         // Clear all elements
         this.despawnAll();
 
-        // Dispose pools
+        // Dispose pools (unregister refraction meshes first)
         for (const pool of this.pools.values()) {
+            if (this._renderer && pool.mesh?.material?.userData?.needsRefraction) {
+                this._renderer.removeRefractionMesh(pool.mesh);
+            }
             pool.dispose();
         }
         this.pools.clear();

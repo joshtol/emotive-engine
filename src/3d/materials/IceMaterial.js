@@ -172,21 +172,13 @@ export function createIceMaterial(options = {}) {
                 );
             }
 
-            // 2D Voronoi for crystalline frost pattern (9 samples vs 27 for 3D)
-            float voronoi(vec2 p) {
-                vec2 i = floor(p);
-                vec2 f = fract(p);
-                float minDist = 1.0;
-
-                for (int x = -1; x <= 1; x++) {
-                    for (int y = -1; y <= 1; y++) {
-                        vec2 neighbor = vec2(float(x), float(y));
-                        vec2 point = neighbor + hash(vec3(i + neighbor, 0.0)) * 0.8;
-                        float dist = length(f - point);
-                        minDist = min(minDist, dist);
-                    }
-                }
-                return minDist;
+            // FBM for frost: layered noise gives organic frost patches
+            float fbm3(vec3 p) {
+                float f = 0.0;
+                f += 0.5000 * noise(p); p *= 2.01;
+                f += 0.2500 * noise(p); p *= 2.02;
+                f += 0.1250 * noise(p);
+                return f / 0.875;
             }
 
             void main() {
@@ -196,20 +188,40 @@ export function createIceMaterial(options = {}) {
                 // Fresnel effect
                 float fresnel = pow(1.0 - abs(dot(normal, viewDir)), 3.0);
 
-                // Frost pattern (UV-space for geometry independence)
+                // Frost pattern: noise-based patches spreading from edges inward.
+                // NOT Voronoi cells — frost forms as organic crystalline coating.
+                // Fresnel drives where frost appears: thick at edges, thin at face-on.
                 float frostMask = 0.0;
                 if (uFrostAmount > 0.01) {
-                    float frost = voronoi(vUv * 8.0);
-                    frost = smoothstep(0.1, 0.3, frost);
-                    frostMask = (1.0 - frost) * uFrostAmount;
+                    // Fresnel-driven spread: frost creeps inward from silhouette edges
+                    float edgeness = pow(1.0 - abs(dot(normal, viewDir)), 1.5);
+
+                    // Multi-scale noise for organic frost texture
+                    float frostNoise = fbm3(vec3(vUv * 6.0, 0.0));
+                    float fineNoise = noise(vec3(vUv * 18.0, 0.5));
+
+                    // Frost threshold: edges always frosted, interior only where noise peaks
+                    // edgeness=1 → frost everywhere, edgeness=0 → only noise peaks > 0.65
+                    float frostThreshold = mix(0.65, 0.0, edgeness);
+                    float frost = smoothstep(frostThreshold, frostThreshold + 0.15, frostNoise);
+
+                    // Fine detail within frost patches
+                    frost += fineNoise * 0.2 * frost;
+
+                    frostMask = frost * uFrostAmount;
                 }
 
-                // Crack pattern (UV-space for geometry independence)
+                // Crack pattern: thin bright lines using noise gradient magnitude
                 float crackIntensity = 0.0;
                 if (uInternalCracks > 0.01) {
-                    float cracks = voronoi(vUv * 5.0 + 0.5);
-                    cracks = smoothstep(0.02, 0.08, cracks);
-                    crackIntensity = (1.0 - cracks) * uInternalCracks;
+                    float crackNoise = fbm3(vec3(vUv * 4.0 + 0.5, 0.3));
+                    // High-frequency detail for crack sharpness
+                    float crackDetail = noise(vec3(vUv * 12.0, 0.7));
+                    // Isolines: thin bright bands where noise crosses thresholds
+                    float crack1 = 1.0 - smoothstep(0.0, 0.02, abs(crackNoise - 0.4));
+                    float crack2 = 1.0 - smoothstep(0.0, 0.015, abs(crackNoise - 0.6));
+                    crackIntensity = max(crack1, crack2 * 0.7) * uInternalCracks;
+                    crackIntensity *= crackDetail * 0.5 + 0.5; // Detail variation
                 }
 
                 float alpha;
@@ -232,10 +244,10 @@ export function createIceMaterial(options = {}) {
                     // Combine
                     alpha = rimAlpha + frostAlpha + crackAlpha;
 
-                    // Color: icy blue-white, brightened for additive blending
-                    finalColor = mix(uColor, vec3(0.5, 0.7, 0.9), fresnel * 0.6);
-                    finalColor += vec3(0.15, 0.25, 0.4) * frostMask;
-                    finalColor += vec3(0.05, 0.1, 0.2) * crackIntensity;
+                    // Color: cold blue for ice lines, not white
+                    finalColor = mix(uColor, vec3(0.4, 0.6, 0.85), fresnel * 0.6);
+                    finalColor += vec3(0.1, 0.18, 0.35) * frostMask;
+                    finalColor += vec3(0.05, 0.08, 0.15) * crackIntensity;
 
                     // Discard near-invisible pixels to avoid uniform wash
                     if (alpha < 0.05) discard;
@@ -247,11 +259,11 @@ export function createIceMaterial(options = {}) {
                     // STANDALONE MODE: Full opaque ice material
                     finalColor = uColor;
 
-                    // Frost whitens patches
+                    // Frost patches whiten the surface
                     vec3 frostWhite = vec3(0.6, 0.72, 0.82);
                     finalColor = mix(finalColor, frostWhite, frostMask * 0.5);
 
-                    // Cracks darken
+                    // Cracks brighten along fracture lines
                     vec3 crackColor = uColor * 0.3;
                     finalColor = mix(finalColor, crackColor, crackIntensity * 0.55);
 
