@@ -3,7 +3,7 @@
  *
  * Reads a distortion map where R/G = pre-scaled signed UV offset (already includes
  * per-instance strength/falloff). Multiple instances add via AdditiveBlending.
- * Hard-clamped to ±0.04 UV (~77px at 1920) as a safety rail.
+ * Hard-clamped to +/-0.04 UV (~77px at 1920) as a safety rail.
  *
  * The pass is inserted before bloom in the EffectComposer chain.
  * The composer auto-manages renderToScreen via isLastEnabledPass().

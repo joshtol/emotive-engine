@@ -24,6 +24,7 @@ import { ElementTypeRegistry } from './ElementTypeRegistry.js';
 
 import {
     createFireDistortionMaterial,
+    createIceDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
 
 import {
@@ -156,7 +157,16 @@ ElementTypeRegistry.register('ice', {
     resetGrain: resetIceGrain,
     resetShaderAnimation: resetIceAnimation,
     scaleMultiplier: 1.2,
-    // distortion: TODO — cold mist distortion (disabled until fire is proven)
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createIceDistortionMaterial,
+        transform: {
+            padding: new THREE.Vector3(0.3, 0.5, 0.3),      // More vertical room for mist
+            centerOffset: new THREE.Vector3(0, -0.15, 0),    // Shift down — cold air sinks
+        },
+        billboard: true,
+        strength: 0.003,
+    },
 });
 
 ElementTypeRegistry.register('electricity', {

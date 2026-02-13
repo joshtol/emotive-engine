@@ -133,7 +133,7 @@ export function createIceDistortionMaterial() {
         name: 'IceDistortion',
         uniforms: {
             uTime: { value: 0.0 },
-            uStrength: { value: 0.002 },
+            uStrength: { value: 0.003 },
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
         fragmentShader: /* glsl */`
@@ -148,24 +148,28 @@ export function createIceDistortionMaterial() {
                 vec2 uv = vUv;
                 vec2 wp = vWorldPos.xy;
 
-                // Cold mist: slow, horizontal drift
-                // World-space noise so pattern doesn't jump when AABB changes
-                float t = uTime * 0.3;
-                float mist1 = dNoise2D(wp * 2.0 + vec2(t * 0.4, -t * 0.1));
-                float mist2 = dNoise2D(wp * 3.5 + vec2(-t * 0.3, t * 0.05));
+                float t = uTime * 0.3; // Slow — cold mist is languid
 
-                // Horizontal spread, slight downward pull
-                float dx = (mist1 - 0.5) * uStrength * 2.0;
-                float dy = (mist2 - 0.5) * uStrength * 0.5 - uStrength * 0.3; // Downward bias
+                // Gentle pulse: strength oscillates slowly (0.8–1.0)
+                float pulse = 0.8 + 0.2 * sin(uTime * 0.5);
 
-                // Concentrated at bottom, fades upward (cold air sinks)
-                float heightWeight = smoothstep(1.0, 0.2, uv.y);
+                // Two-layer rolling fog — world-space so pattern is stable
+                float mist1 = dNoise2D(wp * 3.0 + vec2(t * 0.4, -t * 0.2));
+                float mist2 = dNoise2D(wp * 5.0 + vec2(-t * 0.3, -t * 0.15));
+
+                // Equal horizontal drift and downward pull
+                float dx = (mist1 - 0.5) * uStrength;
+                float dy = (mist2 - 0.5) * uStrength - uStrength * 0.5; // Constant downward bias
+
+                // Cold air pools at bottom — strongest low, fading upward
+                float heightWeight = smoothstep(0.6, 0.1, uv.y);
 
                 // Edge falloff (UV-space — plane edges)
                 float falloff = smoothstep(0.0, 0.2, uv.x) * smoothstep(1.0, 0.8, uv.x)
-                              * smoothstep(0.0, 0.15, uv.y);
+                              * smoothstep(0.0, 0.1, uv.y) * smoothstep(1.0, 0.9, uv.y);
 
-                float strength = falloff * heightWeight;
+                float strength = falloff * heightWeight * pulse;
+
                 gl_FragColor = vec4(dx * strength, dy * strength, 0.0, 1.0);
             }
         `,

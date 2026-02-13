@@ -50,6 +50,7 @@ export class DistortionManager {
      * @param {THREE.ShaderMaterial} config.material - Writes UV offsets to distortion map
      * @param {Object} config.transform - How to derive distortion transform from element transform
      * @param {THREE.Vector3} config.transform.padding - Extra world-unit padding beyond bounding box
+     * @param {THREE.Vector3} [config.transform.centerOffset] - Shift plane center (e.g. downward for ice mist)
      * @param {boolean} config.billboard - Whether to face camera (ignore element rotation)
      * @param {number} config.strength - Default uStrength value
      */
@@ -131,12 +132,18 @@ export class DistortionManager {
             if (z > maxZ) maxZ = z;
         }
 
-        // Center of bounding box
+        // Center of bounding box (shifted by optional centerOffset for asymmetric effects)
         pos.set(
             (minX + maxX) * 0.5,
             (minY + maxY) * 0.5,
             (minZ + maxZ) * 0.5
         );
+        const {centerOffset} = config.transform;
+        if (centerOffset) {
+            pos.x += centerOffset.x;
+            pos.y += centerOffset.y;
+            pos.z += centerOffset.z;
+        }
 
         // Size of bounding box + padding
         const {padding} = config.transform;
