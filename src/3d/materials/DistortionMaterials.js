@@ -17,9 +17,10 @@
  * All materials use AdditiveBlending + depthWrite:false so multiple element types
  * naturally combine in the distortion map.
  *
- * Output format: gl_FragColor = vec4(dx, dy, strength, 1.0)
- *   R/G = signed UV offset direction
- *   B   = strength/falloff multiplier
+ * Output format: gl_FragColor = vec4(dx * falloff, dy * falloff, 0.0, 1.0)
+ *   R/G = signed UV offset, pre-multiplied by falloff (DistortionPass reads only R/G)
+ *   B   = unused (reserved)
+ *   Additive blending accumulates overlapping instances naturally.
  */
 
 import * as THREE from 'three';
@@ -145,11 +146,13 @@ export function createIceDistortionMaterial() {
 
             void main() {
                 vec2 uv = vUv;
+                vec2 wp = vWorldPos.xy;
 
                 // Cold mist: slow, horizontal drift
+                // World-space noise so pattern doesn't jump when AABB changes
                 float t = uTime * 0.3;
-                float mist1 = dNoise2D(uv * 2.0 + vec2(t * 0.4, -t * 0.1));
-                float mist2 = dNoise2D(uv * 3.5 + vec2(-t * 0.3, t * 0.05));
+                float mist1 = dNoise2D(wp * 2.0 + vec2(t * 0.4, -t * 0.1));
+                float mist2 = dNoise2D(wp * 3.5 + vec2(-t * 0.3, t * 0.05));
 
                 // Horizontal spread, slight downward pull
                 float dx = (mist1 - 0.5) * uStrength * 2.0;
@@ -158,13 +161,12 @@ export function createIceDistortionMaterial() {
                 // Concentrated at bottom, fades upward (cold air sinks)
                 float heightWeight = smoothstep(1.0, 0.2, uv.y);
 
-                // Edge falloff
+                // Edge falloff (UV-space — plane edges)
                 float falloff = smoothstep(0.0, 0.2, uv.x) * smoothstep(1.0, 0.8, uv.x)
                               * smoothstep(0.0, 0.15, uv.y);
 
                 float strength = falloff * heightWeight;
-
-                gl_FragColor = vec4(dx, dy, strength, 1.0);
+                gl_FragColor = vec4(dx * strength, dy * strength, 0.0, 1.0);
             }
         `,
         blending: THREE.AdditiveBlending,
@@ -199,7 +201,7 @@ export function createWaterDistortionMaterial() {
                 float dist = length(center);
                 vec2 dir = normalize(center + 0.001);
 
-                // Concentric expanding rings
+                // Concentric expanding rings (UV-space center — rings scale with effect)
                 float t = uTime * 1.0;
                 float ring1 = sin(dist * 20.0 - t * 4.0) * 0.5 + 0.5;
                 float ring2 = sin(dist * 14.0 - t * 2.8 + 1.0) * 0.5 + 0.5;
@@ -211,9 +213,7 @@ export function createWaterDistortionMaterial() {
                 // Falloff: strong near center, zero at edge
                 float falloff = smoothstep(0.5, 0.1, dist);
 
-                float strength = falloff;
-
-                gl_FragColor = vec4(offset, strength, 1.0);
+                gl_FragColor = vec4(offset * falloff, 0.0, 1.0);
             }
         `,
         blending: THREE.AdditiveBlending,
@@ -248,16 +248,18 @@ export function createElectricDistortionMaterial() {
 
             void main() {
                 vec2 uv = vUv;
+                vec2 wp = vWorldPos.xy;
 
                 // Step noise: random jitter that changes abruptly (not smooth)
+                // World-space coords so jitter cells don't shift when AABB resizes
                 float t = floor(uTime * 15.0); // 15 fps step noise
-                vec2 hashCoord1 = uv * 50.0 + vec2(t);
-                vec2 hashCoord2 = uv * 50.0 + vec2(t + 100.0);
+                vec2 hashCoord1 = wp * 50.0 + vec2(t);
+                vec2 hashCoord2 = wp * 50.0 + vec2(t + 100.0);
                 float jitterX = (dHash(hashCoord1) - 0.5) * 2.0;
                 float jitterY = (dHash(hashCoord2) - 0.5) * 2.0;
 
                 // Sparse: only ~30% of pixels get jitter
-                vec2 cellCoord = floor(uv * 20.0) + vec2(t * 0.1);
+                vec2 cellCoord = floor(wp * 20.0) + vec2(t * 0.1);
                 float active = step(0.7, dHash(cellCoord));
 
                 vec2 offset = vec2(jitterX, jitterY) * uStrength * active;
@@ -265,13 +267,11 @@ export function createElectricDistortionMaterial() {
                 // Flash boost: distortion spikes during lightning flash
                 offset *= 1.0 + uFlashIntensity * 3.0;
 
-                // Edge falloff
+                // Edge falloff (UV-space — plane edges)
                 float falloff = smoothstep(0.0, 0.15, uv.x) * smoothstep(1.0, 0.85, uv.x)
                               * smoothstep(0.0, 0.15, uv.y) * smoothstep(1.0, 0.85, uv.y);
 
-                float strength = falloff * active;
-
-                gl_FragColor = vec4(offset, strength, 1.0);
+                gl_FragColor = vec4(offset * falloff, 0.0, 1.0);
             }
         `,
         blending: THREE.AdditiveBlending,

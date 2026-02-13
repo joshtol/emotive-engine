@@ -90,6 +90,7 @@ export class ThreeRenderer {
         this.renderer.domElement.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
 
         // Page visibility change handling (detect tab switches that may invalidate GPU resources)
+        this._wasHidden = false;
         this._boundHandleVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._boundHandleVisibilityChange);
 
@@ -737,12 +738,16 @@ export class ThreeRenderer {
     /**
      * Handle window focus recovery.
      * Windows overlays (snipping tool, Alt+Tab) can invalidate GPU render targets
-     * without firing visibilitychange.
+     * without firing visibilitychange. Only recreate if the page was actually hidden
+     * to avoid churning GPU resources on routine focus events (clicking the window).
      * @private
      */
     _handleFocusRecovery() {
         if (this._destroyed) return;
-        this._recreateDistortionTarget();
+        if (this._wasHidden) {
+            this._wasHidden = false;
+            this._recreateDistortionTarget();
+        }
     }
 
     /**
@@ -752,6 +757,14 @@ export class ThreeRenderer {
      */
     _handleVisibilityChange() {
         if (this._destroyed) return;
+
+        if (document.hidden) {
+            this._wasHidden = true;
+            return;
+        }
+
+        // Becoming visible — clear flag so _handleFocusRecovery doesn't double up
+        this._wasHidden = false;
 
         if (!document.hidden) {
             // Tab became visible - check if textures are still valid

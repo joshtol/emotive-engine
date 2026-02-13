@@ -327,8 +327,9 @@ export class ElementInstancedSpawner {
             this._renderer.addRefractionMesh(pool.mesh);
         }
 
-        // Register distortion config if element type has one
-        if (this._distortionManager && config.distortion) {
+        // Register distortion config if element type has one (and not already registered)
+        if (this._distortionManager && config.distortion &&
+            !this._distortionManager.hasElement(elementType)) {
             const dist = config.distortion;
             this._distortionManager.registerElement(elementType, {
                 geometry: dist.geometry(),
@@ -1706,6 +1707,13 @@ export class ElementInstancedSpawner {
         // OPTIMIZATION: When no elements are active but pools exist,
         // skip expensive per-frame work and just check for pool cleanup
         if (this.activeElements.size === 0) {
+            // Sync distortion to zero before early return — ensures distortion
+            // turns off even if the last element was removed by a non-standard path
+            if (this._distortionManager) {
+                for (const [type, pool] of this.pools) {
+                    this._distortionManager.syncInstances(type, pool.mesh, pool.mesh.count);
+                }
+            }
             this._checkPoolCleanup();
             return;
         }

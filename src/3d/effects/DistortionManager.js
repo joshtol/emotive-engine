@@ -53,6 +53,14 @@ export class DistortionManager {
      * @param {boolean} config.billboard - Whether to face camera (ignore element rotation)
      * @param {number} config.strength - Default uStrength value
      */
+    /**
+     * Check if an element type is already registered.
+     * Used by spawner to avoid creating geometry/material that would be discarded.
+     */
+    hasElement(elementType) {
+        return this.elementMeshes.has(elementType);
+    }
+
     registerElement(elementType, config) {
         if (this.elementMeshes.has(elementType)) return;
 
@@ -94,9 +102,10 @@ export class DistortionManager {
         const count = Math.min(activeCount, MAX_DISTORTION_INSTANCES);
 
         if (count === 0) {
-            distMesh.count = 0;
-            distMesh.visible = false;
-            distMesh.instanceMatrix.needsUpdate = true;
+            if (distMesh.count !== 0) {
+                distMesh.count = 0;
+                distMesh.visible = false;
+            }
             return;
         }
 
