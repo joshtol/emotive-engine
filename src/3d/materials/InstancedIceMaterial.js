@@ -132,6 +132,117 @@ float voronoi(vec3 p) {
     }
     return minDist;
 }
+
+// Trapped air bubbles: 3D volumetric cell grid with proper spheres.
+// The surface CUTS THROUGH 3D spheres → always circular cross-sections,
+// no stretching regardless of surface angle. Bubbles are INSIDE the ice.
+// Returns vec2(brightness, ringDarkness) for compositing.
+vec2 bubbleField3D(vec3 p, float scale, float density) {
+    vec3 sp = p * scale;
+    vec3 i = floor(sp);
+    vec3 f = fract(sp);
+
+    float bright = 0.0;
+    float ringDark = 0.0;
+
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int z = -1; z <= 1; z++) {
+                vec3 nb = vec3(float(x), float(y), float(z));
+                vec3 cid = i + nb;
+
+                float exists = hash(cid * 1.7 + 3.73);
+                if (exists < density) {
+                    vec3 center = nb + vec3(
+                        hash(cid + 0.37),
+                        hash(cid + 1.51),
+                        hash(cid + 2.93)
+                    ) * 0.6 + 0.2;
+                    float r = mix(0.12, 0.30, hash(cid + 4.31));
+                    float d = length(f - center);
+
+                    if (d < r) {
+                        float nd = d / r; // 0=center, 1=edge
+
+                        // Interior: brighter than surrounding ice (primary visual)
+                        bright += (1.0 - nd * nd) * 0.45;
+
+                        // Subtle dark ring at boundary — just defines the edge
+                        ringDark += smoothstep(0.65, 0.95, nd) * 0.5;
+
+                        // Small caustic highlight (3D direction)
+                        vec3 sphereDir = normalize(f - center);
+                        bright += pow(max(dot(sphereDir, normalize(vec3(0.3, 0.8, 0.2))), 0.0), 6.0) * 0.2;
+                    }
+                }
+            }
+        }
+    }
+
+    return vec2(bright, ringDark);
+}
+
+// Internal fracture planes: flat disc-shaped inclusions at random orientations
+// inside the ice volume. Where the surface cuts through a fracture disc, you see
+// a bright scattered-light line that shifts with viewing angle (like real ice).
+// Each cell in the 3D grid may contain a fracture plane with:
+//   - Random center position within cell
+//   - Random plane orientation (normal vector)
+//   - Disc radius with feathery noise-perturbed edges
+//   - View-dependent brightness (planes facing camera flash bright)
+// Returns: brightness (0-1) of fracture scatter at this point.
+float fractureField3D(vec3 p, vec3 viewDir, float scale, float density) {
+    vec3 sp = p * scale;
+    vec3 i = floor(sp);
+    vec3 f = fract(sp);
+
+    float result = 0.0;
+
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int z = -1; z <= 1; z++) {
+                vec3 nb = vec3(float(x), float(y), float(z));
+                vec3 cid = i + nb;
+
+                float exists = hash(cid * 2.3 + 7.91);
+                if (exists < density) {
+                    // Fracture center within cell
+                    vec3 center = nb + vec3(
+                        hash(cid + 0.37),
+                        hash(cid + 1.51),
+                        hash(cid + 2.93)
+                    ) * 0.6 + 0.2;
+
+                    // Random plane orientation
+                    vec3 planeNorm = normalize(vec3(
+                        hash(cid + 5.17) * 2.0 - 1.0,
+                        hash(cid + 6.83) * 2.0 - 1.0,
+                        hash(cid + 8.41) * 2.0 - 1.0
+                    ));
+
+                    // Distance from point to the fracture plane
+                    vec3 toPoint = f - center;
+                    float planeDist = abs(dot(toPoint, planeNorm));
+
+                    // Thick slab — 0.25 ensures high intersection probability.
+                    // At scale 1.5, cell=0.67 units, slab=0.25 → 37% of cell height.
+                    float planeVis = 1.0 - smoothstep(0.0, 0.25, planeDist);
+
+                    // Disc boundary — large discs spanning most of the cell
+                    vec3 inPlane = toPoint - dot(toPoint, planeNorm) * planeNorm;
+                    float radialDist = length(inPlane);
+                    float discRadius = mix(0.5, 0.9, hash(cid + 9.73));
+                    float discMask = 1.0 - smoothstep(discRadius * 0.7, discRadius, radialDist);
+
+                    // No sparkle/brightness multipliers — just geometry.
+                    // Visibility = plane intersection × disc shape. Range 0-1.
+                    result += planeVis * discMask;
+                }
+            }
+        }
+    }
+    return result;
+}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -571,6 +682,63 @@ void main() {
     transmittedLight += vec3(0.04, 0.1, 0.14) * fresnel;
 
     // ═══════════════════════════════════════════════════════════════════════════════
+    // INTERNAL FRACTURE PLANES — flat crystalline sheets trapped inside the volume
+    // Voronoi cells with Chebyshev distance → large angular regions.
+    // Each cell is either a fracture plane (milky scatter) or clear glass.
+    // Per-plane view-dependent brightness from random orientation.
+    // Boundary edges highlighted where fractured meets clear glass.
+    // Computed here, composited AFTER soft clamp (see below).
+    // ═══════════════════════════════════════════════════════════════════════════════
+    float fracPlanes = 0.0;
+    float fracEdge = 0.0;
+    {
+        vec2 fpPx = viewDir.xz / max(smoothNdotV, 0.25) * 0.12;
+        vec2 fpPos = (vPosition.xz + fpPx) * 1.5 + vec2(vRandomSeed * 6.0, vRandomSeed * 4.2);
+        vec2 fpi = floor(fpPos);
+        vec2 fpf = fract(fpPos);
+
+        float fd1 = 10.0, fd2 = 10.0;
+        vec2 fcell1 = vec2(0.0), fcell2 = vec2(0.0);
+
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                vec2 nb = vec2(float(x), float(y));
+                vec2 cell = fpi + nb;
+                vec2 pt = nb + fract(sin(vec2(
+                    dot(cell, vec2(127.1, 311.7)),
+                    dot(cell, vec2(269.5, 183.3))
+                )) * 43758.5453);
+                vec2 diff = fpf - pt;
+                float d = max(abs(diff.x), abs(diff.y));
+                if (d < fd1) { fd2 = fd1; fcell2 = fcell1; fd1 = d; fcell1 = cell; }
+                else if (d < fd2) { fd2 = d; fcell2 = cell; }
+            }
+        }
+
+        float edgeDist = fd2 - fd1;
+
+        // Per-cell fracture determination (~18% of cells have fractures)
+        float fh1 = fract(sin(dot(fcell1, vec2(43.37, 87.71))) * 43758.5453);
+        float fh2 = fract(sin(dot(fcell2, vec2(43.37, 87.71))) * 43758.5453);
+        float fhas1 = step(0.82, fh1);
+        float fhas2 = step(0.82, fh2);
+
+        // View-dependent brightness for the fractured cell's "plane orientation"
+        float fang = fract(sin(dot(fcell1, vec2(13.17, 67.29))) * 43758.5453) * 6.28;
+        vec2 fdir = vec2(cos(fang), sin(fang));
+        float fbright = abs(dot(fdir, viewDir.xz));
+        fbright = mix(0.25, 1.0, fbright);
+        float fbase = mix(0.5, 1.0, fract(fh1 * 7.13));
+
+        // Fracture fill: milky scatter inside fractured cells
+        fracPlanes = fhas1 * fbright * fbase;
+
+        // Fracture boundary edge: bright line where fractured cell meets clear cell
+        float isBoundary = abs(fhas1 - fhas2);
+        fracEdge = isBoundary * (1.0 - smoothstep(0.0, 0.04, edgeDist));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
     // FROST — opaque rime veins over clear glass
     // Applied after energy conservation so frost isn't dimmed at edges.
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -587,13 +755,31 @@ void main() {
     color *= uIntensity;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // TRAPPED AIR BUBBLES — bright dots inside the ice volume
-    // Visible against the neutral body, catching light for internal depth
+    // TRAPPED AIR BUBBLES — round spherical voids frozen inside the ice
+    // Two scales: large prominent bubbles + small fizzy detail.
+    // Each bubble: bright interior, dark ring edge, caustic highlight on top.
+    // Cluster mask concentrates bubbles in patches (not uniform everywhere).
     // ═══════════════════════════════════════════════════════════════════════════════
     vec3 bubbleParallax = viewDir * 0.08 / max(smoothNdotV, 0.25);
-    float bubbleNoise = noise((vPosition + bubbleParallax) * 42.0 + vec3(0.0, localTime * 0.02, 0.0));
-    float bubbleMask = step(0.985, bubbleNoise); // Top 1.5% — rare diamond sparkles, not dust
-    color += vec3(2.0) * bubbleMask; // Single-pixel sparks — high brightness OK, too sparse to bloom
+    // Per-instance offset so each ice element has unique bubble placement
+    vec3 bubbleSamplePos = vPosition + bubbleParallax + vec3(vRandomSeed * 10.0);
+
+    // Cluster mask — mild variation, NOT aggressive culling
+    float bubbleCluster = noise(vPosition * 2.0 + vec3(vRandomSeed * 5.0, 0.0, 0.0));
+    float clusterMask = 0.5 + 0.5 * bubbleCluster; // 0.5–1.0 range, never fully off
+
+    // 3D volumetric bubbles (scale 8, 65% density) — spheres cut by the surface
+    vec2 bub = bubbleField3D(bubbleSamplePos, 8.0, 0.65);
+
+    // Tiny fizzy specks — cheap noise threshold dots for density between big bubbles
+    float fizz = smoothstep(0.82, 0.89, noise(bubbleSamplePos * 35.0)) * 0.20;
+
+    float bubbleBright = (bub.x + fizz) * clusterMask * (1.0 - frostMask);
+    float bubbleRing = bub.y * clusterMask * (1.0 - frostMask);
+
+    // Bright interior (primary) + subtle dark edge (secondary)
+    color += vec3(0.80, 0.85, 0.92) * bubbleBright * 0.35;
+    color -= vec3(0.07, 0.06, 0.04) * bubbleRing;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // SPECULAR — sharp concentrated glints for the wet/glossy look
@@ -628,7 +814,17 @@ void main() {
     vec3 wetReflDir = reflect(-viewDir, worldNormal);
     float wetSpec = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 120.0);
     wetSpec += pow(max(dot(wetReflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 120.0) * 0.5;
-    color += vec3(1.0) * wetSpec * 0.5 * (1.0 - frostMask);
+    wetSpec += pow(max(dot(wetReflDir, normalize(vec3(0.0, 0.6, -0.8))), 0.0), 120.0) * 0.3;
+    color += vec3(1.0) * wetSpec * 0.8 * (1.0 - frostMask);
+
+    // Broad wet sheen — soft glossy highlight from thin water film on ice surface.
+    // Medium specular power = visible gloss patches, not uniform brightening.
+    // Uses smooth worldNormal: the water film IS smooth even over faceted ice.
+    float sheen1 = pow(max(dot(wetReflDir, normalize(vec3(0.3, 1.0, 0.2))), 0.0), 24.0);
+    float sheen2 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.8, -0.5))), 0.0), 24.0) * 0.5;
+    float sheen3 = pow(max(dot(wetReflDir, normalize(vec3(0.6, 0.4, 0.6))), 0.0), 16.0) * 0.3;
+    float wetSheen = sheen1 + sheen2 + sheen3;
+    color += vec3(0.92, 0.95, 1.0) * wetSheen * 0.06 * (1.0 - frostMask) * (1.0 - uMelt * 0.5);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // SOFT CLAMP — cap the smooth glass BASE before adding bright features
@@ -640,6 +836,15 @@ void main() {
     if (finalMax > softCap) {
         color *= softCap / finalMax;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // INTERNAL FRACTURE PLANES — milky crystalline inclusions
+    // Cell fill: angular milky zones where flat fracture sheets scatter light.
+    // Boundary edges: bright lines where fractured cells meet clear glass.
+    // Applied post-clamp so both features exceed the capped body color.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    color = mix(color, vec3(0.88, 0.92, 0.97), fracPlanes * 0.42 * uInternalCracks);
+    color = mix(color, vec3(1.02, 1.05, 1.08), fracEdge * 0.55 * uInternalCracks);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // INTERNAL CRACK LINES (two-scale Voronoi with Chebyshev distance)
