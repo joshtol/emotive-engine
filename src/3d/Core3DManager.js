@@ -507,6 +507,11 @@ export class Core3DManager {
             renderer: this.renderer
         });
 
+        // Wire distortion manager from ThreeRenderer to spawner
+        if (this.renderer?.distortionManager) {
+            this.elementSpawner.setDistortionManager(this.renderer.distortionManager);
+        }
+
         // Initialize with core mesh and camera if available
         // NOTE: Models are NOT preloaded here - they load lazily on first spawn
         // This prevents GPU overhead for demos that don't use elemental gestures

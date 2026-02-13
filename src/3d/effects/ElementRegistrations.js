@@ -19,7 +19,12 @@
 // IMPORTS (all imports must be at the top for correct bundler behavior)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
+import * as THREE from 'three';
 import { ElementTypeRegistry } from './ElementTypeRegistry.js';
+
+import {
+    createFireDistortionMaterial,
+} from '../materials/DistortionMaterials.js';
 
 import {
     createInstancedFireMaterial,
@@ -96,7 +101,16 @@ ElementTypeRegistry.register('fire', {
     setGrain: setFireGrain,
     resetGrain: resetFireGrain,
     resetShaderAnimation: resetFireAnimation,
-    scaleMultiplier: 1.5
+    scaleMultiplier: 1.5,
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createFireDistortionMaterial,
+        transform: {
+            padding: new THREE.Vector3(0.3, 0.3, 0.3), // World-unit padding beyond instance AABB
+        },
+        billboard: true,
+        strength: 0.005,
+    },
 });
 
 ElementTypeRegistry.register('water', {
@@ -118,7 +132,8 @@ ElementTypeRegistry.register('water', {
     setGrain: setWaterGrain,
     resetGrain: resetWaterGrain,
     resetShaderAnimation: resetWaterAnimation,
-    scaleMultiplier: 1.2
+    scaleMultiplier: 1.2,
+    // distortion: TODO — water ripple distortion (disabled until fire is proven)
 });
 
 ElementTypeRegistry.register('ice', {
@@ -140,7 +155,8 @@ ElementTypeRegistry.register('ice', {
     setGrain: setIceGrain,
     resetGrain: resetIceGrain,
     resetShaderAnimation: resetIceAnimation,
-    scaleMultiplier: 1.2
+    scaleMultiplier: 1.2,
+    // distortion: TODO — cold mist distortion (disabled until fire is proven)
 });
 
 ElementTypeRegistry.register('electricity', {
@@ -167,7 +183,8 @@ ElementTypeRegistry.register('electricity', {
     setFlash: setElectricFlash,
     resetFlash: resetElectricFlash,
     resetShaderAnimation: resetElectricAnimation,
-    scaleMultiplier: 1.3
+    scaleMultiplier: 1.3,
+    // distortion: TODO — static jitter distortion (disabled until fire is proven)
 });
 
 // Export for explicit import (side-effect import also works)

@@ -327,6 +327,18 @@ export class ElementInstancedSpawner {
             this._renderer.addRefractionMesh(pool.mesh);
         }
 
+        // Register distortion config if element type has one
+        if (this._distortionManager && config.distortion) {
+            const dist = config.distortion;
+            this._distortionManager.registerElement(elementType, {
+                geometry: dist.geometry(),
+                material: dist.material(),
+                transform: dist.transform,
+                billboard: dist.billboard,
+                strength: dist.strength,
+            });
+        }
+
         DEBUG && console.log(`[ElementInstancedSpawner] Initialized ${elementType} pool with ${geometries.length} models, ${MAX_ELEMENTS_PER_TYPE * SLOTS_PER_ELEMENT} max instances`);
 
         return pool;
@@ -1984,6 +1996,22 @@ export class ElementInstancedSpawner {
                 this.activeElements.delete(elementId);
             }
         }
+
+        // Sync distortion instance matrices from element pools
+        // Must sync ALL pools (including count=0) so distortion meshes get reset
+        if (this._distortionManager) {
+            for (const [type, pool] of this.pools) {
+                this._distortionManager.syncInstances(type, pool.mesh, pool.mesh.count);
+            }
+        }
+    }
+
+    /**
+     * Sets the distortion manager for syncing distortion instances.
+     * @param {DistortionManager} manager
+     */
+    setDistortionManager(manager) {
+        this._distortionManager = manager;
     }
 
     /**

@@ -15,8 +15,10 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-// ShaderPass - available for custom post-processing if needed
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
+import { DistortionShader } from './DistortionPass.js';
+import { DistortionManager } from './effects/DistortionManager.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // normalizeColorLuminance - available for advanced color normalization
 import { GlowLayer } from './effects/GlowLayer.js';
@@ -90,6 +92,11 @@ export class ThreeRenderer {
         // Page visibility change handling (detect tab switches that may invalidate GPU resources)
         this._boundHandleVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._boundHandleVisibilityChange);
+
+        // Focus recovery: Windows overlays (Win+Shift+S, Alt+Tab, etc.) may invalidate
+        // GPU render targets without triggering visibilitychange
+        this._boundHandleFocusRecovery = this._handleFocusRecovery.bind(this);
+        window.addEventListener('focus', this._boundHandleFocusRecovery);
 
         // Create camera
         const fov = options.fov !== undefined ? options.fov : 45;
@@ -456,6 +463,10 @@ export class ThreeRenderer {
         renderPass.clearAlpha = 0;  // Transparent background
         this.composer.addPass(renderPass);
 
+        // Distortion pass slot — added here (before bloom) so bloom stays last.
+        // The actual ShaderPass is created later in the distortion section and inserted here.
+        this._distortionPassIndex = this.composer.passes.length;
+
         // Bloom pass - glow/bloom effect (Unreal Engine style)
         // PERFORMANCE: Always use half resolution for bloom - barely visible difference
         // since bloom is inherently blurry, but saves ~4x fill rate
@@ -471,8 +482,11 @@ export class ThreeRenderer {
             0.9   // threshold - very high so only HDR peaks (>0.9) trigger bloom
         );
         this.bloomPass.name = 'bloomPass';
-        this.bloomPass.enabled = true; // Using proven working blur shader approach
-        this.bloomPass.renderToScreen = true; // CRITICAL: Last pass must render to screen
+        this.bloomPass.enabled = true;
+        // renderToScreen is auto-managed by EffectComposer.isLastEnabledPass()
+        // Bloom must ALWAYS be the last enabled pass (renderToScreen=true) because its
+        // render() has two-phase compositing: copy scene to screen, then add bloom on top.
+        // Distortion pass goes BEFORE bloom so bloom's renderToScreen is never affected.
         this.composer.addPass(this.bloomPass);
 
         // CRITICAL: Clear bloom buffers immediately after creation to prevent garbage data flash
@@ -555,6 +569,38 @@ export class ThreeRenderer {
 
         // Meshes that need screen-space refraction (ice instanced meshes)
         this._refractionMeshes = new Set();
+
+        // === DISTORTION RENDER TARGET ===
+        // Half-res — distortion offsets are low frequency (smooth/blurry by nature)
+        const halfWidth = Math.floor(drawingBufferSize.x * 0.5);
+        const halfHeight = Math.floor(drawingBufferSize.y * 0.5);
+        this.distortionTarget = new THREE.WebGLRenderTarget(
+            halfWidth,
+            halfHeight,
+            {
+                format: THREE.RGBAFormat,
+                type: THREE.HalfFloatType,  // Signed offsets need float
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                depthBuffer: false           // No depth needed for 2D offset map
+            }
+        );
+
+        this.renderer.setRenderTarget(this.distortionTarget);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(null);
+
+        // Distortion post-processing pass (BEFORE bloom, not after)
+        // Bloom must always be the last enabled pass because its render() relies on
+        // renderToScreen=true for correct two-phase compositing (scene copy + bloom add).
+        // Distortion warps the raw scene, then bloom processes the warped result.
+        this.distortionPass = new ShaderPass(DistortionShader);
+        this.distortionPass.enabled = false;  // Off by default — enabled when sources active
+        // Insert before bloom (at saved index) so bloom remains the last enabled pass
+        this.composer.passes.splice(this._distortionPassIndex, 0, this.distortionPass);
+
+        // DistortionManager: creates/syncs parallel InstancedMeshes, renders distortion map
+        this.distortionManager = new DistortionManager(this.renderer, this.camera);
 
         // Composite shader to blend particle bloom onto main scene
         this.particleCompositeShader = {
@@ -664,6 +710,42 @@ export class ThreeRenderer {
     }
 
     /**
+     * Recreate the distortion render target.
+     * Called when GPU resources may have been invalidated by OS-level events.
+     * @private
+     */
+    _recreateDistortionTarget() {
+        if (!this.distortionTarget) return;
+        this.distortionTarget.dispose();
+        const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
+        this.distortionTarget = new THREE.WebGLRenderTarget(
+            Math.floor(size.x * 0.5),
+            Math.floor(size.y * 0.5),
+            {
+                format: THREE.RGBAFormat,
+                type: THREE.HalfFloatType,
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                depthBuffer: false
+            }
+        );
+        this.renderer.setRenderTarget(this.distortionTarget);
+        this.renderer.clear();
+        this.renderer.setRenderTarget(null);
+    }
+
+    /**
+     * Handle window focus recovery.
+     * Windows overlays (snipping tool, Alt+Tab) can invalidate GPU render targets
+     * without firing visibilitychange.
+     * @private
+     */
+    _handleFocusRecovery() {
+        if (this._destroyed) return;
+        this._recreateDistortionTarget();
+    }
+
+    /**
      * Handle page visibility changes
      * When tab becomes visible again, check if GPU resources need reloading
      * @private
@@ -680,15 +762,21 @@ export class ThreeRenderer {
                 console.warn('⚠️ WebGL context lost detected on visibility change');
                 this._contextLost = true;
                 // The context restoration will be handled by the browser's webglcontextrestored event
-            } else if (this.coreMesh?.material) {
-                // Context is valid but textures might be invalidated
-                // Check if the material has textures that need revalidation
-                const { material } = this.coreMesh;
-                if (material.map && !material.map.image) {
-                    // Texture image was garbage collected - trigger reload
-                    console.warn('⚠️ Texture invalidated on visibility change - triggering reload');
-                    if (this.onContextRestored) {
-                        this.onContextRestored();
+            } else {
+                // Context is valid but GPU resources might be invalidated
+
+                // Recreate distortion render target — browsers may reclaim RT memory for background tabs
+                this._recreateDistortionTarget();
+
+                if (this.coreMesh?.material) {
+                    // Check if the material has textures that need revalidation
+                    const { material } = this.coreMesh;
+                    if (material.map && !material.map.image) {
+                        // Texture image was garbage collected - trigger reload
+                        console.warn('⚠️ Texture invalidated on visibility change - triggering reload');
+                        if (this.onContextRestored) {
+                            this.onContextRestored();
+                        }
                     }
                 }
             }
@@ -1631,7 +1719,24 @@ export class ThreeRenderer {
                 }
             }
 
-            // === STEP 1: Render main scene (layer 0) through bloom to screen ===
+            // === STEP 0.75: Render distortion map (if active sources) ===
+            if (this.distortionManager) {
+                this.distortionManager.update(deltaTime / 1000); // ms → seconds
+                const hasDistortion = this.distortionManager.hasActiveSources();
+
+                this.distortionPass.enabled = hasDistortion;
+                // Always bind texture so it's never stale after tab-out recreation
+                this.distortionPass.uniforms.tDistortion.value = this.distortionTarget.texture;
+
+                if (hasDistortion) {
+                    // Ensure camera sees layer 0 — previous steps (soul render) may
+                    // leave it on layer 2, making distortion meshes invisible
+                    this.camera.layers.set(0);
+                    this.distortionManager.render(this.distortionTarget);
+                }
+            }
+
+            // === STEP 1: Render main scene (layer 0) through bloom (+ distortion if active) to screen ===
             this.camera.layers.set(0);
             this.composer.render();
 
@@ -1834,6 +1939,11 @@ export class ThreeRenderer {
                 this.iceRefractionTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
             }
 
+            // Resize distortion render target (half resolution)
+            if (this.distortionTarget) {
+                this.distortionTarget.setSize(halfWidth, halfHeight);
+            }
+
             // Update resolution uniform for crystal shader refraction
             if (this.coreMesh?.material?.uniforms?.resolution) {
                 this.coreMesh.material.uniforms.resolution.value.set(drawingBufferSize.x, drawingBufferSize.y);
@@ -1901,8 +2011,9 @@ export class ThreeRenderer {
             this.renderer.domElement.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
         }
 
-        // Remove visibility change listener
+        // Remove visibility change and focus listeners
         document.removeEventListener('visibilitychange', this._boundHandleVisibilityChange);
+        window.removeEventListener('focus', this._boundHandleFocusRecovery);
 
         // Cancel camera animation RAF
         if (this.cameraAnimationId) {
@@ -1969,6 +2080,20 @@ export class ThreeRenderer {
         if (this._refractionMeshes) {
             this._refractionMeshes.clear();
             this._refractionMeshes = null;
+        }
+
+        // Dispose distortion system
+        if (this.distortionTarget) {
+            this.distortionTarget.dispose();
+            this.distortionTarget = null;
+        }
+        if (this.distortionPass) {
+            this.distortionPass.dispose();
+            this.distortionPass = null;
+        }
+        if (this.distortionManager) {
+            this.distortionManager.dispose();
+            this.distortionManager = null;
         }
 
         // Dispose glow layer
