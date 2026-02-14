@@ -99,6 +99,15 @@ const ICEENCASE_CONFIG = {
                 frequency: 1.5,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: cold mist as ice encases
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.2,
+                progressCurve: 'sustain',
+            }],
             // Edge breakup: ice shader's own Voronoi cracks become actual geometry
             // holes at silhouette edges, creating jagged crystalline outlines.
             // Only edgeMask needed — the ice shader uses its own crack computation.

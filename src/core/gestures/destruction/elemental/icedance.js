@@ -115,6 +115,15 @@ const ICEDANCE_CONFIG = {
                 speed: 2.0,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: cold mist from dancing rings
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             parameterAnimation: {
                 frost: {
                     start: 0.5,

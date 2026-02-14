@@ -112,20 +112,6 @@ const ICE_VORTEX_CONFIG = {
                 frequency: 5,
                 pattern: 'sine'
             },
-            cutout: {
-                strength: 0.5,
-                primary: { pattern: 3, scale: 1.2, weight: 1.0 },     // VORONOI - crystalline cells
-                secondary: { pattern: 8, scale: 0.8, weight: 0.5 },   // CRACKS - fracture lines
-                blend: 'add',
-                travel: 'angular',
-                travelSpeed: 2.0,
-                strengthCurve: 'bell',
-                trailDissolve: {
-                    enabled: true,
-                    offset: -0.4,
-                    softness: 1.2
-                }
-            },
             grain: {
                 type: 3,
                 strength: 0.2,
@@ -133,6 +119,15 @@ const ICE_VORTEX_CONFIG = {
                 speed: 2.5,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: cold mist from vortex
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'normal',
@@ -181,6 +176,6 @@ const ICE_VORTEX_CONFIG = {
  * - Crystals are FLAT (orientation: 'flat') for tornado funnel effect
  * - 120° arcOffset creates cage of ice around the mascot
  * - Funnel shape expands as crystals travel upward
- * - VORONOI cutout with CRACKS overlay for dynamic vortex holes
+ * - No cutout — clean ice material surface
  */
 export default buildIceEffectGesture(ICE_VORTEX_CONFIG);

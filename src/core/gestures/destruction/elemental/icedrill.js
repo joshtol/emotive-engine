@@ -118,6 +118,15 @@ const ICEDRILL_CONFIG = {
                 speed: 4.0,           // Fast for drilling energy
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: cold mist from drilling
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             pulse: {
                 amplitude: 0.08,
                 frequency: 10,      // Fast pulse

@@ -98,6 +98,15 @@ const ICEMIST_CONFIG = {
                 }
             },
             grain: { type: 3, strength: 0.2, scale: 0.35, speed: 0.6, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ground-level cold mist
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.4,
+                sizeScale: 1.5,
+                progressCurve: 'sustain',
+            }],
             pulse: {
                 amplitude: 0.08,
                 frequency: 2,

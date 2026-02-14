@@ -134,6 +134,15 @@ const ICEHELIX_CONFIG = {
                 speed: 1.0,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: cold mist from helix strands
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             // Moderate rotation to show helix structure
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,

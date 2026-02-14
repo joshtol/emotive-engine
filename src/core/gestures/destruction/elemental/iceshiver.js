@@ -93,6 +93,15 @@ const ICESHIVER_CONFIG = {
                 frequency: 8,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: cold mist from shivering
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             scaleVariance: 0.35,
             lifetimeVariance: 0.25,
             delayVariance: 0.1,

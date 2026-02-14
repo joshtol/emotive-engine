@@ -119,6 +119,15 @@ const ICEMEDITATION_CONFIG = {
                 speed: 0.5,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: gentle cold mist
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.2,
+                progressCurve: 'sustain',
+            }],
             // Strong breathing pulse - the key feature
             pulse: {
                 amplitude: 0.15,

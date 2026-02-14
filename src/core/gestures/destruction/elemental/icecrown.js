@@ -85,6 +85,15 @@ const ICECROWN_CONFIG = {
                 frequency: 2,
                 easing: 'easeInOut'
             },
+            // Per-gesture atmospheric particles: cold mist below crown
+            atmospherics: [{
+                preset: 'mist',
+                targets: ['ice-ring'],
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             scaleVariance: 0,
             lifetimeVariance: 0,

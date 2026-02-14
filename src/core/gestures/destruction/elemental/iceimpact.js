@@ -106,6 +106,15 @@ const ICEIMPACT_CONFIG = {
                 frequency: 9,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: cold mist on impact
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             // Violent per-crystal tumbling — faster spins for aggressive motion
             rotate: [
                 { axis: 'z', rotations: -4, phase: 0 },

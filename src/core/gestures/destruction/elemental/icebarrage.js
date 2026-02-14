@@ -109,6 +109,15 @@ const ICEBARRAGE_CONFIG = {
                 frequency: 6,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: cold mist from orbiting crystals
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             // Per-crystal tumbling — each spins on different axes for chaotic, dynamic motion
             rotate: [
                 { axis: 'x', rotations: 2, phase: 0 },

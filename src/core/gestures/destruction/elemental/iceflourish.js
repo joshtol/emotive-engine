@@ -126,6 +126,15 @@ const ICEFLOURISH_CONFIG = {
                     speed: 2.5,
                     blend: 'multiply'
                 },
+                // Per-gesture atmospheric particles: cold mist from flourish
+                atmospherics: [{
+                    preset: 'mist',
+                    targets: ['ice-ring'],
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                }],
                 pulse: {
                     amplitude: 0.15,
                     frequency: 5,

@@ -83,6 +83,15 @@ const ICESPLASH_CONFIG = {
                     strengthCurve: 'fadeOut'
                 },
                 grain: { type: 3, strength: 0.4, scale: 0.3, speed: 1.5, blend: 'multiply' },
+                // Per-gesture atmospheric particles: cold mist from shatter
+                atmospherics: [{
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                }],
                 blending: 'normal',
                 renderOrder: 8,
                 rotate: { axis: 'z', rotations: 0, phase: 0 },

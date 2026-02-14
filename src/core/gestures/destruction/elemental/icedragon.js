@@ -131,6 +131,15 @@ const ICEDRAGON_CONFIG = {
                 speed: 0.8,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: cold mist trailing dragon
+            atmospherics: [{
+                preset: 'mist',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             rotate: { axis: 'y', rotations: 0.5, phase: 0 },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,

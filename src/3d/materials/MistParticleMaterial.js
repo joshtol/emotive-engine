@@ -104,19 +104,32 @@ float pNoise(vec2 p) {
 
 void main() {
     vec2 center = vUv - 0.5;
-    float dist = length(center);
 
-    // Wider noise perturbation for wispier mist edges
-    float n1 = pNoise(center * 4.0 + vSeed * 73.0);
-    float n2 = pNoise(center * 6.0 + vSeed * 137.0 + vec2(3.7, 1.2));
-    dist += (n1 - 0.5) * 0.15 + (n2 - 0.5) * 0.08;
+    // Per-particle wisp direction — each particle stretches differently
+    float wispAngle = vSeed * 6.283;
+    vec2 wispDir = vec2(cos(wispAngle), sin(wispAngle));
+    vec2 wispPerp = vec2(-wispDir.y, wispDir.x);
 
-    // Softer falloff than smoke
-    float shape = 1.0 - smoothstep(0.0, 0.48, dist);
-    shape = pow(shape, 0.8);
+    // Anisotropic distance: stretch along wisp direction for tendril shape
+    float along = dot(center, wispDir);
+    float across = dot(center, wispPerp);
+    float anisoDist = length(vec2(along * 0.7, across * 1.3));
 
-    // Slow fade in, very long hold, gradual fade out
-    float fadeIn = smoothstep(0.0, 0.20, vLife);
+    // 3-octave FBM for organic cloud structure
+    float seedOff = vSeed * 73.0;
+    float fbm = pNoise(center * 3.0 + seedOff) * 0.50
+              + pNoise(center * 7.0 + seedOff * 1.7 + vec2(3.7, 1.2)) * 0.25
+              + pNoise(center * 14.0 + seedOff * 2.3 + vec2(7.1, 5.3)) * 0.125;
+
+    // Shape: anisotropic falloff with FBM erosion at edges
+    float shape = 1.0 - smoothstep(0.05, 0.42, anisoDist + (fbm - 0.4) * 0.20);
+
+    // Internal density variation — wisps and gaps through the body
+    float density = smoothstep(0.25, 0.55, fbm);
+    shape *= mix(0.3, 1.0, density);
+
+    // Fade over lifetime
+    float fadeIn = smoothstep(0.0, 0.15, vLife);
     float fadeOut = 1.0 - smoothstep(0.60, 1.0, vLife);
     float lifeAlpha = fadeIn * fadeOut;
 
