@@ -88,6 +88,15 @@ const ELECTRICVORTEX_CONFIG = {
                 }
             },
             grain: { type: 3, strength: 0.2, scale: 0.3, speed: 2.5, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from vortex
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.2,
+                sizeScale: 1.2,
+                progressCurve: 'sustain',
+            }],
             flash: {
                 events: [
                     { at: 0.20, intensity: 2.0 },

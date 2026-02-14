@@ -62,6 +62,15 @@ const ELECTRICBLAST_CONFIG = {
                     strengthCurve: 'fadeOut'
                 },
                 grain: { type: 3, strength: 0.3, scale: 0.25, speed: 3.0, blend: 'multiply' },
+                // Per-gesture atmospheric particles: intense ionized air blast
+                atmospherics: [{
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.8,
+                    sizeScale: 2.0,
+                    progressCurve: 'pulse',
+                }],
                 flash: {
                     events: [
                         { at: 0.0, intensity: 4.0 },

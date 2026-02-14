@@ -115,6 +115,15 @@ const ELECTRICFLOURISH_CONFIG = {
                     speed: 2.5,
                     blend: 'multiply'
                 },
+                // Per-gesture atmospheric particles: ionized air from flourish
+                atmospherics: [{
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.15,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                }],
                 drift: {
                     speed: 0.3,
                     distance: 0.18,

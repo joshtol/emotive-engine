@@ -55,6 +55,15 @@ const ELECTRICCRACKLE_CONFIG = {
                 strengthCurve: 'fadeOut'
             },
             grain: { type: 3, strength: 0.15, scale: 0.4, speed: 2.0, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from crackle
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.1,
+                sizeScale: 0.6,
+                progressCurve: 'sustain',
+            }],
             flash: {
                 events: [
                     { at: 0.20, intensity: 2.0 },

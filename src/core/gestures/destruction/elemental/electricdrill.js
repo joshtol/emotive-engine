@@ -106,6 +106,15 @@ const ELECTRICDRILL_CONFIG = {
                 speed: 4.0,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: ionized air from drill
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'below',
+                intensity: 0.3,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             rotate: { axis: 'y', rotations: 4, phase: 0 },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,

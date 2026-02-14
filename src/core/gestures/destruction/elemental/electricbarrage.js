@@ -60,6 +60,15 @@ const ELECTRICBARRAGE_CONFIG = {
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
             flicker: { intensity: 0.4, rate: 16, pattern: 'random' },
             grain: { type: 3, strength: 0.12, scale: 0.3, speed: 2.0, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from barrage
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.25,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             flash: {
                 events: [
                     { at: 0.10, intensity: 1.5 },

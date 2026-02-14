@@ -75,6 +75,15 @@ const ELECTRICOVERLOAD_CONFIG = {
                 strengthCurve: 'fadeIn'
             },
             grain: { type: 3, strength: 0.3, scale: 0.25, speed: 2.5, blend: 'multiply' },
+            // Per-gesture atmospheric particles: intense ionized air
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.6,
+                sizeScale: 1.2,
+                progressCurve: 'pulse',
+            }],
             flash: {
                 events: [
                     { at: 0.30, intensity: 1.5 },

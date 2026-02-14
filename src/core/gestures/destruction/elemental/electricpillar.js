@@ -72,6 +72,15 @@ const ELECTRICPILLAR_CONFIG = {
             animation: {
                 ...SHARED_ANIMATION,
                 appearAt: 0.0, disappearAt: 0.85, stagger: 0.04,
+                // Per-gesture atmospheric particles: ionized air from pillar
+                atmospherics: [{
+                    preset: 'ozone',
+                    targets: ['lightning-ring'],
+                    anchor: 'above',
+                    intensity: 0.1,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                }],
                 cutout: {
                     strength: 0.5,
                     primary: { pattern: 1, scale: 1.0, weight: 0.65 },

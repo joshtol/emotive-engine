@@ -68,6 +68,15 @@ const ELECTRICSHOCK_CONFIG = {
                 strengthCurve: 'bell'
             },
             grain: { type: 3, strength: 0.25, scale: 0.3, speed: 3.0, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from shock
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.7,
+                sizeScale: 1.5,
+                progressCurve: 'pulse',
+            }],
             flash: {
                 events: [
                     { at: 0.15, intensity: 2.0 },

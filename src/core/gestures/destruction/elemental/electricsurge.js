@@ -72,6 +72,15 @@ const ELECTRICSURGE_CONFIG = {
                 }
             },
             grain: { type: 3, strength: 0.15, scale: 0.35, speed: 2.0, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from surge
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.2,
+                sizeScale: 1.2,
+                progressCurve: 'rampUp',
+            }],
             pulse: { amplitude: 0.08, frequency: 3, easing: 'easeInOut' },
             emissive: { min: 0.8, max: 2.0, frequency: 4, pattern: 'sine' },
             blending: 'additive',

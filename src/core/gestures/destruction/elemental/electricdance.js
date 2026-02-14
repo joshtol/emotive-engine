@@ -102,6 +102,15 @@ const ELECTRICDANCE_CONFIG = {
                 speed: 1.0,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: ionized air wisps
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -2, phase: 90 }

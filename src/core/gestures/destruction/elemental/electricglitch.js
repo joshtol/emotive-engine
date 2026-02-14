@@ -68,6 +68,15 @@ const ELECTRICGLITCH_CONFIG = {
                 strengthCurve: 'bell'
             },
             grain: { type: 3, strength: 0.2, scale: 0.35, speed: 2.0, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from glitch
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.1,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             scaleVariance: 0.5,
             lifetimeVariance: 0.6,
             delayVariance: 0.4,

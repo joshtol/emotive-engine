@@ -113,6 +113,15 @@ const ELECTRICHELIX_CONFIG = {
                 speed: 1.5,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: ionized air from helix
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+            }],
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,
             lifetimeVariance: 0.1,

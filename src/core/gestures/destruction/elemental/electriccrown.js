@@ -57,6 +57,15 @@ const ELECTRICCROWN_CONFIG = {
             procedural: { scaleSmoothing: 0.1, geometryStability: true },
             pulse: { amplitude: 0.02, frequency: 2, easing: 'easeInOut' },
             rotate: { axis: 'z', rotations: 1, phase: 0 },
+            // Per-gesture atmospheric particles: ionized air from crown
+            atmospherics: [{
+                preset: 'ozone',
+                targets: ['lightning-ring'],
+                anchor: 'above',
+                intensity: 0.04,
+                sizeScale: 0.6,
+                progressCurve: 'sustain',
+            }],
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'additive',

@@ -1,22 +1,22 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Thunderbird Gesture
+ *    ●●  ENGINE - Electric Zap Gesture
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Thunderbird gesture - lightning phoenix rising with spread wings
- * @module gestures/destruction/elemental/thunderbird
+ * @fileoverview Electric zap gesture - explosive multi-layer lightning burst
+ * @module gestures/destruction/elemental/electriczap
  *
  * VISUAL DIAGRAM:
  *         ⚡                          ← arc-medium body rising upward
- *    ↙⚡      ⚡↗                     ← spark-spike wings spreading out
+ *    ↙⚡      ⚡↗                     ← spark-spike arms spreading out
  *         ★                           ← mascot at center
- *       ⚡  ⚡                         ← arc-small tail fragments trailing below
+ *       ⚡  ⚡                         ← arc-small fragments trailing below
  *
- * CONCEPT: Multi-layer bird silhouette. Body rises via axis-travel (proven
- * reliable), wings spread from center via anchor+drift (spark-spike's elongated
- * shape reads as wings). Tail sparks trail below. Flash events create dramatic
+ * CONCEPT: Multi-layer burst. Body rises via axis-travel (proven
+ * reliable), arms spread from center via anchor+drift (spark-spike's elongated
+ * shape reads as bolts). Tail sparks trail below. Flash events create dramatic
  * lightning strikes on the rising body. 5 total instances — lightweight.
  *
  * KEY: All layers include shaderAnimation in modelOverrides (matching
@@ -26,11 +26,11 @@
 
 import { buildElectricEffectGesture } from './electricEffectFactory.js';
 
-const THUNDERBIRD_CONFIG = {
-    name: 'thunderbird',
-    emoji: '🦅',
+const ELECTRICZAP_CONFIG = {
+    name: 'zap',
+    emoji: '⚡',
     type: 'blending',
-    description: 'Lightning phoenix rising with spread wings',
+    description: 'Explosive multi-layer lightning burst',
     duration: 2000,
     beats: 4,
     intensity: 1.7,
@@ -39,7 +39,7 @@ const THUNDERBIRD_CONFIG = {
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════
         // LAYER 1: Body — arc-medium rising from below to above
-        // The central mass of the bird, axis-travel is the proven reliable pattern
+        // The central mass, axis-travel is the proven reliable pattern
         // ═══════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -82,6 +82,15 @@ const THUNDERBIRD_CONFIG = {
                     strengthCurve: 'fadeOut'
                 },
                 grain: { type: 3, strength: 0.12, scale: 0.25, speed: 2.0, blend: 'multiply' },
+                // Per-gesture atmospheric particles: ionized air from zap
+                atmospherics: [{
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.5,
+                    sizeScale: 1.2,
+                    progressCurve: 'pulse',
+                }],
                 flash: {
                     events: [
                         { at: 0.10, intensity: 2.5 },
@@ -104,8 +113,8 @@ const THUNDERBIRD_CONFIG = {
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Left Wing — spark-spike spreading left and up
-        // Spike's elongated shape reads as a wing when drifting outward
+        // LAYER 2: Left Arm — spark-spike spreading left and up
+        // Spike's elongated shape reads as a bolt arm when drifting outward
         // ═══════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
@@ -140,7 +149,7 @@ const THUNDERBIRD_CONFIG = {
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Right Wing — spark-spike spreading right and up (mirror)
+        // LAYER 3: Right Arm — spark-spike spreading right and up (mirror)
         // ═══════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
@@ -176,7 +185,7 @@ const THUNDERBIRD_CONFIG = {
 
         // ═══════════════════════════════════════════════════════════════════════════
         // LAYER 4: Tail — arc-small fragments trailing below
-        // Small discharge sparks that give the bird a trailing plume
+        // Small discharge sparks that give a trailing plume
         // ═══════════════════════════════════════════════════════════════════════════
         {
             type: 'radial-burst',
@@ -228,4 +237,4 @@ const THUNDERBIRD_CONFIG = {
     riseAmount: 0.02
 };
 
-export default buildElectricEffectGesture(THUNDERBIRD_CONFIG);
+export default buildElectricEffectGesture(ELECTRICZAP_CONFIG);

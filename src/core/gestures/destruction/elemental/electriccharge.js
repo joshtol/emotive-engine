@@ -78,6 +78,15 @@ const ELECTRICCHARGE_CONFIG = {
                 strengthCurve: 'fadeIn'
             },
             grain: { type: 3, strength: 0.1, scale: 0.35, speed: 2.0, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from charge
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.1,
+                sizeScale: 0.6,
+                progressCurve: 'rampUp',
+            }],
             scaleVariance: 0.25,
             lifetimeVariance: 0.2,
             blending: 'additive',

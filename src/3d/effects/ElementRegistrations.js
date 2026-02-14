@@ -25,6 +25,7 @@ import { ElementTypeRegistry } from './ElementTypeRegistry.js';
 import {
     createFireDistortionMaterial,
     createIceDistortionMaterial,
+    createElectricDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
 
 // Smoke/mist particle materials are now imported by AtmosphericPresets.js
@@ -199,7 +200,15 @@ ElementTypeRegistry.register('electricity', {
     resetFlash: resetElectricFlash,
     resetShaderAnimation: resetElectricAnimation,
     scaleMultiplier: 1.3,
-    // distortion: TODO — static jitter distortion (disabled until fire is proven)
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createElectricDistortionMaterial,
+        transform: {
+            padding: new THREE.Vector3(0.3, 0.3, 0.3),
+        },
+        billboard: true,
+        strength: 0.003,
+    },
 });
 
 // Export for explicit import (side-effect import also works)

@@ -68,6 +68,15 @@ const ELECTRICSTATIC_CONFIG = {
                 strengthCurve: 'bell'
             },
             grain: { type: 3, strength: 0.1, scale: 0.45, speed: 1.5, blend: 'multiply' },
+            // Per-gesture atmospheric particles: static ionized air
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.08,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             scaleVariance: 0.3,
             lifetimeVariance: 0.4,
             blending: 'additive',

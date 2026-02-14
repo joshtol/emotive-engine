@@ -282,8 +282,8 @@ import {
     electricImpact,
     electricBlast,
     electricSurge,
-    electricThunderbird,
-    thunderbird as thunderbirdGesture
+    electricZap,
+    zap as zapGesture
 } from './destruction/elemental/electricEffectFactory.js';
 // destruction/elemental/ - Water effect gestures (self-contained gesture files)
 import waterSplash from './destruction/elemental/watersplash.js';
@@ -607,8 +607,8 @@ const electricbarrage = electricBarrage;
 const electricimpact = electricImpact;
 const electricblast = electricBlast;
 const electricsurge = electricSurge;
-const electricthunderbird = electricThunderbird;
-const thunderbird = thunderbirdGesture;
+const electriczap = electricZap;
+const zap = zapGesture;
 // Void effect gestures (no shatter, absorption/corruption visuals)
 // Absorption variants (becoming void)
 const drain = voidDrain;
@@ -1035,8 +1035,8 @@ const TRANSFORM_GESTURES = [
     electricimpact,
     electricblast,
     electricsurge,
-    electricthunderbird,
-    thunderbird,
+    electriczap,
+    zap,
     // Void - Absorption (becoming void)
     drain,
     siphon,
@@ -1310,7 +1310,7 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Electric (ring/spectacle gestures)
         'electriccrown', 'electricdance', 'electrichelix', 'electricpillar',
         'electricdrill', 'electricflourish', 'electricvortex', 'electricbarrage',
-        'electricimpact', 'electricblast', 'electricsurge', 'electricthunderbird', 'thunderbird',
+        'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'zap',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
         // destruction/elemental/ - Ice Effect (matching fire/water pattern)

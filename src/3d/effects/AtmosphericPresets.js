@@ -136,6 +136,33 @@ export const ATMOSPHERIC_PRESETS = {
         opacity: 0.03,
         color: [0.65, 0.70, 0.75],
     },
+
+    /**
+     * Ozone: fast-rising, short-lived ionized air wisps.
+     * Best for: electricity gestures, lightning strikes, plasma arcs.
+     */
+    ozone: {
+        materialType: 'smoke',
+        maxParticles: 32,
+        spawnRate: 10,
+        lifetimeMin: 0.6,
+        lifetimeMax: 1.2,
+        sizeMin: 0.06,
+        sizeMax: 0.12,
+        spawnOffsetY: 0.0,
+        initialSpeedMin: 0.3,
+        initialSpeedMax: 0.8,
+        spreadXZ: 0.10,
+        directionY: 1.0,
+        buoyancy: 0.15,
+        drag: 2.5,
+        turbulence: 0.15,
+        rotationSpeedMax: 2.0,
+        endSizeMultiplier: 2.0,
+        opacity: 0.15,
+        colorWarm: [0.60, 0.70, 0.85],
+        colorCool: [0.40, 0.45, 0.55],
+    },
 };
 
 // =================================================================================================

@@ -59,6 +59,15 @@ const ELECTRICIMPACT_CONFIG = {
             exit: { type: 'burst-fade', duration: 0.05, easing: 'easeOut', burstScale: 0.2 },
             procedural: { scaleSmoothing: 0.04, geometryStability: true },
             grain: { type: 3, strength: 0.15, scale: 0.3, speed: 2.5, blend: 'multiply' },
+            // Per-gesture atmospheric particles: ionized air from impact
+            atmospherics: [{
+                preset: 'ozone',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.5,
+                sizeScale: 1.0,
+                progressCurve: 'burst',
+            }],
             pulse: { amplitude: 0.12, frequency: 8, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 3.0, frequency: 9, pattern: 'sine' },
             rotate: [
