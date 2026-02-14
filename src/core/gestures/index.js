@@ -305,7 +305,6 @@ import waterFlourish from './destruction/elemental/waterflourish.js';
 import waterBarrage from './destruction/elemental/waterbarrage.js';
 import waterImpact from './destruction/elemental/waterimpact.js';
 import waterCrush from './destruction/elemental/watercrush.js';
-import waterDragon from './destruction/elemental/waterdragon.js';
 // destruction/elemental/ - Fire effect gestures (self-contained gesture files)
 import fireBurn from './destruction/elemental/burn.js';
 import fireScorch from './destruction/elemental/scorch.js';
@@ -366,7 +365,6 @@ import {
 } from './destruction/elemental/iceEffectFactory.js';
 import iceMist from './destruction/elemental/icemist.js';
 import iceShiver from './destruction/elemental/iceshiver.js';
-import iceDragon from './destruction/elemental/icedragon.js';
 // destruction/elemental/ - Light effect gestures (radiance/holy visuals)
 import {
     blind as lightBlind,
@@ -532,7 +530,6 @@ const waterflourish = waterFlourish;
 const waterbarrage = waterBarrage;
 const waterimpact = waterImpact;
 const watercrush = waterCrush;
-const waterdragon = waterDragon;
 // Smoke (effect-based - soft organic smoke, no angular shards)
 const smokebomb = smokeSmokebomb;
 const vanish = smokeVanish;
@@ -982,7 +979,6 @@ const TRANSFORM_GESTURES = [
     waterbarrage,    // Orbiting water launching upward
     waterimpact,     // Water orbits then crashes inward
     watercrush,      // Heavy wave crushing from above
-    waterdragon,     // Ascending water serpent
     // Smoke
     smokebomb,
     vanish,
@@ -1072,7 +1068,6 @@ const TRANSFORM_GESTURES = [
     iceImpact,
     iceMist,         // Cold mist emanating
     iceShiver,       // Convulsive cold with frost
-    iceDragon,       // Ascending ice serpent
     // Light Effect - Afflicted (overwhelmed by light)
     lightBlind,
     lightPurify,
@@ -1265,8 +1260,8 @@ export const GESTURE_CATEGORIES = {
         'watercrown', 'waterdance', 'waterdrill', 'waterhelix',
         'watermeditation', 'waterpillar', 'waterflourish',
         'waterbarrage', 'waterimpact',
-        // destruction/elemental/ - Water (crush + dragon)
-        'watercrush', 'waterdragon',
+        // destruction/elemental/ - Water (crush)
+        'watercrush',
         // destruction/elemental/ - Smoke
         'smokebomb', 'vanish', 'materialize',
         // destruction/elemental/ - Fire
@@ -1317,7 +1312,7 @@ export const GESTURE_CATEGORIES = {
         'iceCrown', 'iceDance', 'icePillar', 'iceHelix', 'iceMeditation',
         'iceVortex', 'iceSplash', 'iceEncase', 'iceDrill', 'iceFlourish',
         'iceBarrage', 'iceImpact',
-        'icemist', 'iceshiver', 'icedragon',
+        'icemist', 'iceshiver',
         // destruction/elemental/ - Light Effect (afflicted, emanating, transform)
         'lightBlind', 'lightPurify', 'lightCleanse', 'lightRadiate', 'lightGlow', 'lightBeacon',
         'lightAscend', 'lightIlluminate', 'lightDissolve',

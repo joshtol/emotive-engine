@@ -84,27 +84,8 @@ const WATERCROWN_CONFIG = {
                 scaleSmoothing: 0.1,
                 geometryStability: true
             },
-            // Cutout: creates cellular holes and flow streaks for organic look
-            // Two-layer composable: CELLULAR + STREAKS multiplied together
-            // Very slow angular travel for majestic, regal movement
-            // Constant strength - water should ALWAYS have texture, never solid
-            cutout: {
-                strength: 0.7,
-                primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR (smaller scale = larger cells)
-                secondary: { pattern: 1, scale: 0.6, weight: 0.5 },  // STREAKS (subtle)
-                blend: 'multiply',
-                travel: 'angular',
-                travelSpeed: 0.3,            // Very slow sweep for regal effect
-                strengthCurve: 'constant'    // Always textured, never solid
-            },
-            // Grain: cinematic film grain for realistic water crown
-            grain: {
-                type: 3,              // FILM - perlin + white hybrid
-                strength: 0.3,        // Visible grain (0.08 was too subtle)
-                scale: 0.4,           // Coarser for visible texture
-                speed: 0.5,           // Slow, majestic
-                blend: 'multiply'     // Darkens for depth and texture
-            },
+            // No cutout — transparent refraction shows background through water
+            // No grain — multiply grain on transparent refraction = dark speckles
             parameterAnimation: {
                 turbulence: {
                     start: 0.1,

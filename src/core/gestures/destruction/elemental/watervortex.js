@@ -24,7 +24,7 @@
  * - Rings oriented FLAT (horizontal tornado funnel)
  * - Funnel shape: narrower at bottom, wider at top
  * - Arc visibility: portion of ring visible, sweeps around
- * - SPIRAL + STREAKS cutout patterns for vortex motion
+ * - No cutout — transparent refraction shows background through water
  * - Trail dissolve: organic fade at ring bottoms as they rise
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
@@ -51,7 +51,7 @@ const WATER_VORTEX_CONFIG = {
     category: 'transform',
     turbulence: 0.75,
 
-    // 3D Element spawning - spiraling splash rings with cutout patterns
+    // 3D Element spawning - spiraling splash rings
     spawnMode: {
         type: 'axis-travel',
         // Axis travel: rings travel from bottom to top
@@ -106,30 +106,7 @@ const WATER_VORTEX_CONFIG = {
                     curve: 'bell'
                 }
             },
-            // Cutout patterns - spiral holes with streak overlay for vortex motion
-            cutout: {
-                strength: 0.5,
-                primary: { pattern: 6, scale: 1.2, weight: 1.0 },     // SPIRAL - vortex arms
-                secondary: { pattern: 1, scale: 0.8, weight: 0.6 },   // STREAKS - flow lines
-                blend: 'add',                                          // Smooth combine
-                travel: 3,                                             // SPIRAL travel mode
-                travelSpeed: 2.0,                                      // 2 rotations during gesture
-                strengthCurve: 'bell',                                 // Fade in/out
-                // Trail dissolve: organic fade at bottom as rings rise
-                trailDissolve: {
-                    enabled: true,
-                    offset: -0.4,        // Floor 0.4 units below instance center
-                    softness: 1.2        // Wide gradient for visible dissolve
-                }
-            },
-            // Grain: film grain for spray texture
-            grain: {
-                type: 3,              // FILM
-                strength: 0.25,
-                scale: 0.3,
-                speed: 3.0,           // Faster for vortex energy
-                blend: 'multiply'
-            },
+            // No grain — multiply grain on transparent refraction = dark speckles
             pulse: {
                 amplitude: 0.12,
                 frequency: 6,
@@ -191,7 +168,6 @@ const WATER_VORTEX_CONFIG = {
  * - Rings are FLAT (orientation: 'flat') for tornado funnel effect
  * - 120° arcOffset creates cage of water around the mascot
  * - Funnel shape expands as rings travel upward
- * - SPIRAL cutout pattern with STREAKS overlay for dynamic vortex holes
- * - Trail dissolve creates organic fade as rings rise
+ * - No cutout — transparent refraction for liquid look
  */
 export default buildWaterEffectGesture(WATER_VORTEX_CONFIG);

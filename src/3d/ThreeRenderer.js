@@ -1704,24 +1704,35 @@ export class ThreeRenderer {
                 this.renderer.setRenderTarget(null);
             }
 
-            // === STEP 0.5: Render scene WITHOUT ice to texture for refraction ===
-            // Ice shader samples this texture with normal-distorted UVs to bend
-            // the background through the ice volume (screen-space refraction).
-            // Ice outputs at full opacity — the refraction is baked into the color.
+            // === STEP 0.5: Render scene WITHOUT refraction meshes to texture ===
+            // Refraction shaders sample this texture with distorted UVs to bend
+            // the background through their volume (screen-space refraction).
+            // They output at full opacity — the refraction is baked into the color.
             if (this.iceRefractionTarget && this._refractionMeshes && this._refractionMeshes.size > 0) {
                 // Hide refraction meshes
                 for (const mesh of this._refractionMeshes) {
                     mesh.visible = false;
                 }
 
-                // Render scene (layer 0) without ice to refraction target
-                // Alpha=0 clear so shader can distinguish geometry from empty sky
+                // Temporarily set scene.background for refraction capture.
+                // The canvas is transparent (alpha:true) so the CSS background behind
+                // it is invisible to WebGL. Setting scene.background lets refracting
+                // materials distort the actual page background, not just 3D geometry.
+                const savedBackground = this.scene.background;
+                if (this._refractionBackground) {
+                    this.scene.background = this._refractionBackground;
+                }
+
+                // Render scene (layer 0) without refraction meshes to refraction target
                 this.renderer.setRenderTarget(this.iceRefractionTarget);
                 this.renderer.setClearColor(0x000000, 0);
                 this.renderer.clear();
                 this.camera.layers.set(0);
                 this.renderer.render(this.scene, this.camera);
                 this.renderer.setRenderTarget(null);
+
+                // Restore scene.background to null (transparent for CSS composite)
+                this.scene.background = savedBackground;
 
                 // Restore refraction meshes and pass texture to their materials
                 for (const mesh of this._refractionMeshes) {
@@ -1856,6 +1867,26 @@ export class ThreeRenderer {
     removeRefractionMesh(mesh) {
         if (this._refractionMeshes) {
             this._refractionMeshes.delete(mesh);
+        }
+    }
+
+    /**
+     * Set a background texture for refraction capture.
+     * The scene canvas is transparent (alpha:true), so the CSS background behind it
+     * is invisible to WebGL. During refraction capture, this texture is temporarily
+     * set as scene.background so refracting materials can distort it.
+     * @param {THREE.Texture|string|null} textureOrUrl - THREE.Texture, image URL string, or null to clear
+     */
+    setRefractionBackground(textureOrUrl) {
+        if (!textureOrUrl) {
+            this._refractionBackground = null;
+        } else if (typeof textureOrUrl === 'string') {
+            new THREE.TextureLoader().load(textureOrUrl, tex => {
+                tex.colorSpace = THREE.SRGBColorSpace;
+                this._refractionBackground = tex;
+            });
+        } else {
+            this._refractionBackground = textureOrUrl;
         }
     }
 

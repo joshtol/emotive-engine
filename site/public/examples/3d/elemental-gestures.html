@@ -730,6 +730,12 @@
         mascot.init(container);
         mascot.start();
 
+        // Set the CSS background image as refraction background so water/ice
+        // can refract the page background, not just 3D geometry
+        if (mascot.core3D?.renderer) {
+            mascot.core3D.renderer.setRefractionBackground('/assets/images/ice-test-bg.jpg');
+        }
+
         // Expose for console debugging
         window.mascot = mascot;
         window.profiler = profiler;

@@ -106,6 +106,95 @@ float fbm4(vec3 p) {
     }
     return value;
 }
+
+// Hash function for Voronoi and bubble patterns
+float hash(vec3 p) {
+    p = fract(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+// 3D value noise (trilinear interpolated hash)
+float noise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    return mix(
+        mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+            mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+        mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+            mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+        f.z
+    );
+}
+
+// Animated 2D Voronoi for caustic ray patterns (Euclidean distance)
+// Returns vec3: x=edgeDist (F2-F1), y=cellHash for sparkle, z=unused
+vec3 voronoiCaustic(vec2 p, float time) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float d1 = 10.0, d2 = 10.0;
+    float cell1Hash = 0.0;
+
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            vec2 nb = vec2(float(x), float(y));
+            vec2 cell = i + nb;
+            float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+            float h2 = fract(sin(dot(cell, vec2(269.5, 183.3))) * 43758.5453);
+            // Animated cell centers — swimming caustics
+            vec2 pt = nb + vec2(h, h2) + vec2(
+                sin(time * 3.0 + h * 6.28318) * 0.15,
+                cos(time * 2.5 + h2 * 6.28318) * 0.15
+            );
+            float d = length(f - pt); // Euclidean for smooth curves
+            if (d < d1) { d2 = d1; d1 = d; cell1Hash = h; }
+            else if (d < d2) { d2 = d; }
+        }
+    }
+    return vec3(d2 - d1, cell1Hash, 0.0);
+}
+
+// Water bubbles with rising animation
+// Returns vec2(brightness, ringDarkness) for compositing
+vec2 waterBubbles3D(vec3 p, float scale, float density, float time) {
+    vec3 sp = p * scale + vec3(0.0, time * 0.3, 0.0); // Rising motion
+    vec3 i = floor(sp);
+    vec3 f = fract(sp);
+
+    float bright = 0.0;
+    float ringDark = 0.0;
+
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int z = -1; z <= 1; z++) {
+                vec3 nb = vec3(float(x), float(y), float(z));
+                vec3 cid = i + nb;
+
+                float exists = hash(cid * 1.7 + 3.73);
+                if (exists < density) {
+                    vec3 center = nb + vec3(
+                        hash(cid + 0.37),
+                        hash(cid + 1.51),
+                        hash(cid + 2.93)
+                    ) * 0.6 + 0.2;
+                    float r = mix(0.10, 0.25, hash(cid + 4.31));
+                    float d = length(f - center);
+
+                    if (d < r) {
+                        float nd = d / r;
+                        bright += (1.0 - nd * nd) * 0.55;
+                        ringDark += smoothstep(0.65, 0.95, nd) * 0.5;
+                        vec3 sphereDir = normalize(f - center);
+                        bright += pow(max(dot(sphereDir, normalize(vec3(0.3, 0.8, 0.2))), 0.0), 6.0) * 0.2;
+                    }
+                }
+            }
+        }
+    }
+    return vec2(bright, ringDark);
+}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -164,247 +253,252 @@ vec3 waterColor(float intensity, float turbulence) {
  * Outputs: color (vec3), alpha (float) - ready for final output
  */
 export const WATER_FRAGMENT_CORE = /* glsl */`
-    vec3 normal = normalize(vNormal);
-    // Fix for DoubleSide rendering: flip normal for back-facing fragments
-    // Without this, back faces have inverted Fresnel/specular causing dark patches
-    if (!gl_FrontFacing) {
-        normal = -normal;
-    }
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // NORMALS + THICKNESS
+    // Smooth normals hide low-poly faces. Used for: thickness, fresnel, scatter.
+    // ═══════════════════════════════════════════════════════════════════════════════
     vec3 viewDir = normalize(vViewDir);
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // WATER PATTERN GENERATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+    // World normal with faceforward for DoubleSide geometry
+    vec3 worldNormal = normalize(vWorldNormal);
+    if (length(vWorldNormal) < 0.01) worldNormal = viewDir;
+    worldNormal = faceforward(worldNormal, -viewDir, worldNormal);
 
-    // Animated noise for surface patterns
-    vec3 noisePos = vPosition * uNoiseScale + vec3(
-        localTime * 0.001,
-        localTime * 0.0008,
-        localTime * 0.0009
+    float smoothNdotV = max(0.0, dot(worldNormal, viewDir));
+    float fresnel = pow(1.0 - smoothNdotV, 3.0);   // Power 3 for water (ice uses 4)
+    float thickness = smoothNdotV * smoothNdotV * 0.5; // Quadratic proxy
+
+    // Schlick fresnel
+    float F0 = 0.02; // water IOR ~1.33
+    float schlick = F0 + (1.0 - F0) * fresnel;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SCREEN-SPACE REFRACTION — sample background through distorted UVs
+    // The background was rendered to a texture without water meshes.
+    //
+    // KEY INSIGHT: Don't feed ripples into refract() — at near-perpendicular
+    // incidence, refract() suppresses bending (output ≈ input direction).
+    // Instead, apply ripple offsets DIRECTLY to screen UVs. This is the
+    // standard real-time water technique: surface normals/ripples directly
+    // offset the background lookup, producing large, visible distortion.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 waterBodyColor = vec3(0.03, 0.08, 0.14) * uTint; // Nearly colorless — real water only tints at meter-scale depths
+    vec3 transmittedLight;
+    float bgPresence = 1.0; // 1.0 = 3D geometry behind, 0.0 = empty sky (CSS background)
+
+    if (uHasBackground == 1) {
+        vec2 screenUV = gl_FragCoord.xy / uResolution;
+
+        // View-space vectors
+        vec3 I_vs = normalize(vViewPosition);
+        vec3 N_vs = faceforward(normalize(vNormal), I_vs, normalize(vNormal));
+
+        // ── Physical refraction: small but correct geometry-dependent bending ──
+        vec3 refDir = refract(I_vs, N_vs, 0.75);
+        if (length(refDir) < 0.1) refDir = I_vs;
+        float physDistortion = 0.04 + thickness * 0.10;
+        vec2 physOffset = refDir.xy * physDistortion;
+
+        // ── Animated ripple distortion: PRIMARY visible effect ──
+        // Ripples directly offset screen UVs = looking through wavy water surface.
+        // Adjacent pixels get smooth, similar offsets → clean wavy distortion.
+        float rt = uGlobalTime * 0.001;
+        vec2 ripple1 = vec2(
+            sin(vPosition.x * 8.0 + rt * 4.0) * cos(vPosition.z * 6.0 + rt * 3.0),
+            cos(vPosition.x * 7.0 - rt * 3.5) * sin(vPosition.z * 9.0 + rt * 2.5)
+        ) * 0.15;
+        vec2 ripple2 = vec2(
+            sin(vPosition.x * 15.0 - rt * 5.0 + 1.7) * cos(vPosition.z * 12.0 + rt * 4.5),
+            cos(vPosition.x * 13.0 + rt * 6.0) * sin(vPosition.z * 16.0 - rt * 3.0)
+        ) * 0.08;
+        vec2 rippleOffset = (ripple1 + ripple2) * 0.60;
+
+        // Combined: physical refraction + animated ripples
+        vec2 totalOffset = physOffset + rippleOffset;
+
+        // ── Alpha-aware refraction ──
+        // The refraction target clears to (0,0,0,0). Areas with 3D geometry have
+        // alpha > 0. Areas with no geometry (empty sky / CSS background) have alpha ≈ 0.
+        // Over geometry: refract normally. Over sky: be transparent so CSS shows through.
+        vec4 bgCenter = texture2D(uBackgroundTexture, clamp(screenUV + totalOffset, 0.0, 1.0));
+        bgPresence = smoothstep(0.05, 0.3, bgCenter.a);
+
+        vec3 refractedBg;
+        if (bgPresence > 0.1) {
+            // 3D geometry behind — full refraction with chromatic dispersion
+            refractedBg = vec3(
+                texture2D(uBackgroundTexture, clamp(screenUV + totalOffset * 0.97, 0.0, 1.0)).r,
+                bgCenter.g,
+                texture2D(uBackgroundTexture, clamp(screenUV + totalOffset * 1.03, 0.0, 1.0)).b
+            );
+        } else {
+            // Empty sky behind — just use the (near-black) sample
+            refractedBg = bgCenter.rgb;
+        }
+
+        // Over geometry: minimal lift. Over sky: light tint so water has some color.
+        vec3 skyTint = vec3(0.12, 0.20, 0.30) * uTint;
+        vec3 ambientLift = mix(skyTint, vec3(0.02, 0.03, 0.05), bgPresence);
+        refractedBg += ambientLift * (vec3(1.0) - refractedBg);
+
+        // Near-zero body color tint
+        transmittedLight = mix(refractedBg, waterBodyColor, thickness * 0.04);
+    } else {
+        vec3 voidColor = vec3(0.08, 0.12, 0.18);
+        transmittedLight = mix(voidColor, waterBodyColor, thickness * 0.3);
+    }
+
+    // Very subtle energy conservation — avoid darkening the refracted background
+    transmittedLight *= (1.0 - fresnel * 0.08);
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PARALLAX + BREAK MASK + VORONOI CAUSTICS + VIEW SPARKLE
+    // Two-scale animated Voronoi with Euclidean distance → smooth caustic curves.
+    // Break mask erases ~75% for "current channels" of clear vs active water.
+    // ═══════════════════════════════════════════════════════════════════════════════
+    vec2 parallaxDir = viewDir.xz / max(smoothNdotV, 0.25);
+    vec2 coarseParallax = parallaxDir * 0.08;
+    vec2 fineParallax = parallaxDir * 0.12;
+
+    // Break mask — low-frequency noise erases ~80% of caustics, wide gradient for soft edges
+    float breakNoise = noise(vec3(vPosition.xz * 0.4, 0.0));
+    float causticMask = smoothstep(0.55, 0.85, breakNoise);
+
+    // Caustic time — use global time for steady swimming independent of instance
+    float causticTime = uGlobalTime * 0.001;
+
+    // Two-scale animated Voronoi caustics
+    vec3 coarseCaustic = voronoiCaustic(
+        (vPosition.xz + coarseParallax) * 3.0 + vec2(vRandomSeed * 3.0),
+        causticTime
+    );
+    vec3 fineCaustic = voronoiCaustic(
+        (vPosition.xz + fineParallax) * 6.0 + vec2(vRandomSeed * 5.7),
+        causticTime * 1.3
     );
 
-    // Primary flow pattern
-    float flow = fbm4(noisePos);
+    // Per-cell view sparkle: pseudo-plane-normal from cell hash
+    float coarseAngle = coarseCaustic.y * 6.28318;
+    vec2 coarsePlaneDir = vec2(cos(coarseAngle), sin(coarseAngle));
+    float coarseSparkle = abs(dot(coarsePlaneDir, viewDir.xz));
+    coarseSparkle = mix(0.1, 1.0, coarseSparkle);
 
-    // Secondary ripple detail
-    vec3 ripplePos = noisePos * 2.0 + vec3(localTime * 0.0004, 0.0, localTime * 0.0005);
-    float ripple = snoise(ripplePos) * 0.5 + 0.5;
+    float fineAngle = fineCaustic.y * 6.28318;
+    vec2 finePlaneDir = vec2(cos(fineAngle), sin(fineAngle));
+    float fineSparkle = abs(dot(finePlaneDir, viewDir.xz));
+    fineSparkle = mix(0.1, 1.0, fineSparkle);
 
-    // Per-instance variation
-    float posVariation = snoise(vPosition * 4.0 + vec3(vRandomSeed * 10.0)) * 0.15 + 0.92;
+    // Caustic edge-distance to brightness — very narrow widths for thin bright rays only
+    float coarseBright = 1.0 - smoothstep(0.0, 0.03, coarseCaustic.x);
+    float fineBright = 1.0 - smoothstep(0.0, 0.02, fineCaustic.x);
 
-    // Combine patterns - heavily biased toward deep blue
-    float pattern = (flow * 0.5 + ripple * 0.5) * posVariation;
-    pattern = pattern * 0.25 + 0.15;  // Range ~0.05-0.40 - strongly biased toward deep blue
-    pattern = clamp(pattern, 0.0, 1.0);
+    // Combined caustic brightness
+    float causticCombined = (coarseBright * coarseSparkle * 0.6 + fineBright * fineSparkle * 0.4) * causticMask;
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // CAUSTIC LIGHT PATTERNS (enhanced refraction simulation with sparkles)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    // Primary caustics - overlapping sine waves create light focusing effect
-    float caustic1 = sin(flow * 6.28318 + localTime * 0.002);
-    float caustic2 = sin(ripple * 6.28318 - localTime * 0.0015);
-    float causticBase = abs(caustic1 * caustic2);
-
-    // Secondary caustic layer - finer detail at different speed
-    float caustic3 = sin((flow + ripple) * 12.56636 + localTime * 0.003);
-    float caustic4 = sin(pattern * 9.42478 - localTime * 0.0025);
-    float causticDetail = abs(caustic3 * caustic4) * 0.5;
-
-    // Tertiary caustic - very fine, fast-moving for sparkle effect
-    float caustic5 = sin(flow * 25.0 + localTime * 0.005);
-    float caustic6 = sin(ripple * 20.0 - localTime * 0.004);
-    float causticFine = pow(abs(caustic5 * caustic6), 3.0);  // Sharp threshold for sparkles
-
-    // Combine with sharpening - sharper powers for more defined caustic lines
-    float causticSharp = pow(causticBase, 2.0) * 0.4;  // Sharper base caustics
-    float causticSoft = pow(causticDetail, 1.5) * 0.25;
-    float causticSparkle = causticFine * 0.35 * uSparkleIntensity;
-    float caustic = causticSharp + causticSoft + causticSparkle;
+    // Very subtle caustic modulation — refraction distortion IS the real caustic effect,
+    // this just adds a faint hint of surface variation
+    transmittedLight *= 1.0 + causticCombined * 0.04;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ENHANCED RIM GLOW (Stronger Fresnel for meditation aesthetic)
+    // VOLUMETRIC BUBBLES — round spheres rising through the water
+    // Cluster mask ties bubbles to caustic zones for natural grouping.
     // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 bubbleParallax = viewDir * 0.08 / max(smoothNdotV, 0.25);
+    vec3 bubbleSamplePos = vPosition + bubbleParallax + vec3(vRandomSeed * 10.0);
 
-    float fresnel = 1.0 - abs(dot(normal, viewDir));
-    // Lower power = softer, wider glow; higher intensity for dramatic effect
-    float rimSoft = pow(fresnel, 2.0);   // Soft wide glow
-    float rimSharp = pow(fresnel, 4.0);  // Sharp edge accent
+    // Cluster mask tied to break mask: bubbles congregate near caustic zones
+    float bubbleClusterMask = 0.5 + 0.5 * causticMask;
 
-    // Combined rim for layered glow effect
-    float rimGlow = rimSoft * 1.2 + rimSharp * 0.8;
+    vec2 bub = waterBubbles3D(bubbleSamplePos, 20.0, 0.35, uGlobalTime * 0.001);
 
-    // Edge shimmer (enhanced)
-    float edgeShimmer = rimSoft * (0.5 + pattern * 0.5);
+    // Fizz micro-detail
+    float fizz = smoothstep(0.84, 0.90, noise(bubbleSamplePos * 40.0)) * 0.15;
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // IRIDESCENT RIM HIGHLIGHTS (rainbow shimmer at edges)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    // View-dependent iridescence - shifts color based on angle like soap bubbles
-    float iridescentAngle = dot(normal, viewDir) * 3.14159 + localTime * 0.001;
-    vec3 iridescent = vec3(
-        0.5 + 0.5 * sin(iridescentAngle),
-        0.5 + 0.5 * sin(iridescentAngle + 2.094),  // +120 degrees
-        0.5 + 0.5 * sin(iridescentAngle + 4.189)   // +240 degrees
-    );
-    // Apply only to sharp rim edges, subtle effect
-    float iridescentStrength = rimSharp * 0.15;
+    float bubbleBright = (bub.x + fizz) * bubbleClusterMask;
+    float bubbleRing = bub.y * bubbleClusterMask;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SUBSURFACE SCATTERING
+    // SPECULAR — THE DOMINANT VISUAL FEATURE
+    // Real water is mostly invisible; sharp bright glints are what you SEE.
+    // High power (128-512) for needle-sharp highlights, multiple light directions.
     // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 wetReflDir = reflect(-viewDir, worldNormal);
 
-    // Light passing through water creates characteristic glow
-    float subsurface = pow(max(0.0, dot(viewDir, -normal)), 2.0) * 0.3;
+    // Broad wet sheen — sharper than before (power 128), stronger (1.5x)
+    float wetSpec1 = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 128.0);
+    float wetSpec2 = pow(max(dot(wetReflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 128.0) * 0.7;
+    float wetSpec3 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.6, 0.7))), 0.0), 96.0) * 0.5;
+    float wetSpec4 = pow(max(dot(wetReflDir, normalize(vec3(0.2, 0.9, -0.3))), 0.0), 160.0) * 0.4;
+    float broadSpec = (wetSpec1 + wetSpec2 + wetSpec3 + wetSpec4) * 1.5;
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // ANIMATED SPECULAR HIGHLIGHTS WITH SPARKLE LAYER
-    // ═══════════════════════════════════════════════════════════════════════════════
+    // Needle-sharp sparkle — power 512, multiple light directions for more glint points
+    float spark1 = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 512.0);
+    float spark2 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.9, 0.4))), 0.0), 512.0) * 0.6;
+    float spark3 = pow(max(dot(wetReflDir, normalize(vec3(0.4, 0.7, -0.5))), 0.0), 384.0) * 0.4;
 
-    // Primary light direction
-    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3));
-    vec3 halfVec = normalize(lightDir + viewDir);
-
-    // Soft specular base
-    float specularBase = pow(max(0.0, dot(normal, halfVec)), 32.0);
-
-    // Sharp specular sparkles - high power for tight, bright points
-    float specularSharp = pow(max(0.0, dot(normal, halfVec)), 128.0);
-
-    // Animate specular position with multiple frequencies
+    // Twinkling animation (3-freq multiplicative pattern)
     float specShift1 = sin(localTime * 0.003 + vPosition.x * 8.0) * 0.5 + 0.5;
     float specShift2 = sin(localTime * 0.005 - vPosition.z * 12.0) * 0.5 + 0.5;
     float specShift3 = sin(localTime * 0.007 + vPosition.y * 10.0) * 0.5 + 0.5;
+    float sparkleAnim = specShift1 * specShift2 * specShift3;
 
-    // Combine for twinkling effect
-    float specularAnim = specShift1 * specShift2 * specShift3;
+    float sharpSpec = (spark1 + spark2 + spark3) * sparkleAnim * 3.0 * uSparkleIntensity;
 
-    // Final specular: soft base + sharp sparkles
-    float specular = specularBase * 0.4 + specularSharp * specularAnim * 1.2 * uSparkleIntensity;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // FLOW ANIMATION (subtle pulsing)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    // Per-instance flow offset
-    float flowOffset = snoise(vPosition * 2.0 + vec3(vRandomSeed * 5.0)) * 1.5;
-    float flowPulse = sin(localTime * uFlowSpeed * 0.002 + flowOffset) * 0.1 + 0.9;
-
-    // Micro-shimmer
-    float microShimmer = 0.95 + 0.05 * snoise(vec3(localTime * 0.003, vPosition.yz * 4.0));
-    flowPulse *= microShimmer;
+    vec3 specContrib = vec3(0.95, 0.97, 1.0) * (broadSpec + sharpSpec);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // ENHANCED INTERNAL SPIRAL FLOW (configurable speed)
+    // INTERNAL SPIRAL FLOW (reduced contribution for refraction-based approach)
     // ═══════════════════════════════════════════════════════════════════════════════
-
-    // Internal flow speed scaling
     float flowTimeScale = localTime * uInternalFlowSpeed;
-
-    // Create visible internal currents with spiral pattern
     float spiralAngle = atan(vPosition.y, vPosition.x) + flowTimeScale * 0.001;
     float spiralRadius = length(vPosition.xy);
     float spiralFlow = sin(spiralAngle * 3.0 - spiralRadius * 4.0 + flowTimeScale * 0.002);
-    spiralFlow = spiralFlow * 0.5 + 0.5;  // Normalize to 0-1
+    spiralFlow = spiralFlow * 0.5 + 0.5;
 
-    // Secondary counter-rotating spiral for depth
     float spiral2 = sin(-spiralAngle * 2.0 + spiralRadius * 3.0 + flowTimeScale * 0.0015);
     spiral2 = spiral2 * 0.5 + 0.5;
 
-    // Tertiary spiral layer - finer detail
     float spiral3 = sin(spiralAngle * 5.0 + spiralRadius * 6.0 - flowTimeScale * 0.0025);
     spiral3 = spiral3 * 0.5 + 0.5;
 
-    // Combined internal flow visibility with depth layers
-    float internalFlow = spiralFlow * 0.4 + spiral2 * 0.35 + spiral3 * 0.25;
-    internalFlow *= 0.18;  // Overall intensity
+    float internalFlow = (spiralFlow * 0.4 + spiral2 * 0.35 + spiral3 * 0.25) * 0.02; // Near-zero: real water has no internal pattern
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // COLOR CALCULATION WITH DEPTH GRADIENT
+    // COMPOSITING — soft clamp + post-clamp
+    // Cap smooth glass body before adding bright features (specular, caustics, bubbles)
+    // so they can exceed the cap and trigger bloom glow.
     // ═══════════════════════════════════════════════════════════════════════════════
+    vec3 color = transmittedLight;
 
-    float localIntensity = pattern * flowPulse + edgeShimmer * 0.25;
-    localIntensity = clamp(localIntensity, 0.0, 1.0);
+    // Add internal flow contribution (procedural, so scale by uIntensity)
+    color += internalFlow * waterBodyColor * uIntensity;
 
-    // Get base water color
-    vec3 color = waterColor(localIntensity, uTurbulence);
+    // DON'T multiply refracted background by uIntensity — it would wash out the
+    // background visibility. Only procedural additions (flow, specular) scale.
 
-    // Depth-based color gradient: deeper areas are more saturated blue
-    // Uses view-normal alignment as proxy for depth (center = deep, edges = shallow)
-    float depthProxy = abs(dot(normal, viewDir));
-    vec3 deepColor = WATER_DEEP * 1.2;  // Slightly enhanced deep blue
-    vec3 shallowColor = mix(WATER_MID, WATER_BRIGHT, 0.3);  // Brighter cyan at edges
-    vec3 depthTint = mix(shallowColor, deepColor, depthProxy);
-    color = mix(color, color * depthTint / WATER_MID, uDepthGradient);
+    // ── SOFT CLAMP: cap smooth body before bright features ──
+    float softCap = uBloomThreshold + 0.40;
+    float maxChannel = max(color.r, max(color.g, color.b));
+    if (maxChannel > softCap) {
+        color *= softCap / maxChannel;
+    }
 
-    // Add caustic highlights - minimal to prevent white washout
-    color += caustic * WATER_MID * 0.2;
-
-    // Add subsurface scattering
-    color += subsurface * WATER_SUBSURFACE * 0.7;
-
-    // Add specular highlights - subtle cyan tint
-    color += specular * WATER_MID * 0.3;
-
-    // Apply iridescent rim shimmer
-    color += iridescent * iridescentStrength * uGlowScale;
-
-    // Apply internal spiral flow - subtle brightening along flow lines
-    color += internalFlow * WATER_MID * uIntensity * 0.5;
+    // ── POST-CLAMP: bright features exceed cap for bloom ──
+    // Caustics now modulate transmittedLight directly (physically-based light focusing)
+    color += specContrib;
+    color += vec3(0.80, 0.85, 0.92) * bubbleBright * 0.35;
+    color -= vec3(0.05, 0.04, 0.02) * bubbleRing;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // INNER GLOW / SELF-ILLUMINATION (scaled by uGlowScale)
+    // ALPHA — two factors:
+    // 1. Edge dissolution: NdotV-based fade makes thin edges transparent
+    // 2. Background presence: when no refraction background is set AND there's no
+    //    3D geometry behind, reduce alpha so CSS shows through. With a refraction
+    //    background set, bgPresence → 1.0 everywhere → full refraction alpha.
     // ═══════════════════════════════════════════════════════════════════════════════
-
-    // Water appears to glow from within - tied to noise pattern
-    // Reduced to prevent washing out the blue color
-    float innerGlow = pattern * 0.06 + flowPulse * 0.02;
-    vec3 glowColor = WATER_MID;  // Use ocean blue for inner glow
-    color += innerGlow * glowColor * uIntensity * uGlowScale;
-
-    // Rim glow - subtle edge highlight
-    color += rimGlow * WATER_MID * uIntensity * 0.08 * uGlowScale;
-
-    // Apply tint
-    color *= uTint;
-
-    // Apply intensity multiplier - significantly reduced to prevent white washout
-    color *= uIntensity * (0.4 + localIntensity * 0.2);
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // BLOOM HINT (values > 1.0 for post-processing bloom to catch)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    // Sharp edge highlight - minimal to avoid white washout
-    color += rimSharp * vec3(0.02, 0.04, 0.06) * uIntensity * uGlowScale;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // DEPTH VARIATION (thicker interior, transparent edges)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    // Use normal-view alignment as proxy for depth
-    float depthFactor = abs(dot(normal, viewDir));
-    float depthAlpha = mix(0.5, 1.0, depthFactor);
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // ALPHA CALCULATION
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    float alpha = (0.25 + localIntensity * 0.6) * uOpacity;
-
-    // Apply depth variation
-    alpha *= depthAlpha;
-
-    // Edge fade based on displacement
-    float surfaceFade = smoothstep(0.0, uEdgeFade, abs(vDisplacement) + 0.05);
-    alpha *= mix(0.85, 1.0, surfaceFade);
-
-    // Enhanced fresnel rim effect
-    alpha += rimSoft * 0.2;
-
-    alpha = clamp(alpha, 0.0, 1.0);
+    float edgeAlpha = smoothstep(0.08, 0.60, smoothNdotV);
+    float skyAlpha = mix(0.25, 1.0, bgPresence); // 0.25 fallback if no bg set, 1.0 with bg
+    float alpha = edgeAlpha * skyAlpha;
 `;
 
 /**
@@ -589,14 +683,10 @@ export const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
     );
     dripColor = mix(dripColor, dripColor * rainbowTint, flashTotal * 0.15);
 
-    color += dripIntensity * dripColor * 0.25 * uGlowScale;
+    color += dripIntensity * dripColor * 0.15 * uGlowScale;
 
     // Surface tension bulge adds subtle brightness
-    color += tensionBulge * WATER_BRIGHT * 0.15;
-
-    // Drips are more opaque at gathering points
-    alpha = mix(alpha, min(1.0, alpha + 0.15), dripIntensity);
-    alpha = mix(alpha, min(1.0, alpha + 0.08), tensionBulge);
+    color += tensionBulge * WATER_BRIGHT * 0.10;
 `;
 
 /**
@@ -629,15 +719,10 @@ export const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
         foamSparkle *= sin(localTime * 0.006 - vPosition.y * 18.0) * 0.5 + 0.5;
         foamSparkle = pow(foamSparkle, 3.0) * innerRim;
 
-        // Apply foam effects - subtle cyan/white highlights at edges
-        // Reduced significantly to prevent all-white water with alpha=1.0 fix
-        color += innerRim * WATER_BRIGHT * 0.25 * uCutoutStrength;
-        color += outerGlow * WATER_MID * 0.15 * uCutoutStrength;
-        color += foamSparkle * WATER_FOAM * 0.2 * uCutoutStrength * uSparkleIntensity;
-
-        // Foam edges are more opaque to prevent dark semi-transparency
-        alpha = mix(alpha, min(1.0, alpha + 0.15), innerRim * uCutoutStrength);
-        alpha = mix(alpha, min(1.0, alpha + 0.08), outerGlow * uCutoutStrength);
+        // Apply foam effects — blend toward white (mix, not additive) for NormalBlending
+        color = mix(color, WATER_FOAM * 0.9, innerRim * uCutoutStrength * 0.3);
+        color = mix(color, WATER_BRIGHT * 0.8, outerGlow * uCutoutStrength * 0.2);
+        color = mix(color, vec3(1.0), foamSparkle * uCutoutStrength * uSparkleIntensity * 0.15);
     }
 `;
 
@@ -646,29 +731,8 @@ export const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
  * Prevents water from becoming too transparent
  */
 export const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
-    // Soft brightness compression - preserves color variation while controlling bloom
-    // Uses exponential rolloff above threshold instead of hard clamp
-    // uBloomThreshold is set per-mascot: 0.35 for crystal/heart/rough, 0.85 for moon/star
-    float knee = 0.15 + uGlowScale * 0.1;  // Compression softness scales with glow
-    float maxChannel = max(color.r, max(color.g, color.b));
-
-    if (maxChannel > uBloomThreshold) {
-        // Exponential compression: high values compressed more than low
-        float excess = maxChannel - uBloomThreshold;
-        float compressed = uBloomThreshold + knee * (1.0 - exp(-excess / knee));
-        // Scale color proportionally to preserve hue
-        color *= compressed / maxChannel;
-    }
-
     // Discard faint fragments
-    if (alpha < 0.1) discard;
-
-    // CRITICAL: Set alpha to 1.0 for visible fragments to prevent CSS background blending
-    // With premultipliedAlpha: false, browser does: result = canvas * alpha + css_bg * (1-alpha)
-    // If alpha < 1, dark water fragments DARKEN the CSS background (dark * 0.5 + bg * 0.5 < bg)
-    // By setting alpha = 1.0, the water fully replaces the background - no darkening possible
-    // The additive "glow" effect comes from the bloom pass, not from alpha blending
-    alpha = 1.0;
+    if (alpha < 0.01) discard;
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════

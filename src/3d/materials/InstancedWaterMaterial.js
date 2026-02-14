@@ -95,6 +95,8 @@ varying float vNoiseValue;
 varying float vRandomSeed;
 varying float vArcVisibility;  // 0-1 visibility based on arc position
 varying float vVerticalGradient;  // Normalized vertical position (0=bottom, 1=top) for tip effects
+varying vec3 vWorldNormal;   // World-space normal for refraction
+varying vec3 vViewPosition;  // View-space position for refraction
 
 ${NOISE_GLSL}
 
@@ -186,13 +188,43 @@ void main() {
     displaced.y += wobbleY;
     displaced.z += wobbleZ;
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ANIMATED SURFACE WAVES — visible undulation of the water surface
+    // Two frequency layers: broad swells + fine ripples.
+    // The analytical gradient perturbs the normal so specular and refraction
+    // react to the wave shapes, not just the flat polygon normal.
+    // ═══════════════════════════════════════════════════════════════════════════
+    float wt = uGlobalTime * 0.001;
+
+    // Broad swells (5 cycles across model, slow drift)
+    float wave1 = sin(selectedPosition.x * 5.0 + wt * 3.0)
+                * cos(selectedPosition.z * 4.0 + wt * 2.0);
+    // Fine ripples (12 cycles, faster counter-drift)
+    float wave2 = sin(selectedPosition.x * 12.0 - wt * 4.0)
+                * cos(selectedPosition.z * 9.0 + wt * 3.5);
+
+    float waveDispl = (wave1 * 0.07 + wave2 * 0.03) * fadeFactor;
+    displaced += selectedNormal * waveDispl;
+
+    // Analytical gradient: dh/dx and dh/dz for normal perturbation
+    // Normal perturbation amplified 3x beyond displacement — strong refraction waviness
+    // without moving geometry enough to create spikes on low-poly mesh
+    float normalBoost = 1.5;
+    float dwdx = (5.0  * cos(selectedPosition.x * 5.0  + wt * 3.0) * cos(selectedPosition.z * 4.0 + wt * 2.0) * 0.07
+               +  12.0 * cos(selectedPosition.x * 12.0 - wt * 4.0) * cos(selectedPosition.z * 9.0 + wt * 3.5) * 0.03) * normalBoost;
+    float dwdz = (-4.0 * sin(selectedPosition.x * 5.0  + wt * 3.0) * sin(selectedPosition.z * 4.0 + wt * 2.0) * 0.07
+               +  -9.0 * sin(selectedPosition.x * 12.0 - wt * 4.0) * sin(selectedPosition.z * 9.0 + wt * 3.5) * 0.03) * normalBoost;
+
+    // Perturbed normal: standard height-field approximation N' = normalize(N - gradient)
+    vec3 waveNormal = normalize(selectedNormal - vec3(dwdx, 0.0, dwdz) * fadeFactor);
+
     // Apply trail offset
     displaced += trailOffset;
 
     vDisplacement = baseDisplacement;
 
-    // Transform normal with instance matrix
-    vNormal = normalMatrix * mat3(instanceMatrix) * selectedNormal;
+    // Transform wave-perturbed normal with instance matrix
+    vNormal = normalMatrix * mat3(instanceMatrix) * waveNormal;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // Apply instance matrix for per-instance transforms
@@ -239,7 +271,15 @@ void main() {
         vArcVisibility = maxVis;
     }
 
-    gl_Position = projectionMatrix * modelViewMatrix * instancePosition;
+    // World-space normal for refraction (wave-perturbed)
+    vec3 transformedNormal = (instanceMatrix * vec4(waveNormal, 0.0)).xyz;
+    vWorldNormal = normalize(mat3(modelMatrix) * transformedNormal);
+
+    // View-space position for refraction
+    vec4 mvPosition = modelViewMatrix * instancePosition;
+    vViewPosition = mvPosition.xyz;
+
+    gl_Position = projectionMatrix * mvPosition;
 }
 `;
 
@@ -263,6 +303,11 @@ uniform float uDepthGradient;      // Depth-based color variation strength (0=of
 uniform float uInternalFlowSpeed;  // Internal spiral/flow animation speed multiplier
 uniform float uSparkleIntensity;   // Specular sparkle highlight intensity
 
+// Screen-space refraction uniforms
+uniform sampler2D uBackgroundTexture;
+uniform vec2 uResolution;
+uniform int uHasBackground;
+
 // Animation system uniforms (glow, cutout, travel, etc.) from shared core
 ${ANIMATION_UNIFORMS_FRAGMENT}
 
@@ -279,6 +324,8 @@ varying float vNoiseValue;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
+varying vec3 vWorldNormal;
+varying vec3 vViewPosition;
 
 ${NOISE_GLSL}
 ${WATER_COLOR_GLSL}
@@ -297,10 +344,7 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════════
     ${WATER_FRAGMENT_CORE}
 
-    // Scale color by instance opacity
-    color *= vInstanceAlpha;
-
-    // Apply instance alpha
+    // Apply instance alpha (NormalBlending uses alpha for fade, no color pre-multiply)
     alpha *= vInstanceAlpha;
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -423,19 +467,16 @@ export function createInstancedWaterMaterial(options = {}) {
             // Enhanced water system uniforms
             uDepthGradient: { value: 0.3 },      // Depth color variation
             uInternalFlowSpeed: { value: 1.0 },  // Internal flow speed multiplier
-            uSparkleIntensity: { value: 0.4 }    // Specular sparkle intensity
+            uSparkleIntensity: { value: 0.4 },   // Specular sparkle intensity
+            // Screen-space refraction
+            uBackgroundTexture: { value: null },
+            uResolution: { value: new THREE.Vector2(1, 1) },
+            uHasBackground: { value: 0 }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
-        // CRITICAL: Use CustomBlending with src=ONE, dst=ONE for pure additive
-        // AdditiveBlending uses SrcAlpha which darkens edges when MSAA creates partial alpha
-        // Pure additive (ONE, ONE) means: result = src + dst - no alpha involvement
-        blending: THREE.CustomBlending,
-        blendSrc: THREE.OneFactor,
-        blendDst: THREE.OneFactor,
-        blendEquation: THREE.AddEquation,
-        depthWrite: false,
+        depthWrite: true,
         side: THREE.DoubleSide
     });
 
@@ -443,6 +484,7 @@ export function createInstancedWaterMaterial(options = {}) {
     material.userData.elementalType = 'water';
     material.userData.isProcedural = true;
     material.userData.isInstanced = true;
+    material.userData.needsRefraction = true;
 
     return material;
 }
