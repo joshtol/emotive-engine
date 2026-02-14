@@ -133,6 +133,16 @@ const FIRECROWN_CONFIG = {
                 frequency: 3,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: smoke rising from crown
+            atmospherics: [{
+                preset: 'smoke',
+                targets: ['flame-ring'],
+                anchor: 'above',
+                anchorOffset: 0.0,
+                intensity: 0.5,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             // Slow majestic rotation (Z axis because ring is flat - local Z points up)
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             scaleVariance: 0,

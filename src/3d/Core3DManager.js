@@ -512,6 +512,11 @@ export class Core3DManager {
             this.elementSpawner.setDistortionManager(this.renderer.distortionManager);
         }
 
+        // Wire particle atmospherics manager from ThreeRenderer to spawner
+        if (this.renderer?.particleAtmospherics) {
+            this.elementSpawner.setParticleAtmospherics(this.renderer.particleAtmospherics);
+        }
+
         // Initialize with core mesh and camera if available
         // NOTE: Models are NOT preloaded here - they load lazily on first spawn
         // This prevents GPU overhead for demos that don't use elemental gestures

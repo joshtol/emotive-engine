@@ -27,6 +27,9 @@ import {
     createIceDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
 
+// Smoke/mist particle materials are now imported by AtmosphericPresets.js
+// (per-gesture atmospherics replaced global particle configs)
+
 import {
     createInstancedFireMaterial,
     updateInstancedFireMaterial,
@@ -112,6 +115,7 @@ ElementTypeRegistry.register('fire', {
         billboard: true,
         strength: 0.005,
     },
+    // particles: now per-gesture via atmospherics config in gesture animation objects
 });
 
 ElementTypeRegistry.register('water', {
@@ -167,6 +171,7 @@ ElementTypeRegistry.register('ice', {
         billboard: true,
         strength: 0.003,
     },
+    // particles: now per-gesture via atmospherics config in gesture animation objects
 });
 
 ElementTypeRegistry.register('electricity', {

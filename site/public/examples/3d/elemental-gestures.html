@@ -1264,10 +1264,12 @@
             flashWarning() {
                 const display = document.getElementById('gpu-monitor-display');
                 if (display) {
-                    display.style.background = 'rgba(255,0,0,0.8)';
+                    display.style.borderColor = '#e85d5d';
+                    display.style.boxShadow = '0 0 12px rgba(232,93,93,0.3)';
                     setTimeout(() => {
-                        display.style.background = 'rgba(0,0,0,0.85)';
-                    }, 300);
+                        display.style.borderColor = '';
+                        display.style.boxShadow = '';
+                    }, 400);
                 }
             },
 
@@ -1275,17 +1277,41 @@
                 let display = document.getElementById('gpu-monitor-display');
                 if (display) return display;
 
+                // Parent container: .center-content (has position:relative)
+                const parent = document.querySelector('.center-content') || document.body;
+
+                // Hide tab (visible when monitor is hidden)
+                const showTab = document.createElement('div');
+                showTab.id = 'gpu-monitor-tab';
+                showTab.style.cssText = `
+                    position: absolute; right: 0; top: 8px;
+                    background: var(--bg-panel); color: var(--text-muted);
+                    font-family: 'SF Mono', Monaco, Inconsolata, monospace; font-size: 9px;
+                    padding: 4px 6px; border-radius: 4px 0 0 4px; z-index: 10;
+                    cursor: pointer; user-select: none;
+                    border: 1px solid var(--border-color); border-right: none;
+                    backdrop-filter: blur(10px); display: none;
+                    transition: color 0.2s;
+                `;
+                showTab.textContent = 'GPU';
+                showTab.onmouseenter = () => showTab.style.color = 'var(--accent)';
+                showTab.onmouseleave = () => showTab.style.color = 'var(--text-muted)';
+                showTab.onclick = () => this.toggle();
+                parent.appendChild(showTab);
+
+                // Main HUD panel
                 display = document.createElement('div');
                 display.id = 'gpu-monitor-display';
                 display.style.cssText = `
-                    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-                    background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
-                    font-size: 11px; padding: 8px 12px; border-radius: 6px; z-index: 9999;
-                    cursor: pointer; user-select: none; min-width: 300px;
-                    border: 1px solid rgba(0,255,0,0.3); transition: all 0.2s;
+                    position: absolute; right: 8px; top: 8px;
+                    background: var(--bg-panel); color: var(--text-secondary);
+                    font-family: 'SF Mono', Monaco, Inconsolata, monospace;
+                    font-size: 10px; padding: 10px 10px; border-radius: 6px; z-index: 10;
+                    user-select: none; min-width: 72px;
+                    border: 1px solid var(--border-color); backdrop-filter: blur(10px);
+                    transition: opacity 0.2s;
                 `;
-                display.onclick = () => this.toggleExpanded();
-                document.body.appendChild(display);
+                parent.appendChild(display);
                 return display;
             },
 
@@ -1300,52 +1326,83 @@
                 const geoLevel = this.getWarningLevel(stats.geometries, this.thresholds.geometries);
                 const texLevel = this.getWarningLevel(stats.textures, this.thresholds.textures);
 
-                const colorFor = (level) => level === 'critical' ? '#f00' : level === 'warning' ? '#ff0' : '#0f0';
+                const colorFor = (level) => level === 'critical' ? '#e85d5d' : level === 'warning' ? '#f0c040' : 'var(--accent)';
 
-                let html = `<div style="display:flex;justify-content:space-between;align-items:center;">`;
-                html += `<span style="color:${colorFor(geoLevel)}">geo=${stats.geometries}${geoTrend}</span>`;
-                html += `<span style="color:${colorFor(texLevel)}">tex=${stats.textures}${texTrend}</span>`;
-                html += `<span>prog=${stats.programs}${progTrend}</span>`;
-                html += `<span style="color:#0ff">FPS:${this.fps.current || '--'}</span>`;
-                html += `<span style="color:#888">G#${this.gestureCount}</span>`;
+                // Vertical HUD rows
+                const row = (label, value, trend, color) =>
+                    `<div style="display:flex;justify-content:space-between;gap:6px;padding:2px 0;">` +
+                    `<span style="color:var(--text-muted);font-size:9px;">${label}</span>` +
+                    `<span style="color:${color || 'var(--text-secondary)'}">${value}${trend || ''}</span></div>`;
+
+                let html = '';
+
+                // Header with hide button
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">`;
+                html += `<span style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">GPU</span>`;
+                html += `<span onclick="event.stopPropagation();gpuMonitor.toggle()" style="cursor:pointer;font-size:9px;color:var(--text-muted);opacity:0.5;transition:opacity 0.2s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.5'">&times;</span>`;
                 html += `</div>`;
 
+                // Divider
+                html += `<div style="border-top:1px solid var(--border-color);margin-bottom:4px;"></div>`;
+
+                // Core stats
+                html += row('FPS', this.fps.current || '--', '', 'var(--accent)');
+                html += row('GEO', stats.geometries, geoTrend, colorFor(geoLevel));
+                html += row('TEX', stats.textures, texTrend, colorFor(texLevel));
+                html += row('PRG', stats.programs, progTrend);
+                html += row('G#', this.gestureCount, '', 'var(--text-muted)');
+
                 if (this.expanded) {
-                    html += `<div style="border-top:1px solid rgba(255,255,255,0.2);margin-top:6px;padding-top:6px;font-size:10px;">`;
+                    // Divider
+                    html += `<div style="border-top:1px solid var(--border-color);margin:4px 0;"></div>`;
 
                     // Peaks
-                    html += `<div style="color:#f90">PEAKS: geo=${this.peaks.geometries} tex=${this.peaks.textures} prog=${this.peaks.programs}</div>`;
+                    html += `<div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Peaks</div>`;
+                    html += row('GEO', this.peaks.geometries);
+                    html += row('TEX', this.peaks.textures);
+                    html += row('PRG', this.peaks.programs);
 
-                    // FPS details
+                    // FPS range
                     const fpsMin = this.fps.min === Infinity ? '--' : this.fps.min;
                     const fpsMax = this.fps.max === 0 ? '--' : this.fps.max;
-                    html += `<div>FPS: min=${fpsMin} max=${fpsMax} avg=${this.fps.avg || '--'}</div>`;
+                    html += `<div style="border-top:1px solid var(--border-color);margin:4px 0;"></div>`;
+                    html += row('MIN', fpsMin);
+                    html += row('MAX', fpsMax);
+                    html += row('AVG', this.fps.avg || '--');
 
-                    // Memory estimate
-                    html += `<div>Est. GPU: ~${this.estimateMemory(stats)} MB</div>`;
+                    // Memory
+                    html += row('~MB', this.estimateMemory(stats));
 
                     // Instance pools
                     const pools = this.getInstancePoolStats();
                     if (pools) {
-                        const poolStr = Object.entries(pools).map(([k, v]) => `${k}:${v.active}/${v.total}(${v.gpu})`).join(' ');
-                        html += `<div style="color:#0ff">Pools: ${poolStr}</div>`;
+                        html += `<div style="border-top:1px solid var(--border-color);margin:4px 0;"></div>`;
+                        html += `<div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Pools</div>`;
+                        for (const [k, v] of Object.entries(pools)) {
+                            const shortName = k.length > 6 ? k.slice(0, 6) : k;
+                            html += row(shortName, `${v.active}/${v.gpu}`);
+                        }
                     }
 
                     // Recent gesture timings
                     if (this.gestureTimings.length > 0) {
-                        const recent = this.gestureTimings.slice(-3).map(g => `${g.name}:${g.duration}ms`).join(', ');
-                        html += `<div style="color:#aaf">Timings: ${recent}</div>`;
+                        html += `<div style="border-top:1px solid var(--border-color);margin:4px 0;"></div>`;
+                        this.gestureTimings.slice(-3).forEach(g => {
+                            const shortName = g.name.length > 6 ? g.name.slice(0, 6) : g.name;
+                            html += row(shortName, g.duration + 'ms', '', 'var(--text-muted)');
+                        });
                     }
 
                     // Action buttons
-                    html += `<div style="margin-top:6px;display:flex;gap:8px;">`;
-                    html += `<button onclick="event.stopPropagation();gpuMonitor.copyToClipboard()" style="font-size:9px;padding:2px 6px;cursor:pointer;">📋 Copy</button>`;
-                    html += `<button onclick="event.stopPropagation();gpuMonitor.resetPeaks()" style="font-size:9px;padding:2px 6px;cursor:pointer;">🔄 Reset Peaks</button>`;
-                    html += `<button onclick="event.stopPropagation();gpuMonitor.clear()" style="font-size:9px;padding:2px 6px;cursor:pointer;">🗑️ Clear</button>`;
-                    html += `</div>`;
-
-                    html += `</div>`;
+                    html += `<div style="border-top:1px solid var(--border-color);margin:4px 0;"></div>`;
+                    const btnStyle = `font-size:9px;padding:3px 0;cursor:pointer;background:none;border:none;color:var(--text-muted);text-align:center;width:100%;transition:color 0.15s;`;
+                    html += `<button onclick="event.stopPropagation();gpuMonitor.copyToClipboard()" style="${btnStyle}" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color=''">Copy</button>`;
+                    html += `<button onclick="event.stopPropagation();gpuMonitor.resetPeaks()" style="${btnStyle}" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color=''">Reset</button>`;
+                    html += `<button onclick="event.stopPropagation();gpuMonitor.clear()" style="${btnStyle}" onmouseenter="this.style.color='#e85d5d'" onmouseleave="this.style.color=''">Clear</button>`;
                 }
+
+                // Click area for expand/collapse (bottom)
+                html += `<div onclick="gpuMonitor.toggleExpanded()" style="text-align:center;padding:3px 0 0;cursor:pointer;font-size:8px;color:var(--text-muted);opacity:0.4;transition:opacity 0.2s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'">${this.expanded ? '\u25B2' : '\u25BC'}</div>`;
 
                 display.innerHTML = html;
             },
@@ -1359,8 +1416,12 @@
             toggle() {
                 this.visible = !this.visible;
                 const display = document.getElementById('gpu-monitor-display');
+                const tab = document.getElementById('gpu-monitor-tab');
                 if (display) {
                     display.style.display = this.visible ? 'block' : 'none';
+                }
+                if (tab) {
+                    tab.style.display = this.visible ? 'none' : 'block';
                 }
                 console.log(`[GPU Monitor] ${this.visible ? 'Visible' : 'Hidden'} (press G to toggle)`);
             },
@@ -1389,11 +1450,11 @@
                 };
                 navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
                     console.log('[GPU] Data copied to clipboard');
-                    // Brief visual feedback
                     const display = document.getElementById('gpu-monitor-display');
                     if (display) {
-                        display.style.borderColor = '#0f0';
-                        setTimeout(() => { display.style.borderColor = 'rgba(0,255,0,0.3)'; }, 300);
+                        display.style.borderColor = 'var(--accent)';
+                        display.style.boxShadow = '0 0 12px rgba(var(--accent-rgb),0.3)';
+                        setTimeout(() => { display.style.borderColor = ''; display.style.boxShadow = ''; }, 400);
                     }
                 });
             },

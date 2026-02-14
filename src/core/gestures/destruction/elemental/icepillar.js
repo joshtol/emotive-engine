@@ -77,6 +77,16 @@ const SHARED_ANIMATION = {
         speed: 1.5,
         blend: 'multiply'
     },
+    // Per-gesture atmospheric particles: cold mist pooling below ice column
+    atmospherics: [{
+        preset: 'mist',
+        targets: ['ice-ring'],
+        anchor: 'below',
+        anchorOffset: -0.1,
+        intensity: 0.4,
+        sizeScale: 1.5,
+        progressCurve: 'sustain',
+    }],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'normal',

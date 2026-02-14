@@ -19,6 +19,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { DistortionShader } from './DistortionPass.js';
 import { DistortionManager } from './effects/DistortionManager.js';
+import { ParticleAtmosphericsManager } from './effects/ParticleAtmosphericsManager.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // normalizeColorLuminance - available for advanced color normalization
 import { GlowLayer } from './effects/GlowLayer.js';
@@ -603,6 +604,10 @@ export class ThreeRenderer {
         // DistortionManager: creates/syncs parallel InstancedMeshes, renders distortion map
         this.distortionManager = new DistortionManager(this.renderer, this.camera);
 
+        // Particle atmospherics: smoke/mist particles render directly in the main scene
+        // (no separate RT or composite pass — particles are real 3D objects with depth)
+        this.particleAtmospherics = new ParticleAtmosphericsManager(this.scene, this.camera);
+
         // Composite shader to blend particle bloom onto main scene
         this.particleCompositeShader = {
             uniforms: {
@@ -778,7 +783,7 @@ export class ThreeRenderer {
             } else {
                 // Context is valid but GPU resources might be invalidated
 
-                // Recreate distortion render target — browsers may reclaim RT memory for background tabs
+                // Recreate render targets — browsers may reclaim RT memory for background tabs
                 this._recreateDistortionTarget();
 
                 if (this.coreMesh?.material) {
@@ -1749,6 +1754,12 @@ export class ThreeRenderer {
                 }
             }
 
+            // === STEP 0.8: Update particle atmospherics (smoke/mist) ===
+            // Particles render directly in the main scene (no separate RT)
+            if (this.particleAtmospherics) {
+                this.particleAtmospherics.update(deltaTime / 1000);
+            }
+
             // === STEP 1: Render main scene (layer 0) through bloom (+ distortion if active) to screen ===
             this.camera.layers.set(0);
             this.composer.render();
@@ -2107,6 +2118,12 @@ export class ThreeRenderer {
         if (this.distortionManager) {
             this.distortionManager.dispose();
             this.distortionManager = null;
+        }
+
+        // Dispose particle atmospherics
+        if (this.particleAtmospherics) {
+            this.particleAtmospherics.dispose();
+            this.particleAtmospherics = null;
         }
 
         // Dispose glow layer

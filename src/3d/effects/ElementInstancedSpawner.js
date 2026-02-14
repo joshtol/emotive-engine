@@ -340,6 +340,9 @@ export class ElementInstancedSpawner {
             });
         }
 
+        // Particle atmospherics are now per-gesture (started in _applyShaderAnimationOverrides)
+        // No registration needed here — emitters are created on-demand from gesture configs
+
         DEBUG && console.log(`[ElementInstancedSpawner] Initialized ${elementType} pool with ${geometries.length} models, ${MAX_ELEMENTS_PER_TYPE * SLOTS_PER_ELEMENT} max instances`);
 
         return pool;
@@ -439,6 +442,10 @@ export class ElementInstancedSpawner {
             if (elementConfig?.resetShaderAnimation && material) {
                 elementConfig.resetShaderAnimation(material);
             }
+            // Stop atmospherics from previous gesture (particles drain naturally)
+            if (this._particleAtmospherics) {
+                this._particleAtmospherics.stopGesture(elementType);
+            }
 
             // Apply minimum renderOrder from all layers (most negative = furthest back)
             let minRenderOrder = undefined;
@@ -528,6 +535,10 @@ export class ElementInstancedSpawner {
         }
         if (elementConfig?.resetShaderAnimation && material) {
             elementConfig.resetShaderAnimation(material);
+        }
+        // Stop atmospherics from previous gesture (particles drain naturally)
+        if (this._particleAtmospherics) {
+            this._particleAtmospherics.stopGesture(elementType);
         }
 
         const merged = this.mergedGeometries.get(elementType);
@@ -898,6 +909,12 @@ export class ElementInstancedSpawner {
         // Apply flash from animation config (opt-in lightning strike effect for electric elements)
         if (elementConfig?.setFlash && animation?.flash !== undefined) {
             elementConfig.setFlash(material, animation.flash);
+        }
+
+        // Start atmospherics from animation config (per-gesture smoke/mist particles)
+        // Additive: each layer can contribute its own atmospheric emitters
+        if (this._particleAtmospherics && animation?.atmospherics) {
+            this._particleAtmospherics.startGesture(elementType, animation.atmospherics);
         }
     }
 
@@ -1634,6 +1651,18 @@ export class ElementInstancedSpawner {
      * @param {string} [elementType] - Element type to trigger exit for, or all if null
      */
     triggerExit(elementType = null) {
+        // Stop atmospherics when gesture exits (particles drain naturally)
+        if (this._particleAtmospherics) {
+            if (elementType) {
+                this._particleAtmospherics.stopGesture(elementType);
+            } else {
+                // Stop all element types
+                for (const [type] of this.pools) {
+                    this._particleAtmospherics.stopGesture(type);
+                }
+            }
+        }
+
         for (const [elementId, data] of this.activeElements) {
             if (elementType && data.type !== elementType) continue;
 
@@ -1712,6 +1741,13 @@ export class ElementInstancedSpawner {
             if (this._distortionManager) {
                 for (const [type, pool] of this.pools) {
                     this._distortionManager.syncInstances(type, pool.mesh, pool.mesh.count);
+                }
+            }
+            // Sync particle atmospherics to zero sources (same reason)
+            // Pass empty activeElements so all emitters get sourceCount=0
+            if (this._particleAtmospherics) {
+                for (const [type] of this.pools) {
+                    this._particleAtmospherics.syncSources(type, this.activeElements, this.container);
                 }
             }
             this._checkPoolCleanup();
@@ -2012,6 +2048,21 @@ export class ElementInstancedSpawner {
                 this._distortionManager.syncInstances(type, pool.mesh, pool.mesh.count);
             }
         }
+
+        // Sync particle atmospherics: feed filtered positions + gesture progress
+        if (this._particleAtmospherics) {
+            // Collect unique element types with active elements
+            const activeTypes = new Set();
+            for (const [, data] of this.activeElements) {
+                activeTypes.add(data.type);
+            }
+            // Sync sources (filtered by targetModels inside manager) and progress
+            // Pass container so PAM can transform positions to world space
+            for (const type of activeTypes) {
+                this._particleAtmospherics.syncSources(type, this.activeElements, this.container);
+                this._particleAtmospherics.setGestureProgress(type, gestureProgress);
+            }
+        }
     }
 
     /**
@@ -2020,6 +2071,14 @@ export class ElementInstancedSpawner {
      */
     setDistortionManager(manager) {
         this._distortionManager = manager;
+    }
+
+    /**
+     * Sets the particle atmospherics manager for smoke/mist particles.
+     * @param {ParticleAtmosphericsManager} manager
+     */
+    setParticleAtmospherics(manager) {
+        this._particleAtmospherics = manager;
     }
 
     /**
