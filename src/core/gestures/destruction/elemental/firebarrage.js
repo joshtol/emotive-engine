@@ -109,6 +109,15 @@ const FIREBARRAGE_CONFIG = {
                 frequency: 6,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: smoke trailing from orbiting flames
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.25,
+                sizeScale: 0.6,
+                progressCurve: 'sustain',
+            }],
             // Per-element tumbling — each spins on different axes for chaotic, dynamic motion
             rotate: [
                 { axis: 'x', rotations: 2, phase: 0 },

@@ -37,12 +37,12 @@ export const ATMOSPHERIC_PRESETS = {
      */
     smoke: {
         materialType: 'smoke',
-        maxParticles: 48,
-        spawnRate: 8,
+        maxParticles: 64,
+        spawnRate: 18,
         lifetimeMin: 2.0,
         lifetimeMax: 3.5,
-        sizeMin: 0.08,
-        sizeMax: 0.14,
+        sizeMin: 0.10,
+        sizeMax: 0.18,
         spawnOffsetY: 0.0,
         initialSpeedMin: 0.1,
         initialSpeedMax: 0.25,
@@ -53,7 +53,7 @@ export const ATMOSPHERIC_PRESETS = {
         turbulence: 0.2,
         rotationSpeedMax: 1.0,
         endSizeMultiplier: 1.8,
-        opacity: 0.15,
+        opacity: 0.20,
         colorWarm: [0.25, 0.22, 0.18],
         colorCool: [0.18, 0.18, 0.20],
     },
@@ -217,9 +217,9 @@ export function resolveLayerConfig(layerConfig) {
     // Build the material config (what gets passed to material factory)
     const materialConfig = { ...preset };
 
-    // Apply intensity to spawnRate and opacity
+    // Apply intensity to spawnRate (linear) and opacity (sqrt — prevents crush at low intensity)
     materialConfig.spawnRate = preset.spawnRate * intensity;
-    materialConfig.opacity = preset.opacity * Math.min(intensity, 1.5); // Cap opacity scaling
+    materialConfig.opacity = preset.opacity * Math.sqrt(Math.min(intensity, 1.5));
 
     // Apply size scale
     materialConfig.sizeMin = preset.sizeMin * sizeScale;

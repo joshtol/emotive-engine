@@ -144,6 +144,15 @@ const PHOENIX_CONFIG = {
                 speed: 1.5,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke from rising phoenix
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             // All rotate together in spiral
             rotate: { axis: 'y', rotations: 1.5, phase: 0 },
             scaleVariance: 0.2,

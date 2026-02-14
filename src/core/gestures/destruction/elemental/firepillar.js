@@ -84,6 +84,15 @@ const SHARED_ANIMATION = {
         speed: 2.5,
         blend: 'multiply'
     },
+    // Per-gesture atmospheric particles: smoke rising from flame pillar
+    atmospherics: [{
+        preset: 'smoke',
+        targets: ['flame-ring'],
+        anchor: 'above',
+        intensity: 0.4,
+        sizeScale: 1.0,
+        progressCurve: 'sustain',
+    }],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'additive',

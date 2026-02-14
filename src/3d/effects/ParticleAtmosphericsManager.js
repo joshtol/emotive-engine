@@ -275,8 +275,12 @@ class ParticleEmitter {
     }
 
     dispose() {
+        this.mesh.visible = false;
+        this.geometry.instanceCount = 0;
         this.geometry.dispose();
         this.mesh.material.dispose();
+        this.activeCount = 0;
+        this.spawning = false;
     }
 }
 
@@ -305,7 +309,7 @@ export class ParticleAtmosphericsManager {
     /**
      * Start atmospheric emitters for a gesture layer.
      * ADDITIVE: appends emitters to existing ones for this element type.
-     * Call stopGesture() first to clear previous gesture's emitters.
+     * Call forceStopGesture() first to clear previous gesture's emitters on interruption.
      *
      * This design supports multi-layer gestures (e.g., icepillar with 3 layers),
      * where each layer's animation may define its own atmospherics array.
@@ -328,14 +332,13 @@ export class ParticleAtmosphericsManager {
             this.scene.add(emitter.mesh);
             emitters.push(emitter);
         }
-
-        console.log(`[PAM] startGesture(${elementType}): ${layerConfigs.length} layers, elapsed=${this._elapsedTime.toFixed(2)}`);
     }
 
     /**
-     * Stop spawning for a gesture's emitters.
+     * Stop spawning for a gesture's emitters (graceful drain).
      * Existing particles continue their lifecycle and fade naturally.
      * Emitters are cleaned up once all particles are dead.
+     * Use for triggerExit() — smooth visual transition.
      *
      * @param {string} elementType - Element type to stop
      */
@@ -346,6 +349,25 @@ export class ParticleAtmosphericsManager {
         for (const emitter of emitters) {
             emitter.spawning = false;
         }
+    }
+
+    /**
+     * Force-stop and immediately dispose all emitters for an element type.
+     * Removes meshes from scene, disposes materials, frees all memory.
+     * Use for gesture INTERRUPTION — old particles are irrelevant when
+     * a completely new gesture is starting.
+     *
+     * @param {string} elementType - Element type to force-stop
+     */
+    forceStopGesture(elementType) {
+        const emitters = this._activeEmitters.get(elementType);
+        if (!emitters) return;
+
+        for (const emitter of emitters) {
+            this.scene.remove(emitter.mesh);
+            emitter.dispose();
+        }
+        this._activeEmitters.delete(elementType);
     }
 
     /**
@@ -388,11 +410,6 @@ export class ParticleAtmosphericsManager {
                 count++;
             }
 
-            if (!emitter._syncLogged && count > 0) {
-                console.log(`[PAM] syncSources(${elementType}): ${count} sources, worldPos[0]=(${this._filteredPositions[0].toFixed(3)}, ${this._filteredPositions[1].toFixed(3)}, ${this._filteredPositions[2].toFixed(3)})`);
-                emitter._syncLogged = true;
-            }
-
             emitter.setSourcePositions(this._filteredPositions, count);
         }
     }
@@ -429,12 +446,6 @@ export class ParticleAtmosphericsManager {
             for (let i = emitters.length - 1; i >= 0; i--) {
                 const emitter = emitters[i];
                 emitter.update(dt, this._elapsedTime);
-
-                // One-time log when first particles appear
-                if (!emitter._spawnLogged && emitter.activeCount > 0) {
-                    console.log(`[PAM] First particles: ${emitter.activeCount} active, spawnTime=${emitter._spawnTimeBuffer[0].toFixed(3)}, uTime=${this._elapsedTime.toFixed(3)}, lifetime=${emitter._lifetimeBuffer[0].toFixed(2)}, size=${emitter._sizeBuffer[0].toFixed(3)}, pos=(${emitter._spawnPosBuffer[0].toFixed(3)}, ${emitter._spawnPosBuffer[1].toFixed(3)}, ${emitter._spawnPosBuffer[2].toFixed(3)})`);
-                    emitter._spawnLogged = true;
-                }
 
                 // Clean up dead emitters (stopped + no active particles)
                 if (emitter.isDead()) {

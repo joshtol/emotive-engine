@@ -141,6 +141,15 @@ const FIREHELIX_CONFIG = {
                 speed: 1.5,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke from helix strands
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }],
             // Moderate rotation to show the helix structure
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,

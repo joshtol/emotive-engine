@@ -125,6 +125,15 @@ const COMBUST_CONFIG = {
                 speed: 4.0,           // Very fast for chaos
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke from combustion
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }],
             drift: {
                 direction: 'outward', // Explodes outward
                 distance: 0.15,       // Total expansion over gesture lifetime

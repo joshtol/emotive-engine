@@ -142,6 +142,16 @@ const FIREMEDITATION_CONFIG = {
                 speed: 0.5,           // Moderate animation
                 blend: 'multiply'     // Creates holes for gritty texture
             },
+            // Per-gesture atmospheric particles: gentle meditation wisps
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                speedScale: 0.6,
+                progressCurve: 'sustain',
+            }],
             // Gentle slow rotation around Z (spin while facing camera)
             // 5 rings with alternating directions for mandala harmony
             rotate: [

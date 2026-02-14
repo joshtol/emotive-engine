@@ -133,6 +133,15 @@ const FIREFLOURISH_CONFIG = {
                     speed: 2.0,           // Fast animation
                     blend: 'multiply'     // Actually visible on bright colors
                 },
+                // Per-gesture atmospheric particles: smoke from spinning flourish
+                atmospherics: [{
+                    preset: 'smoke',
+                    targets: ['flame-ring'],
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                }],
                 // SPIRAL cutout with spiral travel - interesting flicker
                 cutout: {
                     strength: 0.85,

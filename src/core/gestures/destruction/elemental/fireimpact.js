@@ -106,6 +106,15 @@ const FIREIMPACT_CONFIG = {
                 frequency: 9,
                 pattern: 'sine'
             },
+            // Per-gesture atmospheric particles: impact smoke
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }],
             // Violent per-element tumbling — faster spins for aggressive motion
             rotate: [
                 { axis: 'z', rotations: -4, phase: 0 },

@@ -442,9 +442,9 @@ export class ElementInstancedSpawner {
             if (elementConfig?.resetShaderAnimation && material) {
                 elementConfig.resetShaderAnimation(material);
             }
-            // Stop atmospherics from previous gesture (particles drain naturally)
+            // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
             if (this._particleAtmospherics) {
-                this._particleAtmospherics.stopGesture(elementType);
+                this._particleAtmospherics.forceStopGesture(elementType);
             }
 
             // Apply minimum renderOrder from all layers (most negative = furthest back)
@@ -536,9 +536,9 @@ export class ElementInstancedSpawner {
         if (elementConfig?.resetShaderAnimation && material) {
             elementConfig.resetShaderAnimation(material);
         }
-        // Stop atmospherics from previous gesture (particles drain naturally)
+        // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
         if (this._particleAtmospherics) {
-            this._particleAtmospherics.stopGesture(elementType);
+            this._particleAtmospherics.forceStopGesture(elementType);
         }
 
         const merged = this.mergedGeometries.get(elementType);

@@ -88,6 +88,15 @@ const FIREBLAST_CONFIG = {
                     }
                 },
                 grain: { type: 3, strength: 0.5, scale: 0.3, speed: 1.5, blend: 'multiply' },
+                // Per-gesture atmospheric particles: blast smoke
+                atmospherics: [{
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                }],
                 blending: 'additive',
                 renderOrder: 8,
                 rotate: { axis: 'z', rotations: 0, phase: 0 },

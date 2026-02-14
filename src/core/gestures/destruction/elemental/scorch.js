@@ -113,6 +113,15 @@ const SCORCH_CONFIG = {
                 speed: 0.8,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke from scorched surface
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }],
             drift: {
                 speed: 0.3,
                 distance: 0.3,

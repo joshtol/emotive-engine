@@ -135,6 +135,15 @@ const BURN_CONFIG = {
                 speed: 0.5,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke from burning surface
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }],
             // Key feature: flames rise from where they spawn on surface
             drift: {
                 direction: 'up',

@@ -152,6 +152,15 @@ const BLAZE_CONFIG = {
                     speed: 0.3,
                     blend: 'multiply'
                 },
+                // Per-gesture atmospheric particles: smoke from blazing column
+                atmospherics: [{
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                }],
                 rotate: [
                     { axis: 'y', rotations: 2.3, phase: 0 },
                     { axis: 'y', rotations: -1.7, phase: 67 },

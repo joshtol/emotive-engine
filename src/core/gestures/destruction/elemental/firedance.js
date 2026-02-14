@@ -140,6 +140,15 @@ const FIREDANCE_CONFIG = {
                 speed: 1.0,
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke trails from dancing rings
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }],
             // Dance partners: two mirror each other, one does a flourish
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },     // Lead: 2 rotations

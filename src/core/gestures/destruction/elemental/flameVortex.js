@@ -148,13 +148,11 @@ const FLAME_VORTEX_CONFIG = {
             // Per-gesture atmospheric particles: trailing smoke on vortex
             atmospherics: [{
                 preset: 'smoke',
-                targets: null,  // all fire models
+                targets: null,
                 anchor: 'above',
-                anchorOffset: 0.1,
                 intensity: 0.3,
                 sizeScale: 0.8,
-                speedScale: 1.2,
-                progressCurve: 'rampUp',
+                progressCurve: 'sustain',
             }],
             // Arc animation handles visual rotation - no mesh rotation needed
             scaleVariance: 0.2,

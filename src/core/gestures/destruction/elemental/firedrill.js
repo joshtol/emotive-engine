@@ -143,6 +143,15 @@ const FIREDRILL_CONFIG = {
                 speed: 3.0,           // Fast for intense drilling
                 blend: 'multiply'
             },
+            // Per-gesture atmospheric particles: smoke from drilling
+            atmospherics: [{
+                preset: 'smoke',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }],
             // Fast unified rotation for drill effect
             rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations
             scaleVariance: 0.15,

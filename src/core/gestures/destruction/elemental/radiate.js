@@ -140,6 +140,15 @@ const RADIATE_CONFIG = {
                     speed: 1.0,
                     blend: 'multiply'
                 },
+                // Per-gesture atmospheric particles: smoke from radiating rings
+                atmospherics: [{
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                }],
                 rotate: [
                     { axis: 'y', rotations: 1.5, phase: 0 },
                     { axis: 'y', rotations: 1.5, phase: 120 },
