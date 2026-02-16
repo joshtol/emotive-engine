@@ -109,7 +109,18 @@ const WATERCRUSH_CONFIG = {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0.4, arcCount: 1 },
                         orientationOverride: 'camera'
                     }
-                }
+                },
+                // Burst spray from crushing impact — inherits downward axis-travel motion
+                atmospherics: [{
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 1.0,
+                    sizeScale: 1.2,
+                    burstCount: 30,
+                    progressCurve: 'burst',
+                    velocityInheritance: 0.4,
+                }]
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════

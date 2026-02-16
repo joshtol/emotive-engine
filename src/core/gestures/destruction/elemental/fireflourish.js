@@ -141,6 +141,7 @@ const FIREFLOURISH_CONFIG = {
                     intensity: 0.3,
                     sizeScale: 0.7,
                     progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
                 }],
                 // SPIRAL cutout with spiral travel - interesting flicker
                 cutout: {

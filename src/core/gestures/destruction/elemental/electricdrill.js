@@ -114,6 +114,8 @@ const ELECTRICDRILL_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 0.8,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.5,
+                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
             }],
             rotate: { axis: 'y', rotations: 4, phase: 0 },
             scaleVariance: 0.15,

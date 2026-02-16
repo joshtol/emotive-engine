@@ -134,7 +134,18 @@ const WATERSOAK_CONFIG = {
                     },
                     orientationOverride: 'camera'
                 }
-            }
+            },
+            // Brief spray burst on initial soak impact — inherits axis-travel motion
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.5,
+                sizeScale: 0.8,
+                burstCount: 12,
+                progressCurve: 'burst',
+                velocityInheritance: 0.3,
+            }]
         }
     },
 

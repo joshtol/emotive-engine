@@ -96,6 +96,8 @@ const ELECTRICVORTEX_CONFIG = {
                 intensity: 0.2,
                 sizeScale: 1.2,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.6,
+                centrifugal: { speed: 1.2, tangentialBias: 0.3 },
             }],
             flash: {
                 events: [

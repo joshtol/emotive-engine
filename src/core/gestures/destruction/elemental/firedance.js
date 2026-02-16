@@ -148,6 +148,8 @@ const FIREDANCE_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 0.7,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.4,
+                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
             }],
             // Dance partners: two mirror each other, one does a flourish
             rotate: [

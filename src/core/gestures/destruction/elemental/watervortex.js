@@ -141,7 +141,18 @@ const WATER_VORTEX_CONFIG = {
                     },
                     orientationOverride: 'flat'  // Horizontal rings
                 }
-            }
+            },
+            // Sustained spray flung outward by spinning tornado
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.3,
+                sizeScale: 1.0,
+                progressCurve: 'sustain',
+                velocityInheritance: 0.6,
+                centrifugal: { speed: 1.2, tangentialBias: 0.3 },
+            }],
         }
     },
 

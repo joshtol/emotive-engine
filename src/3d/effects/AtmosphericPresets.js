@@ -16,6 +16,7 @@
 
 import { createSmokeParticleMaterial } from '../materials/SmokeParticleMaterial.js';
 import { createMistParticleMaterial } from '../materials/MistParticleMaterial.js';
+import { createSprayParticleMaterial } from '../materials/SprayParticleMaterial.js';
 
 // =================================================================================================
 // MATERIAL FACTORIES (keyed by preset material name)
@@ -24,6 +25,7 @@ import { createMistParticleMaterial } from '../materials/MistParticleMaterial.js
 const MATERIAL_FACTORIES = {
     smoke: createSmokeParticleMaterial,
     mist: createMistParticleMaterial,
+    spray: createSprayParticleMaterial,
 };
 
 // =================================================================================================
@@ -162,6 +164,36 @@ export const ATMOSPHERIC_PRESETS = {
         opacity: 0.15,
         colorWarm: [0.60, 0.70, 0.85],
         colorCool: [0.40, 0.45, 0.55],
+    },
+
+    /**
+     * Spray: fine water droplets thrown into the air by splashing/crashing water.
+     * Best for: water gestures, fountains, waterfalls, vortex effects.
+     *
+     * Each particle is ONE tiny bright point (not a cloud). Many small particles
+     * arc upward then fall under gravity, creating a fine spray curtain.
+     */
+    spray: {
+        materialType: 'spray',
+        maxParticles: 180,
+        spawnRate: 60,
+        lifetimeMin: 0.5,
+        lifetimeMax: 1.2,
+        sizeMin: 0.14,
+        sizeMax: 0.30,
+        spawnOffsetY: 0.05,
+        spawnRadius: 0.35,
+        initialSpeedMin: 0.8,
+        initialSpeedMax: 1.6,
+        spreadXZ: 0.40,
+        directionY: 0.5,
+        buoyancy: -0.8,
+        drag: 1.0,
+        turbulence: 0.06,
+        rotationSpeedMax: 0.3,
+        endSizeMultiplier: 0.8,
+        opacity: 0.55,
+        color: [0.4, 0.7, 1.0],
     },
 };
 
@@ -308,6 +340,7 @@ export function resolveLayerConfig(layerConfig) {
         initialSpeedMax: materialConfig.initialSpeedMax,
         spreadXZ: materialConfig.spreadXZ,
         directionY: materialConfig.directionY,
+        spawnRadius: materialConfig.spawnRadius || 0,
 
         // Targeting
         targetModels: layerConfig.targets || null,
@@ -317,5 +350,12 @@ export function resolveLayerConfig(layerConfig) {
         progressCurve: layerConfig.progressCurve || 'sustain',
         burstCount: layerConfig.burstCount || 0,
         baseSpawnRate: materialConfig.spawnRate, // Unmodulated rate for progress curve
+
+        // Physics: velocity inheritance (0-1 fraction of source element motion)
+        velocityInheritance: layerConfig.velocityInheritance || 0,
+
+        // Physics: centrifugal emission for spinning gestures
+        // { speed: outward velocity, tangentialBias: 0-1 radial vs tangential mix }
+        centrifugal: layerConfig.centrifugal || null,
     };
 }

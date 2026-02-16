@@ -151,7 +151,8 @@ const WATERMEDITATION_CONFIG = {
                     },
                     orientationOverride: 'camera'
                 }
-            }
+            },
+            // No atmospherics — meditation is peaceful, no violent water motion
         }
     },
 

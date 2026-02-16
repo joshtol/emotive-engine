@@ -121,6 +121,8 @@ const ELECTRICHELIX_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 1.0,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.5,
+                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
             }],
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,

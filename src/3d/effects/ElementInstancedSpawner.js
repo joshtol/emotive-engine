@@ -47,7 +47,7 @@ import {
 
 // Animation state machine for per-element lifecycle
 import { AnimationState, AnimationStates } from './animation/AnimationState.js';
-import { AnimationConfig } from './animation/AnimationConfig.js';
+import { AnimationConfig, evaluateEnergy } from './animation/AnimationConfig.js';
 import { getEasing } from './animation/Easing.js';
 
 // Axis-travel utilities from spawn-modes (shared with legacy spawner)
@@ -184,6 +184,10 @@ export class ElementInstancedSpawner {
         this._poolLastUsed = new Map();  // elementType -> timestamp
         this._poolCleanupInterval = 30000;  // 30 seconds of inactivity before disposal
         this._lastCleanupCheck = 0;
+
+        // Per-type parameterAnimation configs for atmospheric energy evaluation
+        // Stored at gesture start, evaluated each frame to drive particle energy
+        this._parameterAnimations = new Map();  // elementType -> parsed parameterAnimation object
     }
 
     /**
@@ -446,6 +450,7 @@ export class ElementInstancedSpawner {
             if (this._particleAtmospherics) {
                 this._particleAtmospherics.forceStopGesture(elementType);
             }
+            this._parameterAnimations.delete(elementType);
 
             // Apply minimum renderOrder from all layers (most negative = furthest back)
             let minRenderOrder = undefined;
@@ -540,6 +545,7 @@ export class ElementInstancedSpawner {
         if (this._particleAtmospherics) {
             this._particleAtmospherics.forceStopGesture(elementType);
         }
+        this._parameterAnimations.delete(elementType);
 
         const merged = this.mergedGeometries.get(elementType);
         if (!merged) {
@@ -909,6 +915,13 @@ export class ElementInstancedSpawner {
         // Apply flash from animation config (opt-in lightning strike effect for electric elements)
         if (elementConfig?.setFlash && animation?.flash !== undefined) {
             elementConfig.setFlash(material, animation.flash);
+        }
+
+        // Store parameterAnimation for atmospheric energy evaluation per frame
+        // The first named parameter (temperature, turbulence, charge) drives particle energy
+        if (animation?.parameterAnimation) {
+            const animConfig = new AnimationConfig({ parameterAnimation: animation.parameterAnimation });
+            this._parameterAnimations.set(elementType, animConfig.parameterAnimation);
         }
 
         // Start atmospherics from animation config (per-gesture smoke/mist particles)
@@ -2049,7 +2062,7 @@ export class ElementInstancedSpawner {
             }
         }
 
-        // Sync particle atmospherics: feed filtered positions + gesture progress
+        // Sync particle atmospherics: feed filtered positions + gesture progress + energy
         if (this._particleAtmospherics) {
             // Collect unique element types with active elements
             const activeTypes = new Set();
@@ -2061,6 +2074,16 @@ export class ElementInstancedSpawner {
             for (const type of activeTypes) {
                 this._particleAtmospherics.syncSources(type, this.activeElements, this.container);
                 this._particleAtmospherics.setGestureProgress(type, gestureProgress);
+
+                // Evaluate parameterAnimation energy (temperature/turbulence/charge)
+                // and pipe to atmospheric particles so they scale with gesture intensity
+                const paramAnim = this._parameterAnimations.get(type);
+                if (paramAnim && gestureProgress !== null) {
+                    const energy = evaluateEnergy(paramAnim, gestureProgress);
+                    if (energy !== null) {
+                        this._particleAtmospherics.setEnergy(type, energy);
+                    }
+                }
             }
         }
     }

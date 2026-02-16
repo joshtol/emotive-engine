@@ -107,7 +107,17 @@ const SHARED_ANIMATION = {
                 arcCount: 3
             }
         }
-    }
+    },
+    // Sustained spray rising with pillar — inherits upward axis-travel motion
+    atmospherics: [{
+        preset: 'spray',
+        targets: ['splash-ring'],
+        anchor: 'above',
+        intensity: 0.3,
+        sizeScale: 1.0,
+        progressCurve: 'sustain',
+        velocityInheritance: 0.5,
+    }],
 };
 
 /**

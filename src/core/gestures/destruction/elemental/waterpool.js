@@ -97,7 +97,8 @@ const WATERPOOL_CONFIG = {
                     'splash-ring': {
                         shaderAnimation: { type: 5, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 }
                     }
-                }
+                },
+                // No atmospherics — pooling water, no violent splash
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════

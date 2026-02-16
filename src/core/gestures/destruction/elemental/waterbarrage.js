@@ -120,7 +120,18 @@ const WATERBARRAGE_CONFIG = {
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'normal',
-            renderOrder: 12
+            renderOrder: 12,
+            // Spray flung from orbiting barrage elements — inherits orbital motion
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.5,
+                sizeScale: 0.8,
+                burstCount: 12,
+                progressCurve: 'burst',
+                velocityInheritance: 0.7,
+            }]
         }
     },
 

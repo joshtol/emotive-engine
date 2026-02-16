@@ -80,6 +80,7 @@ const ELECTRICPILLAR_CONFIG = {
                     intensity: 0.1,
                     sizeScale: 0.8,
                     progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
                 }],
                 cutout: {
                     strength: 0.5,

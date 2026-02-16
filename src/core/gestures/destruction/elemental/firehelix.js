@@ -149,6 +149,8 @@ const FIREHELIX_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 0.7,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.5,
+                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
             }],
             // Moderate rotation to show the helix structure
             rotate: { axis: 'y', rotations: 2, phase: 0 },

@@ -24,6 +24,7 @@ import { ElementTypeRegistry } from './ElementTypeRegistry.js';
 
 import {
     createFireDistortionMaterial,
+    createWaterDistortionMaterial,
     createIceDistortionMaterial,
     createElectricDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
@@ -139,7 +140,15 @@ ElementTypeRegistry.register('water', {
     resetGrain: resetWaterGrain,
     resetShaderAnimation: resetWaterAnimation,
     scaleMultiplier: 1.2,
-    // distortion: TODO — water ripple distortion (disabled until fire is proven)
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createWaterDistortionMaterial,
+        transform: {
+            padding: new THREE.Vector3(0.3, 0.3, 0.3),
+        },
+        billboard: true,
+        strength: 0.003,
+    },
 });
 
 ElementTypeRegistry.register('ice', {

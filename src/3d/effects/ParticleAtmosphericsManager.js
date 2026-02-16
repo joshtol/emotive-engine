@@ -20,6 +20,10 @@
  *   stopGesture(type) → stops spawning, lets existing particles fade naturally
  *   update(dt) → advances all active emitters, cleans up dead ones
  *
+ * Physics features:
+ *   - velocityInheritance: particles inherit source element motion (axis-travel, orbit, drift)
+ *   - centrifugal: outward radial velocity for spinning gestures (ring rotation)
+ *
  * Integration:
  *   Gesture files define `atmospherics: [{ preset, targets, anchor, ... }]` in animation
  *   ElementInstancedSpawner wires start/stop/sync following cutout/grain/flash pattern
@@ -49,9 +53,16 @@ class ParticleEmitter {
         this.spawning = true; // Set to false on stopGesture to drain
         this._dirty = false;
         this._progress = 0;
+        this._energy = null;  // null = not set (use curveMultiplier fallback)
 
         // Source element positions (filtered by targetModels each frame)
         this._sourcePositions = new Float32Array(MAX_SOURCE_POSITIONS * 3);
+
+        // Velocity tracking: per-source velocity computed from frame-to-frame position delta
+        this._prevSourcePositions = new Float32Array(MAX_SOURCE_POSITIONS * 3);
+        this._sourceVelocities = new Float32Array(MAX_SOURCE_POSITIONS * 3);
+        this._prevSourceCount = 0;
+        this._hasVelocityData = false; // Need 2+ frames to compute velocity
 
         // GPU geometry + attribute buffers
         const max = config.maxParticles;
@@ -127,11 +138,55 @@ class ParticleEmitter {
     }
 
     /**
+     * Compute per-source velocities from frame-to-frame position delta.
+     * Called at the start of update() after syncSources has set new positions.
+     * Sources are matched by index (stable ordering from activeElements iteration).
+     *
+     * @param {number} dt - Frame delta time in seconds
+     */
+    _updateSourceVelocities(dt) {
+        if (dt < 0.001 || this._prevSourceCount === 0 || this.sourceCount === 0) {
+            // Store current for next frame, but no velocity yet
+            for (let i = 0; i < this.sourceCount * 3; i++) {
+                this._prevSourcePositions[i] = this._sourcePositions[i];
+            }
+            this._prevSourceCount = this.sourceCount;
+            this._hasVelocityData = this._prevSourceCount > 0;
+            return;
+        }
+
+        const invDt = 1.0 / dt;
+        const minCount = Math.min(this.sourceCount, this._prevSourceCount);
+
+        for (let i = 0; i < minCount; i++) {
+            const idx = i * 3;
+            this._sourceVelocities[idx]     = (this._sourcePositions[idx]     - this._prevSourcePositions[idx])     * invDt;
+            this._sourceVelocities[idx + 1] = (this._sourcePositions[idx + 1] - this._prevSourcePositions[idx + 1]) * invDt;
+            this._sourceVelocities[idx + 2] = (this._sourcePositions[idx + 2] - this._prevSourcePositions[idx + 2]) * invDt;
+        }
+
+        // New sources (count > prevCount) get zero velocity
+        for (let i = minCount * 3; i < this.sourceCount * 3; i++) {
+            this._sourceVelocities[i] = 0;
+        }
+
+        // Store current as previous for next frame
+        for (let i = 0; i < this.sourceCount * 3; i++) {
+            this._prevSourcePositions[i] = this._sourcePositions[i];
+        }
+        this._prevSourceCount = this.sourceCount;
+        this._hasVelocityData = true;
+    }
+
+    /**
      * Advance the emitter: kill dead particles, spawn new ones, update GPU.
      * @param {number} dt - Delta time in seconds (capped by caller)
      * @param {number} globalTime - Total elapsed time in seconds (monotonic)
      */
     update(dt, globalTime) {
+        // 0. Compute source velocities from position deltas (before spawning)
+        this._updateSourceVelocities(dt);
+
         // 1. Kill dead particles
         for (let i = 0; i < this.activeCount; i++) {
             if (globalTime - this._spawnTimeBuffer[i] >= this._lifetimeBuffer[i]) {
@@ -149,10 +204,15 @@ class ParticleEmitter {
             );
             const effectiveRate = this.config.baseSpawnRate * curveMultiplier;
 
+            // Energy drives particle speed/size at spawn time:
+            // - If parameterAnimation is set (temperature/turbulence/charge), use it
+            // - Otherwise fall back to progressCurve multiplier (backwards compatible)
+            const energy = this._energy !== null ? this._energy : curveMultiplier;
+
             this.spawnAccumulator += effectiveRate * dt;
             while (this.spawnAccumulator >= 1.0 && this.activeCount < this.config.maxParticles) {
                 this.spawnAccumulator -= 1.0;
-                this._spawnOne(globalTime);
+                this._spawnOne(globalTime, energy);
             }
         } else if (!this.spawning) {
             // Draining — don't accumulate
@@ -200,16 +260,32 @@ class ParticleEmitter {
     burstSpawn(count, globalTime) {
         if (this.sourceCount === 0) return;
         for (let i = 0; i < count && this.activeCount < this.config.maxParticles; i++) {
-            this._spawnOne(globalTime);
+            this._spawnOne(globalTime, 1.0);
         }
     }
 
     /**
      * Spawn one particle at a random active source element position.
+     *
+     * Physics pipeline:
+     *   1. Base velocity from preset (directionY, spreadXZ, radial kick)
+     *   2. + velocity inheritance (source element motion * inheritance factor)
+     *   3. + centrifugal kick (outward from source center, for spinning gestures)
+     *
+     * @param {number} globalTime - Current monotonic time
+     * @param {number} energy - Progress curve multiplier (0→1). Modulates speed
+     *   and size at spawn time so particles born during high-energy gesture moments
+     *   fly faster/further than those born during calm moments.
+     *   Floor of 0.3 ensures particles always have some momentum.
+     *   'sustain' curve = always 1.0 = no change (backwards compatible).
      */
-    _spawnOne(globalTime) {
+    _spawnOne(globalTime, energy = 1.0) {
         const cfg = this.config;
         const idx = this.activeCount;
+
+        // Energy modulation: progress curve scales speed and size at spawn time
+        // Floor of 0.3 ensures particles always drift even at lowest energy
+        const energyScale = 0.3 + 0.7 * energy;
 
         // Pick random source position
         const srcIdx = Math.floor(Math.random() * this.sourceCount);
@@ -217,23 +293,79 @@ class ParticleEmitter {
         const sy = this._sourcePositions[srcIdx * 3 + 1];
         const sz = this._sourcePositions[srcIdx * 3 + 2];
 
-        // Spawn position: source + small random offset + configured offset
-        this._spawnPosBuffer[idx * 3]     = sx + (Math.random() - 0.5) * 0.1;
-        this._spawnPosBuffer[idx * 3 + 1] = sy + (cfg.spawnOffsetY ?? 0);
-        this._spawnPosBuffer[idx * 3 + 2] = sz + (Math.random() - 0.5) * 0.1;
+        const baseSpeed = cfg.initialSpeedMin + Math.random() * (cfg.initialSpeedMax - cfg.initialSpeedMin);
+        const speed = baseSpeed * energyScale;
+        const radius = cfg.spawnRadius || 0;
+        let offsetX = 0, offsetZ = 0;
+        let radialVx = 0, radialVz = 0;
 
-        // Initial velocity: primarily in directionY, with lateral spread
-        const speed = cfg.initialSpeedMin + Math.random() * (cfg.initialSpeedMax - cfg.initialSpeedMin);
-        this._spawnVelBuffer[idx * 3]     = (Math.random() - 0.5) * cfg.spreadXZ;
-        this._spawnVelBuffer[idx * 3 + 1] = speed * (cfg.directionY ?? 1.0);
-        this._spawnVelBuffer[idx * 3 + 2] = (Math.random() - 0.5) * cfg.spreadXZ;
+        if (radius > 0) {
+            // Distribute on a random disk around the source (sqrt for uniform area)
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.random()) * radius;
+            const cosA = Math.cos(angle);
+            const sinA = Math.sin(angle);
+            offsetX = cosA * r;
+            offsetZ = sinA * r;
+            // Radial outward velocity kick — spray flings away from source
+            radialVx = cosA * speed * 0.5;
+            radialVz = sinA * speed * 0.5;
+        }
+
+        // Spawn position: source + radial offset + small jitter + configured Y offset
+        this._spawnPosBuffer[idx * 3]     = sx + offsetX + (Math.random() - 0.5) * 0.05;
+        this._spawnPosBuffer[idx * 3 + 1] = sy + (cfg.spawnOffsetY ?? 0);
+        this._spawnPosBuffer[idx * 3 + 2] = sz + offsetZ + (Math.random() - 0.5) * 0.05;
+
+        // Initial velocity: upward + radial outward + random lateral spread
+        let vx = radialVx + (Math.random() - 0.5) * cfg.spreadXZ;
+        let vy = speed * (cfg.directionY ?? 1.0);
+        let vz = radialVz + (Math.random() - 0.5) * cfg.spreadXZ;
+
+        // ── Velocity inheritance: particles inherit source element motion ──
+        // Helps axis-travel (helix rising), orbit (barrage orbiting), drift gestures.
+        // Source velocity computed from frame-to-frame position delta in _updateSourceVelocities().
+        const inheritance = cfg.velocityInheritance || 0;
+        if (inheritance > 0 && this._hasVelocityData) {
+            vx += this._sourceVelocities[srcIdx * 3]     * inheritance;
+            vy += this._sourceVelocities[srcIdx * 3 + 1] * inheritance;
+            vz += this._sourceVelocities[srcIdx * 3 + 2] * inheritance;
+        }
+
+        // ── Centrifugal emission: outward radial kick for spinning gestures ──
+        // For rings rotating around their center, the element origin is stationary
+        // but particles should fling outward as if thrown from the spinning surface.
+        // The offset from source center (from spawnRadius) gives the radial direction.
+        const {centrifugal} = cfg;
+        if (centrifugal && (offsetX !== 0 || offsetZ !== 0)) {
+            const dist = Math.sqrt(offsetX * offsetX + offsetZ * offsetZ);
+            if (dist > 0.01) {
+                const outSpeed = centrifugal.speed * energyScale;
+                // Radial outward component
+                const radialFrac = 1.0 - (centrifugal.tangentialBias || 0);
+                vx += (offsetX / dist) * outSpeed * radialFrac;
+                vz += (offsetZ / dist) * outSpeed * radialFrac;
+                // Tangential component (perpendicular to radial in XZ plane)
+                const tangFrac = centrifugal.tangentialBias || 0;
+                if (tangFrac > 0) {
+                    // Tangent = 90° rotation of radial direction
+                    vx += (-offsetZ / dist) * outSpeed * tangFrac;
+                    vz += (offsetX / dist) * outSpeed * tangFrac;
+                }
+            }
+        }
+
+        this._spawnVelBuffer[idx * 3]     = vx;
+        this._spawnVelBuffer[idx * 3 + 1] = vy;
+        this._spawnVelBuffer[idx * 3 + 2] = vz;
 
         // Timing
         this._spawnTimeBuffer[idx] = globalTime;
         this._lifetimeBuffer[idx]  = cfg.lifetimeMin + Math.random() * (cfg.lifetimeMax - cfg.lifetimeMin);
 
-        // Visual randomization
-        this._sizeBuffer[idx]     = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
+        // Visual randomization — size also scales with energy (subtler: 0.7 floor)
+        const sizeScale = 0.7 + 0.3 * energy;
+        this._sizeBuffer[idx]     = (cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin)) * sizeScale;
         this._rotationBuffer[idx] = Math.random() * Math.PI * 2;
         this._seedBuffer[idx]     = Math.random();
 
@@ -428,8 +560,28 @@ export class ParticleAtmosphericsManager {
             // Fire burst on first frame that has sources (burst hasn't fired yet)
             if (emitter.config.burstCount > 0 && emitter._progress === 0 && progress > 0) {
                 emitter.burstSpawn(emitter.config.burstCount, this._elapsedTime);
+                // Burst is a one-shot event — stop sustained spawning immediately.
+                // Particles live their natural lifetime and arc/fade, but no trickle.
+                emitter.spawning = false;
             }
             emitter._progress = progress;
+        }
+    }
+
+    /**
+     * Set the energy level for atmospheric particles of an element type.
+     * Energy comes from the gesture's parameterAnimation (temperature, turbulence, charge)
+     * evaluated at the current gestureProgress. Drives particle speed and size at spawn time.
+     *
+     * @param {string} elementType - Element type
+     * @param {number} energy - Energy value (typically 0→1, from parameterAnimation)
+     */
+    setEnergy(elementType, energy) {
+        const emitters = this._activeEmitters.get(elementType);
+        if (!emitters) return;
+
+        for (const emitter of emitters) {
+            emitter._energy = energy;
         }
     }
 

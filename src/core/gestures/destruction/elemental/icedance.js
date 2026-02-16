@@ -123,6 +123,8 @@ const ICEDANCE_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 1.0,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.4,
+                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
             }],
             parameterAnimation: {
                 frost: {

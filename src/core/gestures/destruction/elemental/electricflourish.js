@@ -123,6 +123,7 @@ const ELECTRICFLOURISH_CONFIG = {
                     intensity: 0.15,
                     sizeScale: 0.8,
                     progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
                 }],
                 drift: {
                     speed: 0.3,

@@ -68,6 +68,7 @@ const ELECTRICBARRAGE_CONFIG = {
                 intensity: 0.25,
                 sizeScale: 0.8,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.7,
             }],
             flash: {
                 events: [

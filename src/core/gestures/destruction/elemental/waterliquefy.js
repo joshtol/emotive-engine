@@ -111,7 +111,8 @@ const WATERLIQUEFY_CONFIG = {
                         shaderAnimation: { type: 3, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
                         orientationOverride: 'camera'
                     }
-                }
+                },
+                // No atmospherics — dissolving water, no violent splash
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════

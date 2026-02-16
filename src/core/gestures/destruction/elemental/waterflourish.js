@@ -174,7 +174,17 @@ const WATERFLOURISH_CONFIG = {
                         },
                         orientationOverride: 'camera'
                     }
-                }
+                },
+                // Sustained spray trailing from theatrical sweep
+                atmospherics: [{
+                    preset: 'spray',
+                    targets: ['splash-ring'],
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                }],
             }
         },
 

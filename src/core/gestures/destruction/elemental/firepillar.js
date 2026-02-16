@@ -92,6 +92,7 @@ const SHARED_ANIMATION = {
         intensity: 0.4,
         sizeScale: 1.0,
         progressCurve: 'sustain',
+        velocityInheritance: 0.5,
     }],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,

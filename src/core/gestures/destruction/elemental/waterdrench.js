@@ -139,7 +139,18 @@ const WATERDRENCH_CONFIG = {
                     },
                     orientationOverride: 'camera'
                 }
-            }
+            },
+            // Burst spray on drenching impact — inherits downward axis-travel motion
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.8,
+                sizeScale: 1.0,
+                burstCount: 20,
+                progressCurve: 'burst',
+                velocityInheritance: 0.4,
+            }]
         }
     },
 

@@ -119,7 +119,18 @@ const WATERIMPACT_CONFIG = {
             scaleVariance: 0.2,
             lifetimeVariance: 0.08,
             blending: 'normal',
-            renderOrder: 12
+            renderOrder: 12,
+            // Spray flung from converging orbit impacts — inherits orbital motion
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.8,
+                sizeScale: 1.0,
+                burstCount: 15,
+                progressCurve: 'burst',
+                velocityInheritance: 0.7,
+            }]
         }
     },
 

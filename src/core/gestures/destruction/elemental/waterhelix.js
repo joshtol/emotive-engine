@@ -144,7 +144,18 @@ const WATERHELIX_CONFIG = {
                     },
                     orientationOverride: 'vertical'
                 }
-            }
+            },
+            // Sustained spray thrown off spiraling helix
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.25,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+                velocityInheritance: 0.5,
+                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+            }],
         }
     },
 

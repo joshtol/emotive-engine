@@ -97,7 +97,8 @@ const WATERTIDE_CONFIG = {
                     shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.8, arcCount: 2 },
                     orientationOverride: 'camera'
                 }
-            }
+            },
+            // No atmospherics — tidal motion is smooth, no violent splash
         }
     },
 

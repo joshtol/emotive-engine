@@ -136,7 +136,8 @@ const WATERRIPPLE_CONFIG = {
                         arcCount: 3
                     }
                 }
-            }
+            },
+            // No atmospherics — gentle ripples, no violent water motion
         }
     },
 

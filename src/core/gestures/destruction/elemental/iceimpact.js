@@ -114,6 +114,7 @@ const ICEIMPACT_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 1.0,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.7,
             }],
             // Violent per-crystal tumbling — faster spins for aggressive motion
             rotate: [

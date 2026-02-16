@@ -114,7 +114,8 @@ const WATERCROWN_CONFIG = {
                         arcCount: 3       // Multiple arcs for regal look
                     }
                 }
-            }
+            },
+            // No atmospherics — crown floats serenely, no violent water motion
         }
     },
 

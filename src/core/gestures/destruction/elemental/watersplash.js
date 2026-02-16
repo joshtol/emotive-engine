@@ -98,7 +98,17 @@ const WATERSPLASH_CONFIG = {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
                         orientationOverride: 'camera'
                     }
-                }
+                },
+                // Burst spray on impact — one-time event, not sustained
+                atmospherics: [{
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 1.0,
+                    sizeScale: 1.2,
+                    burstCount: 25,
+                    progressCurve: 'burst',
+                }]
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════

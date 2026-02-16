@@ -117,6 +117,7 @@ const FIREBARRAGE_CONFIG = {
                 intensity: 0.25,
                 sizeScale: 0.6,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.7,
             }],
             // Per-element tumbling — each spins on different axes for chaotic, dynamic motion
             rotate: [

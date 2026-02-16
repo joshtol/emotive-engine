@@ -774,4 +774,102 @@ export function parseAnimationConfig(config, gestureDuration = 1000) {
     return new AnimationConfig(config, gestureDuration);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════
+// PARAMETER ANIMATION EVALUATION
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Attempt to behave like GLSL smoothstep for arbitrary edge values.
+ * @param {number} edge0 - Lower edge
+ * @param {number} edge1 - Upper edge
+ * @param {number} x - Input value
+ * @returns {number} Smoothed value 0→1
+ */
+function smoothstep(edge0, edge1, x) {
+    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
+}
+
+/**
+ * Evaluate a single parameter animation at a given gesture progress.
+ *
+ * Interpolates start → peak → end using the specified curve shape.
+ * Returns the parameter value at the current progress point.
+ *
+ * @param {Object} param - Parameter config { start, peak, end, curve }
+ * @param {number} progress - Gesture progress 0→1
+ * @returns {number} Interpolated parameter value
+ */
+export function evaluateParameterValue(param, progress) {
+    if (!param) return 0;
+    const { start, peak, end, curve } = param;
+
+    switch (curve) {
+    case 'bell': {
+        // Smooth rise to peak at midpoint, smooth fall
+        if (progress <= 0.5) {
+            return start + (peak - start) * smoothstep(0, 0.5, progress);
+        }
+        return peak + (end - peak) * smoothstep(0.5, 1.0, progress);
+    }
+    case 'spike': {
+        // Fast rise to peak at 25%, slow fall through remaining 75%
+        if (progress <= 0.25) {
+            return start + (peak - start) * smoothstep(0, 0.25, progress);
+        }
+        return peak + (end - peak) * smoothstep(0.25, 1.0, progress);
+    }
+    case 'sustained': {
+        // Quick ramp up, hold at peak, quick ramp down
+        if (progress <= 0.15) {
+            return start + (peak - start) * smoothstep(0, 0.15, progress);
+        }
+        if (progress >= 0.85) {
+            return peak + (end - peak) * smoothstep(0.85, 1.0, progress);
+        }
+        return peak;
+    }
+    case 'fadeOut': {
+        // Start at peak, smooth fade to end
+        return peak + (end - peak) * smoothstep(0, 1.0, progress);
+    }
+    case 'linear': {
+        // Linear two-segment interpolation
+        if (progress <= 0.5) {
+            return start + (peak - start) * (progress * 2);
+        }
+        return peak + (end - peak) * ((progress - 0.5) * 2);
+    }
+    default:
+        // Unknown curve — use bell as fallback
+        if (progress <= 0.5) {
+            return start + (peak - start) * smoothstep(0, 0.5, progress);
+        }
+        return peak + (end - peak) * smoothstep(0.5, 1.0, progress);
+    }
+}
+
+/**
+ * Extract the primary energy value from a parsed parameterAnimation object.
+ *
+ * parameterAnimation can have named keys like { temperature: {...} } or
+ * { turbulence: {...} } or { primary: {...} }. This function finds the
+ * first parameter and evaluates it at the given progress.
+ *
+ * Returns null if no parameterAnimation is defined (caller should use fallback).
+ *
+ * @param {Object|null} parameterAnimation - Parsed parameterAnimation from AnimationConfig
+ * @param {number} progress - Gesture progress 0→1
+ * @returns {number|null} Energy value (typically 0→1), or null if not defined
+ */
+export function evaluateEnergy(parameterAnimation, progress) {
+    if (!parameterAnimation) return null;
+
+    // Get the first parameter (temperature, turbulence, charge, primary, etc.)
+    const keys = Object.keys(parameterAnimation);
+    if (keys.length === 0) return null;
+
+    return evaluateParameterValue(parameterAnimation[keys[0]], progress);
+}
+
 export default AnimationConfig;

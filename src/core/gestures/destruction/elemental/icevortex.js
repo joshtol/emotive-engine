@@ -127,6 +127,8 @@ const ICE_VORTEX_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 1.0,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.6,
+                centrifugal: { speed: 1.2, tangentialBias: 0.3 },
             }],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,

@@ -282,7 +282,7 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     // standard real-time water technique: surface normals/ripples directly
     // offset the background lookup, producing large, visible distortion.
     // ═══════════════════════════════════════════════════════════════════════════════
-    vec3 waterBodyColor = vec3(0.03, 0.08, 0.14) * uTint; // Nearly colorless — real water only tints at meter-scale depths
+    vec3 waterBodyColor = vec3(0.05, 0.15, 0.30) * uTint; // Stylized blue — reads as "water" at game scale
     vec3 transmittedLight;
     float bgPresence = 1.0; // 1.0 = 3D geometry behind, 0.0 = empty sky (CSS background)
 
@@ -336,19 +336,24 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
             refractedBg = bgCenter.rgb;
         }
 
-        // Over geometry: minimal lift. Over sky: light tint so water has some color.
+        // Over geometry: blue-tinted lift. Over sky: light tint so water has some color.
         vec3 skyTint = vec3(0.12, 0.20, 0.30) * uTint;
-        vec3 ambientLift = mix(skyTint, vec3(0.02, 0.03, 0.05), bgPresence);
+        vec3 ambientLift = mix(skyTint, vec3(0.03, 0.06, 0.10), bgPresence);
         refractedBg += ambientLift * (vec3(1.0) - refractedBg);
 
-        // Near-zero body color tint
-        transmittedLight = mix(refractedBg, waterBodyColor, thickness * 0.04);
+        // Body color tint — visible at thick areas
+        transmittedLight = mix(refractedBg, waterBodyColor, thickness * 0.15);
     } else {
-        vec3 voidColor = vec3(0.08, 0.12, 0.18);
+        vec3 voidColor = vec3(0.08, 0.15, 0.25);
         transmittedLight = mix(voidColor, waterBodyColor, thickness * 0.3);
     }
 
-    // Very subtle energy conservation — avoid darkening the refracted background
+    // Blue absorption — water absorbs red > green > blue wavelengths
+    // Base tint even at thin edges so entire surface reads as "water"
+    vec3 absorptionTint = mix(vec3(1.0), vec3(0.65, 0.85, 1.0), 0.20 + thickness * 0.8);
+    transmittedLight *= absorptionTint;
+
+    // Subtle energy conservation
     transmittedLight *= (1.0 - fresnel * 0.08);
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -444,7 +449,7 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
 
     float sharpSpec = (spark1 + spark2 + spark3) * sparkleAnim * 3.0 * uSparkleIntensity;
 
-    vec3 specContrib = vec3(0.95, 0.97, 1.0) * (broadSpec + sharpSpec);
+    vec3 specContrib = vec3(0.85, 0.92, 1.0) * (broadSpec + sharpSpec);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // INTERNAL SPIRAL FLOW (reduced contribution for refraction-based approach)

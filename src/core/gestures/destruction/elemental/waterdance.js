@@ -154,7 +154,18 @@ const WATERDANCE_CONFIG = {
                     },
                     orientationOverride: 'vertical'
                 }
-            }
+            },
+            // Sustained spray flung off swirling dance
+            atmospherics: [{
+                preset: 'spray',
+                targets: null,
+                anchor: 'above',
+                intensity: 0.25,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+                velocityInheritance: 0.4,
+                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+            }],
         }
     },
 

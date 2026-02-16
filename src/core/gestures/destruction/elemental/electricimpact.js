@@ -67,6 +67,7 @@ const ELECTRICIMPACT_CONFIG = {
                 intensity: 0.5,
                 sizeScale: 1.0,
                 progressCurve: 'burst',
+                velocityInheritance: 0.7,
             }],
             pulse: { amplitude: 0.12, frequency: 8, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 3.0, frequency: 9, pattern: 'sine' },

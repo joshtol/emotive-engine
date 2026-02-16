@@ -111,7 +111,8 @@ const WATERFLOW_CONFIG = {
                         shaderAnimation: { type: 1, arcWidth: 0.75, arcSpeed: 0.8, arcCount: 2 },
                         orientationOverride: 'camera'
                     }
-                }
+                },
+                // No atmospherics — gentle flow, no violent water motion
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════

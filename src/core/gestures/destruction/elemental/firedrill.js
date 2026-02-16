@@ -151,6 +151,8 @@ const FIREDRILL_CONFIG = {
                 intensity: 0.3,
                 sizeScale: 0.7,
                 progressCurve: 'sustain',
+                velocityInheritance: 0.5,
+                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
             }],
             // Fast unified rotation for drill effect
             rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations
