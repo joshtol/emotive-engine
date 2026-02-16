@@ -939,7 +939,7 @@ export function createVoidEffectGesture(variant) {
                 // ═══════════════════════════════════════════════════════════════
                 return {
                     voidOverlay: {
-                        enabled: effectStrength > 0.1,
+                        enabled: effectStrength > 0.01,
                         strength: effectStrength * cfg.intensity,
                         depth: cfg.depth,
                         category: cfg.category,
@@ -1210,7 +1210,7 @@ export function buildVoidEffectGesture(config) {
                     glowBoost,
                     glowColorOverride: cfg.glowColor,
                     voidOverlay: {
-                        enabled: effectStrength > 0.1,
+                        enabled: effectStrength > 0.01,
                         strength: effectStrength * cfg.intensity,
                         depth: cfg.depth || 0.5,
                         category,

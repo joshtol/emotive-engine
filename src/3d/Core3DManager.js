@@ -2483,12 +2483,11 @@ export class Core3DManager {
             this._voidOverlayMesh = null;
 
             // Gracefully exit void elements (fade out) — matching fire/ice/electric
+            // Don't reset distortion strength here — elements are still fading out
+            // via triggerExit, and uFadeProgress naturally reaches 0. Resetting
+            // strength now would cause a warp flash for gestures with reduced distortion.
             if (this.elementSpawner) {
                 this.elementSpawner.triggerExit('void');
-                // Reset distortion strength to default
-                if (this.elementSpawner._distortionManager) {
-                    this.elementSpawner._distortionManager.setDistortionStrength('void', null);
-                }
             }
 
             // Clear void progress tracking and spawn signatures
