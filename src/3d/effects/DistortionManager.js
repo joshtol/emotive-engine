@@ -230,6 +230,32 @@ export class DistortionManager {
         }
     }
 
+    /**
+     * Set distortion strength for an element type (per-gesture override).
+     * Pass null to reset to the default registered strength.
+     * @param {string} elementType
+     * @param {number|null} strength - Override strength, or null to reset
+     */
+    setDistortionStrength(elementType, strength) {
+        const mesh = this.elementMeshes.get(elementType);
+        if (!mesh?.material?.uniforms?.uStrength) return;
+        const config = this.configs.get(elementType);
+        mesh.material.uniforms.uStrength.value = (strength !== null && strength !== undefined)
+            ? strength
+            : (config?.strength ?? 0.018);
+    }
+
+    /**
+     * Set void distortion fade progress for lifecycle easing.
+     * @param {number} fadeProgress - 0.0 (invisible) to 1.0 (full strength)
+     */
+    setVoidFade(fadeProgress) {
+        const mesh = this.elementMeshes.get('void');
+        if (mesh?.material?.uniforms?.uFadeProgress) {
+            mesh.material.uniforms.uFadeProgress.value = fadeProgress;
+        }
+    }
+
     dispose() {
         for (const [, mesh] of this.elementMeshes) {
             mesh.geometry.dispose();

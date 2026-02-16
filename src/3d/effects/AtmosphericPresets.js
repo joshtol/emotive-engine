@@ -17,6 +17,7 @@
 import { createSmokeParticleMaterial } from '../materials/SmokeParticleMaterial.js';
 import { createMistParticleMaterial } from '../materials/MistParticleMaterial.js';
 import { createSprayParticleMaterial } from '../materials/SprayParticleMaterial.js';
+import { createVoidParticleMaterial } from '../materials/VoidParticleMaterial.js';
 
 // =================================================================================================
 // MATERIAL FACTORIES (keyed by preset material name)
@@ -26,6 +27,7 @@ const MATERIAL_FACTORIES = {
     smoke: createSmokeParticleMaterial,
     mist: createMistParticleMaterial,
     spray: createSprayParticleMaterial,
+    void: createVoidParticleMaterial,
 };
 
 // =================================================================================================
@@ -164,6 +166,65 @@ export const ATMOSPHERIC_PRESETS = {
         opacity: 0.15,
         colorWarm: [0.60, 0.70, 0.85],
         colorCool: [0.40, 0.45, 0.55],
+    },
+
+    /**
+     * Shadow: subtle dark wisps and tendrils creeping outward from void sources.
+     * Best for: void gestures at low intensity, dark energy, shadow effects.
+     *
+     * Uses VOID material (multiplicative darkening) at low opacity for
+     * subtle semi-transparent darkening rather than full ink-black.
+     */
+    shadow: {
+        materialType: 'void',
+        maxParticles: 48,
+        spawnRate: 10,
+        lifetimeMin: 1.5,
+        lifetimeMax: 3.0,
+        sizeMin: 0.12,
+        sizeMax: 0.25,
+        spawnOffsetY: 0.0,
+        initialSpeedMin: 0.03,
+        initialSpeedMax: 0.10,
+        spreadXZ: 0.15,
+        directionY: -0.1,
+        buoyancy: -0.01,
+        drag: 0.6,
+        turbulence: 0.05,
+        rotationSpeedMax: 0.3,
+        endSizeMultiplier: 1.6,
+        opacity: 0.35,
+    },
+
+    /**
+     * Darkness: ink-in-water void clouds — sentient darkness.
+     * Best for: void gestures at high intensity, annihilation effects.
+     *
+     * Uses VOID material (premultiplied alpha with near-zero neutral color).
+     * Effectively darkens background toward black with no color tint.
+     *
+     * Fewer, larger particles that spread wider into the scene.
+     * Sinks downward like ink settling in water.
+     */
+    darkness: {
+        materialType: 'void',
+        maxParticles: 36,
+        spawnRate: 8,
+        lifetimeMin: 2.0,
+        lifetimeMax: 4.0,
+        sizeMin: 0.18,
+        sizeMax: 0.35,
+        spawnOffsetY: 0.0,
+        initialSpeedMin: 0.04,
+        initialSpeedMax: 0.12,
+        spreadXZ: 0.25,
+        directionY: -0.3,
+        buoyancy: -0.03,
+        drag: 0.4,
+        turbulence: 0.04,
+        rotationSpeedMax: 0.15,
+        endSizeMultiplier: 1.5,
+        opacity: 0.70,
     },
 
     /**

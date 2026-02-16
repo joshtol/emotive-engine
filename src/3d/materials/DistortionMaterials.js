@@ -285,3 +285,106 @@ export function createElectricDistortionMaterial() {
         side: THREE.DoubleSide,
     });
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// VOID — Kerr Metric Spacetime Warping (rotating black hole)
+//
+// Real black holes don't just pull inward. A spinning (Kerr) black hole DRAGS
+// spacetime in the direction of rotation (frame dragging / Lense-Thirring effect).
+// The result is a spiral distortion pattern that:
+// - Pulls strongly inward at close range (gravitational lensing)
+// - Twists tangentially at medium range (frame dragging dominates)
+// - Creates visible spiral warping in the background (like the reference grid diagram)
+//
+// The distortion is dramatically stronger than other elements (6× base strength)
+// and extends further (wider padding in registration).
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+export function createVoidDistortionMaterial() {
+    return new THREE.ShaderMaterial({
+        name: 'VoidDistortion',
+        uniforms: {
+            uTime: { value: 0.0 },
+            uStrength: { value: 0.018 },
+            uFadeProgress: { value: 0.0 },  // 0→1→0 lifecycle easing (enter/hold/exit)
+        },
+        vertexShader: DISTORTION_VERTEX_GLSL,
+        fragmentShader: /* glsl */`
+            uniform float uTime;
+            uniform float uStrength;
+            uniform float uFadeProgress;
+            varying vec2 vUv;
+            varying vec3 vWorldPos;
+
+            ${DISTORTION_NOISE_GLSL}
+
+            void main() {
+                vec2 uv = vUv;
+                vec2 center = uv - 0.5;
+                float dist = length(center);
+                vec2 dir = normalize(center + 0.001);
+
+                float t = uTime * 0.4; // Slow, ominous — time dilation
+
+                // ─────────────────────────────────────────────────────────
+                // KERR METRIC: Gravitational pull + frame dragging
+                //
+                // Two components of a rotating black hole:
+                // 1. Radial: inward pull (Schwarzschild term)
+                // 2. Tangential: frame dragging / Lense-Thirring twist
+                //
+                // This is an ENHANCEMENT pass on top of per-fragment lensing
+                // in InstancedVoidMaterial. Keep moderate — the individual
+                // elements already do their own screen-space lensing.
+                // ─────────────────────────────────────────────────────────
+
+                // Schwarzschild radius in UV space
+                float rSchwarz = 0.06;
+                float r = max(dist, rSchwarz * 0.5);
+
+                // RADIAL: smoothstep-based (bounded, no 1/r² explosion)
+                // Peak at photon sphere, gentle tail outward
+                float radialStrength = smoothstep(0.45, 0.05, dist) * smoothstep(0.0, 0.04, dist);
+
+                // FRAME DRAGGING: tangential twist (the Kerr signature)
+                // Smoothstep-based so it stays bounded at all radii
+                float angle = atan(center.y, center.x);
+                vec2 tangent = vec2(-sin(angle), cos(angle));
+                // Strong near ergosphere, visible at medium range, fades at edge
+                float frameDrag = smoothstep(0.45, 0.06, dist) * smoothstep(0.0, 0.03, dist);
+                // Boost near the hole — frame dragging peaks closer than radial
+                frameDrag += smoothstep(0.15, 0.04, dist) * 0.5;
+
+                // Slow spacetime pulsation
+                float pulse = 0.9 + 0.1 * sin(t * 1.2);
+
+                // RADIAL: inward pull
+                vec2 offset = -dir * radialStrength * uStrength * pulse;
+
+                // TANGENTIAL: frame dragging twist (spiral character)
+                offset += tangent * frameDrag * uStrength * 2.0 * pulse;
+
+                // Subtle spacetime turbulence
+                float turb = dNoise2D(vWorldPos.xy * 6.0 + vec2(t * 0.5)) - 0.5;
+                offset += vec2(turb, -turb) * uStrength * 0.1;
+
+                // Edge falloff (UV-space — plane edges)
+                float falloff = smoothstep(0.0, 0.10, uv.x) * smoothstep(1.0, 0.90, uv.x)
+                              * smoothstep(0.0, 0.10, uv.y) * smoothstep(1.0, 0.90, uv.y);
+
+                // Radial fade — distortion concentrated toward center
+                float radialFade = smoothstep(0.5, 0.15, dist);
+                falloff *= radialFade;
+
+                // Lifecycle easing: smoothstep fade for gentle enter/exit
+                float fade = uFadeProgress * uFadeProgress * (3.0 - 2.0 * uFadeProgress);
+                gl_FragColor = vec4(offset * falloff * fade, 0.0, 1.0);
+            }
+        `,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: false,
+        transparent: true,
+        side: THREE.DoubleSide,
+    });
+}

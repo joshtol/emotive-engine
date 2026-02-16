@@ -74,6 +74,7 @@ temp/
 
 # Temporary upgrade plans (delete when done)
 UPGRADE_WATER.md
+UPGRADE-VOID.md
 DO-THIS.md
 
 # Testing/development HTML files (examples/ directory is tracked)

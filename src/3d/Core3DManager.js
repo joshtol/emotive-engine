@@ -2403,7 +2403,6 @@ export class Core3DManager {
                 if (!this._voidOverlayMesh) {
                     this._voidMaterial = createVoidMaterial({
                         depth: blended.voidOverlay.depth || 0.7,
-                        innerPattern: 'swirl',
                         opacity: 0.95
                     });
 
@@ -2415,20 +2414,40 @@ export class Core3DManager {
                     this._voidOverlayMesh.scale.setScalar(1.06);
                     mesh.add(this._voidOverlayMesh);
                     this._voidOverlayMesh.renderOrder = mesh.renderOrder + 3;
+                }
 
-                    // Spawn 3D void elements if gesture requests it via spawnMode
-                    const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.voidOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('void')) {
+                // Spawn 3D void elements — matching fire/ice/electric signature-based dedup
+                const {spawnMode, animation, models, count, scale, embedDepth, duration, distortionStrength} = blended.voidOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+                    const spawnSignature = `void:${modeSignature}:${duration}:${animation?.type || 'default'}`;
+
+                    this._voidSpawnedSignatures = this._voidSpawnedSignatures || new Set();
+
+                    if (!this._voidSpawnedSignatures.has(spawnSignature)) {
+                        // Per-gesture distortion strength override (only on gesture change)
+                        if (this.elementSpawner._distortionManager) {
+                            this.elementSpawner._distortionManager.setDistortionStrength(
+                                'void',
+                                distortionStrength !== undefined ? distortionStrength : null
+                            );
+                        }
+                        this.elementSpawner.triggerExit('void'); // Exit void elements (crossfade)
                         this.elementSpawner.spawn('void', {
                             intensity: blended.voidOverlay.strength || 0.8,
                             mode: spawnMode,
-                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            animation,
                             models,
                             count,
                             scale,
                             embedDepth,
                             gestureDuration: duration || 2000
                         });
+                        this._voidSpawnedSignatures.add(spawnSignature);
+                        this._voidSpawnSignature = spawnSignature;
                     }
                 }
 
@@ -2442,6 +2461,9 @@ export class Core3DManager {
                 }
                 if (this._voidMaterial?.uniforms?.uOpacity) {
                     this._voidMaterial.uniforms.uOpacity.value = Math.min(0.95, blended.voidOverlay.strength);
+                }
+                if (this._voidMaterial?.uniforms?.uProgress) {
+                    this._voidMaterial.uniforms.uProgress.value = blended.voidOverlay.progress ?? 0;
                 }
 
                 // Store gesture progress for element spawner animation
@@ -2460,13 +2482,18 @@ export class Core3DManager {
             }
             this._voidOverlayMesh = null;
 
-            // Despawn void elements
+            // Gracefully exit void elements (fade out) — matching fire/ice/electric
             if (this.elementSpawner) {
-                this.elementSpawner.despawn('void');
+                this.elementSpawner.triggerExit('void');
+                // Reset distortion strength to default
+                if (this.elementSpawner._distortionManager) {
+                    this.elementSpawner._distortionManager.setDistortionStrength('void', null);
+                }
             }
 
-            // Clear void progress tracking
+            // Clear void progress tracking and spawn signatures
             this._currentVoidProgress = null;
+            this._voidSpawnedSignatures = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

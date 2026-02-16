@@ -27,6 +27,7 @@ import {
     createWaterDistortionMaterial,
     createIceDistortionMaterial,
     createElectricDistortionMaterial,
+    createVoidDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
 
 // Smoke/mist particle materials are now imported by AtmosphericPresets.js
@@ -84,6 +85,19 @@ import {
     setFlash as setElectricFlash,
     resetFlash as resetElectricFlash
 } from '../materials/InstancedElectricMaterial.js';
+
+import {
+    createInstancedVoidMaterial,
+    updateInstancedVoidMaterial,
+    setInstancedVoidArcAnimation,
+    setInstancedVoidGestureGlow,
+    setInstancedVoidBloomThreshold,
+    setInstancedVoidCutout,
+    resetCutout as resetVoidCutout,
+    setGrain as setVoidGrain,
+    resetGrain as resetVoidGrain,
+    resetAnimation as resetVoidAnimation
+} from '../materials/InstancedVoidMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELEMENT REGISTRATIONS (after all imports are resolved)
@@ -217,6 +231,41 @@ ElementTypeRegistry.register('electricity', {
         },
         billboard: true,
         strength: 0.003,
+    },
+});
+
+ElementTypeRegistry.register('void', {
+    basePath: 'models/Elements/Void/',
+    models: [
+        'void-shard.glb',
+        'void-crack.glb',
+        'corruption-patch.glb',
+        'shadow-tendril.glb',
+        'void-ring.glb',
+        'void-orb.glb',
+        'void-tendril-large.glb',
+        'void-wrap.glb',
+        'splash-ring.glb'
+    ],
+    createMaterial: createInstancedVoidMaterial,
+    updateMaterial: updateInstancedVoidMaterial,
+    setShaderAnimation: setInstancedVoidArcAnimation,
+    setGestureGlow: setInstancedVoidGestureGlow,
+    setBloomThreshold: setInstancedVoidBloomThreshold,
+    setCutout: setInstancedVoidCutout,
+    resetCutout: resetVoidCutout,
+    setGrain: setVoidGrain,
+    resetGrain: resetVoidGrain,
+    resetShaderAnimation: resetVoidAnimation,
+    scaleMultiplier: 1.3,
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createVoidDistortionMaterial,
+        transform: {
+            padding: new THREE.Vector3(0.8, 0.8, 0.8),  // Large — Kerr frame dragging extends far beyond event horizon
+        },
+        billboard: true,
+        strength: 0.028,
     },
 });
 

@@ -345,7 +345,16 @@ import {
     wither as voidWither,
     consume as voidConsume,
     erase as voidErase,
-    singularity as voidSingularity
+    singularity as voidSingularity,
+    voidCrown,
+    voidDance,
+    voidHelix,
+    voidPillar,
+    voidDrill,
+    voidFlourish,
+    voidVortex,
+    voidBarrage,
+    voidImpact
 } from './destruction/elemental/voidEffectFactory.js';
 // destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
 // Matches fire/water pattern: axis-travel, anchor, radial-burst spawn modes
@@ -619,6 +628,16 @@ const wither = voidWither;
 const consume = voidConsume;
 const erase = voidErase;
 const singularity = voidSingularity;
+// Ring/spectacle gestures (void-ring/void-wrap — manifestation effects)
+const voidcrown = voidCrown;
+const voiddance = voidDance;
+const voidhelix = voidHelix;
+const voidpillar = voidPillar;
+const voiddrill = voidDrill;
+const voidflourish = voidFlourish;
+const voidvortex = voidVortex;
+const voidbarrage = voidBarrage;
+const voidimpact = voidImpact;
 // Directional rush gestures
 const rushForward = createRushGesture('forward');
 const rushBack = createRushGesture('back');
@@ -1045,6 +1064,16 @@ const TRANSFORM_GESTURES = [
     consume,
     erase,
     singularity,
+    // Void - Ring/Spectacle (manifestation)
+    voidcrown,
+    voiddance,
+    voidhelix,
+    voidpillar,
+    voiddrill,
+    voidflourish,
+    voidvortex,
+    voidbarrage,
+    voidimpact,
     // Smoke - Emanating (source of smoke)
     puff,
     billow,
@@ -1308,6 +1337,9 @@ export const GESTURE_CATEGORIES = {
         'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'zap',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
+        // destruction/elemental/ - Void (ring/spectacle gestures)
+        'voidcrown', 'voiddance', 'voidhelix', 'voidpillar',
+        'voiddrill', 'voidflourish', 'voidvortex', 'voidbarrage', 'voidimpact',
         // destruction/elemental/ - Ice Effect (matching fire/water pattern)
         'iceCrown', 'iceDance', 'icePillar', 'iceHelix', 'iceMeditation',
         'iceVortex', 'iceSplash', 'iceEncase', 'iceDrill', 'iceFlourish',

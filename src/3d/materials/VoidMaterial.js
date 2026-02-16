@@ -5,20 +5,23 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Standalone void/shadow material with depth-driven behavior
+ * @fileoverview Standalone void material — event horizon overlay for mascot mesh
  * @author Emotive Engine Team
  * @module materials/VoidMaterial
  *
- * ## Master Parameter: depth (0-1)
+ * ## Master Parameters
  *
- * | Depth | Visual                     | Physics                | Example      |
- * |-------|----------------------------|------------------------|--------------|
- * | 0.0   | Wispy shadows              | Floats, disperses      | Shadow wisp  |
- * | 0.5   | Dark mass with halo        | Hovers, slight pull    | Dark entity  |
- * | 1.0   | Pure black, light absorbing| Strong gravity well    | Black hole   |
+ * depth (0-1): Controls maximum consumption coverage
+ *   0.0 = Faint edge darkening | 0.5 = Partial consumption | 1.0 = Near-total absorption
  *
- * Void is unique - it ABSORBS light rather than emitting it.
- * The opposite of fire/bloom.
+ * progress (0-1): Gesture progress drives the SPREAD of darkness over time
+ *   0.0 = Darkness just beginning to creep from edges
+ *   1.0 = Full depth-dependent consumption achieved
+ *
+ * Consuming darkness: void creeps from the silhouette edges inward using
+ * multi-scale FBM noise on object-space position. Fine tendrils reach ahead
+ * of the main consumption front. A thin warm emission rim marks the boundary
+ * where void meets normal surface. Consumed areas are absolute black.
  *
  * ## Usage
  *
@@ -39,44 +42,26 @@ function lerp(a, b, t) {
 }
 
 /**
- * Create a void material with depth-driven appearance
+ * Create a void material with consuming darkness effect
  *
  * @param {Object} options
- * @param {number} [options.depth=0.5] - Master parameter (0=wispy, 0.5=dark mass, 1=black hole)
- * @param {string} [options.innerPattern='swirl'] - 'solid', 'swirl', or 'cosmic'
+ * @param {number} [options.depth=0.5] - Max consumption coverage (0=faint, 1=near-total)
  * @param {number} [options.opacity=0.9] - Base opacity
  * @returns {THREE.ShaderMaterial}
  */
 export function createVoidMaterial(options = {}) {
     const {
         depth = 0.5,
-        innerPattern = 'swirl',
         opacity = 0.9
     } = options;
 
-    // Derive properties from depth - BOOSTED for dramatic visibility
-    const coreOpacity = lerp(0.6, 1.0, depth);            // Much more opaque core
-    const edgeWispiness = lerp(0.6, 0.0, depth);          // Less wispy edges
-    const lightAbsorption = lerp(0.5, 1.0, depth);        // Stronger darkening
-    const innerSwirlSpeed = innerPattern === 'swirl' ? lerp(0.8, 2.5, depth) : 0;  // Faster swirl
-    const cosmicStars = innerPattern === 'cosmic' ? Math.floor(lerp(10, 200, depth)) : 0;
-    const pulseSpeed = lerp(1.0, 3.0, depth);             // Faster pulse
-    const distortionStrength = lerp(0.05, 0.25, depth);   // More edge distortion
-
-    // Map pattern to uniform value
-    const patternType = { solid: 0, swirl: 1, cosmic: 2 }[innerPattern] || 0;
+    const pulseSpeed = lerp(0.5, 1.5, depth);
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
             uDepth: { value: depth },
-            uCoreOpacity: { value: coreOpacity },
-            uEdgeWispiness: { value: edgeWispiness },
-            uLightAbsorption: { value: lightAbsorption },
-            uInnerSwirlSpeed: { value: innerSwirlSpeed },
-            uCosmicStars: { value: cosmicStars },
-            uPatternType: { value: patternType },
+            uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
-            uDistortionStrength: { value: distortionStrength },
             uOpacity: { value: opacity },
             uTime: { value: 0 }
         },
@@ -85,12 +70,10 @@ export function createVoidMaterial(options = {}) {
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
 
             void main() {
                 vPosition = position;
                 vNormal = normalMatrix * normal;
-                vUv = uv;
 
                 vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                 vViewPosition = -mvPosition.xyz;
@@ -101,39 +84,23 @@ export function createVoidMaterial(options = {}) {
 
         fragmentShader: /* glsl */`
             uniform float uDepth;
-            uniform float uCoreOpacity;
-            uniform float uEdgeWispiness;
-            uniform float uLightAbsorption;
-            uniform float uInnerSwirlSpeed;
-            uniform float uCosmicStars;
-            uniform int uPatternType;
+            uniform float uProgress;
             uniform float uPulseSpeed;
-            uniform float uDistortionStrength;
             uniform float uOpacity;
             uniform float uTime;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
 
-            // Hash functions
             float hash(vec2 p) {
                 return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
             }
 
-            float hash3(vec3 p) {
-                p = fract(p * 0.3183099 + 0.1);
-                p *= 17.0;
-                return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-            }
-
-            // 2D noise
             float noise(vec2 p) {
                 vec2 i = floor(p);
                 vec2 f = fract(p);
                 f = f * f * (3.0 - 2.0 * f);
-
                 return mix(
                     mix(hash(i), hash(i + vec2(1, 0)), f.x),
                     mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x),
@@ -141,144 +108,95 @@ export function createVoidMaterial(options = {}) {
                 );
             }
 
-            // FBM for wispy tendrils
-            float fbm(vec2 p) {
-                float value = 0.0;
-                float amplitude = 0.5;
-                for (int i = 0; i < 5; i++) {
-                    value += amplitude * noise(p);
-                    p *= 2.0;
-                    amplitude *= 0.5;
-                }
-                return value;
-            }
-
-            // Swirl pattern for void interior
-            float swirl(vec2 uv, float time) {
-                vec2 centered = uv - 0.5;
-                float dist = length(centered);
-                float angle = atan(centered.y, centered.x);
-
-                // Swirling motion
-                angle += dist * 5.0 - time * uInnerSwirlSpeed;
-
-                // Create spiral arms
-                float spiral = sin(angle * 3.0 + dist * 10.0) * 0.5 + 0.5;
-                spiral = pow(spiral, 2.0);
-
-                // Fade toward center
-                float centerFade = smoothstep(0.0, 0.3, dist);
-
-                return spiral * centerFade * 0.5;
-            }
-
-            // Cosmic star field
-            float stars(vec2 uv, float count) {
-                float stars = 0.0;
-                for (float i = 0.0; i < 50.0; i++) {
-                    if (i >= count) break;
-
-                    vec2 starPos = vec2(
-                        hash(vec2(i * 13.0, 0.0)),
-                        hash(vec2(0.0, i * 17.0))
-                    );
-
-                    float dist = length(uv - starPos);
-                    float brightness = hash(vec2(i, i * 2.0));
-
-                    // Twinkle
-                    brightness *= 0.5 + 0.5 * sin(uTime * 2.0 + i * 1.7);
-
-                    // Star glow
-                    stars += smoothstep(0.02, 0.0, dist) * brightness;
-                }
-                return stars;
-            }
-
             void main() {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
+                float NdotV = abs(dot(normal, viewDir));
+                float edgeness = 1.0 - NdotV;
 
-                // Center-based calculations
-                vec2 centeredUv = vUv * 2.0 - 1.0;
-                float distFromCenter = length(centeredUv);
+                // ═══ CONSUMPTION FIELD ═══
+                // Object-space position projected to 2D for consistent pattern
+                vec2 pos = vPosition.xz * 2.5 + vec2(vPosition.y * 0.8, -vPosition.y * 0.6);
 
-                // === CORE DARKNESS ===
-                // The core is pure black, getting darker with depth
-                vec3 coreColor = vec3(0.0);
+                // 3-octave FBM — organic creeping consumption boundary
+                float n1 = noise(pos * 1.5 + uTime * 0.08);          // Large-scale (slow drift)
+                float n2 = noise(pos * 4.0 - uTime * 0.12);          // Medium (counter-drift)
+                float n3 = noise(pos * 9.0 + uTime * 0.18);          // Fine detail (faster)
+                float consumeField = n1 * 0.50 + n2 * 0.30 + n3 * 0.20;
 
-                // === INNER PATTERN ===
-                float innerPattern = 0.0;
-                vec3 innerColor = vec3(0.0);
+                // Fresnel bias: darkness creeps from silhouette edges inward
+                consumeField += edgeness * 0.20;
 
-                if (uPatternType == 1) {
-                    // Swirl pattern - MUCH more visible
-                    innerPattern = swirl(vUv, uTime);
-                    // Bright purple/magenta swirls visible against black void
-                    innerColor = vec3(0.4, 0.0, 0.6) * innerPattern;
-                    // Add edge glow for tendrils
-                    float edgeGlow = smoothstep(0.3, 0.5, innerPattern);
-                    innerColor += vec3(0.2, 0.0, 0.35) * edgeGlow;
-                } else if (uPatternType == 2) {
-                    // Cosmic pattern - stars in the void
-                    innerPattern = stars(vUv, uCosmicStars);
-                    // Distant stars are white/blue - brighter
-                    innerColor = vec3(0.8, 0.9, 1.0) * innerPattern * 0.6;
-                }
-                // Type 0 (solid) has no inner pattern
+                // ═══ DISSOLVE IN ═══
+                // Smooth opacity ramp over first 20% — darkness materializes gradually
+                float dissolveIn = smoothstep(0.0, 0.20, uProgress);
 
-                // === EDGE TREATMENT ===
-                // Wispy edges using noise
-                float edgeNoise = fbm(vUv * 5.0 + uTime * 0.2);
-                float wispyEdge = smoothstep(0.3 - uEdgeWispiness * 0.2, 0.8, distFromCenter + edgeNoise * uEdgeWispiness * 0.5);
+                // ═══ PROGRESS-DRIVEN THRESHOLD ═══
+                // Progress ramps the consumption from nothing → full depth-dependent coverage
+                float progressRamp = smoothstep(0.05, 0.8, uProgress);
 
-                // Tendrils extending from edges
-                float tendrilAngle = atan(centeredUv.y, centeredUv.x);
-                float tendrils = sin(tendrilAngle * 8.0 + uTime * 0.5) * 0.5 + 0.5;
-                tendrils = pow(tendrils, 4.0) * uEdgeWispiness;
-                float tendrilDist = distFromCenter + tendrils * 0.2;
+                // At progress=0: threshold=0.95 (nearly nothing consumed)
+                // At progress=1: threshold based on depth (0.85 at low, 0.15 at high)
+                float targetThreshold = mix(0.85, 0.15, uDepth);
+                float threshold = mix(0.95, targetThreshold, progressRamp);
 
-                // === PULSE/BREATHE EFFECT ===
-                // More dramatic pulse (0.85 to 1.15 range)
-                float pulse = sin(uTime * uPulseSpeed) * 0.15 + 1.0;
+                // Sharp consumption boundary (0.05 transition — defined edge, not gaussian)
+                float consumed = smoothstep(threshold, threshold - 0.05, consumeField);
 
-                // === COMBINE DARKNESS ===
-                // Core darkness (black absorbing) - stronger base
-                float darkness = uCoreOpacity * (1.0 - wispyEdge * 0.3) * pulse;
+                // ═══ TENDRILS ═══
+                // Fine dark tendrils reaching AHEAD of the main consumption front
+                float tendrilField = noise(pos * 8.0 + uTime * 0.22) * 0.6
+                                   + noise(pos * 14.0 - uTime * 0.14) * 0.4;
+                // Tendrils extend slightly past the main threshold
+                float tendrilThreshold = threshold + 0.10;
+                float tendrils = smoothstep(tendrilThreshold, tendrilThreshold - 0.03,
+                                            tendrilField + edgeness * 0.12);
+                // Thinner than full consumption, only visible at moderate+ depth
+                tendrils *= 0.5 * smoothstep(0.0, 0.4, uDepth * progressRamp);
 
-                // Add inner pattern
-                vec3 finalColor = mix(coreColor, innerColor, innerPattern);
+                float darkness = max(consumed, tendrils);
 
-                // === LIGHT ABSORPTION EFFECT ===
-                // This is what makes void special - it REMOVES light
-                // We use the alpha channel to indicate absorption
-                // The renderer should treat high alpha as "subtract from background"
+                // ═══ VOID CURRENTS ═══
+                // Inside consumed regions: subtle flowing noise prevents flat-black monotony.
+                // Very dim near-black variations with faint violet tone — trapped light.
+                float currentN1 = noise(pos * 3.0 + uTime * 0.25);
+                float currentN2 = noise(pos * 6.0 - uTime * 0.18 + vec2(5.0, 3.0));
+                float currentField = currentN1 * 0.6 + currentN2 * 0.4;
+                // Flowing inward-like motion (modulated by edgeness)
+                float currentIntensity = currentField * consumed * uDepth;
+                // Deep violet-black — hint of trapped light, not flat black
+                vec3 voidCurrentColor = vec3(0.012, 0.006, 0.022) * currentIntensity;
 
-                // Dark halo around the void
-                float halo = smoothstep(1.0, 0.5, distFromCenter) - smoothstep(0.5, 0.0, distFromCenter);
-                halo *= uLightAbsorption * 0.3;
+                // ═══ EDGE EMISSION ═══
+                // Thin warm rim where void meets normal surface
+                float edgeBand = smoothstep(threshold - 0.05, threshold - 0.01, consumeField)
+                               * smoothstep(threshold + 0.03, threshold, consumeField);
 
-                // Final alpha represents "how much to darken" - BOOSTED
-                float alpha = darkness * uOpacity * 1.3;  // 30% boost
+                // Breathing pulse
+                float pulse = 0.85 + 0.15 * sin(uTime * uPulseSpeed);
+                edgeBand *= pulse;
 
-                // Edge fade for soft integration - less aggressive fade
-                float edgeFade = 1.0 - smoothstep(0.8, 1.0, tendrilDist);
-                alpha *= edgeFade;
+                // Warm amber edge (redshifted photons at event horizon boundary)
+                vec3 color = voidCurrentColor;
+                color += vec3(0.85, 0.50, 0.18) * edgeBand * uDepth * 2.0;
 
-                // Deep void is more opaque - stronger boost
-                alpha = mix(alpha, min(1.0, alpha + 0.35), uDepth);
+                // ═══ ALPHA ═══
+                float alpha = darkness * uOpacity * dissolveIn;
+
+                // Edge emission always visible
+                float edgeAlpha = edgeBand * uDepth * 0.5 * dissolveIn;
+                alpha = max(alpha, edgeAlpha);
+
+                // Very faint global darkening at high depth
+                alpha = max(alpha, uDepth * progressRamp * 0.03 * dissolveIn);
 
                 if (alpha < 0.01) discard;
 
-                // For subtractive effect: output dark color with high alpha
-                // The blending mode will handle the actual subtraction
-                gl_FragColor = vec4(finalColor, alpha);
+                gl_FragColor = vec4(color, alpha);
             }
         `,
 
         transparent: true,
-        // Custom blending for light absorption effect
-        // This multiplies the destination by (1 - alpha), effectively darkening
         blending: THREE.CustomBlending,
         blendEquation: THREE.AddEquation,
         blendSrc: THREE.SrcAlphaFactor,
@@ -291,7 +209,6 @@ export function createVoidMaterial(options = {}) {
 
     // Store parameters for external access
     material.userData.depth = depth;
-    material.userData.innerPattern = innerPattern;
     material.userData.elementalType = 'void';
 
     return material;
@@ -319,15 +236,15 @@ export function updateVoidMaterial(material, deltaTime) {
  */
 export function getVoidPhysics(depth = 0.5) {
     return {
-        gravity: lerp(0.0, 0.3, depth),                 // Deep void pulls things in
-        drag: lerp(0.2, 0.0, depth),                    // Deep void has no resistance
+        gravity: lerp(0.0, 0.3, depth),
+        drag: lerp(0.2, 0.0, depth),
         bounce: 0.0,
-        gravityWell: depth > 0.7,                        // Pulls other objects toward it
+        gravityWell: depth > 0.7,
         gravityWellStrength: depth > 0.7 ? lerp(0, 2.0, (depth - 0.7) / 0.3) : 0,
-        disperseOverTime: depth < 0.3,                   // Wisps fade
-        lifetime: lerp(2.0, 999.0, depth),              // Deep void persists
+        disperseOverTime: depth < 0.3,
+        lifetime: lerp(2.0, 999.0, depth),
         absorbLight: true,
-        corruptNearby: depth > 0.6                       // High depth corrupts nearby materials
+        corruptNearby: depth > 0.6
     };
 }
 
@@ -340,12 +257,12 @@ export function getVoidPhysics(depth = 0.5) {
  */
 export function getVoidCrackStyle(depth = 0.5) {
     return {
-        color: 0x000000,                                // Pure black
-        emissive: lerp(-0.5, -2.0, depth),              // NEGATIVE emissive = absorbs light
+        color: 0x000000,
+        emissive: lerp(-0.5, -2.0, depth),
         animated: true,
-        pattern: 'veins',                                // Spreading tendril pattern
-        spreadOverTime: depth > 0.5,                     // Deep void cracks grow
-        corruptNearby: depth > 0.7                       // Adjacent cracks darken
+        pattern: 'veins',
+        spreadOverTime: depth > 0.5,
+        corruptNearby: depth > 0.7
     };
 }
 

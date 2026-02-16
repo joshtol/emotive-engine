@@ -353,13 +353,21 @@ export class ElementInstancedSpawner {
     }
 
     /**
-     * Loads a geometry from a GLTF file.
+     * Loads a geometry from a GLTF file, or generates procedural geometry
+     * for models that don't need external assets.
      * @private
      */
     async _loadGeometry(modelPath) {
         // Check cache
         if (this.geometryCache.has(modelPath)) {
             return this.geometryCache.get(modelPath);
+        }
+
+        // Procedural geometry: void-orb is a sphere, no GLB needed
+        if (modelPath.includes('void-orb.glb')) {
+            const geometry = new THREE.IcosahedronGeometry(0.5, 4);
+            this.geometryCache.set(modelPath, geometry);
+            return geometry;
         }
 
         try {
@@ -2060,6 +2068,18 @@ export class ElementInstancedSpawner {
             for (const [type, pool] of this.pools) {
                 this._distortionManager.syncInstances(type, pool.mesh, pool.mesh.count);
             }
+
+            // Void distortion lifecycle easing: compute max fadeProgress across active void elements
+            // Uses max (not average) so distortion stays full while ANY element is fully visible
+            let voidMaxFade = 0;
+            for (const [, data] of this.activeElements) {
+                if (data.type === 'void' && data.animState) {
+                    if (data.animState.fadeProgress > voidMaxFade) {
+                        voidMaxFade = data.animState.fadeProgress;
+                    }
+                }
+            }
+            this._distortionManager.setVoidFade(voidMaxFade);
         }
 
         // Sync particle atmospherics: feed filtered positions + gesture progress + energy

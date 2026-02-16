@@ -93,10 +93,14 @@ export const MODEL_SIZES = {
     'wave-curl':       { class: 'medium', variance: 0.25 },
 
     // Void models - dark, corrupting
-    'void-crack':      { class: 'small',  variance: 0.3 },
-    'shadow-tendril':  { class: 'medium', variance: 0.25 },
-    'corruption-patch': { class: 'small', variance: 0.3 },
-    'void-shard':      { class: 'tiny',   variance: 0.25 },
+    'void-crack':        { class: 'small',  variance: 0.3 },
+    'shadow-tendril':    { class: 'medium', variance: 0.25 },
+    'corruption-patch':  { class: 'small',  variance: 0.3 },
+    'void-shard':        { class: 'tiny',   variance: 0.25 },
+    'void-ring':         { class: 'large',  variance: 0.15 },  // Vortex ring (matches flame-ring)
+    'void-orb':          { class: 'medium', variance: 0.2 },
+    'void-tendril-large': { class: 'large', variance: 0.2 },
+    'void-wrap':         { class: 'medium', variance: 0.25 },
 
     // Light models - radiant, geometric
     'light-ray':       { class: 'medium', variance: 0.25 },
@@ -171,10 +175,14 @@ export const MODEL_ORIENTATIONS = {
     'wave-curl':       { mode: 'vertical', tiltAngle: 0 },
 
     // Void
-    'void-crack':       { mode: 'outward-flat', tiltAngle: 0.05 },
-    'shadow-tendril':   { mode: 'tangent',      tiltAngle: 0.3 },
-    'corruption-patch': { mode: 'flat',         tiltAngle: 0 },
-    'void-shard':       { mode: 'outward',      tiltAngle: 0.35 },
+    'void-crack':        { mode: 'outward-flat', tiltAngle: 0.05 },
+    'shadow-tendril':    { mode: 'tangent',      tiltAngle: 0.3 },
+    'corruption-patch':  { mode: 'flat',         tiltAngle: 0 },
+    'void-shard':        { mode: 'outward',      tiltAngle: 0.35 },
+    'void-ring':         { mode: 'flat',         tiltAngle: 0 },  // Horizontal ring (matches flame-ring)
+    'void-orb':          { mode: 'outward',      tiltAngle: 0 },
+    'void-tendril-large': { mode: 'tangent',     tiltAngle: 0.2 },
+    'void-wrap':         { mode: 'flat',         tiltAngle: 0.1 },
 
     // Light
     'light-ray':       { mode: 'outward', tiltAngle: 0.1 },
