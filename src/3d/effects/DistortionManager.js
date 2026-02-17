@@ -21,14 +21,12 @@
 
 import * as THREE from 'three';
 
-const MAX_DISTORTION_INSTANCES = 64;
-
 export class DistortionManager {
     constructor(renderer, camera) {
         this.renderer = renderer;
         this.camera = camera;
         this.distortionScene = new THREE.Scene();
-        this.elementMeshes = new Map();  // elementType → InstancedMesh
+        this.elementMeshes = new Map();  // elementType → Mesh
         this.configs = new Map();        // elementType → config
 
         // Cached temporaries for syncInstances (avoid per-frame allocation)
@@ -70,18 +68,24 @@ export class DistortionManager {
             config.material.uniforms.uStrength.value = config.strength;
         }
 
-        const mesh = new THREE.InstancedMesh(
-            config.geometry,
-            config.material,
-            MAX_DISTORTION_INSTANCES
-        );
-        mesh.count = 0;
-        mesh.visible = false;  // Don't render (or compile shader) until instances are active
+        // Single Mesh (not InstancedMesh) — distortion uses exactly 1 plane per element type.
+        // Avoids instanceMatrix in the vertex shader which simplifies GLSL compilation.
+        const mesh = new THREE.Mesh(config.geometry, config.material);
+        mesh.visible = false;  // Don't render (or compile shader) until sources are active
         mesh.frustumCulled = false;
+        mesh.matrixAutoUpdate = false;  // We set matrix manually in syncInstances
 
         this.distortionScene.add(mesh);
         this.elementMeshes.set(elementType, mesh);
         this.configs.set(elementType, config);
+
+        // Force shader compilation NOW, not deferred to first render.
+        // Without this, electric distortion compiles alongside 4+ other shaders
+        // in the same frame (overlay + instanced + particles + distortion),
+        // causing a driver race condition: "Fragment shader is not compiled".
+        mesh.visible = true;
+        this.renderer.compile(this.distortionScene, this.camera);
+        mesh.visible = false;
     }
 
     /**
@@ -100,17 +104,16 @@ export class DistortionManager {
         const distMesh = this.elementMeshes.get(elementType);
         if (!distMesh) return;
 
-        const count = Math.min(activeCount, MAX_DISTORTION_INSTANCES);
-
-        if (count === 0) {
-            if (distMesh.count !== 0) {
-                distMesh.count = 0;
+        if (activeCount === 0) {
+            if (distMesh.visible) {
                 distMesh.visible = false;
             }
             // Reset stored AABB — next gesture starts fresh
             if (this._peakAABB) this._peakAABB.delete(elementType);
             return;
         }
+
+        const count = activeCount;
 
         const config = this.configs.get(elementType);
         const mat = this._tmpMatrix;
@@ -187,12 +190,9 @@ export class DistortionManager {
         }
 
         mat.compose(pos, quat, scl);
-        distMesh.setMatrixAt(0, mat);
-
-        // Always exactly 1 instance — no additive accumulation
-        distMesh.count = 1;
+        distMesh.matrix.copy(mat);
+        distMesh.matrixWorldNeedsUpdate = true;
         distMesh.visible = true;
-        distMesh.instanceMatrix.needsUpdate = true;
     }
 
     /**
@@ -201,7 +201,7 @@ export class DistortionManager {
      */
     hasActiveSources() {
         for (const [, mesh] of this.elementMeshes) {
-            if (mesh.count > 0) return true;
+            if (mesh.visible) return true;
         }
         return false;
     }

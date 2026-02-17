@@ -46,7 +46,7 @@ const ELECTRICCROWN_CONFIG = {
             }
         },
         count: 1,
-        scale: 2.2,
+        scale: 1.2,
         models: ['lightning-ring'],
         animation: {
             appearAt: 0.0,
@@ -84,7 +84,7 @@ const ELECTRICCROWN_CONFIG = {
     glowFlickerRate: 0,
     scaleVibration: 0.003,
     scaleFrequency: 3,
-    scaleGrowth: 0.005,
+    scaleGrowth: 0,
     scalePulse: true,
     rotationDrift: 0.01
 };

@@ -57,8 +57,8 @@ varying vec3 vWorldPos;
 void main() {
     vUv = uv;
 
-    // Transform vertex through instance + model + view
-    vec4 worldPos = modelMatrix * instanceMatrix * vec4(position, 1.0);
+    // Transform vertex through model + view (single Mesh, not InstancedMesh)
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
     vWorldPos = worldPos.xyz;
     vec4 clipPos = projectionMatrix * viewMatrix * worldPos;
 
@@ -92,13 +92,13 @@ export function createFireDistortionMaterial() {
 
                 float t = uTime * 2.0;
 
-                // Two-octave turbulence — frequencies sized for half-res RT survival
+                // Two-octave turbulence - frequencies sized for half-res RT survival
                 // (features must be larger than 2 RT pixels to avoid aliasing away)
                 float n1 = dNoise2D(vec2(wp.x * 18.0, wp.y * 10.0 - t * 2.5));
                 float n2 = dNoise2D(vec2(wp.x * 35.0, wp.y * 18.0 - t * 3.5)) * 0.5;
                 float turb = (n1 + n2) - 0.75; // Center around zero
 
-                // Horizontal: subtle — heat shimmer is mostly vertical
+                // Horizontal: subtle - heat shimmer is mostly vertical
                 float dx = turb * uStrength * 0.25;
 
                 // Vertical: dominant rising streaks
@@ -148,12 +148,12 @@ export function createIceDistortionMaterial() {
                 vec2 uv = vUv;
                 vec2 wp = vWorldPos.xy;
 
-                float t = uTime * 0.3; // Slow — cold mist is languid
+                float t = uTime * 0.3; // Slow - cold mist is languid
 
-                // Gentle pulse: strength oscillates slowly (0.8–1.0)
+                // Gentle pulse: strength oscillates slowly (0.8-1.0)
                 float pulse = 0.8 + 0.2 * sin(uTime * 0.5);
 
-                // Two-layer rolling fog — world-space so pattern is stable
+                // Two-layer rolling fog - world-space so pattern is stable
                 float mist1 = dNoise2D(wp * 3.0 + vec2(t * 0.4, -t * 0.2));
                 float mist2 = dNoise2D(wp * 5.0 + vec2(-t * 0.3, -t * 0.15));
 
@@ -161,10 +161,10 @@ export function createIceDistortionMaterial() {
                 float dx = (mist1 - 0.5) * uStrength;
                 float dy = (mist2 - 0.5) * uStrength - uStrength * 0.5; // Constant downward bias
 
-                // Cold air pools at bottom — strongest low, fading upward
+                // Cold air pools at bottom - strongest low, fading upward
                 float heightWeight = smoothstep(0.6, 0.1, uv.y);
 
-                // Edge falloff (UV-space — plane edges)
+                // Edge falloff (UV-space - plane edges)
                 float falloff = smoothstep(0.0, 0.2, uv.x) * smoothstep(1.0, 0.8, uv.x)
                               * smoothstep(0.0, 0.1, uv.y) * smoothstep(1.0, 0.9, uv.y);
 
@@ -205,7 +205,7 @@ export function createWaterDistortionMaterial() {
                 float dist = length(center);
                 vec2 dir = normalize(center + 0.001);
 
-                // Concentric expanding rings (UV-space center — rings scale with effect)
+                // Concentric expanding rings (UV-space center - rings scale with effect)
                 float t = uTime * 1.0;
                 float ring1 = sin(dist * 20.0 - t * 4.0) * 0.5 + 0.5;
                 float ring2 = sin(dist * 14.0 - t * 2.8 + 1.0) * 0.5 + 0.5;
@@ -216,64 +216,6 @@ export function createWaterDistortionMaterial() {
 
                 // Falloff: strong near center, zero at edge
                 float falloff = smoothstep(0.5, 0.1, dist);
-
-                gl_FragColor = vec4(offset * falloff, 0.0, 1.0);
-            }
-        `,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        depthTest: false,
-        transparent: true,
-        side: THREE.DoubleSide,
-    });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// ELECTRIC — Static Jitter
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-export function createElectricDistortionMaterial() {
-    return new THREE.ShaderMaterial({
-        name: 'ElectricDistortion',
-        uniforms: {
-            uTime: { value: 0.0 },
-            uStrength: { value: 0.003 },
-            uFlashIntensity: { value: 0.0 },
-        },
-        vertexShader: DISTORTION_VERTEX_GLSL,
-        fragmentShader: /* glsl */`
-            uniform float uTime;
-            uniform float uStrength;
-            uniform float uFlashIntensity;
-            varying vec2 vUv;
-            varying vec3 vWorldPos;
-
-            ${DISTORTION_NOISE_GLSL}
-
-            void main() {
-                vec2 uv = vUv;
-                vec2 wp = vWorldPos.xy;
-
-                // Step noise: random jitter that changes abruptly (not smooth)
-                // World-space coords so jitter cells don't shift when AABB resizes
-                float t = floor(uTime * 15.0); // 15 fps step noise
-                vec2 hashCoord1 = wp * 50.0 + vec2(t);
-                vec2 hashCoord2 = wp * 50.0 + vec2(t + 100.0);
-                float jitterX = (dHash(hashCoord1) - 0.5) * 2.0;
-                float jitterY = (dHash(hashCoord2) - 0.5) * 2.0;
-
-                // Sparse: only ~30% of pixels get jitter
-                vec2 cellCoord = floor(wp * 20.0) + vec2(t * 0.1);
-                float active = step(0.7, dHash(cellCoord));
-
-                vec2 offset = vec2(jitterX, jitterY) * uStrength * active;
-
-                // Flash boost: distortion spikes during lightning flash
-                offset *= 1.0 + uFlashIntensity * 3.0;
-
-                // Edge falloff (UV-space — plane edges)
-                float falloff = smoothstep(0.0, 0.15, uv.x) * smoothstep(1.0, 0.85, uv.x)
-                              * smoothstep(0.0, 0.15, uv.y) * smoothstep(1.0, 0.85, uv.y);
 
                 gl_FragColor = vec4(offset * falloff, 0.0, 1.0);
             }
@@ -306,7 +248,7 @@ export function createVoidDistortionMaterial() {
         uniforms: {
             uTime: { value: 0.0 },
             uStrength: { value: 0.018 },
-            uFadeProgress: { value: 0.0 },  // 0→1→0 lifecycle easing (enter/hold/exit)
+            uFadeProgress: { value: 0.0 },  // 0-1-0 lifecycle easing (enter/hold/exit)
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
         fragmentShader: /* glsl */`
@@ -324,25 +266,17 @@ export function createVoidDistortionMaterial() {
                 float dist = length(center);
                 vec2 dir = normalize(center + 0.001);
 
-                float t = uTime * 0.4; // Slow, ominous — time dilation
+                float t = uTime * 0.4; // Slow, ominous - time dilation
 
-                // ─────────────────────────────────────────────────────────
-                // KERR METRIC: Gravitational pull + frame dragging
-                //
-                // Two components of a rotating black hole:
-                // 1. Radial: inward pull (Schwarzschild term)
-                // 2. Tangential: frame dragging / Lense-Thirring twist
-                //
-                // This is an ENHANCEMENT pass on top of per-fragment lensing
-                // in InstancedVoidMaterial. Keep moderate — the individual
-                // elements already do their own screen-space lensing.
-                // ─────────────────────────────────────────────────────────
+                // Kerr metric: gravitational pull + frame dragging
+                // Radial = inward pull (Schwarzschild), Tangential = frame dragging
+                // Enhancement pass on top of per-fragment lensing in InstancedVoidMaterial
 
                 // Schwarzschild radius in UV space
                 float rSchwarz = 0.06;
                 float r = max(dist, rSchwarz * 0.5);
 
-                // RADIAL: smoothstep-based (bounded, no 1/r² explosion)
+                // RADIAL: smoothstep-based (bounded, no 1/r^2 explosion)
                 // Peak at photon sphere, gentle tail outward
                 float radialStrength = smoothstep(0.45, 0.05, dist) * smoothstep(0.0, 0.04, dist);
 
@@ -352,7 +286,7 @@ export function createVoidDistortionMaterial() {
                 vec2 tangent = vec2(-sin(angle), cos(angle));
                 // Strong near ergosphere, visible at medium range, fades at edge
                 float frameDrag = smoothstep(0.45, 0.06, dist) * smoothstep(0.0, 0.03, dist);
-                // Boost near the hole — frame dragging peaks closer than radial
+                // Boost near the hole - frame dragging peaks closer than radial
                 frameDrag += smoothstep(0.15, 0.04, dist) * 0.5;
 
                 // Slow spacetime pulsation
@@ -368,11 +302,11 @@ export function createVoidDistortionMaterial() {
                 float turb = dNoise2D(vWorldPos.xy * 6.0 + vec2(t * 0.5)) - 0.5;
                 offset += vec2(turb, -turb) * uStrength * 0.1;
 
-                // Edge falloff (UV-space — plane edges)
+                // Edge falloff (UV-space - plane edges)
                 float falloff = smoothstep(0.0, 0.10, uv.x) * smoothstep(1.0, 0.90, uv.x)
                               * smoothstep(0.0, 0.10, uv.y) * smoothstep(1.0, 0.90, uv.y);
 
-                // Radial fade — distortion concentrated toward center
+                // Radial fade - distortion concentrated toward center
                 float radialFade = smoothstep(0.5, 0.15, dist);
                 falloff *= radialFade;
 

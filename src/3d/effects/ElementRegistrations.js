@@ -26,7 +26,6 @@ import {
     createFireDistortionMaterial,
     createWaterDistortionMaterial,
     createIceDistortionMaterial,
-    createElectricDistortionMaterial,
     createVoidDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
 
@@ -225,7 +224,7 @@ ElementTypeRegistry.register('electricity', {
     scaleMultiplier: 1.3,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
-        material: createElectricDistortionMaterial,
+        material: createFireDistortionMaterial,
         transform: {
             padding: new THREE.Vector3(0.3, 0.3, 0.3),
         },
