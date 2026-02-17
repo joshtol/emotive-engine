@@ -370,6 +370,13 @@ export class ElementInstancedSpawner {
             return geometry;
         }
 
+        // Procedural geometry: void-disk is a circular billboard disk (for singularity/hollow)
+        if (modelPath.includes('void-disk.glb')) {
+            const geometry = new THREE.CircleGeometry(0.5, 32);
+            this.geometryCache.set(modelPath, geometry);
+            return geometry;
+        }
+
         try {
             const gltf = await new Promise((resolve, reject) => {
                 this.loader.load(modelPath, resolve, undefined, reject);
@@ -384,6 +391,10 @@ export class ElementInstancedSpawner {
             });
 
             if (geometry) {
+                // void-ring is exported in XZ plane — rotate -90° X to match XY convention of all other rings
+                if (modelPath.includes('void-ring')) {
+                    geometry.rotateX(-Math.PI / 2);
+                }
                 this.geometryCache.set(modelPath, geometry);
                 return geometry;
             }
@@ -453,6 +464,10 @@ export class ElementInstancedSpawner {
             }
             if (elementConfig?.resetShaderAnimation && material) {
                 elementConfig.resetShaderAnimation(material);
+            }
+            // Reset disk mode (only singularity uses it)
+            if (material?.uniforms?.uDiskMode) {
+                material.uniforms.uDiskMode.value = 0;
             }
             // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
             if (this._particleAtmospherics) {
@@ -548,6 +563,10 @@ export class ElementInstancedSpawner {
         }
         if (elementConfig?.resetShaderAnimation && material) {
             elementConfig.resetShaderAnimation(material);
+        }
+        // Reset disk mode (only singularity uses it)
+        if (material?.uniforms?.uDiskMode) {
+            material.uniforms.uDiskMode.value = 0;
         }
         // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
         if (this._particleAtmospherics) {
@@ -895,6 +914,16 @@ export class ElementInstancedSpawner {
                     DEBUG && console.log(`[ElementInstancedSpawner] Applying shader animation for ${modelName}:`, overrides.shaderAnimation);
                     elementConfig.setShaderAnimation(material, overrides.shaderAnimation);
                     break;  // Apply once per spawn (all elements use same settings)
+                }
+            }
+        }
+
+        // Apply disk mode from modelOverrides (void singularity billboard disk)
+        if (modelOverrides && material?.uniforms?.uDiskMode) {
+            for (const modelName of modelNames) {
+                if (modelOverrides[modelName]?.diskMode) {
+                    material.uniforms.uDiskMode.value = 1;
+                    break;
                 }
             }
         }
@@ -1275,6 +1304,8 @@ export class ElementInstancedSpawner {
                     animState,
                     // Camera billboard: if true, element always faces camera
                     cameraOrientation: anchorConfig.orientation === 'camera',
+                    // Camera offset: push toward camera by N × mascotRadius (prevents z-fighting with mascot)
+                    cameraOffset: anchorConfig.cameraOffset || 0,
                     // World-space orientation: needed for camera-facing AND for static orientations
                     // Camera-facing needs world-space so container rotation doesn't interfere
                     worldSpaceOrientation: true,
@@ -1806,7 +1837,7 @@ export class ElementInstancedSpawner {
             const config = ElementTypeRegistry.get(type);
             const material = this.materials.get(type);
             if (config?.updateMaterial && material) {
-                config.updateMaterial(material, this.time, gestureProgress ?? 0);
+                config.updateMaterial(material, this.time, gestureProgress ?? 1.0);
             }
         }
 
@@ -1846,12 +1877,15 @@ export class ElementInstancedSpawner {
             const elementConfig = ElementTypeRegistry.get(type);
             const isProceduralElement = elementConfig?.createMaterial != null;
 
-            if (axisTravel && gestureProgress !== null) {
+            if (axisTravel) {
                 // AXIS-TRAVEL MODE: Recalculate position based on gesture progress
+                // When gesture ends (gestureProgress=null), use 1.0 so elements maintain
+                // their end-of-travel position while exit animation completes (no snap-back)
+                const effectiveProgress = gestureProgress ?? 1.0;
                 const result = this._calculateAxisTravelPosition(
                     axisTravel.config,
                     axisTravel.formationData,
-                    gestureProgress
+                    effectiveProgress
                 );
 
                 // Apply calculated position
@@ -1930,8 +1964,11 @@ export class ElementInstancedSpawner {
                 finalScale = isProceduralElement
                     ? baseScale * updateState.scaleMultiplier * animState.fadeProgress
                     : baseScale * updateState.scaleMultiplier * animState.scale;
-            } else if (data.orbit && data.orbit.config.speed !== 0 && gestureProgress !== null) {
+            } else if (data.orbit && data.orbit.config.speed !== 0) {
                 // ORBIT MODE: Recalculate position with orbital rotation + radius/height interpolation
+                // When gesture ends (gestureProgress=null), use 1.0 so elements maintain
+                // their end-of-orbit position while exit animation completes (no snap-back)
+                const effectiveOrbitProgress = gestureProgress ?? 1.0;
                 const orbitCfg = data.orbit.config;
 
                 // Use local progress (0-1 within element's appearance window)
@@ -1939,8 +1976,8 @@ export class ElementInstancedSpawner {
                 const disappearAt = animState.elementConfig?.disappearAt ?? 1;
                 const visibleDuration = disappearAt - appearAt;
                 const localProgress = visibleDuration > 0
-                    ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
-                    : gestureProgress;
+                    ? Math.max(0, Math.min(1, (effectiveOrbitProgress - appearAt) / visibleDuration))
+                    : effectiveOrbitProgress;
 
                 // Get easing function for orbit travel
                 const orbitEasingFn = getEasing(orbitCfg.easing || 'linear');
@@ -2007,6 +2044,13 @@ export class ElementInstancedSpawner {
                     _temp.quaternion2.setFromAxisAngle(_temp.axis.set(0, 0, 1), formationOffset);
                     _temp.quaternion.multiply(_temp.quaternion2);
                 }
+
+                // Camera offset: push element toward camera so it doesn't clip into mascot
+                // Direction toward camera = camera's local +Z in world space
+                if (data.cameraOffset) {
+                    _temp.direction.set(0, 0, 1).applyQuaternion(this.camera.quaternion);
+                    finalPosition.addScaledVector(_temp.direction, data.cameraOffset * this.mascotRadius);
+                }
             } else if (data.worldSpaceOrientation && data.baseWorldRotation) {
                 // For world-space orientations, use the base world rotation directly
                 // The container now has identity rotation when worldSpaceOrientation elements exist
@@ -2023,7 +2067,7 @@ export class ElementInstancedSpawner {
 
             // Update instance transform in pool
             // Note: updateInstanceTransform accepts both scalar and Vector3 scale
-            if (axisTravel && gestureProgress !== null) {
+            if (axisTravel) {
                 // Axis-travel uses non-uniform scale (diameter affects XY circular face)
                 pool.updateInstanceTransform(
                     elementId,

@@ -2029,9 +2029,21 @@ export class Core3DManager {
             // Apply override
             this.glowColor = [...blended.glowColorOverride];
         } else if (this._originalGlowColor) {
-            // Restore original color when override ends
-            this.glowColor = [...this._originalGlowColor];
-            this._originalGlowColor = null;
+            // Smooth lerp back to original color — prevents instant snap when
+            // gesture ends and glowColorOverride drops to null in one frame.
+            // Exponential lerp: ~8 frames to converge at 60fps.
+            const lerpRate = 0.2;
+            this.glowColor[0] += (this._originalGlowColor[0] - this.glowColor[0]) * lerpRate;
+            this.glowColor[1] += (this._originalGlowColor[1] - this.glowColor[1]) * lerpRate;
+            this.glowColor[2] += (this._originalGlowColor[2] - this.glowColor[2]) * lerpRate;
+            // Check if close enough to snap to final value
+            const diff = Math.abs(this.glowColor[0] - this._originalGlowColor[0]) +
+                         Math.abs(this.glowColor[1] - this._originalGlowColor[1]) +
+                         Math.abs(this.glowColor[2] - this._originalGlowColor[2]);
+            if (diff < 0.01) {
+                this.glowColor = [...this._originalGlowColor];
+                this._originalGlowColor = null;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2396,6 +2408,8 @@ export class Core3DManager {
         // Creates a duplicate mesh with void shader that renders on top,
         // showing darkness absorption, corruption tendrils, and light-draining effects.
         if (blended.voidOverlay && blended.voidOverlay.enabled) {
+            // Cancel any in-progress fade-out (new gesture started while old was fading)
+            this._voidOverlayFadingOut = false;
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
@@ -2470,29 +2484,58 @@ export class Core3DManager {
                 this._currentVoidProgress = blended.voidOverlay.progress ?? null;
             }
         } else if (this._voidOverlayMesh) {
-            // Remove overlay mesh when void effect ends
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._voidOverlayMesh.parent) {
-                mesh.remove(this._voidOverlayMesh);
-            }
-            // Dispose resources
-            if (this._voidMaterial) {
-                this._voidMaterial.dispose();
-                this._voidMaterial = null;
-            }
-            this._voidOverlayMesh = null;
-
-            // Gracefully exit void elements (fade out) — matching fire/ice/electric
-            // Don't reset distortion strength here — elements are still fading out
-            // via triggerExit, and uFadeProgress naturally reaches 0. Resetting
-            // strength now would cause a warp flash for gestures with reduced distortion.
-            if (this.elementSpawner) {
-                this.elementSpawner.triggerExit('void');
+            // Fade out overlay smoothly before removing — prevents snap when gesture
+            // is removed from the animation array at progress=1.0 before the factory's
+            // decay has fully zeroed out the overlay opacity.
+            if (!this._voidOverlayFadingOut) {
+                this._voidOverlayFadingOut = true;
+                // Trigger element exit once at fade start
+                if (this.elementSpawner) {
+                    this.elementSpawner.triggerExit('void');
+                }
+                // Clear progress tracking and spawn signatures
+                this._currentVoidProgress = null;
+                this._voidSpawnedSignatures = null;
             }
 
-            // Clear void progress tracking and spawn signatures
-            this._currentVoidProgress = null;
-            this._voidSpawnedSignatures = null;
+            // Exponential decay of overlay opacity (~5 frames to invisible at 60fps)
+            if (this._voidMaterial?.uniforms?.uOpacity) {
+                this._voidMaterial.uniforms.uOpacity.value *= 0.65;
+
+                // Also decay distortion strength toward 0 during fade-out
+                // Prevents spatial warping snap when overlay ends
+                if (this.elementSpawner?._distortionManager) {
+                    const dm = this.elementSpawner._distortionManager;
+                    const mesh = dm.elementMeshes?.get('void');
+                    if (mesh?.material?.uniforms?.uStrength) {
+                        mesh.material.uniforms.uStrength.value *= 0.65;
+                    }
+                }
+
+                if (this._voidMaterial.uniforms.uOpacity.value < 0.005) {
+                    // Fully faded — safe to remove
+                    const mesh = this.renderer?.coreMesh;
+                    if (mesh && this._voidOverlayMesh.parent) {
+                        mesh.remove(this._voidOverlayMesh);
+                    }
+                    this._voidMaterial.dispose();
+                    this._voidMaterial = null;
+                    this._voidOverlayMesh = null;
+                    this._voidOverlayFadingOut = false;
+                }
+            } else {
+                // No material — remove immediately
+                const mesh = this.renderer?.coreMesh;
+                if (mesh && this._voidOverlayMesh.parent) {
+                    mesh.remove(this._voidOverlayMesh);
+                }
+                if (this._voidMaterial) {
+                    this._voidMaterial.dispose();
+                    this._voidMaterial = null;
+                }
+                this._voidOverlayMesh = null;
+                this._voidOverlayFadingOut = false;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

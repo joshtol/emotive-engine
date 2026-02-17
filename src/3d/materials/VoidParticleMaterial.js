@@ -44,6 +44,8 @@ uniform float uDrag;
 uniform float uTurbulenceStrength;
 uniform float uEndSizeMultiplier;
 uniform float uRotationSpeedMax;
+uniform float uGravityStrength;
+uniform vec3 uGravityCenter;
 
 varying vec2 vUv;
 varying float vLife;
@@ -73,6 +75,21 @@ void main() {
     vec3 turbulence = vec3(turbX, 0.0, turbZ) * uTurbulenceStrength * age * 0.5;
 
     vec3 worldPos = aSpawnPos + driftPos + vec3(0.0, buoyancyDisp, 0.0) + turbulence;
+
+    // Gravity: drag-limited acceleration toward uGravityCenter
+    // Direction computed from DRIFTED position (worldPos), not aSpawnPos —
+    // particles spawn near mascot center so aSpawnPos ≈ gravityCenter,
+    // giving no useful direction. After drift, worldPos is offset and
+    // pullDir correctly points back inward.
+    if (uGravityStrength > 0.0) {
+        vec3 toCenter = uGravityCenter - worldPos;
+        float dist = length(toCenter);
+        if (dist > 0.01) {
+            vec3 pullDir = toCenter / dist;
+            float gravDisp = uGravityStrength * (age - dragDecay * invDrag);
+            worldPos += pullDir * gravDisp;
+        }
+    }
 
     float size = aSize * mix(1.0, uEndSizeMultiplier, sizeOverLife(life));
 
@@ -230,6 +247,8 @@ export function createVoidParticleMaterial(config) {
             uTurbulenceStrength: { value: config.turbulence ?? 0.02 },
             uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 2.5 },
             uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 0.1 },
+            uGravityStrength:    { value: config.gravityStrength ?? 0.0 },
+            uGravityCenter:      { value: new THREE.Vector3(0, 0, 0) },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: VOID_FRAGMENT_GLSL,

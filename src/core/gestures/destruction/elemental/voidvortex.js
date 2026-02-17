@@ -17,7 +17,7 @@
  *                      BOTTOM (narrower)
  *
  * FEATURES:
- * - 3 void-wrap models in spiral formation (120° apart)
+ * - 3 void-ring models in spiral formation (120° apart)
  * - Horizontal orientation — dark tornado funnel
  * - Narrower at bottom, wider at top (inverse gravity)
  * - SPIRAL + VORONOI cutout for swirling void
@@ -51,7 +51,7 @@ const VOIDVORTEX_CONFIG = {
             endScale: 1.5,
             startDiameter: 0.6,
             endDiameter: 2.0,
-            orientation: 'flat'     // void-wrap XY plane → 'flat' rotates to horizontal
+            orientation: 'flat'     // void-ring is XY plane — 90° X makes it horizontal
         },
         formation: {
             type: 'spiral',
@@ -77,8 +77,21 @@ const VOIDVORTEX_CONFIG = {
                 frequency: 5,
                 pattern: 'sine'
             },
-            // No cutout — arc animation provides the visual motion
-            // No grain — binary discard doesn't work with grain
+            cutout: {
+                strength: 0.4,
+                primary: { pattern: 6, scale: 1.5, weight: 0.8 },    // SPIRAL — swirling void
+                secondary: { pattern: 3, scale: 1.0, weight: 0.5 },  // VORONOI — cracked void
+                blend: 'multiply',
+                travel: 'spiral',
+                travelSpeed: 3.0,
+                strengthCurve: 'bell',
+                bellPeakAt: 0.5,
+                trailDissolve: {
+                    enabled: true,
+                    offset: -0.6,
+                    softness: 1.8
+                }
+            },
             atmospherics: [{
                 preset: 'darkness',
                 targets: null,
@@ -97,9 +110,9 @@ const VOIDVORTEX_CONFIG = {
                 'void-wrap': {
                     shaderAnimation: {
                         type: 1,            // ROTATING_ARC
-                        arcWidth: 0.5,      // ~50% of ring visible
-                        arcSpeed: 5.0,      // 5 rotations — spinning tornado
-                        arcCount: 1
+                        arcWidth: 0.3,      // Narrow arc — single sweeping tendril
+                        arcSpeed: 4.0,      // Fast but readable sweep
+                        arcCount: 1         // One arc — clear tornado arm
                     },
                     scaling: {
                         mode: 'non-uniform',

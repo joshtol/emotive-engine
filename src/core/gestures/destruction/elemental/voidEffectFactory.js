@@ -928,8 +928,11 @@ export function createVoidEffectGesture(variant) {
                     flickerValue *= (1 - progress * 0.5); // Dims as it collapses
                 }
 
-                const glowIntensity = cfg.glowIntensityMin +
-                    (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
+                // Glow intensity: lerp from 1.0 (neutral) toward dimmed range based on effectStrength.
+                // At effectStrength=0 → glowIntensity=1.0 (no dimming, smooth exit).
+                const glowRange = cfg.glowIntensityMin +
+                    (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue;
+                const glowIntensity = 1.0 + (glowRange - 1.0) * effectStrength;
 
                 // Negative glow boost - void DIMS rather than brightens
                 const glowBoost = -0.3 * effectStrength * cfg.intensity;
@@ -962,7 +965,7 @@ export function createVoidEffectGesture(variant) {
                     meshOpacity,
                     glowIntensity,
                     glowBoost,
-                    glowColorOverride: cfg.glowColor
+                    glowColorOverride: effectStrength > 0.005 ? cfg.glowColor : null
                 };
             }
         }
@@ -1192,8 +1195,13 @@ export function buildVoidEffectGesture(config) {
                     flickerValue *= (1 - progress * 0.5);
                 }
 
-                const glowIntensity = (cfg.glowIntensityMin || 0.4) +
-                    ((cfg.glowIntensityMax || 0.7) - (cfg.glowIntensityMin || 0.4)) * flickerValue * effectStrength;
+                // Glow intensity: lerp from 1.0 (neutral) toward dimmed range based on effectStrength.
+                // At effectStrength=0 → glowIntensity=1.0 (no dimming, smooth exit).
+                // At effectStrength=1 → glowIntensity oscillates between min and max.
+                const glowMin = cfg.glowIntensityMin || 0.4;
+                const glowMax = cfg.glowIntensityMax || 0.7;
+                const glowRange = glowMin + (glowMax - glowMin) * flickerValue;
+                const glowIntensity = 1.0 + (glowRange - 1.0) * effectStrength;
 
                 // Negative glow boost — void DIMS
                 const glowBoost = -(cfg.dimStrength || 0.3) * effectStrength * cfg.intensity;
@@ -1208,7 +1216,7 @@ export function buildVoidEffectGesture(config) {
                     meshOpacity,
                     glowIntensity,
                     glowBoost,
-                    glowColorOverride: cfg.glowColor,
+                    glowColorOverride: effectStrength > 0.005 ? cfg.glowColor : null,
                     voidOverlay: {
                         enabled: effectStrength > 0.01,
                         strength: effectStrength * cfg.intensity,
@@ -1236,23 +1244,25 @@ export function buildVoidEffectGesture(config) {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 // Absorption variants (becoming void)
-export const drain = createVoidEffectGesture('drain');
 export const siphon = createVoidEffectGesture('siphon');
-export const hollow = createVoidEffectGesture('hollow');
 
 // Corruption variants (being corrupted)
-export const corrupt = createVoidEffectGesture('corrupt');
 export const taint = createVoidEffectGesture('taint');
 export const wither = createVoidEffectGesture('wither');
 
 // Annihilation variants (being erased)
-export const consume = createVoidEffectGesture('consume');
 export const erase = createVoidEffectGesture('erase');
-// singularity: now uses modern pattern from voidsingularity.js (void-orb black hole)
+// consume, corrupt, drain, hollow, singularity: modern pattern from individual files
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // INDIVIDUAL GESTURE IMPORTS (modern pattern — each gesture in its own file)
 // ═══════════════════════════════════════════════════════════════════════════════════════
+
+// Upgraded character gestures (multi-layer configs in individual files)
+import consumeGesture from './voidconsume.js';
+import corruptGesture from './voidcorrupt.js';
+import drainGesture from './voiddrain.js';
+import hollowGesture from './voidhollow.js';
 
 // Ring gestures (void-ring/void-wrap — spectacle effects)
 import crownGesture from './voidcrown.js';
@@ -1269,6 +1279,12 @@ import singularityGesture from './voidsingularity.js';
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // EXPORTS — Both legacy and new pattern
 // ═══════════════════════════════════════════════════════════════════════════════════════
+
+// Modern character gesture exports
+export const consume = consumeGesture;
+export const corrupt = corruptGesture;
+export const drain = drainGesture;
+export const hollow = hollowGesture;
 
 // Ring gesture exports
 export const voidCrown = crownGesture;

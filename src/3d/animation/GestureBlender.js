@@ -267,13 +267,17 @@ export class GestureBlender {
                     }
 
                     // GLOW: Multiplicative blending (glow × pulse)
+                    // Apply fadeEnvelope to prevent snap when gesture is removed
+                    // At fadeEnvelope=0, contribution is 1.0 (neutral); at 1.0, full gesture value
                     if (output.glowIntensity !== undefined) {
-                        accumulated.glowIntensity *= output.glowIntensity;
+                        const fadedGlow = 1.0 + (output.glowIntensity - 1.0) * fadeEnvelope;
+                        accumulated.glowIntensity *= fadedGlow;
                     }
 
                     // GLOW BOOST: Additive blending for isolated glow layer
+                    // Apply fadeEnvelope (neutral = 0)
                     if (output.glowBoost !== undefined) {
-                        accumulated.glowBoost += output.glowBoost;
+                        accumulated.glowBoost += output.glowBoost * fadeEnvelope;
                     }
 
                     // GLOW COLOR OVERRIDE: Last-wins (for electric/elemental effects)

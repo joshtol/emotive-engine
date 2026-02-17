@@ -245,7 +245,8 @@ ElementTypeRegistry.register('void', {
         'void-orb.glb',
         'void-tendril-large.glb',
         'void-wrap.glb',
-        'splash-ring.glb'
+        'void-disk.glb',
+        'void-crown.glb'
     ],
     createMaterial: createInstancedVoidMaterial,
     updateMaterial: updateInstancedVoidMaterial,

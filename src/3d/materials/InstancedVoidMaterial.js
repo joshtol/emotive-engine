@@ -138,6 +138,7 @@ uniform float uGlobalTime;
 uniform float uFadeInDuration;
 uniform float uFadeOutDuration;
 uniform float uDepth;
+uniform int uDiskMode;
 
 // Arc visibility uniforms (for vortex effects)
 uniform int uAnimationType;
@@ -210,7 +211,8 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════════
 
     float instanceTime = vLocalTime + aRandomSeed * 10.0;
-    float breathe = sin(instanceTime * 0.3) * 0.008 * uDepth;
+    // Disk mode: ZERO vertex displacement — must stay perfectly round
+    float breathe = uDiskMode == 1 ? 0.0 : sin(instanceTime * 0.3) * 0.008 * uDepth;
 
     vPosition = selectedPosition;
     vRandomSeed = aRandomSeed;
@@ -218,7 +220,7 @@ void main() {
 
     vec3 displaced = selectedPosition + selectedNormal * breathe + trailOffset;
 
-    // View-space normal (for screen-aligned lensing direction)
+    // View-space normal (for screen-aligned lensing direction on 3D geometry)
     vNormal = normalMatrix * mat3(instanceMatrix) * selectedNormal;
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -275,6 +277,7 @@ uniform float uOpacity;
 uniform float uTendrilSpeed;    // Breathing/animation speed
 uniform float uEdgeGlow;        // Photon ring brightness
 uniform float uBloomThreshold;
+uniform int uDiskMode;
 
 // Screen-space gravitational lensing
 uniform sampler2D uBackgroundTexture;
@@ -315,27 +318,123 @@ void main() {
     float NdotV = max(0.0, dot(normal, viewDirVS));
     float edgeness = 1.0 - NdotV; // 0 = face-on (event horizon), 1 = silhouette
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // DISK MODE — billboard singularity with built-in gravitational lensing.
+    //
+    // The disk is a perfect circle (billboard PlaneGeometry). It handles its
+    // OWN background warping here in the shader — the DistortionManager
+    // post-process is disabled (distortionStrength: 0) so the disk geometry
+    // stays perfectly round on screen.
+    //
+    // Three zones from center outward:
+    //   1. Event horizon (diskDist < horizonRadius): absolute black
+    //   2. Photon ring (thin band at horizon boundary): bright amber emission
+    //   3. Lensing zone (horizonRadius → edge): warped background, fading out
+    // ═══════════════════════════════════════════════════════════════════════════════
+    if (uDiskMode == 1) {
+        float diskDist = length(vPosition.xy * 2.0);
+        if (diskDist > 1.0) discard;
+
+        float instanceTime = vLocalTime + vRandomSeed * 10.0;
+
+        // Event horizon radius — everything inside is absolute black
+        float horizonRadius = 0.50;
+
+        // ═══════════════════════════════════════════════════════════════════
+        // GRAVITATIONAL LENSING — warp background around singularity
+        //
+        // Billboard local XY maps directly to screen right/up (camera-facing),
+        // so vPosition.xy gives us the screen-aligned lensing direction.
+        // Offset UV OUTWARD from center → samples from further out →
+        // image appears pulled inward toward singularity.
+        // ═══════════════════════════════════════════════════════════════════
+        vec2 screenUV = gl_FragCoord.xy / uResolution;
+
+        vec2 diskXY = vPosition.xy * 2.0;
+        vec2 lensDir = length(diskXY) > 0.001 ? normalize(diskXY) : vec2(0.0);
+
+        // Lensing strength: strongest near horizon, fading toward edge
+        // Scale by vInstanceAlpha so lensing fades gradually during exit (not binary pop)
+        float lensMask = smoothstep(1.0, horizonRadius + 0.10, diskDist);
+        float lensAmount = lensMask * 0.08 * uIntensity / 1.5 * vInstanceAlpha;
+
+        // Horizon mask: 0 inside event horizon (black), 1 outside (show lensed bg)
+        // Fade toward 1.0 (show unwarped bg) as instance fades out
+        float horizonMask = mix(1.0, smoothstep(horizonRadius - 0.03, horizonRadius + 0.08, diskDist), vInstanceAlpha);
+
+        // Sample with chromatic aberration (wavelength-dependent bending)
+        vec3 lensedBg = vec3(0.0);
+        if (uHasBackground == 1) {
+            vec2 lensOffset = lensDir * lensAmount;
+            float chrAb = lensAmount * 0.08;
+            lensedBg.r = texture2D(uBackgroundTexture, screenUV + lensOffset + lensDir * chrAb).r;
+            lensedBg.g = texture2D(uBackgroundTexture, screenUV + lensOffset).g;
+            lensedBg.b = texture2D(uBackgroundTexture, screenUV + lensOffset - lensDir * chrAb).b;
+        }
+
+        // Black center + lensed edges
+        vec3 color = lensedBg * horizonMask;
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHOTON RING — bright band at horizon boundary
+        // ═══════════════════════════════════════════════════════════════════
+        float ring = smoothstep(horizonRadius - 0.08, horizonRadius, diskDist)
+                   * smoothstep(horizonRadius + 0.06, horizonRadius, diskDist);
+        ring = pow(ring, 1.5);
+
+        // Shimmer — photons in unstable orbit
+        float shimmer = 0.9 + 0.1 * sin(instanceTime * 2.5 + diskDist * 40.0);
+        ring *= shimmer;
+
+        // Doppler asymmetry — slow rotation brightens approaching side
+        float dopplerAngle = atan(vPosition.y, vPosition.x);
+        float dopplerPhase = dopplerAngle + instanceTime * 0.4;
+        float doppler = 0.82 + 0.18 * sin(dopplerPhase);
+        ring *= doppler;
+
+        // Warm amber ring color — gravitationally redshifted photons
+        vec3 ringBase   = vec3(0.90, 0.55, 0.15);
+        vec3 ringBright = vec3(1.00, 0.90, 0.65);
+        vec3 ringColor  = mix(ringBase, ringBright, pow(ring, 2.0));
+
+        float softCap = uBloomThreshold + 0.30;
+        float ringBrightness = min(1.5, softCap) * uEdgeGlow;
+        color += ringColor * ring * ringBrightness * vInstanceAlpha;
+
+        // Instance fade — gradual (lensing already scaled by vInstanceAlpha above)
+        if (vInstanceAlpha < 0.02) discard;
+
+        // Cutout/grain (for gestures that use them)
+        float alpha = 1.0;
+        ${CUTOUT_GLSL}
+        alpha *= trailAlpha;
+        ${GRAIN_GLSL}
+        if (alpha < 0.1) discard;
+
+        gl_FragColor = vec4(color, 1.0);
+        return;
+    }
+
     // Per-instance time
     float instanceTime = vLocalTime + vRandomSeed * 10.0;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // NOISE SMOOTHING — subtle world-space noise hides polygon seams
+    // Must be very small (0.02) — photon ring is only 0.18 wide, so even
+    // ±0.01 perturbation is ~5% of ring width. Larger values (0.1) made
+    // the singularity visibly blobby instead of a perfect circle.
     // ═══════════════════════════════════════════════════════════════════════════════
     float t = instanceTime * uTendrilSpeed;
     vec3 np = vWorldPosition * 5.0;
     float smoothNoise = noise(np * 2.0 + vec3(t * 0.3, -t * 0.2, t * 0.15));
-    float smoothEdge = edgeness + (smoothNoise - 0.5) * 0.1;
+    float smoothEdge = edgeness + (smoothNoise - 0.5) * 0.02;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // GRAVITATIONAL LENSING — screen-space background distortion
     //
-    // Real black holes don't just "glow at edges." They WARP SPACETIME.
-    // Background pixels near the silhouette are pulled inward toward the
-    // singularity. The event horizon (center) is absolute black. The photon
-    // sphere (edge) shows extreme distortion + bright photon ring emission.
-    //
-    // Uses the same screen-space background sampling as ice refraction,
-    // but distorts INWARD (gravitational pull) instead of through (Snell's law).
+    // For 3D geometry (void-orb, void-ring, void-wrap): warps background
+    // through the geometry surface using view-space normals for lens direction.
+    // For disk mode (void-disk): lensing is handled above using diskDist.
     // ═══════════════════════════════════════════════════════════════════════════════
     vec2 screenUV = gl_FragCoord.xy / uResolution;
 
@@ -349,11 +448,13 @@ void main() {
     float horizonEdge = 0.45;
 
     // Lensing strength ramps up beyond the horizon
+    // Scale by vInstanceAlpha so lensing fades gradually during exit (not binary pop)
     float lensMask = smoothstep(horizonEdge, horizonEdge + 0.30, smoothEdge);
-    float lensAmount = lensMask * 0.06 * uIntensity / 1.5;
+    float lensAmount = lensMask * 0.06 * uIntensity / 1.5 * vInstanceAlpha;
 
     // Event horizon mask: 0 = pure black, 1 = shows lensed background
-    float horizonMask = smoothstep(horizonEdge - 0.05, horizonEdge + 0.10, smoothEdge);
+    // Fade toward 1.0 (show unwarped bg) as instance fades out
+    float horizonMask = mix(1.0, smoothstep(horizonEdge - 0.05, horizonEdge + 0.10, smoothEdge), vInstanceAlpha);
 
     // Sample lensed background with subtle chromatic aberration (wavelength-dependent bending)
     vec3 lensedBg = vec3(0.0);
@@ -397,15 +498,16 @@ void main() {
 
     float softCap = uBloomThreshold + 0.30;
     float ringBrightness = min(1.5, softCap) * uEdgeGlow;
-    color += ringColor * ring * ringBrightness;
+    color += ringColor * ring * ringBrightness * vInstanceAlpha;
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // VISIBILITY — discard invisible pixels, everything else is fully opaque.
-    // A black hole is NEVER transparent. You either see it (alpha=1) or you don't.
+    // Lensing, horizon mask, and photon ring all scale by vInstanceAlpha above,
+    // so elements fade gracefully during exit instead of binary popping.
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Instance fade (spawn/exit)
-    if (vInstanceAlpha < 0.5) discard;
+    // Instance fade — gradual (lensing already scaled by vInstanceAlpha)
+    if (vInstanceAlpha < 0.02) discard;
 
     // Arc visibility (for vortex effects) — binary: visible or not
     if (uAnimationType == 1) {
@@ -472,6 +574,7 @@ export function createInstancedVoidMaterial(options = {}) {
             // Animation uniforms (cutout, glow, etc. from shared core)
             ...createAnimationUniforms(),
             // Void uniforms
+            uDiskMode: { value: 0 },
             uDepth: { value: depth },
             uIntensity: { value: derived.intensity },
             uOpacity: { value: opacity },

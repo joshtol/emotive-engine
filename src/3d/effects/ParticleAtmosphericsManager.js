@@ -308,8 +308,12 @@ class ParticleEmitter {
             offsetX = cosA * r;
             offsetZ = sinA * r;
             // Radial outward velocity kick — spray flings away from source
-            radialVx = cosA * speed * 0.5;
-            radialVz = sinA * speed * 0.5;
+            // Suppressed when gravity is active: particles spawn at offset,
+            // gravity handles all motion (inward pull, not outward fling)
+            if (!cfg.gravity) {
+                radialVx = cosA * speed * 0.5;
+                radialVz = sinA * speed * 0.5;
+            }
         }
 
         // Spawn position: source + radial offset + small jitter + configured Y offset
@@ -543,6 +547,16 @@ export class ParticleAtmosphericsManager {
             }
 
             emitter.setSourcePositions(this._filteredPositions, count);
+
+            // Feed gravity center (mascot world origin) to emitters with gravity pull
+            if (emitter.config.gravity && container) {
+                const {uniforms} = emitter.mesh.material;
+                if (uniforms.uGravityCenter) {
+                    _tempVec3.set(0, 0, 0);
+                    container.localToWorld(_tempVec3);
+                    uniforms.uGravityCenter.value.copy(_tempVec3);
+                }
+            }
         }
     }
 

@@ -16,7 +16,7 @@
  *           /|\
  *
  * FEATURES:
- * - Single void-ring anchored at head, horizontal
+ * - Single void-crown anchored at head, horizontal
  * - Slow ominous rotation with FBM void shader
  * - Gentle bob for floating effect
  * - Light-absorbing CustomBlending — ring darkens surroundings
@@ -42,15 +42,15 @@ const VOIDCROWN_CONFIG = {
         anchor: {
             landmark: 'top',
             offset: { x: 0, y: 0.05, z: 0 },
-            orientation: 'flat',        // void-wrap exported in XY plane, needs 90° X to be horizontal
+            orientation: 'flat',        // void-crown is XY plane — 90° X makes it horizontal
             bob: {
                 amplitude: 0.02,
                 frequency: 0.25      // Slower than electric — ominous float
             }
         },
         count: 1,
-        scale: 2.2,
-        models: ['void-wrap'],
+        scale: 0.85,
+        models: ['void-crown'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.75,
@@ -62,7 +62,7 @@ const VOIDCROWN_CONFIG = {
             rotate: { axis: 'z', rotations: 0.5, phase: 0 },   // Slow rotation
             atmospherics: [{
                 preset: 'darkness',
-                targets: ['void-wrap'],
+                targets: ['void-crown'],
                 anchor: 'above',
                 intensity: 0.5,
                 sizeScale: 1.2,
@@ -87,7 +87,7 @@ const VOIDCROWN_CONFIG = {
             blending: 'normal',
             renderOrder: 3,
             modelOverrides: {
-                'void-wrap': {
+                'void-crown': {
                     shaderAnimation: {
                         type: 1,            // ROTATING_ARC
                         arcWidth: 0.6,      // Wide arcs — regal, stately

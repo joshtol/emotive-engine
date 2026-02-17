@@ -43,6 +43,15 @@ export function parseAnchorConfig(config, resolveLandmark) {
             amplitude: anchor.bob.amplitude || 0.02,
             frequency: anchor.bob.frequency || 0.5,
         } : null,
+        wander: anchor.wander ? {
+            radius: anchor.wander.radius || 0.1,
+            speedX: anchor.wander.speedX || 0.3,
+            speedZ: anchor.wander.speedZ || 0.2,
+        } : null,
+
+        // Camera offset: push element toward camera by N × mascotRadius
+        // Use for billboard elements that would otherwise clip into mascot geometry
+        cameraOffset: anchor.cameraOffset || 0,
 
         // Pass through other spawn options
         count: config.count || 1,
@@ -65,18 +74,28 @@ export function parseAnchorConfig(config, resolveLandmark) {
  */
 export function calculateAnchorPosition(anchorConfig, time = 0) {
     const baseY = anchorConfig.landmarkY + anchorConfig.offset.y;
+    let {x} = anchorConfig.offset;
     let y = baseY;
+    let {z} = anchorConfig.offset;
 
-    // Apply bob animation if configured
+    // Apply bob animation if configured (vertical oscillation)
     if (anchorConfig.bob) {
         const bobOffset = Math.sin(time * anchorConfig.bob.frequency * Math.PI * 2) * anchorConfig.bob.amplitude;
         y = baseY + bobOffset;
     }
 
+    // Apply wander if configured (XZ Lissajous wandering)
+    // Uses incommensurate frequencies for natural non-repeating paths
+    if (anchorConfig.wander) {
+        const w = anchorConfig.wander;
+        x += Math.sin(time * w.speedX * Math.PI * 2) * w.radius;
+        z += Math.cos(time * w.speedZ * Math.PI * 2) * w.radius;
+    }
+
     return {
-        x: anchorConfig.offset.x,
+        x,
         y,
-        z: anchorConfig.offset.z,
+        z,
         baseY,  // Store for update loop
     };
 }

@@ -107,6 +107,8 @@ export class DistortionManager {
                 distMesh.count = 0;
                 distMesh.visible = false;
             }
+            // Reset stored AABB — next gesture starts fresh
+            if (this._peakAABB) this._peakAABB.delete(elementType);
             return;
         }
 
@@ -116,47 +118,66 @@ export class DistortionManager {
         const quat = this._tmpQuat;
         const scl = this._tmpScl;
 
-        // Compute AABB from all active instance positions
-        let minX = Infinity, minY = Infinity, minZ = Infinity;
-        let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
-        for (let i = 0; i < count; i++) {
-            elementMesh.getMatrixAt(i, mat);
-            const x = mat.elements[12];
-            const y = mat.elements[13];
-            const z = mat.elements[14];
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-            if (z < minZ) minZ = z;
-            if (z > maxZ) maxZ = z;
+        // Track peak instance count per element type.
+        // When elements start dying (count decreasing), freeze the AABB at its peak
+        // to prevent the distortion center from jumping as elements exit staggered.
+        if (!this._peakAABB) this._peakAABB = new Map();
+        const stored = this._peakAABB.get(elementType);
+
+        if (stored && count < stored.count) {
+            // Elements dying — use frozen AABB so distortion center doesn't jump
+            pos.copy(stored.center);
+            scl.copy(stored.size);
+        } else {
+            // Growing or stable — compute fresh AABB
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            for (let i = 0; i < count; i++) {
+                elementMesh.getMatrixAt(i, mat);
+                const x = mat.elements[12];
+                const y = mat.elements[13];
+                const z = mat.elements[14];
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                if (z < minZ) minZ = z;
+                if (z > maxZ) maxZ = z;
+            }
+
+            // Center of bounding box (shifted by optional centerOffset for asymmetric effects)
+            pos.set(
+                (minX + maxX) * 0.5,
+                (minY + maxY) * 0.5,
+                (minZ + maxZ) * 0.5
+            );
+            const {centerOffset} = config.transform;
+            if (centerOffset) {
+                pos.x += centerOffset.x;
+                pos.y += centerOffset.y;
+                pos.z += centerOffset.z;
+            }
+
+            // Size of bounding box + padding
+            const {padding} = config.transform;
+            const sizeX = (maxX - minX) + padding.x * 2;
+            const sizeY = (maxY - minY) + padding.y * 2;
+
+            // Plane scale = bounding box size (geometry is 1×1 unit plane)
+            // Minimum size prevents zero-area when all instances are at same position
+            scl.set(
+                Math.max(sizeX, padding.x),
+                Math.max(sizeY, padding.y),
+                1.0
+            );
+
+            // Store peak AABB for freeze during exit
+            this._peakAABB.set(elementType, {
+                center: pos.clone(),
+                size: scl.clone(),
+                count,
+            });
         }
-
-        // Center of bounding box (shifted by optional centerOffset for asymmetric effects)
-        pos.set(
-            (minX + maxX) * 0.5,
-            (minY + maxY) * 0.5,
-            (minZ + maxZ) * 0.5
-        );
-        const {centerOffset} = config.transform;
-        if (centerOffset) {
-            pos.x += centerOffset.x;
-            pos.y += centerOffset.y;
-            pos.z += centerOffset.z;
-        }
-
-        // Size of bounding box + padding
-        const {padding} = config.transform;
-        const sizeX = (maxX - minX) + padding.x * 2;
-        const sizeY = (maxY - minY) + padding.y * 2;
-
-        // Plane scale = bounding box size (geometry is 1×1 unit plane)
-        // Minimum size prevents zero-area when all instances are at same position
-        scl.set(
-            Math.max(sizeX, padding.x),
-            Math.max(sizeY, padding.y),
-            1.0
-        );
 
         // Billboard: face camera
         if (config.billboard) {

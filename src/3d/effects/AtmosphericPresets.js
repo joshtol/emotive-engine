@@ -383,6 +383,20 @@ export function resolveLayerConfig(layerConfig) {
     }
     materialConfig.spawnOffsetY = spawnOffsetY;
 
+    // Apply lifetime scale (for shorter-lived suction particles, etc.)
+    if (layerConfig.lifetimeScale != null) {
+        materialConfig.lifetimeMin = preset.lifetimeMin * layerConfig.lifetimeScale;
+        materialConfig.lifetimeMax = preset.lifetimeMax * layerConfig.lifetimeScale;
+    }
+
+    // Apply gravity: strength to material, spawnRadius to emitter
+    if (layerConfig.gravity) {
+        materialConfig.gravityStrength = layerConfig.gravity.strength || 0;
+        if (layerConfig.gravity.spawnRadius) {
+            materialConfig.spawnRadius = layerConfig.gravity.spawnRadius;
+        }
+    }
+
     // Create material instance
     const materialFactory = MATERIAL_FACTORIES[preset.materialType];
     const material = materialFactory(materialConfig);
@@ -418,5 +432,9 @@ export function resolveLayerConfig(layerConfig) {
         // Physics: centrifugal emission for spinning gestures
         // { speed: outward velocity, tangentialBias: 0-1 radial vs tangential mix }
         centrifugal: layerConfig.centrifugal || null,
+
+        // Physics: gravity pull toward mascot center (void particles only)
+        // { strength: acceleration magnitude }
+        gravity: layerConfig.gravity || null,
     };
 }

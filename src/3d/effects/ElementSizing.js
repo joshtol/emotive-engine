@@ -84,6 +84,7 @@ export const MODEL_SIZES = {
     'arc-medium':      { class: 'medium', variance: 0.2 },
     'arc-cluster':     { class: 'large',  variance: 0.2 },
     'spark-node':      { class: 'tiny',   variance: 0.3 },
+    'lightning-ring':  { class: 'large',  variance: 0.15 },
 
     // Water models - flowing, organic
     'droplet-small':   { class: 'tiny',   variance: 0.25 },
@@ -101,6 +102,8 @@ export const MODEL_SIZES = {
     'void-orb':          { class: 'medium', variance: 0.2 },
     'void-tendril-large': { class: 'large', variance: 0.2 },
     'void-wrap':         { class: 'medium', variance: 0.25 },
+    'void-disk':         { class: 'large',  variance: 0.1 },   // Procedural dark disk (singularity/hollow)
+    'void-crown':        { class: 'large',  variance: 0.15 },  // Crown ring GLB
 
     // Light models - radiant, geometric
     'light-ray':       { class: 'medium', variance: 0.25 },
@@ -166,6 +169,7 @@ export const MODEL_ORIENTATIONS = {
     'arc-medium':      { mode: 'tangent', tiltAngle: 0.15 },
     'arc-cluster':     { mode: 'outward', tiltAngle: 0.3 },
     'spark-node':      { mode: 'outward', tiltAngle: 0.4 },
+    'lightning-ring':  { mode: 'flat',    tiltAngle: 0 },
 
     // Water - falling mode for droplets
     'droplet-small':   { mode: 'falling', tiltAngle: 0.1, fallFactor: 0.7 },
@@ -179,10 +183,12 @@ export const MODEL_ORIENTATIONS = {
     'shadow-tendril':    { mode: 'tangent',      tiltAngle: 0.3 },
     'corruption-patch':  { mode: 'flat',         tiltAngle: 0 },
     'void-shard':        { mode: 'outward',      tiltAngle: 0.35 },
-    'void-ring':         { mode: 'flat',         tiltAngle: 0 },  // Horizontal ring (matches flame-ring)
+    'void-ring':         { mode: 'flat',         tiltAngle: 0 },  // XY plane in Three.js — 'flat' rotates to horizontal
     'void-orb':          { mode: 'outward',      tiltAngle: 0 },
     'void-tendril-large': { mode: 'tangent',     tiltAngle: 0.2 },
     'void-wrap':         { mode: 'flat',         tiltAngle: 0.1 },
+    'void-disk':         { mode: 'flat',         tiltAngle: 0 },   // Procedural dark disk — always flat
+    'void-crown':        { mode: 'flat',         tiltAngle: 0 },   // Crown ring GLB — horizontal above head
 
     // Light
     'light-ray':       { mode: 'outward', tiltAngle: 0.1 },
