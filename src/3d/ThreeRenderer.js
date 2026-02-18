@@ -18,6 +18,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { DistortionShader } from './DistortionPass.js';
+import { AmbientOcclusionPass } from './AmbientOcclusionPass.js';
 import { DistortionManager } from './effects/DistortionManager.js';
 import { ParticleAtmosphericsManager } from './effects/ParticleAtmosphericsManager.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -92,6 +93,9 @@ export class ThreeRenderer {
 
         // Page visibility change handling (detect tab switches that may invalidate GPU resources)
         this._wasHidden = false;
+        // Progressive warmup: skip heavy post-processing for first N frames after tab-back
+        // to spread shader recompilation across frames instead of one massive stall
+        this._warmupFramesRemaining = 0;
         this._boundHandleVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._boundHandleVisibilityChange);
 
@@ -434,6 +438,12 @@ export class ThreeRenderer {
         this.renderer.getDrawingBufferSize(drawingBufferSize);
 
         // Create with alpha-enabled render target at full drawing buffer resolution
+        // DepthTexture: RenderPass writes depth here for free — reused by AO pass
+        // DepthStencilFormat + UnsignedInt248Type matches Three.js SSAOPass (broadest GPU support)
+        const depthTexture = new THREE.DepthTexture(drawingBufferSize.x, drawingBufferSize.y);
+        depthTexture.format = THREE.DepthStencilFormat;
+        depthTexture.type = THREE.UnsignedInt248Type;
+
         const renderTarget = new THREE.WebGLRenderTarget(
             drawingBufferSize.x,
             drawingBufferSize.y, {
@@ -442,7 +452,8 @@ export class ThreeRenderer {
                 minFilter: THREE.NearestFilter,  // DIAGNOSTIC: Prevent bilinear blending with transparent black at edges
                 magFilter: THREE.NearestFilter,
                 stencilBuffer: false,
-                depthBuffer: true
+                depthBuffer: true,
+                depthTexture
             });
         this.composer = new EffectComposer(this.renderer, renderTarget);
 
@@ -464,6 +475,12 @@ export class ThreeRenderer {
         renderPass.clearColor = new THREE.Color(0, 0, 0);
         renderPass.clearAlpha = 0;  // Transparent background
         this.composer.addPass(renderPass);
+
+        // Ambient Occlusion pass — reads depth from RenderPass, composites AO onto scene
+        // Placed after RenderPass so it has scene depth, before distortion/bloom
+        this.aoPass = new AmbientOcclusionPass(this.camera, drawingBufferSize.x, drawingBufferSize.y);
+        this.aoPass.enabled = false;  // Off by default — enabled per-element by Core3DManager
+        this.composer.addPass(this.aoPass);
 
         // Distortion pass slot — added here (before bloom) so bloom stays last.
         // The actual ShaderPass is created later in the distortion section and inserted here.
@@ -772,6 +789,17 @@ export class ThreeRenderer {
         this._wasHidden = false;
 
         if (!document.hidden) {
+            // Progressive warmup: skip heavy passes for first frames after tab-back.
+            // Chrome hibernates WebGL for background tabs, evicting all compiled shaders,
+            // textures, and framebuffers. The first render after tab-back forces synchronous
+            // recompilation of every shader program. With bloom (14 passes × 2) + distortion
+            // + particles, that's 30+ shader programs recompiling in ONE frame = multi-second
+            // freeze. Spreading across frames: frame 1 = scene only, frame 2+ = full pipeline.
+            this._warmupFramesRemaining = 3;
+
+            // Reset Three.js state cache — may be stale after GPU hibernation
+            this.renderer?.state?.reset();
+
             // Tab became visible - check if textures are still valid
             // Some browsers silently invalidate GPU resources without triggering webglcontextlost
             const gl = this.renderer?.getContext();
@@ -1659,6 +1687,17 @@ export class ThreeRenderer {
         // Manually clear with transparent background (needed when autoClear = false)
         this.renderer.clear();
 
+        // Progressive warmup after tab-back: render scene only, skip bloom/distortion/particles.
+        // Each frame recompiles the shaders it touches. Frame 1 = scene shaders.
+        // After warmup, full pipeline resumes and bloom/distortion shaders compile incrementally.
+        if (this._warmupFramesRemaining > 0) {
+            this._warmupFramesRemaining--;
+            this.camera.layers.set(0);
+            this.renderer.render(this.scene, this.camera);
+            this.camera.layers.enableAll();
+            return;
+        }
+
         // Render with post-processing if enabled, otherwise direct render
         if (this.composer) {
             // === STEP 0: Render soul (layer 2) to texture for refraction sampling ===
@@ -1945,6 +1984,23 @@ export class ThreeRenderer {
     }
 
     /**
+     * Enable or disable screen-space ambient occlusion.
+     * @param {boolean} enabled - Whether AO is active
+     * @param {Object} [options] - AO parameters
+     * @param {number} [options.intensity] - AO strength (0 = none, 1 = full)
+     * @param {number} [options.radius] - View-space sampling radius
+     * @param {number} [options.minDistance] - Min depth diff for occlusion
+     * @param {number} [options.maxDistance] - Max depth diff for occlusion
+     */
+    setAmbientOcclusion(enabled, options = {}) {
+        if (!this.aoPass) return;
+        this.aoPass.enabled = enabled;
+        if (options.intensity !== undefined) this.aoPass.intensity = options.intensity;
+        if (options.fineRadius !== undefined) this.aoPass.fineRadius = options.fineRadius;
+        if (options.coarseRadius !== undefined) this.aoPass.coarseRadius = options.coarseRadius;
+    }
+
+    /**
      * Resize renderer and camera
      * @param {number} width - Canvas width
      * @param {number} height - Canvas height
@@ -1997,6 +2053,11 @@ export class ThreeRenderer {
             // Resize distortion render target (half resolution)
             if (this.distortionTarget) {
                 this.distortionTarget.setSize(halfWidth, halfHeight);
+            }
+
+            // Resize AO pass internal targets (half resolution)
+            if (this.aoPass) {
+                this.aoPass.setSize(drawingBufferSize.x, drawingBufferSize.y);
             }
 
             // Update resolution uniform for crystal shader refraction
@@ -2103,6 +2164,12 @@ export class ThreeRenderer {
         if (this.glassMaterial) {
             this.disposeMaterial(this.glassMaterial);
             this.glassMaterial = null;
+        }
+
+        // Dispose AO pass
+        if (this.aoPass) {
+            this.aoPass.dispose();
+            this.aoPass = null;
         }
 
         // Dispose composer

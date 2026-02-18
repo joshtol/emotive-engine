@@ -322,3 +322,79 @@ export function createVoidDistortionMaterial() {
         side: THREE.DoubleSide,
     });
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// LIGHT — Holy Shimmer (warm rising refraction + radial bloom push)
+//
+// Intense light sources heat surrounding air, creating refractive index gradients.
+// Chromatic Prism — light refracts into a rainbow halo around the mascot.
+// R/G channels write radial UV push (outward from center). B channel writes
+// non-zero to trigger the chromatic aberration split in DistortionPass.
+// The pass samples R/G/B at slightly different offset magnitudes, creating
+// rainbow fringing. Stronger at edges (where refraction is most visible).
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+export function createLightDistortionMaterial() {
+    return new THREE.ShaderMaterial({
+        name: 'LightDistortion',
+        uniforms: {
+            uTime: { value: 0.0 },
+            uStrength: { value: 0.004 },
+        },
+        vertexShader: DISTORTION_VERTEX_GLSL,
+        fragmentShader: /* glsl */`
+            uniform float uTime;
+            uniform float uStrength;
+            varying vec2 vUv;
+            varying vec3 vWorldPos;
+
+            ${DISTORTION_NOISE_GLSL}
+
+            void main() {
+                vec2 uv = vUv;
+                vec2 wp = vWorldPos.xy;
+
+                float t = uTime * 1.2;
+
+                // Breathing pulse — slow divine rhythm
+                float pulse = 0.85 + 0.15 * sin(t * 0.7);
+
+                // Radial direction from center — prism pushes outward
+                vec2 center = uv - 0.5;
+                float dist = length(center);
+                vec2 dir = dist > 0.001 ? normalize(center) : vec2(0.0);
+
+                // Radial push — strongest in a ring band (not center, not edge)
+                // Creates the classic "halo" refraction zone
+                float ring = smoothstep(0.05, 0.2, dist) * smoothstep(0.5, 0.3, dist);
+
+                // Subtle noise modulation — prism edge shimmers, not static
+                float shimmer = dNoise2D(vec2(wp.x * 6.0 + t * 0.3, wp.y * 6.0 - t * 0.2));
+                shimmer = shimmer * 0.3 + 0.7; // 0.7 to 1.0 range — mostly stable, slight variation
+
+                float radialStrength = ring * shimmer * pulse * uStrength;
+
+                // R/G: radial UV offset (pushes pixels outward from mascot center)
+                float dx = dir.x * radialStrength;
+                float dy = dir.y * radialStrength;
+
+                // B: chromatic aberration UV spread for DistortionPass
+                // Written as direct UV-space spread (not scaled by uStrength like R/G).
+                // With AdditiveBlending, 1-2 overlapping planes → ~0.008-0.016 UV total
+                // = ~15-30px separation at 1920 for visible rainbow fringing.
+                float chromaticSignal = ring * shimmer * pulse * 0.008;
+
+                // Edge falloff (UV-space)
+                float falloff = smoothstep(0.0, 0.1, uv.x) * smoothstep(1.0, 0.9, uv.x)
+                              * smoothstep(0.0, 0.1, uv.y) * smoothstep(1.0, 0.9, uv.y);
+
+                gl_FragColor = vec4(dx * falloff, dy * falloff, chromaticSignal * falloff, 1.0);
+            }
+        `,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: false,
+        transparent: true,
+        side: THREE.DoubleSide,
+    });
+}

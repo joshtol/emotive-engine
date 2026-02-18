@@ -724,7 +724,10 @@
             minZoom: 0.9,
             maxZoom: 2.0,
             materialVariant: 'multiplexer',
-            assetBasePath: '/assets'
+            assetBasePath: '/assets',
+            // DEV: Only prewarm earth while iterating on earth shader. Others load on demand.
+            preloadElements: ['earth'],
+            backgroundPrewarm: false
         });
 
         mascot.init(container);
@@ -869,10 +872,9 @@
             }
 
             // Earth keywords
-            if (name.includes('petrify') || name.includes('stone') || name.includes('rock') ||
+            if (name.includes('petrify') || name.includes('stone') ||
                 name.includes('quake') || name.includes('tremor') ||
-                name.includes('rubble') || name.includes('boulder') || name.includes('mineral') ||
-                name.includes('shatter')) {
+                name.includes('rubble') || name.includes('boulder') || name.includes('mineral')) {
                 return 'earth';
             }
 

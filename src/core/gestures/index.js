@@ -285,6 +285,7 @@ import {
     electricZap,
     zap as zapGesture
 } from './destruction/elemental/electricEffectFactory.js';
+import electricMeditation from './destruction/elemental/electricmeditation.js';
 // destruction/elemental/ - Water effect gestures (self-contained gesture files)
 import waterSplash from './destruction/elemental/watersplash.js';
 import waterDrench from './destruction/elemental/waterdrench.js';
@@ -356,6 +357,7 @@ import {
     voidBarrage,
     voidImpact
 } from './destruction/elemental/voidEffectFactory.js';
+import voidMeditation from './destruction/elemental/voidmeditation.js';
 // destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
 // Matches fire/water pattern: axis-travel, anchor, radial-burst spawn modes
 import {
@@ -374,18 +376,28 @@ import {
 } from './destruction/elemental/iceEffectFactory.js';
 import iceMist from './destruction/elemental/icemist.js';
 import iceShiver from './destruction/elemental/iceshiver.js';
-// destruction/elemental/ - Light effect gestures (radiance/holy visuals)
-import {
-    blind as lightBlind,
-    purify as lightPurify,
-    cleanse as lightCleanse,
-    radiate as lightRadiate,
-    glow as lightGlow,
-    beacon as lightBeacon,
-    ascend as lightAscend,
-    illuminate as lightIlluminate,
-    dissolve as lightDissolve
-} from './destruction/elemental/lightEffectFactory.js';
+// destruction/elemental/ - Light effect gestures (all modern instanced pattern)
+import lightBlind from './destruction/elemental/lightblind.js';
+import lightPurify from './destruction/elemental/lightpurify.js';
+import lightCleanse from './destruction/elemental/lightcleanse.js';
+import lightRadiate from './destruction/elemental/lightradiate.js';
+import lightGlow from './destruction/elemental/lightglow.js';
+import lightBeacon from './destruction/elemental/lightbeacon.js';
+import lightAscend from './destruction/elemental/lightascend.js';
+import lightIlluminate from './destruction/elemental/lightilluminate.js';
+import lightDissolve from './destruction/elemental/lightdissolve.js';
+import lightMeditation from './destruction/elemental/lightmeditation.js';
+import lightCrown from './destruction/elemental/lightcrown.js';
+import lightDance from './destruction/elemental/lightdance.js';
+import lightHelix from './destruction/elemental/lighthelix.js';
+import lightPillar from './destruction/elemental/lightpillar.js';
+import lightDrill from './destruction/elemental/lightdrill.js';
+import lightFlourish from './destruction/elemental/lightflourish.js';
+import lightVortex from './destruction/elemental/lightvortex.js';
+import lightBarrage from './destruction/elemental/lightbarrage.js';
+import lightImpact from './destruction/elemental/lightimpact.js';
+import lightBlast from './destruction/elemental/lightblast.js';
+import lightSurge from './destruction/elemental/lightsurge.js';
 // destruction/elemental/ - Poison effect gestures (toxic/acid visuals)
 import {
     infect as poisonInfect,
@@ -399,17 +411,26 @@ import {
     dissolve as poisonDissolve
 } from './destruction/elemental/poisonEffectFactory.js';
 // destruction/elemental/ - Earth effect gestures (stone/petrification visuals)
-import {
-    petrify as earthPetrify,
-    burden as earthBurden,
-    rumble as earthRumble,
-    quake as earthQuake,
-    encase as earthEncase,
-    crumble as earthCrumble,
-    shatter as earthShatter,
-    erode as earthErode,
-    fossilize as earthFossilize
-} from './destruction/elemental/earthEffectFactory.js';
+import earthPetrify from './destruction/elemental/earthpetrify.js';
+import earthBurden from './destruction/elemental/earthburden.js';
+import earthRumble from './destruction/elemental/earthrumble.js';
+import earthQuake from './destruction/elemental/earthquake.js';
+import earthEncase from './destruction/elemental/earthencase.js';
+import earthCrumble from './destruction/elemental/earthcrumble.js';
+import earthShatter from './destruction/elemental/earthshatter.js';
+import earthErode from './destruction/elemental/eartherode.js';
+import earthMeditation from './destruction/elemental/earthmeditation.js';
+import earthCrown from './destruction/elemental/earthcrown.js';
+import earthDance from './destruction/elemental/earthdance.js';
+import earthHelix from './destruction/elemental/earthhelix.js';
+import earthPillar from './destruction/elemental/earthpillar.js';
+import earthDrill from './destruction/elemental/earthdrill.js';
+import earthFlourish from './destruction/elemental/earthflourish.js';
+import earthVortex from './destruction/elemental/earthvortex.js';
+import earthBarrage from './destruction/elemental/earthbarrage.js';
+import earthImpact from './destruction/elemental/earthimpact.js';
+import earthBlast from './destruction/elemental/earthblast.js';
+import earthSurge from './destruction/elemental/earthsurge.js';
 // destruction/elemental/ - Nature effect gestures (plant/growth visuals)
 // NOTE: sprout, wilt, and overgrow removed due to crash - needs investigation
 import {
@@ -614,6 +635,7 @@ const electricimpact = electricImpact;
 const electricblast = electricBlast;
 const electricsurge = electricSurge;
 const electriczap = electricZap;
+const electricmeditation = electricMeditation;
 const zap = zapGesture;
 // Void effect gestures (no shatter, absorption/corruption visuals)
 // Absorption variants (becoming void)
@@ -638,6 +660,39 @@ const voidflourish = voidFlourish;
 const voidvortex = voidVortex;
 const voidbarrage = voidBarrage;
 const voidimpact = voidImpact;
+const voidmeditation = voidMeditation;
+// Light effect gestures — lowercase aliases for modern pattern
+const lightblind = lightBlind;
+const lightpurify = lightPurify;
+const lightcleanse = lightCleanse;
+const lightradiate = lightRadiate;
+const lightglow = lightGlow;
+const lightbeacon = lightBeacon;
+const lightascend = lightAscend;
+const lightilluminate = lightIlluminate;
+const lightdissolve = lightDissolve;
+const lightmeditation = lightMeditation;
+// Earth effect gestures — lowercase aliases for modern pattern
+const earthpetrify = earthPetrify;
+const earthburden = earthBurden;
+const earthrumble = earthRumble;
+const earthquake = earthQuake;
+const earthencase = earthEncase;
+const earthcrumble = earthCrumble;
+const earthshatter = earthShatter;
+const eartherode = earthErode;
+const earthmeditation = earthMeditation;
+const earthcrown = earthCrown;
+const earthdance = earthDance;
+const earthhelix = earthHelix;
+const earthpillar = earthPillar;
+const earthdrill = earthDrill;
+const earthflourish = earthFlourish;
+const earthvortex = earthVortex;
+const earthbarrage = earthBarrage;
+const earthimpact = earthImpact;
+const earthblast = earthBlast;
+const earthsurge = earthSurge;
 // Directional rush gestures
 const rushForward = createRushGesture('forward');
 const rushBack = createRushGesture('back');
@@ -1051,6 +1106,7 @@ const TRANSFORM_GESTURES = [
     electricblast,
     electricsurge,
     electriczap,
+    electricmeditation,
     zap,
     // Void - Absorption (becoming void)
     drain,
@@ -1074,6 +1130,7 @@ const TRANSFORM_GESTURES = [
     voidvortex,
     voidbarrage,
     voidimpact,
+    voidmeditation,
     // Smoke - Emanating (source of smoke)
     puff,
     billow,
@@ -1109,6 +1166,19 @@ const TRANSFORM_GESTURES = [
     lightAscend,
     lightIlluminate,
     lightDissolve,
+    // Light Effect - Ring/Spectacle (modern instanced pattern)
+    lightCrown,
+    lightDance,
+    lightHelix,
+    lightPillar,
+    lightDrill,
+    lightFlourish,
+    lightVortex,
+    lightBarrage,
+    lightImpact,
+    lightBlast,
+    lightSurge,
+    lightMeditation,
     // Poison Effect - Afflicted (being poisoned)
     poisonInfect,
     poisonSicken,
@@ -1127,12 +1197,24 @@ const TRANSFORM_GESTURES = [
     // Earth Effect - Emanating (controlling earth)
     earthRumble,
     earthQuake,
+    earthMeditation,
     // Earth Effect - Transform (becoming/breaking stone)
     earthEncase,
     earthCrumble,
     earthShatter,
     earthErode,
-    earthFossilize,
+    // Earth Effect - Ring/Spectacle (modern instanced pattern)
+    earthCrown,
+    earthDance,
+    earthHelix,
+    earthPillar,
+    earthDrill,
+    earthFlourish,
+    earthVortex,
+    earthBarrage,
+    earthImpact,
+    earthBlast,
+    earthSurge,
     // Nature Effect - Afflicted (being overtaken)
     natureEntangle,
     natureRoot,
@@ -1334,12 +1416,12 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Electric (ring/spectacle gestures)
         'electriccrown', 'electricdance', 'electrichelix', 'electricpillar',
         'electricdrill', 'electricflourish', 'electricvortex', 'electricbarrage',
-        'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'zap',
+        'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'electricmeditation', 'zap',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
         // destruction/elemental/ - Void (ring/spectacle gestures)
         'voidcrown', 'voiddance', 'voidhelix', 'voidpillar',
-        'voiddrill', 'voidflourish', 'voidvortex', 'voidbarrage', 'voidimpact',
+        'voiddrill', 'voidflourish', 'voidvortex', 'voidbarrage', 'voidimpact', 'voidmeditation',
         // destruction/elemental/ - Ice Effect (matching fire/water pattern)
         'iceCrown', 'iceDance', 'icePillar', 'iceHelix', 'iceMeditation',
         'iceVortex', 'iceSplash', 'iceEncase', 'iceDrill', 'iceFlourish',
@@ -1347,13 +1429,21 @@ export const GESTURE_CATEGORIES = {
         'icemist', 'iceshiver',
         // destruction/elemental/ - Light Effect (afflicted, emanating, transform)
         'lightBlind', 'lightPurify', 'lightCleanse', 'lightRadiate', 'lightGlow', 'lightBeacon',
-        'lightAscend', 'lightIlluminate', 'lightDissolve',
+        'lightAscend', 'lightIlluminate', 'lightDissolve', 'lightMeditation',
+        // destruction/elemental/ - Light (ring/spectacle gestures)
+        'lightcrown', 'lightdance', 'lighthelix', 'lightpillar',
+        'lightdrill', 'lightflourish', 'lightvortex', 'lightbarrage',
+        'lightimpact', 'lightblast', 'lightsurge', 'lightmeditation',
         // destruction/elemental/ - Poison Effect (afflicted, emanating, transform)
         'poisonInfect', 'poisonSicken', 'poisonOoze', 'poisonSeep', 'poisonToxic',
         'poisonCorrode', 'poisonMelt', 'poisonDecay', 'poisonDissolve',
         // destruction/elemental/ - Earth Effect (afflicted, emanating, transform)
-        'earthPetrify', 'earthBurden', 'earthRumble', 'earthQuake',
-        'earthEncase', 'earthCrumble', 'earthShatter', 'earthErode', 'earthFossilize',
+        'earthPetrify', 'earthBurden', 'earthRumble', 'earthQuake', 'earthMeditation',
+        'earthEncase', 'earthCrumble', 'earthShatter', 'earthErode',
+        // destruction/elemental/ - Earth (ring/spectacle gestures)
+        'earthcrown', 'earthdance', 'earthhelix', 'earthpillar',
+        'earthdrill', 'earthflourish', 'earthvortex', 'earthbarrage',
+        'earthimpact', 'earthblast', 'earthsurge', 'earthmeditation',
         // destruction/elemental/ - Nature Effect (afflicted, emanating, transform)
         'natureEntangle', 'natureRoot', 'natureConstrict', 'natureBloom', 'natureFlourish',
         'natureBlossom',

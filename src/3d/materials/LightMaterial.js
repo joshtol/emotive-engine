@@ -5,19 +5,25 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Standalone light/holy material with radiance effects
+ * @fileoverview Standalone light/holy material — consuming radiance overlay for mascot mesh
  * @author Emotive Engine Team
  * @module materials/LightMaterial
  *
- * ## Master Parameter: radiance (0-1)
+ * ## Master Parameters
  *
- * | Radiance | Visual                    | Effect              | Example       |
- * |----------|---------------------------|---------------------|---------------|
- * | 0.0      | Soft warm glow            | Gentle warmth       | Candlelight   |
- * | 0.5      | Golden rays emanating     | Purifying presence  | Divine light  |
- * | 1.0      | Blinding brilliance       | Overwhelming purity | Ascension     |
+ * radiance (0-1): Controls maximum consumption coverage
+ *   0.0 = Faint edge glow | 0.5 = Partial consumption | 1.0 = Near-total engulfment
  *
- * Light is the opposite of void - it ADDS brightness rather than absorbing it.
+ * progress (0-1): Gesture progress drives the SPREAD of light over time
+ *   0.0 = Light just beginning to creep from edges
+ *   1.0 = Full radiance-dependent consumption achieved
+ *
+ * Consuming light: divine radiance creeps from the silhouette edges inward using
+ * multi-scale FBM noise on object-space position. Fine tendrils of light reach ahead
+ * of the main consumption front. A thin white-hot emission rim marks the boundary
+ * where light meets normal surface. Consumed areas are brilliant golden-white.
+ *
+ * This is the LIGHT counterpart to VoidMaterial's consuming darkness.
  */
 
 import * as THREE from 'three';
@@ -27,42 +33,26 @@ function lerp(a, b, t) {
 }
 
 /**
- * Create a light material with radiance-driven appearance
+ * Create a light material with consuming radiance effect
  *
  * @param {Object} options
- * @param {number} [options.radiance=0.5] - Master parameter (0=glow, 0.5=divine, 1=blinding)
- * @param {string} [options.hue='golden'] - 'golden', 'white', or 'prismatic'
+ * @param {number} [options.radiance=0.5] - Max consumption coverage (0=faint, 1=near-total)
  * @param {number} [options.opacity=0.8] - Base opacity
  * @returns {THREE.ShaderMaterial}
  */
 export function createLightMaterial(options = {}) {
     const {
         radiance = 0.5,
-        hue = 'golden',
         opacity = 0.8
     } = options;
 
-    // Derive properties from radiance
-    const brightness = lerp(0.4, 1.5, radiance);
-    const rayCount = Math.floor(lerp(4, 12, radiance));
-    const rayLength = lerp(0.2, 0.8, radiance);
-    const pulseSpeed = lerp(1.0, 3.0, radiance);
-    const coreIntensity = lerp(0.5, 1.0, radiance);
-    const bloomStrength = lerp(0.2, 0.8, radiance);
-
-    // Map hue to uniform value
-    const hueType = { golden: 0, white: 1, prismatic: 2 }[hue] || 0;
+    const pulseSpeed = lerp(0.8, 2.0, radiance);
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
             uRadiance: { value: radiance },
-            uBrightness: { value: brightness },
-            uRayCount: { value: rayCount },
-            uRayLength: { value: rayLength },
+            uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
-            uCoreIntensity: { value: coreIntensity },
-            uBloomStrength: { value: bloomStrength },
-            uHueType: { value: hueType },
             uOpacity: { value: opacity },
             uTime: { value: 0 }
         },
@@ -71,12 +61,10 @@ export function createLightMaterial(options = {}) {
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
 
             void main() {
                 vPosition = position;
                 vNormal = normalMatrix * normal;
-                vUv = uv;
 
                 vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                 vViewPosition = -mvPosition.xyz;
@@ -87,27 +75,19 @@ export function createLightMaterial(options = {}) {
 
         fragmentShader: /* glsl */`
             uniform float uRadiance;
-            uniform float uBrightness;
-            uniform float uRayCount;
-            uniform float uRayLength;
+            uniform float uProgress;
             uniform float uPulseSpeed;
-            uniform float uCoreIntensity;
-            uniform float uBloomStrength;
-            uniform int uHueType;
             uniform float uOpacity;
             uniform float uTime;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
 
-            // Hash function
             float hash(vec2 p) {
                 return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
             }
 
-            // Soft noise
             float noise(vec2 p) {
                 vec2 i = floor(p);
                 vec2 f = fract(p);
@@ -119,108 +99,113 @@ export function createLightMaterial(options = {}) {
                 );
             }
 
-            // Light rays pattern
-            float rays(vec2 uv, float count, float time) {
-                vec2 centered = uv - 0.5;
-                float angle = atan(centered.y, centered.x);
-                float dist = length(centered);
-
-                // Rotating rays
-                float rayAngle = angle + time * 0.2;
-                float ray = sin(rayAngle * count) * 0.5 + 0.5;
-                ray = pow(ray, 3.0);
-
-                // Fade rays with distance
-                float rayFade = smoothstep(0.5, 0.1, dist);
-
-                return ray * rayFade;
-            }
-
-            // Sparkle effect
-            float sparkle(vec2 uv, float time) {
-                float n = noise(uv * 20.0 + time);
-                return pow(n, 8.0) * 2.0;
-            }
-
             void main() {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
+                float NdotV = abs(dot(normal, viewDir));
+                float edgeness = 1.0 - NdotV;
 
-                vec2 centeredUv = vUv * 2.0 - 1.0;
-                float distFromCenter = length(centeredUv);
+                // ═══ CONSUMPTION FIELD ═══
+                // Object-space position projected to 2D for consistent pattern
+                vec2 pos = vPosition.xz * 2.5 + vec2(vPosition.y * 0.8, -vPosition.y * 0.6);
 
-                // === BASE LIGHT COLOR ===
-                vec3 lightColor;
-                if (uHueType == 0) {
-                    // Golden - warm divine light
-                    lightColor = vec3(1.0, 0.85, 0.4);
-                } else if (uHueType == 1) {
-                    // White - pure holy light
-                    lightColor = vec3(1.0, 0.98, 0.95);
-                } else {
-                    // Prismatic - rainbow shifting
-                    float hueShift = uTime * 0.5 + distFromCenter * 2.0;
-                    lightColor = vec3(
-                        sin(hueShift) * 0.3 + 0.7,
-                        sin(hueShift + 2.094) * 0.3 + 0.7,
-                        sin(hueShift + 4.189) * 0.3 + 0.7
-                    );
-                }
+                // 3-octave FBM — organic creeping consumption boundary
+                float n1 = noise(pos * 1.5 + uTime * 0.10);         // Large-scale (slow drift)
+                float n2 = noise(pos * 4.0 - uTime * 0.15);         // Medium (counter-drift)
+                float n3 = noise(pos * 9.0 + uTime * 0.22);         // Fine detail (faster)
+                float consumeField = n1 * 0.50 + n2 * 0.30 + n3 * 0.20;
 
-                // === CORE GLOW ===
-                float coreGlow = 1.0 - smoothstep(0.0, 0.5, distFromCenter);
-                coreGlow = pow(coreGlow, 1.5) * uCoreIntensity;
+                // Fresnel bias: light creeps from silhouette edges inward
+                consumeField += edgeness * 0.20;
 
-                // === LIGHT RAYS ===
-                float rayPattern = rays(vUv, uRayCount, uTime);
-                float rayMask = smoothstep(0.0, uRayLength, distFromCenter) *
-                               (1.0 - smoothstep(uRayLength, uRayLength + 0.3, distFromCenter));
-                float lightRays = rayPattern * rayMask * uRadiance;
+                // ═══ DISSOLVE IN ═══
+                // Slow ease-in over first 40% — light fades in gently, not a sudden flash.
+                // Squared smoothstep gives a soft-start curve (slow at first, then accelerates).
+                float rawDissolve = smoothstep(0.0, 0.40, uProgress);
+                float dissolveIn = rawDissolve * rawDissolve;
 
-                // === PULSE EFFECT ===
-                float pulse = sin(uTime * uPulseSpeed) * 0.15 + 1.0;
+                // ═══ PROGRESS-DRIVEN THRESHOLD ═══
+                // Progress ramps the consumption from nothing → full radiance-dependent coverage.
+                // Wider ramp (0.05 to 1.0) with squared easing so coverage builds gradually —
+                // tendrils appear first, full consumption comes later.
+                float rawRamp = smoothstep(0.05, 1.0, uProgress);
+                float progressRamp = rawRamp * rawRamp;
 
-                // === BLOOM/HALO ===
-                float bloom = 1.0 - smoothstep(0.3, 0.9, distFromCenter);
-                bloom = pow(bloom, 2.0) * uBloomStrength;
+                // At progress=0: threshold=0.95 (nearly nothing consumed)
+                // At progress=1: threshold based on radiance (0.85 at low, 0.15 at high)
+                float targetThreshold = mix(0.85, 0.15, uRadiance);
+                float threshold = mix(0.95, targetThreshold, progressRamp);
 
-                // === SPARKLES ===
-                float sparkles = sparkle(vUv, uTime) * uRadiance * 0.5;
+                // Sharp consumption boundary
+                float consumed = smoothstep(threshold, threshold - 0.05, consumeField);
 
-                // === FRESNEL RIM ===
-                float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
+                // ═══ TENDRILS ═══
+                // Fine light tendrils reaching AHEAD of the main consumption front
+                float tendrilField = noise(pos * 8.0 + uTime * 0.25) * 0.6
+                                   + noise(pos * 14.0 - uTime * 0.16) * 0.4;
+                float tendrilThreshold = threshold + 0.10;
+                float tendrils = smoothstep(tendrilThreshold, tendrilThreshold - 0.03,
+                                            tendrilField + edgeness * 0.12);
+                tendrils *= 0.4 * smoothstep(0.0, 0.4, uRadiance * progressRamp);
 
-                // === COMBINE ===
-                float intensity = (coreGlow + lightRays + bloom + sparkles) * pulse * uBrightness;
-                intensity += fresnel * 0.3 * uRadiance;
+                float lightMask = max(consumed, tendrils);
 
-                vec3 finalColor = lightColor * intensity;
+                // ═══ LIGHT COLOR ═══
+                // Golden-white divine light — warm, not clinical white
+                vec3 baseLight = vec3(1.0, 0.90, 0.55);
 
-                // Additive bloom effect - brighten beyond 1.0
-                finalColor = min(finalColor * 1.5, vec3(2.0));
+                // Consumed areas: rich golden light with subtle noise variation
+                float colorNoise = noise(pos * 3.0 + uTime * 0.2);
+                // Shift toward pure white in the brightest consumed areas
+                vec3 consumedColor = mix(baseLight, vec3(1.0, 0.97, 0.88), consumed * 0.6);
+                // Subtle internal variation — flowing divine energy, not flat
+                consumedColor *= 0.85 + colorNoise * 0.15;
 
-                // Alpha - light is semi-transparent but additive
-                float alpha = uOpacity * min(1.0, intensity);
-                alpha = max(alpha, coreGlow * 0.5);
+                // Scale brightness with radiance
+                consumedColor *= mix(0.6, 1.2, uRadiance);
 
-                // Edge softness
-                float edgeFade = 1.0 - smoothstep(0.8, 1.0, distFromCenter);
-                alpha *= edgeFade;
+                // ═══ EDGE EMISSION ═══
+                // Hot white rim where light meets normal surface
+                float edgeBand = smoothstep(threshold - 0.05, threshold - 0.01, consumeField)
+                               * smoothstep(threshold + 0.03, threshold, consumeField);
+
+                // Breathing pulse
+                float pulse = 0.85 + 0.15 * sin(uTime * uPulseSpeed);
+                edgeBand *= pulse;
+
+                // White-hot edge (brightest point of the consuming front)
+                // Tied to dissolveIn AND uOpacity so edge dims during fade-out
+                vec3 color = consumedColor * lightMask;
+                color += vec3(1.0, 0.95, 0.80) * edgeBand * uRadiance * 2.5 * dissolveIn * uOpacity;
+
+                // ═══ FRESNEL RIM ═══
+                // Subtle edge glow even before consumption — light begins at the edges
+                float fresnelGlow = pow(edgeness, 3.0) * uRadiance * progressRamp * 0.3;
+                color += baseLight * fresnelGlow;
+
+                // ═══ ALPHA ═══
+                float alpha = lightMask * uOpacity * dissolveIn;
+
+                // Edge emission — scaled by dissolveIn AND uOpacity for smooth retreat
+                float edgeAlpha = edgeBand * uRadiance * 0.6 * dissolveIn * dissolveIn * uOpacity;
+                alpha = max(alpha, edgeAlpha);
+
+                // Fresnel rim alpha — also respects uOpacity
+                alpha = max(alpha, fresnelGlow * dissolveIn * uOpacity);
 
                 if (alpha < 0.01) discard;
 
-                gl_FragColor = vec4(finalColor, alpha);
+                gl_FragColor = vec4(color, alpha);
             }
         `,
 
         transparent: true,
-        blending: THREE.NormalBlending,
+        blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
     });
 
     material.userData.radiance = radiance;
-    material.userData.hue = hue;
     material.userData.elementalType = 'light';
 
     return material;
@@ -240,14 +225,14 @@ export function updateLightMaterial(material, deltaTime) {
  */
 export function getLightPhysics(radiance = 0.5) {
     return {
-        gravity: lerp(0.5, -0.2, radiance),    // Light floats upward at high radiance
+        gravity: lerp(0.5, -0.2, radiance),
         drag: lerp(0.1, 0.3, radiance),
         bounce: 0.0,
         disperseOverTime: true,
         lifetime: lerp(1.5, 3.0, radiance),
         emitLight: true,
         lightIntensity: radiance,
-        purifyNearby: radiance > 0.6          // High radiance cleanses void
+        purifyNearby: radiance > 0.6
     };
 }
 

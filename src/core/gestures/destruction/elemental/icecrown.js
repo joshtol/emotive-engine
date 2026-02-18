@@ -60,8 +60,8 @@ const ICECROWN_CONFIG = {
             }
         },
         count: 1,
-        scale: 2.2,
-        models: ['ice-ring'],
+        scale: 1.0,
+        models: ['ice-crown'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.75,
@@ -88,7 +88,7 @@ const ICECROWN_CONFIG = {
             // Per-gesture atmospheric particles: cold mist below crown
             atmospherics: [{
                 preset: 'mist',
-                targets: ['ice-ring'],
+                targets: ['ice-crown'],
                 anchor: 'below',
                 intensity: 0.3,
                 sizeScale: 1.0,

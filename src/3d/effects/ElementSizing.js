@@ -51,12 +51,17 @@ export const MODEL_SIZES = {
     'crystal-medium':  { class: 'small',  variance: 0.2 },
     'crystal-cluster': { class: 'medium', variance: 0.2 },
     'ice-spike':       { class: 'small',  variance: 0.25 },
+    'ice-crown':       { class: 'large',  variance: 0.15 },  // Crown ring GLB
 
     // Earth models - chunky, substantial feel
     'rock-chunk-small':  { class: 'small',  variance: 0.25 },
     'rock-chunk-medium': { class: 'medium', variance: 0.2 },
     'rock-cluster':      { class: 'large',  variance: 0.2 },
     'stone-slab':        { class: 'medium', variance: 0.25 },
+    'earth-ring':        { class: 'large',  variance: 0.15 },  // Ring GLB — horizontal crown/helix
+    'stone-ring':        { class: 'large',  variance: 0.15 },  // Stone ring GLB — secondary ring
+    'boulder':           { class: 'large',  variance: 0.2 },   // Large rock chunk
+    'stone-spike':       { class: 'small',  variance: 0.25 },  // Pointed stone spike
 
     // Nature models - organic, varied sizes
     'vine-tendril':    { class: 'medium', variance: 0.3 },
@@ -106,10 +111,14 @@ export const MODEL_SIZES = {
     'void-crown':        { class: 'large',  variance: 0.15 },  // Crown ring GLB
 
     // Light models - radiant, geometric
-    'light-ray':       { class: 'medium', variance: 0.25 },
+    'light-ray':       { class: 'medium', variance: 0.25 },  // Procedural elongated diamond
+    'light-orb':       { class: 'small',  variance: 0.2 },   // Procedural glowing sphere
     'prism-shard':     { class: 'small',  variance: 0.2 },
-    'halo-ring':       { class: 'large',  variance: 0.2 },
-    'sparkle-star':    { class: 'tiny',   variance: 0.3 }
+    'light-ring':       { class: 'large',  variance: 0.2 },
+    'sparkle-star':    { class: 'tiny',   variance: 0.3 },
+    'sun-ring':        { class: 'large',  variance: 0.15 },  // Ornate secondary ring
+    'light-burst':     { class: 'medium', variance: 0.2 },   // Radial starburst
+    'light-crown':     { class: 'large',  variance: 0.15 }   // Crown-specific ring
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -136,12 +145,17 @@ export const MODEL_ORIENTATIONS = {
     'crystal-medium':  { mode: 'outward', tiltAngle: 0.2 },
     'crystal-cluster': { mode: 'outward', tiltAngle: 0.25 },
     'ice-spike':       { mode: 'outward', tiltAngle: 0.05 },
+    'ice-crown':       { mode: 'flat',    tiltAngle: 0 },    // Crown ring GLB — horizontal above head
 
     // Earth
     'rock-chunk-small':  { mode: 'outward', tiltAngle: 0.35 },
     'rock-chunk-medium': { mode: 'outward', tiltAngle: 0.3 },
     'rock-cluster':      { mode: 'outward', tiltAngle: 0.15 },
     'stone-slab':        { mode: 'flat',    tiltAngle: 0.1 },
+    'earth-ring':        { mode: 'flat',    tiltAngle: 0 },    // Ring GLB — XY plane, rotate to horizontal
+    'stone-ring':        { mode: 'flat',    tiltAngle: 0 },    // Ring GLB — XY plane, rotate to horizontal
+    'boulder':           { mode: 'outward', tiltAngle: 0.2 },  // Outward from surface
+    'stone-spike':       { mode: 'outward', tiltAngle: 0.05 }, // Points outward like ice-spike
 
     // Nature
     'vine-tendril':    { mode: 'tangent', tiltAngle: 0.2 },
@@ -191,10 +205,14 @@ export const MODEL_ORIENTATIONS = {
     'void-crown':        { mode: 'flat',         tiltAngle: 0 },   // Crown ring GLB — horizontal above head
 
     // Light
-    'light-ray':       { mode: 'outward', tiltAngle: 0.1 },
+    'light-ray':       { mode: 'outward', tiltAngle: 0.1 },  // Procedural elongated diamond
+    'light-orb':       { mode: 'outward', tiltAngle: 0 },    // Procedural glowing sphere
     'prism-shard':     { mode: 'outward', tiltAngle: 0.2 },
-    'halo-ring':       { mode: 'outward-flat', tiltAngle: 0 },
-    'sparkle-star':    { mode: 'outward', tiltAngle: 0.3 }
+    'light-ring':       { mode: 'flat',         tiltAngle: 0 },
+    'sparkle-star':    { mode: 'outward', tiltAngle: 0.3 },
+    'sun-ring':        { mode: 'flat',    tiltAngle: 0 },    // XY plane ring — horizontal
+    'light-burst':     { mode: 'outward', tiltAngle: 0.15 }, // Radial starburst
+    'light-crown':     { mode: 'flat',    tiltAngle: 0 }     // Crown ring GLB — horizontal above head
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════

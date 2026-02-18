@@ -288,15 +288,15 @@ export class ElementInstancedSpawner {
             return null;
         }
 
-        // Load all models for this element type
-        const geometries = [];
-        for (const modelName of config.models) {
+        // Load all models for this element type (parallel)
+        const loadPromises = config.models.map(modelName => {
             const modelPath = `${this.assetsBasePath}/${config.basePath}${modelName}`;
-            const geometry = await this._loadGeometry(modelPath);
-            if (geometry) {
-                geometries.push({ geometry, name: modelName.replace('.glb', '') });
-            }
-        }
+            return this._loadGeometry(modelPath).then(geometry => {
+                return geometry ? { geometry, name: modelName.replace('.glb', '') } : null;
+            });
+        });
+        const results = await Promise.all(loadPromises);
+        const geometries = results.filter(r => r !== null);
 
         if (geometries.length === 0) {
             console.error(`[ElementInstancedSpawner] No models loaded for ${elementType}`);
@@ -373,6 +373,26 @@ export class ElementInstancedSpawner {
         // Procedural geometry: void-disk is a circular billboard disk (for singularity/hollow)
         if (modelPath.includes('void-disk.glb')) {
             const geometry = new THREE.CircleGeometry(0.5, 32);
+            this.geometryCache.set(modelPath, geometry);
+            return geometry;
+        }
+
+        // Procedural geometry: light-ray is an elongated diamond (billboard ray of light)
+        if (modelPath.includes('light-ray.glb')) {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0.6);     // Top point (elongated)
+            shape.lineTo(0.12, 0);    // Right
+            shape.lineTo(0, -0.6);    // Bottom point
+            shape.lineTo(-0.12, 0);   // Left
+            shape.closePath();
+            const geometry = new THREE.ShapeGeometry(shape);
+            this.geometryCache.set(modelPath, geometry);
+            return geometry;
+        }
+
+        // Procedural geometry: light-orb is a glowing sphere
+        if (modelPath.includes('light-orb.glb')) {
+            const geometry = new THREE.IcosahedronGeometry(0.4, 3);
             this.geometryCache.set(modelPath, geometry);
             return geometry;
         }
@@ -461,6 +481,9 @@ export class ElementInstancedSpawner {
             }
             if (elementConfig?.resetFlash && material) {
                 elementConfig.resetFlash(material);
+            }
+            if (elementConfig?.resetWetness && material) {
+                elementConfig.resetWetness(material);
             }
             if (elementConfig?.resetShaderAnimation && material) {
                 elementConfig.resetShaderAnimation(material);
@@ -561,6 +584,9 @@ export class ElementInstancedSpawner {
         if (elementConfig?.resetFlash && material) {
             elementConfig.resetFlash(material);
         }
+        if (elementConfig?.resetWetness && material) {
+            elementConfig.resetWetness(material);
+        }
         if (elementConfig?.resetShaderAnimation && material) {
             elementConfig.resetShaderAnimation(material);
         }
@@ -581,8 +607,6 @@ export class ElementInstancedSpawner {
 
         // Determine spawn mode type
         const modeType = typeof mode === 'object' ? (mode.type || 'surface') : mode;
-
-        // Debug: log spawn mode
         DEBUG && console.log(`[ElementInstancedSpawner] spawn ${elementType}: modeType=${modeType}`);
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -954,6 +978,11 @@ export class ElementInstancedSpawner {
             elementConfig.setFlash(material, animation.flash);
         }
 
+        // Apply wetness from animation config (moisture sheen for earth/ice elements)
+        if (elementConfig?.setWetness && animation?.wetness !== undefined) {
+            elementConfig.setWetness(material, animation.wetness);
+        }
+
         // Store parameterAnimation for atmospheric energy evaluation per frame
         // The first named parameter (temperature, turbulence, charge) drives particle energy
         if (animation?.parameterAnimation) {
@@ -1036,7 +1065,10 @@ export class ElementInstancedSpawner {
      */
     _spawnAxisTravel(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
         const ctx = this._getSpawnContext(elementType);
-        if (!ctx) return [];
+        if (!ctx) {
+            console.warn(`[ElementInstancedSpawner] _spawnAxisTravel: no context for ${elementType}`);
+            return [];
+        }
 
         const { pool, merged, config: elementConfig } = ctx;
 

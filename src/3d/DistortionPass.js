@@ -35,7 +35,6 @@ export const DistortionShader = {
         varying vec2 vUv;
 
         void main() {
-            // Sample distortion map raw (all 4 channels)
             vec4 distSample = texture2D(tDistortion, vUv);
 
             // R/G = signed UV offset (pre-multiplied by strength/falloff)
@@ -44,10 +43,21 @@ export const DistortionShader = {
             // Hard clamp: safety rail against runaway accumulation
             offset = clamp(offset, vec2(-0.04), vec2(0.04));
 
-            // Apply UV warp to scene
-            vec4 color = texture2D(tDiffuse, vUv + offset);
+            // Base scene warp — full vec4 preserves alpha
+            // (canvas is transparent + premultipliedAlpha; alpha=1.0 would make BG opaque black)
+            vec4 scene = texture2D(tDiffuse, vUv + offset);
 
-            gl_FragColor = color;
+            // B channel = chromatic aberration UV spread (written by light distortion)
+            // Prism split: red refracts outward more, blue less (matches real dispersion)
+            // B is a direct UV spread amount (~0.008-0.016), NOT scaled by offset.
+            // When B=0 (non-light elements), chrShift=vec2(0), R/B read same UV as scene.
+            float chromatic = distSample.b * uGlobalStrength;
+            vec2 chrDir = length(offset) > 0.0001 ? normalize(offset) : vec2(0.0);
+            vec2 chrShift = chrDir * chromatic;
+            scene.r = texture2D(tDiffuse, vUv + offset + chrShift).r;
+            scene.b = texture2D(tDiffuse, vUv + offset - chrShift).b;
+
+            gl_FragColor = scene;
         }
     `
 };

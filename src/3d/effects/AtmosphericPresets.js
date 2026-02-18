@@ -18,6 +18,8 @@ import { createSmokeParticleMaterial } from '../materials/SmokeParticleMaterial.
 import { createMistParticleMaterial } from '../materials/MistParticleMaterial.js';
 import { createSprayParticleMaterial } from '../materials/SprayParticleMaterial.js';
 import { createVoidParticleMaterial } from '../materials/VoidParticleMaterial.js';
+import { createFireflyParticleMaterial } from '../materials/FireflyParticleMaterial.js';
+import { createDustParticleMaterial } from '../materials/DustParticleMaterial.js';
 
 // =================================================================================================
 // MATERIAL FACTORIES (keyed by preset material name)
@@ -28,6 +30,8 @@ const MATERIAL_FACTORIES = {
     mist: createMistParticleMaterial,
     spray: createSprayParticleMaterial,
     void: createVoidParticleMaterial,
+    firefly: createFireflyParticleMaterial,
+    dust: createDustParticleMaterial,
 };
 
 // =================================================================================================
@@ -255,6 +259,125 @@ export const ATMOSPHERIC_PRESETS = {
         endSizeMultiplier: 0.8,
         opacity: 0.55,
         color: [0.4, 0.7, 1.0],
+    },
+
+    /**
+     * Firefly: twinkling motes of warm golden light drifting lazily.
+     * Best for: light gestures, divine radiance, holy aura.
+     *
+     * Sparse, long-lived, tiny additive points with per-particle blink cycle.
+     * High turbulence creates brownian wandering. Slight upward bias
+     * gives the impression of ascending sparks of divine energy.
+     */
+    firefly: {
+        materialType: 'firefly',
+        maxParticles: 40,
+        spawnRate: 10,
+        lifetimeMin: 2.0,
+        lifetimeMax: 3.5,
+        sizeMin: 0.10,
+        sizeMax: 0.22,
+        spawnOffsetY: 0.0,
+        initialSpeedMin: 0.02,
+        initialSpeedMax: 0.08,
+        spreadXZ: 0.20,
+        directionY: 0.3,
+        buoyancy: 0.015,
+        drag: 0.6,
+        turbulence: 0.25,
+        rotationSpeedMax: 0.0,
+        endSizeMultiplier: 0.7,
+        opacity: 0.90,
+        color: [1.0, 0.85, 0.4],
+    },
+
+    /**
+     * Earth Dust: Fine brown particles rising slowly from disturbed ground.
+     * High turbulence creates drifting, settling-dust feel.
+     * Per-particle color variation: warm brown → reddish-brown (iron-stained soil).
+     * Best for: earth gestures, tremors, impacts, petrification.
+     */
+    'earth-dust': {
+        materialType: 'dust',
+        maxParticles: 80,
+        spawnRate: 20,
+        lifetimeMin: 1.5,
+        lifetimeMax: 3.0,
+        sizeMin: 0.04,
+        sizeMax: 0.14,                  // Wider range — some larger motes
+        spawnOffsetY: -0.1,
+        initialSpeedMin: 0.01,
+        initialSpeedMax: 0.05,
+        spreadXZ: 0.30,
+        directionY: 0.4,
+        buoyancy: 0.008,
+        drag: 1.2,
+        turbulence: 0.20,
+        rotationSpeedMax: 0.8,
+        endSizeMultiplier: 0.4,
+        opacity: 0.60,
+        color: [0.55, 0.45, 0.35],          // Warm brown earth tone
+        colorVariant: [0.65, 0.40, 0.22],   // Reddish-brown variant (iron-stained soil)
+        gravity: 0.0,
+    },
+
+    /**
+     * Earth Gravel: Angular rock fragments falling with gravity.
+     * Low turbulence, high gravity — debris from seismic events.
+     * Wider size range includes occasional larger pebbles.
+     * Best for: earthshatter, earthquake, earthblast, impacts.
+     */
+    'earth-gravel': {
+        materialType: 'dust',
+        maxParticles: 60,
+        spawnRate: 25,
+        lifetimeMin: 0.8,
+        lifetimeMax: 1.6,
+        sizeMin: 0.03,
+        sizeMax: 0.14,                  // Wider range — rare larger pebbles
+        spawnOffsetY: 0.15,
+        initialSpeedMin: 0.08,
+        initialSpeedMax: 0.20,
+        spreadXZ: 0.40,
+        directionY: 0.1,
+        buoyancy: 0.0,
+        drag: 0.3,
+        turbulence: 0.05,
+        rotationSpeedMax: 3.0,
+        endSizeMultiplier: 0.9,
+        opacity: 0.80,
+        color: [0.45, 0.40, 0.35],          // Dark grey-brown stone
+        colorVariant: [0.55, 0.42, 0.28],   // Warmer brown variant
+        gravity: 0.4,
+    },
+
+    /**
+     * Earth Pebble: Larger heavy stone chunks falling with strong gravity.
+     * Few particles, high opacity, fast fall. Tumbling debris boulders.
+     * Best for: earthcrumble, earthquake, earthblast — heavy impact moments.
+     */
+    'earth-pebble': {
+        materialType: 'dust',
+        maxParticles: 24,
+        spawnRate: 8,
+        lifetimeMin: 0.6,
+        lifetimeMax: 1.2,
+        sizeMin: 0.10,
+        sizeMax: 0.22,
+        spawnOffsetY: 0.10,
+        initialSpeedMin: 0.15,
+        initialSpeedMax: 0.35,
+        spreadXZ: 0.50,
+        directionY: 0.3,
+        buoyancy: 0.0,
+        drag: 0.15,
+        turbulence: 0.02,
+        rotationSpeedMax: 4.0,
+        endSizeMultiplier: 0.95,
+        opacity: 0.90,
+        color: [0.40, 0.36, 0.30],          // Dark stone
+        colorVariant: [0.50, 0.35, 0.20],   // Brown variant
+        gravity: 0.8,
     },
 };
 

@@ -27,6 +27,7 @@ import {
     createWaterDistortionMaterial,
     createIceDistortionMaterial,
     createVoidDistortionMaterial,
+    createLightDistortionMaterial,
 } from '../materials/DistortionMaterials.js';
 
 // Smoke/mist particle materials are now imported by AtmosphericPresets.js
@@ -64,9 +65,11 @@ import {
     setInstancedIceGestureGlow,
     setInstancedIceBloomThreshold,
     setInstancedIceCutout,
+    setInstancedIceWetness,
     resetCutout as resetIceCutout,
     setGrain as setIceGrain,
     resetGrain as resetIceGrain,
+    resetWetness as resetIceWetness,
     resetAnimation as resetIceAnimation
 } from '../materials/InstancedIceMaterial.js';
 
@@ -97,6 +100,34 @@ import {
     resetGrain as resetVoidGrain,
     resetAnimation as resetVoidAnimation
 } from '../materials/InstancedVoidMaterial.js';
+
+import {
+    createInstancedLightMaterial,
+    updateInstancedLightMaterial,
+    setInstancedLightArcAnimation,
+    setInstancedLightGestureGlow,
+    setInstancedLightBloomThreshold,
+    setInstancedLightCutout,
+    resetCutout as resetLightCutout,
+    setGrain as setLightGrain,
+    resetGrain as resetLightGrain,
+    resetAnimation as resetLightAnimation
+} from '../materials/InstancedLightMaterial.js';
+
+import {
+    createInstancedEarthMaterial,
+    updateInstancedEarthMaterial,
+    setInstancedEarthArcAnimation,
+    setInstancedEarthGestureGlow,
+    setInstancedEarthBloomThreshold,
+    setInstancedEarthCutout,
+    setInstancedEarthWetness,
+    resetCutout as resetEarthCutout,
+    setGrain as setEarthGrain,
+    resetGrain as resetEarthGrain,
+    resetWetness as resetEarthWetness,
+    resetAnimation as resetEarthAnimation
+} from '../materials/InstancedEarthMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELEMENT REGISTRATIONS (after all imports are resolved)
@@ -171,7 +202,8 @@ ElementTypeRegistry.register('ice', {
         'crystal-medium.glb',
         'crystal-cluster.glb',
         'ice-spike.glb',
-        'ice-ring.glb'
+        'ice-ring.glb',
+        'ice-crown.glb'
     ],
     createMaterial: createInstancedIceMaterial,
     updateMaterial: updateInstancedIceMaterial,
@@ -182,6 +214,8 @@ ElementTypeRegistry.register('ice', {
     resetCutout: resetIceCutout,
     setGrain: setIceGrain,
     resetGrain: resetIceGrain,
+    setWetness: setInstancedIceWetness,
+    resetWetness: resetIceWetness,
     resetShaderAnimation: resetIceAnimation,
     scaleMultiplier: 1.2,
     distortion: {
@@ -266,6 +300,77 @@ ElementTypeRegistry.register('void', {
         },
         billboard: true,
         strength: 0.028,
+    },
+});
+
+ElementTypeRegistry.register('light', {
+    basePath: 'models/Elements/Light/',
+    models: [
+        'light-ray.glb',
+        'light-orb.glb',
+        'sparkle-star.glb',
+        'prism-shard.glb',
+        'light-ring.glb',
+        'sun-ring.glb',
+        'light-burst.glb',
+        'light-crown.glb'
+    ],
+    createMaterial: createInstancedLightMaterial,
+    updateMaterial: updateInstancedLightMaterial,
+    setShaderAnimation: setInstancedLightArcAnimation,
+    setGestureGlow: setInstancedLightGestureGlow,
+    setBloomThreshold: setInstancedLightBloomThreshold,
+    setCutout: setInstancedLightCutout,
+    resetCutout: resetLightCutout,
+    setGrain: setLightGrain,
+    resetGrain: resetLightGrain,
+    resetShaderAnimation: resetLightAnimation,
+    scaleMultiplier: 1.3,
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createLightDistortionMaterial,
+        transform: {
+            padding: new THREE.Vector3(0.4, 0.5, 0.4), // More vertical — light rises
+        },
+        billboard: true,
+        strength: 0.004,  // Subtle holy shimmer — between fire (0.005) and water/ice (0.003)
+    },
+});
+
+ElementTypeRegistry.register('earth', {
+    basePath: 'models/Elements/Earth/',
+    models: [
+        'rock-chunk-small.glb',
+        'rock-chunk-medium.glb',
+        'rock-cluster.glb',
+        'stone-slab.glb',
+        'earth-ring.glb',
+        'stone-ring.glb',
+        'boulder.glb',
+        'stone-spike.glb',
+        'earth-crown.glb'
+    ],
+    createMaterial: createInstancedEarthMaterial,
+    updateMaterial: updateInstancedEarthMaterial,
+    setShaderAnimation: setInstancedEarthArcAnimation,
+    setGestureGlow: setInstancedEarthGestureGlow,
+    setBloomThreshold: setInstancedEarthBloomThreshold,
+    setCutout: setInstancedEarthCutout,
+    resetCutout: resetEarthCutout,
+    setGrain: setEarthGrain,
+    resetGrain: resetEarthGrain,
+    setWetness: setInstancedEarthWetness,
+    resetWetness: resetEarthWetness,
+    resetShaderAnimation: resetEarthAnimation,
+    scaleMultiplier: 1.0,
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createFireDistortionMaterial,  // Reuse fire distortion (earth has ~0 strength)
+        transform: {
+            padding: new THREE.Vector3(0.2, 0.2, 0.2),
+        },
+        billboard: true,
+        strength: 0.0,  // Earth is solid — no distortion by default
     },
 });
 

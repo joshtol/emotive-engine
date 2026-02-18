@@ -2710,29 +2710,54 @@ export class Core3DManager {
         // LIGHT OVERLAY - Radiance/holy effect
         // ═══════════════════════════════════════════════════════════════════════════
         if (blended.lightOverlay && blended.lightOverlay.enabled) {
+            // Cancel any in-progress fade-out (new gesture started while old was fading)
+            this._lightOverlayFadingOut = false;
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
                 if (!this._lightOverlayMesh) {
                     this._lightMaterial = createLightMaterial({
                         radiance: blended.lightOverlay.radiance || 0.7,
-                        hue: 'golden',
                         opacity: 0.35
                     });
                     this._lightOverlayMesh = new THREE.Mesh(mesh.geometry, this._lightMaterial);
                     this._lightOverlayMesh.scale.setScalar(1.04);
                     mesh.add(this._lightOverlayMesh);
                     this._lightOverlayMesh.renderOrder = mesh.renderOrder + 3;
+                }
 
-                    // Spawn 3D light elements if gesture requests it via spawnMode
-                    const {spawnMode} = blended.lightOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('light')) {
+                // Spawn 3D light elements if gesture requests it via spawnMode
+                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.lightOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    // Handle array spawnMode (spawn layers) by stringifying for reliable signature
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+                    const spawnSignature = `light:${modeSignature}:${duration}:${animation?.type || 'default'}`;
+
+                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
+                    this._lightSpawnedSignatures = this._lightSpawnedSignatures || new Set();
+
+                    // Only spawn if this signature hasn't been spawned yet in this session
+                    if (!this._lightSpawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit('light'); // Exit light elements (crossfade)
                         this.elementSpawner.spawn('light', {
                             intensity: blended.lightOverlay.strength || 0.8,
-                            mode: spawnMode
+                            mode: spawnMode,
+                            animation,      // Pass animation config with modelOverrides
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: duration || 2000
                         });
+                        this._lightSpawnedSignatures.add(spawnSignature);
+                        this._lightSpawnSignature = spawnSignature;
                     }
                 }
+
+                // Update light overlay material each frame
                 if (this._lightMaterial?.uniforms?.uTime) {
                     this._lightMaterial.uniforms.uTime.value = blended.lightOverlay.time;
                 }
@@ -2742,21 +2767,60 @@ export class Core3DManager {
                 if (this._lightMaterial?.uniforms?.uOpacity) {
                     this._lightMaterial.uniforms.uOpacity.value = Math.min(0.35, blended.lightOverlay.strength);
                 }
+                if (this._lightMaterial?.uniforms?.uProgress) {
+                    this._lightMaterial.uniforms.uProgress.value = blended.lightOverlay.progress ?? 0;
+                }
+
+                // Track progress for exit detection
+                this._currentLightProgress = blended.lightOverlay.progress ?? null;
             }
         } else if (this._lightOverlayMesh) {
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._lightOverlayMesh.parent) {
-                mesh.remove(this._lightOverlayMesh);
+            // Fade out overlay smoothly — reverse the consuming light so it retreats
+            // instead of snapping off. Mirrors the void overlay fade-out pattern.
+            if (!this._lightOverlayFadingOut) {
+                this._lightOverlayFadingOut = true;
+                // Trigger element exit once at fade start
+                if (this.elementSpawner) {
+                    this.elementSpawner.triggerExit('light');
+                }
+                // Clear spawn tracking so next gesture session starts fresh
+                this._lightSpawnSignature = null;
+                this._lightSpawnedSignatures = null;
             }
-            if (this._lightMaterial) {
-                this._lightMaterial.dispose();
-                this._lightMaterial = null;
-            }
-            this._lightOverlayMesh = null;
 
-            // Despawn light elements
-            if (this.elementSpawner) {
-                this.elementSpawner.despawn('light');
+            // Decay progress back toward 0 — consuming light retreats the way it crept in
+            if (this._lightMaterial?.uniforms?.uProgress) {
+                this._lightMaterial.uniforms.uProgress.value *= 0.88;
+            }
+            // Also decay opacity
+            if (this._lightMaterial?.uniforms?.uOpacity) {
+                this._lightMaterial.uniforms.uOpacity.value *= 0.88;
+
+                if (this._lightMaterial.uniforms.uOpacity.value < 0.005) {
+                    // Fully faded — safe to remove
+                    const mesh = this.renderer?.coreMesh;
+                    if (mesh && this._lightOverlayMesh.parent) {
+                        mesh.remove(this._lightOverlayMesh);
+                    }
+                    this._lightMaterial.dispose();
+                    this._lightMaterial = null;
+                    this._lightOverlayMesh = null;
+                    this._lightOverlayFadingOut = false;
+                    this._currentLightProgress = null;
+                }
+            } else {
+                // No material — remove immediately
+                const mesh = this.renderer?.coreMesh;
+                if (mesh && this._lightOverlayMesh.parent) {
+                    mesh.remove(this._lightOverlayMesh);
+                }
+                if (this._lightMaterial) {
+                    this._lightMaterial.dispose();
+                    this._lightMaterial = null;
+                }
+                this._lightOverlayMesh = null;
+                this._lightOverlayFadingOut = false;
+                this._currentLightProgress = null;
             }
         }
 
@@ -2800,9 +2864,11 @@ export class Core3DManager {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // EARTH OVERLAY - Stone/petrification effect + 3D rock chunk spawning
+        // EARTH OVERLAY - Consuming petrification effect + 3D rock chunk spawning
         // ═══════════════════════════════════════════════════════════════════════════
         if (blended.earthOverlay && blended.earthOverlay.enabled) {
+            // Cancel any in-progress fade-out (new gesture started while old was fading)
+            this._earthOverlayFadingOut = false;
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
@@ -2816,16 +2882,44 @@ export class Core3DManager {
                     mesh.add(this._earthOverlayMesh);
                     this._earthOverlayMesh.renderOrder = mesh.renderOrder + 3;
 
-                    // Spawn 3D rock chunks only if gesture explicitly requests it via spawnMode
-                    // spawnMode: 'orbit' | 'impact' | 'burst' | 'none' (default)
-                    const {spawnMode} = blended.earthOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('earth')) {
-                        this.elementSpawner.spawn('earth', {
-                            intensity: blended.earthOverlay.strength || 0.8,
-                            mode: spawnMode
-                        });
+                    // Enable ambient occlusion — contact shadows between rock chunks
+                    if (this.renderer) {
+                        this.renderer.setAmbientOcclusion(true);
                     }
                 }
+
+                // Spawn 3D earth elements if gesture requests it via spawnMode
+                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.earthOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    // Create spawn signature from key config properties to detect gesture changes
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+                    const spawnSignature = `earth:${modeSignature}:${duration}:${animation?.type || 'default'}`;
+
+                    // Track spawned signatures to prevent re-spawning
+                    this._earthSpawnedSignatures = this._earthSpawnedSignatures || new Set();
+
+                    if (!this._earthSpawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit('earth');
+                        this.elementSpawner.spawn('earth', {
+                            intensity: blended.earthOverlay.strength || 0.8,
+                            mode: spawnMode,
+                            animation,
+                            models,
+                            count,
+                            scale,
+                            embedDepth,
+                            gestureDuration: duration || 2000
+                        }).catch(err => {
+                            console.error('[Core3DManager] Earth spawn error:', err);
+                        });
+                        this._earthSpawnedSignatures.add(spawnSignature);
+                        this._earthSpawnSignature = spawnSignature;
+                    }
+                }
+
+                // Update earth overlay material each frame
                 if (this._earthMaterial?.uniforms?.uTime) {
                     this._earthMaterial.uniforms.uTime.value = blended.earthOverlay.time;
                 }
@@ -2835,21 +2929,69 @@ export class Core3DManager {
                 if (this._earthMaterial?.uniforms?.uOpacity) {
                     this._earthMaterial.uniforms.uOpacity.value = Math.min(0.9, blended.earthOverlay.strength);
                 }
+                if (this._earthMaterial?.uniforms?.uProgress) {
+                    this._earthMaterial.uniforms.uProgress.value = blended.earthOverlay.progress ?? 0;
+                }
+
+                // Track progress for exit detection
+                this._currentEarthProgress = blended.earthOverlay.progress ?? null;
             }
         } else if (this._earthOverlayMesh) {
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._earthOverlayMesh.parent) {
-                mesh.remove(this._earthOverlayMesh);
+            // Fade out overlay smoothly — reverse the consuming stone so it retreats
+            if (!this._earthOverlayFadingOut) {
+                this._earthOverlayFadingOut = true;
+                // Trigger element exit once at fade start
+                if (this.elementSpawner) {
+                    this.elementSpawner.triggerExit('earth');
+                }
+                // Clear spawn tracking so next gesture session starts fresh
+                this._earthSpawnSignature = null;
+                this._earthSpawnedSignatures = null;
             }
-            if (this._earthMaterial) {
-                this._earthMaterial.dispose();
-                this._earthMaterial = null;
-            }
-            this._earthOverlayMesh = null;
 
-            // Despawn rock chunks
-            if (this.elementSpawner) {
-                this.elementSpawner.despawn('earth');
+            // Decay progress back toward 0 — consuming stone retreats
+            if (this._earthMaterial?.uniforms?.uProgress) {
+                this._earthMaterial.uniforms.uProgress.value *= 0.88;
+            }
+            // Also decay opacity
+            if (this._earthMaterial?.uniforms?.uOpacity) {
+                this._earthMaterial.uniforms.uOpacity.value *= 0.88;
+
+                if (this._earthMaterial.uniforms.uOpacity.value < 0.005) {
+                    // Fully faded — safe to remove
+                    const mesh = this.renderer?.coreMesh;
+                    if (mesh && this._earthOverlayMesh.parent) {
+                        mesh.remove(this._earthOverlayMesh);
+                    }
+                    this._earthMaterial.dispose();
+                    this._earthMaterial = null;
+                    this._earthOverlayMesh = null;
+                    this._earthOverlayFadingOut = false;
+                    this._currentEarthProgress = null;
+
+                    // Disable AO unless ice is still active
+                    if (this.renderer && !this._iceOverlayMesh) {
+                        this.renderer.setAmbientOcclusion(false);
+                    }
+                }
+            } else {
+                // No material — remove immediately
+                const mesh = this.renderer?.coreMesh;
+                if (mesh && this._earthOverlayMesh.parent) {
+                    mesh.remove(this._earthOverlayMesh);
+                }
+                if (this._earthMaterial) {
+                    this._earthMaterial.dispose();
+                    this._earthMaterial = null;
+                }
+                this._earthOverlayMesh = null;
+                this._earthOverlayFadingOut = false;
+                this._currentEarthProgress = null;
+
+                // Disable AO unless ice is still active
+                if (this.renderer && !this._iceOverlayMesh) {
+                    this.renderer.setAmbientOcclusion(false);
+                }
             }
         }
 
@@ -3304,6 +3446,9 @@ export class Core3DManager {
                 ?? this._currentIceProgress
                 ?? this._currentElectricProgress
                 ?? this._currentVoidProgress
+                ?? this._currentLightProgress
+                ?? this._currentEarthProgress
+                ?? this._currentNatureProgress
                 ?? null;
             this.elementSpawner.update(deltaTime / 1000, gestureProgress);  // Convert ms to seconds
         }
@@ -3438,6 +3583,7 @@ export class Core3DManager {
             this.elementSpawner.setElementBloomThreshold('water', elementBloomThreshold);
             this.elementSpawner.setElementBloomThreshold('ice', elementBloomThreshold);
             this.elementSpawner.setElementBloomThreshold('electricity', elementBloomThreshold);
+            this.elementSpawner.setElementBloomThreshold('earth', elementBloomThreshold);
         }
 
         // Update isolated glow layer for gesture effects (glow/flash)

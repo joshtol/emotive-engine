@@ -55,6 +55,13 @@ import {
     resetGrain,
     resetAnimation
 } from './cores/InstancedAnimationCore.js';
+import {
+    WETNESS_UNIFORMS_GLSL,
+    WETNESS_FUNC_GLSL,
+    createWetnessUniforms,
+    setWetness,
+    resetWetness
+} from './cores/WetnessCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ICE DEFAULTS
@@ -68,6 +75,7 @@ const ICE_DEFAULTS = {
     internalCracks: 0.8,
     subsurfaceScatter: 0.15,
     glowScale: 0.1,
+    wetSpeed: 0.5,          // Moderate pace for ice melt/moisture
     fadeInDuration: 0.2,
     fadeOutDuration: 0.4
 };
@@ -509,6 +517,9 @@ uniform vec3 uTint;
 uniform float uGlowIntensity;
 uniform float uBloomThreshold;
 
+// Shared wetness system (WetnessCore)
+${WETNESS_UNIFORMS_GLSL}
+
 // Screen-space refraction uniforms
 uniform sampler2D uBackgroundTexture;
 uniform vec2 uResolution;
@@ -534,6 +545,7 @@ varying float vVerticalGradient;
 varying vec2 vUv;
 
 ${NOISE_GLSL}
+${WETNESS_FUNC_GLSL}
 ${ICE_COLOR_GLSL}
 ${CUTOUT_PATTERN_FUNC_GLSL}
 
@@ -808,14 +820,18 @@ void main() {
     specContrib *= (1.0 - frostMask); // Frost is matte — kills specular completely
     color += specContrib;
 
+    // Spatial wetness mask — modulates wet film specular for natural variation.
+    // Uses shared WetnessCore. crackProximity=0.0 for now (coarseEdge computed later).
+    float wetMask = calculateWetMask(vPosition, vRandomSeed, localTime + vRandomSeed * 10.0, 0.0);
+
     // Wet film specular — secondary tighter highlight on smooth surface.
     // Creates the "water on glass" look. Uses smooth world normal, not flat facets.
-    // Power 120 = very sharp pinpoints. Layered on top of the broader faceted spec.
+    // Power 120 = very sharp pinpoints. Spatially modulated by wetMask.
     vec3 wetReflDir = reflect(-viewDir, worldNormal);
     float wetSpec = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 120.0);
     wetSpec += pow(max(dot(wetReflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 120.0) * 0.5;
     wetSpec += pow(max(dot(wetReflDir, normalize(vec3(0.0, 0.6, -0.8))), 0.0), 120.0) * 0.3;
-    color += vec3(1.0) * wetSpec * 0.8 * (1.0 - frostMask);
+    color += vec3(1.0) * wetSpec * 0.8 * (1.0 - frostMask) * wetMask;
 
     // Broad wet sheen — soft glossy highlight from thin water film on ice surface.
     // Medium specular power = visible gloss patches, not uniform brightening.
@@ -824,7 +840,10 @@ void main() {
     float sheen2 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.8, -0.5))), 0.0), 24.0) * 0.5;
     float sheen3 = pow(max(dot(wetReflDir, normalize(vec3(0.6, 0.4, 0.6))), 0.0), 16.0) * 0.3;
     float wetSheen = sheen1 + sheen2 + sheen3;
-    color += vec3(0.92, 0.95, 1.0) * wetSheen * 0.06 * (1.0 - frostMask) * (1.0 - uMelt * 0.5);
+    color += vec3(0.92, 0.95, 1.0) * wetSheen * 0.06 * (1.0 - frostMask) * (1.0 - uMelt * 0.5) * wetMask;
+
+    // Subtle spatial darkening from moisture (ice is translucent, so minimal)
+    color = applyWetDarkening(color, wetMask, 0.92);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // SOFT CLAMP — cap the smooth glass BASE before adding bright features
@@ -1140,6 +1159,8 @@ export function createInstancedIceMaterial(options = {}) {
             uFadeOutDuration: { value: fadeOutDuration },
             // Animation uniforms (cutout, glow, etc. from shared core)
             ...createAnimationUniforms(),
+            // Shared wetness system — melt drives wetness (frozen=0.3, melting=1.0)
+            ...createWetnessUniforms({ wetness: melt * 0.7 + 0.3, wetSpeed: ICE_DEFAULTS.wetSpeed }),
             // Override glowScale if provided in options
             uGlowScale: { value: glowScale },
             // Ice uniforms
@@ -1198,6 +1219,12 @@ export function setInstancedIceMelt(material, melt) {
     material.uniforms.uMelt.value = melt;
     material.uniforms.uFrostAmount.value = ICE_DEFAULTS.frostAmount * (1.0 - melt);
     material.uniforms.uInternalCracks.value = ICE_DEFAULTS.internalCracks * (1.0 - melt * 0.5);
+
+    // More melt = more surface moisture (range 0.3-1.0, frozen ice still has some)
+    if (material.uniforms.uWetness) {
+        material.uniforms.uWetness.value = melt * 0.7 + 0.3;
+    }
+
     material.userData.melt = melt;
 }
 
@@ -1250,6 +1277,15 @@ export function setInstancedIceBloomThreshold(material, threshold) {
  */
 export const setInstancedIceArcAnimation = setShaderAnimation;
 
+/**
+ * Configure wetness on ice elements.
+ * @param {THREE.ShaderMaterial} material - Instanced ice material
+ * @param {Object} config - Wetness configuration { wetness, wetSpeed }
+ */
+export function setInstancedIceWetness(material, config) {
+    setWetness(material, config);
+}
+
 // Re-export animation types and shared functions for convenience
 export {
     ANIMATION_TYPES,
@@ -1265,7 +1301,9 @@ export {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
+    setWetness,
+    resetWetness
 };
 
 export default {
@@ -1276,12 +1314,15 @@ export default {
     setInstancedIceGestureGlow,
     setInstancedIceBloomThreshold,
     setInstancedIceCutout,
+    setInstancedIceWetness,
     setInstancedIceArcAnimation,
     setShaderAnimation,
     setGestureGlow,
     setGlowScale,
     setCutout,
     setGrain,
+    setWetness,
+    resetWetness,
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
     CUTOUT_BLEND,

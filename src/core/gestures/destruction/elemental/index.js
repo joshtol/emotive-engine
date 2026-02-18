@@ -39,20 +39,8 @@ export {
     ICE_EFFECT_VARIANTS
 } from './iceEffectFactory.js';
 
-// Light effect gestures
-export {
-    createLightEffectGesture,
-    blind,
-    purify,
-    cleanse,
-    radiate as lightRadiate,
-    glow,
-    beacon,
-    ascend,
-    illuminate,
-    dissolve as lightDissolve,
-    LIGHT_EFFECT_VARIANTS
-} from './lightEffectFactory.js';
+// Light effect gesture factory
+export { buildLightEffectGesture } from './lightEffectFactory.js';
 
 // Poison effect gestures
 export {
@@ -69,20 +57,40 @@ export {
     POISON_EFFECT_VARIANTS
 } from './poisonEffectFactory.js';
 
-// Earth effect gestures
-export {
-    createEarthEffectGesture,
-    petrify,
-    burden,
-    rumble,
-    quake,
-    encase as earthEncase,
-    crumble,
-    shatter as earthShatter,
-    erode,
-    fossilize,
-    EARTH_EFFECT_VARIANTS
-} from './earthEffectFactory.js';
+// Earth effect gesture factory
+export { buildEarthEffectGesture } from './earthEffectFactory.js';
+
+// Earth effect gestures (self-contained gesture files)
+export { default as earthPetrify } from './earthpetrify.js';
+export { default as earthBurden } from './earthburden.js';
+export { default as earthRumble } from './earthrumble.js';
+export { default as earthQuake } from './earthquake.js';
+export { default as earthMeditation } from './earthmeditation.js';
+export { default as earthEncase } from './earthencase.js';
+export { default as earthCrumble } from './earthcrumble.js';
+export { default as earthShatter } from './earthshatter.js';
+export { default as earthErode } from './eartherode.js';
+export { default as earthcrown } from './earthcrown.js';
+export { default as earthdance } from './earthdance.js';
+export { default as earthhelix } from './earthhelix.js';
+export { default as earthpillar } from './earthpillar.js';
+export { default as earthdrill } from './earthdrill.js';
+export { default as earthflourish } from './earthflourish.js';
+export { default as earthvortex } from './earthvortex.js';
+export { default as earthbarrage } from './earthbarrage.js';
+export { default as earthimpact } from './earthimpact.js';
+export { default as earthblast } from './earthblast.js';
+export { default as earthsurge } from './earthsurge.js';
+
+// Earth effect variants list for discovery
+export const EARTH_EFFECT_VARIANTS = [
+    'earthpetrify', 'earthburden',
+    'earthrumble', 'earthquake', 'earthmeditation',
+    'earthencase', 'earthcrumble', 'earthshatter', 'eartherode',
+    'earthcrown', 'earthdance', 'earthhelix', 'earthpillar',
+    'earthdrill', 'earthflourish', 'earthvortex', 'earthbarrage',
+    'earthimpact', 'earthblast', 'earthsurge'
+];
 
 // Nature effect gestures
 export {
