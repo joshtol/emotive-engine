@@ -382,13 +382,13 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════════
 
     // Petrification-driven base color — dark cool grey (Seiryu limestone)
-    vec3 warmGrey  = vec3(0.38, 0.35, 0.30);  // Warm medium grey — slightly warmer/earthier
-    vec3 coolGrey  = vec3(0.31, 0.31, 0.33);  // Cool medium grey (more petrified)
+    vec3 warmGrey  = vec3(0.42, 0.36, 0.28);  // Warm ochre-grey — visible earthy hue
+    vec3 coolGrey  = vec3(0.33, 0.32, 0.33);  // Cool medium grey (more petrified)
     vec3 baseColor = mix(warmGrey, coolGrey, uPetrification);
 
     // Per-instance geological color shift — each rock is unique
     float instanceWarm = fract(vRandomSeed * 3.71) * 2.0 - 1.0;
-    baseColor *= vec3(1.0 + instanceWarm * 0.04, 1.0 + instanceWarm * 0.01, 1.0 - instanceWarm * 0.03);
+    baseColor *= vec3(1.0 + instanceWarm * 0.08, 1.0 + instanceWarm * 0.03, 1.0 - instanceWarm * 0.06);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // MINERAL COLOR PATCHES — subtle geological variety
@@ -407,10 +407,10 @@ void main() {
     float mineralNoise3 = noise(vPosition * 2.5 + vec3(vRandomSeed * 6.0, 0.0, 3.0));
     float warmMask = smoothstep(0.45, 0.68, mineralNoise3);
 
-    // Blue-grey dominant patches — reinforces cool base tone
-    vec3 blueGrey = vec3(0.18, 0.20, 0.26);
+    // Blue-grey patches — sparse cool accents, not dominant
+    vec3 blueGrey = vec3(0.22, 0.23, 0.26);  // Warmer blue-grey
     float blueGreyMask = smoothstep(0.35, 0.18, mineralNoise2);
-    baseColor = mix(baseColor, blueGrey, blueGreyMask * 0.22);
+    baseColor = mix(baseColor, blueGrey, blueGreyMask * 0.12);  // Halved from 0.22
 
     // Per-pixel shade variation — reduced amplitude to not overpower mineral patches
     vec3 warpOffset = vec3(
@@ -421,10 +421,10 @@ void main() {
     vec3 warpedPos = vPosition + warpOffset;
     float shadeNoise = noise(warpedPos * 8.0 + vec3(vRandomSeed * 5.5));
     baseColor *= 0.88 + shadeNoise * 0.24;  // ±12% — stronger tonal variation
+    // Warm-only tint variation — noise selects warm vs neutral, never cool
     float tintNoise = noise(warpedPos * 5.0 + vec3(vRandomSeed * 2.2, 1.7, 0.4));
-    vec3 warmShift = baseColor * vec3(1.05, 0.99, 0.93);
-    vec3 coolShift = baseColor * vec3(0.94, 0.99, 1.06);
-    baseColor = mix(coolShift, warmShift, tintNoise);
+    vec3 warmShift = baseColor * vec3(1.06, 1.00, 0.91);
+    baseColor = mix(baseColor, warmShift, tintNoise);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // SURFACE NOISE + PROCEDURAL BUMP — computed BEFORE diffuse lighting
@@ -473,12 +473,19 @@ void main() {
     float NdotL3 = max(0.0, dot(bumpedNormal, lightDir3));
 
     // Directional diffuse — primary light dominant for clear light/shadow contrast
-    float diffuse = NdotL1 * 0.78 + NdotL2 * 0.14 + NdotL3 * 0.08;
+    float bumpDiffuse = NdotL1 * 0.78 + NdotL2 * 0.14 + NdotL3 * 0.08;
+
+    // Face-normal diffuse — sharp per-polygon contrast (chiseled stone planes)
+    float faceNdotL1 = max(0.0, dot(faceNormal, lightDir1));
+    float faceDiffuse = faceNdotL1 * 0.78 + max(0.0, dot(faceNormal, lightDir2)) * 0.14 + max(0.0, dot(faceNormal, lightDir3)) * 0.08;
+
+    // Blend: 60% bump (detail) + 40% face (sharp polygon contrast)
+    float diffuse = bumpDiffuse * 0.6 + faceDiffuse * 0.4;
 
     // Cool ambient with hemisphere variation (sky vs ground)
     float skyAmt = bumpedNormal.y * 0.5 + 0.5;
-    vec3 ambientUp   = vec3(0.22, 0.22, 0.23);  // Raised — survives AO+shadow multiply
-    vec3 ambientDown = vec3(0.11, 0.11, 0.12);  // Raised — shadow-side faces stay readable
+    vec3 ambientUp   = vec3(0.24, 0.23, 0.21);  // Warm sky ambient
+    vec3 ambientDown = vec3(0.15, 0.13, 0.10);  // Warm brown ground bounce — shadows stay readable
     vec3 ambient = mix(ambientDown, ambientUp, skyAmt);
 
     vec3 stoneColor = baseColor * (ambient + vec3(diffuse));
@@ -526,8 +533,9 @@ void main() {
     // Multiplicative tint: warm zones get red/green boosted, blue reduced.
     // This is like color grading — survives all prior processing.
     float warmAmount = min(ochreMask * 0.48 + warmMask * 0.38, 0.55);
-    warmAmount *= smoothstep(0.05, 0.4, diffuse);  // Only show warm color in lit areas — shadows stay neutral grey
-    vec3 warmTint = vec3(1.18, 1.06, 0.82);  // Stronger warm ochre — more visible mineral contrast
+    // Base warmth everywhere (shadows stay earthy, not grey), extra in lit areas
+    warmAmount = warmAmount * 0.4 + warmAmount * 0.6 * smoothstep(0.05, 0.4, diffuse);
+    vec3 warmTint = vec3(1.20, 1.07, 0.80);  // Stronger warm ochre — more visible mineral contrast
     stoneColor *= mix(vec3(1.0), warmTint, warmAmount);
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -540,9 +548,9 @@ void main() {
     float strataY = vPosition.y * 6.0 + vRandomSeed * 3.0;
     float strataWarp = noise(vPosition * 2.0 + vec3(0.0, vRandomSeed * 5.0, 0.0));
     float strata = sin(strataY + strataWarp * 2.0) * 0.5 + 0.5;
-    vec3 warmBand = stoneColor * vec3(1.03, 1.01, 0.97);
-    vec3 coolBand = stoneColor * vec3(0.97, 0.99, 1.03);
-    stoneColor = mix(coolBand, warmBand, strata);
+    vec3 warmBand = stoneColor * vec3(1.04, 1.01, 0.96);
+    vec3 neutralBand = stoneColor * vec3(0.99, 0.99, 1.00);  // Neutral, not cool
+    stoneColor = mix(neutralBand, warmBand, strata);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // LAYER 3: CRACKS + CALCITE VEINS — Seiryu stone-inspired fractures
@@ -564,11 +572,15 @@ void main() {
     float calciteNoise = noise(vec3(crackPos * 0.7, vRandomSeed * 3.0 + 7.0));
     float isCalcite = smoothstep(0.42, 0.58, calciteNoise);  // ~40% of cracks become calcite
 
+    // Per-crack width variation — geological fractures taper and vary
+    float widthNoise = noise(vec3(crackPos * 1.2, vRandomSeed * 8.0));
+    float crackWidth = mix(0.03, 0.08, widthNoise);  // hairline → wide gape
+
     // Dark crack lines — empty crevices (deeper on dark stone)
-    float darkCrackLine = 1.0 - smoothstep(0.0, 0.045, crackEdge);
+    float darkCrackLine = 1.0 - smoothstep(0.0, crackWidth, crackEdge);
     darkCrackLine *= breakMask * (1.0 - isCalcite);  // only where NOT calcite
-    vec3 crackColor = vec3(0.04, 0.035, 0.03);  // Deeper crevice shadow
-    stoneColor = mix(stoneColor, crackColor, darkCrackLine * 0.90);
+    vec3 crackColor = vec3(0.06, 0.04, 0.02);  // Warm dark crevice — retains earthy hue
+    stoneColor = mix(stoneColor, crackColor, darkCrackLine * 0.95);
 
     // Calcite veins — bright white lines tracing fracture paths
     float calciteLine = 1.0 - smoothstep(0.0, 0.05, crackEdge);
@@ -672,11 +684,11 @@ void main() {
     vec3 baseSpecNormal = mix(faceNormal, normalize(vWorldNormal), specWet * 0.35);
     vec3 specNormal = normalize(baseSpecNormal + ripplePerturbation);
 
-    // Power: dry=80 (tight matte glint) → wet=24 (broad sheen, not mirror)
-    float specPower = mix(80.0, 24.0, specWet);
+    // Power: dry=48 (broader catch light) → wet=24 (broad sheen, not mirror)
+    float specPower = mix(48.0, 24.0, specWet);
 
-    // Intensity: dry=0.06 (barely-there) → wet=0.18 (visible but not chrome)
-    float specIntensity = mix(0.06, 0.18, specWet);
+    // Intensity: dry=0.14 (visible sheen on lit faces) → wet=0.22 (clear gloss)
+    float specIntensity = mix(0.14, 0.22, specWet);
 
     // Color: dry=cool grey → wet=warm neutral (wet stone reflects warm ground bounce)
     vec3 drySpecColor = vec3(0.15, 0.15, 0.17);
@@ -715,6 +727,12 @@ void main() {
     // Stone body stays well under threshold (matte rock never blooms).
     // Wet specular and mica added AFTER soft clamp — they can bloom naturally.
     // ═══════════════════════════════════════════════════════════════════════════════
+
+    // ─── Final warm color grade ───
+    // All upstream processing dilutes warmth through multiple mix/multiply stages.
+    // This final pass ensures the stone always reads as warm earthy rock, not concrete.
+    // Strong warm filter: boost red channel, suppress blue heavily.
+    stoneColor *= vec3(1.12, 1.03, 0.85);
 
     vec3 color = stoneColor * uIntensity * uGlowScale;
 

@@ -2179,6 +2179,7 @@ export class Core3DManager {
 
                     // Render after original mesh
                     this._waterOverlayMesh.renderOrder = mesh.renderOrder + 1;
+
                 }
 
                 // Spawn 3D water elements - runs every frame but signature prevents respawn
@@ -2554,6 +2555,11 @@ export class Core3DManager {
                     this._iceOverlayMesh.scale.setScalar(1.01);
                     mesh.add(this._iceOverlayMesh);
                     this._iceOverlayMesh.renderOrder = mesh.renderOrder + 1;
+
+                    // Enable ambient occlusion — contact shadows between ice chunks
+                    if (this.renderer) {
+                        this.renderer.setAmbientOcclusion(true);
+                    }
                 }
 
                 // Spawn 3D ice crystals - matching fire spawn pattern with signature tracking
@@ -2667,6 +2673,11 @@ export class Core3DManager {
                 this._iceMaterial = null;
             }
             this._iceOverlayMesh = null;
+
+            // Disable AO unless earth is still active
+            if (this.renderer && !this._earthOverlayMesh) {
+                this.renderer.setAmbientOcclusion(false);
+            }
 
             // Restore mascot's original material values
             if (this._iceOriginalMaterial && mesh?.material) {

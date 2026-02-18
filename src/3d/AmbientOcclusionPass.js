@@ -309,7 +309,7 @@ class AmbientOcclusionPass extends Pass {
         this.needsSwap = true;
 
         /** AO strength. 0 = no effect, higher = stronger. */
-        this.intensity = 1.5;
+        this.intensity = 1.3;
 
         /** Fine-scale pixel radius at depth=1.0 — tight contact shadows. */
         this.fineRadius = 120.0;
@@ -330,7 +330,7 @@ class AmbientOcclusionPass extends Pass {
         this.shadowEnabled = true;
 
         /** Contact shadow strength. 0 = off, 1 = full black. */
-        this.shadowIntensity = 0.55;
+        this.shadowIntensity = 0.65;
 
         this._fullWidth = width;
         this._fullHeight = height;
@@ -340,7 +340,7 @@ class AmbientOcclusionPass extends Pass {
         // ── Internal half-resolution render targets ──
         const halfOpts = {
             format: THREE.RGBAFormat,
-            type: THREE.UnsignedByteType,
+            type: THREE.HalfFloatType,     // 16-bit — eliminates shadow banding from 8-bit quantization
             minFilter: THREE.LinearFilter,
             magFilter: THREE.LinearFilter
         };

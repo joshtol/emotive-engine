@@ -303,21 +303,21 @@ export const ATMOSPHERIC_PRESETS = {
         spawnRate: 20,
         lifetimeMin: 1.5,
         lifetimeMax: 3.0,
-        sizeMin: 0.04,
-        sizeMax: 0.14,                  // Wider range — some larger motes
+        sizeMin: 0.02,                  // Tiny specks
+        sizeMax: 0.10,                  // Up to visible motes (not chunks)
         spawnOffsetY: -0.1,
         initialSpeedMin: 0.01,
-        initialSpeedMax: 0.05,
+        initialSpeedMax: 0.04,
         spreadXZ: 0.30,
         directionY: 0.4,
         buoyancy: 0.008,
         drag: 1.2,
         turbulence: 0.20,
-        rotationSpeedMax: 0.8,
+        rotationSpeedMax: 0.3,          // Slow tumble — dust barely rotates
         endSizeMultiplier: 0.4,
-        opacity: 0.60,
-        color: [0.55, 0.45, 0.35],          // Warm brown earth tone
-        colorVariant: [0.65, 0.40, 0.22],   // Reddish-brown variant (iron-stained soil)
+        opacity: 0.35,                  // Subtle haze — barely perceptible motes
+        color: [0.60, 0.48, 0.32],          // Warmer tan dust
+        colorVariant: [0.70, 0.45, 0.25],   // Warm ochre variant
         gravity: 0.0,
     },
 

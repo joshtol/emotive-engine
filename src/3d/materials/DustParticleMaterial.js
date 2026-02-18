@@ -119,30 +119,23 @@ void main() {
     vec2 center = vUv - 0.5;
     float dist = length(center);
 
-    // ═══ ANGULAR SHAPE ═══
-    // Noise-eroded circle creates irregular rocky particle shape.
-    // Each particle has unique shape from aSeed.
+    // ═══ SOFT MOTE SHAPE ═══
+    // Smooth radial falloff — dust reads as out-of-focus floating motes,
+    // not sharp geometric debris. Slight angular wobble keeps them organic.
     float ang = atan(center.y, center.x);
+    float wobble = sin(ang * 3.0 + vSeed * 20.0) * 0.04;  // Subtle, not angular
+    float effectiveRadius = 0.38 + wobble;
 
-    // Angular edge modulation — makes circle into rough polygon
-    float edgeNoise = 0.0;
-    edgeNoise += sin(ang * 3.0 + vSeed * 20.0) * 0.08;
-    edgeNoise += sin(ang * 5.0 + vSeed * 50.0) * 0.05;
-    edgeNoise += sin(ang * 8.0 + vSeed * 80.0) * 0.03;
-
-    // Effective radius varies per angle — creates angular debris shape
-    float effectiveRadius = 0.35 + edgeNoise;
-
-    // Sharp edge falloff — matte opaque particle, not soft cloud
-    float shape = smoothstep(effectiveRadius, effectiveRadius - 0.06, dist);
+    // Soft Gaussian-like falloff — core opaque, edges dissolve
+    float shape = smoothstep(effectiveRadius, effectiveRadius * 0.15, dist);
 
     // Billboard clip
     if (shape < 0.01) discard;
 
     // ═══ SURFACE TEXTURE ═══
-    // Subtle brightness variation across particle surface — gritty not flat
+    // Very subtle brightness variation — dust is mostly uniform, not gritty
     float grain = hash21(floor(vUv * 8.0 + vSeed * 10.0));
-    float surfaceVar = 0.85 + grain * 0.30;
+    float surfaceVar = 0.92 + grain * 0.16;
 
     // ═══ LIFE FADE ═══
     float fadeIn = smoothstep(0.0, 0.10, vLife);
@@ -154,8 +147,8 @@ void main() {
     float seedVar = vSeed * 0.15;
     vec3 color = particleColor * surfaceVar * (0.9 + seedVar);
 
-    // Slight darkening at edges for depth
-    color *= mix(0.7, 1.0, smoothstep(effectiveRadius, 0.0, dist));
+    // Gentle center brightening — dust motes catch light at core
+    color *= mix(0.85, 1.0, smoothstep(effectiveRadius, 0.0, dist));
 
     float alpha = shape * fadeIn * fadeOut * uOpacity;
     if (alpha < 0.005) discard;
