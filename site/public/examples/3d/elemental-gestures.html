@@ -725,8 +725,7 @@
             maxZoom: 2.0,
             materialVariant: 'multiplexer',
             assetBasePath: '/assets',
-            // DEV: Only prewarm earth while iterating on earth shader. Others load on demand.
-            preloadElements: ['earth'],
+            preloadElements: [],
             backgroundPrewarm: false
         });
 
@@ -899,69 +898,65 @@
             btn.dataset.element = element;
             btn.dataset.description = gesture.description || '';
 
-            btn.innerHTML = `
-                <span class="emoji">${gesture.emoji || elementMeta[element].emoji}</span>
-                <span class="name">${gesture.name}</span>
-            `;
+            // Pure DOM API — no innerHTML parsing overhead
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'emoji';
+            emojiSpan.textContent = gesture.emoji || elementMeta[element].emoji;
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'name';
+            nameSpan.textContent = gesture.name;
+            btn.appendChild(emojiSpan);
+            btn.appendChild(nameSpan);
 
             return btn;
         }
 
         /**
-         * Populate gesture grids from API
+         * Populate gesture grids from registry names.
+         * warmUpGestures yields names WITHOUT triggering lazy factory getters,
+         * so this is instant — zero module evaluation, zero frame drops.
+         * Factories load on-demand when the user actually clicks a gesture.
          */
-        function populateGestures() {
-            // Get all available gestures from the mascot
-            const allGestures = mascot.getAvailableGestures();
-
-            // Clear loading states
+        function populateGesturesProgressively() {
             Object.values(grids).forEach(grid => {
                 if (grid) grid.innerHTML = '';
             });
 
-            // Filter to only elemental gestures and group by element
-            const grouped = {};
-            elements.forEach(el => grouped[el] = []);
+            const gestureCounts = {};
+            elements.forEach(el => { gestureCounts[el] = 0; });
 
-            allGestures.forEach(gesture => {
-                // Skip gestures that use the shatter system (enableShatter is false)
-                if (gesture.usesShatter) {
-                    return;
-                }
-                const element = detectElement(gesture.name);
-                if (element && grouped[element]) {
-                    grouped[element].push(gesture);
-                    allElementalGestures.push({ ...gesture, element });
+            mascot.warmUpGestures({
+                prewarmFactories: false, // factories resolve on-demand at click time
+                onBatch(batch) {
+                    const frags = {};
+                    batch.forEach(gesture => {
+                        if (gesture.name.startsWith('shatter')) return;
+                        const element = detectElement(gesture.name);
+                        if (!element || !grids[element]) return;
+
+                        if (!frags[element]) frags[element] = document.createDocumentFragment();
+                        frags[element].appendChild(createGestureButton(gesture, element));
+                        allElementalGestures.push({ ...gesture, element });
+                        gestureCounts[element]++;
+                    });
+
+                    Object.entries(frags).forEach(([element, frag]) => {
+                        grids[element].appendChild(frag);
+                    });
+                },
+                onComplete() {
+                    elements.forEach(el => {
+                        const c = gestureCounts[el];
+                        if (c === 0 && grids[el]) {
+                            grids[el].innerHTML = '<div class="empty-state">No gestures</div>';
+                        }
+                        if (counts[el]) counts[el].textContent = c;
+                        if (headerCounts[el]) headerCounts[el].textContent = `(${c})`;
+                    });
+                    statTotal.textContent = allElementalGestures.length;
+                    updateVisibleCount();
                 }
             });
-
-            // Sort each group alphabetically
-            Object.keys(grouped).forEach(element => {
-                grouped[element].sort((a, b) => a.name.localeCompare(b.name));
-            });
-
-            // Populate grids
-            Object.entries(grouped).forEach(([element, gestures]) => {
-                const grid = grids[element];
-                if (!grid) return;
-
-                if (gestures.length === 0) {
-                    grid.innerHTML = '<div class="empty-state">No gestures</div>';
-                    return;
-                }
-
-                gestures.forEach(gesture => {
-                    grid.appendChild(createGestureButton(gesture, element));
-                });
-
-                // Update counts
-                if (counts[element]) counts[element].textContent = gestures.length;
-                if (headerCounts[element]) headerCounts[element].textContent = `(${gestures.length})`;
-            });
-
-            // Update stats
-            statTotal.textContent = allElementalGestures.length;
-            updateVisibleCount();
         }
 
         /**
@@ -1570,8 +1565,8 @@
         // ═══════════════════════════════════════════════════════════════════════════
 
         setTimeout(() => {
-            populateGestures();
-            // Initial snapshot
+            populateGesturesProgressively();
+            // Initial snapshot taken in onComplete callback
             gpuMonitor.snapshot('initial');
         }, 100);
     </script>

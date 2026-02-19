@@ -34,10 +34,10 @@ export class GestureCache {
         this.propertyCache = new Map();
         this.compositionCache = new Map();
         this.pluginCache = new Map();
-        this.stats = { 
-            hits: 0, 
-            misses: 0, 
-            loadTime: 0, 
+        this.stats = {
+            hits: 0,
+            misses: 0,
+            loadTime: 0,
             cacheSize: 0,
             gestureHits: 0,
             propertyHits: 0,
@@ -45,6 +45,16 @@ export class GestureCache {
         };
         this.isInitialized = false;
         this.loadStartTime = 0;
+        // Deferred: don't call initialize() here — it iterates the entire
+        // GESTURE_REGISTRY which would trigger all lazy getters at module load time.
+        // Instead, initialize lazily on first cache access via _ensureInitialized().
+    }
+
+    /**
+     * Ensure the cache is initialized (lazy — first access triggers init)
+     */
+    _ensureInitialized() {
+        if (this.isInitialized) return;
         this.initialize();
     }
 
@@ -165,6 +175,7 @@ export class GestureCache {
      * Get a cached gesture
      */
     getGesture(name) {
+        this._ensureInitialized();
         // Check core gesture cache first
         if (this.gestureCache.has(name)) {
             this.stats.hits++;
@@ -187,6 +198,7 @@ export class GestureCache {
      * Get cached gesture properties
      */
     getGestureProperties(name) {
+        this._ensureInitialized();
         if (this.propertyCache.has(name)) {
             this.stats.hits++;
             this.stats.propertyHits++;
@@ -201,6 +213,7 @@ export class GestureCache {
      * Get cached gesture combination
      */
     getGestureCombination(gesture1, gesture2) {
+        this._ensureInitialized();
         const key = `${gesture1}+${gesture2}`;
         if (this.compositionCache.has(key)) {
             this.stats.hits++;

@@ -41,7 +41,12 @@ import ParticleSystem from '../core/ParticleSystem.js'; // Reuse 2D particles!
 import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion, listEmotions, hasEmotion } from '../core/emotions/index.js';
-import { getGesture, listGestures, GESTURE_CATEGORIES } from '../core/gestures/index.js';
+import { getGesture, listGestures, warmUpGestures as _warmUpGestures, GESTURE_CATEGORIES } from '../core/gestures/index.js';
+import { FrameBudgetScheduler } from './FrameBudgetScheduler.js';
+// Import from ElementRegistrations (not ElementTypeRegistry directly) to ensure
+// all element types are registered — the register() calls are side effects in
+// ElementRegistrations.js that rollup will tree-shake if imported via the bare registry.
+import { ElementTypeRegistry } from './effects/ElementRegistrations.js';
 import { applySSSPreset as applySSS, SSSPresets } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
@@ -304,7 +309,9 @@ export class EmotiveMascot3D {
                 minZoom: this.config.minZoom,
                 maxZoom: this.config.maxZoom,
                 materialVariant: this.config.materialVariant,
-                assetBasePath: this.config.assetBasePath
+                assetBasePath: this.config.assetBasePath,
+                preloadElements: this.config.preloadElements,
+                backgroundPrewarm: this.config.backgroundPrewarm
             });
 
             // Cache 2D canvas context to prevent repeated getContext() calls
@@ -399,6 +406,9 @@ export class EmotiveMascot3D {
 
         this.lastFrameTime = currentTime;
 
+        // Measure frame work time for budget scheduler
+        const frameStart = performance.now();
+
         // Render 3D core - check again as state may have changed
         if (this.core3D && !this._destroyed) {
             this.core3D.render(deltaTime);
@@ -475,6 +485,12 @@ export class EmotiveMascot3D {
                 // Render particles with emotion color
                 this.particleSystem.render(this.ctx2D, glowColor, null);
             }
+        }
+
+        // Frame-budget scheduler: process one queued work item if budget allows
+        if (this._frameBudgetScheduler) {
+            const frameTime = performance.now() - frameStart;
+            this._frameBudgetScheduler.tick(frameTime);
         }
 
         // Continue loop
@@ -1668,6 +1684,62 @@ export class EmotiveMascot3D {
     }
 
     /**
+     * Populate gesture names instantly, then pre-warm factories in the background.
+     *
+     * Phase 1 (instant): onBatch/onComplete fire synchronously with gesture names.
+     * Phase 2 (background): Lazy factory getters resolve one-per-frame via the
+     * FrameBudgetScheduler, only when the render frame had budget to spare.
+     * Phase 3 (background): Element model GLBs preload serially through the scheduler.
+     * Each preload is async (fetch off-thread), but the scheduler waits for each
+     * to complete (including sync parse/compile) before starting the next.
+     *
+     * @param {Object} options
+     * @param {Function} [options.onBatch] - Called with gesture name/category objects
+     * @param {Function} [options.onComplete] - Called when all names are yielded (DOM ready)
+     * @param {Function} [options.onFactoriesReady] - Called when all lazy factories are pre-warmed
+     * @param {boolean} [options.prewarmFactories=true] - Whether to pre-warm factories in background
+     * @param {boolean} [options.prewarmModels=false] - Whether to pre-warm element model GLBs.
+     *   Disabled by default — each type's GLB parse + shader compile is 50-200ms of
+     *   synchronous work that can't be broken into frame-budget-safe chunks.
+     * @param {Function} [options.onModelsReady] - Called when all element models are pre-loaded
+     */
+    warmUpGestures({ onBatch, onComplete, onFactoriesReady, prewarmFactories = true, prewarmModels = false, onModelsReady } = {}) {
+        // Phase 1: Yield names instantly
+        const factoryWork = _warmUpGestures({ onBatch, onComplete });
+
+        // Phase 2: Queue factory pre-warming into frame-budget scheduler
+        if (prewarmFactories && factoryWork && factoryWork.length > 0) {
+            if (!this._frameBudgetScheduler) {
+                this._frameBudgetScheduler = new FrameBudgetScheduler();
+            }
+            this._frameBudgetScheduler.enqueueAll(factoryWork);
+            if (onFactoriesReady && !prewarmModels) {
+                this._frameBudgetScheduler.onDrain = onFactoriesReady;
+            }
+        }
+
+        // Phase 3: Queue element model preloading (async work items)
+        // Each preload fetches GLBs, merges geometry, compiles shaders.
+        // The scheduler serializes them so synchronous post-fetch work doesn't overlap.
+        // NOTE: Each type's post-fetch sync work (50-200ms) exceeds frame budget.
+        // The scheduler prevents CONCURRENT loads but can't prevent per-type drops.
+        if (prewarmModels && this.core3D?.elementSpawner) {
+            if (!this._frameBudgetScheduler) {
+                this._frameBudgetScheduler = new FrameBudgetScheduler();
+            }
+            const elementTypes = ElementTypeRegistry.types();
+            const modelWork = elementTypes.map(type =>
+                () => this.core3D.elementSpawner.preloadModels(type)
+            );
+            this._frameBudgetScheduler.enqueueAll(modelWork);
+            const finalCallback = onModelsReady || onFactoriesReady;
+            if (finalCallback) {
+                this._frameBudgetScheduler.onDrain = finalCallback;
+            }
+        }
+    }
+
+    /**
      * Get gesture categories mapping (for UI generation)
      * Returns semantic categories: idle, dance, actions, reactions, destruction, atmosphere
      * @returns {Object<string, string[]>} Category name to array of gesture names
@@ -2059,6 +2131,12 @@ export class EmotiveMascot3D {
         // Set destroyed flag first to stop any pending animation frames
         this._destroyed = true;
         this.stop();
+
+        // Clean up frame budget scheduler
+        if (this._frameBudgetScheduler) {
+            this._frameBudgetScheduler.destroy();
+            this._frameBudgetScheduler = null;
+        }
 
         // Clean up audio bridge
         if (this._audioBridge) {

@@ -789,14 +789,6 @@ export class ThreeRenderer {
         this._wasHidden = false;
 
         if (!document.hidden) {
-            // Progressive warmup: skip heavy passes for first frames after tab-back.
-            // Chrome hibernates WebGL for background tabs, evicting all compiled shaders,
-            // textures, and framebuffers. The first render after tab-back forces synchronous
-            // recompilation of every shader program. With bloom (14 passes × 2) + distortion
-            // + particles, that's 30+ shader programs recompiling in ONE frame = multi-second
-            // freeze. Spreading across frames: frame 1 = scene only, frame 2+ = full pipeline.
-            this._warmupFramesRemaining = 3;
-
             // Reset Three.js state cache — may be stale after GPU hibernation
             this.renderer?.state?.reset();
 
@@ -1690,14 +1682,6 @@ export class ThreeRenderer {
         // Progressive warmup after tab-back: render scene only, skip bloom/distortion/particles.
         // Each frame recompiles the shaders it touches. Frame 1 = scene shaders.
         // After warmup, full pipeline resumes and bloom/distortion shaders compile incrementally.
-        if (this._warmupFramesRemaining > 0) {
-            this._warmupFramesRemaining--;
-            this.camera.layers.set(0);
-            this.renderer.render(this.scene, this.camera);
-            this.camera.layers.enableAll();
-            return;
-        }
-
         // Render with post-processing if enabled, otherwise direct render
         if (this.composer) {
             // === STEP 0: Render soul (layer 2) to texture for refraction sampling ===

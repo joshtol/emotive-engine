@@ -491,224 +491,8 @@ import directional from './atmosphere/control/directional.js';
 import { createMagneticGesture } from './atmosphere/control/magneticFactory.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ CREATE DIRECTIONAL GESTURE VARIANTS
+// │ (Factory calls moved to lazy registration below — see GESTURE REGISTRY section)
 // └─────────────────────────────────────────────────────────────────────────────────────
-// Directional lunge gestures
-const lungeForward = createLungeGesture('forward');
-const lungeBack = createLungeGesture('back');
-const lungeLeft = createLungeGesture('left');
-const lungeRight = createLungeGesture('right');
-const lungeUp = createLungeGesture('up');
-const lungeDown = createLungeGesture('down');
-// Directional recoil gestures
-const recoilBack = createRecoilGesture('back');
-const recoilForward = createRecoilGesture('forward');
-const recoilLeft = createRecoilGesture('left');
-const recoilRight = createRecoilGesture('right');
-const recoilUp = createRecoilGesture('up');
-const recoilDown = createRecoilGesture('down');
-// Directional bow gestures REMOVED - bow is always forward toward the audience
-// Use tiltLeft/tiltRight for lateral leans, bow for forward bow
-// Directional oof gestures
-const oofLeft = createOofGesture('left');
-const oofRight = createOofGesture('right');
-const oofFront = createOofGesture('front');
-const oofBack = createOofGesture('back');
-const oofUp = createOofGesture('up');
-const oofDown = createOofGesture('down');
-// Geometry shatter gestures (actual mesh fragmentation, 3D only)
-const shatterMesh = createShatterGesture('default');
-const shatterExplosive = createShatterGesture('explosive');
-const shatterCrumble = createShatterGesture('crumble');
-const shatterReform = createShatterGesture('reform');
-const shatterPunchLeft = createShatterGesture('punchLeft');
-const shatterPunchRight = createShatterGesture('punchRight');
-const shatterPunchFront = createShatterGesture('punchFront');
-const shatterSuspend = createShatterGesture('suspend');
-// Dual-mode shatter gestures (work on IDLE or FROZEN state)
-const shatterImplode = createShatterGesture('implode');
-const shatterGravity = createShatterGesture('gravity');
-const shatterOrbit = createShatterGesture('orbit');
-// Dissolve gestures (directional wind variants)
-const dissolveUp = createDissolveGesture('up');
-const dissolveDown = createDissolveGesture('down');
-const dissolveLeft = createDissolveGesture('left');
-const dissolveRight = createDissolveGesture('right');
-const dissolveAway = createDissolveGesture('away');
-const dissolveToward = createDissolveGesture('toward');
-// Elemental gestures (use elemental material system)
-// Water (uses water effect gestures - no shatter, just fluid visuals)
-// Impact variants (water hitting mascot)
-const splash = waterSplash;
-const drench = waterDrench;
-const soak = waterSoak;
-// Ambient variants (emanating water)
-const flow = waterFlow;
-const tide = waterTide;
-// Transform variants (becoming water)
-const liquefy = waterLiquefy;
-const poolWater = waterPool;
-const vortexWater = waterVortex;
-// Water axis-travel effects (new GPU-instanced gestures)
-const watercrown = waterCrown;
-const waterdance = waterDance;
-const waterdrill = waterDrill;
-const waterhelix = waterHelix;
-const watermeditation = waterMeditation;
-const waterpillar = waterPillar;
-const waterflourish = waterFlourish;
-const waterbarrage = waterBarrage;
-const waterimpact = waterImpact;
-const watercrush = waterCrush;
-// Smoke (effect-based - soft organic smoke, no angular shards)
-const smokebomb = smokeSmokebomb;
-const vanish = smokeVanish;
-const materialize = smokeMaterialize;
-// Fire (shatter-based)
-const ignite = createElementalGesture('ignite');
-const ember = createElementalGesture('ember');
-// Fire effect gestures (no shatter, just flame visuals)
-// Burning variants (victim of fire)
-const burn = fireBurn;
-const scorch = fireScorch;
-const combust = fireCombust;
-// Vortex variants (spiraling fire tornado) - has dedicated file
-const flameVortex = flameVortexGesture;
-// Firedance - vertical dancing rings - has dedicated file
-const firedance = firedanceGesture;
-// Phoenix - rising rebirth with gyroscoping vertical rings - has dedicated file
-const phoenix = phoenixGesture;
-// Fireflourish - theatrical flame sword flourish - has dedicated file
-const fireflourish = fireflourishGesture;
-// Firecrown - majestic flame crown above the head - has dedicated file
-const firecrown = firecrownGesture;
-// Firemeditation - static stacked rings with breathing pulse - has dedicated file
-const firemeditation = firemeditationGesture;
-// Firedrill - fast tight ascending helix - has dedicated file
-const firedrill = firedrillGesture;
-// Firepillar - stacked horizontal rings rising together - has dedicated file
-const firepillar = firepillarGesture;
-// Firehelix - DNA-style double helix ascending flame - has dedicated file
-const firehelix = firehelixGesture;
-// Firebarrage - orbiting flames launching upward - has dedicated file
-const firebarrage = firebarrageGesture;
-// Fireimpact - fire orbits then crashes inward - has dedicated file
-const fireimpact = fireimpactGesture;
-// Fireblast - explosive fire burst (splash equivalent) - has dedicated file
-const fireblast = fireblastGesture;
-// Radiating variants (source of fire)
-const radiate = fireRadiate;
-const blaze = fireBlaze;
-// Smoke effect gestures (no shatter, just wisp visuals)
-// Emanating variants (source of smoke)
-const puff = smokePuff;
-const billow = smokeBillow;
-const fume = smokeFume;
-// Afflicted variants (victim of smoke)
-const shroud = smokeShroud;
-const hazeSmoke = smokeHaze;
-const chokeSmoke = smokeChoke;
-// Ice
-const iceFreeze = createElementalGesture('freeze');
-const shatterIce = createElementalGesture('shatterIce');
-const thaw = createElementalGesture('thaw');
-// Electric (uses electric effect gestures - no shatter, just visual effects)
-// Electrocution variants (victim of electricity)
-const shock = electricShock;
-const overload = electricOverload;
-const glitch = electricGlitch;
-// Powered variants (source of electricity)
-const crackle = electricCrackle;
-const chargeUp = electricCharge;
-const electricAuraEffect = electricAura;
-const staticDischarge = electricStatic;
-// Ring/spectacle variants (GPU-instanced lightning ring gestures)
-const electriccrown = electricCrown;
-const electricdance = electricDance;
-const electrichelix = electricHelix;
-const electricpillar = electricPillar;
-const electricdrill = electricDrill;
-const electricflourish = electricFlourish;
-const electricvortex = electricVortex;
-const electricbarrage = electricBarrage;
-const electricimpact = electricImpact;
-const electricblast = electricBlast;
-const electricsurge = electricSurge;
-const electriczap = electricZap;
-const electricmeditation = electricMeditation;
-const zap = zapGesture;
-// Void effect gestures (no shatter, absorption/corruption visuals)
-// Absorption variants (becoming void)
-const drain = voidDrain;
-const siphon = voidSiphon;
-const hollow = voidHollow;
-// Corruption variants (being corrupted)
-const corrupt = voidCorrupt;
-const taint = voidTaint;
-const wither = voidWither;
-// Annihilation variants (being erased)
-const consume = voidConsume;
-const erase = voidErase;
-const singularity = voidSingularity;
-// Ring/spectacle gestures (void-ring/void-wrap — manifestation effects)
-const voidcrown = voidCrown;
-const voiddance = voidDance;
-const voidhelix = voidHelix;
-const voidpillar = voidPillar;
-const voiddrill = voidDrill;
-const voidflourish = voidFlourish;
-const voidvortex = voidVortex;
-const voidbarrage = voidBarrage;
-const voidimpact = voidImpact;
-const voidmeditation = voidMeditation;
-// Light effect gestures — lowercase aliases for modern pattern
-const lightblind = lightBlind;
-const lightpurify = lightPurify;
-const lightcleanse = lightCleanse;
-const lightradiate = lightRadiate;
-const lightglow = lightGlow;
-const lightbeacon = lightBeacon;
-const lightascend = lightAscend;
-const lightilluminate = lightIlluminate;
-const lightdissolve = lightDissolve;
-const lightmeditation = lightMeditation;
-// Earth effect gestures — lowercase aliases for modern pattern
-const earthpetrify = earthPetrify;
-const earthburden = earthBurden;
-const earthrumble = earthRumble;
-const earthquake = earthQuake;
-const earthencase = earthEncase;
-const earthcrumble = earthCrumble;
-const earthshatter = earthShatter;
-const eartherode = earthErode;
-const earthmeditation = earthMeditation;
-const earthcrown = earthCrown;
-const earthdance = earthDance;
-const earthhelix = earthHelix;
-const earthpillar = earthPillar;
-const earthdrill = earthDrill;
-const earthflourish = earthFlourish;
-const earthvortex = earthVortex;
-const earthbarrage = earthBarrage;
-const earthimpact = earthImpact;
-const earthblast = earthBlast;
-const earthsurge = earthSurge;
-// Directional rush gestures
-const rushForward = createRushGesture('forward');
-const rushBack = createRushGesture('back');
-const rushLeft = createRushGesture('left');
-const rushRight = createRushGesture('right');
-const rushUp = createRushGesture('up');
-const rushDown = createRushGesture('down');
-// Directional magnetic gestures
-const magneticForward = createMagneticGesture('forward');
-const magneticBack = createMagneticGesture('back');
-const magneticLeft = createMagneticGesture('left');
-const magneticRight = createMagneticGesture('right');
-const magneticUp = createMagneticGesture('up');
-const magneticDown = createMagneticGesture('down');
-const magneticAttract = createMagneticGesture('attract');
-const magneticRepel = createMagneticGesture('repel');
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ PLACEHOLDER GESTURES FOR NEW ANIMATIONS
@@ -862,444 +646,211 @@ const shimmer = {
 const groove = createPlaceholderGesture('groove', '🎵');
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ GESTURE COLLECTIONS
+// │ GESTURE REGISTRY — Lazy construction for fast page load
 // └─────────────────────────────────────────────────────────────────────────────────────
-const MOTION_GESTURES = [
-    bounce,
-    pulse,
-    shake,
-    nod,
-    vibrate,
-    twitch,
-    sway,
-    float,
-    jitter,
-    // New gestures
-    sparkle,
-    shimmer,
-    wiggle,
-    groove,
-    point,
-    lean,
-    reach,
-    headBob,
-    // Accent gestures (dance-friendly - boost groove, don't compete)
-    pop,
-    // bob removed - redundant with headBob
-    swell,
-    swagger,
-    dip,
-    flare,
-    // Directional dance gestures
-    stepLeft,
-    stepRight,
-    stepUp,
-    stepDown,
-    slideLeft,
-    slideRight,
-    // Directional lean gestures
-    leanLeft,
-    leanRight,
-    // Directional kick gestures
-    kickLeft,
-    kickRight,
-    // Directional float gestures (storytelling)
-    floatUp,
-    floatDown,
-    floatLeft,
-    floatRight,
-    // Directional point gestures (storytelling)
-    pointUp,
-    pointDown,
-    pointLeft,
-    pointRight,
-    // Blending gestures (moved from effects/)
-    breathe,
-    expand,
-    contract,
-    // Oscillating motions (continuous rhythmic behaviors)
-    rock,
-    pendulum,
-    wobble,
-    teeter,
-    // Dance/rhythmic motions
-    hula,
-    orbit,
-    orbitLeft,
-    orbitRight,
-    orbitUp,
-    orbitDown,
-    twist,
-    // Dance moves (moved from effects/)
-    runningman,
-    charleston
-];
+// Gestures are registered in two ways:
+// 1. EAGER: Already-imported gestures (constructed at import time) — just property assignment
+// 2. LAZY: Factory-generated gestures — factory call deferred until first access via getter
+//
+// This eliminates ~60 factory calls at module evaluation time, dramatically reducing
+// the blocking work that happens before the page can render.
 
-const TRANSFORM_GESTURES = [
-    spin,
-    spinLeft,
-    spinRight,
-    jump,
-    // Directional jump gestures (jumpUp removed - redundant with jump)
-    jumpDown,
-    jumpLeft,
-    jumpRight,
-    morph,
-    stretch,
-    tilt,
-    // Directional tilt gestures
-    tiltUp,
-    tiltDown,
-    tiltLeft,
-    tiltRight,
-    shatter,
-    // New transform gestures - acrobatic
-    flip,
-    backflip,
-    // New transform gestures - dramatic poses
-    crouch,
-    lunge,
-    recoil,
-    bow,
-    // Directional lunge gestures
-    lungeForward,
-    lungeBack,
-    lungeLeft,
-    lungeRight,
-    lungeUp,
-    lungeDown,
-    // Directional recoil gestures
-    recoilBack,
-    recoilForward,
-    recoilLeft,
-    recoilRight,
-    recoilUp,
-    recoilDown,
-    // New transform gestures - size transformations
-    inflate,
-    deflate,
-    squash,
-    // New transform gestures - combat/impact
-    knockout,
-    knockdown,
-    oofLeft,
-    oofRight,
-    oofFront,
-    oofBack,
-    oofUp,
-    oofDown,
-    // Crack gestures (post-processing surface cracks)
-    crackFront,
-    crackBack,
-    crackLeft,
-    crackRight,
-    crackUp,
-    crackDown,
-    crackHeal,
-    // New transform gestures - intense emotions
-    rage,
-    fury,
-    battlecry,
-    charge,
-    // Directional rush gestures
-    rushForward,
-    rushBack,
-    rushLeft,
-    rushRight,
-    rushUp,
-    rushDown,
-    // Extreme squash
-    pancake,
-    // Geometry shatter gestures (3D mesh fragmentation)
-    shatterMesh,
-    shatterExplosive,
-    shatterCrumble,
-    shatterReform,
-    shatterPunchLeft,
-    shatterPunchRight,
-    shatterPunchFront,
-    shatterSuspend,
-    // Dual-mode shatter gestures (work on IDLE or FROZEN state)
-    shatterImplode,
-    shatterGravity,
-    shatterOrbit,
-    // Dissolve gestures (shards blow away like dust)
-    dissolveUp,
-    dissolveDown,
-    dissolveLeft,
-    dissolveRight,
-    dissolveAway,
-    dissolveToward,
-    // Elemental gestures (use elemental material system)
-    // Water - Impact (water hitting mascot)
-    splash,
-    drench,
-    soak,
-    // Water - Ambient (emanating water)
-    flow,
-    tide,
-    // Water - Transform (becoming water)
-    liquefy,
-    poolWater,
-    vortexWater,
-    // Water - Axis-travel effects (new GPU-instanced gestures)
-    watercrown,      // Majestic water crown at head
-    waterdance,      // Vertical dancing splash rings
-    waterdrill,      // Fast tight descending helix
-    waterhelix,      // DNA-style double helix
-    watermeditation, // Mandala rings with breathing pulse
-    waterpillar,     // Stacked rings rising as pillar
-    waterflourish,   // Theatrical water flourish
-    waterbarrage,    // Orbiting water launching upward
-    waterimpact,     // Water orbits then crashes inward
-    watercrush,      // Heavy wave crushing from above
-    // Smoke
-    smokebomb,
-    vanish,
-    materialize,
-    // Fire (shatter-based)
-    ignite,
-    ember,
-    // Fire - Burning (victim of fire)
-    burn,
-    scorch,
-    combust,
-    // Fire - Axis-travel effects (ring-based)
-    flameVortex,    // Horizontal tornado rings
-    firedance,      // Vertical dancing rings
-    phoenix,        // Vertical gyroscope rings
-    fireflourish,   // Theatrical flame sword flourish
-    firecrown,      // Majestic flame crown at head
-    firemeditation, // Static rings with breathing pulse
-    firedrill,      // Fast tight ascending helix
-    firepillar,     // Stacked rings rising as pillar
-    firehelix,      // DNA-style double helix ascending
-    firebarrage,    // Orbiting flames launching upward
-    fireimpact,     // Fire orbits then crashes inward
-    fireblast,      // Explosive fire burst (splash equivalent)
-    // Fire - Radiating (source of fire)
-    radiate,
-    blaze,
-    // Ice
-    iceFreeze,
-    shatterIce,
-    thaw,
-    // Electric - Electrocution (victim)
-    shock,
-    overload,
-    glitch,
-    // Electric - Powered (source)
-    crackle,
-    chargeUp,
-    electricAuraEffect,
-    staticDischarge,
-    // Electric - Ring/Spectacle
-    electriccrown,
-    electricdance,
-    electrichelix,
-    electricpillar,
-    electricdrill,
-    electricflourish,
-    electricvortex,
-    electricbarrage,
-    electricimpact,
-    electricblast,
-    electricsurge,
-    electriczap,
-    electricmeditation,
-    zap,
-    // Void - Absorption (becoming void)
-    drain,
-    siphon,
-    hollow,
-    // Void - Corruption (being corrupted)
-    corrupt,
-    taint,
-    wither,
-    // Void - Annihilation (being erased)
-    consume,
-    erase,
-    singularity,
-    // Void - Ring/Spectacle (manifestation)
-    voidcrown,
-    voiddance,
-    voidhelix,
-    voidpillar,
-    voiddrill,
-    voidflourish,
-    voidvortex,
-    voidbarrage,
-    voidimpact,
-    voidmeditation,
-    // Smoke - Emanating (source of smoke)
-    puff,
-    billow,
-    fume,
-    // Smoke - Afflicted (victim of smoke)
-    shroud,
-    hazeSmoke,
-    chokeSmoke,
-    // Ice Effect - Matching fire/water pattern
-    iceCrown,
-    iceDance,
-    icePillar,
-    iceHelix,
-    iceMeditation,
-    iceVortex,
-    iceSplash,
-    iceEncase,
-    iceDrill,
-    iceFlourish,
-    iceBarrage,
-    iceImpact,
-    iceMist,         // Cold mist emanating
-    iceShiver,       // Convulsive cold with frost
-    // Light Effect - Afflicted (overwhelmed by light)
-    lightBlind,
-    lightPurify,
-    lightCleanse,
-    // Light Effect - Emanating (projecting radiance)
-    lightRadiate,
-    lightGlow,
-    lightBeacon,
-    // Light Effect - Transform (becoming light)
-    lightAscend,
-    lightIlluminate,
-    lightDissolve,
-    // Light Effect - Ring/Spectacle (modern instanced pattern)
-    lightCrown,
-    lightDance,
-    lightHelix,
-    lightPillar,
-    lightDrill,
-    lightFlourish,
-    lightVortex,
-    lightBarrage,
-    lightImpact,
-    lightBlast,
-    lightSurge,
-    lightMeditation,
-    // Poison Effect - Afflicted (being poisoned)
-    poisonInfect,
-    poisonSicken,
-    // Poison Effect - Emanating (exuding toxins)
-    poisonOoze,
-    poisonSeep,
-    poisonToxic,
-    // Poison Effect - Transform (becoming toxic)
-    poisonCorrode,
-    poisonMelt,
-    poisonDecay,
-    poisonDissolve,
-    // Earth Effect - Afflicted (being petrified)
-    earthPetrify,
-    earthBurden,
-    // Earth Effect - Emanating (controlling earth)
-    earthRumble,
-    earthQuake,
-    earthMeditation,
-    // Earth Effect - Transform (becoming/breaking stone)
-    earthEncase,
-    earthCrumble,
-    earthShatter,
-    earthErode,
-    // Earth Effect - Ring/Spectacle (modern instanced pattern)
-    earthCrown,
-    earthDance,
-    earthHelix,
-    earthPillar,
-    earthDrill,
-    earthFlourish,
-    earthVortex,
-    earthBarrage,
-    earthImpact,
-    earthBlast,
-    earthSurge,
-    // Nature Effect - Afflicted (being overtaken)
-    natureEntangle,
-    natureRoot,
-    natureConstrict,
-    // Nature Effect - Emanating (projecting growth)
-    natureBloom,
-    natureFlourish,
-    // Nature Effect - Transform (becoming nature)
-    natureBlossom
-];
-
-const EFFECT_GESTURES = [
-    wave,
-    drift,
-    // Directional drift gestures
-    driftUp,
-    driftDown,
-    driftLeft,
-    driftRight,
-    flicker,
-    burst,
-    directional,
-    settle,
-    fade,
-    hold,
-    flash,
-    glow,
-    peek,
-    rain,
-    // New effect gestures (Tier 1 - emotional)
-    shiver,
-    heartbeat,
-    confetti,
-    fizz,
-    // Cascade gestures (directional waterfall)
-    cascadeUp,
-    cascadeDown,
-    cascadeLeft,
-    cascadeRight,
-    // Directional burst gestures
-    burstUp,
-    burstDown,
-    burstLeft,
-    burstRight,
-    // New effect gestures (Tier 2 - dynamics)
-    ripple,
-    elasticBounce,
-    // Swarm gestures (directional flock)
-    swarmUp,
-    swarmDown,
-    swarmLeft,
-    swarmRight,
-    // New effect gestures (Tier 3 - nice to have)
-    bloom,
-    snap,
-    // Directional magnetic gestures
-    magneticForward,
-    magneticBack,
-    magneticLeft,
-    magneticRight,
-    magneticUp,
-    magneticDown,
-    magneticAttract,
-    magneticRepel,
-    // Environmental particle effects
-    vortex
-];
-
-// ┌─────────────────────────────────────────────────────────────────────────────────────
-// │ GESTURE REGISTRY - Fast lookup by name
-// └─────────────────────────────────────────────────────────────────────────────────────
 export const GESTURE_REGISTRY = {};
 
-// Build the registry from all gesture arrays - SYNCHRONOUSLY
-[...MOTION_GESTURES, ...TRANSFORM_GESTURES, ...EFFECT_GESTURES].forEach(gesture => {
+// Name arrays for GESTURE_TYPES (built during registration)
+const _motionNames = [];
+const _transformNames = [];
+const _effectNames = [];
+
+/**
+ * Register an already-constructed gesture eagerly (just property assignment)
+ */
+function _regEager(gesture, group) {
     GESTURE_REGISTRY[gesture.name] = gesture;
-});
+    group.push(gesture.name);
+}
+
+/**
+ * Register a factory-generated gesture lazily (factory call deferred)
+ */
+function _regLazy(name, loader, group) {
+    Object.defineProperty(GESTURE_REGISTRY, name, {
+        configurable: true,
+        enumerable: true,
+        get() {
+            const gesture = loader();
+            Object.defineProperty(GESTURE_REGISTRY, name, {
+                configurable: true, enumerable: true, writable: true,
+                value: gesture
+            });
+            return gesture;
+        }
+    });
+    group.push(name);
+}
+
+// ── MOTION gestures (all imported — no factory calls) ────────────────────────────────
+[
+    bounce, pulse, shake, nod, vibrate, twitch, sway, float, jitter,
+    sparkle, shimmer, wiggle, groove, point, lean, reach, headBob,
+    pop, swell, swagger, dip, flare,
+    stepLeft, stepRight, stepUp, stepDown, slideLeft, slideRight,
+    leanLeft, leanRight, kickLeft, kickRight,
+    floatUp, floatDown, floatLeft, floatRight,
+    pointUp, pointDown, pointLeft, pointRight,
+    breathe, expand, contract,
+    rock, pendulum, wobble, teeter,
+    hula, orbit, orbitLeft, orbitRight, orbitUp, orbitDown,
+    twist, runningman, charleston
+].forEach(g => _regEager(g, _motionNames));
+
+// ── TRANSFORM gestures — imported ────────────────────────────────────────────────────
+[
+    spin, spinLeft, spinRight, jump, jumpDown, jumpLeft, jumpRight,
+    morph, stretch, tilt, tiltUp, tiltDown, tiltLeft, tiltRight,
+    shatter, flip, backflip, crouch, lunge, recoil, bow,
+    inflate, deflate, squash, knockout, knockdown,
+    crackFront, crackBack, crackLeft, crackRight, crackUp, crackDown, crackHeal,
+    rage, fury, battlecry, charge, pancake,
+    // Water
+    waterSplash, waterDrench, waterSoak, waterFlow, waterTide,
+    waterLiquefy, waterPool, waterVortex,
+    waterCrown, waterDance, waterDrill, waterHelix, waterMeditation,
+    waterPillar, waterFlourish, waterBarrage, waterImpact, waterCrush,
+    // Smoke
+    smokeSmokebomb, smokeVanish, smokeMaterialize,
+    // Fire
+    fireBurn, fireScorch, fireCombust,
+    flameVortexGesture, firedanceGesture, phoenixGesture,
+    fireflourishGesture, firecrownGesture, firemeditationGesture,
+    firedrillGesture, firepillarGesture, firehelixGesture,
+    firebarrageGesture, fireimpactGesture, fireblastGesture,
+    fireRadiate, fireBlaze,
+    // Smoke effects
+    smokePuff, smokeBillow, smokeFume, smokeShroud, smokeHaze, smokeChoke,
+    // Electric
+    electricShock, electricOverload, electricGlitch,
+    electricCrackle, electricCharge, electricAura, electricStatic,
+    electricCrown, electricDance, electricHelix, electricPillar,
+    electricDrill, electricFlourish, electricVortex, electricBarrage,
+    electricImpact, electricBlast, electricSurge, electricZap,
+    electricMeditation, zapGesture,
+    // Void
+    voidDrain, voidSiphon, voidHollow,
+    voidCorrupt, voidTaint, voidWither,
+    voidConsume, voidErase, voidSingularity,
+    voidCrown, voidDance, voidHelix, voidPillar, voidDrill,
+    voidFlourish, voidVortex, voidBarrage, voidImpact,
+    voidMeditation,
+    // Ice
+    iceCrown, iceDance, icePillar, iceHelix, iceMeditation,
+    iceVortex, iceSplash, iceEncase, iceDrill, iceFlourish,
+    iceBarrage, iceImpact,
+    iceMist, iceShiver,
+    // Light
+    lightBlind, lightPurify, lightCleanse, lightRadiate, lightGlow, lightBeacon,
+    lightAscend, lightIlluminate, lightDissolve,
+    lightCrown, lightDance, lightHelix, lightPillar, lightDrill,
+    lightFlourish, lightVortex, lightBarrage, lightImpact, lightBlast, lightSurge,
+    lightMeditation,
+    // Poison
+    poisonInfect, poisonSicken, poisonOoze, poisonSeep, poisonToxic,
+    poisonCorrode, poisonMelt, poisonDecay, poisonDissolve,
+    // Earth
+    earthPetrify, earthBurden, earthRumble, earthQuake,
+    earthEncase, earthCrumble, earthShatter, earthErode,
+    earthMeditation, earthCrown, earthDance, earthHelix, earthPillar,
+    earthDrill, earthFlourish, earthVortex, earthBarrage, earthImpact,
+    earthBlast, earthSurge,
+    // Nature
+    natureEntangle, natureRoot, natureConstrict,
+    natureBloom, natureFlourish, natureBlossom
+].forEach(g => _regEager(g, _transformNames));
+
+// ── TRANSFORM gestures — factory-generated (LAZY) ────────────────────────────────────
+// Lunge variants
+_regLazy('lungeForward', () => createLungeGesture('forward'), _transformNames);
+_regLazy('lungeBack', () => createLungeGesture('back'), _transformNames);
+_regLazy('lungeLeft', () => createLungeGesture('left'), _transformNames);
+_regLazy('lungeRight', () => createLungeGesture('right'), _transformNames);
+_regLazy('lungeUp', () => createLungeGesture('up'), _transformNames);
+_regLazy('lungeDown', () => createLungeGesture('down'), _transformNames);
+// Recoil variants
+_regLazy('recoilBack', () => createRecoilGesture('back'), _transformNames);
+_regLazy('recoilForward', () => createRecoilGesture('forward'), _transformNames);
+_regLazy('recoilLeft', () => createRecoilGesture('left'), _transformNames);
+_regLazy('recoilRight', () => createRecoilGesture('right'), _transformNames);
+_regLazy('recoilUp', () => createRecoilGesture('up'), _transformNames);
+_regLazy('recoilDown', () => createRecoilGesture('down'), _transformNames);
+// Oof variants
+_regLazy('oofLeft', () => createOofGesture('left'), _transformNames);
+_regLazy('oofRight', () => createOofGesture('right'), _transformNames);
+_regLazy('oofFront', () => createOofGesture('front'), _transformNames);
+_regLazy('oofBack', () => createOofGesture('back'), _transformNames);
+_regLazy('oofUp', () => createOofGesture('up'), _transformNames);
+_regLazy('oofDown', () => createOofGesture('down'), _transformNames);
+// Shatter variants (factory 'default' overwrites imported shatter — matches previous behavior)
+_regLazy('shatter', () => createShatterGesture('default'), _transformNames);
+_regLazy('shatterExplosive', () => createShatterGesture('explosive'), _transformNames);
+_regLazy('shatterCrumble', () => createShatterGesture('crumble'), _transformNames);
+_regLazy('shatterReform', () => createShatterGesture('reform'), _transformNames);
+_regLazy('shatterPunchLeft', () => createShatterGesture('punchLeft'), _transformNames);
+_regLazy('shatterPunchRight', () => createShatterGesture('punchRight'), _transformNames);
+_regLazy('shatterPunchFront', () => createShatterGesture('punchFront'), _transformNames);
+_regLazy('shatterSuspend', () => createShatterGesture('suspend'), _transformNames);
+_regLazy('shatterImplode', () => createShatterGesture('implode'), _transformNames);
+_regLazy('shatterGravity', () => createShatterGesture('gravity'), _transformNames);
+_regLazy('shatterOrbit', () => createShatterGesture('orbit'), _transformNames);
+// Dissolve variants
+_regLazy('dissolveUp', () => createDissolveGesture('up'), _transformNames);
+_regLazy('dissolveDown', () => createDissolveGesture('down'), _transformNames);
+_regLazy('dissolveLeft', () => createDissolveGesture('left'), _transformNames);
+_regLazy('dissolveRight', () => createDissolveGesture('right'), _transformNames);
+_regLazy('dissolveAway', () => createDissolveGesture('away'), _transformNames);
+_regLazy('dissolveToward', () => createDissolveGesture('toward'), _transformNames);
+// Elemental factory gestures
+_regLazy('ignite', () => createElementalGesture('ignite'), _transformNames);
+_regLazy('ember', () => createElementalGesture('ember'), _transformNames);
+_regLazy('iceFreeze', () => createElementalGesture('freeze'), _transformNames);
+_regLazy('shatterIce', () => createElementalGesture('shatterIce'), _transformNames);
+_regLazy('thaw', () => createElementalGesture('thaw'), _transformNames);
+// Rush variants
+_regLazy('rushForward', () => createRushGesture('forward'), _transformNames);
+_regLazy('rushBack', () => createRushGesture('back'), _transformNames);
+_regLazy('rushLeft', () => createRushGesture('left'), _transformNames);
+_regLazy('rushRight', () => createRushGesture('right'), _transformNames);
+_regLazy('rushUp', () => createRushGesture('up'), _transformNames);
+_regLazy('rushDown', () => createRushGesture('down'), _transformNames);
+
+// ── EFFECT gestures — imported ───────────────────────────────────────────────────────
+[
+    wave, drift, driftUp, driftDown, driftLeft, driftRight,
+    flicker, burst, directional, settle, fade, hold, flash, glow, peek, rain,
+    shiver, heartbeat, confetti, fizz,
+    cascadeUp, cascadeDown, cascadeLeft, cascadeRight,
+    burstUp, burstDown, burstLeft, burstRight,
+    ripple, elasticBounce,
+    swarmUp, swarmDown, swarmLeft, swarmRight,
+    bloom, snap, vortex
+].forEach(g => _regEager(g, _effectNames));
+
+// ── EFFECT gestures — factory-generated (LAZY) ──────────────────────────────────────
+_regLazy('magneticForward', () => createMagneticGesture('forward'), _effectNames);
+_regLazy('magneticBack', () => createMagneticGesture('back'), _effectNames);
+_regLazy('magneticLeft', () => createMagneticGesture('left'), _effectNames);
+_regLazy('magneticRight', () => createMagneticGesture('right'), _effectNames);
+_regLazy('magneticUp', () => createMagneticGesture('up'), _effectNames);
+_regLazy('magneticDown', () => createMagneticGesture('down'), _effectNames);
+_regLazy('magneticAttract', () => createMagneticGesture('attract'), _effectNames);
+_regLazy('magneticRepel', () => createMagneticGesture('repel'), _effectNames);
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ GESTURE TYPE MAPPING - Quick type lookup
 // └─────────────────────────────────────────────────────────────────────────────────────
 export const GESTURE_TYPES = {
-    blending: MOTION_GESTURES.map(g => g.name),
-    override: TRANSFORM_GESTURES.map(g => g.name),
-    effect: EFFECT_GESTURES.map(g => g.name)
+    blending: _motionNames,
+    override: _transformNames,
+    effect: _effectNames
 };
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -1595,8 +1146,68 @@ export function listGestures() {
     return allGestures;
 }
 
-// Debug utilities can be imported directly if needed
-// Export them instead of polluting global scope
+/**
+ * Progressively resolve lazy gesture getters in idle-time batches.
+ * Avoids blocking the main thread during page load.
+ * @param {Object} options
+ * @param {Function} [options.onBatch] - Called with each batch of resolved gesture info objects
+ * @param {Function} [options.onComplete] - Called when all gestures are resolved
+ */
+export function warmUpGestures({ onBatch, onComplete } = {}) {
+    // Object.keys enumerates lazy getter property names WITHOUT triggering them.
+    // We yield name + category only — no factory resolution, no module evaluation.
+    const names = Object.keys(GESTURE_REGISTRY);
+
+    if (onBatch) {
+        onBatch(names.map(name => ({
+            name,
+            category: GESTURE_TO_CATEGORY[name] || 'atmosphere',
+            source: 'core'
+        })));
+    }
+
+    // Plugin gestures (typically few)
+    try {
+        const pluginBatch = [];
+        const pluginNames = pluginAdapter.getAllPluginGestures();
+        pluginNames.forEach(pn => {
+            const g = pluginAdapter.getPluginGesture(pn);
+            pluginBatch.push({
+                name: g.name, emoji: g.emoji || '🔌', type: g.type,
+                category: g.category || 'effect',
+                description: g.description || 'Plugin gesture',
+                source: 'plugin'
+            });
+        });
+        if (pluginBatch.length && onBatch) onBatch(pluginBatch);
+    } catch (_e) { /* no plugins */ }
+
+    if (onComplete) onComplete();
+
+    // Return factory work thunks for FrameBudgetScheduler to execute across frames
+    return getLazyGestureNames().map(name => () => resolveGesture(name));
+}
+
+/**
+ * Explicitly resolve a lazy gesture getter, forcing factory evaluation.
+ * If already resolved, this is a no-op (reads cached value property).
+ * @param {string} name - Gesture name
+ * @returns {Object|null} Resolved gesture object
+ */
+export function resolveGesture(name) {
+    return GESTURE_REGISTRY[name] || null;
+}
+
+/**
+ * Get names of gestures that still have unresolved factory getters.
+ * @returns {string[]}
+ */
+export function getLazyGestureNames() {
+    return Object.keys(GESTURE_REGISTRY).filter(name => {
+        const desc = Object.getOwnPropertyDescriptor(GESTURE_REGISTRY, name);
+        return desc && typeof desc.get === 'function';
+    });
+}
 
 // Export plugin adapter for external use
 export { pluginAdapter };
