@@ -165,5 +165,13 @@ export default {
         driftSpeed: 0.3,        // Energy movement speed - serene, peaceful
         shimmerSpeed: 0.4,      // Vertical pulse speed - deep, meditative
         turbulence: 0.1         // Chaos/randomness factor - tranquil stillness
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.2,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

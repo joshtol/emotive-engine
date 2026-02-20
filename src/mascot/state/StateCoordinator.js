@@ -7,6 +7,7 @@
 
 import { getEmotion, getEmotionVisualParams } from '../../core/emotions/index.js';
 import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
+import { EmotionDynamics } from '../../core/state/EmotionDynamics.js';
 
 export class StateCoordinator {
     /**
@@ -38,6 +39,9 @@ export class StateCoordinator {
         this._chainTarget = deps.chainTarget || this;
         this.currentEmotion = 'neutral';
         this.emotionIntensity = 1.0;
+
+        // Emotion dynamics (Feature 4) — created lazily, disabled by default
+        this._dynamics = null;
     }
 
     /**
@@ -68,16 +72,20 @@ export class StateCoordinator {
         // Handle backward compatibility - if options is a string, treat as undertone
         let undertone = null;
         let duration = 500;
+        let intensity = 1.0;
 
         if (typeof options === 'string') {
             undertone = options;
         } else if (options && typeof options === 'object') {
             undertone = options.undertone || null;
             duration = options.duration || 500;
+            intensity = options.intensity ?? 1.0;
         }
 
+        this.emotionIntensity = intensity;
+
         // Set emotional state in state machine
-        const success = this.stateMachine.setEmotion(mappedEmotion, undertone, duration);
+        const success = this.stateMachine.setEmotion(mappedEmotion, { undertone, duration, intensity });
 
         if (success) {
             // Register emotion's rhythm configuration
@@ -147,19 +155,77 @@ export class StateCoordinator {
         return this._chainTarget;
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // MULTI-EMOTION SLOT API (Feature 2)
+    // ═══════════════════════════════════════════════════════════════════
+
     /**
-     * Methods to be moved here:
-     * - getEmotion()
-     * - setUndertoneModifier()
-     * - transitionToEmotion() (new smooth transition)
-     * - setEmotionVector() (new 2D control)
-     * - Emotion blending logic
+     * Push an emotion into a slot (stacks if already present).
+     * @param {string} emotion - Emotion name
+     * @param {number} [intensity=0.5] - Intensity 0.0-1.0
+     * @returns {Object} Chain target
      */
+    pushEmotion(emotion, intensity = 0.5) {
+        const emotionMapping = { 'happy': 'joy', 'curious': 'surprise', 'frustrated': 'anger', 'sad': 'sadness' };
+        const mapped = emotionMapping[emotion] || emotion;
+        this.stateMachine.pushEmotion(mapped, intensity);
+        const dom = this.stateMachine.getDominant();
+        if (dom) this.currentEmotion = dom.emotion;
+        this._emit('emotionChanged', { emotion: this.currentEmotion, slots: this.stateMachine.getSlots() });
+        return this._chainTarget;
+    }
+
+    /**
+     * Nudge an emotion's intensity by delta.
+     * @param {string} emotion - Emotion name
+     * @param {number} delta - Intensity change
+     * @param {number} [cap=1.0] - Maximum intensity
+     * @returns {Object} Chain target
+     */
+    nudgeEmotion(emotion, delta, cap = 1.0) {
+        const emotionMapping = { 'happy': 'joy', 'curious': 'surprise', 'frustrated': 'anger', 'sad': 'sadness' };
+        const mapped = emotionMapping[emotion] || emotion;
+        this.stateMachine.nudgeEmotion(mapped, delta, cap);
+        const dom = this.stateMachine.getDominant();
+        if (dom) this.currentEmotion = dom.emotion;
+        return this._chainTarget;
+    }
+
+    /**
+     * Clear all emotion slots.
+     * @returns {Object} Chain target
+     */
+    clearEmotions() {
+        this.stateMachine.clearEmotions();
+        this.currentEmotion = 'neutral';
+        this._emit('emotionChanged', { emotion: 'neutral', slots: [] });
+        return this._chainTarget;
+    }
+
+    /**
+     * Get full emotional state (dominant + undercurrents).
+     * @returns {Object}
+     */
+    getEmotionalState() {
+        return this.stateMachine.getEmotionalState();
+    }
+
+    /**
+     * Get or lazily create EmotionDynamics instance.
+     * @returns {import('../../../core/state/EmotionDynamics.js').EmotionDynamics}
+     */
+    get dynamics() {
+        if (!this._dynamics) {
+            this._dynamics = new EmotionDynamics(this.stateMachine);
+        }
+        return this._dynamics;
+    }
 
     /**
      * Cleanup
      */
     destroy() {
+        if (this._dynamics) this._dynamics.destroy();
         this.currentEmotion = 'neutral';
     }
 }

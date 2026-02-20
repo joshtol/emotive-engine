@@ -43,6 +43,15 @@ export { SoundSystem } from './core/audio/SoundSystem.js';
 export { default as AudioLevelProcessor } from './core/audio/AudioLevelProcessor.js';
 export { AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
 export { default as GrooveTemplates } from './core/audio/GrooveTemplates.js';
+export { RhythmInputEvaluator } from './core/audio/RhythmInputEvaluator.js';
+export { AudioLayerManager } from './core/audio/AudioLayerManager.js';
+
+// State
+export { EmotionDynamics } from './core/state/EmotionDynamics.js';
+
+// Timeline
+export { Timeline } from './core/timeline/Timeline.js';
+export { TimelineSection } from './core/timeline/TimelineSection.js';
 
 // ============================================================================
 // EMOTIONS & GESTURES
@@ -53,7 +62,9 @@ export {
     getEmotionVisualParams,
     hasEmotion,
     listEmotions,
-    getEmotionGestures
+    getEmotionGestures,
+    getEmotionRhythmModifiers,
+    getBlendedRhythmModifiers
 } from './core/emotions/index.js';
 
 export {

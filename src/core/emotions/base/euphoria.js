@@ -94,5 +94,13 @@ export default {
         driftSpeed: 1.8,        // Energy movement speed - radiant, flowing
         shimmerSpeed: 2.5,      // Vertical pulse speed - transcendent pulsing
         turbulence: 0.7         // Chaos/randomness factor - ecstatic variation
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.5,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

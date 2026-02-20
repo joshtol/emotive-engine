@@ -104,5 +104,13 @@ export default {
         driftSpeed: 0.6,        // Energy movement speed - steady, directed
         shimmerSpeed: 0.2,      // Vertical pulse speed - minimal distraction
         turbulence: 0.1         // Chaos/randomness factor - laser-focused precision
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 0.85,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

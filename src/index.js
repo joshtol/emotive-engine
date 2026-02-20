@@ -48,6 +48,15 @@ export { default as ParticleSystem } from './core/ParticleSystem.js';
 export { SoundSystem } from './core/audio/SoundSystem.js';
 export { default as AudioLevelProcessor } from './core/audio/AudioLevelProcessor.js';
 export { AudioAnalyzer } from './core/audio/AudioAnalyzer.js';
+export { RhythmInputEvaluator } from './core/audio/RhythmInputEvaluator.js';
+export { AudioLayerManager } from './core/audio/AudioLayerManager.js';
+
+// State
+export { EmotionDynamics } from './core/state/EmotionDynamics.js';
+
+// Timeline
+export { Timeline } from './core/timeline/Timeline.js';
+export { TimelineSection } from './core/timeline/TimelineSection.js';
 
 // ============================================================================
 // FEATURES
@@ -60,6 +69,8 @@ export {
     hasEmotion,
     listEmotions,
     getEmotionGestures,
+    getEmotionRhythmModifiers,
+    getBlendedRhythmModifiers,
     pluginAdapter as emotionPluginAdapter
 } from './core/emotions/index.js';
 

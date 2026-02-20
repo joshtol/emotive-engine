@@ -92,5 +92,13 @@ export default {
         driftSpeed: 0.4,        // Energy movement speed - slow, unsettled
         shimmerSpeed: 0.6,      // Vertical pulse speed - queasy wavering
         turbulence: 0.35        // Chaos/randomness factor - nauseating irregularity
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 0.85,
+        visualNoise: 0.2,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

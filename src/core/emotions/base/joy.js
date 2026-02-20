@@ -118,6 +118,14 @@ export default {
         driftSpeed: 1.2,        // Energy movement speed - lively, bouncy
         shimmerSpeed: 1.5,      // Vertical pulse speed - excited pulsing
         turbulence: 0.3         // Chaos/randomness factor - playful variation
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.3,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 
     // Note: Black hole behavior auto-derives from modifiers (speed: 1.8, intensity: 1.1, smoothness: 1.0)

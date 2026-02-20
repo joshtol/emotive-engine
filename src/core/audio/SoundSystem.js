@@ -46,6 +46,7 @@
  */
 import HarmonicSystem from './HarmonicSystem.js';
 import { GestureSoundLibrary } from './GestureSoundLibrary.js';
+import { AudioLayerManager } from './AudioLayerManager.js';
 
 export class SoundSystem {
     constructor() {
@@ -260,6 +261,18 @@ export class SoundSystem {
     }
 
     /**
+     * Get (or lazily create) the AudioLayerManager for stem-based adaptive music.
+     * @returns {AudioLayerManager|null}
+     */
+    getAudioLayerManager() {
+        if (!this.isAvailable()) return null;
+        if (!this._audioLayerManager) {
+            this._audioLayerManager = new AudioLayerManager(this.context);
+        }
+        return this._audioLayerManager;
+    }
+
+    /**
    * Clean up audio resources
    */
     cleanup() {
@@ -283,6 +296,11 @@ export class SoundSystem {
         } catch {
             // SoundSystem: Error during cleanup
         } finally {
+            // Clean up audio layer manager
+            if (this._audioLayerManager) {
+                this._audioLayerManager.destroy();
+                this._audioLayerManager = null;
+            }
             // Always reset state regardless of errors
             this.context = null;
             this.nodes = { master: null, ambient: null, effects: null };

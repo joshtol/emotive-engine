@@ -96,5 +96,13 @@ export default {
         driftSpeed: 1.5,        // Energy movement speed - sudden, startled bursts
         shimmerSpeed: 2.0,      // Vertical pulse speed - shocked flashing
         turbulence: 0.5         // Chaos/randomness factor - unexpected variation
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 2.0,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

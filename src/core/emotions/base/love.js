@@ -92,5 +92,13 @@ export default {
         driftSpeed: 0.8,        // Energy movement speed - warm, flowing
         shimmerSpeed: 1.2,      // Vertical pulse speed - heartbeat-like rhythm
         turbulence: 0.2         // Chaos/randomness factor - smooth, romantic
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.15,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

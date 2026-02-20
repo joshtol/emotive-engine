@@ -98,5 +98,13 @@ export default {
                 rate: 0.4               // Slow breathing (matches breathRate)
             }
         }
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.0,
+        visualNoise: 0.8,
+        inputDelay: 20,
+        tempoShift: 0
     }
 };

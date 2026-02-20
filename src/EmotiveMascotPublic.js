@@ -591,9 +591,10 @@ class EmotiveMascotPublic {
             }
         } else if (undertoneOrDurationOrOptions && typeof undertoneOrDurationOrOptions === 'object') {
             // It's an options object
-            const {undertone: newUndertone, duration: newDuration} = undertoneOrDurationOrOptions;
+            const {undertone: newUndertone, duration: newDuration, intensity: newIntensity} = undertoneOrDurationOrOptions;
             undertone = newUndertone;
             if (newDuration !== undefined) duration = newDuration;
+            if (newIntensity !== undefined) this._lastIntensity = newIntensity;
         }
 
         // Record if in recording mode
@@ -607,12 +608,14 @@ class EmotiveMascotPublic {
             });
         }
 
-        // Set in engine with undertone and duration
-        if (undertone) {
-            engine.setEmotion(emotion, { undertone }, duration);
-        } else {
-            engine.setEmotion(emotion, null, duration);
+        // Build options with intensity support
+        const opts = {};
+        if (undertone) opts.undertone = undertone;
+        if (this._lastIntensity !== undefined) {
+            opts.intensity = this._lastIntensity;
+            this._lastIntensity = undefined;
         }
+        engine.setEmotion(emotion, Object.keys(opts).length ? opts : null, duration);
     }
 
     /**
@@ -628,6 +631,85 @@ class EmotiveMascotPublic {
         if (engine.soundSystem) {
             engine.soundSystem.enabled = enabled;
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // MULTI-EMOTION SLOT API (Feature 2)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Push an emotion into a slot (stacks if already present).
+     * @param {string} emotion - Emotion name
+     * @param {number} [intensity=0.5] - Intensity 0.0-1.0
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    pushEmotion(emotion, intensity = 0.5) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.stateCoordinator.pushEmotion(emotion, intensity);
+        return this;
+    }
+
+    /**
+     * Nudge an emotion's intensity by delta.
+     * @param {string} emotion - Emotion name
+     * @param {number} delta - Intensity change (can be negative)
+     * @param {number} [cap=1.0] - Maximum intensity
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    nudgeEmotion(emotion, delta, cap = 1.0) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.stateCoordinator.nudgeEmotion(emotion, delta, cap);
+        return this;
+    }
+
+    /**
+     * Clear all emotion slots. Resets to neutral.
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    clearEmotions() {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.stateCoordinator.clearEmotions();
+        return this;
+    }
+
+    /**
+     * Get full emotional state (dominant, undercurrents, all slots).
+     * @returns {Object} { dominant, undercurrents, slots }
+     */
+    getEmotionalState() {
+        const engine = this._getReal();
+        if (!engine) return { dominant: null, undercurrents: [], slots: [] };
+        return engine.stateCoordinator.getEmotionalState();
+    }
+
+    /**
+     * Get the EmotionDynamics instance for decay/accumulation control.
+     * @returns {Object} EmotionDynamics instance
+     */
+    get dynamics() {
+        const engine = this._getReal();
+        if (!engine) return null;
+        return engine.stateCoordinator.dynamics;
+    }
+
+    /**
+     * Get the RhythmInputEvaluator for grading tap timing.
+     * @param {Object} [config] - Optional evaluator config
+     * @returns {Object|null} RhythmInputEvaluator instance
+     */
+    getInputEvaluator(config) {
+        return this._audioManager.getInputEvaluator(config);
+    }
+
+    /**
+     * Get the AudioLayerManager for stem-based adaptive music.
+     * @returns {Object|null} AudioLayerManager instance
+     */
+    getAudioLayers() {
+        return this._audioManager.getLayers();
     }
 
     /**

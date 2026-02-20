@@ -90,5 +90,13 @@ export default {
         driftSpeed: 0.15,       // Energy movement speed - nearly still, dreaming
         shimmerSpeed: 0.1,      // Vertical pulse speed - deep sleep rhythm
         turbulence: 0.05        // Chaos/randomness factor - peaceful stillness
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.1,
+        visualNoise: 0,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

@@ -244,4 +244,25 @@ export class AudioManager {
             engine.rhythmIntegration.stop();
         }
     }
+
+    /**
+     * Get the RhythmInputEvaluator for grading tap timing.
+     * @param {Object} [config] - Optional evaluator config
+     * @returns {import('../core/audio/RhythmInputEvaluator.js').RhythmInputEvaluator|null}
+     */
+    getInputEvaluator(config) {
+        const engine = this._getEngine();
+        if (!engine || !engine.rhythmIntegration) return null;
+        return engine.rhythmIntegration.getInputEvaluator(config);
+    }
+
+    /**
+     * Get the AudioLayerManager for stem-based adaptive music.
+     * @returns {import('../core/audio/AudioLayerManager.js').AudioLayerManager|null}
+     */
+    getLayers() {
+        const engine = this._getEngine();
+        if (!engine || !engine.soundSystem) return null;
+        return engine.soundSystem.getAudioLayerManager();
+    }
 }

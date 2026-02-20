@@ -98,5 +98,13 @@ export default {
         driftSpeed: 0.2,        // Energy movement speed - sluggish, heavy
         shimmerSpeed: 0.3,      // Vertical pulse speed - slow, weighted
         turbulence: 0.1         // Chaos/randomness factor - minimal, subdued
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 1.0,
+        visualNoise: 0,
+        inputDelay: 45,
+        tempoShift: 0
     }
 };

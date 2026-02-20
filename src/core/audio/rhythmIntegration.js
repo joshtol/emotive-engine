@@ -35,6 +35,7 @@
  */
 
 import rhythmEngine from './rhythm.js';
+import { RhythmInputEvaluator } from './RhythmInputEvaluator.js';
 
 class RhythmIntegration {
     constructor() {
@@ -42,6 +43,7 @@ class RhythmIntegration {
         this.adapter = null;
         this.subsystemConfigs = new Map();
         this.activeModulations = new Map();
+        this._inputEvaluator = null;
     }
     
     /**
@@ -376,6 +378,19 @@ class RhythmIntegration {
         }
     }
     
+    /**
+     * Get (or lazily create) the rhythm input evaluator.
+     * @param {Object} [config] - Optional config overrides
+     * @returns {RhythmInputEvaluator}
+     */
+    getInputEvaluator(config) {
+        if (!this._inputEvaluator) {
+            if (!this.adapter) this.initialize();
+            this._inputEvaluator = new RhythmInputEvaluator(this.adapter, config);
+        }
+        return this._inputEvaluator;
+    }
+
     /**
      * Sync to external audio
      */

@@ -240,8 +240,67 @@ export function getEmotionGestures(emotionName) {
     return emotion?.gestures || [];
 }
 
-// Debug utilities can be imported directly if needed
-// No longer polluting global scope
+/**
+ * Get rhythm modifiers for a single emotion.
+ * @param {string} emotionName
+ * @returns {Object} { windowMultiplier, visualNoise, inputDelay, tempoShift }
+ */
+export function getEmotionRhythmModifiers(emotionName) {
+    const emotion = getEmotion(emotionName);
+    return emotion?.rhythmModifiers ?? { windowMultiplier: 1.0, visualNoise: 0, inputDelay: 0, tempoShift: 0 };
+}
+
+/**
+ * Compute blended rhythm modifiers across multi-emotion slots.
+ * Dominant contributes 75%, undercurrents share 25%.
+ * @param {Array<{emotion: string, intensity: number}>} slots
+ * @returns {Object} Blended { windowMultiplier, visualNoise, inputDelay, tempoShift }
+ */
+export function getBlendedRhythmModifiers(slots) {
+    const defaults = { windowMultiplier: 1.0, visualNoise: 0, inputDelay: 0, tempoShift: 0 };
+    if (!slots || slots.length === 0) return defaults;
+
+    if (slots.length === 1) {
+        const mods = getEmotionRhythmModifiers(slots[0].emotion);
+        const i = slots[0].intensity;
+        return {
+            windowMultiplier: 1.0 + (mods.windowMultiplier - 1.0) * i,
+            visualNoise: mods.visualNoise * i,
+            inputDelay: mods.inputDelay * i,
+            tempoShift: mods.tempoShift * i,
+        };
+    }
+
+    // Find dominant
+    let domIdx = 0;
+    for (let i = 1; i < slots.length; i++) {
+        if (slots[i].intensity > slots[domIdx].intensity) domIdx = i;
+    }
+
+    const result = { windowMultiplier: 0, visualNoise: 0, inputDelay: 0, tempoShift: 0 };
+    const undercurrents = slots.filter((_, i) => i !== domIdx);
+    const ucWeight = undercurrents.length > 0 ? 0.25 / undercurrents.length : 0;
+
+    // Dominant: 75%
+    const domMods = getEmotionRhythmModifiers(slots[domIdx].emotion);
+    const di = slots[domIdx].intensity;
+    result.windowMultiplier += (1.0 + (domMods.windowMultiplier - 1.0) * di) * 0.75;
+    result.visualNoise += domMods.visualNoise * di * 0.75;
+    result.inputDelay += domMods.inputDelay * di * 0.75;
+    result.tempoShift += domMods.tempoShift * di * 0.75;
+
+    // Undercurrents
+    for (const uc of undercurrents) {
+        const ucMods = getEmotionRhythmModifiers(uc.emotion);
+        const ui = uc.intensity;
+        result.windowMultiplier += (1.0 + (ucMods.windowMultiplier - 1.0) * ui) * ucWeight;
+        result.visualNoise += ucMods.visualNoise * ui * ucWeight;
+        result.inputDelay += ucMods.inputDelay * ui * ucWeight;
+        result.tempoShift += ucMods.tempoShift * ui * ucWeight;
+    }
+
+    return result;
+}
 
 // Export plugin adapter for external use
 export { pluginAdapter };
@@ -253,6 +312,8 @@ export default {
     getEmotionVisualParams,
     getEmotionParams: getEmotionVisualParams, // Alias for compatibility
     getEmotionModifiers,
+    getEmotionRhythmModifiers,
+    getBlendedRhythmModifiers,
     listEmotions,
     getAllEmotions,
     hasEmotion,

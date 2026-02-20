@@ -127,5 +127,13 @@ export default {
         driftSpeed: 0.9,        // Energy movement speed - watchful scanning
         shimmerSpeed: 1.8,      // Vertical pulse speed - alert flickering
         turbulence: 0.4         // Chaos/randomness factor - paranoid uncertainty
+    },
+
+    // Rhythm game modifiers
+    rhythmModifiers: {
+        windowMultiplier: 0.9,
+        visualNoise: 0.3,
+        inputDelay: 0,
+        tempoShift: 0
     }
 };

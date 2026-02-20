@@ -78,8 +78,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
-                null,
-                500
+                { undertone: null, duration: 500, intensity: 1 }
             );
         });
 
@@ -88,8 +87,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'surprise',
-                null,
-                500
+                { undertone: null, duration: 500, intensity: 1 }
             );
         });
 
@@ -98,8 +96,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'anger',
-                null,
-                500
+                { undertone: null, duration: 500, intensity: 1 }
             );
         });
 
@@ -108,8 +105,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'sadness',
-                null,
-                500
+                { undertone: null, duration: 500, intensity: 1 }
             );
         });
 
@@ -118,8 +114,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
-                null,
-                500
+                { undertone: null, duration: 500, intensity: 1 }
             );
         });
 
@@ -128,8 +123,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
-                'intense',
-                500
+                { undertone: 'intense', duration: 500, intensity: 1 }
             );
         });
 
@@ -138,8 +132,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
-                'subdued',
-                500
+                { undertone: 'subdued', duration: 500, intensity: 1 }
             );
         });
 
@@ -148,8 +141,7 @@ describe('StateCoordinator', () => {
 
             expect(mockDeps.stateMachine.setEmotion).toHaveBeenCalledWith(
                 'joy',
-                'clear',
-                1000
+                { undertone: 'clear', duration: 1000, intensity: 1 }
             );
         });
 

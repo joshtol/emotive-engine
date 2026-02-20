@@ -75,7 +75,7 @@
 
 import { interpolateHsl } from '../../utils/colorUtils.js';
 import { applyEasing, easeInOutCubic } from '../../utils/easing.js';
-import { hasEmotion, listEmotions } from '../emotions/index.js';
+import { hasEmotion, listEmotions, getBlendedRhythmModifiers } from '../emotions/index.js';
 import { emotionCache } from '../cache/EmotionCache.js';
 
 class EmotiveStateMachine {
@@ -86,10 +86,15 @@ class EmotiveStateMachine {
         this.state = {
             emotion: 'neutral',
             undertone: null,
+            intensity: 1.0,
             gesture: null,
             speaking: false,
             audioLevel: 0
         };
+
+        // Multi-emotion slots (Feature 2)
+        this.slots = [];
+        this.maxSlots = 3;
         
         // Transition management
         this.transitions = {
@@ -97,6 +102,14 @@ class EmotiveStateMachine {
                 current: 'neutral',
                 target: null,
                 progress: 0,
+                duration: 500,
+                startTime: 0,
+                isActive: false
+            },
+            intensity: {
+                from: 1.0,
+                to: 1.0,
+                progress: 1,
                 duration: 500,
                 startTime: 0,
                 isActive: false
@@ -195,18 +208,30 @@ class EmotiveStateMachine {
     }
 
     /**
-     * Sets the emotional state with optional undertone
+     * Sets the emotional state with optional undertone and intensity.
+     * Clears all slots and sets a single emotion (convenience wrapper).
      * @param {string} emotion - The emotion to set
-     * @param {string|null} undertone - Optional undertone modifier
-     * @param {number} duration - Transition duration in milliseconds
+     * @param {string|Object|null} undertoneOrOptions - Undertone string, options object, or null
+     * @param {number} [duration=500] - Transition duration in milliseconds
      * @returns {boolean} Success status
      */
-    setEmotion(emotion, undertone = null, duration = 500) {
+    setEmotion(emotion, undertoneOrOptions = null, duration = 500) {
         return this.errorBoundary.wrap(() => {
+            // Parse overloaded signature
+            let undertone = null;
+            let intensity = 1.0;
+            if (typeof undertoneOrOptions === 'string') {
+                undertone = undertoneOrOptions;
+            } else if (undertoneOrOptions && typeof undertoneOrOptions === 'object') {
+                undertone = undertoneOrOptions.undertone ?? null;
+                duration = undertoneOrOptions.duration ?? duration;
+                intensity = undertoneOrOptions.intensity ?? 1.0;
+            }
+
             // Clear interpolation cache when emotion changes
             this.interpolationCache.cachedProperties = null;
             this.interpolationCache.cachedRenderState = null;
-            
+
             // Validate emotion using modular system
             if (!hasEmotion(emotion) && !Object.prototype.hasOwnProperty.call(this.emotionalStates, emotion)) {
                 const validEmotions = [...Object.keys(this.emotionalStates), ...listEmotions()];
@@ -219,8 +244,14 @@ class EmotiveStateMachine {
                 throw new Error(`Invalid undertone: ${undertone}. Valid undertones: ${Object.keys(this.undertoneModifiers).join(', ')}`);
             }
 
-            // If already in this state, just update undertone
-            if (this.state.emotion === emotion && this.state.undertone === undertone) {
+            // Clamp intensity
+            intensity = Math.max(0, Math.min(1, intensity));
+
+            // Clear slots and set single emotion
+            this.slots = [{ emotion, intensity }];
+
+            // If already in this state with same intensity, just update undertone
+            if (this.state.emotion === emotion && this.state.undertone === undertone && this.state.intensity === intensity) {
                 return true;
             }
 
@@ -235,7 +266,7 @@ class EmotiveStateMachine {
                         startTime: performance.now(),
                         isActive: true
                     };
-                    
+
                     // Reset simulated time for testing
                     if (this._simulatedTime !== undefined) {
                         this._simulatedTime = 0;
@@ -253,7 +284,20 @@ class EmotiveStateMachine {
                 }
                 this.state.emotion = emotion;
             }
-            
+
+            // Set up intensity transition if intensity is changing
+            if (this.state.intensity !== intensity) {
+                this.transitions.intensity = {
+                    from: this.state.intensity,
+                    to: intensity,
+                    progress: 0,
+                    duration: Math.max(100, duration),
+                    startTime: performance.now(),
+                    isActive: true
+                };
+                this.state.intensity = intensity;
+            }
+
             // Set up undertone transition if undertone is changing
             if (this.state.undertone !== undertone) {
                 this.transitions.undertone = {
@@ -271,6 +315,167 @@ class EmotiveStateMachine {
 
             return true;
         }, 'emotion-setting', false)();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // MULTI-EMOTION SLOT SYSTEM (Feature 2)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Push an emotion into a slot. If emotion already exists, add intensity (stacking).
+     * If slots are full, replaces the weakest.
+     * @param {string} emotion - Emotion name
+     * @param {number} [intensity=0.5] - Intensity 0.0-1.0
+     * @returns {boolean} Success
+     */
+    pushEmotion(emotion, intensity = 0.5) {
+        return this.errorBoundary.wrap(() => {
+            if (!hasEmotion(emotion) && !Object.prototype.hasOwnProperty.call(this.emotionalStates, emotion)) {
+                return false;
+            }
+            intensity = Math.max(0, Math.min(1, intensity));
+            this.interpolationCache.cachedProperties = null;
+
+            // If emotion already in a slot, stack intensity
+            const existing = this.slots.find(s => s.emotion === emotion);
+            if (existing) {
+                existing.intensity = Math.min(1, existing.intensity + intensity);
+            } else if (this.slots.length < this.maxSlots) {
+                this.slots.push({ emotion, intensity });
+            } else {
+                // Replace weakest
+                let weakest = 0;
+                for (let i = 1; i < this.slots.length; i++) {
+                    if (this.slots[i].intensity < this.slots[weakest].intensity) weakest = i;
+                }
+                this.slots[weakest] = { emotion, intensity };
+            }
+
+            this._syncDominantToState();
+            return true;
+        }, 'push-emotion', false)();
+    }
+
+    /**
+     * Nudge an emotion's intensity by delta. Creates slot if emotion not present (positive only).
+     * @param {string} emotion - Emotion name
+     * @param {number} delta - Intensity change (can be negative)
+     * @param {number} [cap=1.0] - Maximum intensity
+     */
+    nudgeEmotion(emotion, delta, cap = 1.0) {
+        this.interpolationCache.cachedProperties = null;
+        const existing = this.slots.find(s => s.emotion === emotion);
+        if (existing) {
+            existing.intensity = Math.max(0, Math.min(cap, existing.intensity + delta));
+            if (existing.intensity <= 0) {
+                this.slots = this.slots.filter(s => s !== existing);
+            }
+        } else if (delta > 0) {
+            // Create new slot
+            this.pushEmotion(emotion, Math.min(cap, delta));
+            return;
+        }
+        this._syncDominantToState();
+    }
+
+    /**
+     * Clear all emotion slots. Transition to neutral.
+     */
+    clearEmotions() {
+        this.slots = [];
+        this.interpolationCache.cachedProperties = null;
+        this.state.emotion = 'neutral';
+        this.state.intensity = 1.0;
+    }
+
+    /**
+     * Get all slots (reference — used by EmotionDynamics for decay).
+     * @returns {Array<{emotion: string, intensity: number}>}
+     */
+    getSlots() {
+        return this.slots;
+    }
+
+    /**
+     * Remove slots that have decayed to zero.
+     */
+    pruneEmptySlots() {
+        const before = this.slots.length;
+        this.slots = this.slots.filter(s => s.intensity > 0);
+        if (this.slots.length !== before) {
+            this.interpolationCache.cachedProperties = null;
+            this._syncDominantToState();
+        }
+    }
+
+    /**
+     * Get the dominant emotion slot (highest intensity).
+     * @returns {{emotion: string, intensity: number}|null}
+     */
+    getDominant() {
+        if (!this.slots.length) return null;
+        return this.slots.reduce((a, b) => b.intensity > a.intensity ? b : a);
+    }
+
+    /**
+     * Get non-dominant slots.
+     * @returns {Array<{emotion: string, intensity: number}>}
+     */
+    getUndercurrents() {
+        const dom = this.getDominant();
+        if (!dom) return [];
+        return this.slots.filter(s => s !== dom);
+    }
+
+    /**
+     * Full emotional state query.
+     * @returns {Object}
+     */
+    getEmotionalState() {
+        const dominant = this.getDominant();
+        return {
+            dominant: dominant ? { ...dominant } : null,
+            undercurrents: this.getUndercurrents().map(s => ({ ...s })),
+            slots: this.slots.map(s => ({ ...s }))
+        };
+    }
+
+    /**
+     * Get current blended rhythm modifiers from all emotion slots (Feature 7).
+     * @returns {Object} { windowMultiplier, visualNoise, inputDelay, tempoShift }
+     */
+    getCurrentRhythmModifiers() {
+        if (this.slots.length > 0) {
+            return getBlendedRhythmModifiers(this.slots);
+        }
+        // Fallback: single emotion at current intensity
+        return getBlendedRhythmModifiers([{ emotion: this.state.emotion, intensity: this.state.intensity }]);
+    }
+
+    /**
+     * Sync the dominant slot to the legacy state.emotion / state.intensity fields.
+     * @private
+     */
+    _syncDominantToState() {
+        const dom = this.getDominant();
+        if (dom) {
+            if (this.state.emotion !== dom.emotion) {
+                // Start visual transition
+                this.transitions.emotional = {
+                    current: this.state.emotion,
+                    target: dom.emotion,
+                    progress: 0,
+                    duration: 300,
+                    startTime: performance.now(),
+                    isActive: true
+                };
+                this.state.emotion = dom.emotion;
+            }
+            this.state.intensity = dom.intensity;
+        } else {
+            this.state.emotion = 'neutral';
+            this.state.intensity = 1.0;
+        }
     }
 
     /**
@@ -335,7 +540,12 @@ class EmotiveStateMachine {
             if (this.transitions.emotional.isActive) {
                 this.updateEmotionalTransition(deltaTime);
             }
-            
+
+            // Update intensity transition
+            if (this.transitions.intensity.isActive) {
+                this.updateIntensityTransition(deltaTime);
+            }
+
             // Update undertone transition
             if (this.transitions.undertone.isActive) {
                 this.updateUndertoneTransition(deltaTime);
@@ -384,6 +594,33 @@ class EmotiveStateMachine {
     }
     
     /**
+     * Updates intensity transition progress
+     * @param {number} _deltaTime - Time since last update (unused, uses wall clock)
+     */
+    updateIntensityTransition(_deltaTime) {
+        const transition = this.transitions.intensity;
+        const elapsed = performance.now() - transition.startTime;
+        transition.progress = Math.min(1, elapsed / transition.duration);
+
+        if (transition.progress >= 1) {
+            transition.isActive = false;
+            transition.from = transition.to;
+            transition.progress = 1;
+        }
+    }
+
+    /**
+     * Get interpolated intensity (accounts for active transition).
+     * @returns {number} Current effective intensity 0-1
+     */
+    getEffectiveIntensity() {
+        const transition = this.transitions.intensity;
+        if (!transition.isActive) return this.state.intensity;
+        const eased = easeInOutCubic(transition.progress);
+        return transition.from + (transition.to - transition.from) * eased;
+    }
+
+    /**
      * Updates emotional state transition progress
      * @param {number} deltaTime - Time since last update in milliseconds
      */
@@ -420,38 +657,113 @@ class EmotiveStateMachine {
     getCurrentEmotionalProperties() {
         return this.errorBoundary.wrap(() => {
             const now = performance.now();
-            
+
             // Use cached result if still valid
-            if (this.interpolationCache.cachedProperties && 
+            if (this.interpolationCache.cachedProperties &&
                 (now - this.interpolationCache.lastUpdate) < this.interpolationCache.cacheInterval) {
                 return this.interpolationCache.cachedProperties;
             }
-            
-            const transition = this.transitions.emotional;
+
             let properties;
 
-            if (transition.isActive && transition.target) {
-                // Interpolate between current and target states
-                properties = this.interpolateEmotionalProperties(
-                    transition.current,
-                    transition.target,
-                    transition.progress
-                );
+            // Multi-slot blending when we have undercurrents
+            if (this.slots.length > 1) {
+                properties = this._blendSlotProperties();
             } else {
-                // Use current state properties - fallback to neutral if emotion not found
-                const emotionState = this.emotionalStates[this.state.emotion] || this.emotionalStates.neutral;
-                properties = { ...emotionState };
+                // Single emotion path (legacy or single slot)
+                const transition = this.transitions.emotional;
+                if (transition.isActive && transition.target) {
+                    properties = this.interpolateEmotionalProperties(
+                        transition.current,
+                        transition.target,
+                        transition.progress
+                    );
+                } else {
+                    const emotionState = this.emotionalStates[this.state.emotion] || this.emotionalStates.neutral;
+                    properties = { ...emotionState };
+                }
+
+                // Apply intensity scaling
+                const intensity = this.getEffectiveIntensity();
+                if (intensity < 1.0) {
+                    properties.glowIntensity = this._lerp(0.7, properties.glowIntensity, intensity);
+                    properties.particleRate = Math.round(this._lerp(1, properties.particleRate, intensity));
+                    properties.breathRate = this._lerp(1.0, properties.breathRate, intensity);
+                    properties.breathDepth = properties.breathDepth * intensity;
+                    properties.coreSize = this._lerp(1.0, properties.coreSize, intensity);
+                }
             }
 
             // Apply undertone modifiers
             properties = this.applyUndertone(properties, this.state.undertone);
-            
+
             // Cache the result
             this.interpolationCache.cachedProperties = properties;
             this.interpolationCache.lastUpdate = now;
 
             return properties;
         }, 'emotional-properties', () => this.emotionalStates.neutral)();
+    }
+
+    /**
+     * Blend visual properties across all emotion slots.
+     * Dominant contributes 75%, undercurrents share the remaining 25%.
+     * @private
+     * @returns {Object} Blended properties
+     */
+    _blendSlotProperties() {
+        const dom = this.getDominant();
+        const undercurrents = this.getUndercurrents();
+
+        const domProps = this.emotionalStates[dom.emotion] || this.emotionalStates.neutral;
+        const result = { ...domProps };
+
+        // Scale dominant by its intensity
+        const di = dom.intensity;
+        result.glowIntensity = this._lerp(0.7, domProps.glowIntensity, di) * 0.75;
+        result.particleRate = domProps.particleRate * di * 0.75;
+        result.breathRate = this._lerp(1.0, domProps.breathRate, di) * 0.75;
+        result.breathDepth = domProps.breathDepth * di * 0.75;
+        result.coreSize = this._lerp(1.0, domProps.coreSize, di) * 0.75;
+
+        // Blend in undercurrents
+        const ucWeight = undercurrents.length > 0 ? 0.25 / undercurrents.length : 0;
+        for (const uc of undercurrents) {
+            const ucProps = this.emotionalStates[uc.emotion] || this.emotionalStates.neutral;
+            const ui = uc.intensity;
+            result.glowIntensity += this._lerp(0.7, ucProps.glowIntensity, ui) * ucWeight;
+            result.particleRate += ucProps.particleRate * ui * ucWeight;
+            result.breathRate += this._lerp(1.0, ucProps.breathRate, ui) * ucWeight;
+            result.breathDepth += ucProps.breathDepth * ui * ucWeight;
+            result.coreSize += this._lerp(1.0, ucProps.coreSize, ui) * ucWeight;
+        }
+
+        result.particleRate = Math.round(result.particleRate);
+
+        // Color: weighted HSL blend
+        if (undercurrents.length > 0) {
+            const totalIntensity = this.slots.reduce((sum, s) => sum + s.intensity, 0);
+            let blendedColor = domProps.primaryColor;
+            for (const uc of undercurrents) {
+                const ucProps = this.emotionalStates[uc.emotion] || this.emotionalStates.neutral;
+                const weight = uc.intensity / totalIntensity;
+                blendedColor = interpolateHsl(blendedColor, ucProps.primaryColor, weight);
+            }
+            result.primaryColor = blendedColor;
+        }
+
+        // Discrete properties use dominant
+        result.particleBehavior = domProps.particleBehavior;
+
+        return result;
+    }
+
+    /**
+     * Linear interpolation helper.
+     * @private
+     */
+    _lerp(a, b, t) {
+        return a + (b - a) * t;
     }
 
     /**
@@ -492,6 +804,7 @@ class EmotiveStateMachine {
         return {
             emotion: this.state.emotion,
             undertone: this.state.undertone,
+            intensity: this.state.intensity,
             isTransitioning: this.transitions.emotional.isActive,
             transitionProgress: this.transitions.emotional.progress,
             properties: this.getCurrentEmotionalProperties()
@@ -595,6 +908,7 @@ class EmotiveStateMachine {
      * @param {number} duration - Transition duration in milliseconds
      */
     reset(duration = 500) {
+        this.slots = [];
         this.setEmotion('neutral', null, duration);
     }
 
