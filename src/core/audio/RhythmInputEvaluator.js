@@ -33,6 +33,9 @@ export class RhythmInputEvaluator {
         // Emotion feedback loop (UP-RESONANCE-2 Feature 2)
         this._emotionFeedback = null;  // { perfect: {emotion, delta}, great: ..., good: ..., miss: ... }
         this._emotionTarget = null;    // (emotion, delta) => void
+
+        // Difficulty manager reference (UP-RESONANCE-2 Feature 5)
+        this._difficultyManager = null;
     }
 
     /**
@@ -103,9 +106,15 @@ export class RhythmInputEvaluator {
      * @private
      */
     _gradeOffset(offset, tapTime, targetTime) {
+        // Auto-rhythm assist — always return 'good' (Feature 5)
+        if (this._difficultyManager && this._difficultyManager.autoRhythm) {
+            return this._recordResult('good', offset, tapTime, targetTime);
+        }
+
         const absOffset = Math.abs(offset);
         const emotionMod = this._emotionSource?.() ?? { windowMultiplier: 1.0 };
-        const mod = this._windowModifiers.multiplier * (emotionMod.windowMultiplier || 1.0);
+        const diffMult = this._difficultyManager ? this._difficultyManager.getWindowMultiplier() : 1.0;
+        const mod = this._windowModifiers.multiplier * (emotionMod.windowMultiplier || 1.0) * diffMult;
 
         let grade;
         if (absOffset <= this._windows.perfect * mod) grade = 'perfect';
@@ -113,10 +122,18 @@ export class RhythmInputEvaluator {
         else if (absOffset <= this._windows.good * mod) grade = 'good';
         else grade = 'miss';
 
+        return this._recordResult(grade, offset, tapTime, targetTime);
+    }
+
+    /**
+     * Record a graded result, push to history, fire callbacks.
+     * @private
+     */
+    _recordResult(grade, offset, tapTime, targetTime) {
         const result = {
             grade,
             offset,
-            absOffset,
+            absOffset: Math.abs(offset),
             multiplier: this._grades[grade].multiplier,
             label: this._grades[grade].label,
             timestamp: tapTime,
@@ -198,6 +215,14 @@ export class RhythmInputEvaluator {
      */
     setEmotionTarget(fn) {
         this._emotionTarget = fn || null;
+    }
+
+    /**
+     * Attach a DifficultyManager for window scaling and auto-rhythm (Feature 5).
+     * @param {import('./DifficultyManager.js').DifficultyManager} manager
+     */
+    setDifficultyManager(manager) {
+        this._difficultyManager = manager || null;
     }
 
     setWindows(windows) { Object.assign(this._windows, windows); }

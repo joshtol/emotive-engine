@@ -796,14 +796,40 @@ class EmotiveMascotPublic {
     }
 
     /**
-     * Get the effective BPM accounting for emotion modifiers (UP-RESONANCE-2 Feature 8).
-     * Composites: baseBPM * (1 + emotionTempoShift).
+     * Get the effective BPM accounting for emotion + difficulty modifiers.
+     * Composites: baseBPM * emotionTempoShift * slowModeMult (Features 5+8).
      * @returns {number} Effective BPM
      */
     getEffectiveBPM() {
         const engine = this._getReal();
         if (!engine || !engine.rhythmIntegration) return 120;
-        return engine.rhythmIntegration.getEffectiveBPM(engine.stateMachine);
+        let bpm = engine.rhythmIntegration.getEffectiveBPM(engine.stateMachine);
+        const dm = this._audioManager.getDifficultyManager();
+        bpm *= dm.getBPMMultiplier();
+        return Math.round(bpm * 100) / 100;
+    }
+
+    /**
+     * Set difficulty preset (UP-RESONANCE-2 Feature 5).
+     * @param {'easy'|'normal'|'hard'} preset
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setDifficulty(preset) {
+        this._audioManager.getDifficultyManager().setDifficulty(preset);
+        return this;
+    }
+
+    /**
+     * Set accessibility assists (UP-RESONANCE-2 Feature 5).
+     * @param {Object} opts
+     * @param {boolean} [opts.autoRhythm] - All inputs auto-succeed at 'good'
+     * @param {boolean} [opts.slowMode] - Reduce BPM by 25%
+     * @param {boolean} [opts.visualMetronome] - Enable pulse guide
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setAssist(opts) {
+        this._audioManager.getDifficultyManager().setAssist(opts);
+        return this;
     }
 
     /**

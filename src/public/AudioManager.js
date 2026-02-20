@@ -34,6 +34,8 @@
  * ════════════════════════════════════════════════════════════════════════════════════
  */
 
+import { DifficultyManager } from '../core/audio/DifficultyManager.js';
+
 export class AudioManager {
     /**
      * Create AudioManager
@@ -43,6 +45,7 @@ export class AudioManager {
         this._getEngine = getEngine;
         this._audioBlob = null;
         this._audioDuration = 0;
+        this._difficultyManager = null;
     }
 
     /**
@@ -262,7 +265,23 @@ export class AudioManager {
             });
         }
 
+        // Auto-wire difficulty manager (UP-RESONANCE-2 Feature 5)
+        if (evaluator && !evaluator._difficultyManager) {
+            evaluator.setDifficultyManager(this.getDifficultyManager());
+        }
+
         return evaluator;
+    }
+
+    /**
+     * Get (or lazily create) the DifficultyManager (UP-RESONANCE-2 Feature 5).
+     * @returns {DifficultyManager}
+     */
+    getDifficultyManager() {
+        if (!this._difficultyManager) {
+            this._difficultyManager = new DifficultyManager();
+        }
+        return this._difficultyManager;
     }
 
     /**
