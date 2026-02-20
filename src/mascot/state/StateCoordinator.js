@@ -40,6 +40,14 @@ export class StateCoordinator {
         this.currentEmotion = 'neutral';
         this.emotionIntensity = 1.0;
 
+        // Wire emotion event hooks (UP-RESONANCE-2 Feature 1)
+        // Events from EmotiveStateMachine bubble through to the main mascot event bus
+        if (this.stateMachine.setEventCallback) {
+            this.stateMachine.setEventCallback((eventName, data) => {
+                this._emit(eventName, data);
+            });
+        }
+
         // Emotion dynamics (Feature 4) — created lazily, disabled by default
         this._dynamics = null;
     }

@@ -95,6 +95,11 @@ class EmotiveStateMachine {
         // Multi-emotion slots (Feature 2)
         this.slots = [];
         this.maxSlots = 3;
+
+        // Event hooks (UP-RESONANCE-2 Feature 1)
+        // Set by StateCoordinator to bubble events to main bus
+        this._eventCallback = null;
+        this._previousDominant = null;
         
         // Transition management
         this.transitions = {
@@ -249,6 +254,7 @@ class EmotiveStateMachine {
 
             // Clear slots and set single emotion
             this.slots = [{ emotion, intensity }];
+            this._previousDominant = emotion;
 
             // If already in this state with same intensity, just update undertone
             if (this.state.emotion === emotion && this.state.undertone === undertone && this.state.intensity === intensity) {
@@ -318,6 +324,46 @@ class EmotiveStateMachine {
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // EVENT HOOKS (UP-RESONANCE-2 Feature 1)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Set event callback for emotion state changes.
+     * Called by StateCoordinator to wire into the main event bus.
+     * @param {Function} callback - (eventName, data) => void
+     */
+    setEventCallback(callback) {
+        this._eventCallback = callback;
+    }
+
+    /**
+     * Emit an event through the callback.
+     * @private
+     */
+    _emitEvent(name, data) {
+        if (this._eventCallback) this._eventCallback(name, data);
+    }
+
+    /**
+     * Check if dominant emotion changed and emit event.
+     * @private
+     */
+    _checkDominantChange() {
+        const dom = this.getDominant();
+        const currentDominant = dom ? dom.emotion : null;
+        const prevDominant = this._previousDominant;
+
+        if (currentDominant !== prevDominant) {
+            this._previousDominant = currentDominant;
+            this._emitEvent('dominantChanged', {
+                previous: prevDominant,
+                current: currentDominant,
+                intensity: dom ? dom.intensity : 0
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // MULTI-EMOTION SLOT SYSTEM (Feature 2)
     // ═══════════════════════════════════════════════════════════════════
 
@@ -339,19 +385,32 @@ class EmotiveStateMachine {
             // If emotion already in a slot, stack intensity
             const existing = this.slots.find(s => s.emotion === emotion);
             if (existing) {
+                const before = existing.intensity;
                 existing.intensity = Math.min(1, existing.intensity + intensity);
+                this._emitEvent('slotChanged', { emotion, intensity: existing.intensity, action: 'push' });
+                if (existing.intensity >= 1 && before < 1) {
+                    this._emitEvent('emotionPeaked', { emotion, intensity: existing.intensity });
+                }
             } else if (this.slots.length < this.maxSlots) {
                 this.slots.push({ emotion, intensity });
+                this._emitEvent('slotChanged', { emotion, intensity, action: 'push' });
+                if (intensity >= 1) {
+                    this._emitEvent('emotionPeaked', { emotion, intensity });
+                }
             } else {
                 // Replace weakest
                 let weakest = 0;
                 for (let i = 1; i < this.slots.length; i++) {
                     if (this.slots[i].intensity < this.slots[weakest].intensity) weakest = i;
                 }
+                const removed = this.slots[weakest];
+                this._emitEvent('slotChanged', { emotion: removed.emotion, intensity: 0, action: 'replaced' });
                 this.slots[weakest] = { emotion, intensity };
+                this._emitEvent('slotChanged', { emotion, intensity, action: 'push' });
             }
 
             this._syncDominantToState();
+            this._checkDominantChange();
             return true;
         }, 'push-emotion', false)();
     }
@@ -366,9 +425,16 @@ class EmotiveStateMachine {
         this.interpolationCache.cachedProperties = null;
         const existing = this.slots.find(s => s.emotion === emotion);
         if (existing) {
+            const before = existing.intensity;
             existing.intensity = Math.max(0, Math.min(cap, existing.intensity + delta));
             if (existing.intensity <= 0) {
                 this.slots = this.slots.filter(s => s !== existing);
+                this._emitEvent('slotChanged', { emotion, intensity: 0, action: 'removed' });
+            } else {
+                this._emitEvent('slotChanged', { emotion, intensity: existing.intensity, action: 'nudge' });
+                if (existing.intensity >= cap && before < cap) {
+                    this._emitEvent('emotionPeaked', { emotion, intensity: existing.intensity });
+                }
             }
         } else if (delta > 0) {
             // Create new slot
@@ -376,16 +442,23 @@ class EmotiveStateMachine {
             return;
         }
         this._syncDominantToState();
+        this._checkDominantChange();
     }
 
     /**
      * Clear all emotion slots. Transition to neutral.
      */
     clearEmotions() {
+        const hadSlots = this.slots.length > 0;
         this.slots = [];
         this.interpolationCache.cachedProperties = null;
         this.state.emotion = 'neutral';
         this.state.intensity = 1.0;
+        if (hadSlots) {
+            this._emitEvent('slotChanged', { emotion: null, intensity: 0, action: 'cleared' });
+            this._previousDominant = null;
+            this._emitEvent('dominantChanged', { previous: this._previousDominant, current: null, intensity: 0 });
+        }
     }
 
     /**
@@ -401,10 +474,15 @@ class EmotiveStateMachine {
      */
     pruneEmptySlots() {
         const before = this.slots.length;
+        const removed = this.slots.filter(s => s.intensity <= 0);
         this.slots = this.slots.filter(s => s.intensity > 0);
         if (this.slots.length !== before) {
             this.interpolationCache.cachedProperties = null;
+            for (const r of removed) {
+                this._emitEvent('emotionDecayed', { emotion: r.emotion, intensity: 0, removed: true });
+            }
             this._syncDominantToState();
+            this._checkDominantChange();
         }
     }
 

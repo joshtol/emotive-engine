@@ -40,9 +40,13 @@ export class EmotionDynamics {
             slot.intensity = Math.max(this._decayFloor, slot.intensity - decay);
             if (slot.intensity !== before) {
                 for (const cb of this._onDecay) cb(slot.emotion, slot.intensity, before);
+                // Emit decay event through stateMachine's event pipeline
+                this._sm._emitEvent('emotionDecayed', { emotion: slot.emotion, intensity: slot.intensity, removed: false });
+                this._sm._emitEvent('slotChanged', { emotion: slot.emotion, intensity: slot.intensity, action: 'decay' });
             }
         }
 
+        // pruneEmptySlots emits emotionDecayed with removed: true for zeroed slots
         this._sm.pruneEmptySlots();
     }
 
