@@ -710,6 +710,48 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Serialize full engine state for persistence (UP-RESONANCE-2 Feature 3).
+     * @returns {Object} Snapshot that can be JSON.stringify'd
+     */
+    getSnapshot() {
+        const engine = this._getReal();
+        if (!engine) return null;
+        const snapshot = {
+            version: 1,
+            timestamp: Date.now(),
+            stateMachine: engine.stateMachine.serialize(),
+        };
+        // Include dynamics config if it has been created
+        if (engine.stateCoordinator._dynamics) {
+            snapshot.dynamics = engine.stateCoordinator._dynamics.serialize();
+        }
+        return snapshot;
+    }
+
+    /**
+     * Restore engine state from a snapshot (UP-RESONANCE-2 Feature 3).
+     * @param {Object} data - Snapshot from getSnapshot()
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    loadSnapshot(data) {
+        const engine = this._getReal();
+        if (!engine || !data || data.version !== 1) return this;
+        if (data.stateMachine) {
+            engine.stateMachine.deserialize(data.stateMachine);
+        }
+        if (data.dynamics) {
+            engine.stateCoordinator.dynamics.deserialize(data.dynamics);
+        }
+        // Fire event so listeners know state was restored
+        engine.stateCoordinator._emit('emotionChanged', {
+            emotion: engine.stateMachine.state.emotion,
+            slots: engine.stateMachine.getSlots(),
+            restored: true
+        });
+        return this;
+    }
+
+    /**
      * Get the EmotionDynamics instance for decay/accumulation control.
      * @returns {Object} EmotionDynamics instance
      */

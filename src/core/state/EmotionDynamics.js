@@ -75,6 +75,26 @@ export class EmotionDynamics {
     onDecay(cb) { this._onDecay.push(cb); return () => { this._onDecay = this._onDecay.filter(c => c !== cb); }; }
     onNudge(cb) { this._onNudge.push(cb); return () => { this._onNudge = this._onNudge.filter(c => c !== cb); }; }
 
+    // Serialization (UP-RESONANCE-2 Feature 3)
+    serialize() {
+        return {
+            decayRate: this._decayRate,
+            decayFloor: this._decayFloor,
+            accumulationCap: this._accumulationCap,
+            enabled: this._enabled,
+            paused: this._paused,
+        };
+    }
+
+    deserialize(data) {
+        if (!data) return;
+        this._decayRate = data.decayRate ?? this._decayRate;
+        this._decayFloor = data.decayFloor ?? this._decayFloor;
+        this._accumulationCap = data.accumulationCap ?? this._accumulationCap;
+        this._enabled = data.enabled ?? this._enabled;
+        this._paused = data.paused ?? this._paused;
+    }
+
     destroy() {
         this._onDecay.length = 0;
         this._onNudge.length = 0;

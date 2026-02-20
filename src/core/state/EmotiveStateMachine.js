@@ -1102,6 +1102,52 @@ class EmotiveStateMachine {
         return from + (to - from) * applyEasing(progress, 0, 1, easingType);
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // STATE SERIALIZATION (UP-RESONANCE-2 Feature 3)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Serialize the full emotional state for persistence.
+     * @returns {Object} Serializable snapshot
+     */
+    serialize() {
+        return {
+            version: 1,
+            emotion: this.state.emotion,
+            undertone: this.state.undertone,
+            intensity: this.state.intensity,
+            slots: this.slots.map(s => ({ ...s })),
+            dampening: this._emotionDampening,
+            negativeEmotions: [...this._negativeEmotions],
+        };
+    }
+
+    /**
+     * Restore emotional state from a serialized snapshot.
+     * @param {Object} data - Snapshot from serialize()
+     */
+    deserialize(data) {
+        if (!data || data.version !== 1) return;
+
+        this.slots = (data.slots || []).map(s => ({ emotion: s.emotion, intensity: s.intensity }));
+        this._emotionDampening = data.dampening ?? 0;
+        if (data.negativeEmotions) {
+            this._negativeEmotions = new Set(data.negativeEmotions);
+        }
+
+        // Restore legacy state fields
+        this.state.emotion = data.emotion || 'neutral';
+        this.state.undertone = data.undertone || null;
+        this.state.intensity = data.intensity ?? 1.0;
+        this._previousDominant = data.emotion || null;
+
+        // Clear transitions — we're restoring a settled state
+        this.transitions.emotional.isActive = false;
+        this.transitions.intensity.isActive = false;
+        this.transitions.undertone.isActive = false;
+        this.interpolationCache.cachedProperties = null;
+    }
+
     /**
      * Enables simulated time for testing purposes
      * @param {boolean} enabled - Whether to use simulated time
