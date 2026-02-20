@@ -100,6 +100,10 @@ class EmotiveStateMachine {
         // Set by StateCoordinator to bubble events to main bus
         this._eventCallback = null;
         this._previousDominant = null;
+
+        // Emotion dampening (UP-RESONANCE-2 Feature 4)
+        this._emotionDampening = 0;
+        this._negativeEmotions = new Set(['anger', 'fear', 'sadness', 'disgust', 'suspicion']);
         
         // Transition management
         this.transitions = {
@@ -364,6 +368,35 @@ class EmotiveStateMachine {
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // EMOTION DAMPENING (UP-RESONANCE-2 Feature 4)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Set emotion dampening factor. Reduces the impact of positive nudges
+     * on negative emotions (anger, fear, sadness, disgust, suspicion).
+     * @param {number} factor - 0.0 (no dampening) to 1.0 (full dampening)
+     */
+    setEmotionDampening(factor) {
+        this._emotionDampening = Math.max(0, Math.min(1, factor));
+    }
+
+    /**
+     * Get current emotion dampening factor.
+     * @returns {number} 0.0-1.0
+     */
+    getEmotionDampening() {
+        return this._emotionDampening;
+    }
+
+    /**
+     * Configure which emotions are considered "negative" for dampening.
+     * @param {string[]} emotions - Array of emotion names
+     */
+    setNegativeEmotions(emotions) {
+        this._negativeEmotions = new Set(emotions);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // MULTI-EMOTION SLOT SYSTEM (Feature 2)
     // ═══════════════════════════════════════════════════════════════════
 
@@ -422,6 +455,11 @@ class EmotiveStateMachine {
      * @param {number} [cap=1.0] - Maximum intensity
      */
     nudgeEmotion(emotion, delta, cap = 1.0) {
+        // Apply dampening to positive nudges on negative emotions
+        if (delta > 0 && this._emotionDampening > 0 && this._negativeEmotions.has(emotion)) {
+            delta *= (1 - this._emotionDampening);
+        }
+
         this.interpolationCache.cachedProperties = null;
         const existing = this.slots.find(s => s.emotion === emotion);
         if (existing) {

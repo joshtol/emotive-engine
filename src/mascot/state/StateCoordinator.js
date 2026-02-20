@@ -229,6 +229,28 @@ export class StateCoordinator {
         return this._dynamics;
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // EMOTION DAMPENING (UP-RESONANCE-2 Feature 4)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Set emotion dampening factor (reduces negative emotion spikes).
+     * @param {number} factor - 0.0 (none) to 1.0 (full dampening)
+     * @returns {Object} Chain target
+     */
+    setEmotionDampening(factor) {
+        this.stateMachine.setEmotionDampening(factor);
+        return this._chainTarget;
+    }
+
+    /**
+     * Get current emotion dampening factor.
+     * @returns {number}
+     */
+    getEmotionDampening() {
+        return this.stateMachine.getEmotionDampening();
+    }
+
     /**
      * Cleanup
      */

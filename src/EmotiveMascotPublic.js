@@ -665,6 +665,30 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Set emotion dampening (UP-RESONANCE-2 Feature 4).
+     * Reduces the impact of positive nudges on negative emotions
+     * (anger, fear, sadness, disgust, suspicion).
+     * @param {number} factor - 0.0 (no dampening) to 1.0 (full dampening)
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setEmotionDampening(factor) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.stateCoordinator.setEmotionDampening(factor);
+        return this;
+    }
+
+    /**
+     * Get current emotion dampening factor.
+     * @returns {number} 0.0-1.0
+     */
+    getEmotionDampening() {
+        const engine = this._getReal();
+        if (!engine) return 0;
+        return engine.stateCoordinator.getEmotionDampening();
+    }
+
+    /**
      * Clear all emotion slots. Resets to neutral.
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
