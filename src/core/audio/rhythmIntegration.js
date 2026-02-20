@@ -392,6 +392,21 @@ class RhythmIntegration {
     }
 
     /**
+     * Get the effective BPM accounting for emotion modifiers (UP-RESONANCE-2 Feature 8).
+     * @param {Object} [stateMachine] - EmotiveStateMachine for rhythm modifiers
+     * @returns {number} Composite BPM
+     */
+    getEffectiveBPM(stateMachine) {
+        if (!this.adapter) return 120;
+        let bpm = this.adapter.getBPM();
+        if (stateMachine && typeof stateMachine.getCurrentRhythmModifiers === 'function') {
+            const mods = stateMachine.getCurrentRhythmModifiers();
+            if (mods.tempoShift) bpm *= (1 + mods.tempoShift);
+        }
+        return Math.round(bpm * 100) / 100;
+    }
+
+    /**
      * Sync to external audio
      */
     syncToAudio(audioContext, audioSource) {

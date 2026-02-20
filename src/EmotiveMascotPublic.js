@@ -754,6 +754,17 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Get the effective BPM accounting for emotion modifiers (UP-RESONANCE-2 Feature 8).
+     * Composites: baseBPM * (1 + emotionTempoShift).
+     * @returns {number} Effective BPM
+     */
+    getEffectiveBPM() {
+        const engine = this._getReal();
+        if (!engine || !engine.rhythmIntegration) return 120;
+        return engine.rhythmIntegration.getEffectiveBPM(engine.stateMachine);
+    }
+
+    /**
      * Set shape
      * @param {string} shape - Shape name
      * @param {Object|number} [configOrTimestamp] - Config object or timestamp for recording
