@@ -705,6 +705,23 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Configure automatic emotion nudges based on rhythm grade (UP-RESONANCE-2 Feature 2).
+     * When the evaluator grades a tap, it auto-nudges the emotion system.
+     *
+     * @param {Object} config - Map of grade → { emotion, delta } or null
+     * @param {Object} [config.perfect] - e.g. { emotion: 'joy', delta: 0.10 }
+     * @param {Object} [config.great]   - e.g. { emotion: 'calm', delta: 0.05 }
+     * @param {Object} [config.good]    - null for no effect
+     * @param {Object} [config.miss]    - e.g. { emotion: 'anger', delta: 0.15 }
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setEmotionFeedback(config) {
+        const evaluator = this.getInputEvaluator();
+        if (evaluator) evaluator.setEmotionFeedback(config);
+        return this;
+    }
+
+    /**
      * Get the AudioLayerManager for stem-based adaptive music.
      * @returns {Object|null} AudioLayerManager instance
      */

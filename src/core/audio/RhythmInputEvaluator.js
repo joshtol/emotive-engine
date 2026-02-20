@@ -29,6 +29,10 @@ export class RhythmInputEvaluator {
         this._history = [];
         this._maxHistory = 100;
         this._onEvaluate = [];
+
+        // Emotion feedback loop (UP-RESONANCE-2 Feature 2)
+        this._emotionFeedback = null;  // { perfect: {emotion, delta}, great: ..., good: ..., miss: ... }
+        this._emotionTarget = null;    // (emotion, delta) => void
     }
 
     /**
@@ -123,6 +127,12 @@ export class RhythmInputEvaluator {
         if (this._history.length > this._maxHistory) this._history.shift();
         for (const cb of this._onEvaluate) cb(result);
 
+        // Emotion feedback loop — nudge emotion based on grade
+        if (this._emotionFeedback && this._emotionTarget) {
+            const fb = this._emotionFeedback[grade];
+            if (fb) this._emotionTarget(fb.emotion, fb.delta);
+        }
+
         return result;
     }
 
@@ -168,6 +178,26 @@ export class RhythmInputEvaluator {
     onEvaluate(callback) {
         this._onEvaluate.push(callback);
         return () => { this._onEvaluate = this._onEvaluate.filter(cb => cb !== callback); };
+    }
+
+    /**
+     * Configure automatic emotion nudges per grade (UP-RESONANCE-2 Feature 2).
+     * @param {Object} config - Map of grade → { emotion, delta }
+     * @param {Object} [config.perfect] - e.g. { emotion: 'joy', delta: 0.10 }
+     * @param {Object} [config.great]   - e.g. { emotion: 'calm', delta: 0.05 }
+     * @param {Object} [config.good]    - null for no effect
+     * @param {Object} [config.miss]    - e.g. { emotion: 'anger', delta: 0.15 }
+     */
+    setEmotionFeedback(config) {
+        this._emotionFeedback = config || null;
+    }
+
+    /**
+     * Set the nudge function called when emotion feedback fires.
+     * @param {Function} fn - (emotion, delta) => void
+     */
+    setEmotionTarget(fn) {
+        this._emotionTarget = fn || null;
     }
 
     setWindows(windows) { Object.assign(this._windows, windows); }

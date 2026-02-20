@@ -253,7 +253,16 @@ export class AudioManager {
     getInputEvaluator(config) {
         const engine = this._getEngine();
         if (!engine || !engine.rhythmIntegration) return null;
-        return engine.rhythmIntegration.getInputEvaluator(config);
+        const evaluator = engine.rhythmIntegration.getInputEvaluator(config);
+
+        // Auto-wire emotion target if stateCoordinator available (UP-RESONANCE-2 Feature 2)
+        if (evaluator && !evaluator._emotionTarget && engine.stateCoordinator) {
+            evaluator.setEmotionTarget((emotion, delta) => {
+                engine.stateCoordinator.nudgeEmotion(emotion, delta);
+            });
+        }
+
+        return evaluator;
     }
 
     /**
