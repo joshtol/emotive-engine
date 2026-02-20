@@ -425,6 +425,11 @@ class AnimationController {
         if (this.subsystems.stateMachine) {
             this.subsystems.stateMachine.update(deltaTime);
         }
+
+        // Tick timed modifiers (UP-RESONANCE-2 Feature 6)
+        if (this.parentMascot?.stateCoordinator?._modifierManager) {
+            this.parentMascot.stateCoordinator._modifierManager.update(deltaTime);
+        }
         
         // Gesture updates now handled by renderer
         

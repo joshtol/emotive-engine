@@ -833,6 +833,41 @@ class EmotiveMascotPublic {
     }
 
     /**
+     * Apply a timed modifier (UP-RESONANCE-2 Feature 6).
+     * @param {string} name - Unique modifier name
+     * @param {Object} config - { duration, rhythmWindowMult, visualNoise, inputDelay, tempoShift, onTick, onExpire }
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    applyModifier(name, config) {
+        const engine = this._getReal();
+        if (!engine) throw new Error('Engine not initialized. Call init() first.');
+        engine.stateCoordinator.modifiers.applyModifier(name, config);
+        return this;
+    }
+
+    /**
+     * Remove a timed modifier by name.
+     * @param {string} name
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    removeModifier(name) {
+        const engine = this._getReal();
+        if (!engine) return this;
+        engine.stateCoordinator.modifiers.removeModifier(name);
+        return this;
+    }
+
+    /**
+     * Get all active modifiers.
+     * @returns {Array<{name: string, remaining: number|null, config: Object}>}
+     */
+    getActiveModifiers() {
+        const engine = this._getReal();
+        if (!engine) return [];
+        return engine.stateCoordinator.modifiers.getActiveModifiers();
+    }
+
+    /**
      * Set shape
      * @param {string} shape - Shape name
      * @param {Object|number} [configOrTimestamp] - Config object or timestamp for recording

@@ -8,6 +8,7 @@
 import { getEmotion, getEmotionVisualParams } from '../../core/emotions/index.js';
 import rhythmIntegration from '../../core/audio/rhythmIntegration.js';
 import { EmotionDynamics } from '../../core/state/EmotionDynamics.js';
+import { ModifierManager } from '../../core/state/ModifierManager.js';
 
 export class StateCoordinator {
     /**
@@ -50,6 +51,9 @@ export class StateCoordinator {
 
         // Emotion dynamics (Feature 4) — created lazily, disabled by default
         this._dynamics = null;
+
+        // Timed modifier system (UP-RESONANCE-2 Feature 6)
+        this._modifierManager = new ModifierManager((name, data) => this._emit(name, data));
     }
 
     /**
@@ -251,11 +255,19 @@ export class StateCoordinator {
         return this.stateMachine.getEmotionDampening();
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // TIMED MODIFIERS (UP-RESONANCE-2 Feature 6)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /** @returns {ModifierManager} */
+    get modifiers() { return this._modifierManager; }
+
     /**
      * Cleanup
      */
     destroy() {
         if (this._dynamics) this._dynamics.destroy();
+        this._modifierManager.clear();
         this.currentEmotion = 'neutral';
     }
 }
