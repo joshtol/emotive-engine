@@ -13,6 +13,7 @@ import { GestureController } from './public/GestureController.js';
 import { TimelineRecorder } from './public/TimelineRecorder.js';
 import { ElementAttachmentManager } from './public/ElementAttachmentManager.js';
 import { VisualEffectsManager } from './public/VisualEffectsManager.js';
+import { StanceRegistry } from './core/state/StanceRegistry.js';
 import { IntentParser } from './core/intent/IntentParser.js';
 import { listGestures } from './core/gestures/index.js';
 
@@ -60,6 +61,7 @@ class EmotiveMascotPublic {
         };
 
         // Initialize managers
+        this._stanceRegistry = new StanceRegistry();
         this._audioManager = new AudioManager(() => this._getReal());
         this._gestureController = new GestureController(
             () => this._getReal(),
@@ -876,10 +878,20 @@ class EmotiveMascotPublic {
     setShape(shape, configOrTimestamp) {
         const engine = this._getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
+
+        // Check stance registry first (UP-RESONANCE-2 Feature 7)
+        let resolvedShape = shape;
+        if (this._stanceRegistry.hasStance(shape)) {
+            const stanceConfig = this._stanceRegistry.activate(shape);
+            resolvedShape = stanceConfig.shape || shape;
+            if (engine.stateCoordinator) {
+                engine.stateCoordinator._emit('stanceChanged', { name: shape, config: stanceConfig });
+            }
+        }
+
         let config = {};
         let timestamp = undefined;
-        
+
         // Handle parameter overloading
         if (typeof configOrTimestamp === 'number') {
             timestamp = configOrTimestamp;
@@ -888,20 +900,61 @@ class EmotiveMascotPublic {
             config = restConfig;
             timestamp = newTimestamp;
         }
-        
+
         // Record if in recording mode
         if (this._isRecording) {
             const time = timestamp || (Date.now() - this._recordingStartTime);
             this._timeline.push({
                 type: 'shape',
-                name: shape,
+                name: resolvedShape,
                 time,
                 config
             });
         }
-        
+
         // Set in engine with config for rhythm sync
-        if (engine) engine.morphTo(shape, config);
+        if (engine) engine.morphTo(resolvedShape, config);
+    }
+
+    /**
+     * Register a named morph stance (UP-RESONANCE-2 Feature 7).
+     * @param {string} name - Stance name
+     * @param {Object} config - { shape, elements, visualConfig, modifiers, description }
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    registerStance(name, config) {
+        this._stanceRegistry.registerStance(name, config);
+        return this;
+    }
+
+    /**
+     * Get the active stance, if any.
+     * @returns {{name: string, config: Object}|null}
+     */
+    getActiveStance() {
+        return this._stanceRegistry.getActiveStance();
+    }
+
+    /**
+     * Get all registered stance names.
+     * @returns {string[]}
+     */
+    getAvailableStances() {
+        return this._stanceRegistry.getAvailableStances();
+    }
+
+    /**
+     * Dismiss the active stance and return to default form.
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    dismissStance() {
+        if (this._stanceRegistry.dismiss()) {
+            const engine = this._getReal();
+            if (engine && engine.stateCoordinator) {
+                engine.stateCoordinator._emit('stanceChanged', { name: null, config: null });
+            }
+        }
+        return this;
     }
 
     /**
@@ -1213,6 +1266,93 @@ class EmotiveMascotPublic {
 
         requestAnimationFrame(animate);
         return this;
+    }
+
+    /**
+     * Orchestrated scene transition: fadeOut → setupFn → fadeIn (UP-RESONANCE-2 Feature 9).
+     * @param {Function} setupFn - (mascot) => void, called during black screen
+     * @param {Object} [opts]
+     * @param {number} [opts.fadeOutMs=500]
+     * @param {number} [opts.fadeInMs=500]
+     * @returns {Promise<void>}
+     */
+    async transitionTo(setupFn, opts = {}) {
+        const fadeOutMs = opts.fadeOutMs ?? 500;
+        const fadeInMs = opts.fadeInMs ?? 500;
+
+        // Fade out
+        await new Promise(resolve => {
+            const startOpacity = this.getOpacity();
+            const startTime = performance.now();
+            const animate = t => {
+                const progress = Math.min((t - startTime) / fadeOutMs, 1);
+                this.setOpacity(startOpacity * (1 - progress));
+                if (progress < 1) requestAnimationFrame(animate);
+                else resolve();
+            };
+            requestAnimationFrame(animate);
+        });
+
+        // Apply changes during black
+        if (setupFn) setupFn(this);
+
+        // Fade in
+        await new Promise(resolve => {
+            const startTime = performance.now();
+            const animate = t => {
+                const progress = Math.min((t - startTime) / fadeInMs, 1);
+                this.setOpacity(progress);
+                if (progress < 1) requestAnimationFrame(animate);
+                else resolve();
+            };
+            requestAnimationFrame(animate);
+        });
+    }
+
+    /**
+     * Set ambient mood overlay (UP-RESONANCE-2 Feature 10).
+     * Multipliers affect particle density, glow, and breath speed.
+     * @param {Object|string} moodOrPreset - Config object or preset name
+     * @param {string} [moodOrPreset.tint] - Color overlay hex
+     * @param {number} [moodOrPreset.particleDensity=1.0] - Spawn rate multiplier
+     * @param {number} [moodOrPreset.glowIntensity=1.0] - Glow multiplier
+     * @param {number} [moodOrPreset.breathSpeed=1.0] - Breathing multiplier
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    setAmbientMood(moodOrPreset) {
+        let config;
+        if (typeof moodOrPreset === 'string') {
+            config = this._ambientPresets?.[moodOrPreset];
+            if (!config) return this;
+        } else {
+            config = moodOrPreset;
+        }
+        this._ambientMood = { ...config };
+
+        // Apply tint if available
+        if (config.tint) this.setColor(config.tint);
+
+        return this;
+    }
+
+    /**
+     * Register a named ambient mood preset.
+     * @param {string} name - Preset name
+     * @param {Object} config - { tint, particleDensity, glowIntensity, breathSpeed }
+     * @returns {EmotiveMascotPublic} This instance for chaining
+     */
+    registerAmbientPreset(name, config) {
+        if (!this._ambientPresets) this._ambientPresets = {};
+        this._ambientPresets[name] = { ...config };
+        return this;
+    }
+
+    /**
+     * Get the current ambient mood config.
+     * @returns {Object|null}
+     */
+    getAmbientMood() {
+        return this._ambientMood ? { ...this._ambientMood } : null;
     }
 
     /**
