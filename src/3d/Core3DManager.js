@@ -2248,60 +2248,41 @@ export class Core3DManager {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // FIRE OVERLAY - Flame effect applied as additive shader overlay
+        // FIRE OVERLAY - Consuming flame effect with smooth fade-out
         // ═══════════════════════════════════════════════════════════════════════════
-        // Creates a duplicate mesh with fire shader that renders on top,
-        // showing flames, heat glow, and embers.
         if (blended.fireOverlay && blended.fireOverlay.enabled) {
+            // Cancel any in-progress fade-out (new gesture started while old was fading)
+            this._fireOverlayFadingOut = false;
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
-                // Create overlay mesh if not already created
                 if (!this._fireOverlayMesh) {
-                    // Create fire material in overlay mode
                     this._fireMaterial = createFireMaterial({
                         temperature: blended.fireOverlay.temperature || 0.5,
-                        opacity: 0.6,
-                        overlay: true  // Use overlay mode for sparse flame visibility
+                        opacity: 0.4
                     });
-
-                    // Clone the mesh geometry for the overlay
-                    this._fireOverlayMesh = new THREE.Mesh(
-                        mesh.geometry,
-                        this._fireMaterial
-                    );
-
-                    // Slightly larger to avoid z-fighting
-                    this._fireOverlayMesh.scale.setScalar(1.02);
-
-                    // Add as child of original mesh so it follows transforms
+                    this._fireOverlayMesh = new THREE.Mesh(mesh.geometry, this._fireMaterial);
+                    this._fireOverlayMesh.scale.setScalar(1.04);
                     mesh.add(this._fireOverlayMesh);
-
-                    // Render after original mesh
                     this._fireOverlayMesh.renderOrder = mesh.renderOrder + 2;
                 }
 
                 // Spawn 3D fire elements - runs every frame but signature prevents respawn
                 const {spawnMode, animation, models, count, scale, embedDepth} = blended.fireOverlay;
                 if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    // Create spawn signature from key config properties to detect gesture changes
-                    // Handle array spawnMode (spawn layers) by stringifying for reliable signature
                     const modeSignature = Array.isArray(spawnMode)
                         ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
                         : String(spawnMode);
                     const spawnSignature = `fire:${modeSignature}:${blended.fireOverlay.duration}:${animation?.type || 'default'}`;
 
-                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
-                    // This prevents: A runs, B interrupts, B ends, A's config returns → would respawn A
                     this._spawnedSignatures = this._spawnedSignatures || new Set();
 
-                    // Only spawn if this signature hasn't been spawned yet in this session
                     if (!this._spawnedSignatures.has(spawnSignature)) {
                         this.elementSpawner.triggerExit(); // Exit ALL elements (crossfade)
                         this.elementSpawner.spawn('fire', {
                             intensity: blended.fireOverlay.strength || 0.8,
                             mode: spawnMode,
-                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            animation,
                             models,
                             count,
                             scale,
@@ -2313,43 +2294,64 @@ export class Core3DManager {
                     }
                 }
 
-                // Update fire material each frame
+                // Update fire material uniforms
                 if (this._fireMaterial?.uniforms?.uTime) {
                     this._fireMaterial.uniforms.uTime.value = blended.fireOverlay.time;
                 }
-                // Update intensity based on heat
-                if (this._fireMaterial?.uniforms?.uIntensity) {
-                    const baseIntensity = this._fireMaterial.uniforms.uIntensity.value;
-                    this._fireMaterial.uniforms.uIntensity.value = baseIntensity * (0.5 + blended.fireOverlay.heat * 0.5);
+                if (this._fireMaterial?.uniforms?.uTemperature) {
+                    this._fireMaterial.uniforms.uTemperature.value = blended.fireOverlay.temperature || 0.5;
+                }
+                if (this._fireMaterial?.uniforms?.uOpacity) {
+                    this._fireMaterial.uniforms.uOpacity.value = Math.min(0.4, blended.fireOverlay.strength);
+                }
+                if (this._fireMaterial?.uniforms?.uProgress) {
+                    this._fireMaterial.uniforms.uProgress.value = blended.fireOverlay.progress ?? 0;
                 }
 
-                // Store gesture progress for element spawner animation (temperature evolution)
                 this._currentFireProgress = blended.fireOverlay.progress ?? null;
             }
         } else if (this._fireOverlayMesh) {
-            // Remove overlay mesh when fire effect ends
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._fireOverlayMesh.parent) {
-                mesh.remove(this._fireOverlayMesh);
-            }
-            // Dispose resources
-            if (this._fireMaterial) {
-                this._fireMaterial.dispose();
-                this._fireMaterial = null;
-            }
-            this._fireOverlayMesh = null;
-
-            // Gracefully exit fire elements (fade out)
-            if (this.elementSpawner) {
-                this.elementSpawner.triggerExit('fire');
+            // Fade out overlay smoothly — flames retreat before disappearing
+            if (!this._fireOverlayFadingOut) {
+                this._fireOverlayFadingOut = true;
+                if (this.elementSpawner) {
+                    this.elementSpawner.triggerExit('fire');
+                }
+                this._elementSpawnSignature = null;
+                this._spawnedSignatures = null;
             }
 
-            // Clear spawn tracking so next gesture session starts fresh
-            this._elementSpawnSignature = null;
-            this._spawnedSignatures = null;
+            // Decay progress and opacity
+            if (this._fireMaterial?.uniforms?.uProgress) {
+                this._fireMaterial.uniforms.uProgress.value *= 0.88;
+            }
+            if (this._fireMaterial?.uniforms?.uOpacity) {
+                this._fireMaterial.uniforms.uOpacity.value *= 0.88;
 
-            // Clear fire progress tracking
-            this._currentFireProgress = null;
+                if (this._fireMaterial.uniforms.uOpacity.value < 0.005) {
+                    const mesh = this.renderer?.coreMesh;
+                    if (mesh && this._fireOverlayMesh.parent) {
+                        mesh.remove(this._fireOverlayMesh);
+                    }
+                    this._fireMaterial.dispose();
+                    this._fireMaterial = null;
+                    this._fireOverlayMesh = null;
+                    this._fireOverlayFadingOut = false;
+                    this._currentFireProgress = null;
+                }
+            } else {
+                const mesh = this.renderer?.coreMesh;
+                if (mesh && this._fireOverlayMesh.parent) {
+                    mesh.remove(this._fireOverlayMesh);
+                }
+                if (this._fireMaterial) {
+                    this._fireMaterial.dispose();
+                    this._fireMaterial = null;
+                }
+                this._fireOverlayMesh = null;
+                this._fireOverlayFadingOut = false;
+                this._currentFireProgress = null;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
