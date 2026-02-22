@@ -5,48 +5,23 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Voidmeditation gesture - relay arc energy flow through 3 vertical rings
+ * @fileoverview Voidmeditation gesture - triple concentric void hexagons
  * @module gestures/destruction/elemental/voidmeditation
  *
- * CONCEPT: Three camera-facing void-rings stacked vertically (bottom → center → top).
- * Energy flows upward through the rings sequentially via relay arc handoff.
- * Slow rotation and breathing pulse create a meditative, centered feel.
+ * CONCEPT: Three concentric Star-of-David hexagons (inner / middle / outer), each built
+ * from two interlocked triangles — DOUBLED with a counter-rotating mirror set. 36 rings
+ * total. Each layer has a 120° arc-phase offset; the counter set adds another 180° offset
+ * so arcs appear on both sides of every ring. Inner spins fastest, outer slowest.
+ *
+ * RELAY WAVE: All 36 rings are always visible (relay floor=0.5). A brightness wave
+ * sweeps through 3 relay steps, but the indices are STAGGERED across hexagons
+ * (inner [0,1,2], middle [1,2,0], outer [2,0,1]) creating a rotating diagonal band
+ * of peak brightness — the void appears to spiral through the mandala.
  *
  * Uses the relay arc system (aRandomSeed >= 100 encoding) for per-instance arc control.
  */
 
 import { buildVoidEffectGesture } from './voidEffectFactory.js';
-
-// Shared animation config for all 3 rings
-const SHARED_ANIMATION = {
-    appearAt: 0.0,
-    disappearAt: 0.7,
-    enter: { type: 'fade', duration: 0.2, easing: 'easeInOut' },
-    exit: { type: 'fade', duration: 0.25, easing: 'easeInOut' },
-    emissive: { min: 0.4, max: 0.8, frequency: 1.2, pattern: 'sine' },
-    pulse: { amplitude: 0.08, frequency: 1.5, easing: 'easeInOut' },
-    cutout: {
-        strength: 0.5,
-        primary: { pattern: 4, scale: 2.0, weight: 1.0 },
-        secondary: { pattern: 6, scale: 1.5, weight: 0.5 },
-        blend: 'add',
-        travel: 'angular',
-        travelSpeed: 0.3,
-        strengthCurve: 'bell',
-        bellPeakAt: 0.5,
-        bellWidth: 1.0
-    },
-    grain: { type: 3, strength: 0.4, scale: 0.5, speed: 0.3, blend: 'multiply' },
-    atmospherics: [{
-        preset: 'smoke',
-        targets: null,
-        anchor: 'above',
-        intensity: 0.2,
-        sizeScale: 0.8,
-        progressCurve: 'sustain'
-    }],
-    renderOrder: 10
-};
 
 const SHARED_ANCHOR = {
     landmark: 'center',
@@ -57,92 +32,88 @@ const SHARED_ANCHOR = {
     endScale: 1.0
 };
 
+const SHARED_ANIMATION = {
+    disappearAt: 0.85,
+    enter: { type: 'scale', duration: 0.15, easing: 'easeOut' },
+    exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
+    emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+    blending: 'normal',
+    renderOrder: 10,
+    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }
+};
+
+function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0) {
+    const S = 0.866;
+    const round = v => Math.round(v * 100) / 100;
+
+    const rings = [
+        // Triangle 1 (upright)
+        { x: 0,        y: radius,      relay: relayIndices[0], arc: 4.71, dir: -1 },
+        { x: S*radius, y: -0.5*radius, relay: relayIndices[1], arc: 3.14, dir:  1 },
+        { x:-S*radius, y: -0.5*radius, relay: relayIndices[2], arc: 0.0,  dir: -1 },
+        // Triangle 2 (inverted)
+        { x: 0,        y: -radius,     relay: relayIndices[0], arc: 4.71, dir:  1 },
+        { x:-S*radius, y:  0.5*radius, relay: relayIndices[1], arc: 3.14, dir: -1 },
+        { x: S*radius, y:  0.5*radius, relay: relayIndices[2], arc: 0.0,  dir:  1 },
+    ];
+
+    return rings.map(r => ({
+        type: 'anchor',
+        anchor: { ...SHARED_ANCHOR, offset: { x: round(r.x), y: round(r.y), z: 0 } },
+        count: 1,
+        scale: ringScale,
+        sizeVariance: 0,
+        models: ['void-ring'],
+        animation: {
+            ...SHARED_ANIMATION,
+            appearAt: delay,
+            rotate: [{ axis: 'z', rotations: r.dir * baseRotations, phase: 0 }],
+            modelOverrides: {
+                'void-ring': {
+                    arcPhase: (r.arc + arcPhaseOffset) % 6.28,
+                    relayIndex: r.relay,
+                    orientationOverride: 'camera'
+                }
+            }
+        }
+    }));
+}
+
 const VOIDMEDITATION_CONFIG = {
     name: 'voidmeditation',
     emoji: '🧘',
     type: 'blending',
-    description: 'Meditative void relay — entropy flows through three aligned rings',
-    duration: 2500,
-    beats: 4,
-    intensity: 0.7,
+    description: 'Triple void hexagon mandala — three concentric relay hexagons with differential rotation',
+    duration: 3000,
+    beats: 6,
+    intensity: 1.5,
     category: 'emanating',
     entropy: 0.3,
 
     spawnMode: [
-        // Ring A — bottom — relay 0, slow CW
-        {
-            type: 'anchor',
-            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: -0.3, z: 0 } },
-            count: 1,
-            scale: 1.5,
-            sizeVariance: 0,
-            models: ['void-ring'],
-            animation: {
-                ...SHARED_ANIMATION,
-                rotate: [{ axis: 'z', rotations: 0.2 }],
-                modelOverrides: {
-                    'void-ring': {
-                        arcPhase: 0.0,
-                        relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        },
+        // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══
+        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0),
+        ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08),
+        ...createHexLayer(0.78, 1.55,  1,   4.19, [2, 0, 1], 0.16),
 
-        // Ring B — center — relay 1, slow CCW
-        {
-            type: 'anchor',
-            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: 0, z: 0 } },
-            count: 1,
-            scale: 1.5,
-            sizeVariance: 0,
-            models: ['void-ring'],
-            animation: {
-                ...SHARED_ANIMATION,
-                rotate: [{ axis: 'z', rotations: -0.15 }],
-                modelOverrides: {
-                    'void-ring': {
-                        arcPhase: 2.09,
-                        relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        },
-
-        // Ring C — top — relay 2, slow CW
-        {
-            type: 'anchor',
-            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: 0.3, z: 0 } },
-            count: 1,
-            scale: 1.5,
-            sizeVariance: 0,
-            models: ['void-ring'],
-            animation: {
-                ...SHARED_ANIMATION,
-                rotate: [{ axis: 'z', rotations: 0.1 }],
-                modelOverrides: {
-                    'void-ring': {
-                        arcPhase: 4.19,
-                        relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+        // ═══ COUNTER SET (opposite rotation, +180° arc offset) ═══
+        ...createHexLayer(0.28, 0.70, -2,    3.14, [0, 1, 2], 0.0),
+        ...createHexLayer(0.52, 1.15,  1.5,  5.23, [1, 2, 0], 0.08),
+        ...createHexLayer(0.78, 1.55, -1,    1.05, [2, 0, 1], 0.16),
     ],
 
     glowColor: [0.3, 0.1, 0.5],
     glowIntensityMin: 0.4,
     glowIntensityMax: 0.8,
     glowFlickerRate: 2,
-    scaleVibration: 0.004,
-    scaleFrequency: 1.5,
-    scaleGrowth: 0,
+    scaleVibration: 0.01,
+    scaleFrequency: 2,
+    scaleContract: 0.02,
     tremor: 0.002,
-    tremorFrequency: 1.2,
-    decayRate: 0.2
+    tremorFrequency: 3,
+    shakeAmount: 0.003,
+    shakeFrequency: 4,
+    decayRate: 0.1
 };
 
 export default buildVoidEffectGesture(VOIDMEDITATION_CONFIG);

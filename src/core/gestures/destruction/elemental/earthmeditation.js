@@ -5,105 +5,95 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Earthmeditation gesture - relay arc energy flow through 3 vertical rings
+ * @fileoverview Earthmeditation gesture - dual Star-of-David stone weave
  * @module gestures/destruction/elemental/earthmeditation
  *
- * CONCEPT: Three camera-facing earth-rings stacked vertically (bottom → center → top).
- * Energy flows upward through the rings sequentially via relay arc handoff.
- * Slow rotation and breathing pulse create a meditative, centered feel.
+ * CONCEPT: Two Star-of-David hexagons — one original, one vertically flipped with
+ * reversed rotations. 12 rings total. Each hexagon is a trinity of earth-rings
+ * with relay arc handoff creating a weaving stone flow.
  *
  * Uses the relay arc system (aRandomSeed >= 100 encoding) for per-instance arc control.
  */
 
 import { buildEarthEffectGesture } from './earthEffectFactory.js';
 
-// Shared animation config for all 3 rings
-const SHARED_ANIMATION = {
-    appearAt: 0.0,
-    disappearAt: 0.7,
-    enter: { type: 'fade', duration: 0.2, easing: 'easeInOut' },
-    exit: { type: 'fade', duration: 0.25, easing: 'easeInOut' },
-    emissive: { min: 0.5, max: 0.9, frequency: 1.2, pattern: 'sine' },
-    pulse: { amplitude: 0.08, frequency: 1.5, easing: 'easeInOut' },
-    cutout: {
-        strength: 0.5,
-        primary: { pattern: 4, scale: 2.0, weight: 1.0 },
-        secondary: { pattern: 6, scale: 1.5, weight: 0.5 },
-        blend: 'add',
-        travel: 'angular',
-        travelSpeed: 0.4,
-        strengthCurve: 'bell',
-        bellPeakAt: 0.5,
-        bellWidth: 1.0
-    },
-    grain: { type: 3, strength: 0.25, scale: 0.4, speed: 0.4, blend: 'multiply' },
-    atmospherics: [{
-        preset: 'earth-dust',
-        targets: null,
-        anchor: 'above',
-        intensity: 0.2,
-        sizeScale: 0.8,
-        progressCurve: 'sustain'
-    }],
-    renderOrder: 10
-};
-
-const SHARED_ANCHOR = {
-    landmark: 'center',
-    orientation: 'camera',
-    cameraOffset: 1.0,
-    relativeOffset: true,
-    startScale: 1.0,
-    endScale: 1.0
-};
-
 const EARTHMEDITATION_CONFIG = {
     name: 'earthmeditation',
     emoji: '🧘',
     type: 'blending',
-    description: 'Meditative earth relay — energy flows upward through three aligned rings',
-    duration: 2500,
-    beats: 4,
+    description: 'Dual stone weave — earth hexagon meditation',
+    duration: 4000,
+    beats: 8,
     intensity: 0.7,
     category: 'emanating',
     petrification: 0.3,
 
     spawnMode: [
-        // Ring A — bottom — relay 0, slow CW
+        // ═══ ICETWIRL ORIGINAL ═══
+
+        // Ring A — lower-left — relay 2, CW
         {
             type: 'anchor',
-            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: -0.3, z: 0 } },
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
             count: 1,
-            scale: 1.5,
+            scale: 3.0,
             sizeVariance: 0,
             models: ['earth-ring'],
             animation: {
-                ...SHARED_ANIMATION,
-                rotate: [{ axis: 'z', rotations: 0.3 }],
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
                 modelOverrides: {
                     'earth-ring': {
                         arcPhase: 0.0,
-                        relayIndex: 0,
+                        relayIndex: 2,
                         orientationOverride: 'camera'
                     }
                 }
             }
         },
 
-        // Ring B — center — relay 1, slow CCW
+        // Ring B — lower-right — relay 1, CCW
         {
             type: 'anchor',
-            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: 0, z: 0 } },
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
             count: 1,
-            scale: 1.5,
+            scale: 3.0,
             sizeVariance: 0,
             models: ['earth-ring'],
             animation: {
-                ...SHARED_ANIMATION,
-                rotate: [{ axis: 'z', rotations: -0.25 }],
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
                 modelOverrides: {
                     'earth-ring': {
-                        arcPhase: 2.09,
+                        arcPhase: 3.14,
                         relayIndex: 1,
                         orientationOverride: 'camera'
                     }
@@ -111,21 +101,354 @@ const EARTHMEDITATION_CONFIG = {
             }
         },
 
-        // Ring C — top — relay 2, slow CW
+        // Ring C — upper-center — relay 0, CW
         {
             type: 'anchor',
-            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: 0.3, z: 0 } },
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: 0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
             count: 1,
-            scale: 1.5,
+            scale: 3.0,
             sizeVariance: 0,
             models: ['earth-ring'],
             animation: {
-                ...SHARED_ANIMATION,
-                rotate: [{ axis: 'z', rotations: 0.2 }],
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 4.71,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // ═══ Y-FLIPPED COPY (everything identical except offset.y negated) ═══
+
+        // Ring A (flipped) — upper-right — relay 2, CCW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 0.0,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring B (flipped) — upper-left — relay 1, CW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 3.14,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C (flipped) — lower-center — relay 0, CCW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: -0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 4.71,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // ═══ VERTICAL FLIP OF ENTIRE THING (Y negated, rotations reversed) ═══
+
+        // Ring A (v-flip) — upper-left — relay 2, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 1.05,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring B (v-flip) — upper-right — relay 0, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
                 modelOverrides: {
                     'earth-ring': {
                         arcPhase: 4.19,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C (v-flip) — lower-center — relay 2, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: -0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 2.62,
                         relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring A' (v-flip) — lower-right — relay 0, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 1.05,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring B' (v-flip) — lower-left — relay 1, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 4.19,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C' (v-flip) — upper-center — relay 1, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: 0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['earth-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'earth-ring': {
+                        arcPhase: 2.62,
+                        relayIndex: 1,
                         orientationOverride: 'camera'
                     }
                 }
@@ -137,11 +460,13 @@ const EARTHMEDITATION_CONFIG = {
     glowIntensityMin: 0.3,
     glowIntensityMax: 0.6,
     glowFlickerRate: 2,
-    scaleVibration: 0.004,
-    scaleFrequency: 1.5,
-    scaleGrowth: 0,
-    tremor: 0.002,
-    tremorFrequency: 1.5,
+    scaleVibration: 0,
+    scaleFrequency: 0,
+    scaleContract: 0,
+    tremor: 0,
+    tremorFrequency: 0,
+    shakeAmount: 0,
+    shakeFrequency: 0,
     decayRate: 0.2
 };
 
