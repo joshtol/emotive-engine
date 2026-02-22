@@ -22,8 +22,8 @@ import * as THREE from 'three';
 
 // Constants
 const POOL_SIZE = 64;           // Max instances per element type (16 elements × 4 slots each)
-const TRAIL_COPIES = 3;         // Trail copies per main element
-const SLOTS_PER_ELEMENT = 1 + TRAIL_COPIES;  // 4 slots total
+const TRAIL_COPIES = 1;         // Trail copies per main element (reduced from 3)
+const SLOTS_PER_ELEMENT = 1 + TRAIL_COPIES;  // 2 slots total (was 4)
 
 /**
  * Manages a pool of instanced elements for GPU-efficient rendering.
