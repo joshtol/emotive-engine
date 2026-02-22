@@ -535,15 +535,10 @@ void main() {
     lightning *= flicker;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SPARKS — occasional bright point flashes
-    // ═══════════════════════════════════════════════════════════════════════════════
-    float sparkVal = sparks3D(vWorldPosition + vec3(vRandomSeed * 50.0), effectiveTime) * uSparkDensity;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
     // COLOR — bolt network drives both color and visibility
     // Dark areas between bolts are TRANSPARENT — model geometry hidden
     // ═══════════════════════════════════════════════════════════════════════════════
-    float brightness = lightning + sparkVal + rimGlow;
+    float brightness = lightning + rimGlow;
 
     vec3 baseColor = getElectricColor(uCharge);
 
