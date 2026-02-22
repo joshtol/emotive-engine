@@ -198,14 +198,7 @@ float branchingVeins(vec2 p, float scale) {
     // Combine: high gradient + directional alignment = vein
     float vein = smoothstep(0.3, 0.8, gradMag) * smoothstep(0.2, 0.6, dirDeriv);
 
-    // Add secondary finer veins at higher frequency for detail
-    vec3 sp2 = vec3(p * scale * 2.5, 0.5);
-    float dx2 = fbm4(sp2 + vec3(eps, 0.0, 0.0)) - fbm4(sp2 - vec3(eps, 0.0, 0.0));
-    float dy2 = fbm4(sp2 + vec3(0.0, eps, 0.0)) - fbm4(sp2 - vec3(0.0, eps, 0.0));
-    float gradMag2 = length(vec2(dx2, dy2)) / (2.0 * eps);
-    float fineVein = smoothstep(0.35, 0.85, gradMag2);
-
-    return vein * 0.7 + fineVein * 0.3;
+    return vein;
 }
 
 // Subsurface scattering approximation for organic translucency.
