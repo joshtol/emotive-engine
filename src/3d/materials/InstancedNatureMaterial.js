@@ -542,19 +542,18 @@ void main() {
     // Dark green veins visible especially at high growth levels.
     // =====================================================================================
 
-    float veinPattern = branchingVeins(
-        vPosition.xz + vec2(vRandomSeed * 3.0),
-        4.0
-    );
+    // Skip branchingVeins at low growth — saves 32 noise calls (8× fbm4)
+    // At growth < 0.1, vein contribution is negligible on dark bark
+    if (uGrowth > 0.1) {
+        float veinPattern = branchingVeins(
+            vPosition.xz + vec2(vRandomSeed * 3.0),
+            4.0
+        );
 
-    // Vein color: darker green than body
-    vec3 veinColor = vec3(0.05, 0.15, 0.02);
-
-    // Vein intensity increases with growth (dead wood has no veins)
-    float veinStrength = veinPattern * (0.2 + uGrowth * 0.6);
-
-    // Mix veins into base color
-    baseColor = mix(baseColor, veinColor, veinStrength * 0.4);
+        vec3 veinColor = vec3(0.05, 0.15, 0.02);
+        float veinStrength = veinPattern * (0.2 + uGrowth * 0.6);
+        baseColor = mix(baseColor, veinColor, veinStrength * 0.4);
+    }
 
     // =====================================================================================
     // 4. HEMISPHERE AMBIENT
@@ -672,19 +671,17 @@ void main() {
     // Added AFTER soft clamp so they exceed bloom threshold and glow.
     // =====================================================================================
 
-    float bioSpot = bioluminescence(vPosition + vec3(vRandomSeed * 12.0));
-
-    // Modulate by growth: only visible when growth > 0.5
-    float bioGrowthMask = smoothstep(0.4, 0.7, uGrowth);
-
-    // Pulsing glow -- slow breathing rhythm per-instance
-    float bioPulse = 0.7 + 0.3 * sin(
-        uGlobalTime * 1.5 + vRandomSeed * 6.28 + vPosition.x * 3.0
-    );
-
-    // Soft cyan-green glow color -- bright enough to bloom
-    vec3 bioColor = vec3(0.30, 1.00, 0.50) * 1.5;
-    color += bioColor * bioSpot * bioGrowthMask * bioPulse;
+    // Skip bioluminescence at low growth — saves noise + sin when invisible
+    // bioGrowthMask = smoothstep(0.4, 0.7, uGrowth) is 0.0 below 0.4
+    if (uGrowth > 0.4) {
+        float bioSpot = bioluminescence(vPosition + vec3(vRandomSeed * 12.0));
+        float bioGrowthMask = smoothstep(0.4, 0.7, uGrowth);
+        float bioPulse = 0.7 + 0.3 * sin(
+            uGlobalTime * 1.5 + vRandomSeed * 6.28 + vPosition.x * 3.0
+        );
+        vec3 bioColor = vec3(0.30, 1.00, 0.50) * 1.5;
+        color += bioColor * bioSpot * bioGrowthMask * bioPulse;
+    }
 
     // =====================================================================================
     // ALPHA -- Solid organic forms

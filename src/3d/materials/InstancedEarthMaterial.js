@@ -693,9 +693,13 @@ void main() {
     // each polygon face — some pixels catch light, others don't.
     // Dry areas: zero perturbation (flat matte rock, correct).
     // Wet areas: subtle ripple → per-pixel specular variation.
-    float rippleX = noise(vPosition * 12.0 + vec3(instanceTime * 0.08, 0.0, 0.0)) - 0.5;
-    float rippleZ = noise(vPosition * 12.0 + vec3(0.0, 0.0, instanceTime * 0.06 + 3.7)) - 0.5;
-    vec3 ripplePerturbation = vec3(rippleX, 0.0, rippleZ) * specWet * 0.18;
+    // Skip ripple noise when dry — saves 2 noise() calls on dry surfaces
+    vec3 ripplePerturbation = vec3(0.0);
+    if (specWet > 0.1) {
+        float rippleX = noise(vPosition * 12.0 + vec3(instanceTime * 0.08, 0.0, 0.0)) - 0.5;
+        float rippleZ = noise(vPosition * 12.0 + vec3(0.0, 0.0, instanceTime * 0.06 + 3.7)) - 0.5;
+        ripplePerturbation = vec3(rippleX, 0.0, rippleZ) * specWet * 0.18;
+    }
 
     // Normal blending: start from face normal, blend toward smooth (55% max),
     // then add water ripple perturbation in wet zones.

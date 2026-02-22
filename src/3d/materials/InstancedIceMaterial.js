@@ -1021,7 +1021,7 @@ void main() {
         // physically interact with specular — they glint like real grooves.
         // Both coarse AND fine cracks get their own specular pass.
         float crackSpecGlint = 0.0;
-        if (coarseCrack > 0.05) {
+        if (coarseCrack > 0.1) {
             float dex = dFdx(coarseEdge);
             float dey = dFdy(coarseEdge);
             vec3 crackGrad = vec3(dex, 0.0, dey);

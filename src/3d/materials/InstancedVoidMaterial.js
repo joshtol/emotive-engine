@@ -164,6 +164,8 @@ varying vec3 vViewPosition;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
+varying float vDopplerAngleXY;  // Pre-computed atan(pos.y, pos.x) for disk mode
+varying float vDopplerAngleXZ;  // Pre-computed atan(pos.z, pos.x) for non-disk mode
 
 ${NOISE_GLSL}
 
@@ -221,6 +223,10 @@ void main() {
     vPosition = selectedPosition;
     vRandomSeed = aRandomSeed;
     vVerticalGradient = clamp((selectedPosition.y + 0.5) / 1.0, 0.0, 1.0);
+
+    // Pre-compute atan for Doppler asymmetry — saves 30 ops/fragment
+    vDopplerAngleXY = atan(selectedPosition.y, selectedPosition.x);
+    vDopplerAngleXZ = atan(selectedPosition.z, selectedPosition.x);
 
     vec3 displaced = selectedPosition + selectedNormal * breathe + trailOffset;
 
@@ -319,6 +325,8 @@ varying vec3 vViewPosition;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
+varying float vDopplerAngleXY;
+varying float vDopplerAngleXZ;
 
 ${NOISE_GLSL}
 ${CUTOUT_PATTERN_FUNC_GLSL}
@@ -407,7 +415,7 @@ void main() {
         ring *= shimmer;
 
         // Doppler asymmetry — slow rotation brightens approaching side
-        float dopplerAngle = atan(vPosition.y, vPosition.x);
+        float dopplerAngle = vDopplerAngleXY;
         float dopplerPhase = dopplerAngle + instanceTime * 0.4;
         float doppler = 0.82 + 0.18 * sin(dopplerPhase);
         ring *= doppler;
@@ -503,9 +511,9 @@ void main() {
     ring *= shimmer;
 
     // Doppler asymmetry — rotating singularity brightens the approaching side.
-    // Uses object-space vertex angle for stable asymmetry that slowly rotates.
+    // Uses object-space vertex angle (pre-computed in vertex shader).
     // Subtle: dim side still at 65% — must preserve circular read.
-    float dopplerAngle = atan(vPosition.z, vPosition.x);
+    float dopplerAngle = vDopplerAngleXZ;
     float dopplerPhase = dopplerAngle + instanceTime * 0.4;  // Slow rotation
     float doppler = 0.82 + 0.18 * sin(dopplerPhase);         // 0.64 to 1.0 range
     ring *= doppler;
