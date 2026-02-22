@@ -512,7 +512,7 @@ export function createInstancedLightMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.FrontSide
     });
 
     material.userData.radiance = radiance;

@@ -658,7 +658,7 @@ export function createInstancedElectricMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.FrontSide
     });
 
     material.userData.charge = charge;
