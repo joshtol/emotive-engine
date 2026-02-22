@@ -449,31 +449,11 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     vec3 specContrib = vec3(0.85, 0.92, 1.0) * (broadSpec + sharpSpec);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // INTERNAL SPIRAL FLOW (reduced contribution for refraction-based approach)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    float flowTimeScale = localTime * uInternalFlowSpeed;
-    float spiralAngle = atan(vPosition.y, vPosition.x) + flowTimeScale * 0.001;
-    float spiralRadius = length(vPosition.xy);
-    float spiralFlow = sin(spiralAngle * 3.0 - spiralRadius * 4.0 + flowTimeScale * 0.002);
-    spiralFlow = spiralFlow * 0.5 + 0.5;
-
-    float spiral2 = sin(-spiralAngle * 2.0 + spiralRadius * 3.0 + flowTimeScale * 0.0015);
-    spiral2 = spiral2 * 0.5 + 0.5;
-
-    float spiral3 = sin(spiralAngle * 5.0 + spiralRadius * 6.0 - flowTimeScale * 0.0025);
-    spiral3 = spiral3 * 0.5 + 0.5;
-
-    float internalFlow = (spiralFlow * 0.4 + spiral2 * 0.35 + spiral3 * 0.25) * 0.02; // Near-zero: real water has no internal pattern
-
-    // ═══════════════════════════════════════════════════════════════════════════════
     // COMPOSITING — soft clamp + post-clamp
     // Cap smooth glass body before adding bright features (specular, caustics, bubbles)
     // so they can exceed the cap and trigger bloom glow.
     // ═══════════════════════════════════════════════════════════════════════════════
     vec3 color = transmittedLight;
-
-    // Add internal flow contribution (procedural, so scale by uIntensity)
-    color += internalFlow * waterBodyColor * uIntensity;
 
     // DON'T multiply refracted background by uIntensity — it would wash out the
     // background visibility. Only procedural additions (flow, specular) scale.

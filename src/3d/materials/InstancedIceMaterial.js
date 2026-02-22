@@ -122,20 +122,18 @@ float fbm4(vec3 p) {
     return f / 0.9375;
 }
 
-// Voronoi for crystalline patterns
-float voronoi(vec3 p) {
-    vec3 i = floor(p);
-    vec3 f = fract(p);
+// Voronoi for crystalline patterns — 2D (9 iterations, used in vertex displacement)
+float voronoi2D(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
     float minDist = 1.0;
 
     for (int x = -1; x <= 1; x++) {
         for (int y = -1; y <= 1; y++) {
-            for (int z = -1; z <= 1; z++) {
-                vec3 neighbor = vec3(float(x), float(y), float(z));
-                vec3 point = neighbor + hash(i + neighbor) * 0.8;
-                float dist = length(f - point);
-                minDist = min(minDist, dist);
-            }
+            vec2 neighbor = vec2(float(x), float(y));
+            vec2 point = neighbor + hash(vec3(i + neighbor, 0.0)) * 0.8;
+            float dist = length(f - point);
+            minDist = min(minDist, dist);
         }
     }
     return minDist;
@@ -432,7 +430,8 @@ void main() {
         // Per-instance offset so each crystal has unique edges
         // Low frequency (1.5) → broad heavy warps, not tiny bumps
         // Ring looks "bent" not "vibrating" — big surface undulations
-        float vor = voronoi(selectedPosition * 1.5 + vec3(aRandomSeed * 7.13, 0.0, aRandomSeed * 3.71));
+        // 2D Voronoi (9 iter) — ring geometry has minimal Z variation
+        float vor = voronoi2D(selectedPosition.xz * 1.5 + vec2(aRandomSeed * 7.13, aRandomSeed * 3.71));
         float displ = (vor - 0.4) * 2.0;
 
         // QUANTIZE into terraces — "chiseled ice plates" not smooth waves.
@@ -834,7 +833,9 @@ void main() {
 
     // Spatial wetness mask — modulates wet film specular for natural variation.
     // Uses shared WetnessCore. crackProximity=0.0 for now (coarseEdge computed later).
-    float wetMask = calculateWetMask(vPosition, vRandomSeed, localTime + vRandomSeed * 10.0, 0.0);
+    // Guard: at low melt (uWetness ≤ 0.4), wet patches are barely visible.
+    // Skip 4 noise + sin (~165 ALU) and use constant instead.
+    float wetMask = uWetness > 0.4 ? calculateWetMask(vPosition, vRandomSeed, localTime + vRandomSeed * 10.0, 0.0) : 0.3;
 
     // Wet film specular — secondary tighter highlight on smooth surface.
     // Creates the "water on glass" look. Uses smooth world normal, not flat facets.

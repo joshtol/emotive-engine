@@ -638,7 +638,9 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════════
 
     float crackProximity = 1.0 - smoothstep(0.0, 0.10, crackEdge);
-    float wetMask = calculateWetMask(vPosition, vRandomSeed, instanceTime, crackProximity);
+    // Guard: at low wetness, wet patches are imperceptible.
+    // Skip 4 noise + sin (~165 ALU) and use 0.0 instead.
+    float wetMask = uWetness > 0.15 ? calculateWetMask(vPosition, vRandomSeed, instanceTime, crackProximity) : 0.0;
 
     // Moderate darkening — wet stone absorbs light, darker than dry.
     // Tuned for dark Seiryu grey base: 0.45 multiplier (was 0.75 for bright sandstone).

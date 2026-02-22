@@ -203,32 +203,6 @@ float voronoiEdge2D(vec2 p, float time, float jitter) {
     return abs(dot(toCenter - f, cellDiff));
 }
 
-// Sparse bright spark points — random flickering bright spots
-float sparks2D(vec2 pos, float time) {
-    vec2 gridPos = pos * 8.0;
-    vec2 gridId = floor(gridPos);
-    vec2 gridUv = fract(gridPos);
-
-    float spark = 0.0;
-    for (int y = 0; y <= 1; y++) {
-        for (int x = 0; x <= 1; x++) {
-            vec2 offset = vec2(float(x), float(y));
-            vec2 cellId = gridId + offset;
-
-            vec2 sparkPos = hash2(cellId) * 0.8 + 0.1;
-            float d = length(gridUv - offset - sparkPos + 0.5);
-
-            // Irregular flicker timing — sparks pop in and out randomly
-            float flickerSeed = dot(cellId, vec2(127.1, 311.7));
-            float flicker = step(0.8, fract(sin(time * 12.0 + flickerSeed) * 43758.5453));
-
-            spark += smoothstep(0.15, 0.0, d) * flicker;
-        }
-    }
-
-    return spark;
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // 3D Voronoi edge distance — single-pass optimization
 // Tracks closest + second-closest cells in one 27-iteration pass (was 54 iterations).
@@ -276,32 +250,6 @@ float voronoiEdge3D(vec3 p, float time, float jitter) {
     return abs(dot(toCenter - f, cellDiff));
 }
 
-// 3D sparse bright spark points
-float sparks3D(vec3 pos, float time) {
-    vec3 gridPos = pos * 8.0;
-    vec3 gridId = floor(gridPos);
-    vec3 gridUv = fract(gridPos);
-
-    float spark = 0.0;
-    for (int z = 0; z <= 1; z++) {
-        for (int y = 0; y <= 1; y++) {
-            for (int x = 0; x <= 1; x++) {
-                vec3 offset = vec3(float(x), float(y), float(z));
-                vec3 cellId = gridId + offset;
-
-                vec3 sparkPos = hash3(cellId) * 0.8 + 0.1;
-                float d = length(gridUv - offset - sparkPos + 0.5);
-
-                float flickerSeed = dot(cellId, vec3(127.1, 311.7, 74.7));
-                float flicker = step(0.8, fract(sin(time * 12.0 + flickerSeed) * 43758.5453));
-
-                spark += smoothstep(0.15, 0.0, d) * flicker;
-            }
-        }
-    }
-
-    return spark;
-}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
