@@ -141,47 +141,39 @@ float voronoi(vec3 p) {
     return minDist;
 }
 
-// Trapped air bubbles: 3D volumetric cell grid with proper spheres.
-// The surface CUTS THROUGH 3D spheres → always circular cross-sections,
-// no stretching regardless of surface angle. Bubbles are INSIDE the ice.
+// Trapped air bubbles: 2D cell grid with circular cross-sections.
+// On thin ring geometry, Z depth is negligible — 2D captures the same look.
 // Returns vec2(brightness, ringDarkness) for compositing.
-vec2 bubbleField3D(vec3 p, float scale, float density) {
-    vec3 sp = p * scale;
-    vec3 i = floor(sp);
-    vec3 f = fract(sp);
+vec2 bubbleField2D(vec3 p, float scale, float density) {
+    vec2 sp = p.xz * scale;
+    vec2 i = floor(sp);
+    vec2 f = fract(sp);
 
     float bright = 0.0;
     float ringDark = 0.0;
 
     for (int x = -1; x <= 1; x++) {
         for (int y = -1; y <= 1; y++) {
-            for (int z = -1; z <= 1; z++) {
-                vec3 nb = vec3(float(x), float(y), float(z));
-                vec3 cid = i + nb;
+            vec2 nb = vec2(float(x), float(y));
+            vec2 cid = i + nb;
+            vec3 cid3 = vec3(cid, 0.0);
 
-                float exists = hash(cid * 1.7 + 3.73);
-                if (exists < density) {
-                    vec3 center = nb + vec3(
-                        hash(cid + 0.37),
-                        hash(cid + 1.51),
-                        hash(cid + 2.93)
-                    ) * 0.6 + 0.2;
-                    float r = mix(0.12, 0.30, hash(cid + 4.31));
-                    float d = length(f - center);
+            float exists = hash(cid3 * 1.7 + 3.73);
+            if (exists < density) {
+                vec2 center = nb + vec2(
+                    hash(cid3 + 0.37),
+                    hash(cid3 + 1.51)
+                ) * 0.6 + 0.2;
+                float r = mix(0.12, 0.30, hash(cid3 + 4.31));
+                float d = length(f - center);
 
-                    if (d < r) {
-                        float nd = d / r; // 0=center, 1=edge
+                if (d < r) {
+                    float nd = d / r;
+                    bright += (1.0 - nd * nd) * 0.45;
+                    ringDark += smoothstep(0.65, 0.95, nd) * 0.5;
 
-                        // Interior: brighter than surrounding ice (primary visual)
-                        bright += (1.0 - nd * nd) * 0.45;
-
-                        // Subtle dark ring at boundary — just defines the edge
-                        ringDark += smoothstep(0.65, 0.95, nd) * 0.5;
-
-                        // Small caustic highlight (3D direction)
-                        vec3 sphereDir = normalize(f - center);
-                        bright += pow(max(dot(sphereDir, normalize(vec3(0.3, 0.8, 0.2))), 0.0), 6.0) * 0.2;
-                    }
+                    vec2 discDir = normalize(f - center);
+                    bright += pow(max(dot(discDir, normalize(vec2(0.3, 0.2))), 0.0), 6.0) * 0.2;
                 }
             }
         }
@@ -800,8 +792,8 @@ void main() {
     float bubbleCluster = noise(vPosition * 2.0 + vec3(vRandomSeed * 5.0, 0.0, 0.0));
     float clusterMask = 0.5 + 0.5 * bubbleCluster; // 0.5–1.0 range, never fully off
 
-    // 3D volumetric bubbles (scale 8, 65% density) — spheres cut by the surface
-    vec2 bub = bubbleField3D(bubbleSamplePos, 8.0, 0.65);
+    // 2D bubbles (scale 8, 65% density) — circles on thin ring geometry
+    vec2 bub = bubbleField2D(bubbleSamplePos, 8.0, 0.65);
 
     // Tiny fizzy specks — cheap noise threshold dots for density between big bubbles
     float fizz = smoothstep(0.82, 0.89, noise(bubbleSamplePos * 35.0)) * 0.20;
