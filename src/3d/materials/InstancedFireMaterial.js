@@ -316,6 +316,15 @@ varying float vArcVisibility;
 varying float vRandomSeed;
 
 ${NOISE_GLSL}
+
+// Lighter layeredTurbulence for instanced elements — drops fine+micro
+// (2 fewer snoise). Large+medium carry the visual weight on small geometry.
+float layeredTurbulenceLite(vec3 p, float time) {
+    float large = turbulence(p * 0.5 + vec3(0.0, -time * 0.0025, 0.0), 3) * 0.4;
+    float medium = turbulence(p + vec3(time * 0.0015, -time * 0.005, 0.0), 3) * 0.35;
+    return large + medium;
+}
+
 ${FIRE_COLOR_GLSL}
 ${CUTOUT_PATTERN_FUNC_GLSL}
 
@@ -335,8 +344,8 @@ void main() {
 
     vec3 noisePos = vPosition * uNoiseScale + vec3(0.0, -localTime * 0.00085, 0.0);
 
-    // Layered turbulence for organic, billowing flames
-    float flame = layeredTurbulence(noisePos, localTime);
+    // Layered turbulence (lite — large+medium only, drops fine+micro snoise)
+    float flame = layeredTurbulenceLite(noisePos, localTime);
 
     // Position-based variation for non-uniform flames
     float posVariation = snoise(vPosition * 7.0) * 0.15 + 0.92;
