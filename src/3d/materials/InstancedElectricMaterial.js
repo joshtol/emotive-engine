@@ -180,7 +180,7 @@ float voronoiEdge2D(vec2 p, float time, float jitter) {
             vec2 cellId = n + neighbor;
             vec2 cellHash = hash2(cellId);
             vec2 cellOffset = cellHash * jitter;
-            cellOffset += sin(time * 3.0 + cellHash * 6.28) * 0.15;
+            cellOffset += (fract(time * 0.48 + cellHash) * 2.0 - 1.0) * 0.15;
 
             vec2 cellPoint = neighbor + cellOffset;
             float d = length(cellPoint - f);
@@ -252,7 +252,7 @@ float voronoiEdge3D(vec3 p, float time, float jitter) {
                 vec3 cellId = n + neighbor;
                 vec3 cellHash = hash3(cellId);
                 vec3 cellOffset = cellHash * jitter;
-                cellOffset += sin(time * 3.0 + cellHash * 6.28) * 0.15;
+                cellOffset += (fract(time * 0.48 + cellHash) * 2.0 - 1.0) * 0.15;
 
                 vec3 cellPoint = neighbor + cellOffset;
                 float d = length(cellPoint - f);
