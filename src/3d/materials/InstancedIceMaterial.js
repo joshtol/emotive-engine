@@ -912,6 +912,7 @@ void main() {
         vec2 ccf = fract(coarsePos);
         float cd1 = 10.0, cd2 = 10.0;
         vec2 cCell1 = vec2(0.0), cCell2 = vec2(0.0);
+        vec2 cAbsPt1 = vec2(0.0), cAbsPt2 = vec2(0.0); // absolute Voronoi point positions (for dark reuse)
 
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
@@ -923,8 +924,8 @@ void main() {
                 )) * 43758.5453);
                 vec2 diff = ccf - pt;
                 float d = max(abs(diff.x), abs(diff.y)); // Chebyshev: angular cells
-                if (d < cd1) { cd2 = cd1; cCell2 = cCell1; cd1 = d; cCell1 = cell; }
-                else if (d < cd2) { cd2 = d; cCell2 = cell; }
+                if (d < cd1) { cd2 = cd1; cCell2 = cCell1; cAbsPt2 = cAbsPt1; cd1 = d; cCell1 = cell; cAbsPt1 = cci + pt; }
+                else if (d < cd2) { cd2 = d; cCell2 = cell; cAbsPt2 = cci + pt; }
             }
         }
 
@@ -944,31 +945,17 @@ void main() {
         float coarseSparkle = abs(dot(coarsePlaneDir, viewDir.xz)); // 0=edge-on (dim), 1=face-on (flash)
         coarseSparkle = mix(0.05, 1.0, coarseSparkle); // Wide range: TIR flicker — some nearly vanish
 
-        // ─── DARK FRACTURES (occlusion planes — slightly offset from bright) ───
-        // A second crack layer at offset parallax simulates fracture planes that
-        // BLOCK light instead of scattering it. Dark blue-grey occlusion lines.
-        vec2 darkParallax = parallaxDir * parallaxScale * 0.5; // shallower depth — different plane
-        vec2 darkPos = (vPosition.xz + darkParallax + vec2(0.13, -0.09)) * 0.7; // offset breaks alignment, same scale as coarse
-        vec2 dci = floor(darkPos);
-        vec2 dcf = fract(darkPos);
-        float dd1 = 10.0, dd2 = 10.0;
-
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                vec2 nb = vec2(float(x), float(y));
-                vec2 cell = dci + nb;
-                vec2 pt = nb + fract(sin(vec2(
-                    dot(cell, vec2(127.1, 311.7)),
-                    dot(cell, vec2(269.5, 183.3))
-                )) * 43758.5453);
-                vec2 diff = dcf - pt;
-                float d = max(abs(diff.x), abs(diff.y));
-                if (d < dd1) { dd2 = dd1; dd1 = d; }
-                else if (d < dd2) { dd2 = d; }
-            }
-        }
-
-        float darkEdge = dd2 - dd1;
+        // ─── DARK FRACTURES (reuse coarse Voronoi topology) ───
+        // Same cell structure as coarse but at offset parallax. Recompute just
+        // 2 distances from the stored cell points instead of a full 9-iteration loop.
+        vec2 darkParallax = parallaxDir * parallaxScale * 0.5;
+        vec2 darkPos = (vPosition.xz + darkParallax + vec2(0.13, -0.09)) * 0.7;
+        vec2 dv1 = darkPos - cAbsPt1;
+        vec2 dv2 = darkPos - cAbsPt2;
+        float ddd1 = max(abs(dv1.x), abs(dv1.y));
+        float ddd2 = max(abs(dv2.x), abs(dv2.y));
+        if (ddd1 > ddd2) { float tmp = ddd1; ddd1 = ddd2; ddd2 = tmp; }
+        float darkEdge = ddd2 - ddd1;
         float darkCrack = (1.0 - smoothstep(0.0, 0.012, darkEdge)) * coarseMask;
 
         // ─── CRACK SPECULAR GLINTS (physical grooves catch light) ───
