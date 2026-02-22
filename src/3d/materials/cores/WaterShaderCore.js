@@ -143,10 +143,10 @@ vec3 voronoiCaustic(vec2 p, float time) {
             vec2 cell = i + nb;
             float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
             float h2 = fract(sin(dot(cell, vec2(269.5, 183.3))) * 43758.5453);
-            // Animated cell centers — swimming caustics
+            // Animated cell centers — swimming caustics (fract drift)
             vec2 pt = nb + vec2(h, h2) + vec2(
-                sin(time * 3.0 + h * 6.28318) * 0.15,
-                cos(time * 2.5 + h2 * 6.28318) * 0.15
+                (fract(time * 0.48 + h) * 2.0 - 1.0) * 0.15,
+                (fract(time * 0.40 + h2) * 2.0 - 1.0) * 0.15
             );
             float d = length(f - pt); // Euclidean for smooth curves
             if (d < d1) { d2 = d1; d1 = d; cell1Hash = h; }
@@ -166,9 +166,9 @@ vec2 waterBubbles3D(vec3 p, float scale, float density, float time) {
     float bright = 0.0;
     float ringDark = 0.0;
 
-    for (int x = -1; x <= 1; x++) {
-        for (int y = -1; y <= 1; y++) {
-            for (int z = -1; z <= 1; z++) {
+    for (int x = 0; x <= 1; x++) {
+        for (int y = 0; y <= 1; y++) {
+            for (int z = 0; z <= 1; z++) {
                 vec3 nb = vec3(float(x), float(y), float(z));
                 vec3 cid = i + nb;
 
@@ -414,7 +414,7 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     // Cluster mask tied to break mask: bubbles congregate near caustic zones
     float bubbleClusterMask = 0.5 + 0.5 * causticMask;
 
-    vec2 bub = waterBubbles3D(bubbleSamplePos, 20.0, 0.35, uGlobalTime * 0.001);
+    vec2 bub = waterBubbles3D(bubbleSamplePos, 20.0, 0.50, uGlobalTime * 0.001);
 
     // Fizz micro-detail
     float fizz = smoothstep(0.84, 0.90, noise(bubbleSamplePos * 40.0)) * 0.15;
@@ -441,11 +441,8 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     float spark2 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.9, 0.4))), 0.0), 512.0) * 0.6;
     float spark3 = pow(max(dot(wetReflDir, normalize(vec3(0.4, 0.7, -0.5))), 0.0), 384.0) * 0.4;
 
-    // Twinkling animation (3-freq multiplicative pattern)
-    float specShift1 = sin(localTime * 0.003 + vPosition.x * 8.0) * 0.5 + 0.5;
-    float specShift2 = sin(localTime * 0.005 - vPosition.z * 12.0) * 0.5 + 0.5;
-    float specShift3 = sin(localTime * 0.007 + vPosition.y * 10.0) * 0.5 + 0.5;
-    float sparkleAnim = specShift1 * specShift2 * specShift3;
+    // Twinkling animation (noise-based shimmer)
+    float sparkleAnim = snoise(vPosition * 8.0 + vec3(localTime * 0.004)) * 0.5 + 0.5;
 
     float sharpSpec = (spark1 + spark2 + spark3) * sparkleAnim * 3.0 * uSparkleIntensity;
 
