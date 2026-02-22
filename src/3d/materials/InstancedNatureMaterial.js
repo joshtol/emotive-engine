@@ -119,7 +119,16 @@ float snoise(vec3 p) {
     return noise(p) * 2.0 - 1.0;
 }
 
-// FBM with 4 octaves
+// FBM with 3 octaves (base color — 4th octave is 6% of signal, sub-pixel on small geometry)
+float fbm3(vec3 p) {
+    float f = 0.0;
+    f += 0.5000 * noise(p); p *= 2.01;
+    f += 0.2500 * noise(p); p *= 2.02;
+    f += 0.1250 * noise(p);
+    return f / 0.8750;
+}
+
+// FBM with 4 octaves (branchingVeins — needs full detail for gradient computation)
 float fbm4(vec3 p) {
     float f = 0.0;
     f += 0.5000 * noise(p); p *= 2.01;
@@ -491,7 +500,8 @@ void main() {
     vec3 baseColor = mix(barkBrown, lushGreen, uGrowth);
 
     // Organic FBM noise variation -- per-instance offset prevents repetition
-    float organicNoise = fbm4(vPosition * 3.0 + vec3(vRandomSeed * 5.0));
+    // fbm3: 4th octave (6.25% weight) is sub-pixel on small ring geometry
+    float organicNoise = fbm3(vPosition * 3.0 + vec3(vRandomSeed * 5.0));
     baseColor *= 0.85 + organicNoise * 0.30; // +/-15% variation
 
     // Per-instance color shift -- each nature element is unique
