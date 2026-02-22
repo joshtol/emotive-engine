@@ -895,7 +895,6 @@ void main() {
     // ═══════════════════════════════════════════════════════════════════════════════
     // Crack values hoisted for edge-breakup discard (used after crack coloring)
     float coarseCrack = 0.0;
-    float fineCrack = 0.0;
 
     if (uInternalCracks > 0.01) {
 
@@ -905,7 +904,6 @@ void main() {
         float parallaxScale = 0.12;
         vec2 parallaxDir = viewDir.xz / max(smoothNdotV, 0.25);
         vec2 coarseParallax = parallaxDir * parallaxScale;        // shallow layer
-        vec2 fineParallax = parallaxDir * parallaxScale * 1.8;    // deeper layer
 
         // ─── BREAK-THE-WEB MASK ───
         // Low-frequency noise erases ~75% of crack lines. Most of the surface
@@ -913,7 +911,6 @@ void main() {
         // Frequency 0.4 → large smooth patches, not small noisy spots.
         float breakMask = noise(vec3(vPosition.xz * 0.4, 0.0));
         float coarseMask = smoothstep(0.55, 0.78, breakMask); // ~75% erased — huge quiet zones
-        float fineMask = smoothstep(0.48, 0.72, breakMask);   // fine cracks slightly more visible
 
         // ─── COARSE FRACTURE PLANES (scale 0.7 — MASSIVE structural cleaves) ───
         // Very low frequency → 3-4 fractures spanning the entire object.
@@ -982,44 +979,10 @@ void main() {
         float darkEdge = dd2 - dd1;
         float darkCrack = (1.0 - smoothstep(0.0, 0.012, darkEdge)) * coarseMask;
 
-        // ─── FINE CRACKS (scale 2.0 — secondary fractures, still large) ───
-        vec2 finePos = (vPosition.xz + fineParallax) * 2.0;
-        vec2 fci = floor(finePos);
-        vec2 fcf = fract(finePos);
-        float fd1 = 10.0, fd2 = 10.0;
-        vec2 fCell1 = vec2(0.0), fCell2 = vec2(0.0);
-
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                vec2 nb = vec2(float(x), float(y));
-                vec2 cell = fci + nb;
-                vec2 pt = nb + fract(sin(vec2(
-                    dot(cell, vec2(127.1, 311.7)),
-                    dot(cell, vec2(269.5, 183.3))
-                )) * 43758.5453);
-                vec2 diff = fcf - pt;
-                float d = max(abs(diff.x), abs(diff.y)); // Chebyshev
-                if (d < fd1) { fd2 = fd1; fCell2 = fCell1; fd1 = d; fCell1 = cell; }
-                else if (d < fd2) { fd2 = d; fCell2 = cell; }
-            }
-        }
-
-        float fineEdge = fd2 - fd1;
-        float finePairHash = fract(sin(dot(fCell1 + fCell2, vec2(78.233, 143.71))) * 43758.5453);
-        float fineWidth = mix(0.003, 0.012, finePairHash); // Thin secondary fractures
-        fineCrack = (1.0 - smoothstep(0.0, fineWidth, fineEdge)) * fineMask;
-        float fineDepth = mix(0.5, 0.9, finePairHash);
-
-        // Fine sparkle (independent plane direction)
-        vec2 finePlaneDir = normalize(vec2(finePairHash * 2.0 - 1.0, fract(finePairHash * 11.3) * 2.0 - 1.0));
-        float fineSparkle = abs(dot(finePlaneDir, viewDir.xz));
-        fineSparkle = mix(0.05, 1.0, fineSparkle); // Wide range: TIR flicker — some cracks nearly vanish
-
         // ─── CRACK SPECULAR GLINTS (physical grooves catch light) ───
         // Use dFdx/dFdy of edge distances to get crack surface gradient.
         // This perturbs the normal WHERE cracks exist, so fracture lines
         // physically interact with specular — they glint like real grooves.
-        // Both coarse AND fine cracks get their own specular pass.
         float crackSpecGlint = 0.0;
         if (coarseCrack > 0.1) {
             float dex = dFdx(coarseEdge);
@@ -1031,15 +994,6 @@ void main() {
             cSpec += pow(max(dot(crackRefl, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 48.0) * 0.6;
             cSpec += pow(max(dot(crackRefl, normalize(vec3(0.6, 0.3, -0.6))), 0.0), 48.0) * 0.3;
             crackSpecGlint += cSpec * coarseCrack * coarseSparkle;
-        }
-        if (fineCrack > 0.05) {
-            float fdex = dFdx(fineEdge);
-            float fdey = dFdy(fineEdge);
-            vec3 fineGrad = vec3(fdex, 0.0, fdey);
-            vec3 fineNorm = normalize(normal + fineGrad * 12.0);
-            vec3 fineRefl = reflect(-viewDir, fineNorm);
-            float fSpec = pow(max(dot(fineRefl, normalize(vec3(0.3, 1.0, 0.5))), 0.0), 48.0);
-            crackSpecGlint += fSpec * fineCrack * fineSparkle * 0.4;
         }
 
         // ─── COMPOSITE ───
@@ -1056,8 +1010,6 @@ void main() {
         // 4. Refraction halo: subtle brightening adjacent to fracture
         color = mix(color, vec3(1.3), coarseBrightEdge * coarseMask * 0.25 * uInternalCracks);
 
-        // 5. Fine: hairline secondary scratches with their own sparkle
-        color = mix(color, vec3(1.05), fineCrack * fineDepth * fineSparkle * uInternalCracks * 0.3);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -1074,8 +1026,7 @@ void main() {
         float eHigh = eLow + 0.8;
         float eFactor = smoothstep(eLow, eHigh, eRatio);
 
-        // Combined crack mask — coarse dominates, fine contributes
-        float crackMask = max(coarseCrack, fineCrack * 0.7);
+        float crackMask = coarseCrack;
 
         // At edges where cracks exist → discard for jagged silhouette
         if (eFactor * crackMask > 0.2) discard;
