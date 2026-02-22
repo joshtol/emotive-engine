@@ -632,14 +632,14 @@ void main() {
 
     // =====================================================================================
     // SPECULAR -- subtle waxy leaf sheen, not metallic
-    // Low power (24) for broad organic gloss. Much subtler than ice.
+    // Low power (16) for broad organic gloss. Much subtler than ice.
     // Uses smooth worldNormal for consistent organic highlights.
     // =====================================================================================
 
     vec3 reflDir = reflect(-viewDir, worldNormal);
-    float spec1 = pow(max(dot(reflDir, lightDir1), 0.0), 24.0);
-    float spec2 = pow(max(dot(reflDir, lightDir2), 0.0), 24.0) * 0.4;
-    float spec3 = pow(max(dot(reflDir, lightDir3), 0.0), 24.0) * 0.2;
+    float spec1 = pow(max(dot(reflDir, lightDir1), 0.0), 16.0);
+    float spec2 = pow(max(dot(reflDir, lightDir2), 0.0), 16.0) * 0.4;
+    float spec3 = pow(max(dot(reflDir, lightDir3), 0.0), 16.0) * 0.2;
     float spec = spec1 + spec2 + spec3;
 
     // Waxy leaf specular -- very subtle green-white highlight
