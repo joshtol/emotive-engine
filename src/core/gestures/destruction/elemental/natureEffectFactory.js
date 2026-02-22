@@ -34,7 +34,7 @@
  * |-----------|------------|-------------------------------------|
  * | entangle  | Afflicted  | Vines wrapping around               |
  * | root      | Afflicted  | Roots growing, anchoring            |
- * | constrict | Afflicted  | Plants squeezing tight              |
+ * | twirl     | Afflicted  | Relay arc weaving through rings     |
  * | bloom     | Emanating  | Flowers blooming outward            |
  * | sprout    | Emanating  | New growth emerging                 |
  * | flourish  | Emanating  | Lush vegetation spreading           |
@@ -75,7 +75,7 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.2,
             count: 8,
             scale: 1.0,
-            models: ['vine-tendril', 'vine-coil', 'thorn-vine'],
+            models: ['s-vine', 'vine-twist'],
             minDistance: 0.15,         // Vines can be close but not overlapping
             animation: {
                 appearAt: 0.1,
@@ -168,7 +168,7 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.3,           // Roots cluster near base
             count: 6,
             scale: 1.0,
-            models: ['root-tendril', 'moss-patch'],
+            models: ['s-vine', 'vine-cluster'],
             minDistance: 0.18,         // Roots spread out organically
             animation: {
                 appearAt: 0.08,
@@ -231,8 +231,8 @@ const NATURE_EFFECT_VARIANTS = {
         decayRate: 0.2
     },
 
-    constrict: {
-        name: 'natureConstrict',
+    twirl: {
+        name: 'natureTwirl',
         emoji: '🐍',
         type: 'blending',
         description: 'Plants squeezing tight, crushing grip',
@@ -254,7 +254,7 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.4,           // Tight clustering
             count: 10,
             scale: 1.0,
-            models: ['vine-coil', 'thorn-vine', 'vine-tendril'],
+            models: ['vine-twist', 's-vine'],
             minDistance: 0.1,          // Tight wrapping allows close proximity
             animation: {
                 appearAt: 0.05,
@@ -343,7 +343,7 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.15,
             count: 10,
             scale: 1.0,
-            models: ['flower-bloom', 'flower-bud', 'petal-scatter'],
+            models: ['vine-cluster', 'leaf-bunch', 'thorn-curl'],
             minDistance: 0.15,         // Flowers need space to be visible
             animation: {
                 appearAt: 0.12,
@@ -435,7 +435,7 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.2,
             count: 6,
             scale: 1.0,
-            models: ['leaf-single', 'leaf-cluster', 'fern-frond'],
+            models: ['leaf-bunch', 'vine-cluster', 's-vine'],
             minDistance: 0.18,         // New growth spreads out
             animation: {
                 appearAt: 0.1,
@@ -517,7 +517,7 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.1,           // Even spread
             count: 12,
             scale: 1.0,
-            models: ['leaf-cluster', 'fern-frond', 'vine-tendril', 'flower-bloom'],
+            models: ['vine-cluster', 'leaf-bunch', 's-vine', 'u-vine'],
             minDistance: 0.12,         // Dense lush coverage
             animation: {
                 appearAt: 0.08,
@@ -613,8 +613,43 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.25,
             count: 5,
             scale: 0.9,                // Slightly smaller - wilted
-            models: ['leaf-single', 'petal-scatter', 'flower-bud'],
-            minDistance: 0.2           // Sparse coverage, more spacing
+            models: ['leaf-bunch', 'vine-cluster', 'thorn-curl'],
+            minDistance: 0.2,          // Sparse coverage, more spacing
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.85,
+                stagger: 0.08,         // Slow wilting spread
+                enter: {
+                    type: 'grow',
+                    duration: 0.15,
+                    easing: 'easeOutQuad'
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.2,
+                    easing: 'easeIn'
+                },
+                pulse: {
+                    amplitude: 0.04,
+                    frequency: 1.0,
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.25,
+                    max: 0.45,
+                    frequency: 1.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'down',
+                    speed: 0.01,
+                    noise: 0.06
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 6
+            }
         },
         // Glow - fading yellow-green
         glowColor: [0.6, 0.65, 0.3],   // Fading green
@@ -663,8 +698,55 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.15,
             count: 15,                 // High count for full overgrowth
             scale: 1.1,                // Slightly larger for overgrown feel
-            models: ['vine-coil', 'leaf-cluster', 'fern-frond', 'moss-patch', 'mushroom-cap'],
-            minDistance: 0.1           // Very dense overgrowth
+            models: ['vine-twist', 'vine-cluster', 's-vine', 'thorn-curl'],
+            minDistance: 0.1,          // Very dense overgrowth
+            animation: {
+                appearAt: 0.05,
+                disappearAt: 0.88,
+                stagger: 0.03,         // Rapid overgrowth
+                enter: {
+                    type: 'grow',
+                    duration: 0.1,
+                    easing: 'easeOutBack',
+                    overshoot: 1.15
+                },
+                exit: {
+                    type: 'shrink',
+                    duration: 0.15,
+                    easing: 'easeInCubic'
+                },
+                pulse: {
+                    amplitude: 0.08,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.4,
+                    max: 0.75,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'outward',
+                    speed: 0.008,
+                    noise: 0.1
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.008,
+                    oscillate: true,
+                    range: Math.PI / 12
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.12,
+                blending: 'normal',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.25
+                }
+            }
         },
         // Glow - deep jungle green
         glowColor: [0.15, 0.6, 0.2],   // Deep jungle
@@ -715,8 +797,54 @@ const NATURE_EFFECT_VARIANTS = {
             clustering: 0.2,
             count: 10,
             scale: 1.0,
-            models: ['flower-bloom', 'petal-scatter', 'flower-bud', 'leaf-single'],
-            minDistance: 0.15          // Flowers need visibility
+            models: ['vine-cluster', 'leaf-bunch', 'thorn-curl'],
+            minDistance: 0.15,         // Flowers need visibility
+            animation: {
+                appearAt: 0.1,
+                disappearAt: 0.88,
+                stagger: 0.05,
+                enter: {
+                    type: 'pop',
+                    duration: 0.12,
+                    easing: 'easeOutBack',
+                    overshoot: 1.2
+                },
+                exit: {
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
+                },
+                pulse: {
+                    amplitude: 0.1,
+                    frequency: 2,
+                    easing: 'easeInOut'
+                },
+                emissive: {
+                    min: 0.55,
+                    max: 0.95,
+                    frequency: 2.5,
+                    pattern: 'sine'
+                },
+                drift: {
+                    direction: 'up',
+                    speed: 0.01,
+                    noise: 0.12
+                },
+                rotate: {
+                    axis: 'y',
+                    speed: 0.015,
+                    oscillate: true,
+                    range: Math.PI / 6
+                },
+                scaleVariance: 0.2,
+                lifetimeVariance: 0.15,
+                blending: 'normal',
+                renderOrder: 8,
+                intensityScaling: {
+                    scale: 1.2,
+                    emissiveMax: 1.3
+                }
+            }
         },
         // Glow - vibrant flower colors
         glowColor: [0.95, 0.5, 0.6],   // Vibrant pink
@@ -996,7 +1124,212 @@ export function createNatureEffectGesture(variant) {
                         spawnMode: cfg.spawnMode || null,
                         duration: cfg.duration,
                         time,
+                        progress,
                         // Extract spawn options from spawnMode (like fire does)
+                        animation: config.spawnMode?.animation,
+                        models: config.spawnMode?.models,
+                        count: config.spawnMode?.count,
+                        scale: config.spawnMode?.scale,
+                        embedDepth: config.spawnMode?.embedDepth
+                    },
+                    position: [posX, posY, posZ],
+                    rotation: [rotX, rotY, rotZ],
+                    scale,
+                    meshOpacity,
+                    glowIntensity,
+                    glowBoost,
+                    glowColorOverride: cfg.glowColor
+                };
+            }
+        }
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// MODERN FACTORY — buildNatureEffectGesture(config)
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Build a nature effect gesture from a full config object.
+ * Modern pattern matching buildIceEffectGesture / buildElectricEffectGesture.
+ *
+ * @param {Object} config - Full gesture configuration
+ * @param {string} config.name - Gesture name
+ * @param {string} config.emoji - Display emoji
+ * @param {string} config.type - Gesture type ('blending')
+ * @param {string} config.description - Human-readable description
+ * @param {number} config.duration - Duration in ms
+ * @param {number} config.beats - Beat count
+ * @param {number} config.intensity - Effect intensity
+ * @param {string} config.category - 'afflicted' | 'emanating' | 'transform'
+ * @param {number} config.growth - Growth level 0-1
+ * @param {Object} [config.spawnMode] - 3D element spawn configuration
+ * @param {Object} [config.cutout] - Cutout effect configuration
+ * @param {Object} [config.grain] - Grain effect configuration
+ * @returns {Object} Gesture configuration with 3d.evaluate()
+ */
+export function buildNatureEffectGesture(config) {
+    return {
+        name: config.name,
+        emoji: config.emoji,
+        type: config.type,
+        description: config.description,
+
+        config: {
+            duration: config.duration,
+            beats: config.beats,
+            intensity: config.intensity,
+            ...config
+        },
+
+        rhythm: {
+            enabled: true,
+            syncMode: 'beat',
+            amplitudeSync: {
+                onBeat: config.category === 'emanating' ? 1.4 : 1.2,
+                offBeat: 1.0,
+                curve: 'smooth'
+            }
+        },
+
+        '3d': {
+            evaluate(progress, motion) {
+                const cfg = { ...config, ...motion };
+                const time = progress * cfg.duration / 1000;
+                const { category } = cfg;
+
+                // ═══════════════════════════════════════════════════════════════
+                // EFFECT STRENGTH
+                // ═══════════════════════════════════════════════════════════════
+                let effectStrength = 1.0;
+
+                if (category === 'afflicted') {
+                    if (progress < 0.2) effectStrength = progress / 0.2;
+                    if (cfg.pulsingGrip) {
+                        effectStrength *= Math.sin(time * Math.PI * 3) * 0.15 + 0.85;
+                    }
+                }
+
+                if (category === 'emanating') {
+                    if (progress < 0.15) effectStrength = progress / 0.15;
+                    effectStrength *= Math.sin(time * Math.PI * 2) * 0.1 + 0.9;
+                }
+
+                if (category === 'transform') {
+                    effectStrength = Math.pow(progress, 0.7);
+                }
+
+                const decayRate = cfg.decayRate || 0.18;
+                if (progress > (1 - decayRate)) {
+                    const decayProgress = (progress - (1 - decayRate)) / decayRate;
+                    effectStrength *= (1 - decayProgress);
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // POSITION
+                // ═══════════════════════════════════════════════════════════════
+                let posX = 0, posY = 0, posZ = 0;
+
+                if (cfg.floatAmount > 0) {
+                    posY += Math.sin(time * (cfg.floatSpeed || 1) * Math.PI * 2) * cfg.floatAmount * effectStrength;
+                }
+                if (cfg.riseAmount > 0) {
+                    posY += cfg.riseAmount * progress * effectStrength;
+                }
+                if (cfg.droopAmount > 0) {
+                    posY -= cfg.droopAmount * progress * (1 + (cfg.droopAcceleration || 0) * progress) * effectStrength;
+                }
+                if (cfg.sinkAmount > 0) {
+                    posY -= cfg.sinkAmount * progress * (1 + (cfg.sinkAcceleration || 0) * progress) * effectStrength;
+                }
+                if (cfg.tremor > 0) {
+                    let tremorStr = cfg.tremor;
+                    if (cfg.tremorDecay) tremorStr *= (1 - progress * cfg.tremorDecay);
+                    const tTime = time * (cfg.tremorFrequency || 4);
+                    posX += (noise1D(tTime) - 0.5) * tremorStr * effectStrength;
+                    posY += (noise1D(tTime + 50) - 0.5) * tremorStr * 0.5 * effectStrength;
+                    posZ += (noise1D(tTime + 100) - 0.5) * tremorStr * 0.3 * effectStrength;
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // SCALE
+                // ═══════════════════════════════════════════════════════════════
+                let scale = 1.0;
+                const scaleTime = time * (cfg.scaleFrequency || 2);
+
+                if (cfg.scalePulse) {
+                    const breathe = Math.sin(scaleTime * Math.PI * 2) * 0.5 + 0.5;
+                    scale = 1.0 + (breathe - 0.5) * (cfg.scaleVibration || 0.02) * effectStrength;
+                } else {
+                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.6 +
+                                      Math.sin(scaleTime * Math.PI * 2.7) * 0.4;
+                    scale = 1.0 + scaleNoise * (cfg.scaleVibration || 0.02) * effectStrength;
+                }
+                if (cfg.scaleGrow > 0) scale += cfg.scaleGrow * progress * effectStrength;
+                if (cfg.scaleContract > 0) scale -= cfg.scaleContract * progress * effectStrength;
+                if (cfg.scaleShrink > 0) scale -= cfg.scaleShrink * progress * effectStrength;
+                scale = Math.max(0.1, scale);
+
+                // ═══════════════════════════════════════════════════════════════
+                // ROTATION
+                // ═══════════════════════════════════════════════════════════════
+                let rotX = 0, rotY = 0, rotZ = 0;
+
+                if (cfg.rotationSpeed > 0) {
+                    rotY = time * cfg.rotationSpeed * Math.PI * 2 * effectStrength;
+                }
+                if (cfg.rotationTwist > 0) {
+                    const twistTime = time * (cfg.rotationTwistSpeed || 0.5);
+                    rotZ = Math.sin(twistTime * Math.PI * 2) * cfg.rotationTwist * effectStrength;
+                }
+                if (cfg.rotationTilt > 0) {
+                    const tiltProgress = progress * (cfg.rotationTiltSpeed || 0.3);
+                    rotX = cfg.rotationTilt * tiltProgress * effectStrength;
+                    rotZ += cfg.rotationTilt * 0.5 * tiltProgress * effectStrength;
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // MESH OPACITY
+                // ═══════════════════════════════════════════════════════════════
+                let meshOpacity = 1.0;
+                if (cfg.fadeOut) {
+                    const startAt = cfg.fadeStartAt || 0.5;
+                    const endAt = cfg.fadeEndAt || 0.95;
+                    if (progress >= startAt) {
+                        const fadeProg = Math.min(1, (progress - startAt) / (endAt - startAt));
+                        meshOpacity = Math.max(0, cfg.fadeCurve === 'accelerating' ? 1 - fadeProg * fadeProg : 1 - fadeProg);
+                    }
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // GLOW
+                // ═══════════════════════════════════════════════════════════════
+                const flickerTime = time * (cfg.glowFlickerRate || 3);
+                let flickerValue;
+                if (category === 'emanating') {
+                    flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.2 + 0.8;
+                } else if (cfg.pulsingGrip) {
+                    flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.25 + 0.75;
+                } else {
+                    flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.15 + 0.85;
+                }
+                const glowIntensity = (cfg.glowIntensityMin || 0.5) +
+                    ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) * flickerValue * effectStrength;
+                const glowBoost = 0.2 * effectStrength * (cfg.intensity || 1) * (cfg.growth || 0.5);
+
+                // ═══════════════════════════════════════════════════════════════
+                // RETURN
+                // ═══════════════════════════════════════════════════════════════
+                return {
+                    natureOverlay: {
+                        enabled: effectStrength > 0.1,
+                        strength: effectStrength * (cfg.intensity || 1),
+                        growth: cfg.growth || 0.5,
+                        category: cfg.category,
+                        spawnMode: cfg.spawnMode || null,
+                        duration: cfg.duration,
+                        time,
+                        progress,
                         animation: config.spawnMode?.animation,
                         models: config.spawnMode?.models,
                         count: config.spawnMode?.count,
@@ -1020,35 +1353,25 @@ export function createNatureEffectGesture(variant) {
 // PRE-BUILT GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-// Afflicted variants (being overtaken)
-export const entangle = createNatureEffectGesture('entangle');
-export const root = createNatureEffectGesture('root');
-export const constrict = createNatureEffectGesture('constrict');
-
 // Emanating variants (projecting growth)
-export const bloom = createNatureEffectGesture('bloom');
-// NOTE: sprout removed due to crash - needs investigation
-export const flourish = createNatureEffectGesture('flourish');
+export const sprout = createNatureEffectGesture('sprout');
 
 // Transform variants (becoming nature)
-// NOTE: wilt and overgrow removed due to crash - needs investigation
-export const blossom = createNatureEffectGesture('blossom');
+export const wilt = createNatureEffectGesture('wilt');
+export const overgrow = createNatureEffectGesture('overgrow');
 
 export {
     NATURE_EFFECT_VARIANTS
 };
 
 export default {
-    // Afflicted
-    entangle,
-    root,
-    constrict,
     // Emanating
-    bloom,
-    flourish,
+    sprout,
     // Transform
-    blossom,
-    // Factory
+    wilt,
+    overgrow,
+    // Factories
     createNatureEffectGesture,
+    buildNatureEffectGesture,
     NATURE_EFFECT_VARIANTS
 };

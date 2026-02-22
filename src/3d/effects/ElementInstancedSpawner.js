@@ -88,7 +88,7 @@ import {
 // Debug logging - set to true to enable verbose console output
 const DEBUG = false;
 
-const MAX_ELEMENTS_PER_TYPE = 16;  // Max logical elements per type (×4 for trails = 64 instances)
+const MAX_ELEMENTS_PER_TYPE = 48;  // Max logical elements per type (×4 for trails = 192 instances)
 
 // Default scale multiplier for surface mode elements (matches original ElementSpawner)
 const DEFAULT_SCALE_MULTIPLIER = 1.5;
@@ -482,6 +482,9 @@ export class ElementInstancedSpawner {
             if (elementConfig?.resetFlash && material) {
                 elementConfig.resetFlash(material);
             }
+            if (elementConfig?.resetRelay && material) {
+                elementConfig.resetRelay(material);
+            }
             if (elementConfig?.resetWetness && material) {
                 elementConfig.resetWetness(material);
             }
@@ -583,6 +586,9 @@ export class ElementInstancedSpawner {
         }
         if (elementConfig?.resetFlash && material) {
             elementConfig.resetFlash(material);
+        }
+        if (elementConfig?.resetRelay && material) {
+            elementConfig.resetRelay(material);
         }
         if (elementConfig?.resetWetness && material) {
             elementConfig.resetWetness(material);
@@ -983,6 +989,11 @@ export class ElementInstancedSpawner {
             elementConfig.setWetness(material, animation.wetness);
         }
 
+        // Apply relay config from animation (per-gesture relay count + arc width)
+        if (elementConfig?.setRelay && animation?.relay !== undefined) {
+            elementConfig.setRelay(material, animation.relay);
+        }
+
         // Store parameterAnimation for atmospheric energy evaluation per frame
         // The first named parameter (temperature, turbulence, charge) drives particle energy
         if (animation?.parameterAnimation) {
@@ -1292,11 +1303,17 @@ export class ElementInstancedSpawner {
 
             // Calculate position at anchor point using shared utility
             const anchorPos = calculateAnchorPosition(anchorConfig, 0);
+            // If relativeOffset, scale offset by mascotRadius so spacing stays proportional
+            if (anchorConfig.relativeOffset) {
+                anchorPos.x *= this.mascotRadius;
+                anchorPos.y = anchorConfig.landmarkY + anchorConfig.offset.y * this.mascotRadius;
+                anchorPos.z *= this.mascotRadius;
+            }
             const position = _temp.position.set(anchorPos.x, anchorPos.y, anchorPos.z).clone();
 
-            // Calculate scale
+            // Calculate scale (sizeVariance override: 0 = identical sizes for relay rings)
             const scaleMultiplier = anchorConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
-            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
+            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier, spawnMode.sizeVariance);
             _temp.scale.setScalar(baseScale);
 
             // Apply orientation - use camera quaternion directly for camera-facing elements
@@ -1314,8 +1331,14 @@ export class ElementInstancedSpawner {
             // Generate element ID
             const elementId = `${elementType}_${this._nextId++}`;
 
-            // Spawn in pool
-            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
+            // Extract per-instance relay config from modelOverrides (if configured)
+            // arcPhase: model-space angle where arc sits (fixed, moves with ring rotation)
+            // relayIndex: which ring in the relay cycle (0=top, 1=right, 2=left)
+            const instanceArcPhase = modelOverrides[modelName]?.arcPhase ?? null;
+            const instanceRelayIndex = modelOverrides[modelName]?.relayIndex ?? null;
+
+            // Spawn in pool (arcPhase + relayIndex encode into aRandomSeed for relay vine masking)
+            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex, instanceArcPhase, instanceRelayIndex);
 
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
@@ -1941,6 +1964,23 @@ export class ElementInstancedSpawner {
                 // ANCHOR MODE: Apply bob animation using shared utility
                 const anchorPos = calculateAnchorPosition(data.anchor.config, this.time);
                 _temp.position.set(anchorPos.x, anchorPos.y, anchorPos.z);
+
+                // Camera-relative positioning: rotate XZ offset to track camera orbit
+                // so "left" stays camera-left regardless of camera angle
+                if (data.cameraOrientation && this.camera) {
+                    const camRight = _temp.direction.set(1, 0, 0).applyQuaternion(this.camera.quaternion);
+                    camRight.y = 0;
+                    camRight.normalize();
+                    const camFwd = _temp.axis.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
+                    camFwd.y = 0;
+                    camFwd.normalize();
+                    const ox = anchorPos.x;
+                    const oz = anchorPos.z;
+                    _temp.position.x = ox * camRight.x + oz * camFwd.x;
+                    _temp.position.z = ox * camRight.z + oz * camFwd.z;
+                    // Y unchanged — vertical offset stays world-relative
+                }
+
                 finalPosition = _temp.position;
 
                 // Calculate local progress for scale interpolation (0-1 within element's FULL visibility window)

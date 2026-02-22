@@ -64,18 +64,13 @@ export const MODEL_SIZES = {
     'stone-spike':       { class: 'small',  variance: 0.25 },  // Pointed stone spike
 
     // Nature models - organic, varied sizes
-    'vine-tendril':    { class: 'medium', variance: 0.3 },
-    'vine-coil':       { class: 'medium', variance: 0.25 },
-    'thorn-vine':      { class: 'small',  variance: 0.3 },
-    'leaf-single':     { class: 'tiny',   variance: 0.25 },
-    'leaf-cluster':    { class: 'small',  variance: 0.3 },
-    'fern-frond':      { class: 'medium', variance: 0.25 },
-    'flower-bud':      { class: 'tiny',   variance: 0.3 },
-    'flower-bloom':    { class: 'small',  variance: 0.25 },
-    'petal-scatter':   { class: 'tiny',   variance: 0.3 },
-    'root-tendril':    { class: 'small',  variance: 0.3 },
-    'moss-patch':      { class: 'tiny',   variance: 0.25 },
-    'mushroom-cap':    { class: 'small',  variance: 0.3 },
+    'vine-ring':       { class: 'small',  variance: 0 },     // Ring GLB — relay rings must be identical
+    'vine-cluster':    { class: 'small',  variance: 0.25 },
+    's-vine':          { class: 'medium', variance: 0.25 },
+    'leaf-bunch':      { class: 'small',  variance: 0.3 },
+    'vine-twist':      { class: 'medium', variance: 0.25 },
+    'u-vine':          { class: 'medium', variance: 0.25 },
+    'thorn-curl':      { class: 'small',  variance: 0.3 },
 
     // Fire models - dynamic, rising flames
     'ember-cluster':   { class: 'tiny',   variance: 0.3 },
@@ -158,18 +153,13 @@ export const MODEL_ORIENTATIONS = {
     'stone-spike':       { mode: 'outward', tiltAngle: 0.05 }, // Points outward like ice-spike
 
     // Nature
-    'vine-tendril':    { mode: 'tangent', tiltAngle: 0.2 },
-    'vine-coil':       { mode: 'tangent', tiltAngle: 0.15 },
-    'thorn-vine':      { mode: 'tangent', tiltAngle: 0.25 },
-    'leaf-single':     { mode: 'flat',    tiltAngle: 0.3 },
-    'leaf-cluster':    { mode: 'outward', tiltAngle: 0.4 },
-    'fern-frond':      { mode: 'outward', tiltAngle: 0.5 },
-    'flower-bud':      { mode: 'outward', tiltAngle: 0.2 },
-    'flower-bloom':    { mode: 'outward', tiltAngle: 0.3 },
-    'petal-scatter':   { mode: 'flat',    tiltAngle: 0.1 },
-    'root-tendril':    { mode: 'tangent', tiltAngle: -0.1 },
-    'moss-patch':      { mode: 'flat',    tiltAngle: 0 },
-    'mushroom-cap':    { mode: 'outward', tiltAngle: 0.15 },
+    'vine-ring':       { mode: 'flat',    tiltAngle: 0 },    // Ring GLB — XY plane, camera-overridden per gesture
+    'vine-cluster':    { mode: 'outward', tiltAngle: 0.3 },
+    's-vine':          { mode: 'tangent', tiltAngle: 0.2 },
+    'leaf-bunch':      { mode: 'outward', tiltAngle: 0.4 },
+    'vine-twist':      { mode: 'tangent', tiltAngle: 0.15 },
+    'u-vine':          { mode: 'tangent', tiltAngle: 0.2 },
+    'thorn-curl':      { mode: 'tangent', tiltAngle: 0.25 },
 
     // Fire - rising mode biases toward world-up
     'ember-cluster':   { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.6 },
@@ -224,16 +214,17 @@ export const MODEL_ORIENTATIONS = {
  * @param {string} modelName - Name of the model (without .glb extension)
  * @returns {{ base: number, min: number, max: number }} Size fractions of R
  */
-export function getModelSizeFraction(modelName) {
+export function getModelSizeFraction(modelName, overrideVariance) {
     const sizeInfo = MODEL_SIZES[modelName];
     if (!sizeInfo) {
         // Default to small size class
         const base = SIZE_CLASSES.small;
-        return { base, min: base * 0.8, max: base * 1.2 };
+        const variance = overrideVariance !== undefined ? overrideVariance : 0.2;
+        return { base, min: base * (1 - variance), max: base * (1 + variance) };
     }
 
     const base = SIZE_CLASSES[sizeInfo.class];
-    const variance = sizeInfo.variance || 0.2;
+    const variance = overrideVariance !== undefined ? overrideVariance : (sizeInfo.variance ?? 0.2);
 
     return {
         base,
@@ -302,8 +293,8 @@ export function calculateMascotRadius(mesh) {
  * @param {number} [scaleMultiplier=1.0] - Additional scale multiplier
  * @returns {number} Final scale value
  */
-export function calculateElementScale(modelName, mascotRadius, scaleMultiplier = 1.0) {
-    const sizeFraction = getModelSizeFraction(modelName);
+export function calculateElementScale(modelName, mascotRadius, scaleMultiplier = 1.0, overrideVariance) {
+    const sizeFraction = getModelSizeFraction(modelName, overrideVariance);
     const baseScale = sizeFraction.min + Math.random() * (sizeFraction.max - sizeFraction.min);
     return baseScale * mascotRadius * scaleMultiplier;
 }

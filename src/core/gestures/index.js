@@ -286,6 +286,7 @@ import {
     zap as zapGesture
 } from './destruction/elemental/electricEffectFactory.js';
 import electricMeditation from './destruction/elemental/electricmeditation.js';
+import electricTwirl from './destruction/elemental/electrictwirl.js';
 // destruction/elemental/ - Water effect gestures (self-contained gesture files)
 import waterSplash from './destruction/elemental/watersplash.js';
 import waterDrench from './destruction/elemental/waterdrench.js';
@@ -306,6 +307,7 @@ import waterFlourish from './destruction/elemental/waterflourish.js';
 import waterBarrage from './destruction/elemental/waterbarrage.js';
 import waterImpact from './destruction/elemental/waterimpact.js';
 import waterCrush from './destruction/elemental/watercrush.js';
+import waterTwirl from './destruction/elemental/watertwirl.js';
 // destruction/elemental/ - Fire effect gestures (self-contained gesture files)
 import fireBurn from './destruction/elemental/burn.js';
 import fireScorch from './destruction/elemental/scorch.js';
@@ -324,6 +326,7 @@ import firehelixGesture from './destruction/elemental/firehelix.js';
 import firebarrageGesture from './destruction/elemental/firebarrage.js';
 import fireimpactGesture from './destruction/elemental/fireimpact.js';
 import fireblastGesture from './destruction/elemental/fireblast.js';
+import fireTwirl from './destruction/elemental/firetwirl.js';
 // destruction/elemental/ - Smoke effect gestures (no shatter, soft organic visuals)
 import {
     puff as smokePuff,
@@ -358,6 +361,7 @@ import {
     voidImpact
 } from './destruction/elemental/voidEffectFactory.js';
 import voidMeditation from './destruction/elemental/voidmeditation.js';
+import voidTwirl from './destruction/elemental/voidtwirl.js';
 // destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
 // Matches fire/water pattern: axis-travel, anchor, radial-burst spawn modes
 import {
@@ -376,6 +380,7 @@ import {
 } from './destruction/elemental/iceEffectFactory.js';
 import iceMist from './destruction/elemental/icemist.js';
 import iceShiver from './destruction/elemental/iceshiver.js';
+import iceTwirl from './destruction/elemental/icetwirl.js';
 // destruction/elemental/ - Light effect gestures (all modern instanced pattern)
 import lightBlind from './destruction/elemental/lightblind.js';
 import lightPurify from './destruction/elemental/lightpurify.js';
@@ -398,6 +403,7 @@ import lightBarrage from './destruction/elemental/lightbarrage.js';
 import lightImpact from './destruction/elemental/lightimpact.js';
 import lightBlast from './destruction/elemental/lightblast.js';
 import lightSurge from './destruction/elemental/lightsurge.js';
+import lightTwirl from './destruction/elemental/lighttwirl.js';
 // destruction/elemental/ - Poison effect gestures (toxic/acid visuals)
 import {
     infect as poisonInfect,
@@ -431,16 +437,23 @@ import earthBarrage from './destruction/elemental/earthbarrage.js';
 import earthImpact from './destruction/elemental/earthimpact.js';
 import earthBlast from './destruction/elemental/earthblast.js';
 import earthSurge from './destruction/elemental/earthsurge.js';
-// destruction/elemental/ - Nature effect gestures (plant/growth visuals)
-// NOTE: sprout, wilt, and overgrow removed due to crash - needs investigation
-import {
-    entangle as natureEntangle,
-    root as natureRoot,
-    constrict as natureConstrict,
-    bloom as natureBloom,
-    flourish as natureFlourish,
-    blossom as natureBlossom
-} from './destruction/elemental/natureEffectFactory.js';
+import earthTwirl from './destruction/elemental/earthtwirl.js';
+// destruction/elemental/ - Nature instanced ring/spectacle gestures (modern pattern)
+import natureEntangle from './destruction/elemental/entangle.js';
+import natureRoot from './destruction/elemental/root.js';
+import natureTwirl from './destruction/elemental/naturetwirl.js';
+import natureBlossom from './destruction/elemental/blossom.js';
+import natureBloom from './destruction/elemental/bloom.js';
+import natureCrown from './destruction/elemental/naturecrown.js';
+import natureDance from './destruction/elemental/naturedance.js';
+import natureDrill from './destruction/elemental/naturedrill.js';
+import natureRingFlourish from './destruction/elemental/natureflourish.js';
+import natureHelix from './destruction/elemental/naturehelix.js';
+import natureMeditation from './destruction/elemental/naturemeditation.js';
+import naturePillar from './destruction/elemental/naturepillar.js';
+import natureVortex from './destruction/elemental/naturevortex.js';
+import natureBarrage from './destruction/elemental/naturebarrage.js';
+import natureShield from './destruction/elemental/natureshield.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -716,7 +729,7 @@ function _regLazy(name, loader, group) {
     waterSplash, waterDrench, waterSoak, waterFlow, waterTide,
     waterLiquefy, waterPool, waterVortex,
     waterCrown, waterDance, waterDrill, waterHelix, waterMeditation,
-    waterPillar, waterFlourish, waterBarrage, waterImpact, waterCrush,
+    waterPillar, waterFlourish, waterBarrage, waterImpact, waterCrush, waterTwirl,
     // Smoke
     smokeSmokebomb, smokeVanish, smokeMaterialize,
     // Fire
@@ -725,7 +738,7 @@ function _regLazy(name, loader, group) {
     fireflourishGesture, firecrownGesture, firemeditationGesture,
     firedrillGesture, firepillarGesture, firehelixGesture,
     firebarrageGesture, fireimpactGesture, fireblastGesture,
-    fireRadiate, fireBlaze,
+    fireRadiate, fireBlaze, fireTwirl,
     // Smoke effects
     smokePuff, smokeBillow, smokeFume, smokeShroud, smokeHaze, smokeChoke,
     // Electric
@@ -734,25 +747,25 @@ function _regLazy(name, loader, group) {
     electricCrown, electricDance, electricHelix, electricPillar,
     electricDrill, electricFlourish, electricVortex, electricBarrage,
     electricImpact, electricBlast, electricSurge, electricZap,
-    electricMeditation, zapGesture,
+    electricMeditation, zapGesture, electricTwirl,
     // Void
     voidDrain, voidSiphon, voidHollow,
     voidCorrupt, voidTaint, voidWither,
     voidConsume, voidErase, voidSingularity,
     voidCrown, voidDance, voidHelix, voidPillar, voidDrill,
     voidFlourish, voidVortex, voidBarrage, voidImpact,
-    voidMeditation,
+    voidMeditation, voidTwirl,
     // Ice
     iceCrown, iceDance, icePillar, iceHelix, iceMeditation,
     iceVortex, iceSplash, iceEncase, iceDrill, iceFlourish,
     iceBarrage, iceImpact,
-    iceMist, iceShiver,
+    iceMist, iceShiver, iceTwirl,
     // Light
     lightBlind, lightPurify, lightCleanse, lightRadiate, lightGlow, lightBeacon,
     lightAscend, lightIlluminate, lightDissolve,
     lightCrown, lightDance, lightHelix, lightPillar, lightDrill,
     lightFlourish, lightVortex, lightBarrage, lightImpact, lightBlast, lightSurge,
-    lightMeditation,
+    lightMeditation, lightTwirl,
     // Poison
     poisonInfect, poisonSicken, poisonOoze, poisonSeep, poisonToxic,
     poisonCorrode, poisonMelt, poisonDecay, poisonDissolve,
@@ -761,10 +774,12 @@ function _regLazy(name, loader, group) {
     earthEncase, earthCrumble, earthShatter, earthErode,
     earthMeditation, earthCrown, earthDance, earthHelix, earthPillar,
     earthDrill, earthFlourish, earthVortex, earthBarrage, earthImpact,
-    earthBlast, earthSurge,
-    // Nature
-    natureEntangle, natureRoot, natureConstrict,
-    natureBloom, natureFlourish, natureBlossom
+    earthBlast, earthSurge, earthTwirl,
+    // Nature (instanced ring/spectacle)
+    natureEntangle, natureRoot, natureTwirl, natureBlossom,
+    natureBloom, natureCrown, natureDance, natureDrill, natureRingFlourish,
+    natureHelix, natureMeditation, naturePillar, natureVortex,
+    natureBarrage, natureShield
 ].forEach(g => _regEager(g, _transformNames));
 
 // ── TRANSFORM gestures — factory-generated (LAZY) ────────────────────────────────────
@@ -809,11 +824,8 @@ _regLazy('dissolveRight', () => createDissolveGesture('right'), _transformNames)
 _regLazy('dissolveAway', () => createDissolveGesture('away'), _transformNames);
 _regLazy('dissolveToward', () => createDissolveGesture('toward'), _transformNames);
 // Elemental factory gestures
-_regLazy('ignite', () => createElementalGesture('ignite'), _transformNames);
-_regLazy('ember', () => createElementalGesture('ember'), _transformNames);
 _regLazy('iceFreeze', () => createElementalGesture('freeze'), _transformNames);
 _regLazy('shatterIce', () => createElementalGesture('shatterIce'), _transformNames);
-_regLazy('thaw', () => createElementalGesture('thaw'), _transformNames);
 // Rush variants
 _regLazy('rushForward', () => createRushGesture('forward'), _transformNames);
 _regLazy('rushBack', () => createRushGesture('back'), _transformNames);
@@ -923,11 +935,11 @@ export const GESTURE_CATEGORIES = {
         'watermeditation', 'waterpillar', 'waterflourish',
         'waterbarrage', 'waterimpact',
         // destruction/elemental/ - Water (crush)
-        'watercrush',
+        'watercrush', 'watertwirl',
         // destruction/elemental/ - Smoke
         'smokebomb', 'vanish', 'materialize',
         // destruction/elemental/ - Fire
-        'ignite', 'phoenix', 'ember',
+        'phoenix',
         // destruction/elemental/ - Fire (burning - victim of fire)
         'burn', 'scorch', 'combust',
         // destruction/elemental/ - Fire (vortex - spiraling fire tornado)
@@ -953,13 +965,13 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Fire (fireblast - explosive fire burst)
         'fireblast',
         // destruction/elemental/ - Fire (radiating - source of fire)
-        'radiate', 'blaze',
+        'radiate', 'blaze', 'firetwirl',
         // destruction/elemental/ - Smoke (emanating - source of smoke)
         'puff', 'billow', 'fume',
         // destruction/elemental/ - Smoke (afflicted - victim of smoke)
         'shroud', 'hazeSmoke', 'chokeSmoke',
         // destruction/elemental/ - Ice
-        'iceFreeze', 'shatterIce', 'thaw',
+        'iceFreeze', 'shatterIce',
         // destruction/elemental/ - Electric (electrocution)
         'shock', 'overload', 'glitch',
         // destruction/elemental/ - Electric (powered)
@@ -967,24 +979,24 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Electric (ring/spectacle gestures)
         'electriccrown', 'electricdance', 'electrichelix', 'electricpillar',
         'electricdrill', 'electricflourish', 'electricvortex', 'electricbarrage',
-        'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'electricmeditation', 'zap',
+        'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'electricmeditation', 'electrictwirl', 'zap',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
         'drain', 'siphon', 'hollow', 'corrupt', 'taint', 'wither', 'consume', 'erase', 'singularity',
         // destruction/elemental/ - Void (ring/spectacle gestures)
         'voidcrown', 'voiddance', 'voidhelix', 'voidpillar',
-        'voiddrill', 'voidflourish', 'voidvortex', 'voidbarrage', 'voidimpact', 'voidmeditation',
+        'voiddrill', 'voidflourish', 'voidvortex', 'voidbarrage', 'voidimpact', 'voidmeditation', 'voidtwirl',
         // destruction/elemental/ - Ice Effect (matching fire/water pattern)
         'iceCrown', 'iceDance', 'icePillar', 'iceHelix', 'iceMeditation',
         'iceVortex', 'iceSplash', 'iceEncase', 'iceDrill', 'iceFlourish',
         'iceBarrage', 'iceImpact',
-        'icemist', 'iceshiver',
+        'icemist', 'iceshiver', 'icetwirl',
         // destruction/elemental/ - Light Effect (afflicted, emanating, transform)
         'lightBlind', 'lightPurify', 'lightCleanse', 'lightRadiate', 'lightGlow', 'lightBeacon',
         'lightAscend', 'lightIlluminate', 'lightDissolve', 'lightMeditation',
         // destruction/elemental/ - Light (ring/spectacle gestures)
         'lightcrown', 'lightdance', 'lighthelix', 'lightpillar',
         'lightdrill', 'lightflourish', 'lightvortex', 'lightbarrage',
-        'lightimpact', 'lightblast', 'lightsurge', 'lightmeditation',
+        'lightimpact', 'lightblast', 'lightsurge', 'lightmeditation', 'lighttwirl',
         // destruction/elemental/ - Poison Effect (afflicted, emanating, transform)
         'poisonInfect', 'poisonSicken', 'poisonOoze', 'poisonSeep', 'poisonToxic',
         'poisonCorrode', 'poisonMelt', 'poisonDecay', 'poisonDissolve',
@@ -994,10 +1006,7 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Earth (ring/spectacle gestures)
         'earthcrown', 'earthdance', 'earthhelix', 'earthpillar',
         'earthdrill', 'earthflourish', 'earthvortex', 'earthbarrage',
-        'earthimpact', 'earthblast', 'earthsurge', 'earthmeditation',
-        // destruction/elemental/ - Nature Effect (afflicted, emanating, transform)
-        'natureEntangle', 'natureRoot', 'natureConstrict', 'natureBloom', 'natureFlourish',
-        'natureBlossom',
+        'earthimpact', 'earthblast', 'earthsurge', 'earthmeditation', 'earthtwirl',
         // destruction/reform/
         'morph'
     ],

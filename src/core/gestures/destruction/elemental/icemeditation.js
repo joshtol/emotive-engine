@@ -5,189 +5,466 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Icemeditation gesture - mandala crystals with breathing pulse
- * @author Emotive Engine Team
+ * @fileoverview Icemeditation gesture - icetwirl doubled into a hexagon
  * @module gestures/destruction/elemental/icemeditation
- * @complexity ⭐⭐ Intermediate
  *
- * VISUAL DIAGRAM:
- *           ❄️
- *        ❄️     ❄️
- *           ●           ← Mandala: center + outer crystals
- *        ❄️     ❄️          Breathing pulse in/out
- *           ❄️
- *
- * FEATURES:
- * - 5 ice-ring elements in mandala formation (1 center + 4 outer)
- * - Anchored at center (no travel)
- * - Synchronized breathing pulse animation
- * - VORONOI + CRACKS cutout with angular travel
- * - Calm meditative ice energy
- * - GPU-instanced rendering via ElementInstancedSpawner
- *
- * USED BY:
- * - Meditation effects
- * - Calm ice displays
- * - Focusing/centering effects
- * - Spiritual frost themes
+ * CONCEPT: Two Star-of-David hexagons — one original, one vertically flipped with
+ * reversed rotations. 12 rings total. Each hexagon is icetwirl + its mirror.
  */
 
 import { buildIceEffectGesture } from './iceEffectFactory.js';
 
-/**
- * Icemeditation gesture configuration
- * Mandala crystals with breathing pulse
- */
 const ICEMEDITATION_CONFIG = {
     name: 'icemeditation',
     emoji: '🧘',
     type: 'blending',
-    description: 'Meditative ice crystals with breathing pulse',
+    description: 'Dual ice weave — icetwirl hexagon',
     duration: 4000,
-    beats: 4,
-    intensity: 0.6,
+    beats: 8,
+    intensity: 0.7,
     category: 'emanating',
     frost: 0.5,
 
-    // 3D Element spawning - MANDALA: 5 crystals (1 center + 4 outer)
-    spawnMode: {
-        type: 'axis-travel',
-        axisTravel: {
-            axis: 'y',
-            start: 'center',
-            end: 'center',
-            easing: 'easeInOut',
-            startScale: 1.4,
-            endScale: 1.4,
-            startDiameter: 2.2,
-            endDiameter: 2.2,
-            orientation: 'camera'       // Billboard: always face camera
-        },
-        formation: {
-            type: 'mandala',
-            count: 5,
-            radius: 0.5,
-            arcOffset: 45,
-            scales: [1.1, 0.7, 0.7, 0.7, 0.7]
-        },
-        count: 5,
-        scale: 1.6,
-        models: ['ice-ring'],
-        animation: {
-            appearAt: 0.0,
-            disappearAt: 0.8,
-            stagger: 0,
-            enter: {
-                type: 'fade',
-                duration: 0.5,
-                easing: 'easeInOut'
+    spawnMode: [
+        // ═══ ICETWIRL ORIGINAL ═══
+
+        // Ring A — lower-left — relay 2, CW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
             },
-            exit: {
-                type: 'fade',
-                duration: 0.4,
-                easing: 'easeInOut'
-            },
-            procedural: {
-                scaleSmoothing: 0.15,
-                geometryStability: true
-            },
-            parameterAnimation: {
-                frost: {
-                    start: 0.35,
-                    peak: 0.55,
-                    end: 0.4,
-                    curve: 'sine'
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 0.0,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
                 }
+            }
+        },
+
+        // Ring B — lower-right — relay 1, CCW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
             },
-            // VORONOI + CRACKS for crystalline mandala
-            cutout: {
-                strength: 0.55,
-                primary: { pattern: 3, scale: 1.0, weight: 1.0 },    // VORONOI - crystalline cells
-                secondary: { pattern: 8, scale: 1.2, weight: 0.4 },  // CRACKS - subtle fractures
-                blend: 'add',
-                travel: 'angular',
-                travelSpeed: 0.5,
-                strengthCurve: 'bell',
-                bellPeakAt: 0.5,
-                bellWidth: 1.0
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 3.14,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C — upper-center — relay 0, CW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: 0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
             },
-            // Grain: FILM for subtle frost texture
-            grain: {
-                type: 3,
-                strength: 0.2,
-                scale: 0.3,
-                speed: 0.5,
-                blend: 'multiply'
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 4.71,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // ═══ Y-FLIPPED COPY (everything identical except offset.y negated) ═══
+
+        // Ring A (flipped) — upper-right — relay 2, CCW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
             },
-            // Per-gesture atmospheric particles: gentle cold mist
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-            }],
-            // Strong breathing pulse - the key feature
-            pulse: {
-                amplitude: 0.15,
-                frequency: 1.5,
-                easing: 'easeInOut'
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 0.0,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring B (flipped) — upper-left — relay 1, CW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
             },
-            emissive: {
-                min: 0.7,
-                max: 1.2,
-                frequency: 1.5,
-                pattern: 'sine'
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 3.14,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C (flipped) — lower-center — relay 0, CCW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: -0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
             },
-            // Gentle slow rotation around Z
-            rotate: [
-                { axis: 'z', rotations: 0.4, phase: 0 },
-                { axis: 'z', rotations: -0.35, phase: 0 },
-                { axis: 'z', rotations: 0.25, phase: 0 },
-                { axis: 'z', rotations: -0.35, phase: 0 },
-                { axis: 'z', rotations: 0.4, phase: 0 }
-            ],
-            scaleVariance: 0,
-            lifetimeVariance: 0,
-            blending: 'normal',
-            depthWrite: false,          // Don't occlude mascot (camera-facing rings safe from Necker inversion)
-            renderOrder: -5,
-            modelOverrides: {
-                'ice-ring': {
-                    shaderAnimation: {
-                        type: 1,
-                        arcWidth: 0.9,
-                        arcSpeed: 0.4,
-                        arcCount: 2
-                    },
-                    orientationOverride: 'camera'
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 4.71,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // ═══ VERTICAL FLIP OF ENTIRE THING (Y negated, rotations reversed) ═══
+
+        // Ring A (v-flip) — upper-left — relay 2, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 1.05,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring B (v-flip) — upper-right — relay 0, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: 0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 4.19,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C (v-flip) — lower-center — relay 2, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: -0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 2.62,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring A' (v-flip) — lower-right — relay 0, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: -3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 1.05,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring B' (v-flip) — lower-left — relay 1, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: -0.38, y: -0.22, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 4.19,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
+        },
+
+        // Ring C' (v-flip) — upper-center — relay 1, arc offset +π/3
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0.0, y: 0.44, z: 0 },
+                orientation: 'camera',
+                cameraOffset: 1.0,
+                relativeOffset: true,
+                startScale: 1.0,
+                endScale: 1.0
+            },
+            count: 1,
+            scale: 3.0,
+            sizeVariance: 0,
+            models: ['ice-ring'],
+            animation: {
+                appearAt: 0.04,
+                disappearAt: 0.85,
+                enter: { type: 'scale', duration: 0.05, easing: 'easeOut' },
+                exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
+                emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+                rotate: [{ axis: 'z', rotations: 3, phase: 0 }],
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        arcPhase: 2.62,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
                 }
             }
         }
-    },
+    ],
 
-    // Glow - calm icy aura
-    glowColor: [0.55, 0.8, 0.95],
-    glowIntensityMin: 0.6,
-    glowIntensityMax: 1.0,
-    glowFlickerRate: 3,
-    // Scale - synchronized breathing
-    scaleVibration: 0.004,
-    scaleFrequency: 1.5,
-    scaleGrowth: 0,
-    // Tremor - crystalline stillness
-    tremor: 0.001,
-    tremorFrequency: 1
+    glowColor: [0.6, 0.85, 1.0],
+    glowIntensityMin: 0.7,
+    glowIntensityMax: 1.2,
+    glowFlickerRate: 2,
+    scaleVibration: 0,
+    scaleFrequency: 0,
+    scaleContract: 0,
+    tremor: 0,
+    tremorFrequency: 0,
+    shakeAmount: 0,
+    shakeFrequency: 0,
+    decayRate: 0.15
 };
 
-/**
- * Icemeditation gesture - mandala crystals with breathing pulse.
- *
- * Uses axis-travel with mandala formation:
- * - 5 crystal-cluster models in mandala pattern
- * - Synchronized breathing pulse (scale + emissive)
- * - VORONOI + CRACKS cutout for crystalline texture
- * - Calm meditative ice energy
- */
 export default buildIceEffectGesture(ICEMEDITATION_CONFIG);

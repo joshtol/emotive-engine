@@ -158,42 +158,7 @@ const SMOKE_VARIANTS = {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 const FIRE_VARIANTS = {
-    ignite: {
-        name: 'ignite',
-        emoji: '🔥',
-        description: 'Catch fire and burn away',
-        duration: 3000,
-        beats: 6,
-        intensity: 1.2,
-        elemental: 'fire',
-        elementalParam: 0.6,        // Active flames
-        overlay: 'smoke',           // Smoke particles
-        overlayParam: 0.3,
-        impactPoint: [0, -0.3, 0],  // Bottom (fire rises)
-        impactDirection: [0, 1, 0], // Upward flames
-        revealSoul: true,
-        gravity: 1.0,               // Fire rises
-        explosionForce: 1.0,
-        rotationForce: 4.0          // Flickering rotation
-    },
     // NOTE: phoenix moved to fireEffectFactory.js (ring-based effect)
-    ember: {
-        name: 'ember',
-        emoji: '🪨',
-        description: 'Smolder and crumble (low temperature)',
-        duration: 6000,
-        beats: 12,
-        intensity: 0.3,
-        elemental: 'fire',
-        elementalParam: 0.15,       // Embers (low temp)
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, -1, 0],
-        revealSoul: true,
-        gravity: -0.5,              // Slow fall
-        explosionForce: 0.1,        // Gentle crumble
-        rotationForce: 0.5,
-        shatterTriggerAt: 0.0       // Immediate crumble
-    }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -236,23 +201,6 @@ const ICE_VARIANTS = {
         explosionForce: 2.0,        // Explosive shatter
         rotationForce: 6.0,         // Shards tumble
         preFreezePhase: true        // Visual freeze before shatter
-    },
-    thaw: {
-        name: 'thaw',
-        emoji: '💧',
-        description: 'Ice melts to water transition',
-        duration: 4000,
-        beats: 8,
-        intensity: 0.6,
-        elemental: 'ice',
-        elementalParam: 0.9,        // High melt (transitions to water)
-        impactPoint: [0, 0.2, 0],
-        impactDirection: [0, -1, 0],
-        revealSoul: true,
-        gravity: -3.0,
-        explosionForce: 0.3,
-        rotationForce: 1.0,
-        meltTransition: true        // Visual melt effect
     }
 };
 

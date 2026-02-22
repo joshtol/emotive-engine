@@ -1,142 +1,148 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Void Meditation Gesture
+ *    ●●  ENGINE - Voidmeditation Gesture
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Voidmeditation gesture - dark mandala with breathing pulse
+ * @fileoverview Voidmeditation gesture - relay arc energy flow through 3 vertical rings
  * @module gestures/destruction/elemental/voidmeditation
  *
- * VISUAL DIAGRAM:
- *         ◎   ◎
- *       ◎       ◎          ← 5 void-rings in mandala pattern
- *         ◎ ★ ◎              1 center + 4 outer
- *       ◎       ◎            camera-facing, breathing
- *         ◎   ◎
+ * CONCEPT: Three camera-facing void-rings stacked vertically (bottom → center → top).
+ * Energy flows upward through the rings sequentially via relay arc handoff.
+ * Slow rotation and breathing pulse create a meditative, centered feel.
  *
- * CONCEPT: Following the firemeditation pattern with void aesthetics.
- * A dark mandala of void-rings — the anti-meditation. Where fire
- * meditation is warm and nurturing, void meditation is still and
- * consuming. Slow breathing pulse, alternating rotation, dark energy.
- *
- * FEATURES:
- * - 5 void-rings in mandala formation (1 center + 4 outer)
- * - Camera-facing orientation
- * - Synchronized breathing pulse
- * - Alternating rotation directions
- * - Dark atmospheric wisps
- * - Long 4000ms duration
+ * Uses the relay arc system (aRandomSeed >= 100 encoding) for per-instance arc control.
  */
 
 import { buildVoidEffectGesture } from './voidEffectFactory.js';
+
+// Shared animation config for all 3 rings
+const SHARED_ANIMATION = {
+    appearAt: 0.0,
+    disappearAt: 0.7,
+    enter: { type: 'fade', duration: 0.2, easing: 'easeInOut' },
+    exit: { type: 'fade', duration: 0.25, easing: 'easeInOut' },
+    emissive: { min: 0.4, max: 0.8, frequency: 1.2, pattern: 'sine' },
+    pulse: { amplitude: 0.08, frequency: 1.5, easing: 'easeInOut' },
+    cutout: {
+        strength: 0.5,
+        primary: { pattern: 4, scale: 2.0, weight: 1.0 },
+        secondary: { pattern: 6, scale: 1.5, weight: 0.5 },
+        blend: 'add',
+        travel: 'angular',
+        travelSpeed: 0.3,
+        strengthCurve: 'bell',
+        bellPeakAt: 0.5,
+        bellWidth: 1.0
+    },
+    grain: { type: 3, strength: 0.4, scale: 0.5, speed: 0.3, blend: 'multiply' },
+    atmospherics: [{
+        preset: 'smoke',
+        targets: null,
+        anchor: 'above',
+        intensity: 0.2,
+        sizeScale: 0.8,
+        progressCurve: 'sustain'
+    }],
+    renderOrder: 10
+};
+
+const SHARED_ANCHOR = {
+    landmark: 'center',
+    orientation: 'camera',
+    cameraOffset: 1.0,
+    relativeOffset: true,
+    startScale: 1.0,
+    endScale: 1.0
+};
 
 const VOIDMEDITATION_CONFIG = {
     name: 'voidmeditation',
     emoji: '🧘',
     type: 'blending',
-    description: 'Dark meditative mandala — void energy breathing in stillness',
-    duration: 4000,
+    description: 'Meditative void relay — entropy flows through three aligned rings',
+    duration: 2500,
     beats: 4,
     intensity: 0.7,
-    category: 'absorption',
-    voidStrength: 0.5,
+    category: 'emanating',
+    entropy: 0.3,
 
-    spawnMode: {
-        type: 'axis-travel',
-        axisTravel: {
-            axis: 'y',
-            start: 'center',
-            end: 'center',
-            easing: 'easeInOut',
-            startScale: 1.0,
-            endScale: 1.0,
-            startDiameter: 1.8,
-            endDiameter: 1.8,
-            orientation: 'camera'
+    spawnMode: [
+        // Ring A — bottom — relay 0, slow CW
+        {
+            type: 'anchor',
+            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: -0.3, z: 0 } },
+            count: 1,
+            scale: 1.5,
+            sizeVariance: 0,
+            models: ['void-ring'],
+            animation: {
+                ...SHARED_ANIMATION,
+                rotate: [{ axis: 'z', rotations: 0.2 }],
+                modelOverrides: {
+                    'void-ring': {
+                        arcPhase: 0.0,
+                        relayIndex: 0,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
         },
-        formation: {
-            type: 'mandala',
-            count: 5,
-            radius: 0.5,
-            arcOffset: 45,
-            scales: [1.0, 0.6, 0.6, 0.6, 0.6]
+
+        // Ring B — center — relay 1, slow CCW
+        {
+            type: 'anchor',
+            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: 0, z: 0 } },
+            count: 1,
+            scale: 1.5,
+            sizeVariance: 0,
+            models: ['void-ring'],
+            animation: {
+                ...SHARED_ANIMATION,
+                rotate: [{ axis: 'z', rotations: -0.15 }],
+                modelOverrides: {
+                    'void-ring': {
+                        arcPhase: 2.09,
+                        relayIndex: 1,
+                        orientationOverride: 'camera'
+                    }
+                }
+            }
         },
-        count: 5,
-        scale: 1.2,
-        models: ['void-ring'],
-        animation: {
-            appearAt: 0.0,
-            disappearAt: 0.8,
-            stagger: 0,
-            enter: { type: 'fade', duration: 0.5, easing: 'easeInOut' },
-            exit: { type: 'fade', duration: 0.4, easing: 'easeInOut' },
-            procedural: { scaleSmoothing: 0.15, geometryStability: true },
-            pulse: { amplitude: 0.12, frequency: 1.2, easing: 'easeInOut' },
-            emissive: { min: 0.7, max: 1.3, frequency: 1.2, pattern: 'sine' },
-            cutout: {
-                strength: 0.6,
-                primary: { pattern: 4, scale: 2.0, weight: 1.0 },
-                secondary: { pattern: 6, scale: 1.5, weight: 0.5 },
-                blend: 'add',
-                travel: 'angular',
-                travelSpeed: 0.4,
-                strengthCurve: 'bell',
-                bellPeakAt: 0.5,
-                bellWidth: 1.0,
-                geometricMask: { type: 'distance', core: 0.1, tip: 0.3 }
-            },
-            grain: {
-                type: 3,
-                strength: 0.4,
-                scale: 0.5,
-                speed: 0.3,
-                blend: 'multiply'
-            },
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                speedScale: 0.4,
-                progressCurve: 'sustain',
-            }],
-            rotate: [
-                { axis: 'z', rotations: 0.3, phase: 0 },
-                { axis: 'z', rotations: -0.25, phase: 0 },
-                { axis: 'z', rotations: 0.2, phase: 0 },
-                { axis: 'z', rotations: -0.25, phase: 0 },
-                { axis: 'z', rotations: 0.3, phase: 0 }
-            ],
-            scaleVariance: 0,
-            lifetimeVariance: 0,
-            blending: 'additive',
-            depthWrite: false,
-            renderOrder: -5,
-            modelOverrides: {
-                'void-ring': {
-                    shaderAnimation: {
-                        type: 1,
-                        arcWidth: 0.85,
-                        arcSpeed: 0.3,
-                        arcCount: 2
-                    },
-                    orientationOverride: 'camera'
+
+        // Ring C — top — relay 2, slow CW
+        {
+            type: 'anchor',
+            anchor: { ...SHARED_ANCHOR, offset: { x: 0, y: 0.3, z: 0 } },
+            count: 1,
+            scale: 1.5,
+            sizeVariance: 0,
+            models: ['void-ring'],
+            animation: {
+                ...SHARED_ANIMATION,
+                rotate: [{ axis: 'z', rotations: 0.1 }],
+                modelOverrides: {
+                    'void-ring': {
+                        arcPhase: 4.19,
+                        relayIndex: 2,
+                        orientationOverride: 'camera'
+                    }
                 }
             }
         }
-    },
+    ],
 
-    decayRate: 0.2,
-    glowColor: [0.3, 0.1, 0.5],        // Dark purple void
+    glowColor: [0.3, 0.1, 0.5],
     glowIntensityMin: 0.4,
     glowIntensityMax: 0.8,
     glowFlickerRate: 2,
     scaleVibration: 0.004,
-    scaleFrequency: 1.2,
+    scaleFrequency: 1.5,
     scaleGrowth: 0,
-    rotationEffect: false
+    tremor: 0.002,
+    tremorFrequency: 1.2,
+    decayRate: 0.2
 };
 
 export default buildVoidEffectGesture(VOIDMEDITATION_CONFIG);

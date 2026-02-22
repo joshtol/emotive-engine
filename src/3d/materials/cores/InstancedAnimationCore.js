@@ -168,6 +168,7 @@ uniform float uGestureProgress;       // 0-1 gesture lifetime
 uniform float uArcWidth;              // Arc width (0.5 = ~29% visible)
 uniform float uArcSpeed;              // Rotations per gesture
 uniform int uArcCount;                // Number of visible arcs
+uniform float uArcPhase;              // Arc starting angle in radians (replaces random seed)
 
 // Ripple animation (type 2: RIPPLE_PULSE)
 uniform float uRippleSpeed;           // Ripple expansion speed
@@ -279,7 +280,7 @@ if (uAnimationType == 1) {
     // Shows only a portion of the ring that sweeps around
     // ═══════════════════════════════════════════════════════════════════════════════
     float vertexAngle = atan(localPosition.z, localPosition.x);
-    float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + aRandomSeed;
+    float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + uArcPhase;
     float halfWidth = uArcWidth * 3.14159;
     float arcSpacing = 6.28318 / float(max(1, uArcCount));
 
@@ -877,26 +878,26 @@ if (uCutoutStrength > 0.01 && uCutoutPattern1 >= 0) {
         finalCutout = pow(maskedCutout, widenPower);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // TRAIL DISSOLVE: Fade alpha at bottom of each instance
-    // Uses ALPHA (not discard) so the existing cutout pattern edges remain organic
-    // No hard horizontal line - just a smooth fade that works WITH the pattern
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    if (uTrailDissolveEnabled == 1) {
-        // Distance from this fragment to the instance's floor
-        float instanceFloor = vInstancePosition.y + uTrailDissolveOffset;
-        float distFromFloor = vWorldPosition.y - instanceFloor;
-
-        // trailAlpha: 0 at floor, 1 at softness distance above
-        // This creates a SMOOTH FADE - no hard edge
-        trailAlpha = smoothstep(0.0, uTrailDissolveSoftness, distFromFloor);
-    }
-
     // Binary discard for cutout pattern holes (creates organic edges)
     if (finalCutout < 0.5) {
         discard;
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRAIL DISSOLVE: Fade alpha at bottom of each instance
+// Runs independently of cutout (works with strength=0 too)
+// Uses ALPHA (not discard) so edges remain organic
+// ═══════════════════════════════════════════════════════════════════════════════
+
+if (uTrailDissolveEnabled == 1) {
+    // Distance from this fragment to the instance's floor
+    float instanceFloor = vInstancePosition.y + uTrailDissolveOffset;
+    float distFromFloor = vWorldPosition.y - instanceFloor;
+
+    // trailAlpha: 0 at floor, 1 at softness distance above
+    // This creates a SMOOTH FADE - no hard edge
+    trailAlpha = smoothstep(0.0, uTrailDissolveSoftness, distFromFloor);
 }
 `;
 
@@ -1019,6 +1020,7 @@ export const ANIMATION_DEFAULTS = {
     arcWidth: 0.5,
     arcSpeed: 1.0,
     arcCount: 1,
+    arcPhase: 0.0,
     // Ripple
     rippleSpeed: 0.5,
     rippleCount: 3,
@@ -1081,6 +1083,7 @@ export function createAnimationUniforms() {
         uArcWidth: { value: ANIMATION_DEFAULTS.arcWidth },
         uArcSpeed: { value: ANIMATION_DEFAULTS.arcSpeed },
         uArcCount: { value: ANIMATION_DEFAULTS.arcCount },
+        uArcPhase: { value: ANIMATION_DEFAULTS.arcPhase },
         // Ripple
         uRippleSpeed: { value: ANIMATION_DEFAULTS.rippleSpeed },
         uRippleCount: { value: ANIMATION_DEFAULTS.rippleCount },
@@ -1486,6 +1489,7 @@ export function setShaderAnimation(material, config = {}) {
     if (params.arcWidth !== undefined) material.uniforms.uArcWidth.value = params.arcWidth;
     if (params.arcSpeed !== undefined) material.uniforms.uArcSpeed.value = params.arcSpeed;
     if (params.arcCount !== undefined) material.uniforms.uArcCount.value = params.arcCount;
+    if (params.arcPhase !== undefined) material.uniforms.uArcPhase.value = params.arcPhase;
     if (params.rippleSpeed !== undefined) material.uniforms.uRippleSpeed.value = params.rippleSpeed;
     if (params.rippleCount !== undefined) material.uniforms.uRippleCount.value = params.rippleCount;
     if (params.flowDirection !== undefined) material.uniforms.uFlowDirection.value = params.flowDirection;

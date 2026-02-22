@@ -42,7 +42,9 @@ import {
     resetCutout as resetFireCutout,
     setGrain as setFireGrain,
     resetGrain as resetFireGrain,
-    resetAnimation as resetFireAnimation
+    resetAnimation as resetFireAnimation,
+    setRelay as setFireRelay,
+    resetRelay as resetFireRelay
 } from '../materials/InstancedFireMaterial.js';
 
 import {
@@ -55,7 +57,9 @@ import {
     resetCutout as resetWaterCutout,
     setGrain as setWaterGrain,
     resetGrain as resetWaterGrain,
-    resetAnimation as resetWaterAnimation
+    resetAnimation as resetWaterAnimation,
+    setRelay as setWaterRelay,
+    resetRelay as resetWaterRelay
 } from '../materials/InstancedWaterMaterial.js';
 
 import {
@@ -70,7 +74,9 @@ import {
     setGrain as setIceGrain,
     resetGrain as resetIceGrain,
     resetWetness as resetIceWetness,
-    resetAnimation as resetIceAnimation
+    resetAnimation as resetIceAnimation,
+    setRelay as setIceRelay,
+    resetRelay as resetIceRelay
 } from '../materials/InstancedIceMaterial.js';
 
 import {
@@ -85,7 +91,9 @@ import {
     resetGrain as resetElectricGrain,
     resetAnimation as resetElectricAnimation,
     setFlash as setElectricFlash,
-    resetFlash as resetElectricFlash
+    resetFlash as resetElectricFlash,
+    setRelay as setElectricRelay,
+    resetRelay as resetElectricRelay
 } from '../materials/InstancedElectricMaterial.js';
 
 import {
@@ -98,7 +106,9 @@ import {
     resetCutout as resetVoidCutout,
     setGrain as setVoidGrain,
     resetGrain as resetVoidGrain,
-    resetAnimation as resetVoidAnimation
+    resetAnimation as resetVoidAnimation,
+    setRelay as setVoidRelay,
+    resetRelay as resetVoidRelay
 } from '../materials/InstancedVoidMaterial.js';
 
 import {
@@ -111,7 +121,9 @@ import {
     resetCutout as resetLightCutout,
     setGrain as setLightGrain,
     resetGrain as resetLightGrain,
-    resetAnimation as resetLightAnimation
+    resetAnimation as resetLightAnimation,
+    setRelay as setLightRelay,
+    resetRelay as resetLightRelay
 } from '../materials/InstancedLightMaterial.js';
 
 import {
@@ -126,8 +138,25 @@ import {
     setGrain as setEarthGrain,
     resetGrain as resetEarthGrain,
     resetWetness as resetEarthWetness,
-    resetAnimation as resetEarthAnimation
+    resetAnimation as resetEarthAnimation,
+    setRelay as setEarthRelay,
+    resetRelay as resetEarthRelay
 } from '../materials/InstancedEarthMaterial.js';
+
+import {
+    createInstancedNatureMaterial,
+    updateInstancedNatureMaterial,
+    setInstancedNatureArcAnimation,
+    setInstancedNatureGestureGlow,
+    setInstancedNatureBloomThreshold,
+    setInstancedNatureCutout,
+    resetCutout as resetNatureCutout,
+    setGrain as setNatureGrain,
+    resetGrain as resetNatureGrain,
+    resetAnimation as resetNatureAnimation,
+    setRelay as setNatureRelay,
+    resetRelay as resetNatureRelay
+} from '../materials/InstancedNatureMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELEMENT REGISTRATIONS (after all imports are resolved)
@@ -151,6 +180,8 @@ ElementTypeRegistry.register('fire', {
     setGrain: setFireGrain,
     resetGrain: resetFireGrain,
     resetShaderAnimation: resetFireAnimation,
+    setRelay: setFireRelay,
+    resetRelay: resetFireRelay,
     scaleMultiplier: 1.5,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -183,6 +214,8 @@ ElementTypeRegistry.register('water', {
     setGrain: setWaterGrain,
     resetGrain: resetWaterGrain,
     resetShaderAnimation: resetWaterAnimation,
+    setRelay: setWaterRelay,
+    resetRelay: resetWaterRelay,
     scaleMultiplier: 1.2,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -217,6 +250,8 @@ ElementTypeRegistry.register('ice', {
     setWetness: setInstancedIceWetness,
     resetWetness: resetIceWetness,
     resetShaderAnimation: resetIceAnimation,
+    setRelay: setIceRelay,
+    resetRelay: resetIceRelay,
     scaleMultiplier: 1.2,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -255,6 +290,8 @@ ElementTypeRegistry.register('electricity', {
     setFlash: setElectricFlash,
     resetFlash: resetElectricFlash,
     resetShaderAnimation: resetElectricAnimation,
+    setRelay: setElectricRelay,
+    resetRelay: resetElectricRelay,
     scaleMultiplier: 1.3,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -291,6 +328,8 @@ ElementTypeRegistry.register('void', {
     setGrain: setVoidGrain,
     resetGrain: resetVoidGrain,
     resetShaderAnimation: resetVoidAnimation,
+    setRelay: setVoidRelay,
+    resetRelay: resetVoidRelay,
     scaleMultiplier: 1.3,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -325,6 +364,8 @@ ElementTypeRegistry.register('light', {
     setGrain: setLightGrain,
     resetGrain: resetLightGrain,
     resetShaderAnimation: resetLightAnimation,
+    setRelay: setLightRelay,
+    resetRelay: resetLightRelay,
     scaleMultiplier: 1.3,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -362,6 +403,8 @@ ElementTypeRegistry.register('earth', {
     setWetness: setInstancedEarthWetness,
     resetWetness: resetEarthWetness,
     resetShaderAnimation: resetEarthAnimation,
+    setRelay: setEarthRelay,
+    resetRelay: resetEarthRelay,
     scaleMultiplier: 1.0,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
@@ -371,6 +414,42 @@ ElementTypeRegistry.register('earth', {
         },
         billboard: true,
         strength: 0.0,  // Earth is solid — no distortion by default
+    },
+});
+
+ElementTypeRegistry.register('nature', {
+    basePath: 'models/Elements/Nature/',
+    models: [
+        'vine-ring.glb',
+        'nature-crown.glb',
+        'vine-cluster.glb',
+        's-vine.glb',
+        'leaf-bunch.glb',
+        'vine-twist.glb',
+        'u-vine.glb',
+        'thorn-curl.glb'
+    ],
+    createMaterial: createInstancedNatureMaterial,
+    updateMaterial: updateInstancedNatureMaterial,
+    setShaderAnimation: setInstancedNatureArcAnimation,
+    setGestureGlow: setInstancedNatureGestureGlow,
+    setBloomThreshold: setInstancedNatureBloomThreshold,
+    setCutout: setInstancedNatureCutout,
+    resetCutout: resetNatureCutout,
+    setGrain: setNatureGrain,
+    resetGrain: resetNatureGrain,
+    resetShaderAnimation: resetNatureAnimation,
+    setRelay: setNatureRelay,
+    resetRelay: resetNatureRelay,
+    scaleMultiplier: 1.2,
+    distortion: {
+        geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
+        material: createFireDistortionMaterial,  // Reuse fire distortion (nature has minimal distortion)
+        transform: {
+            padding: new THREE.Vector3(0.2, 0.3, 0.2),
+        },
+        billboard: true,
+        strength: 0.002,  // Very subtle organic shimmer
     },
 });
 

@@ -5,200 +5,126 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Firemeditation gesture - static rings with breathing pulse
- * @author Emotive Engine Team
+ * @fileoverview Firemeditation gesture - triple concentric flame hexagons
  * @module gestures/destruction/elemental/firemeditation
- * @complexity ⭐⭐ Intermediate
  *
- * VISUAL DIAGRAM:
- *         ═══════
- *         ═══════        ← Stacked horizontal rings
- *           ★            ← Breathing pulse in/out
- *         ═══════
- *         ═══════
+ * CONCEPT: Three concentric Star-of-David hexagons (inner / middle / outer), each built
+ * from two interlocked triangles — DOUBLED with a counter-rotating mirror set. 36 rings
+ * total. Each layer has a 120° arc-phase offset; the counter set adds another 180° offset
+ * so arcs appear on both sides of every ring. Inner spins fastest, outer slowest.
  *
- * FEATURES:
- * - 3 horizontal flame rings stacked vertically
- * - Anchored at center (no travel)
- * - Synchronized breathing pulse animation
- * - Calm meditative fire energy
- * - GPU-instanced rendering via ElementInstancedSpawner
+ * RELAY WAVE: All 36 rings are always visible (relay floor=0.5). A brightness wave
+ * sweeps through 3 relay steps, but the indices are STAGGERED across hexagons
+ * (inner [0,1,2], middle [1,2,0], outer [2,0,1]) creating a rotating diagonal band
+ * of peak brightness — the fire appears to spiral through the mandala.
  *
- * USED BY:
- * - Meditation effects
- * - Calm fire displays
- * - Focusing/centering effects
- * - Spiritual fire themes
+ * Uses the relay arc system (aRandomSeed >= 100 encoding) for per-instance arc control.
  */
 
 import { buildFireEffectGesture } from './fireEffectFactory.js';
 
-/**
- * Firemeditation gesture configuration
- * Static stacked rings with breathing pulse
- */
-const FIREMEDITATION_CONFIG = {
-    name: 'firemeditation',
-    emoji: '🧘',
-    type: 'blending',
-    description: 'Meditative flame rings with breathing pulse',
-    duration: 4000,         // Longer for meditation feel
-    beats: 4,
-    intensity: 0.7,         // Calmer intensity
-    category: 'radiating',
-    temperature: 0.5,       // Balanced warm
+const SHARED_ANCHOR = {
+    landmark: 'center',
+    orientation: 'camera',
+    cameraOffset: 1.0,
+    relativeOffset: true,
+    startScale: 1.0,
+    endScale: 1.0
+};
 
-    // 3D Element spawning - MANDALA: 5 rings at different heights and sizes
-    // Creates a lotus/chakra-like meditation pattern
-    spawnMode: {
-        type: 'axis-travel',
-        axisTravel: {
-            axis: 'y',
-            start: 'center',
-            end: 'center',              // No travel - fixed in place
-            easing: 'easeInOut',
-            startScale: 1.0,
-            endScale: 1.0,              // No scale change
-            startDiameter: 1.8,
-            endDiameter: 1.8,           // Constant diameter
-            orientation: 'camera'       // Billboard: always face camera
-        },
-        formation: {
-            type: 'mandala',            // Rings positioned in circular pattern
-            count: 5,                   // 1 center + 4 outer rings
-            radius: 0.5,                // Distance of outer rings from center
-            arcOffset: 45,              // 45° rotation between each ring
-            // Mandala scale: center large, outer rings smaller
-            scales: [1.0, 0.6, 0.6, 0.6, 0.6]
-        },
-        count: 5,
-        scale: 1.2,
+const SHARED_ANIMATION = {
+    disappearAt: 0.85,
+    enter: { type: 'scale', duration: 0.15, easing: 'easeOut' },
+    exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
+    emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
+    blending: 'normal',
+    renderOrder: 10,
+    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }  // 3-step spiral wave, all rings always visible
+};
+
+/**
+ * Generate 6 rings forming a Star-of-David hexagon at a given radius.
+ * Two interlocked equilateral triangles, relay-paired (top/bottom, left pair, right pair).
+ * @param {number[]} relayIndices - Relay indices for each vertex pair [top/bot, right, left]
+ *   Staggering these across hexagons creates a spiral brightness wave through the mandala.
+ * @param {number} delay - appearAt delay (0 = immediate, 0.08 = 8% into gesture) for blooming entrance
+ */
+function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0) {
+    const S = 0.866; // sin(60°)
+    const round = v => Math.round(v * 100) / 100;
+
+    //                     position                    relay           arcBase  CW/CCW
+    const rings = [
+        // Triangle 1 (upright)
+        { x: 0,        y: radius,      relay: relayIndices[0], arc: 4.71, dir: -1 }, // top
+        { x: S*radius, y: -0.5*radius, relay: relayIndices[1], arc: 3.14, dir:  1 }, // lower-right
+        { x:-S*radius, y: -0.5*radius, relay: relayIndices[2], arc: 0.0,  dir: -1 }, // lower-left
+        // Triangle 2 (inverted)
+        { x: 0,        y: -radius,     relay: relayIndices[0], arc: 4.71, dir:  1 }, // bottom
+        { x:-S*radius, y:  0.5*radius, relay: relayIndices[1], arc: 3.14, dir: -1 }, // upper-left
+        { x: S*radius, y:  0.5*radius, relay: relayIndices[2], arc: 0.0,  dir:  1 }, // upper-right
+    ];
+
+    return rings.map(r => ({
+        type: 'anchor',
+        anchor: { ...SHARED_ANCHOR, offset: { x: round(r.x), y: round(r.y), z: 0 } },
+        count: 1,
+        scale: ringScale,
+        sizeVariance: 0,
         models: ['flame-ring'],
         animation: {
-            appearAt: 0.0,
-            disappearAt: 0.8,
-            stagger: 0,             // All appear together
-            enter: {
-                type: 'fade',
-                duration: 0.5,      // Slow, gentle fade in
-                easing: 'easeInOut'
-            },
-            exit: {
-                type: 'fade',
-                duration: 0.4,      // Slow, gentle fade out
-                easing: 'easeInOut'
-            },
-            procedural: {
-                scaleSmoothing: 0.15,
-                geometryStability: true
-            },
-            parameterAnimation: {
-                temperature: {
-                    start: 0.4,
-                    peak: 0.55,
-                    end: 0.45,
-                    curve: 'sine'   // Smooth breathing curve
-                }
-            },
-            flicker: {
-                intensity: 0.08,    // Minimal flicker for calm
-                rate: 4,
-                pattern: 'sine'
-            },
-            // Strong breathing pulse - the key feature
-            pulse: {
-                amplitude: 0.15,    // Noticeable breathing
-                frequency: 1.5,     // Slow breath cycle
-                easing: 'easeInOut'
-            },
-            emissive: {
-                min: 0.9,
-                max: 1.5,
-                frequency: 1.5,     // Synced with breath
-                pattern: 'sine'
-            },
-            // Ethereal WAVES - flowing meditation energy
-            cutout: {
-                strength: 0.6,
-                primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - flowing energy
-                secondary: { pattern: 6, scale: 1.5, weight: 0.5 },  // SPIRAL - meditation swirl
-                blend: 'add',
-                travel: 'angular',
-                travelSpeed: 0.6,         // Slow meditative rotation
-                strengthCurve: 'bell',
-                bellPeakAt: 0.5,
-                bellWidth: 1.0,               // Full plateau - effectively constant
-                geometricMask: {
-                    type: 'distance',
-                    core: 0.1,
-                    tip: 0.3
-                }
-            },
-            // Grain: WHITE noise for sharp, granular texture
-            grain: {
-                type: 2,              // WHITE - sharp granular noise
-                strength: 0.5,        // Moderate - not too many holes
-                scale: 0.5,           // Medium grain size
-                speed: 0.5,           // Moderate animation
-                blend: 'multiply'     // Creates holes for gritty texture
-            },
-            // Per-gesture atmospheric particles: gentle meditation wisps
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                speedScale: 0.6,
-                progressCurve: 'sustain',
-            }],
-            // Gentle slow rotation around Z (spin while facing camera)
-            // 5 rings with alternating directions for mandala harmony
-            rotate: [
-                { axis: 'z', rotations: 0.4, phase: 0 },     // Ring 0 (top, small): clockwise
-                { axis: 'z', rotations: -0.35, phase: 0 },   // Ring 1 (upper-mid): counter-clockwise
-                { axis: 'z', rotations: 0.25, phase: 0 },    // Ring 2 (center, large): slow clockwise
-                { axis: 'z', rotations: -0.35, phase: 0 },   // Ring 3 (lower-mid): counter-clockwise
-                { axis: 'z', rotations: 0.4, phase: 0 }      // Ring 4 (bottom, small): clockwise
-            ],
-            scaleVariance: 0,       // Uniform for meditation
-            lifetimeVariance: 0,
-            blending: 'additive',
-            renderOrder: -5,    // Render before mascot (behind)
+            ...SHARED_ANIMATION,
+            appearAt: delay,
+            rotate: [{ axis: 'z', rotations: r.dir * baseRotations, phase: 0 }],
             modelOverrides: {
                 'flame-ring': {
-                    shaderAnimation: {
-                        type: 1,
-                        arcWidth: 0.9,    // Wide arcs for full rings
-                        arcSpeed: 0.5,    // Slow internal animation
-                        arcCount: 2
-                    },
+                    arcPhase: (r.arc + arcPhaseOffset) % 6.28,
+                    relayIndex: r.relay,
                     orientationOverride: 'camera'
                 }
             }
         }
-    },
+    }));
+}
 
-    // Mesh effects - calm warm glow
-    flickerFrequency: 4,
-    flickerAmplitude: 0.004,
-    flickerDecay: 0.4,
-    glowColor: [1.0, 0.65, 0.3],    // Soft warm gold
-    glowIntensityMin: 0.7,
+const FIREMEDITATION_CONFIG = {
+    name: 'firemeditation',
+    emoji: '🔥',
+    type: 'blending',
+    description: 'Triple flame hexagon mandala — three concentric relay hexagons with differential rotation',
+    duration: 3000,
+    beats: 6,
+    intensity: 1.5,
+    category: 'afflicted',
+    temperature: 0.5,
+
+    spawnMode: [
+        // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══
+        // Spiral wave: staggered relay indices create rotating diagonal brightness band
+        //           radius  scale  rotations  arcPhase  relayIndices
+        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0),    // inner — appears first
+        ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08),  // middle — blooms outward
+        ...createHexLayer(0.78, 1.55,  1,   4.19, [2, 0, 1], 0.16),  // outer — last to arrive
+
+        // ═══ COUNTER SET (opposite rotation, +180° arc offset) ═══
+        // Same timing as forward — mirrored pairs bloom together
+        ...createHexLayer(0.28, 0.70, -2,    3.14, [0, 1, 2], 0.0),
+        ...createHexLayer(0.52, 1.15,  1.5,  5.23, [1, 2, 0], 0.08),
+        ...createHexLayer(0.78, 1.55, -1,    1.05, [2, 0, 1], 0.16),
+    ],
+
+    glowColor: [1.0, 0.7, 0.3],
+    glowIntensityMin: 0.8,
     glowIntensityMax: 1.1,
-    glowFlickerRate: 3,
-    scaleVibration: 0.004,
-    scaleFrequency: 1.5,
-    scaleGrowth: 0,                  // No growth for stable meditation
-    rotationEffect: false
+    glowFlickerRate: 2,
+    scaleVibration: 0.01,
+    scaleFrequency: 2,
+    scaleContract: 0.02,
+    tremor: 0.002,
+    tremorFrequency: 3,
+    shakeAmount: 0.003,
+    shakeFrequency: 4,
+    decayRate: 0.1
 };
 
-/**
- * Firemeditation gesture - static rings with breathing pulse.
- *
- * Uses anchor spawn mode with stack formation:
- * - 3 flame-ring models stacked vertically at center
- * - Synchronized breathing pulse (scale + emissive)
- * - Calm meditative fire energy
- */
 export default buildFireEffectGesture(FIREMEDITATION_CONFIG);

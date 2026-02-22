@@ -53,6 +53,10 @@ export function parseAnchorConfig(config, resolveLandmark) {
         // Use for billboard elements that would otherwise clip into mascot geometry
         cameraOffset: anchor.cameraOffset || 0,
 
+        // Relative offset: if true, offset x/y/z are fractions of mascotRadius
+        // This keeps element spacing proportional to mascot size
+        relativeOffset: anchor.relativeOffset || false,
+
         // Pass through other spawn options
         count: config.count || 1,
         models: config.models || [],

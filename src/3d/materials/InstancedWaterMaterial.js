@@ -79,7 +79,11 @@ uniform int uAnimationType;      // 0=none, 1=rotating arc
 uniform float uArcWidth;         // Arc width in radians
 uniform float uArcSpeed;         // Rotations per gesture
 uniform int uArcCount;           // Number of visible arcs
+uniform float uArcPhase;         // Arc starting angle in radians
 uniform float uGestureProgress;  // 0-1 gesture progress
+uniform int uRelayCount;         // Number of relay rings
+uniform float uRelayArcWidth;   // Relay arc width in radians
+uniform float uRelayFloor;
 
 // Per-instance attributes
 ${INSTANCED_ATTRIBUTES_VERTEX}
@@ -243,13 +247,29 @@ void main() {
     // ARC VISIBILITY (for vortex ring effects)
     // ═══════════════════════════════════════════════════════════════════════════════
     vArcVisibility = 1.0;
-    if (uAnimationType == 1) {
+    if (aRandomSeed >= 100.0) {
+        // Generalized relay: supports arbitrary relay count via uRelayCount
+        float encoded = aRandomSeed - 100.0;
+        float ringId = floor(encoded / 10.0);
+        float instanceArcPhase = encoded - ringId * 10.0;
+
+        float vertexAngle = atan(selectedPosition.y, selectedPosition.x);
+        float hw = uRelayArcWidth * 0.5;
+        float angleDiff = vertexAngle - instanceArcPhase;
+        angleDiff = mod(angleDiff + 3.14159, 6.28318) - 3.14159;
+        float arcMask = 1.0 - smoothstep(hw * 0.7, hw, abs(angleDiff));
+
+        float cp = uGestureProgress * float(uRelayCount) * 1.5;
+        float d = cp - ringId;
+        float relayAlpha = smoothstep(-0.30, 0.05, d) * (1.0 - smoothstep(0.70, 1.05, d));
+        vArcVisibility = arcMask * mix(uRelayFloor, 1.0, relayAlpha);
+    } else if (uAnimationType == 1) {
         // Calculate angle of this vertex in local XZ plane
         float vertexAngle = atan(selectedPosition.z, selectedPosition.x);
 
         // Arc center rotates based on gesture progress + per-instance phase offset
         // aRandomSeed stores the arc phase (rotationOffset) for vortex effects
-        float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + aRandomSeed;
+        float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + uArcPhase;
 
         // Calculate arc visibility
         float halfWidth = uArcWidth * 3.14159;  // Convert to radians
@@ -351,14 +371,13 @@ void main() {
     // ARC VISIBILITY (for vortex effects)
     // ═══════════════════════════════════════════════════════════════════════════════
     if (uAnimationType == 1) {
-        // Apply arc foam effect at edges
+        // Apply arc foam effect at edges (uniform-based arc only)
         ${WATER_ARC_FOAM_GLSL}
-
-        // Apply arc visibility
+    }
+    // Apply arc visibility (for vortex/relay effects)
+    if (vArcVisibility < 0.999) {
         alpha *= vArcVisibility;
-        // Fade color to avoid dark artifacts at edge
         color *= mix(0.3, 1.0, vArcVisibility);
-        // Discard fully invisible fragments
         if (vArcVisibility < 0.05) discard;
     }
 
@@ -452,6 +471,10 @@ export function createInstancedWaterMaterial(options = {}) {
             uFadeOutDuration: { value: fadeOutDuration },
             // Animation uniforms (cutout, glow, etc. from shared core)
             ...createAnimationUniforms(),
+            // Relay arc uniforms
+            uRelayCount: { value: 3 },
+            uRelayArcWidth: { value: 3.14159 },
+            uRelayFloor: { value: 0.0 },
             // Override glowScale if provided in options
             uGlowScale: { value: glowScale },
             // Water uniforms
@@ -623,6 +646,26 @@ export function setInstancedWaterSparkle(material, intensity) {
     if (material?.uniforms?.uSparkleIntensity) {
         material.uniforms.uSparkleIntensity.value = intensity;
     }
+}
+
+export function setRelay(material, config) {
+    if (!material) return;
+    if (config.count !== undefined && material.uniforms?.uRelayCount) {
+        material.uniforms.uRelayCount.value = config.count;
+    }
+    if (config.arcWidth !== undefined && material.uniforms?.uRelayArcWidth) {
+        material.uniforms.uRelayArcWidth.value = config.arcWidth;
+    }
+    if (config.floor !== undefined && material.uniforms?.uRelayFloor) {
+        material.uniforms.uRelayFloor.value = config.floor;
+    }
+}
+
+export function resetRelay(material) {
+    if (!material) return;
+    if (material.uniforms?.uRelayCount) material.uniforms.uRelayCount.value = 3;
+    if (material.uniforms?.uRelayArcWidth) material.uniforms.uRelayArcWidth.value = Math.PI;
+    if (material.uniforms?.uRelayFloor) material.uniforms.uRelayFloor.value = 0.0;
 }
 
 // Re-export animation types and shared functions for convenience

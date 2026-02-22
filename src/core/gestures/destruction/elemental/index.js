@@ -81,6 +81,7 @@ export { default as earthbarrage } from './earthbarrage.js';
 export { default as earthimpact } from './earthimpact.js';
 export { default as earthblast } from './earthblast.js';
 export { default as earthsurge } from './earthsurge.js';
+export { default as earthtwirl } from './earthtwirl.js';
 
 // Earth effect variants list for discovery
 export const EARTH_EFFECT_VARIANTS = [
@@ -89,23 +90,48 @@ export const EARTH_EFFECT_VARIANTS = [
     'earthencase', 'earthcrumble', 'earthshatter', 'eartherode',
     'earthcrown', 'earthdance', 'earthhelix', 'earthpillar',
     'earthdrill', 'earthflourish', 'earthvortex', 'earthbarrage',
-    'earthimpact', 'earthblast', 'earthsurge'
+    'earthimpact', 'earthblast', 'earthsurge', 'earthtwirl'
 ];
 
-// Nature effect gestures
+// Nature effect gesture factories
 export {
     createNatureEffectGesture,
-    entangle,
-    root,
-    constrict,
-    bloom,
-    sprout,
-    flourish,
-    wilt,
-    overgrow,
-    blossom,
+    buildNatureEffectGesture,
     NATURE_EFFECT_VARIANTS
 } from './natureEffectFactory.js';
+
+// Nature effect gestures (self-contained gesture files - attribute gestures)
+export { default as entangle } from './entangle.js';
+export { default as root } from './root.js';
+export { default as naturetwirl } from './naturetwirl.js';
+export { default as bloom } from './bloom.js';
+export { default as sprout } from './sprout.js';
+export { default as wilt } from './wilt.js';
+export { default as overgrow } from './overgrow.js';
+export { default as blossom } from './blossom.js';
+
+// Nature effect gestures (self-contained gesture files - character + ring/spectacle)
+export { default as naturecrown } from './naturecrown.js';
+export { default as naturemeditation } from './naturemeditation.js';
+export { default as natureshield } from './natureshield.js';
+export { default as naturevortex } from './naturevortex.js';
+export { default as naturedance } from './naturedance.js';
+export { default as naturehelix } from './naturehelix.js';
+export { default as naturedrill } from './naturedrill.js';
+export { default as natureflourish } from './natureflourish.js';
+export { default as naturepillar } from './naturepillar.js';
+export { default as naturebarrage } from './naturebarrage.js';
+
+// Nature effect variants list for discovery
+export const NATURE_GESTURE_VARIANTS = [
+    'natureentangle', 'natureroot', 'naturetwirl',
+    'naturebloom', 'natureblossom', 'sprout',
+    'wilt', 'overgrow',
+    'naturecrown', 'naturemeditation', 'natureshield',
+    'naturevortex', 'naturedance', 'naturehelix',
+    'naturedrill', 'natureflourish', 'naturepillar',
+    'naturebarrage'
+];
 
 // Void effect gestures
 export {
@@ -164,6 +190,7 @@ export { default as firepillar } from './firepillar.js';
 export { default as firepillarGesture } from './firepillar.js';
 export { default as firehelix } from './firehelix.js';
 export { default as firehelixGesture } from './firehelix.js';
+export { default as firetwirl } from './firetwirl.js';
 
 // Fire effect variants list for discovery
 export const FIRE_EFFECT_VARIANTS = [
@@ -180,5 +207,6 @@ export const FIRE_EFFECT_VARIANTS = [
     'firemeditation',
     'firedrill',
     'firepillar',
-    'firehelix'
+    'firehelix',
+    'firetwirl'
 ];

@@ -717,7 +717,7 @@
             enablePostProcessing: true,
             enableShadows: false,
             enableControls: true,
-            enableShatter: false, // Disabled for isolated element spawner testing
+            enableShatter: true,
             autoRotate: true,
             cameraDistance: 1.2,
             fov: 30,
@@ -816,8 +816,8 @@
 
             // Fire keywords (flame-vortex matches on 'flame', phoenix is fire rebirth)
             if (name.includes('burn') || name.includes('blaze') || name.includes('scorch') ||
-                name.includes('combust') || name.includes('smolder') || name.includes('ignite') ||
-                name.includes('inferno') || name.includes('flame') || name.includes('ember') ||
+                name.includes('combust') || name.includes('smolder') ||
+                name.includes('inferno') || name.includes('flame') ||
                 name.includes('radiate') || name.includes('phoenix') || name.includes('firedance')) {
                 return 'fire';
             }
@@ -825,7 +825,7 @@
             // Ice keywords
             if (name.includes('freeze') || name.includes('frost') ||
                 name.includes('crystal') || name.includes('glacial') || name.includes('chill') ||
-                name.includes('frozen') || name.includes('thaw')) {
+                name.includes('frozen')) {
                 return 'ice';
             }
 
@@ -879,9 +879,10 @@
 
             // Nature keywords
             if (name.includes('entangle') || name.includes('root') || name.includes('vine') ||
-                name.includes('bloom') || name.includes('sprout') || name.includes('flourish') ||
+                name.includes('sprout') || name.includes('flourish') ||
                 name.includes('plant') || name.includes('grow') ||
-                name.includes('constrict') || name.includes('thorn') || name.includes('leaf')) {
+                name.includes('constrict') || name.includes('thorn') || name.includes('leaf') ||
+                name === 'wilt' || name === 'overgrow' || name === 'blossom') {
                 return 'nature';
             }
 

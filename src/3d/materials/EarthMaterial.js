@@ -252,24 +252,24 @@ export function createEarthMaterial(options = {}) {
                 // ═══ STONE COLOR — Seiryu-style dark grey limestone ═══
                 // Cool charcoal grey with slight blue undertones.
                 // Petrification drives from warm grey → cool grey.
-                vec3 warmGrey = vec3(0.36, 0.34, 0.31);
-                vec3 coolGrey = vec3(0.31, 0.31, 0.33);
+                vec3 warmGrey = vec3(0.34, 0.33, 0.32);
+                vec3 coolGrey = vec3(0.28, 0.29, 0.33);
                 vec3 baseStone = mix(warmGrey, coolGrey, uPetrification);
 
                 // ═══ MINERAL COLOR PATCHES ═══
                 // Blue-grey dominant, sparse warm ochre — Seiryu uniformity
                 float mineralNoise1 = noise3D(vPosition * 1.5 + vec3(3.7, 0.0, 0.0));
                 float mineralNoise2 = noise3D(vPosition * 0.8 + vec3(1.3, 0.7, 2.5));
-                vec3 blueGrey = vec3(0.18, 0.20, 0.26);
+                vec3 blueGrey = vec3(0.20, 0.22, 0.28);
                 float blueGreyMask = smoothstep(0.35, 0.18, mineralNoise2);
-                baseStone = mix(baseStone, blueGrey, blueGreyMask * 0.12);
+                baseStone = mix(baseStone, blueGrey, blueGreyMask * 0.22);
 
                 // Per-pixel shade variation — subtle warm/cool shifts
                 float shadeNoise = noise3D(vPosition * 8.0 + vec3(5.5, 0.0, 0.0));
                 baseStone *= 0.93 + shadeNoise * 0.14;
                 float tintNoise = noise3D(vPosition * 5.0 + vec3(2.2, 1.7, 0.4));
-                vec3 warmShift = baseStone * vec3(1.03, 0.99, 0.95);
-                vec3 coolShift = baseStone * vec3(0.97, 1.00, 1.03);
+                vec3 warmShift = baseStone * vec3(1.02, 1.00, 0.97);
+                vec3 coolShift = baseStone * vec3(0.96, 0.99, 1.04);
                 baseStone = mix(coolShift, warmShift, tintNoise);
 
                 // ═══ SURFACE NOISE + PROCEDURAL BUMP ═══
@@ -297,8 +297,8 @@ export function createEarthMaterial(options = {}) {
                 float diffuse = NdotL1 * 0.78 + NdotL2 * 0.14 + NdotL3 * 0.08;
 
                 float skyAmt = bumpedNormal.y * 0.5 + 0.5;
-                vec3 ambientUp = vec3(0.21, 0.21, 0.22);
-                vec3 ambientDown = vec3(0.10, 0.10, 0.11);
+                vec3 ambientUp = vec3(0.20, 0.21, 0.24);
+                vec3 ambientDown = vec3(0.10, 0.10, 0.12);
                 vec3 ambient = mix(ambientDown, ambientUp, skyAmt);
 
                 vec3 consumedColor = baseStone * (ambient + vec3(diffuse));
@@ -310,7 +310,7 @@ export function createEarthMaterial(options = {}) {
 
                 // ═══ SURFACE DETAIL — crevice/ridge color ═══
                 float crevice = smoothstep(0.30, 0.48, rockNoise);
-                vec3 creviceColor = baseStone * vec3(0.55, 0.55, 0.57);
+                vec3 creviceColor = baseStone * vec3(0.48, 0.49, 0.54);
                 consumedColor = mix(creviceColor, consumedColor, crevice);
 
                 float ridge = smoothstep(0.60, 0.75, rockNoise);
@@ -326,16 +326,16 @@ export function createEarthMaterial(options = {}) {
                 float ochreMask = smoothstep(0.42, 0.65, mineralNoise1);
                 float mineralNoise3 = noise3D(vPosition * 2.5 + vec3(6.0, 0.0, 3.0));
                 float warmMask = smoothstep(0.45, 0.68, mineralNoise3);
-                float warmAmount = min(ochreMask * 0.35 + warmMask * 0.25, 0.40);
-                warmAmount *= smoothstep(0.05, 0.4, diffuse);  // Only in lit areas
-                vec3 warmTint = vec3(1.08, 1.03, 0.93);
+                float warmAmount = min(ochreMask * 0.20 + warmMask * 0.15, 0.25);
+                warmAmount *= smoothstep(0.05, 0.4, diffuse);
+                vec3 warmTint = vec3(1.05, 1.02, 0.94);
                 consumedColor *= mix(vec3(1.0), warmTint, warmAmount);
 
                 // ═══ SEDIMENTARY STRATA ═══
                 float strataY = vPosition.y * 6.0;
                 float strataWarp = noise3D(vPosition * 2.0 + vec3(0.0, 5.0, 0.0));
                 float strata = sin(strataY + strataWarp * 2.0) * 0.5 + 0.5;
-                vec3 warmBand = consumedColor * vec3(1.03, 1.01, 0.97);
+                vec3 warmBand = consumedColor * vec3(1.02, 1.01, 0.97);
                 vec3 coolBand = consumedColor * vec3(0.97, 0.99, 1.03);
                 consumedColor = mix(coolBand, warmBand, strata);
 
@@ -356,7 +356,7 @@ export function createEarthMaterial(options = {}) {
                 // Dark crack lines (empty crevice shadows)
                 float darkCrackLine = 1.0 - smoothstep(0.0, 0.04, visualCrackEdge);
                 darkCrackLine *= breakMask2 * (1.0 - isCalcite);
-                consumedColor = mix(consumedColor, vec3(0.06, 0.05, 0.04), darkCrackLine * 0.85);
+                consumedColor = mix(consumedColor, vec3(0.04, 0.04, 0.06), darkCrackLine * 0.85);
 
                 // Calcite veins — bright white lines
                 float calciteLine = 1.0 - smoothstep(0.0, 0.05, visualCrackEdge);
@@ -366,7 +366,7 @@ export function createEarthMaterial(options = {}) {
 
                 // ═══ DIRT IN CREVICES ═══
                 // Dark soil in consumption-front crevices (from growth Voronoi patchEdge)
-                vec3 dirtColor = vec3(0.12, 0.10, 0.08);
+                vec3 dirtColor = vec3(0.08, 0.08, 0.10);
                 float creviceMask = smoothstep(0.4, 0.0, patchEdge) * 0.3;
                 consumedColor = mix(consumedColor, dirtColor, creviceMask);
 

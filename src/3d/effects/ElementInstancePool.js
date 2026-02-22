@@ -135,10 +135,11 @@ export class ElementInstancePool {
      * @param {THREE.Quaternion} [rotation] - Optional rotation
      * @param {THREE.Vector3} [scale] - Optional scale
      * @param {number} [modelIndex=0] - Which model variant to use
-     * @param {number} [arcPhase=0] - Arc phase offset in radians (for vortex effects)
+     * @param {number|null} [arcPhase=null] - Arc phase offset in radians (null = keep random seed)
+     * @param {number|null} [relayIndex=null] - Relay ring index (0=top, 1=right, 2=left). Encodes as (100 + index*10 + phase)
      * @returns {boolean} True if spawn succeeded, false if pool is full
      */
-    spawn(elementId, position, rotation, scale, modelIndex = 0, arcPhase = 0) {
+    spawn(elementId, position, rotation, scale, modelIndex = 0, arcPhase = null, relayIndex = null) {
         // Check for available slots
         if (this.freeSlots.length === 0) {
             console.warn('[ElementInstancePool] Pool full, cannot spawn');
@@ -170,7 +171,8 @@ export class ElementInstancePool {
             opacity: 0.0,  // Start invisible - AnimationState controls smooth fade
             trailParent: -1,
             trailIndex: -1,
-            arcPhase
+            arcPhase,
+            relayIndex
         });
 
         // Set up trail instances (slightly behind in time/position)
@@ -184,7 +186,8 @@ export class ElementInstancePool {
                 opacity: 0.0,  // Start invisible - AnimationState controls fade
                 trailParent: mainSlot,
                 trailIndex: i,
-                arcPhase
+                arcPhase,
+                relayIndex
             });
         }
 
@@ -215,12 +218,17 @@ export class ElementInstancePool {
         this.opacityArray[slot] = attrs.opacity;
         this.trailParentArray[slot] = attrs.trailParent;
         this.trailIndexArray[slot] = attrs.trailIndex;
-        // For vortex effects, arcPhase overrides randomSeed to position arcs at different angles
-        // Use type check since arcPhase=0 is valid (element 0 should start at 0)
+        // Per-instance relay encoding: aRandomSeed = 100 + relayIndex*10 + arcPhase
+        // Ring 0 (top): 100-106, Ring 1 (right): 110-116, Ring 2 (left): 120-126
+        // Shader checks aRandomSeed >= 100.0 to distinguish from default random seeds [0,1)
         if (typeof attrs.arcPhase === 'number') {
-            this.randomSeedArray[slot] = attrs.arcPhase;
-            this.randomSeedAttr.needsUpdate = true;
+            const base = 100.0 + (attrs.relayIndex || 0) * 10.0;
+            this.randomSeedArray[slot] = base + attrs.arcPhase;
+        } else {
+            // Clear any stale relay encoding from previous gesture's use of this slot
+            this.randomSeedArray[slot] = Math.random();
         }
+        this.randomSeedAttr.needsUpdate = true;
 
         // Mark attributes for update
         this.spawnTimeAttr.needsUpdate = true;

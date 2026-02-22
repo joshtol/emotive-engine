@@ -204,7 +204,11 @@ uniform int uAnimationType;
 uniform float uArcWidth;
 uniform float uArcSpeed;
 uniform int uArcCount;
+uniform float uArcPhase;
 uniform float uGestureProgress;
+uniform int uRelayCount;         // Number of relay rings
+uniform float uRelayArcWidth;   // Relay arc width in radians
+uniform float uRelayFloor;
 
 // Per-instance attributes
 ${INSTANCED_ATTRIBUTES_VERTEX}
@@ -301,9 +305,25 @@ void main() {
     // ARC VISIBILITY (for vortex ring effects)
     // ═══════════════════════════════════════════════════════════════════════════════
     vArcVisibility = 1.0;
-    if (uAnimationType == 1) {
+    if (aRandomSeed >= 100.0) {
+        // Generalized relay: supports arbitrary relay count via uRelayCount
+        float encoded = aRandomSeed - 100.0;
+        float ringId = floor(encoded / 10.0);
+        float instanceArcPhase = encoded - ringId * 10.0;
+
+        float vertexAngle = atan(selectedPosition.y, selectedPosition.x);
+        float hw = uRelayArcWidth * 0.5;
+        float angleDiff = vertexAngle - instanceArcPhase;
+        angleDiff = mod(angleDiff + 3.14159, 6.28318) - 3.14159;
+        float arcMask = 1.0 - smoothstep(hw * 0.7, hw, abs(angleDiff));
+
+        float cp = uGestureProgress * float(uRelayCount) * 1.5;
+        float d = cp - ringId;
+        float relayAlpha = smoothstep(-0.30, 0.05, d) * (1.0 - smoothstep(0.70, 1.05, d));
+        vArcVisibility = arcMask * mix(uRelayFloor, 1.0, relayAlpha);
+    } else if (uAnimationType == 1) {
         float vertexAngle = atan(selectedPosition.z, selectedPosition.x);
-        float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + aRandomSeed;
+        float arcAngle = uGestureProgress * uArcSpeed * 6.28318 + uArcPhase;
         float halfWidth = uArcWidth * 3.14159;
         float arcSpacing = 6.28318 / float(max(1, uArcCount));
 
@@ -381,9 +401,9 @@ void main() {
     // Stone is primarily diffuse. NdotL is the main lighting model.
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Petrification-driven base color — dark cool grey (Seiryu limestone)
-    vec3 warmGrey  = vec3(0.42, 0.36, 0.28);  // Warm ochre-grey — visible earthy hue
-    vec3 coolGrey  = vec3(0.33, 0.32, 0.33);  // Cool medium grey (more petrified)
+    // Petrification-driven base color — cool grey stone (Seiryu limestone)
+    vec3 warmGrey  = vec3(0.36, 0.35, 0.33);  // Warm neutral grey — subtle warmth only
+    vec3 coolGrey  = vec3(0.30, 0.31, 0.35);  // Blue-grey stone (more petrified)
     vec3 baseColor = mix(warmGrey, coolGrey, uPetrification);
 
     // Per-instance geological color shift — each rock is unique
@@ -407,10 +427,10 @@ void main() {
     float mineralNoise3 = noise(vPosition * 2.5 + vec3(vRandomSeed * 6.0, 0.0, 3.0));
     float warmMask = smoothstep(0.45, 0.68, mineralNoise3);
 
-    // Blue-grey patches — sparse cool accents, not dominant
-    vec3 blueGrey = vec3(0.22, 0.23, 0.26);  // Warmer blue-grey
+    // Blue-grey patches — cool mineral zones, characteristic of real stone
+    vec3 blueGrey = vec3(0.22, 0.24, 0.30);  // Blue-grey mineral
     float blueGreyMask = smoothstep(0.35, 0.18, mineralNoise2);
-    baseColor = mix(baseColor, blueGrey, blueGreyMask * 0.12);  // Halved from 0.22
+    baseColor = mix(baseColor, blueGrey, blueGreyMask * 0.22);  // Stronger cool patches
 
     // Per-pixel shade variation — reduced amplitude to not overpower mineral patches
     vec3 warpOffset = vec3(
@@ -421,10 +441,11 @@ void main() {
     vec3 warpedPos = vPosition + warpOffset;
     float shadeNoise = noise(warpedPos * 8.0 + vec3(vRandomSeed * 5.5));
     baseColor *= 0.88 + shadeNoise * 0.24;  // ±12% — stronger tonal variation
-    // Warm-only tint variation — noise selects warm vs neutral, never cool
+    // Warm/cool tint variation — geological color shifts
     float tintNoise = noise(warpedPos * 5.0 + vec3(vRandomSeed * 2.2, 1.7, 0.4));
-    vec3 warmShift = baseColor * vec3(1.06, 1.00, 0.91);
-    baseColor = mix(baseColor, warmShift, tintNoise);
+    vec3 warmShift = baseColor * vec3(1.03, 1.00, 0.96);
+    vec3 coolShift = baseColor * vec3(0.96, 0.99, 1.04);
+    baseColor = mix(coolShift, warmShift, tintNoise);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // SURFACE NOISE + PROCEDURAL BUMP — computed BEFORE diffuse lighting
@@ -484,8 +505,8 @@ void main() {
 
     // Cool ambient with hemisphere variation (sky vs ground)
     float skyAmt = bumpedNormal.y * 0.5 + 0.5;
-    vec3 ambientUp   = vec3(0.24, 0.23, 0.21);  // Warm sky ambient
-    vec3 ambientDown = vec3(0.15, 0.13, 0.10);  // Warm brown ground bounce — shadows stay readable
+    vec3 ambientUp   = vec3(0.22, 0.23, 0.26);  // Cool sky ambient — slight blue
+    vec3 ambientDown = vec3(0.12, 0.12, 0.14);  // Neutral cool ground bounce
     vec3 ambient = mix(ambientDown, ambientUp, skyAmt);
 
     vec3 stoneColor = baseColor * (ambient + vec3(diffuse));
@@ -507,7 +528,7 @@ void main() {
 
     // Crevice darkening — lighter floor since bump already handles physical shadow
     float crevice = smoothstep(0.30, 0.48, rockNoise);
-    vec3 creviceColor = baseColor * vec3(0.48, 0.48, 0.50);  // Neutral-cool crevice shadow
+    vec3 creviceColor = baseColor * vec3(0.46, 0.47, 0.52);  // Cool crevice shadow
     stoneColor = mix(creviceColor, stoneColor, crevice);
 
     // Ridge brightening — cool highlight on exposed faces
@@ -528,14 +549,12 @@ void main() {
     float gritAmp = mix(0.16, 0.36, grittyZone) * (1.0 - polishedZone * 0.85);
     stoneColor *= (1.0 - gritAmp * 0.5) + grit * gritAmp;
 
-    // ─── Post-diffuse warm mineral mottling ───
-    // Applied AFTER diffuse + crevice + grain so warmth isn't diluted.
-    // Multiplicative tint: warm zones get red/green boosted, blue reduced.
-    // This is like color grading — survives all prior processing.
-    float warmAmount = min(ochreMask * 0.48 + warmMask * 0.38, 0.55);
-    // Base warmth everywhere (shadows stay earthy, not grey), extra in lit areas
-    warmAmount = warmAmount * 0.4 + warmAmount * 0.6 * smoothstep(0.05, 0.4, diffuse);
-    vec3 warmTint = vec3(1.20, 1.07, 0.80);  // Stronger warm ochre — more visible mineral contrast
+    // ─── Post-diffuse mineral mottling ───
+    // Sparse warm patches for geological realism — stone is mostly grey
+    // with occasional ochre/iron deposits. Kept subtle so grey dominates.
+    float warmAmount = min(ochreMask * 0.30 + warmMask * 0.20, 0.30);
+    warmAmount *= smoothstep(0.05, 0.4, diffuse);  // Only in lit areas
+    vec3 warmTint = vec3(1.06, 1.02, 0.93);  // Subtle warm — barely shifts grey
     stoneColor *= mix(vec3(1.0), warmTint, warmAmount);
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -548,9 +567,9 @@ void main() {
     float strataY = vPosition.y * 6.0 + vRandomSeed * 3.0;
     float strataWarp = noise(vPosition * 2.0 + vec3(0.0, vRandomSeed * 5.0, 0.0));
     float strata = sin(strataY + strataWarp * 2.0) * 0.5 + 0.5;
-    vec3 warmBand = stoneColor * vec3(1.04, 1.01, 0.96);
-    vec3 neutralBand = stoneColor * vec3(0.99, 0.99, 1.00);  // Neutral, not cool
-    stoneColor = mix(neutralBand, warmBand, strata);
+    vec3 warmBand = stoneColor * vec3(1.02, 1.01, 0.97);
+    vec3 coolBand = stoneColor * vec3(0.97, 0.99, 1.03);
+    stoneColor = mix(coolBand, warmBand, strata);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // LAYER 3: CRACKS + CALCITE VEINS — Seiryu stone-inspired fractures
@@ -579,7 +598,7 @@ void main() {
     // Dark crack lines — empty crevices (deeper on dark stone)
     float darkCrackLine = 1.0 - smoothstep(0.0, crackWidth, crackEdge);
     darkCrackLine *= breakMask * (1.0 - isCalcite);  // only where NOT calcite
-    vec3 crackColor = vec3(0.06, 0.04, 0.02);  // Warm dark crevice — retains earthy hue
+    vec3 crackColor = vec3(0.04, 0.04, 0.06);  // Cool dark crevice
     stoneColor = mix(stoneColor, crackColor, darkCrackLine * 0.95);
 
     // Calcite veins — bright white lines tracing fracture paths
@@ -605,8 +624,8 @@ void main() {
     float stainNoise = noise(vec3(crackPos * 0.8, vPosition.y * 3.0));
     float stainZone = smoothstep(0.0, 0.08, crackEdge) * (1.0 - smoothstep(0.08, 0.25, crackEdge));
     float stainDrip = smoothstep(0.55, 0.70, stainNoise);  // Rarer
-    vec3 stainColor = vec3(0.32, 0.28, 0.22);  // Muted warm deposit (subtle)
-    stoneColor = mix(stoneColor, stainColor, stainZone * stainDrip * breakMask * 0.12);
+    vec3 stainColor = vec3(0.28, 0.27, 0.24);  // Muted neutral deposit
+    stoneColor = mix(stoneColor, stainColor, stainZone * stainDrip * breakMask * 0.08);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // WET SHEEN — moisture patches with crack pooling and temporal drift
@@ -718,7 +737,7 @@ void main() {
     // Real stone transmits a faint warm glow where geometry thins at silhouettes.
     // Uses same rimNdotV as rim light but steeper falloff and warm earth color.
     float sssRim = pow(1.0 - rimNdotV, 5.0) * 0.06;
-    vec3 sssColor = vec3(0.35, 0.22, 0.12);
+    vec3 sssColor = vec3(0.25, 0.22, 0.20);
     stoneColor += sssColor * sssRim * (0.3 + diffuse * 0.7);
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -728,11 +747,10 @@ void main() {
     // Wet specular and mica added AFTER soft clamp — they can bloom naturally.
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // ─── Final warm color grade ───
-    // All upstream processing dilutes warmth through multiple mix/multiply stages.
-    // This final pass ensures the stone always reads as warm earthy rock, not concrete.
-    // Strong warm filter: boost red channel, suppress blue heavily.
-    stoneColor *= vec3(1.12, 1.03, 0.85);
+    // ─── Final color grade — neutral stone ───
+    // Stone reads as natural grey rock. Very slight cool push to counter
+    // any residual warmth from mineral patches and strata.
+    stoneColor *= vec3(1.0, 1.0, 1.02);
 
     vec3 color = stoneColor * uIntensity * uGlowScale;
 
@@ -773,9 +791,11 @@ void main() {
     // Apply instance alpha (spawn/exit fade + trail fade)
     alpha *= vInstanceAlpha;
 
-    // Apply arc visibility (for vortex effects)
-    if (uAnimationType == 1) {
+    // Apply arc visibility (for vortex/relay effects)
+    if (vArcVisibility < 0.999) {
         alpha *= vArcVisibility;
+        color *= mix(0.3, 1.0, vArcVisibility);
+        if (vArcVisibility < 0.05) discard;
     }
 
     // Discard invisible pixels
@@ -832,6 +852,10 @@ export function createInstancedEarthMaterial(options = {}) {
             uFadeOutDuration: { value: fadeOutDuration },
             // Animation uniforms (cutout, glow, etc. from shared core)
             ...createAnimationUniforms(),
+            // Relay arc uniforms
+            uRelayCount: { value: 3 },
+            uRelayArcWidth: { value: 3.14159 },
+            uRelayFloor: { value: 0.0 },
             // Shared wetness system
             ...createWetnessUniforms({ wetness: derived.wetness, wetSpeed: EARTH_DEFAULTS.wetSpeed }),
             // Earth uniforms
@@ -940,6 +964,26 @@ export function setInstancedEarthCutout(material, config) {
  */
 export function setInstancedEarthWetness(material, config) {
     setWetness(material, config);
+}
+
+export function setRelay(material, config) {
+    if (!material) return;
+    if (config.count !== undefined && material.uniforms?.uRelayCount) {
+        material.uniforms.uRelayCount.value = config.count;
+    }
+    if (config.arcWidth !== undefined && material.uniforms?.uRelayArcWidth) {
+        material.uniforms.uRelayArcWidth.value = config.arcWidth;
+    }
+    if (config.floor !== undefined && material.uniforms?.uRelayFloor) {
+        material.uniforms.uRelayFloor.value = config.floor;
+    }
+}
+
+export function resetRelay(material) {
+    if (!material) return;
+    if (material.uniforms?.uRelayCount) material.uniforms.uRelayCount.value = 3;
+    if (material.uniforms?.uRelayArcWidth) material.uniforms.uRelayArcWidth.value = Math.PI;
+    if (material.uniforms?.uRelayFloor) material.uniforms.uRelayFloor.value = 0.0;
 }
 
 // Re-export animation types and shared functions for convenience

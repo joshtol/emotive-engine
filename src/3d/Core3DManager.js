@@ -3035,6 +3035,9 @@ export class Core3DManager {
                         });
                     }
                 }
+
+                // Store gesture progress for element spawner animation
+                this._currentNatureProgress = blended.natureOverlay.progress ?? null;
             }
         } else if (this._natureSpawnedThisGesture) {
             // Reset spawn flag when gesture ends
@@ -3044,6 +3047,9 @@ export class Core3DManager {
             if (this.elementSpawner) {
                 this.elementSpawner.despawn('nature');
             }
+
+            // Clear nature progress tracking
+            this._currentNatureProgress = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -3595,6 +3601,7 @@ export class Core3DManager {
             this.elementSpawner.setElementBloomThreshold('ice', elementBloomThreshold);
             this.elementSpawner.setElementBloomThreshold('electricity', elementBloomThreshold);
             this.elementSpawner.setElementBloomThreshold('earth', elementBloomThreshold);
+            this.elementSpawner.setElementBloomThreshold('nature', elementBloomThreshold);
         }
 
         // Update isolated glow layer for gesture effects (glow/flash)
