@@ -517,15 +517,8 @@ void main() {
     float bolt2 = 1.0 - smoothstep(0.0, lineWidth * 0.8, edge2);
     bolt2 = pow(bolt2, 2.5) * 0.6;
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // TERTIARY MICRO-CRACKS (finest detail, scale 10)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    float edge3 = voronoiEdge3D(vWorldPosition * 10.0, effectiveTime * 1.6, 0.75);
-    float bolt3 = 1.0 - smoothstep(0.0, lineWidth * 0.5, edge3);
-    bolt3 = pow(bolt3, 3.0) * 0.3;
-
-    // Combine — three overlapping scales create dense bolt network
-    float lightning = min(bolt1 + bolt2 + bolt3, 1.0);
+    // Combine — two overlapping scales create bolt network
+    float lightning = min(bolt1 + bolt2, 1.0);
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // FLICKER — electrical pulsing (per-instance variation)
