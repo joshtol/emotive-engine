@@ -20,6 +20,7 @@ import { createSprayParticleMaterial } from '../materials/SprayParticleMaterial.
 import { createVoidParticleMaterial } from '../materials/VoidParticleMaterial.js';
 import { createFireflyParticleMaterial } from '../materials/FireflyParticleMaterial.js';
 import { createDustParticleMaterial } from '../materials/DustParticleMaterial.js';
+import { createLeafParticleMaterial } from '../materials/LeafParticleMaterial.js';
 
 // =================================================================================================
 // MATERIAL FACTORIES (keyed by preset material name)
@@ -32,6 +33,7 @@ const MATERIAL_FACTORIES = {
     void: createVoidParticleMaterial,
     firefly: createFireflyParticleMaterial,
     dust: createDustParticleMaterial,
+    leaf: createLeafParticleMaterial,
 };
 
 // =================================================================================================
@@ -378,6 +380,36 @@ export const ATMOSPHERIC_PRESETS = {
         color: [0.40, 0.36, 0.30],          // Dark stone
         colorVariant: [0.50, 0.35, 0.20],   // Brown variant
         gravity: 0.8,
+    },
+
+    /**
+     * Falling Leaves: Leaf-shaped particles tumbling and drifting downward.
+     * High turbulence for side-to-side sway, fast rotation for tumbling.
+     * Warm autumn colors with per-particle variation.
+     * Best for: nature gestures — crowns, vortex, dance, meditation.
+     */
+    'falling-leaves': {
+        materialType: 'leaf',
+        maxParticles: 80,
+        spawnRate: 18,
+        lifetimeMin: 2.0,
+        lifetimeMax: 5.0,
+        sizeMin: 0.04,
+        sizeMax: 0.22,
+        spawnOffsetY: 0.5,
+        initialSpeedMin: 0.01,
+        initialSpeedMax: 0.06,
+        spreadXZ: 0.50,
+        directionY: -0.3,
+        buoyancy: -0.005,
+        drag: 1.0,
+        turbulence: 0.25,
+        rotationSpeedMax: 2.5,
+        endSizeMultiplier: 0.80,
+        opacity: 0.65,
+        color: [0.90, 0.70, 0.25],          // Golden yellow
+        colorVariant: [0.75, 0.30, 0.12],   // Warm orange-red
+        gravity: 0.03,
     },
 };
 

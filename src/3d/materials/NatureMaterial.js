@@ -5,19 +5,23 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Standalone nature/plant material with vine and growth effects
+ * @fileoverview Consuming nature/growth overlay for mascot mesh
  * @author Emotive Engine Team
  * @module materials/NatureMaterial
  *
- * ## Master Parameter: growth (0-1)
+ * ## Master Parameters
  *
- * | Growth | Visual                    | Effect              | Example       |
- * |--------|---------------------------|---------------------|---------------|
- * | 0.0    | Sparse sprouts            | Gentle emergence    | Seeds         |
- * | 0.5    | Spreading vines, leaves   | Active growth       | Overgrowth    |
- * | 1.0    | Dense foliage, blooming   | Full flourish       | Forest spirit |
+ * growth (0-1): Controls maximum consumption coverage and appearance
+ *   0.0 = Sparse sprouts, thin creep | 0.5 = Active vines | 1.0 = Dense flourishing
  *
- * Nature features organic vine patterns, leaf textures, and blooming effects.
+ * progress (0-1): Gesture progress drives the SPREAD of growth over time
+ *   0.0 = Growth just beginning to creep from below
+ *   1.0 = Full growth-dependent consumption achieved
+ *
+ * Consuming growth: organic matter creeps upward from below using multi-scale FBM noise
+ * on object-space position. Fine vine tendrils reach ahead of the main growth front.
+ * A warm green-gold emission rim marks the growing boundary. Consumed areas show
+ * darkened, moss-covered surface with subtle dew-like specular highlights.
  */
 
 import * as THREE from 'three';
@@ -27,40 +31,26 @@ function lerp(a, b, t) {
 }
 
 /**
- * Create a nature material with growth-driven appearance
+ * Create a nature material with consuming growth effect
  *
  * @param {Object} options
- * @param {number} [options.growth=0.5] - Master parameter (0=sprouts, 0.5=vines, 1=flourish)
- * @param {string} [options.season='summer'] - 'spring', 'summer', 'autumn', 'winter'
- * @param {number} [options.opacity=0.85] - Base opacity
+ * @param {number} [options.growth=0.5] - Max consumption coverage (0=sparse, 1=flourishing)
+ * @param {number} [options.opacity=0.7] - Base opacity
  * @returns {THREE.ShaderMaterial}
  */
 export function createNatureMaterial(options = {}) {
     const {
         growth = 0.5,
-        season = 'summer',
-        opacity = 0.85
+        opacity = 0.7
     } = options;
 
-    // Derive properties from growth
-    const vineCount = Math.floor(lerp(2, 8, growth));
-    const vineLengthleaf = lerp(0.2, 0.8, growth);
-    const leafDensity = lerp(0.1, 0.7, growth);
-    const bloomAmount = growth > 0.7 ? lerp(0.0, 1.0, (growth - 0.7) / 0.3) : 0.0;
-    const swayAmount = lerp(0.02, 0.08, growth);
-
-    // Season affects colors
-    const seasonType = { spring: 0, summer: 1, autumn: 2, winter: 3 }[season] || 1;
+    const pulseSpeed = lerp(1.2, 0.5, growth);
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
             uGrowth: { value: growth },
-            uVineCount: { value: vineCount },
-            uVineLength: { value: vineLengthleaf },
-            uLeafDensity: { value: leafDensity },
-            uBloomAmount: { value: bloomAmount },
-            uSwayAmount: { value: swayAmount },
-            uSeasonType: { value: seasonType },
+            uProgress: { value: 0 },
+            uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
             uTime: { value: 0 }
         },
@@ -69,12 +59,12 @@ export function createNatureMaterial(options = {}) {
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
+            varying float vVerticalPos;
 
             void main() {
                 vPosition = position;
                 vNormal = normalMatrix * normal;
-                vUv = uv;
+                vVerticalPos = position.y;
 
                 vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                 vViewPosition = -mvPosition.xyz;
@@ -85,26 +75,20 @@ export function createNatureMaterial(options = {}) {
 
         fragmentShader: /* glsl */`
             uniform float uGrowth;
-            uniform float uVineCount;
-            uniform float uVineLength;
-            uniform float uLeafDensity;
-            uniform float uBloomAmount;
-            uniform float uSwayAmount;
-            uniform int uSeasonType;
+            uniform float uProgress;
+            uniform float uPulseSpeed;
             uniform float uOpacity;
             uniform float uTime;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
+            varying float vVerticalPos;
 
-            // Hash
             float hash(vec2 p) {
                 return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
             }
 
-            // Noise
             float noise(vec2 p) {
                 vec2 i = floor(p);
                 vec2 f = fract(p);
@@ -116,200 +100,119 @@ export function createNatureMaterial(options = {}) {
                 );
             }
 
-            // FBM
+            // 3-octave FBM for moss/lichen patches
             float fbm(vec2 p) {
-                float value = 0.0;
-                float amp = 0.5;
-                for (int i = 0; i < 4; i++) {
-                    value += amp * noise(p);
-                    p *= 2.0;
-                    amp *= 0.5;
-                }
-                return value;
-            }
-
-            // Vine pattern - curving tendrils
-            float vine(vec2 uv, float seed, float time) {
-                // Starting point
-                float startY = hash(vec2(seed, 0.0)) * 0.3;
-                float startX = hash(vec2(0.0, seed)) * 0.8 + 0.1;
-
-                // Sway animation
-                float sway = sin(time * 2.0 + seed * 5.0) * uSwayAmount;
-
-                // Curve the vine
-                float targetX = startX + (uv.y - startY) * (hash(vec2(seed * 2.0, 0.0)) - 0.5) * 2.0;
-                targetX += sway * (uv.y - startY);
-
-                // Vine thickness varies
-                float thickness = 0.015 * (1.0 - (uv.y - startY) * 0.5);
-
-                // Distance to vine curve
-                float dist = abs(uv.x - targetX);
-
-                // Only draw where vine has grown
-                float vineLength = uVineLength;
-                float vineMask = smoothstep(startY, startY + vineLength, uv.y) *
-                                (1.0 - smoothstep(startY + vineLength - 0.1, startY + vineLength, uv.y));
-
-                return smoothstep(thickness, thickness * 0.3, dist) * vineMask;
-            }
-
-            // Leaf shape
-            float leaf(vec2 uv, vec2 pos, float size, float angle) {
-                vec2 centered = uv - pos;
-
-                // Rotate
-                float c = cos(angle);
-                float s = sin(angle);
-                centered = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
-
-                // Leaf shape - pointed oval
-                centered.x *= 2.0;
-                float dist = length(centered);
-                float leafShape = smoothstep(size, size * 0.3, dist);
-
-                // Leaf vein
-                float vein = smoothstep(0.01, 0.0, abs(centered.x)) * leafShape * 0.3;
-
-                return leafShape - vein;
-            }
-
-            // Flower/bloom
-            float flower(vec2 uv, vec2 pos, float size, float time) {
-                vec2 centered = uv - pos;
-                float dist = length(centered);
-                float angle = atan(centered.y, centered.x);
-
-                // Petals
-                float petals = sin(angle * 5.0 + time * 0.5) * 0.3 + 0.7;
-                float flowerShape = smoothstep(size * petals, size * petals * 0.5, dist);
-
-                // Center
-                float center = smoothstep(size * 0.3, size * 0.1, dist);
-
-                return max(flowerShape, center);
+                float f = 0.0;
+                f += 0.50 * noise(p); p *= 2.01;
+                f += 0.25 * noise(p); p *= 2.02;
+                f += 0.125 * noise(p);
+                return f / 0.875;
             }
 
             void main() {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
+                float NdotV = abs(dot(normal, viewDir));
+                float edgeness = 1.0 - NdotV;
 
-                vec2 centeredUv = vUv * 2.0 - 1.0;
-                float distFromCenter = length(centeredUv);
+                // ═══ CONSUMPTION FIELD ═══
+                vec2 pos = vPosition.xz * 2.5 + vec2(vPosition.y * 0.8, -vPosition.y * 0.6);
 
-                // === SEASON COLORS ===
-                vec3 leafColorLight, leafColorDark, flowerColor;
+                float growSpeed = mix(0.08, 0.04, uGrowth);
+                float n1 = noise(pos * 1.5 + uTime * growSpeed);
+                float n2 = noise(pos * 4.0 - uTime * growSpeed * 1.3);
+                float n3 = noise(pos * 9.0 + uTime * growSpeed * 2.0);
+                float consumeField = n1 * 0.50 + n2 * 0.30 + n3 * 0.20;
 
-                if (uSeasonType == 0) { // Spring
-                    leafColorLight = vec3(0.35, 0.55, 0.25);
-                    leafColorDark = vec3(0.15, 0.35, 0.1);
-                    flowerColor = vec3(0.95, 0.75, 0.85); // Soft pink blossoms
-                } else if (uSeasonType == 1) { // Summer
-                    leafColorLight = vec3(0.2, 0.5, 0.15);
-                    leafColorDark = vec3(0.08, 0.3, 0.06);
-                    flowerColor = vec3(0.9, 0.85, 0.9); // White/cream wildflowers
-                } else if (uSeasonType == 2) { // Autumn
-                    leafColorLight = vec3(0.7, 0.4, 0.1);
-                    leafColorDark = vec3(0.5, 0.2, 0.05);
-                    flowerColor = vec3(0.7, 0.25, 0.1); // Muted orange/red
-                } else { // Winter
-                    leafColorLight = vec3(0.25, 0.32, 0.25);
-                    leafColorDark = vec3(0.12, 0.18, 0.12);
-                    flowerColor = vec3(0.85, 0.9, 0.95); // Frost white
-                }
+                consumeField += edgeness * 0.15;
 
-                vec3 vineColor = vec3(0.15, 0.25, 0.08);
+                // Upward bias: growth creeps up from below
+                float vertBias = smoothstep(0.5, -0.5, vVerticalPos) * 0.25;
+                consumeField += vertBias;
 
-                // === VINES ===
-                float vinePattern = 0.0;
-                for (float i = 0.0; i < 8.0; i++) {
-                    if (i >= uVineCount) break;
-                    vinePattern += vine(vUv, i * 7.3, uTime);
-                }
-                vinePattern = min(vinePattern, 1.0);
+                // ═══ DISSOLVE IN ═══
+                float rawDissolve = smoothstep(0.0, 0.35, uProgress);
+                float dissolveIn = rawDissolve * rawDissolve;
 
-                // === LEAVES ===
-                float leafPattern = 0.0;
-                float leafNoise = fbm(vUv * 10.0);
+                // ═══ PROGRESS-DRIVEN THRESHOLD ═══
+                float rawRamp = smoothstep(0.05, 0.90, uProgress);
+                float progressRamp = rawRamp * rawRamp;
 
-                for (float i = 0.0; i < 20.0; i++) {
-                    if (i / 20.0 > uLeafDensity) break;
+                float targetThreshold = mix(0.85, 0.15, uGrowth);
+                float threshold = mix(0.95, targetThreshold, progressRamp);
 
-                    vec2 leafPos = vec2(
-                        hash(vec2(i * 13.7, 0.0)),
-                        hash(vec2(0.0, i * 17.3))
-                    );
-                    float leafSize = 0.03 + hash(vec2(i, i * 2.0)) * 0.04;
-                    float leafAngle = hash(vec2(i * 3.0, i)) * 6.28 + uTime * 0.2;
+                float consumed = smoothstep(threshold, threshold - 0.05, consumeField);
 
-                    // Sway
-                    leafPos.x += sin(uTime * 1.5 + i) * uSwayAmount;
+                // ═══ VINE TENDRILS ═══
+                // Vertically stretched — creeping upward like vines
+                vec2 vinePos = vec2(vPosition.x * 2.0, vPosition.y * 5.0);
+                float vineField = noise(vinePos * 3.0 - vec2(0.0, uTime * growSpeed * 3.0)) * 0.6
+                               + noise(vinePos * 7.0 + vec2(0.0, uTime * growSpeed * 2.0)) * 0.4;
+                float tendrilThreshold = threshold + 0.10;
+                float tendrils = smoothstep(tendrilThreshold, tendrilThreshold - 0.03,
+                                            vineField + edgeness * 0.12);
+                tendrils *= 0.4 * smoothstep(0.0, 0.4, uGrowth * progressRamp + 0.3);
 
-                    leafPattern += leaf(vUv, leafPos, leafSize, leafAngle);
-                }
-                leafPattern = min(leafPattern, 1.0);
+                float natureMask = max(consumed, tendrils);
 
-                // === FLOWERS/BLOOMS ===
-                float bloomPattern = 0.0;
-                if (uBloomAmount > 0.0) {
-                    for (float i = 0.0; i < 5.0; i++) {
-                        vec2 flowerPos = vec2(
-                            hash(vec2(i * 23.7, 100.0)),
-                            hash(vec2(100.0, i * 31.3))
-                        );
-                        float flowerSize = 0.04 + hash(vec2(i * 5.0, i * 3.0)) * 0.03;
+                // ═══ ORGANIC DARKENING BASE ═══
+                // Near-black with green tint — darkens surface organically
+                vec3 baseColor = vec3(0.01, 0.03, 0.01);
 
-                        bloomPattern += flower(vUv, flowerPos, flowerSize, uTime) * uBloomAmount;
-                    }
-                    bloomPattern = min(bloomPattern, 1.0);
-                }
+                // ═══ MOSS/LICHEN PATCHES ═══
+                // FBM-driven green-brown patches on consumed surface
+                float mossNoise = fbm(pos * 5.0 + uTime * 0.015);
+                float moss = smoothstep(0.30, 0.55, mossNoise);
+                // Break mask — not all consumed area gets moss
+                float mossBreak = noise(pos * 2.0 + 0.5);
+                moss *= smoothstep(0.30, 0.55, mossBreak);
+                moss *= uGrowth;  // More moss when fully grown
+                vec3 mossColor = vec3(0.15, 0.25, 0.08) * moss * 0.6;
 
-                // === COMBINE ===
-                vec3 natureColor = vec3(0.0);
-                float totalPattern = 0.0;
+                // ═══ SPECULAR HIGHLIGHTS ═══
+                // Dew-like organic sheen — softer than water's sharp gloss
+                vec3 light1 = normalize(vec3(0.3, 1.0, 0.5));
+                vec3 half1 = normalize(light1 + viewDir);
+                float spec1 = pow(max(dot(normal, half1), 0.0), 80.0);
 
-                // Layer: vines first
-                if (vinePattern > 0.0) {
-                    natureColor = mix(natureColor, vineColor, vinePattern);
-                    totalPattern = max(totalPattern, vinePattern);
-                }
+                vec3 light2 = normalize(vec3(-0.6, 0.7, -0.4));
+                vec3 half2 = normalize(light2 + viewDir);
+                float spec2 = pow(max(dot(normal, half2), 0.0), 64.0);
 
-                // Layer: leaves
-                if (leafPattern > 0.0) {
-                    vec3 leafColor = mix(leafColorDark, leafColorLight, leafNoise);
-                    natureColor = mix(natureColor, leafColor, leafPattern);
-                    totalPattern = max(totalPattern, leafPattern);
-                }
+                // Green-white dew highlights — less intense than water
+                vec3 specColor = vec3(1.4, 1.8, 1.2) * spec1
+                               + vec3(0.8, 1.1, 0.7) * spec2;
 
-                // Layer: flowers on top
-                if (bloomPattern > 0.0) {
-                    natureColor = mix(natureColor, flowerColor, bloomPattern);
-                    totalPattern = max(totalPattern, bloomPattern);
-                }
+                // ═══ FRESNEL REFLECTION ═══
+                // Faint green sheen at glancing angles
+                float fresnel = pow(edgeness, 2.0) * progressRamp;
+                vec3 fresnelColor = vec3(0.4, 0.7, 0.3) * fresnel * 0.6;
 
-                // === LIGHTING ===
-                float diffuse = max(dot(normal, vec3(0.3, 1.0, 0.3)), 0.0);
-                natureColor *= (0.7 + diffuse * 0.3);
+                // ═══ EDGE EMISSION ═══
+                // Green-gold glow at growth boundary
+                float edgeBand = smoothstep(threshold - 0.05, threshold - 0.01, consumeField)
+                               * smoothstep(threshold + 0.03, threshold, consumeField);
+                float pulse = 0.85 + 0.15 * sin(uTime * uPulseSpeed);
+                edgeBand *= pulse;
 
-                // Subtle fresnel
-                float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
-                natureColor += leafColorLight * fresnel * 0.08;
+                // ═══ COMPOSITE ═══
+                vec3 color = baseColor;
+                color += mossColor * consumed;
+                color += specColor * consumed;
+                color += fresnelColor;
+                color += vec3(0.4, 0.7, 0.2) * edgeBand * 0.6 * dissolveIn;
 
-                // === ALPHA ===
-                float alpha = totalPattern * uOpacity;
-
-                // Growth spreads from center
-                float growthMask = 1.0 - smoothstep(uGrowth * 1.2, uGrowth * 1.2 + 0.2, distFromCenter);
-                alpha *= growthMask;
-
-                // Edge fade
-                float edgeFade = 1.0 - smoothstep(0.9, 1.0, distFromCenter);
-                alpha *= edgeFade;
+                // ═══ ALPHA ═══
+                float alpha = natureMask * uOpacity * dissolveIn * 0.65;
+                // Moss patches boost alpha slightly
+                alpha += moss * consumed * uOpacity * dissolveIn * 0.15;
+                float edgeAlpha = edgeBand * 0.45 * dissolveIn * uOpacity;
+                alpha = max(alpha, edgeAlpha);
+                alpha = max(alpha, fresnel * dissolveIn * uOpacity * 0.35);
 
                 if (alpha < 0.01) discard;
 
-                gl_FragColor = vec4(natureColor, alpha);
+                gl_FragColor = vec4(color, alpha);
             }
         `,
 
@@ -320,7 +223,6 @@ export function createNatureMaterial(options = {}) {
     });
 
     material.userData.growth = growth;
-    material.userData.season = season;
     material.userData.elementalType = 'nature';
 
     return material;
@@ -340,8 +242,8 @@ export function updateNatureMaterial(material, deltaTime) {
  */
 export function getNaturePhysics(growth = 0.5) {
     return {
-        gravity: lerp(0.8, 0.5, growth),       // More floaty when grown
-        drag: lerp(0.2, 0.4, growth),          // More air resistance with foliage
+        gravity: lerp(0.8, 0.5, growth),
+        drag: lerp(0.2, 0.4, growth),
         bounce: 0.1,
         rootsTarget: growth > 0.3,
         entangles: growth > 0.5,

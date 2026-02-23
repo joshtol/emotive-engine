@@ -3082,17 +3082,34 @@ export class Core3DManager {
         // NATURE OVERLAY - Plant/growth effect
         // ═══════════════════════════════════════════════════════════════════════════
         if (blended.natureOverlay && blended.natureOverlay.enabled) {
+            // Cancel any in-progress fade-out (new gesture started while old was fading)
+            this._natureOverlayFadingOut = false;
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
-                // Track if we've already spawned elements this gesture (use a simple flag)
-                if (!this._natureSpawnedThisGesture) {
-                    this._natureSpawnedThisGesture = true;
+                if (!this._natureOverlayMesh) {
+                    this._natureMaterial = createNatureMaterial({
+                        growth: blended.natureOverlay.growth || 0.5,
+                        opacity: 0.7
+                    });
+                    this._natureOverlayMesh = new THREE.Mesh(mesh.geometry, this._natureMaterial);
+                    this._natureOverlayMesh.scale.setScalar(1.03);
+                    mesh.add(this._natureOverlayMesh);
+                    this._natureOverlayMesh.renderOrder = mesh.renderOrder + 1;
+                }
 
-                    // Spawn 3D nature elements only if gesture explicitly requests it via spawnMode
-                    // Extract all spawn options like fire does
-                    const {spawnMode, animation, models, count, scale, embedDepth} = blended.natureOverlay;
-                    if (spawnMode && spawnMode !== 'none' && this.elementSpawner && !this.elementSpawner.hasElements('nature')) {
+                // Spawn 3D nature elements — signature-based dedup
+                const {spawnMode, animation, models, count, scale, embedDepth} = blended.natureOverlay;
+                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : String(spawnMode);
+                    const spawnSignature = `nature:${modeSignature}:${blended.natureOverlay.duration}:${animation?.type || 'default'}`;
+
+                    this._spawnedSignatures = this._spawnedSignatures || new Set();
+
+                    if (!this._spawnedSignatures.has(spawnSignature)) {
+                        this.elementSpawner.triggerExit();
                         this.elementSpawner.spawn('nature', {
                             intensity: blended.natureOverlay.strength || 0.8,
                             mode: spawnMode,
@@ -3105,23 +3122,69 @@ export class Core3DManager {
                         }).catch(err => {
                             console.error('[Core3DManager] Nature spawn error:', err);
                         });
+                        this._spawnedSignatures.add(spawnSignature);
+                        this._elementSpawnSignature = spawnSignature;
                     }
                 }
 
-                // Store gesture progress for element spawner animation
+                // Update nature material uniforms
+                if (this._natureMaterial?.uniforms?.uTime) {
+                    this._natureMaterial.uniforms.uTime.value = blended.natureOverlay.time;
+                }
+                if (this._natureMaterial?.uniforms?.uGrowth) {
+                    this._natureMaterial.uniforms.uGrowth.value = blended.natureOverlay.growth || 0.5;
+                }
+                if (this._natureMaterial?.uniforms?.uOpacity) {
+                    this._natureMaterial.uniforms.uOpacity.value = Math.min(0.7, blended.natureOverlay.strength);
+                }
+                if (this._natureMaterial?.uniforms?.uProgress) {
+                    this._natureMaterial.uniforms.uProgress.value = blended.natureOverlay.progress ?? 0;
+                }
+
                 this._currentNatureProgress = blended.natureOverlay.progress ?? null;
             }
-        } else if (this._natureSpawnedThisGesture) {
-            // Reset spawn flag when gesture ends
-            this._natureSpawnedThisGesture = false;
-
-            // Despawn nature elements
-            if (this.elementSpawner) {
-                this.elementSpawner.despawn('nature');
+        } else if (this._natureOverlayMesh) {
+            // Fade out overlay smoothly — growth retreats before disappearing
+            if (!this._natureOverlayFadingOut) {
+                this._natureOverlayFadingOut = true;
+                if (this.elementSpawner) {
+                    this.elementSpawner.triggerExit('nature');
+                }
+                this._elementSpawnSignature = null;
+                this._spawnedSignatures = null;
             }
 
-            // Clear nature progress tracking
-            this._currentNatureProgress = null;
+            // Decay progress and opacity
+            if (this._natureMaterial?.uniforms?.uProgress) {
+                this._natureMaterial.uniforms.uProgress.value *= 0.88;
+            }
+            if (this._natureMaterial?.uniforms?.uOpacity) {
+                this._natureMaterial.uniforms.uOpacity.value *= 0.88;
+
+                if (this._natureMaterial.uniforms.uOpacity.value < 0.005) {
+                    const mesh = this.renderer?.coreMesh;
+                    if (mesh && this._natureOverlayMesh.parent) {
+                        mesh.remove(this._natureOverlayMesh);
+                    }
+                    this._natureMaterial.dispose();
+                    this._natureMaterial = null;
+                    this._natureOverlayMesh = null;
+                    this._natureOverlayFadingOut = false;
+                    this._currentNatureProgress = null;
+                }
+            } else {
+                const mesh = this.renderer?.coreMesh;
+                if (mesh && this._natureOverlayMesh.parent) {
+                    mesh.remove(this._natureOverlayMesh);
+                }
+                if (this._natureMaterial) {
+                    this._natureMaterial.dispose();
+                    this._natureMaterial = null;
+                }
+                this._natureOverlayMesh = null;
+                this._natureOverlayFadingOut = false;
+                this._currentNatureProgress = null;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
