@@ -499,8 +499,9 @@ export function createInstancedWaterMaterial(options = {}) {
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
-        depthWrite: true,
-        side: THREE.DoubleSide
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
     });
 
     material.userData.turbulence = turbulence;

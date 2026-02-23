@@ -99,7 +99,7 @@ const SEEDBURST_CONFIG = {
             count: 10,
             scale: 0.8,
             models: ['thorn-curl', 'leaf-bunch', 's-vine', 'vine-twist', 'thorn-curl',
-                     'leaf-bunch', 's-vine', 'vine-twist', 'thorn-curl', 'leaf-bunch'],
+                'leaf-bunch', 's-vine', 'vine-twist', 'thorn-curl', 'leaf-bunch'],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.5,

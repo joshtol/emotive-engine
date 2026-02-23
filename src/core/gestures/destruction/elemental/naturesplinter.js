@@ -51,8 +51,8 @@ const NATURESPLINTER_CONFIG = {
         count: 12,
         scale: 0.7,
         models: ['s-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch',
-                 's-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch',
-                 's-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch'],
+            's-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch',
+            's-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.5,

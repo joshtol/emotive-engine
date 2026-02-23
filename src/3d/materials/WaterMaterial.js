@@ -18,10 +18,11 @@
  *   0.0 = Water just beginning to seep from above
  *   1.0 = Full viscosity-dependent consumption achieved
  *
- * Consuming water: fluid creeps downward from above using multi-scale FBM noise on
- * object-space position. Fine tendrils of water drip ahead of the main consumption
- * front. A thin caustic emission rim marks the wet boundary. Consumed areas show
- * darkened, tinted surface with subtle flowing caustic patterns.
+ * Additive water overlay: fluid creeps downward from above using multi-scale FBM
+ * noise on object-space position. Fine tendrils drip ahead of the consumption front.
+ * A bright caustic rim marks the wet boundary. Consumed areas show specular
+ * highlights, caustic shimmer, and fresnel reflections — purely additive, never
+ * darkening the underlying mascot. Works on all geometry types (moon, sun, crystal).
  */
 
 import * as THREE from 'three';
@@ -142,7 +143,6 @@ export function createWaterMaterial(options = {}) {
                 float consumed = smoothstep(threshold, threshold - 0.05, consumeField);
 
                 // ═══ DRIP TENDRILS ═══
-                // Vertically stretched noise — looks like drips running down
                 vec2 dripPos = vec2(vPosition.x * 2.0, vPosition.y * 6.0);
                 float dripField = noise(dripPos * 3.0 + vec2(0.0, uTime * flowSpeed * 3.0)) * 0.6
                                 + noise(dripPos * 7.0 - vec2(0.0, uTime * flowSpeed * 2.0)) * 0.4;
@@ -153,15 +153,8 @@ export function createWaterMaterial(options = {}) {
 
                 float waterMask = max(consumed, tendrils);
 
-                // ═══ WET DARKENING BASE ═══
-                // Nearly black — the key to wet realism is DARKENING, not coloring.
-                // NormalBlending: result = src*alpha + bg*(1-alpha)
-                // Dark src at moderate alpha → darkens underlying surface.
-                vec3 baseColor = vec3(0.01, 0.02, 0.04);  // Near-black, hint of blue
-
                 // ═══ SPECULAR HIGHLIGHTS ═══
-                // THE main visual cue for wetness: sharp glossy highlights.
-                // Values >1.0 are fine — they create highlights brighter than bg.
+                // Glossy wet reflections — the primary visual cue for water
                 vec3 light1 = normalize(vec3(0.3, 1.0, 0.5));
                 vec3 half1 = normalize(light1 + viewDir);
                 float spec1 = pow(max(dot(normal, half1), 0.0), 128.0);
@@ -170,24 +163,21 @@ export function createWaterMaterial(options = {}) {
                 vec3 half2 = normalize(light2 + viewDir);
                 float spec2 = pow(max(dot(normal, half2), 0.0), 96.0);
 
-                // Bright enough to exceed background through alpha blending
-                vec3 specColor = vec3(2.0, 2.2, 2.5) * spec1
-                               + vec3(1.2, 1.4, 1.7) * spec2;
+                vec3 specColor = vec3(0.7, 0.85, 1.0) * spec1 * 1.8
+                               + vec3(0.5, 0.7, 1.0) * spec2;
 
                 // ═══ CAUSTIC SHIMMER ═══
-                // Very sparse, subtle — secondary to specular
                 float c1 = noise(pos * 6.0 + vec2(uTime * 0.18, -uTime * 0.12));
                 float c2 = noise(pos * 11.0 - vec2(uTime * 0.10, uTime * 0.14));
                 float c3 = noise(pos * 2.5 + uTime * 0.05);
                 float caustic = c1 * c2;
-                caustic *= smoothstep(0.35, 0.65, c3);  // Break mask erases most
+                caustic *= smoothstep(0.35, 0.65, c3);
                 caustic = smoothstep(0.32, 0.48, caustic);
-                vec3 causticColor = vec3(0.8, 1.0, 1.5) * caustic * 0.5;
+                vec3 causticColor = vec3(0.4, 0.6, 1.0) * caustic * 0.6;
 
-                // ═══ FRESNEL REFLECTION ═══
-                // Wet surfaces reflect strongly at glancing angles
+                // ═══ FRESNEL RIM ═══
                 float fresnel = pow(edgeness, 2.0) * progressRamp;
-                vec3 fresnelColor = vec3(0.8, 1.0, 1.3) * fresnel * 0.8;
+                vec3 fresnelColor = vec3(0.3, 0.5, 0.8) * fresnel * 0.7;
 
                 // ═══ EDGE EMISSION ═══
                 float edgeBand = smoothstep(threshold - 0.05, threshold - 0.01, consumeField)
@@ -195,28 +185,33 @@ export function createWaterMaterial(options = {}) {
                 float pulse = 0.85 + 0.15 * sin(uTime * uPulseSpeed);
                 edgeBand *= pulse;
 
-                // ═══ COMPOSITE ═══
-                vec3 color = baseColor;
+                // ═══ COMPOSITE — ADDITIVE ONLY ═══
+                // All effects ADD light. No dark base. Impossible to blackout any mascot.
+                vec3 color = vec3(0.0);
                 color += specColor * consumed;
                 color += causticColor * consumed;
                 color += fresnelColor;
-                color += vec3(0.6, 0.8, 1.2) * edgeBand * 0.6 * dissolveIn;
+                color += vec3(0.3, 0.5, 0.8) * edgeBand * 0.6 * dissolveIn;
+
+                // Subtle blue tint wash in consumed areas (very faint additive glow)
+                color += vec3(0.02, 0.05, 0.10) * consumed * dissolveIn;
 
                 // ═══ ALPHA ═══
-                // Moderate alpha — visible darkening with specular punch-through
-                float alpha = waterMask * uOpacity * dissolveIn * 0.65;
-                float edgeAlpha = edgeBand * 0.45 * dissolveIn * uOpacity;
+                // With AdditiveBlending: result = src * alpha + dst
+                // Alpha controls brightness of added light, NOT background darkening
+                float alpha = waterMask * uOpacity * dissolveIn;
+                float edgeAlpha = edgeBand * 0.5 * dissolveIn * uOpacity;
                 alpha = max(alpha, edgeAlpha);
-                alpha = max(alpha, fresnel * dissolveIn * uOpacity * 0.4);
+                alpha = max(alpha, fresnel * dissolveIn * uOpacity * 0.5);
 
-                if (alpha < 0.01) discard;
+                if (alpha < 0.05) discard;
 
                 gl_FragColor = vec4(color, alpha);
             }
         `,
 
         transparent: true,
-        blending: THREE.NormalBlending,
+        blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
     });

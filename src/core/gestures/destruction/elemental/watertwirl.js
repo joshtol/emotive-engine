@@ -50,7 +50,7 @@ const WATERTWIRL_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
-                blending: 'normal',
+                blending: 'additive',
                 renderOrder: 10,
                 atmospherics: [{ preset: 'spray', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
                 modelOverrides: {
@@ -86,7 +86,7 @@ const WATERTWIRL_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
-                blending: 'normal',
+                blending: 'additive',
                 renderOrder: 10,
                 modelOverrides: {
                     'splash-ring': {
@@ -121,7 +121,7 @@ const WATERTWIRL_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
-                blending: 'normal',
+                blending: 'additive',
                 renderOrder: 10,
                 modelOverrides: {
                     'splash-ring': {

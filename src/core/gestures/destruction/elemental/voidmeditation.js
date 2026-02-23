@@ -39,7 +39,7 @@ const SHARED_ANIMATION = {
     emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
     blending: 'normal',
     renderOrder: 10,
-                atmospherics: [{ preset: 'shadow', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
+    atmospherics: [{ preset: 'shadow', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
     relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }
 };
 

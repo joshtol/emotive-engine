@@ -715,8 +715,9 @@ export const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
  * Prevents water from becoming too transparent
  */
 export const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
-    // Discard faint fragments
-    if (alpha < 0.01) discard;
+    // Discard faint fragments — threshold raised to prevent low-alpha pixels
+    // from writing to depth buffer and darkening objects behind (moon/sun blackout)
+    if (alpha < 0.1) discard;
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
