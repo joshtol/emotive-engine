@@ -108,7 +108,15 @@ const NATUREBARRAGE_CONFIG = {
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'normal',
-            renderOrder: 12
+            renderOrder: 12,
+            atmospherics: [{
+                preset: 'falling-leaves',
+                targets: null,
+                anchor: 'around',
+                intensity: 0.3,
+                sizeScale: 0.7,
+                progressCurve: 'sustain',
+            }]
         }
     },
 

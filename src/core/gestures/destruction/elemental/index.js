@@ -16,7 +16,6 @@ export {
     getElementalVariants,
     getVariantsByElement,
     WATER_VARIANTS,
-    SMOKE_VARIANTS,
     FIRE_VARIANTS,
     ICE_VARIANTS,
     ELECTRIC_VARIANTS,
@@ -24,38 +23,12 @@ export {
     ALL_ELEMENTAL_VARIANTS
 } from './elementalFactory.js';
 
-// Ice effect gestures
-export {
-    createIceEffectGesture,
-    freeze,
-    chill,
-    frostbite,
-    thaw,
-    frost,
-    crystallize,
-    glacial,
-    shatter as iceShatter,
-    encase as iceEncase,
-    ICE_EFFECT_VARIANTS
-} from './iceEffectFactory.js';
+// Ice effect gesture factory
+export { buildIceEffectGesture } from './iceEffectFactory.js';
 
 // Light effect gesture factory
 export { buildLightEffectGesture } from './lightEffectFactory.js';
 
-// Poison effect gestures
-export {
-    createPoisonEffectGesture,
-    infect,
-    sicken,
-    ooze,
-    seep,
-    toxic,
-    corrode,
-    melt,
-    decay,
-    dissolve as poisonDissolve,
-    POISON_EFFECT_VARIANTS
-} from './poisonEffectFactory.js';
 
 // Earth effect gesture factory
 export { buildEarthEffectGesture } from './earthEffectFactory.js';
@@ -82,6 +55,7 @@ export { default as earthimpact } from './earthimpact.js';
 export { default as earthblast } from './earthblast.js';
 export { default as earthsurge } from './earthsurge.js';
 export { default as earthtwirl } from './earthtwirl.js';
+export { default as earthshield } from './earthshield.js';
 
 // Earth effect variants list for discovery
 export const EARTH_EFFECT_VARIANTS = [
@@ -90,15 +64,12 @@ export const EARTH_EFFECT_VARIANTS = [
     'earthencase', 'earthcrumble', 'earthshatter', 'eartherode',
     'earthcrown', 'earthdance', 'earthhelix', 'earthpillar',
     'earthdrill', 'earthflourish', 'earthvortex', 'earthbarrage',
-    'earthimpact', 'earthblast', 'earthsurge', 'earthtwirl'
+    'earthimpact', 'earthblast', 'earthsurge', 'earthtwirl',
+    'earthshield'
 ];
 
 // Nature effect gesture factories
-export {
-    createNatureEffectGesture,
-    buildNatureEffectGesture,
-    NATURE_EFFECT_VARIANTS
-} from './natureEffectFactory.js';
+export { buildNatureEffectGesture } from './natureEffectFactory.js';
 
 // Nature effect gestures (self-contained gesture files - attribute gestures)
 export { default as entangle } from './entangle.js';
@@ -108,7 +79,7 @@ export { default as bloom } from './bloom.js';
 export { default as sprout } from './sprout.js';
 export { default as wilt } from './wilt.js';
 export { default as overgrow } from './overgrow.js';
-export { default as blossom } from './blossom.js';
+export { default as natureconstrict } from './natureconstrict.js';
 
 // Nature effect gestures (self-contained gesture files - character + ring/spectacle)
 export { default as naturecrown } from './naturecrown.js';
@@ -121,47 +92,58 @@ export { default as naturedrill } from './naturedrill.js';
 export { default as natureflourish } from './natureflourish.js';
 export { default as naturepillar } from './naturepillar.js';
 export { default as naturebarrage } from './naturebarrage.js';
+export { default as seedburst } from './seedburst.js';
+export { default as seedpod } from './seedpod.js';
+export { default as naturecleanse } from './naturecleanse.js';
+export { default as naturesplinter } from './naturesplinter.js';
 
 // Nature effect variants list for discovery
 export const NATURE_GESTURE_VARIANTS = [
     'natureentangle', 'natureroot', 'naturetwirl',
-    'naturebloom', 'natureblossom', 'sprout',
+    'naturebloom', 'natureconstrict', 'sprout',
     'wilt', 'overgrow',
     'naturecrown', 'naturemeditation', 'natureshield',
     'naturevortex', 'naturedance', 'naturehelix',
     'naturedrill', 'natureflourish', 'naturepillar',
-    'naturebarrage'
+    'naturebarrage', 'seedburst', 'seedpod',
+    'naturecleanse', 'naturesplinter'
 ];
 
-// Void effect gestures
+// Water effect gestures (self-contained gesture files)
+export { default as watershield } from './watershield.js';
+
+// Ice effect gestures (self-contained gesture files)
+export { default as iceshield } from './iceshield.js';
+
+// Electric effect gestures (self-contained gesture files)
+export { default as electricshield } from './electricshield.js';
+
+// Void effect gestures (self-contained gesture files)
+export { default as voidshield } from './voidshield.js';
+
+// Light effect gestures (self-contained gesture files)
+export { default as lightshield } from './lightshield.js';
+
+// Void effect gesture factory + individual gesture re-exports
 export {
-    createVoidEffectGesture,
+    buildVoidEffectGesture,
     drain,
-    siphon,
     hollow,
     corrupt,
-    taint,
-    wither,
     consume,
-    erase,
     singularity,
-    VOID_EFFECT_VARIANTS
+    voidCrown,
+    voidDance,
+    voidHelix,
+    voidPillar,
+    voidDrill,
+    voidFlourish,
+    voidVortex,
+    voidBarrage,
+    voidImpact,
+    voidSingularity
 } from './voidEffectFactory.js';
 
-// Smoke effect gestures (derived element - uses void models)
-export {
-    createSmokeEffectGesture,
-    puff,
-    billow,
-    fume,
-    shroud,
-    haze,
-    choke,
-    smokebomb,
-    vanish,
-    materialize,
-    SMOKE_EFFECT_VARIANTS
-} from './smokeEffectFactory.js';
 
 // Fire effect factory (buildFireEffectGesture helper only)
 export { buildFireEffectGesture } from './fireEffectFactory.js';
@@ -191,6 +173,7 @@ export { default as firepillarGesture } from './firepillar.js';
 export { default as firehelix } from './firehelix.js';
 export { default as firehelixGesture } from './firehelix.js';
 export { default as firetwirl } from './firetwirl.js';
+export { default as fireshield } from './fireshield.js';
 
 // Fire effect variants list for discovery
 export const FIRE_EFFECT_VARIANTS = [
@@ -208,5 +191,6 @@ export const FIRE_EFFECT_VARIANTS = [
     'firedrill',
     'firepillar',
     'firehelix',
-    'firetwirl'
+    'firetwirl',
+    'fireshield'
 ];

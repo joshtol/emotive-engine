@@ -94,10 +94,10 @@ const NATUREDRILL_CONFIG = {
                 blend: 'multiply'
             },
             atmospherics: [{
-                preset: 'earth-dust',
+                preset: 'falling-leaves',
                 targets: null,
-                anchor: 'below',
-                intensity: 0.3,
+                anchor: 'around',
+                intensity: 0.4,
                 sizeScale: 0.8,
                 progressCurve: 'sustain',
                 velocityInheritance: 0.5,

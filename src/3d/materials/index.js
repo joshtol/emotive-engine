@@ -89,17 +89,6 @@ export {
 } from './WaterMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Smoke Material
-// ═══════════════════════════════════════════════════════════════════════════
-export {
-    createSmokeMaterial,
-    updateSmokeMaterial,
-    setSmokeMaterialLifetime,
-    getSmokePhysics,
-    getSmokeCrackStyle
-} from './SmokeMaterial.js';
-
-// ═══════════════════════════════════════════════════════════════════════════
 // Ice Material
 // ═══════════════════════════════════════════════════════════════════════════
 export {
@@ -154,29 +143,6 @@ export {
     setInstancedWaterArcAnimation,
     ANIMATION_TYPES as WATER_ANIMATION_TYPES
 } from './InstancedWaterMaterial.js';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Procedural Poison Material (derived element - uses water models)
-// ═══════════════════════════════════════════════════════════════════════════
-export {
-    createProceduralPoisonMaterial,
-    updateProceduralPoisonMaterial,
-    setProceduralPoisonToxicity,
-    setProceduralPoisonIntensity,
-    getProceduralPoisonPhysics
-} from './ProceduralPoisonMaterial.js';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Procedural Smoke Material (derived element - uses void models)
-// ═══════════════════════════════════════════════════════════════════════════
-export {
-    createProceduralSmokeMaterial,
-    updateProceduralSmokeMaterial,
-    setProceduralSmokeDensity,
-    setProceduralSmokeIntensity,
-    setProceduralSmokeWarmth,
-    getProceduralSmokePhysics
-} from './ProceduralSmokeMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Procedural Void Material (advanced shader-based with rift support)

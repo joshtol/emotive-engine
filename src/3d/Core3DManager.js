@@ -45,11 +45,9 @@ import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
 import { createElectricMaterial, updateElectricMaterial } from './materials/ElectricMaterial.js';
 import { createWaterMaterial, updateWaterMaterial } from './materials/WaterMaterial.js';
 import { createFireMaterial, updateFireMaterial } from './materials/FireMaterial.js';
-import { createSmokeMaterial, updateSmokeMaterial } from './materials/SmokeMaterial.js';
 import { createVoidMaterial, updateVoidMaterial } from './materials/VoidMaterial.js';
 import { createIceMaterial, updateIceMaterial } from './materials/IceMaterial.js';
 import { createLightMaterial, updateLightMaterial } from './materials/LightMaterial.js';
-import { createPoisonMaterial, updatePoisonMaterial } from './materials/PoisonMaterial.js';
 import { createEarthMaterial, updateEarthMaterial } from './materials/EarthMaterial.js';
 import { createNatureMaterial, updateNatureMaterial } from './materials/NatureMaterial.js';
 import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
@@ -2905,45 +2903,6 @@ export class Core3DManager {
                 this._lightOverlayFadingOut = false;
                 this._currentLightProgress = null;
             }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // POISON OVERLAY - Toxic/acid effect
-        // ═══════════════════════════════════════════════════════════════════════════
-        if (blended.poisonOverlay && blended.poisonOverlay.enabled) {
-            const mesh = this.renderer?.coreMesh;
-            const scene = this.renderer?.scene;
-            if (mesh && scene) {
-                if (!this._poisonOverlayMesh) {
-                    this._poisonMaterial = createPoisonMaterial({
-                        toxicity: blended.poisonOverlay.toxicity || 0.7,
-                        opacity: 0.40
-                    });
-                    this._poisonOverlayMesh = new THREE.Mesh(mesh.geometry, this._poisonMaterial);
-                    this._poisonOverlayMesh.scale.setScalar(1.03);
-                    mesh.add(this._poisonOverlayMesh);
-                    this._poisonOverlayMesh.renderOrder = mesh.renderOrder + 3;
-                }
-                if (this._poisonMaterial?.uniforms?.uTime) {
-                    this._poisonMaterial.uniforms.uTime.value = blended.poisonOverlay.time;
-                }
-                if (this._poisonMaterial?.uniforms?.uToxicity) {
-                    this._poisonMaterial.uniforms.uToxicity.value = blended.poisonOverlay.toxicity || 0.7;
-                }
-                if (this._poisonMaterial?.uniforms?.uOpacity) {
-                    this._poisonMaterial.uniforms.uOpacity.value = Math.min(0.40, blended.poisonOverlay.strength);
-                }
-            }
-        } else if (this._poisonOverlayMesh) {
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._poisonOverlayMesh.parent) {
-                mesh.remove(this._poisonOverlayMesh);
-            }
-            if (this._poisonMaterial) {
-                this._poisonMaterial.dispose();
-                this._poisonMaterial = null;
-            }
-            this._poisonOverlayMesh = null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

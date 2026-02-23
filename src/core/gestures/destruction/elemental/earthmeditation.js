@@ -56,6 +56,7 @@ const EARTHMEDITATION_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'earth-dust', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'earth-ring': {
                         arcPhase: 0.0,

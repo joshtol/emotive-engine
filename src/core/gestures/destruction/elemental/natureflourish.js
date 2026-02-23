@@ -11,7 +11,7 @@
  * FEATURES:
  * - THREE SPAWN LAYERS for dramatic nature flourish
  * - Layer 1: 5 camera-facing spinning vine rings with VORONOI cutout
- * - Layer 2: 2 crossing vine-rings with CRACKS cutout (X sweep)
+ * - Layer 2: 2 crossing vine-rings with CRACKS cutout (diagonal X sweep)
  * - Layer 3: 2 tilted vine-ring arcs at +/-45 angles
  */
 
@@ -66,10 +66,9 @@ const NATUREFLOURISH_CONFIG = {
                     easing: 'easeOut'
                 },
                 exit: {
-                    type: 'burst-fade',
-                    duration: 0.85,
-                    easing: 'easeIn',
-                    burstScale: 1.15
+                    type: 'fade',
+                    duration: 0.15,
+                    easing: 'easeIn'
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
@@ -103,11 +102,11 @@ const NATUREFLOURISH_CONFIG = {
                     blend: 'multiply'
                 },
                 atmospherics: [{
-                    preset: 'earth-dust',
+                    preset: 'falling-leaves',
                     targets: ['vine-ring'],
-                    anchor: 'below',
-                    intensity: 0.3,
-                    sizeScale: 1.0,
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 0.9,
                     progressCurve: 'sustain',
                     velocityInheritance: 0.4,
                 }],
@@ -181,7 +180,7 @@ const NATUREFLOURISH_CONFIG = {
             models: ['vine-ring'],
             animation: {
                 appearAt: 0.12,
-                disappearAt: 0.5,
+                disappearAt: 0.45,
                 enter: {
                     type: 'scale',
                     duration: 0.06,
@@ -189,7 +188,7 @@ const NATUREFLOURISH_CONFIG = {
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.3,
+                    duration: 0.15,
                     easing: 'easeIn'
                 },
                 procedural: {
@@ -256,7 +255,7 @@ const NATUREFLOURISH_CONFIG = {
             models: ['vine-ring'],
             animation: {
                 appearAt: 0.12,
-                disappearAt: 0.5,
+                disappearAt: 0.45,
                 enter: {
                     type: 'scale',
                     duration: 0.06,
@@ -264,7 +263,7 @@ const NATUREFLOURISH_CONFIG = {
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.3,
+                    duration: 0.15,
                     easing: 'easeIn'
                 },
                 procedural: {
@@ -335,7 +334,7 @@ const NATUREFLOURISH_CONFIG = {
             models: ['vine-ring'],
             animation: {
                 appearAt: 0.30,
-                disappearAt: 0.70,
+                disappearAt: 0.60,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
@@ -343,8 +342,8 @@ const NATUREFLOURISH_CONFIG = {
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.28,
-                    easing: 'easeInCubic'
+                    duration: 0.15,
+                    easing: 'easeIn'
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
@@ -404,7 +403,7 @@ const NATUREFLOURISH_CONFIG = {
             models: ['vine-ring'],
             animation: {
                 appearAt: 0.30,
-                disappearAt: 0.70,
+                disappearAt: 0.60,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
@@ -412,8 +411,8 @@ const NATUREFLOURISH_CONFIG = {
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.28,
-                    easing: 'easeInCubic'
+                    duration: 0.15,
+                    easing: 'easeIn'
                 },
                 procedural: {
                     scaleSmoothing: 0.05,

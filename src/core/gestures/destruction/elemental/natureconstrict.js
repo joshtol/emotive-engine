@@ -1,12 +1,12 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Nature Blossom Gesture
+ *    ●●  ENGINE - Natureconstrict Gesture
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Natureblossom gesture - massive organic vine sculptures materializing
- * @module gestures/destruction/elemental/blossom
+ * @fileoverview Natureconstrict gesture - massive organic vine sculptures materializing
+ * @module gestures/destruction/elemental/natureconstrict
  *
  * CONCEPT: Giant organic vine pieces materialize around the mascot like nature
  * spontaneously sculpting itself into existence. Each piece is a different model —
@@ -33,8 +33,8 @@
 
 import { buildNatureEffectGesture } from './natureEffectFactory.js';
 
-const NATUREBLOSSOM_CONFIG = {
-    name: 'natureblossom',
+const NATURECONSTRICT_CONFIG = {
+    name: 'natureconstrict',
     emoji: '🌺',
     type: 'blending',
     description: 'Living sculpture — giant vine shapes materialize and grow around the mascot',
@@ -138,7 +138,7 @@ const NATUREBLOSSOM_CONFIG = {
                     },
                     'u-vine': {
                         shaderAnimation: { type: 1, arcWidth: 0.55, arcSpeed: 0.5, arcCount: 1 },
-                        orientationOverride: 'flat'
+                        orientationOverride: 'vertical'
                     }
                 }
             }
@@ -239,4 +239,4 @@ const NATUREBLOSSOM_CONFIG = {
     decayRate: 0.18
 };
 
-export default buildNatureEffectGesture(NATUREBLOSSOM_CONFIG);
+export default buildNatureEffectGesture(NATURECONSTRICT_CONFIG);

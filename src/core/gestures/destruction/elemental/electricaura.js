@@ -68,6 +68,7 @@ const ELECTRICAURA_CONFIG = {
                 strengthCurve: 'constant'
             },
             grain: { type: 3, strength: 0.08, scale: 0.4, speed: 1.0, blend: 'multiply' },
+            atmospherics: [{ preset: 'ozone', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
             rotate: { axis: 'y', rotations: 0.5, phase: 0 },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,

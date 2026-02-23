@@ -58,8 +58,8 @@ const NATUREVORTEX_CONFIG = {
             easing: 'easeInOut',
             startScale: 1.0,
             endScale: 1.4,
-            startDiameter: 0.5,
-            endDiameter: 2.0,
+            startDiameter: 0.8,
+            endDiameter: 2.5,
             orientation: 'flat'
         },
         formation: {
@@ -128,7 +128,15 @@ const NATUREVORTEX_CONFIG = {
                 scale: 0.25,
                 speed: 0.5,
                 blend: 'multiply'
-            }
+            },
+            atmospherics: [{
+                preset: 'falling-leaves',
+                targets: ['vine-ring'],
+                anchor: 'around',
+                intensity: 0.5,
+                sizeScale: 0.8,
+                progressCurve: 'sustain',
+            }]
         }
     },
 

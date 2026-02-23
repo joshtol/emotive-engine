@@ -5,18 +5,27 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Naturebloom gesture - vertical vine rings erupting upward
+ * @fileoverview Naturebloom gesture - canopy growth (tree in fast-forward)
  * @module gestures/destruction/elemental/bloom
  *
- * CONCEPT: Life force shooting upward — vertical vine-rings ascending from
- * the mascot's base. Like firedance but with explosive upward energy.
+ * CONCEPT: A tree growing in fast-forward. Layer 1 is the trunk — three
+ * tight flat vine-rings ascending rapidly from feet to above head.
+ * Layer 2 is the canopy — five vine-rings anchored above the mascot,
+ * tilted outward at different angles like branches spreading into a crown.
+ * The canopy rings start small and expand outward, creating the silhouette
+ * of a tree canopy unfurling.
  *
- * FEATURES:
- * - 4 vertical vine-rings ascending bottom → above
- * - Arc animation creates animated growth appearance
- * - easeOut — explosive start, settling as energy dissipates
- * - Spiral formation with 90° offsets
- * - Scale shrinks as rings rise (energy spreading)
+ * Trunk grows FIRST (fast upward rush), then canopy SPREADS (slower unfurl).
+ * Together they create the unmistakable shape of a tree blossoming overhead.
+ *
+ * VISUAL DIAGRAM (side view):
+ *          ╱═══╲
+ *        ╱═══════╲       ← Canopy: 5 tilted rings spreading outward
+ *       ╱═══════════╲
+ *           ║║║
+ *           ║║║          ← Trunk: 3 flat rings ascending
+ *           ║║║
+ *            ★           ← Mascot at base
  */
 
 import { buildNatureEffectGesture } from './natureEffectFactory.js';
@@ -25,133 +34,400 @@ const NATUREBLOOM_CONFIG = {
     name: 'naturebloom',
     emoji: '🌸',
     type: 'blending',
-    description: 'Life force erupting — vertical vine rings shoot upward',
-    duration: 1500,
-    beats: 3,
-    intensity: 1.3,
+    description: 'Canopy growth — trunk rises, then branches spread into a living crown',
+    duration: 2000,
+    beats: 4,
+    intensity: 1.2,
     category: 'emanating',
     growth: 0.8,
 
-    spawnMode: {
-        type: 'axis-travel',
-        axisTravel: {
-            axis: 'y',
-            start: 'bottom',
-            end: 'above',
-            easing: 'easeOut',
-            startScale: 1.2,
-            endScale: 0.9,
-            startDiameter: 1.4,
-            endDiameter: 2.2,
-            orientation: 'vertical'
-        },
-        formation: {
-            type: 'spiral',
-            count: 4,
-            spacing: 0.1,
-            arcOffset: 90,
-            phaseOffset: 0
-        },
-        count: 4,
-        scale: 1.0,
-        models: ['vine-ring'],
-        animation: {
-            appearAt: 0.0,
-            disappearAt: 0.6,
-            stagger: 0.04,
-            enter: {
-                type: 'scale',
-                duration: 0.08,
-                easing: 'easeOut'
+    spawnMode: [
+        // ═════════════════════════════════════════════════════════════════════
+        // LAYER 1: Trunk — 3 tight flat rings ascending rapidly
+        // ═════════════════════════════════════════════════════════════════════
+        {
+            type: 'axis-travel',
+            axisTravel: {
+                axis: 'y',
+                start: 'bottom',
+                end: 'center',
+                easing: 'easeOutCubic',
+                startScale: 1.0,
+                endScale: 0.7,
+                startDiameter: 0.5,
+                endDiameter: 0.3,
+                diameterUnit: 'mascot',
+                holdAt: 0.4,
+                orientation: 'flat'
             },
-            exit: {
-                type: 'fade',
-                duration: 0.45,
-                easing: 'easeIn'
+            formation: {
+                type: 'stack',
+                count: 3,
+                spacing: 0.25
             },
-            procedural: {
-                scaleSmoothing: 0.06,
-                geometryStability: true
-            },
-            parameterAnimation: {
-                growth: {
-                    start: 0.5,
-                    peak: 0.85,
-                    end: 0.6,
-                    curve: 'bell'
+            count: 3,
+            scale: 2.0,
+            models: ['vine-ring'],
+            animation: {
+                appearAt: 0.0,
+                disappearAt: 0.80,
+                stagger: 0.06,
+                enter: {
+                    type: 'scale',
+                    duration: 0.1,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeInCubic'
+                },
+                procedural: {
+                    scaleSmoothing: 0.06,
+                    geometryStability: true
+                },
+                pulse: {
+                    amplitude: 0.03,
+                    frequency: 2,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: {
+                    min: 0.6,
+                    max: 1.2,
+                    frequency: 2,
+                    pattern: 'sine'
+                },
+                rotate: [
+                    { axis: 'z', rotations: 0.2, phase: 0 },
+                    { axis: 'z', rotations: -0.25, phase: 60 },
+                    { axis: 'z', rotations: 0.15, phase: 120 }
+                ],
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 3, scale: 3.0, weight: 1.0 },
+                    secondary: { pattern: 0, scale: 5.0, weight: 0.3 },
+                    blend: 'add',
+                    travel: 'vertical',
+                    travelSpeed: 1.5,
+                    strengthCurve: 'constant'
+                },
+                grain: {
+                    type: 3,
+                    strength: 0.05,
+                    scale: 0.3,
+                    speed: 0.4,
+                    blend: 'multiply'
+                },
+                blending: 'normal',
+                renderOrder: 6,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: {
+                            type: 1,
+                            arcWidth: 0.85,
+                            arcSpeed: 1.5,
+                            arcCount: 1
+                        },
+                        orientationOverride: 'flat'
+                    }
                 }
+            }
+        },
+
+        // ═════════════════════════════════════════════════════════════════════
+        // LAYER 2: Canopy — 5 tilted rings spreading outward above head
+        // ═════════════════════════════════════════════════════════════════════
+
+        // ── Branch 1: directly above center, slightly tilted ─────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0.15, z: 0 },
+                orientation: 'flat',
+                startScale: 0.2,
+                endScale: 1.0,
+                scaleEasing: 'easeOutCubic',
+                bob: { amplitude: 0.01, frequency: 0.3 }
             },
-            pulse: {
-                amplitude: 0.08,
-                frequency: 5,
-                easing: 'easeInOut'
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                appearAt: 0.25,
+                disappearAt: 0.85,
+                enter: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeInCubic'
+                },
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
+                pulse: {
+                    amplitude: 0.04,
+                    frequency: 1.5,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
+                rotate: { axis: 'x', rotations: 0.4, phase: 0 },
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 6, scale: 1.5, weight: 1.0 },
+                    secondary: { pattern: 0, scale: 2.5, weight: 0.3 },
+                    blend: 'add',
+                    travel: 'spiral',
+                    travelSpeed: 0.5,
+                    strengthCurve: 'bell',
+                    bellPeakAt: 0.5
+                },
+                grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                blending: 'normal',
+                renderOrder: 10,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.35, arcCount: 2 },
+                        orientationOverride: 'flat'
+                    }
+                }
+            }
+        },
+
+        // ── Branch 2: tilted at 0° (radial) ─────────────────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0.1, z: 0 },
+                orientation: 'radial',
+                startScale: 0.2,
+                endScale: 1.0,
+                scaleEasing: 'easeOutCubic',
+                bob: { amplitude: 0.008, frequency: 0.35 }
             },
-            emissive: {
-                min: 0.9,
-                max: 1.8,
-                frequency: 5,
-                pattern: 'sine'
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                appearAt: 0.30,
+                disappearAt: 0.85,
+                enter: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeInCubic'
+                },
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
+                pulse: {
+                    amplitude: 0.04,
+                    frequency: 1.5,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
+                rotate: { axis: 'y', rotations: -0.35, phase: 0 },
+                grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                blending: 'normal',
+                renderOrder: 12,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
+                        orientationOverride: 'radial'
+                    }
+                }
+            }
+        },
+
+        // ── Branch 3: tilted at 90° ─────────────────────────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0.1, z: 0 },
+                orientation: 'radial',
+                startScale: 0.2,
+                endScale: 1.0,
+                scaleEasing: 'easeOutCubic',
+                bob: { amplitude: 0.008, frequency: 0.4 }
             },
-            cutout: {
-                strength: 0.6,
-                primary: { pattern: 4, scale: 1.5, weight: 1.0 },
-                secondary: { pattern: 3, scale: 1.2, weight: 0.4 },
-                blend: 'add',
-                travel: 'radial',
-                travelSpeed: 2.0,
-                strengthCurve: 'bell',
-                bellPeakAt: 0.5
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                appearAt: 0.35,
+                disappearAt: 0.85,
+                enter: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeInCubic'
+                },
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
+                pulse: {
+                    amplitude: 0.04,
+                    frequency: 1.5,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
+                rotate: { axis: 'x', rotations: 0.35, phase: 90 },
+                grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                blending: 'normal',
+                renderOrder: 14,
+                atmospherics: [{
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                }],
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
+                        orientationOverride: 'radial'
+                    }
+                }
+            }
+        },
+
+        // ── Branch 4: tilted at 180° ────────────────────────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0.1, z: 0 },
+                orientation: 'radial',
+                startScale: 0.2,
+                endScale: 1.0,
+                scaleEasing: 'easeOutCubic',
+                bob: { amplitude: 0.008, frequency: 0.45 }
             },
-            grain: {
-                type: 3,
-                strength: 0.15,
-                scale: 0.2,
-                speed: 1.5,
-                blend: 'multiply'
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                appearAt: 0.40,
+                disappearAt: 0.85,
+                enter: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeInCubic'
+                },
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
+                pulse: {
+                    amplitude: 0.04,
+                    frequency: 1.5,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
+                rotate: { axis: 'y', rotations: -0.4, phase: 180 },
+                grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                blending: 'normal',
+                renderOrder: 16,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
+                        orientationOverride: 'radial'
+                    }
+                }
+            }
+        },
+
+        // ── Branch 5: tilted at 270° ────────────────────────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0.1, z: 0 },
+                orientation: 'radial',
+                startScale: 0.2,
+                endScale: 1.0,
+                scaleEasing: 'easeOutCubic',
+                bob: { amplitude: 0.008, frequency: 0.38 }
             },
-            atmospherics: [{
-                preset: 'earth-dust',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.35,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4
-            }],
-            rotate: [
-                { axis: 'y', rotations: 2, phase: 0 },
-                { axis: 'y', rotations: -1.5, phase: 90 },
-                { axis: 'y', rotations: 2.5, phase: 180 },
-                { axis: 'y', rotations: -2, phase: 270 }
-            ],
-            scaleVariance: 0.15,
-            lifetimeVariance: 0.1,
-            blending: 'normal',
-            renderOrder: 12,
-            modelOverrides: {
-                'vine-ring': {
-                    shaderAnimation: {
-                        type: 1,
-                        arcWidth: 0.6,
-                        arcSpeed: 2.0,
-                        arcCount: 1
-                    },
-                    orientationOverride: 'vertical'
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                appearAt: 0.45,
+                disappearAt: 0.85,
+                enter: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeOutBack'
+                },
+                exit: {
+                    type: 'scale',
+                    duration: 0.2,
+                    easing: 'easeInCubic'
+                },
+                procedural: {
+                    scaleSmoothing: 0.08,
+                    geometryStability: true
+                },
+                pulse: {
+                    amplitude: 0.04,
+                    frequency: 1.5,
+                    easing: 'easeInOut',
+                    sync: 'global'
+                },
+                emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
+                rotate: { axis: 'x', rotations: 0.3, phase: 270 },
+                grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                blending: 'normal',
+                renderOrder: 18,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
+                        orientationOverride: 'radial'
+                    }
                 }
             }
         }
-    },
+    ],
 
     glowColor: [0.3, 0.8, 0.25],
     glowIntensityMin: 0.8,
-    glowIntensityMax: 1.6,
-    glowFlickerRate: 5,
-    scaleVibration: 0.015,
-    scaleFrequency: 4,
+    glowIntensityMax: 1.5,
+    glowFlickerRate: 3,
+    scaleVibration: 0.01,
+    scaleFrequency: 2,
     scaleGrow: 0.02,
-    tremor: 0.004,
-    tremorFrequency: 4,
-    decayRate: 0.15
+    tremor: 0.003,
+    tremorFrequency: 3,
+    decayRate: 0.16
 };
 
 export default buildNatureEffectGesture(NATUREBLOOM_CONFIG);

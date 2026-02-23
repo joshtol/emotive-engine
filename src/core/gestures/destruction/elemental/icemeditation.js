@@ -53,6 +53,7 @@ const ICEMEDITATION_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'mist', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'ice-ring': {
                         arcPhase: 0.0,

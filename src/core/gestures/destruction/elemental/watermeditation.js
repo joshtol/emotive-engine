@@ -44,7 +44,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -56,6 +56,7 @@ const WATERMEDITATION_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'spray', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'splash-ring': {
                         arcPhase: 0.0,
@@ -79,7 +80,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -114,7 +115,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -151,7 +152,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -186,7 +187,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -221,7 +222,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -258,7 +259,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -293,7 +294,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -328,7 +329,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -363,7 +364,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -398,7 +399,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -433,7 +434,7 @@ const WATERMEDITATION_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 3.0,
+            scale: 1.5,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {

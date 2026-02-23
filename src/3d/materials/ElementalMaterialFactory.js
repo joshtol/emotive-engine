@@ -56,13 +56,6 @@ import {
 } from './WaterMaterial.js';
 
 import {
-    createSmokeMaterial,
-    updateSmokeMaterial,
-    getSmokePhysics,
-    getSmokeCrackStyle
-} from './SmokeMaterial.js';
-
-import {
     createIceMaterial,
     updateIceMaterial,
     getIcePhysics,
@@ -101,13 +94,6 @@ const ELEMENTAL_REGISTRY = {
         physics: getWaterPhysics,
         crack: getWaterCrackStyle,
         masterParam: 'viscosity'
-    },
-    smoke: {
-        create: createSmokeMaterial,
-        update: updateSmokeMaterial,
-        physics: getSmokePhysics,
-        crack: getSmokeCrackStyle,
-        masterParam: 'density'
     },
     ice: {
         create: createIceMaterial,

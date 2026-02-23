@@ -54,6 +54,14 @@ const NATUREMEDITATION_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
+                atmospherics: [{
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                }],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {

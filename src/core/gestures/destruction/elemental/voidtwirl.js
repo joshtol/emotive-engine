@@ -52,6 +52,7 @@ const VOIDTWIRL_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'shadow', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'void-ring': {
                         arcPhase: 0.0,

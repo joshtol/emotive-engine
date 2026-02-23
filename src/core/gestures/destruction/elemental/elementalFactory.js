@@ -39,119 +39,13 @@
 // WATER GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const WATER_VARIANTS = {
-    splash: {
-        name: 'splash',
-        emoji: '💦',
-        description: 'Transform to water and splash outward',
-        duration: 2000,
-        beats: 4,
-        intensity: 1.2,
-        elemental: 'water',
-        elementalParam: 0.3,        // Normal water viscosity
-        impactPoint: [0, -0.2, 0],  // Lower center
-        impactDirection: [0, 1, 0.3], // Upward splash
-        revealSoul: true,
-        gravity: -4.0,              // Slower fall (water drag)
-        explosionForce: 1.8,        // Strong splash
-        rotationForce: 2.0          // Tumbling droplets
-    },
-    drip: {
-        name: 'drip',
-        emoji: '🫠',
-        description: 'Melt downward like wax',
-        duration: 4000,
-        beats: 8,
-        intensity: 0.4,
-        elemental: 'water',
-        elementalParam: 0.7,        // Higher viscosity (thicker)
-        impactPoint: [0, 0.3, 0],   // Top
-        impactDirection: [0, -1, 0], // Downward drip
-        revealSoul: true,
-        gravity: -1.5,              // Very slow drip
-        explosionForce: 0.1,        // Minimal outward
-        rotationForce: 0.3,         // Slight tumble
-        shatterTriggerAt: 0.0       // Immediate
-    },
-    ripple: {
-        name: 'ripple',
-        emoji: '🌊',
-        description: 'Wobble and dissolve like disturbed water',
-        duration: 3000,
-        beats: 6,
-        intensity: 0.8,
-        elemental: 'water',
-        elementalParam: 0.2,        // Low viscosity (fluid)
-        impactPoint: [0, 0, 0],     // Center
-        impactDirection: [1, 0, 0], // Horizontal ripple
-        revealSoul: false,
-        gravity: -2.0,
-        explosionForce: 0.6,
-        rotationForce: 1.0,
-        useWobble: true             // Pre-shatter wobble effect
-    }
-};
+const WATER_VARIANTS = {};
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // SMOKE GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const SMOKE_VARIANTS = {
-    smokebomb: {
-        name: 'smokebomb',
-        emoji: '💨',
-        description: 'Poof into dispersing smoke cloud',
-        duration: 2500,
-        beats: 4,
-        intensity: 1.0,
-        elemental: 'smoke',
-        elementalParam: 0.5,        // Medium density
-        impactPoint: [0, 0, 0],     // Center
-        impactDirection: [0, 1, 0], // Upward poof
-        revealSoul: false,          // Vanish completely
-        gravity: 0.5,               // Rises (smoke floats up)
-        explosionForce: 1.5,        // Quick poof
-        rotationForce: 3.0          // Swirling smoke
-    },
-    vanish: {
-        name: 'vanish',
-        emoji: '👻',
-        description: 'Fade into wispy nothing',
-        duration: 3000,
-        beats: 6,
-        intensity: 0.5,
-        elemental: 'smoke',
-        elementalParam: 0.1,        // Very light (steam)
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 1, 0],
-        revealSoul: false,
-        gravity: 0.8,               // Gentle rise
-        explosionForce: 0.3,        // Soft dispersion
-        rotationForce: 1.0,
-        fadeOut: true               // Gradual opacity fade
-    },
-    materialize: {
-        name: 'materialize',
-        emoji: '✨',
-        description: 'Condense from smoke (reverse smokebomb)',
-        duration: 2500,
-        beats: 4,
-        intensity: 1.0,
-        elemental: 'smoke',
-        elementalParam: 0.8,        // Dense smoke condensing
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, -1, 0], // Inward
-        revealSoul: true,
-        reassemble: true,
-        reassembleAt: 0.4,          // Quick reassembly
-        reassembleDuration: 1500,
-        isDualMode: true,
-        dualModeType: 'implode',
-        dualModeDuration: 1000,
-        gravity: -1.0,
-        explosionForce: 0.8
-    }
-};
+const SMOKE_VARIANTS = {};
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // FIRE GESTURES
@@ -165,174 +59,19 @@ const FIRE_VARIANTS = {
 // ICE GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const ICE_VARIANTS = {
-    freeze: {
-        name: 'iceFreeze',
-        emoji: '🧊',
-        description: 'Crystallize solid then freeze mid-air',
-        duration: 2500,
-        beats: 4,
-        intensity: 0.8,
-        elemental: 'ice',
-        elementalParam: 0.0,        // Fully frozen
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 1, 0],
-        revealSoul: true,
-        isFreezeMode: true,         // Freeze mid-air
-        isSuspendMode: true,
-        suspendAt: 0.15,
-        suspendDuration: 0.15,
-        gravity: -2.0,
-        explosionForce: 0.8
-    },
-    shatterIce: {
-        name: 'shatterIce',
-        emoji: '❄️',
-        description: 'Freeze then shatter into ice shards',
-        duration: 2000,
-        beats: 4,
-        intensity: 1.3,
-        elemental: 'ice',
-        elementalParam: 0.1,        // Solid ice
-        impactPoint: [0, 0, 0.3],
-        impactDirection: [0, 0, -1],
-        revealSoul: true,
-        gravity: -9.8,              // Normal gravity (ice is heavy)
-        explosionForce: 2.0,        // Explosive shatter
-        rotationForce: 6.0,         // Shards tumble
-        preFreezePhase: true        // Visual freeze before shatter
-    }
-};
+const ICE_VARIANTS = {};
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELECTRIC GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const ELECTRIC_VARIANTS = {
-    shock: {
-        name: 'shock',
-        emoji: '⚡',
-        description: 'Brief electric surge with arcs',
-        duration: 1500,
-        beats: 2,
-        intensity: 1.0,
-        elemental: 'electric',
-        elementalParam: 0.5,        // Active arcs
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 1, 0],
-        revealSoul: true,
-        reassemble: true,
-        reassembleAt: 0.5,
-        reassembleDuration: 700,
-        gravity: -5.0,              // Quick
-        explosionForce: 1.5,
-        rotationForce: 8.0,         // Jittery rotation
-        electricFlicker: true
-    },
-    overload: {
-        name: 'overload',
-        emoji: '💥',
-        description: 'Charge builds then explodes',
-        duration: 3000,
-        beats: 6,
-        intensity: 2.0,
-        elemental: 'electric',
-        elementalParam: 1.0,        // Maximum charge (lightning)
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 1, 0],
-        revealSoul: true,
-        gravity: -2.0,
-        explosionForce: 3.0,        // Massive explosion
-        rotationForce: 10.0,
-        chargeBuildup: true,        // Visual charge effect
-        shatterTriggerAt: 0.3       // Delayed for buildup
-    },
-    glitch: {
-        name: 'glitch',
-        emoji: '📺',
-        description: 'Flicker and static displacement',
-        duration: 2000,
-        beats: 4,
-        intensity: 0.7,
-        elemental: 'electric',
-        elementalParam: 0.2,        // Static (low charge)
-        impactPoint: [0, 0, 0],
-        impactDirection: [1, 0, 0],
-        revealSoul: false,
-        reassemble: true,
-        reassembleAt: 0.6,
-        reassembleDuration: 800,
-        gravity: -4.0,
-        explosionForce: 0.5,
-        rotationForce: 2.0,
-        glitchEffect: true          // Visual glitch/static
-    }
-};
+const ELECTRIC_VARIANTS = {};
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // VOID GESTURES
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VOID_VARIANTS = {
-    consume: {
-        name: 'consume',
-        emoji: '🕳️',
-        description: 'Void swallows inward',
-        duration: 3000,
-        beats: 6,
-        intensity: 1.0,
-        elemental: 'void',
-        elementalParam: 0.7,        // Dark mass
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 0, 0], // Inward to center
-        revealSoul: false,          // Consumed by void
-        isDualMode: true,
-        dualModeType: 'implode',
-        dualModeDuration: 2500,
-        gravity: 0.3,               // Slight pull (void gravity well)
-        explosionForce: 0.5,
-        rotationForce: 2.0,
-        voidPull: true              // Shards pulled to center
-    },
-    corrupt: {
-        name: 'corrupt',
-        emoji: '🖤',
-        description: 'Dark tendrils spread over surface',
-        duration: 4000,
-        beats: 8,
-        intensity: 0.6,
-        elemental: 'void',
-        elementalParam: 0.4,        // Wispy darkness
-        impactPoint: [0, -0.3, 0],  // Starts from below
-        impactDirection: [0, 1, 0], // Spreads upward
-        revealSoul: true,
-        gravity: -1.0,
-        explosionForce: 0.3,
-        rotationForce: 1.5,
-        corruptSpread: true,        // Visual corruption effect
-        shatterTriggerAt: 0.4       // Delayed for spread
-    },
-    singularity: {
-        name: 'singularity',
-        emoji: '⚫',
-        description: 'Implode to point then vanish',
-        duration: 2500,
-        beats: 4,
-        intensity: 1.5,
-        elemental: 'void',
-        elementalParam: 1.0,        // Maximum depth (black hole)
-        impactPoint: [0, 0, 0],
-        impactDirection: [0, 0, 0],
-        revealSoul: false,          // Vanishes completely
-        isDualMode: true,
-        dualModeType: 'implode',
-        dualModeDuration: 2000,
-        gravity: 2.0,               // Strong inward pull
-        explosionForce: 0.1,        // Minimal outward
-        rotationForce: 5.0,         // Spiraling in
-        singularityCollapse: true
-    }
-};
+const VOID_VARIANTS = {};
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // FACTORY FUNCTIONS

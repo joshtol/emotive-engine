@@ -52,6 +52,7 @@ const FIRETWIRL_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'smoke', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'flame-ring': {
                         arcPhase: 0.0,

@@ -52,6 +52,7 @@ const ICETWIRL_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'mist', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'ice-ring': {
                         arcPhase: 0.0,

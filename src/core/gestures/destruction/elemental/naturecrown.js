@@ -74,9 +74,9 @@ const NATURECROWN_CONFIG = {
             atmospherics: [{
                 preset: 'falling-leaves',
                 targets: ['nature-crown'],
-                anchor: 'above',
-                intensity: 0.5,
-                sizeScale: 1.0,
+                anchor: 'around',
+                intensity: 0.15,
+                sizeScale: 0.6,
                 progressCurve: 'sustain',
             }],
             scaleVariance: 0,

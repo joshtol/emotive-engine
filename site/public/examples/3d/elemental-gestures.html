@@ -38,7 +38,6 @@
         .element-ice { --element-color: #38bdf8; }
         .element-electric { --element-color: #facc15; }
         .element-water { --element-color: #3b82f6; }
-        .element-poison { --element-color: #84cc16; }
         .element-void { --element-color: #a855f7; }
         .element-light { --element-color: #fef08a; }
         .element-earth { --element-color: #a3a3a3; }
@@ -193,10 +192,6 @@
         .gesture-btn[data-element="water"]:hover {
             border-color: rgba(59, 130, 246, 0.5);
             background: rgba(59, 130, 246, 0.15);
-        }
-        .gesture-btn[data-element="poison"]:hover {
-            border-color: rgba(132, 204, 22, 0.5);
-            background: rgba(132, 204, 22, 0.15);
         }
         .gesture-btn[data-element="void"]:hover {
             border-color: rgba(168, 85, 247, 0.5);
@@ -800,7 +795,6 @@
             // ═══════════════════════════════════════════════════════════════
             // PREFIX-BASED DETECTION (most reliable)
             // ═══════════════════════════════════════════════════════════════
-            if (name.startsWith('poison')) return 'poison';
             if (name.startsWith('light')) return 'light';
             if (name.startsWith('fire')) return 'fire';
             if (name.startsWith('ice')) return 'ice';
@@ -809,6 +803,7 @@
             if (name.startsWith('void')) return 'void';
             if (name.startsWith('earth')) return 'earth';
             if (name.startsWith('nature')) return 'nature';
+            if (name.startsWith('seed')) return 'nature';
 
             // ═══════════════════════════════════════════════════════════════
             // KEYWORD-BASED DETECTION (for unprefixed gestures)
@@ -846,14 +841,6 @@
                 return 'water';
             }
 
-            // Poison keywords
-            if (name.includes('toxic') || name.includes('corrode') || name.includes('ooze') ||
-                name.includes('seep') || name.includes('infect') || name.includes('sicken') ||
-                name.includes('melt') || name.includes('decay') || name.includes('acid') ||
-                name.includes('venom')) {
-                return 'poison';
-            }
-
             // Void keywords
             if (name.includes('drain') || name.includes('consume') ||
                 name.includes('singularity') || name.includes('abyss') || name.includes('dark') ||
@@ -882,7 +869,7 @@
                 name.includes('sprout') || name.includes('flourish') ||
                 name.includes('plant') || name.includes('grow') ||
                 name.includes('constrict') || name.includes('thorn') || name.includes('leaf') ||
-                name === 'wilt' || name === 'overgrow' || name === 'blossom') {
+                name === 'wilt' || name === 'overgrow') {
                 return 'nature';
             }
 

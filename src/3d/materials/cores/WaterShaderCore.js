@@ -477,8 +477,10 @@ export const WATER_FRAGMENT_CORE = /* glsl */`
     // 2. Background presence: when no refraction background is set AND there's no
     //    3D geometry behind, reduce alpha so CSS shows through. With a refraction
     //    background set, bgPresence → 1.0 everywhere → full refraction alpha.
+    // Cap base alpha at 0.25 so overlapping rings (shield/meditation/twirl) don't
+    // compound to black via NormalBlending: (1-alpha)^N. Sparkles/foam add more.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float edgeAlpha = smoothstep(0.08, 0.60, smoothNdotV);
+    float edgeAlpha = smoothstep(0.08, 0.60, smoothNdotV) * 0.25;
     float skyAlpha = mix(0.25, 1.0, bgPresence); // 0.25 fallback if no bg set, 1.0 with bg
     float alpha = edgeAlpha * skyAlpha;
 `;

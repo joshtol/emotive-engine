@@ -109,8 +109,8 @@ void main() {
     // Star rays: thin spikes along 4 axes
     float starRays = smoothstep(0.10 + starExtend, 0.0, dist) * 0.6;
 
-    // Faint circular glow halo around star
-    float glow = smoothstep(0.40, 0.0, dist) * 0.15;
+    // Circular glow halo around star — visible aura
+    float glow = smoothstep(0.48, 0.0, dist) * 0.25;
 
     float shape = core + starRays + glow;
 
@@ -128,11 +128,11 @@ void main() {
     float phase2 = uTime * freq2 + vSeed * 7.0;
     float beat = sin(phase1) * sin(phase2);
 
-    // Sharp peaks: pow(4) makes flashes brief and intense
-    float twinkle = pow(max(0.0, beat), 4.0);
+    // Broader peaks: pow(2.5) keeps flash character but particles visible longer
+    float twinkle = pow(max(0.0, beat), 2.5);
 
-    // Minimum glow floor so particles don't completely vanish
-    twinkle = twinkle * 0.85 + 0.15;
+    // Higher glow floor so particles stay visible between flashes
+    twinkle = twinkle * 0.65 + 0.35;
 
     // ═══ LIFE FADE ═══
     float fadeIn = smoothstep(0.0, 0.15, vLife);

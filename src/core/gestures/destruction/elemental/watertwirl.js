@@ -40,7 +40,7 @@ const WATERTWIRL_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 1.85,
+            scale: 1.3,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -52,6 +52,7 @@ const WATERTWIRL_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
+                atmospherics: [{ preset: 'spray', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
                 modelOverrides: {
                     'splash-ring': {
                         arcPhase: 0.0,
@@ -75,7 +76,7 @@ const WATERTWIRL_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 1.85,
+            scale: 1.3,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {
@@ -110,7 +111,7 @@ const WATERTWIRL_CONFIG = {
                 endScale: 1.0
             },
             count: 1,
-            scale: 1.85,
+            scale: 1.3,
             sizeVariance: 0,
             models: ['splash-ring'],
             animation: {

@@ -121,7 +121,11 @@ export function parseAxisTravelConfig(config, resolveLandmark) {
         endScale: axisTravel.endScale ?? 1.0,
         startDiameter: axisTravel.startDiameter ?? 1.0,
         endDiameter: axisTravel.endDiameter ?? 1.0,
+        // 'mascot' = diameter values are multiples of mascot width (1.0 = mascot width)
+        diameterUnit: axisTravel.diameterUnit || null,
         reverseAt: axisTravel.reverseAt ?? null,
+        // holdAt: gesture progress (0-1) at which travel completes and holds at end position
+        holdAt: axisTravel.holdAt ?? null,
 
         // Orientation (unified naming, normalized)
         orientation: normalizeOrientation(rawOrientation),
@@ -258,6 +262,11 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
     let progress = gestureProgress;
     if (formationData?.progressOffset) {
         progress = Math.max(0, Math.min(1, progress - formationData.progressOffset));
+    }
+
+    // Handle holdAt: clamp progress so travel completes early and holds at end
+    if (axisConfig.holdAt !== null && axisConfig.holdAt > 0) {
+        progress = Math.min(progress / axisConfig.holdAt, 1.0);
     }
 
     // Handle reverseAt for down-then-up patterns (e.g., Transport)

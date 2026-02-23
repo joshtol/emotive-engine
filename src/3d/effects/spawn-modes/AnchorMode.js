@@ -62,6 +62,10 @@ export function parseAnchorConfig(config, resolveLandmark) {
         models: config.models || [],
         scale: config.scale ?? 1.0,
 
+        // Mascot-relative diameter: 'mascot' = diameter values are multiples of mascot width
+        diameterUnit: config.diameterUnit || null,
+        diameter: config.diameter ?? 1.0,
+
         // Scale animation over element lifetime (like axis-travel)
         // If both are equal or only scale is set, no interpolation occurs
         startScale: anchor.startScale ?? 1.0,

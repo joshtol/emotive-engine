@@ -49,7 +49,7 @@ const SHARED_ANIMATION = {
  *   Staggering these across hexagons creates a spiral brightness wave through the mandala.
  * @param {number} delay - appearAt delay (0 = immediate, 0.08 = 8% into gesture) for blooming entrance
  */
-function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0) {
+function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0, atmospherics = null) {
     const S = 0.866; // sin(60°)
     const round = v => Math.round(v * 100) / 100;
 
@@ -65,7 +65,7 @@ function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayI
         { x: S*radius, y:  0.5*radius, relay: relayIndices[2], arc: 0.0,  dir:  1 }, // upper-right
     ];
 
-    return rings.map(r => ({
+    return rings.map((r, i) => ({
         type: 'anchor',
         anchor: { ...SHARED_ANCHOR, offset: { x: round(r.x), y: round(r.y), z: 0 } },
         count: 1,
@@ -76,6 +76,7 @@ function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayI
             ...SHARED_ANIMATION,
             appearAt: delay,
             rotate: [{ axis: 'z', rotations: r.dir * baseRotations, phase: 0 }],
+            ...(i === 0 && atmospherics ? { atmospherics } : {}),
             modelOverrides: {
                 'flame-ring': {
                     arcPhase: (r.arc + arcPhaseOffset) % 6.28,
@@ -102,7 +103,7 @@ const FIREMEDITATION_CONFIG = {
         // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══
         // Spiral wave: staggered relay indices create rotating diagonal brightness band
         //           radius  scale  rotations  arcPhase  relayIndices
-        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0),    // inner — appears first
+        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0, [{ preset: 'smoke', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }]),    // inner — appears first
         ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08),  // middle — blooms outward
         ...createHexLayer(0.78, 1.55,  1,   4.19, [2, 0, 1], 0.16),  // outer — last to arrive
 

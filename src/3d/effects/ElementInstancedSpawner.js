@@ -35,6 +35,7 @@ import { MascotSpatialRef } from './MascotSpatialRef.js';
 // Shared sizing/orientation logic (Golden Ratio system from original ElementSpawner)
 import {
     getModelOrientation,
+    getModelSizeFraction,
     calculateElementScale
 } from './ElementSizing.js';
 
@@ -182,6 +183,9 @@ export class ElementInstancedSpawner {
 
         // Pool cleanup tracking (dispose pools after inactivity)
         this._poolLastUsed = new Map();  // elementType -> timestamp
+
+        // Cached model geometry diameters for mascot-relative diameter calculations
+        this._modelGeometryDiameters = new Map();  // modelName -> diameter in model space
         this._poolCleanupInterval = 30000;  // 30 seconds of inactivity before disposal
         this._lastCleanupCheck = 0;
 
@@ -807,6 +811,58 @@ export class ElementInstancedSpawner {
     }
 
     /**
+     * Get the geometry diameter of a model in model space.
+     * Used for mascot-relative diameter calculations.
+     * @param {string} modelName - Model name (e.g., 'vine-ring')
+     * @param {string} elementType - Element type for path resolution
+     * @returns {number} Model diameter in model space (from bounding sphere)
+     * @private
+     */
+    _getModelGeometryDiameter(modelName, elementType) {
+        if (this._modelGeometryDiameters.has(modelName)) {
+            return this._modelGeometryDiameters.get(modelName);
+        }
+
+        // Try to find geometry in cache by searching for this model name
+        let diameter = 2.0; // Default fallback (radius 1.0)
+        for (const [path, geometry] of this.geometryCache.entries()) {
+            if (path.includes(`${modelName}.glb`) || path.includes(`/${modelName}`)) {
+                if (!geometry.boundingSphere) {
+                    geometry.computeBoundingSphere();
+                }
+                diameter = geometry.boundingSphere.radius * 2;
+                break;
+            }
+        }
+
+        this._modelGeometryDiameters.set(modelName, diameter);
+        DEBUG && console.log(`[ElementInstancedSpawner] Model geometry diameter for ${modelName}: ${diameter.toFixed(3)}`);
+        return diameter;
+    }
+
+    /**
+     * Compute the diameter conversion factor for mascot-relative sizing.
+     * When diameterUnit='mascot', config diameter 1.0 = exactly mascot width.
+     * @param {string} modelName - Model name
+     * @param {string} elementType - Element type
+     * @param {number} scaleMultiplier - The config scale value
+     * @returns {number} Factor to multiply config diameter by
+     * @private
+     */
+    _computeMascotDiameterFactor(modelName, elementType, scaleMultiplier) {
+        const geomDiameter = this._getModelGeometryDiameter(modelName, elementType);
+        const sizeFraction = getModelSizeFraction(modelName);
+        // baseScale = sizeFraction.base * mascotRadius * scaleMultiplier
+        // worldDiameter = geomDiameter * baseScale * interpScale * diameter
+        // For worldDiameter = 2*mascotRadius when diameter=1.0, interpScale=1.0:
+        // 2*mascotRadius = geomDiameter * sizeFraction.base * mascotRadius * scaleMultiplier * 1.0
+        // factor = 2 / (geomDiameter * sizeFraction.base * scaleMultiplier)
+        const factor = 2.0 / (geomDiameter * sizeFraction.base * scaleMultiplier);
+        DEBUG && console.log(`[ElementInstancedSpawner] Mascot diameter factor for ${modelName}: ${factor.toFixed(3)} (geom=${geomDiameter.toFixed(3)}, sizeFrac=${sizeFraction.base.toFixed(4)}, scale=${scaleMultiplier})`);
+        return factor;
+    }
+
+    /**
      * Expand formation into per-element configurations.
      * Delegates to shared utility function.
      * @param {Object} parsedConfig - Parsed axis-travel config
@@ -1123,18 +1179,27 @@ export class ElementInstancedSpawner {
             // Include per-element scaleMultiplier from formation (for mandala varied ring sizes)
             const formationScaleMultiplier = initialResult.scaleMultiplier ?? 1.0;
             const initialScale = baseScale * initialResult.scale * formationScaleMultiplier;
+
+            // Mascot-relative diameter: compute factor so diameter 1.0 = mascot width
+            const diameterFactor = axisConfig.diameterUnit === 'mascot'
+                ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
+                : 1.0;
+
             // Scale XY (circular face) by diameter, Z (thickness) stays uniform
             // Ring model is in XY plane - diameter affects the circular face
+            const effectiveDiameter = initialResult.diameter * diameterFactor;
             _temp.scale.set(
-                initialScale * initialResult.diameter,
-                initialScale * initialResult.diameter,
+                initialScale * effectiveDiameter,
+                initialScale * effectiveDiameter,
                 initialScale
             );
 
             // Determine ring orientation:
-            // 1. Use orientation from config if specified
-            // 2. Fall back to model's default orientation from ElementSizing
-            const configOrientation = axisConfig.orientation;
+            // 1. Use per-model orientationOverride from modelOverrides if specified
+            // 2. Use orientation from axis-travel config if specified
+            // 3. Fall back to model's default orientation from ElementSizing
+            const perModelOrientation = modelOverrides[modelName]?.orientationOverride;
+            const configOrientation = perModelOrientation || axisConfig.orientation;
             const modelOrientation = getModelOrientation(modelName);
             const orientationMode = configOrientation || modelOrientation.mode || 'outward';
             DEBUG && console.log(`[ElementInstancedSpawner] Ring orientation for ${modelName}: config=${configOrientation}, model=${modelOrientation.mode}, resolved=${orientationMode}`);
@@ -1247,7 +1312,8 @@ export class ElementInstancedSpawner {
                     axisTravel: {
                         config: axisConfig,
                         formationData,
-                        initialResult
+                        initialResult,
+                        diameterFactor
                     }
                 });
                 spawnedIds.push(elementId);
@@ -1314,16 +1380,33 @@ export class ElementInstancedSpawner {
             // Calculate scale (sizeVariance override: 0 = identical sizes for relay rings)
             const scaleMultiplier = anchorConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier, spawnMode.sizeVariance);
-            _temp.scale.setScalar(baseScale);
 
-            // Apply orientation - use camera quaternion directly for camera-facing elements
+            // Mascot-relative diameter: compute factor so diameter 1.0 = mascot width
+            const diameterFactor = anchorConfig.diameterUnit === 'mascot'
+                ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
+                : 0;
+
+            if (diameterFactor) {
+                // Non-uniform scale: XY = ring face diameter, Z = thickness
+                const effectiveDiameter = (anchorConfig.diameter || 1.0) * diameterFactor;
+                _temp.scale.set(
+                    baseScale * effectiveDiameter,
+                    baseScale * effectiveDiameter,
+                    baseScale
+                );
+            } else {
+                _temp.scale.setScalar(baseScale);
+            }
+
+            // Apply orientation - check per-model override first, then anchor config
+            const anchorOrientMode = modelOverrides[modelName]?.orientationOverride || anchorConfig.orientation;
             let rotation;
-            if (anchorConfig.orientation === 'camera' && this.camera) {
+            if (anchorOrientMode === 'camera' && this.camera) {
                 // Billboard: copy camera quaternion so element faces toward camera
                 rotation = this.camera.quaternion.clone();
             } else {
                 // Use static orientation from shared utility
-                const orientRot = getAnchorOrientation(anchorConfig.orientation);
+                const orientRot = getAnchorOrientation(anchorOrientMode);
                 _temp.euler.set(orientRot.x, orientRot.y, orientRot.z);
                 rotation = _temp.quaternion.setFromEuler(_temp.euler).clone();
             }
@@ -1358,7 +1441,7 @@ export class ElementInstancedSpawner {
                     scale: baseScale,
                     animState,
                     // Camera billboard: if true, element always faces camera
-                    cameraOrientation: anchorConfig.orientation === 'camera',
+                    cameraOrientation: anchorOrientMode === 'camera',
                     // Camera offset: push toward camera by N × mascotRadius (prevents z-fighting with mascot)
                     cameraOffset: anchorConfig.cameraOffset || 0,
                     // World-space orientation: needed for camera-facing AND for static orientations
@@ -1369,6 +1452,9 @@ export class ElementInstancedSpawner {
                     anchor: {
                         config: anchorConfig,
                         baseY: anchorPos.baseY,
+                        // Mascot-relative diameter factor (0 = uniform scale, >0 = non-uniform XY)
+                        diameterFactor: diameterFactor || 0,
+                        diameter: anchorConfig.diameter || 1.0,
                         // Scale animation: interpolate from startScale to endScale over lifetime
                         startScale: anchorConfig.startScale,
                         endScale: anchorConfig.endScale,
@@ -1403,8 +1489,8 @@ export class ElementInstancedSpawner {
         // Parse config using RadialBurstMode utility
         const burstConfig = parseRadialBurstConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
 
-        // Parse orientation from radialBurst config
-        const orientationMode = spawnMode.radialBurst?.orientation || 'vertical';
+        // Parse orientation from radialBurst config (per-model override resolved in loop)
+        const baseOrientationMode = spawnMode.radialBurst?.orientation || 'vertical';
 
         // Check for animation configuration (gesture glow, shader animations)
         const animation = spawnMode.animation || {};
@@ -1434,7 +1520,8 @@ export class ElementInstancedSpawner {
                 initialState.position.z
             ).clone();
 
-            // Apply orientation - use camera quaternion for camera-facing elements
+            // Apply orientation - per-model override > burst config
+            const orientationMode = modelOverrides[modelName]?.orientationOverride || baseOrientationMode;
             let rotation;
             if (orientationMode === 'camera' && this.camera) {
                 // Billboard: copy camera quaternion so element faces toward camera
@@ -1542,8 +1629,9 @@ export class ElementInstancedSpawner {
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
             _temp.scale.setScalar(baseScale);
 
-            // Determine ring orientation
-            const configOrientation = orbitConfig.orientation;
+            // Determine ring orientation (per-model override > orbit config > model default)
+            const perModelOrbitOrientation = modelOverrides[modelName]?.orientationOverride;
+            const configOrientation = perModelOrbitOrientation || orbitConfig.orientation;
             const modelOrientation = getModelOrientation(modelName);
             const orientationMode = configOrientation || modelOrientation.mode || 'vertical';
 
@@ -1946,14 +2034,19 @@ export class ElementInstancedSpawner {
                 // Apply calculated position
                 finalPosition = result.position;
 
-                // Apply scale with diameter (XY circular face) and animation fadeProgress
+                // Apply scale with diameter (XY circular face)
                 // Ring model is in XY plane - diameter affects the circular face, Z is thickness
                 // Include per-element scaleMultiplier from formation (for mandala varied ring sizes)
+                // NOTE: Do NOT multiply by fadeProgress here — that causes shrinking on exit.
+                // Exit animations that want scale changes use animState.scale directly.
+                // fadeProgress is only used for enter animation (growing in).
                 const formationScaleMultiplier = result.scaleMultiplier ?? 1.0;
-                const animScale = baseScale * result.scale * formationScaleMultiplier * animState.fadeProgress;
+                const enterFade = animState.state === AnimationStates.ENTERING ? animState.fadeProgress : 1.0;
+                const animScale = baseScale * result.scale * formationScaleMultiplier * enterFade;
+                const effectiveDiameter = result.diameter * (axisTravel.diameterFactor || 1.0);
                 _temp.scale.set(
-                    animScale * result.diameter,
-                    animScale * result.diameter,
+                    animScale * effectiveDiameter,
+                    animScale * effectiveDiameter,
                     animScale
                 );
                 finalScale = animScale;
@@ -2012,6 +2105,16 @@ export class ElementInstancedSpawner {
                     finalScale = isProceduralElement
                         ? baseScale * scaleInterp * animState.fadeProgress
                         : baseScale * scaleInterp * animState.scale;
+                }
+
+                // Mascot-relative diameter: apply non-uniform XY scale for ring face
+                if (data.anchor.diameterFactor) {
+                    const effectiveDiameter = data.anchor.diameter * data.anchor.diameterFactor;
+                    _temp.scale.set(
+                        finalScale * effectiveDiameter,
+                        finalScale * effectiveDiameter,
+                        finalScale
+                    );
                 }
             } else if (data.radialBurst) {
                 // RADIAL-BURST MODE: Update position using RadialBurstMode utility
@@ -2139,8 +2242,8 @@ export class ElementInstancedSpawner {
 
             // Update instance transform in pool
             // Note: updateInstanceTransform accepts both scalar and Vector3 scale
-            if (axisTravel) {
-                // Axis-travel uses non-uniform scale (diameter affects XY circular face)
+            if (axisTravel || (data.anchor && data.anchor.diameterFactor)) {
+                // Non-uniform scale: diameter affects XY circular face, Z stays at base
                 pool.updateInstanceTransform(
                     elementId,
                     finalPosition,

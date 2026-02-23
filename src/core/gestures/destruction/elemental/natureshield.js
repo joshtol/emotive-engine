@@ -5,26 +5,59 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Natureshield gesture - living armor with vine cage and organic coating
+ * @fileoverview Natureshield gesture - gyroscopic vine rings protecting mascot
  * @module gestures/destruction/elemental/natureshield
  *
- * CONCEPT: A living organic shield with 3 distinct defense layers:
- * Layer 1: 8 mixed [vine-twist, thorn-curl, leaf-bunch, vine-cluster] surface-spawn on mascot
- *          — organic armor growing directly on the body (like iceencase)
- * Layer 2: 4 vine-rings orbiting at waist (structural cage perimeter)
- * Layer 3: Single vine-ring flat above head (dome canopy)
+ * CONCEPT: Six large vine-rings anchored at the mascot center on different axes,
+ * each tumbling/flipping on an axis PERPENDICULAR to its plane — true gyroscopic
+ * motion. Adjacent rings flip in opposite directions.
  *
- * Like iceencase: mixed models surface-spawned on mascot body.
- * Plus vine-ring structural cage for visible protection boundary.
+ * Ring 1: Flat — flips on X (tumbles front-to-back) CW
+ * Ring 2: Vertical (0°) — flips on Y (tumbles around vertical) CCW
+ * Ring 3: Vertical (60°) — flips on X CW
+ * Ring 4: Vertical (120°) — flips on Y CCW
+ * Ring 5: Tilted 45° — flips on X CW
+ * Ring 6: Tilted -45° — flips on Y CCW
+ *
+ * Each ring FLIPS through space rather than spinning in-place like a record.
+ * This creates the classic gyroscope / gimbal look.
+ *
+ * VISUAL DIAGRAM (oblique view):
+ *       ╱───╲╱───╲
+ *      │╱─╲  ╱─╲ │
+ *      ││ ╱★╲ │ ││    ← Six rings tumbling on different axes
+ *      │╲─╱  ╲─╱ │       flipping to sweep out a protective sphere
+ *       ╲───╱╲───╱
  */
 
 import { buildNatureEffectGesture } from './natureEffectFactory.js';
+
+// Shared animation for all gyroscopic rings
+const SHARED_RING_ANIMATION = {
+    disappearAt: 0.9,
+    enter: { type: 'scale', duration: 0.15, easing: 'easeOutBack' },
+    exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
+    procedural: { scaleSmoothing: 0.08, geometryStability: true },
+    pulse: { amplitude: 0.03, frequency: 2, easing: 'easeInOut', sync: 'global' },
+    emissive: { min: 0.5, max: 1.0, frequency: 2, pattern: 'sine' },
+    cutout: {
+        strength: 0.4,
+        primary: { pattern: 0, scale: 3.0, weight: 1.0 },
+        secondary: { pattern: 3, scale: 2.0, weight: 0.3 },
+        blend: 'add',
+        travel: 'angular',
+        travelSpeed: 0.5,
+        strengthCurve: 'constant'
+    },
+    grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+    blending: 'normal',
+};
 
 const NATURESHIELD_CONFIG = {
     name: 'natureshield',
     emoji: '🛡️',
     type: 'blending',
-    description: 'Living shield — organic armor grows on body, vine cage orbits around',
+    description: 'Gyroscopic vine cage — six tumbling rings form a protective sphere',
     duration: 3000,
     beats: 4,
     intensity: 1.0,
@@ -32,151 +65,165 @@ const NATURESHIELD_CONFIG = {
     growth: 0.7,
 
     spawnMode: [
-        // ── Layer 1: 8 mixed organic pieces surface-spawned (living armor) ──
-        // Like iceencase: multiple model types growing ON mascot surface
-        {
-            type: 'surface',
-            pattern: 'shell',
-            embedDepth: 0.15,
-            cameraFacing: 0.35,
-            clustering: 0.1,
-            minDistance: 0.1,
-            count: 8,
-            scale: 1.2,
-            models: ['vine-twist', 'thorn-curl', 'leaf-bunch', 'vine-cluster'],
-            animation: {
-                appearAt: 0.0,
-                disappearAt: 0.85,
-                stagger: 0.04,
-                enter: {
-                    type: 'grow',
-                    duration: 0.15,
-                    easing: 'easeOutQuad'
-                },
-                exit: {
-                    type: 'shrink',
-                    duration: 0.2,
-                    easing: 'easeInQuad'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                pulse: {
-                    amplitude: 0.04,
-                    frequency: 1.5,
-                    easing: 'easeInOut',
-                    sync: 'global'
-                },
-                emissive: { min: 0.3, max: 0.7, frequency: 1.5, pattern: 'sine' },
-                rotate: {
-                    axis: 'y',
-                    speed: 0.006,
-                    oscillate: true,
-                    range: Math.PI / 20
-                },
-                scaleVariance: 0.2,
-                blending: 'normal',
-                renderOrder: 4,
-                modelOverrides: {
-                    'vine-twist': {
-                        scaling: { mode: 'non-uniform', axes: { x: 1.2, y: 0.8, z: 1.2 } }
-                    },
-                    'thorn-curl': {
-                        scaling: { mode: 'non-uniform', axes: { x: 0.85, y: 1.5, z: 0.85 } }
-                    },
-                    'leaf-bunch': {
-                        scaling: { mode: 'non-uniform', axes: { x: 1.3, y: 0.7, z: 1.3 } }
-                    },
-                    'vine-cluster': {
-                        scaling: { mode: 'non-uniform', axes: { x: 0.8, y: 1.4, z: 0.8 } }
-                    }
-                }
-            }
-        },
-
-        // ── Layer 2: 4 vine-rings orbiting at waist (structural cage) ──────
-        {
-            type: 'orbit',
-            orbit: {
-                height: 0.0,
-                endHeight: 0.0,
-                radius: 0.8,
-                endRadius: 0.8,
-                speed: 0.3,
-                easing: 'linear',
-                startScale: 1.0,
-                endScale: 1.0,
-                orientation: 'camera'
-            },
-            formation: {
-                type: 'ring',
-                count: 4,
-                arcOffset: 90
-            },
-            count: 4,
-            scale: 1.5,
-            models: ['vine-ring'],
-            animation: {
-                appearAt: 0.05,
-                disappearAt: 0.8,
-                stagger: 0.03,
-                enter: { type: 'scale', duration: 0.15, easing: 'easeOut' },
-                exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
-                pulse: { amplitude: 0.04, frequency: 2, easing: 'easeInOut' },
-                emissive: { min: 0.5, max: 0.9, frequency: 2, pattern: 'sine' },
-                cutout: {
-                    strength: 0.4,
-                    primary: { pattern: 0, scale: 3.0, weight: 1.0 },
-                    secondary: { pattern: 3, scale: 2.0, weight: 0.3 },
-                    blend: 'add',
-                    travel: 'angular',
-                    travelSpeed: 0.5,
-                    strengthCurve: 'constant'
-                },
-                grain: { type: 3, strength: 0.1, scale: 0.3, speed: 0.4, blend: 'multiply' },
-                rotate: [
-                    { axis: 'z', rotations: 0.3, phase: 0 },
-                    { axis: 'z', rotations: -0.25, phase: 90 },
-                    { axis: 'z', rotations: 0.35, phase: 180 },
-                    { axis: 'z', rotations: -0.3, phase: 270 }
-                ],
-                blending: 'normal',
-                renderOrder: 10,
-                modelOverrides: {
-                    'vine-ring': {
-                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        },
-
-        // ── Layer 3: Dome cap (flat ring above head) ────────────────────────
+        // ── Ring 1: Flat — flips on X axis (front-to-back tumble) CW ─────
         {
             type: 'anchor',
             anchor: {
-                landmark: 'above',
-                offset: { x: 0, y: 0.15, z: 0 },
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
                 orientation: 'flat',
-                bob: { amplitude: 0.015, frequency: 0.5 }
+                bob: { amplitude: 0.008, frequency: 0.3 }
             },
             count: 1,
-            scale: 1.8,
+            scale: 4.5,
             models: ['vine-ring'],
             animation: {
-                appearAt: 0.1,
-                disappearAt: 0.75,
-                enter: { type: 'scale', duration: 0.2, easing: 'easeOut' },
-                exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
-                emissive: { min: 0.6, max: 1.0, frequency: 2, pattern: 'sine' },
-                rotate: { axis: 'z', rotations: 0.25, phase: 0 },
-                blending: 'normal',
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.0,
+                rotate: { axis: 'x', rotations: 0.75, phase: 0 },
                 renderOrder: 6,
                 modelOverrides: {
                     'vine-ring': {
-                        shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.4, arcCount: 2 },
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 },
                         orientationOverride: 'flat'
+                    }
+                }
+            }
+        },
+
+        // ── Ring 2: Vertical (0°) — flips on Y axis (vertical tumble) CCW
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.35 }
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.03,
+                rotate: { axis: 'y', rotations: -0.75, phase: 0 },
+                renderOrder: 8,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
+                        orientationOverride: 'vertical'
+                    }
+                }
+            }
+        },
+
+        // ── Ring 3: Vertical (60°) — flips on X axis CW ─────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.4 }
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.06,
+                rotate: { axis: 'x', rotations: 0.75, phase: 60 },
+                renderOrder: 10,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 },
+                        orientationOverride: 'vertical'
+                    }
+                }
+            }
+        },
+
+        // ── Ring 4: Vertical (120°) — flips on Y axis CCW ───────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.45 }
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.09,
+                rotate: { axis: 'y', rotations: -0.75, phase: 120 },
+                renderOrder: 12,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
+                        orientationOverride: 'vertical'
+                    }
+                }
+            }
+        },
+
+        // ── Ring 5: Tilted 45° — flips on X axis CW ─────────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'radial',
+                bob: { amplitude: 0.008, frequency: 0.38 }
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.12,
+                rotate: { axis: 'x', rotations: 0.75, phase: 45 },
+                renderOrder: 14,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 },
+                        orientationOverride: 'radial'
+                    }
+                }
+            }
+        },
+
+        // ── Ring 6: Tilted -45° — flips on Y axis CCW ───────────────────
+        {
+            type: 'anchor',
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'radial',
+                bob: { amplitude: 0.008, frequency: 0.42 }
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['vine-ring'],
+            animation: {
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.15,
+                rotate: { axis: 'y', rotations: -0.75, phase: -45 },
+                atmospherics: [{
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.2,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                }],
+                renderOrder: 16,
+                modelOverrides: {
+                    'vine-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 },
+                        orientationOverride: 'radial'
                     }
                 }
             }

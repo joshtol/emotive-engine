@@ -38,12 +38,15 @@ const NATUREROOT_CONFIG = {
         axisTravel: {
             axis: 'y',
             start: 'center',
-            end: 'below',
+            end: 'bottom',
+            endOffset: -0.1,
             easing: 'easeIn',
             startScale: 1.0,
-            endScale: 0.7,
-            startDiameter: 1.8,
+            endScale: 1.0,
+            startDiameter: 1.0,
             endDiameter: 1.0,
+            diameterUnit: 'mascot',
+            holdAt: 0.75,
             orientation: 'flat'
         },
         formation: {
@@ -54,11 +57,11 @@ const NATUREROOT_CONFIG = {
             phaseOffset: 0.03
         },
         count: 5,
-        scale: 1.0,
+        scale: 1.3,
         models: ['vine-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.75,
+            disappearAt: 0.95,
             stagger: 0.06,
             enter: {
                 type: 'scale',
@@ -67,7 +70,7 @@ const NATUREROOT_CONFIG = {
             },
             exit: {
                 type: 'fade',
-                duration: 0.35,
+                duration: 0.1,
                 easing: 'easeIn'
             },
             procedural: {
@@ -110,15 +113,21 @@ const NATUREROOT_CONFIG = {
                 blend: 'multiply'
             },
             atmospherics: [{
-                preset: 'earth-dust',
+                preset: 'falling-leaves',
                 targets: null,
-                anchor: 'below',
+                anchor: 'around',
                 intensity: 0.4,
-                sizeScale: 1.0,
+                sizeScale: 0.9,
                 progressCurve: 'sustain',
                 velocityInheritance: 0.3
             }],
-            rotate: { axis: 'z', rotations: 0.5, phase: 0 },
+            rotate: [
+                { axis: 'z', rotations: 0.5, phase: 0 },
+                { axis: 'z', rotations: -0.8, phase: 72 },
+                { axis: 'z', rotations: 0.6, phase: 144 },
+                { axis: 'z', rotations: -0.4, phase: 216 },
+                { axis: 'z', rotations: 0.7, phase: 288 }
+            ],
             scaleVariance: 0.1,
             lifetimeVariance: 0.1,
             blending: 'normal',

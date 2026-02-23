@@ -31,19 +31,22 @@ const NATUREENTANGLE_CONFIG = {
     growth: 0.7,
 
     spawnMode: [
-        // ── Layer 1: 6 flat vine-rings descending + constricting (wrapping) ──
-        // Rings travel from above → feet, narrowing diameter like tightening vines
+        // ── Layer 1: 6 flat vine-rings descending → feet, wrapping entire body ──
+        // Rings descend from above, squeeze to mascot width, and HOLD (no shrink)
         {
             type: 'axis-travel',
             axisTravel: {
                 axis: 'y',
                 start: 'above',
-                end: 'feet',
+                end: 'center',
+                endOffset: -0.15,
                 easing: 'easeOut',
                 startScale: 1.0,
-                endScale: 0.7,
-                startDiameter: 2.5,
-                endDiameter: 0.8,
+                endScale: 1.0,
+                startDiameter: 1.5,
+                endDiameter: 1.0,
+                diameterUnit: 'mascot',
+                holdAt: 0.75,
                 orientation: 'flat'
             },
             formation: {
@@ -54,11 +57,11 @@ const NATUREENTANGLE_CONFIG = {
                 phaseOffset: 0.03
             },
             count: 6,
-            scale: 1.0,
+            scale: 2.0,
             models: ['vine-ring'],
             animation: {
                 appearAt: 0.0,
-                disappearAt: 0.8,
+                disappearAt: 0.95,
                 stagger: 0.05,
                 enter: {
                     type: 'scale',
@@ -67,7 +70,7 @@ const NATUREENTANGLE_CONFIG = {
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.3,
+                    duration: 0.1,
                     easing: 'easeIn'
                 },
                 procedural: {
@@ -103,7 +106,14 @@ const NATUREENTANGLE_CONFIG = {
                     strengthCurve: 'fadeIn'
                 },
                 grain: { type: 3, strength: 0.2, scale: 0.3, speed: 0.8, blend: 'multiply' },
-                rotate: { axis: 'z', rotations: 1.0, phase: 0 },
+                rotate: [
+                    { axis: 'z', rotations: 0.8, phase: 0 },
+                    { axis: 'z', rotations: -1.2, phase: 45 },
+                    { axis: 'z', rotations: 1.5, phase: 120 },
+                    { axis: 'z', rotations: -0.6, phase: 200 },
+                    { axis: 'z', rotations: 1.0, phase: 270 },
+                    { axis: 'z', rotations: -1.4, phase: 160 }
+                ],
                 blending: 'normal',
                 renderOrder: 12,
                 modelOverrides: {
@@ -116,7 +126,15 @@ const NATUREENTANGLE_CONFIG = {
                         },
                         orientationOverride: 'flat'
                     }
-                }
+                },
+                atmospherics: [{
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                }]
             }
         },
 
