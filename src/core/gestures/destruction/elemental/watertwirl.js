@@ -137,7 +137,7 @@ const WATERTWIRL_CONFIG = {
     glowColor: [0.3, 0.6, 1.0],
     glowIntensityMin: 0.7,
     glowIntensityMax: 1.2,
-    glowFlickerRate: 6,
+    glowPulseRate: 6,
     scaleVibration: 0.025,
     scaleFrequency: 6,
     scaleContract: 0.05,

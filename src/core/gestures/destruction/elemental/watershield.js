@@ -114,7 +114,7 @@ const WATERSHIELD_CONFIG = {
     glowColor: [0.25, 0.55, 0.9],
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.85,
-    glowFlickerRate: 2,
+    glowPulseRate: 2,
     scaleVibration: 0.005,
     scaleFrequency: 2,
     tremor: 0.002,

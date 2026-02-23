@@ -460,7 +460,7 @@ const WATERMEDITATION_CONFIG = {
     glowColor: [0.4, 0.7, 1.0],
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.9,
-    glowFlickerRate: 2,
+    glowPulseRate: 2,
     scaleVibration: 0,
     scaleFrequency: 0,
     scaleContract: 0,

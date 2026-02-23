@@ -279,7 +279,7 @@ export function buildWaterEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // GLOW - Wet sheen, pulsing
                 // ═══════════════════════════════════════════════════════════════
-                const glowTime = time * cfg.glowPulseRate * Math.PI * 2;
+                const glowTime = time * (cfg.glowPulseRate || 2) * Math.PI * 2;
                 let glowPulse = Math.sin(glowTime) * 0.5 + 0.5; // 0-1
 
                 // Impact burst glow
