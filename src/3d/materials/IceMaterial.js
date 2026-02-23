@@ -5,125 +5,63 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Standalone ice material with melt-driven behavior
+ * @fileoverview Consuming ice/frost overlay for mascot mesh
  * @author Emotive Engine Team
  * @module materials/IceMaterial
  *
- * ## Master Parameter: melt (0-1)
+ * ## Master Parameters
  *
- * | Melt | Visual                       | Physics           | Example      |
- * |------|------------------------------|-------------------|--------------|
- * | 0.0  | Sharp refraction, frost      | Brittle, heavy    | Solid ice    |
- * | 0.5  | Softer edges, dripping       | Slippery, cracking| Melting      |
- * | 1.0  | Transitions to water         | Water physics     | Slush        |
+ * melt (0-1): Controls maximum consumption coverage and frost appearance
+ *   0.0 = Deep frozen, heavy frost | 0.5 = Standard ice | 1.0 = Barely frozen, thin ice
  *
- * At melt > 0.8, the material transitions to water behavior.
+ * progress (0-1): Gesture progress drives the SPREAD of ice over time
+ *   0.0 = Frost just beginning to creep from edges
+ *   1.0 = Full melt-dependent consumption achieved
  *
- * ## Usage
- *
- * Standalone:
- *   const iceMesh = new THREE.Mesh(geometry, createIceMaterial({ melt: 0.0 }));
- *
- * Shatter system:
- *   shatterSystem.shatter(mesh, dir, { elemental: 'ice', elementalParam: 0.1 });
+ * Consuming ice: frost creeps inward from silhouette edges using multi-scale FBM noise
+ * on object-space position. Fine frost tendrils reach ahead of the main consumption
+ * front. A thin cold emission rim marks the freezing boundary. Consumed areas show
+ * darkened surface with frost patches and sharp crystalline specular highlights.
  */
 
 import * as THREE from 'three';
-import { createWaterMaterial, getWaterPhysics } from './WaterMaterial.js';
+import { getWaterPhysics } from './WaterMaterial.js';
 
-/**
- * Interpolate between values based on parameter
- */
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
 /**
- * Get ice color based on melt level
- */
-function getIceColor(melt) {
-    const color = new THREE.Color();
-
-    if (melt < 0.3) {
-        // Solid ice - saturated blue (visible frosted tint over mascot)
-        color.setRGB(0.3, 0.5, 0.75);
-    } else if (melt < 0.7) {
-        // Melting - shifts toward cyan
-        const t = (melt - 0.3) / 0.4;
-        color.setRGB(
-            lerp(0.3, 0.35, t),
-            lerp(0.5, 0.55, t),
-            lerp(0.75, 0.78, t)
-        );
-    } else {
-        // Nearly water - lighter cyan
-        color.setRGB(0.35, 0.55, 0.78);
-    }
-
-    return color;
-}
-
-/**
- * Create an ice material with melt-driven appearance
- *
- * At high melt (>0.8), returns a water material instead (phase transition)
+ * Create an ice material with consuming frost effect
  *
  * @param {Object} options
- * @param {number} [options.melt=0.0] - Master parameter (0=frozen, 0.5=melting, 1=slush)
- * @param {THREE.Color} [options.color] - Override color (otherwise derived from melt)
- * @param {number} [options.opacity=0.9] - Base opacity
+ * @param {number} [options.melt=0.0] - Max consumption coverage (0=deep frost, 1=thin ice)
+ * @param {number} [options.opacity=0.7] - Base opacity
  * @returns {THREE.ShaderMaterial}
  */
 export function createIceMaterial(options = {}) {
     const {
         melt = 0.0,
-        color = null,
-        opacity = 0.85,
-        overlay = false  // When true, use additive blending for overlay effect
+        opacity = 0.7
     } = options;
 
-    // Phase transition: high melt = water
-    if (melt > 0.8) {
-        const waterViscosity = lerp(0.6, 0.3, (melt - 0.8) / 0.2);
-        return createWaterMaterial({
-            viscosity: waterViscosity,
-            color: color || new THREE.Color(0.5, 0.75, 1.0),
-            opacity
-        });
-    }
-
-    // Derive properties from melt
-    const iceColor = color || getIceColor(melt);
-    const transmission = lerp(0.7, 0.9, melt);           // More transparent as melts
-    const roughness = lerp(0.02, 0.3, melt);             // Gets rougher as melts
-    const frostAmount = lerp(1.0, 0.0, melt);            // Frost fades
-    const internalCracks = lerp(0.8, 0.2, melt);         // Internal cracks fade
-    const ior = lerp(1.31, 1.33, melt);                  // Ice → water IOR
-    const subsurfaceScatter = lerp(0.3, 0.1, melt);      // Less scatter when wet
+    const pulseSpeed = lerp(0.6, 1.2, melt);
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
-            uColor: { value: iceColor },
-            uTransmission: { value: transmission },
-            uRoughness: { value: roughness },
-            uFrostAmount: { value: frostAmount },
-            uInternalCracks: { value: internalCracks },
-            uIOR: { value: ior },
-            uSubsurfaceScatter: { value: subsurfaceScatter },
-            uOpacity: { value: opacity },
-            uTime: { value: 0 },
             uMelt: { value: melt },
-            uOverlay: { value: overlay ? 1.0 : 0.0 }
+            uProgress: { value: 0 },
+            uPulseSpeed: { value: pulseSpeed },
+            uOpacity: { value: opacity },
+            uTime: { value: 0 }
         },
 
         vertexShader: /* glsl */`
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
 
             void main() {
-                vUv = uv;
                 vPosition = position;
                 vNormal = normalMatrix * normal;
 
@@ -135,172 +73,152 @@ export function createIceMaterial(options = {}) {
         `,
 
         fragmentShader: /* glsl */`
-            uniform vec3 uColor;
-            uniform float uTransmission;
-            uniform float uRoughness;
-            uniform float uFrostAmount;
-            uniform float uInternalCracks;
-            uniform float uSubsurfaceScatter;
+            uniform float uMelt;
+            uniform float uProgress;
+            uniform float uPulseSpeed;
             uniform float uOpacity;
             uniform float uTime;
-            uniform float uMelt;
-            uniform float uOverlay;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
 
-            // Noise functions for frost and cracks
-            float hash(vec3 p) {
-                p = fract(p * 0.3183099 + 0.1);
-                p *= 17.0;
-                return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
             }
 
-            float noise(vec3 p) {
-                vec3 i = floor(p);
-                vec3 f = fract(p);
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
                 f = f * f * (3.0 - 2.0 * f);
-
                 return mix(
-                    mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
-                        mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-                    mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-                        mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
-                    f.z
+                    mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                    mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x),
+                    f.y
                 );
             }
 
-            // FBM for frost: layered noise gives organic frost patches
-            float fbm3(vec3 p) {
+            // 3-octave FBM for frost patches
+            float fbm(vec2 p) {
                 float f = 0.0;
-                f += 0.5000 * noise(p); p *= 2.01;
-                f += 0.2500 * noise(p); p *= 2.02;
-                f += 0.1250 * noise(p);
+                f += 0.50 * noise(p); p *= 2.01;
+                f += 0.25 * noise(p); p *= 2.02;
+                f += 0.125 * noise(p);
                 return f / 0.875;
             }
 
             void main() {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
+                float NdotV = abs(dot(normal, viewDir));
+                float edgeness = 1.0 - NdotV;
 
-                // Fresnel effect
-                float fresnel = pow(1.0 - abs(dot(normal, viewDir)), 3.0);
+                // ═══ CONSUMPTION FIELD ═══
+                vec2 pos = vPosition.xz * 2.5 + vec2(vPosition.y * 0.8, -vPosition.y * 0.6);
 
-                // Frost pattern: noise-based patches spreading from edges inward.
-                // NOT Voronoi cells — frost forms as organic crystalline coating.
-                // Fresnel drives where frost appears: thick at edges, thin at face-on.
-                float frostMask = 0.0;
-                if (uFrostAmount > 0.01) {
-                    // Fresnel-driven spread: frost creeps inward from silhouette edges
-                    float edgeness = pow(1.0 - abs(dot(normal, viewDir)), 1.5);
+                // Slow creeping — ice spreads deliberately
+                float n1 = noise(pos * 1.5 + uTime * 0.06);
+                float n2 = noise(pos * 4.0 - uTime * 0.08);
+                float n3 = noise(pos * 9.0 + uTime * 0.12);
+                float consumeField = n1 * 0.50 + n2 * 0.30 + n3 * 0.20;
 
-                    // Multi-scale noise for organic frost texture
-                    float frostNoise = fbm3(vec3(vUv * 6.0, 0.0));
-                    float fineNoise = noise(vec3(vUv * 18.0, 0.5));
+                // Fresnel-dominant bias: ice encases from edges inward (no gravity)
+                consumeField += edgeness * 0.25;
 
-                    // Frost threshold: edges always frosted, interior only where noise peaks
-                    // edgeness=1 → frost everywhere, edgeness=0 → only noise peaks > 0.65
-                    float frostThreshold = mix(0.65, 0.0, edgeness);
-                    float frost = smoothstep(frostThreshold, frostThreshold + 0.15, frostNoise);
+                // ═══ DISSOLVE IN ═══
+                float rawDissolve = smoothstep(0.0, 0.40, uProgress);
+                float dissolveIn = rawDissolve * rawDissolve;
 
-                    // Fine detail within frost patches
-                    frost += fineNoise * 0.2 * frost;
+                // ═══ PROGRESS-DRIVEN THRESHOLD ═══
+                float rawRamp = smoothstep(0.05, 0.95, uProgress);
+                float progressRamp = rawRamp * rawRamp;
 
-                    frostMask = frost * uFrostAmount;
-                }
+                // Inverted from fire/water: low melt = MORE coverage
+                float targetThreshold = mix(0.15, 0.85, uMelt);
+                float threshold = mix(0.95, targetThreshold, progressRamp);
 
-                // Crack pattern: thin bright lines using noise gradient magnitude
-                float crackIntensity = 0.0;
-                if (uInternalCracks > 0.01) {
-                    float crackNoise = fbm3(vec3(vUv * 4.0 + 0.5, 0.3));
-                    // High-frequency detail for crack sharpness
-                    float crackDetail = noise(vec3(vUv * 12.0, 0.7));
-                    // Isolines: thin bright bands where noise crosses thresholds
-                    float crack1 = 1.0 - smoothstep(0.0, 0.02, abs(crackNoise - 0.4));
-                    float crack2 = 1.0 - smoothstep(0.0, 0.015, abs(crackNoise - 0.6));
-                    crackIntensity = max(crack1, crack2 * 0.7) * uInternalCracks;
-                    crackIntensity *= crackDetail * 0.5 + 0.5; // Detail variation
-                }
+                float consumed = smoothstep(threshold, threshold - 0.05, consumeField);
 
-                float alpha;
-                vec3 finalColor;
+                // ═══ FROST TENDRILS ═══
+                // Crystalline feathered frost reaching ahead
+                float tendrilField = noise(pos * 10.0 + uTime * 0.10) * 0.6
+                                   + noise(pos * 16.0 - uTime * 0.07) * 0.4;
+                float tendrilThreshold = threshold + 0.10;
+                float tendrils = smoothstep(tendrilThreshold, tendrilThreshold - 0.03,
+                                            tendrilField + edgeness * 0.15);
+                // More tendrils when deeply frozen
+                tendrils *= 0.5 * smoothstep(0.0, 0.3, (1.0 - uMelt) * progressRamp + 0.2);
 
-                if (uOverlay > 0.5) {
-                    // OVERLAY MODE: Sparse highlights via additive blending
-                    // Only show frost patches, crack edges, and fresnel rim
-                    // No uniform wash - geometry-independent appearance
+                float iceMask = max(consumed, tendrils);
 
-                    // Fresnel gives strong rim/edge highlights
-                    float rimAlpha = pow(fresnel, 2.0) * 0.7;
+                // ═══ FROST PATCHES ═══
+                // FBM-driven frost crystals on frozen surface — white/blue patches
+                float frostNoise = fbm(pos * 4.0 + uTime * 0.02);
+                float frost = smoothstep(0.35, 0.60, frostNoise);
+                frost *= (1.0 - uMelt);  // Frost fades as ice melts
 
-                    // Frost patches give bright frost sparkle
-                    float frostAlpha = frostMask * 0.5;
+                // ═══ ICE DARKENING BASE ═══
+                // Cold blue-black base — darkens surface with icy tint
+                vec3 baseColor = vec3(0.02, 0.04, 0.10);
 
-                    // Crack edges give subtle structure
-                    float crackAlpha = crackIntensity * 0.3;
+                // Frost brightens consumed areas with white-blue crystalline patches
+                vec3 frostColor = vec3(0.4, 0.55, 0.75) * frost * 0.6;
 
-                    // Combine
-                    alpha = rimAlpha + frostAlpha + crackAlpha;
+                // ═══ SPECULAR HIGHLIGHTS ═══
+                // Sharp crystalline specular — colder, bluer than water
+                vec3 light1 = normalize(vec3(0.3, 1.0, 0.5));
+                vec3 half1 = normalize(light1 + viewDir);
+                float spec1 = pow(max(dot(normal, half1), 0.0), 160.0);
 
-                    // Color: cold blue for ice lines, not white
-                    finalColor = mix(uColor, vec3(0.4, 0.6, 0.85), fresnel * 0.6);
-                    finalColor += vec3(0.1, 0.18, 0.35) * frostMask;
-                    finalColor += vec3(0.05, 0.08, 0.15) * crackIntensity;
+                vec3 light2 = normalize(vec3(-0.5, 0.8, -0.3));
+                vec3 half2 = normalize(light2 + viewDir);
+                float spec2 = pow(max(dot(normal, half2), 0.0), 128.0);
 
-                    // Discard near-invisible pixels to avoid uniform wash
-                    if (alpha < 0.05) discard;
+                // Cold blue-white specular
+                vec3 specColor = vec3(1.6, 1.9, 2.4) * spec1
+                               + vec3(1.0, 1.2, 1.6) * spec2;
 
-                    // Clamp below bloom threshold
-                    finalColor = min(finalColor, vec3(0.78));
-                    alpha = clamp(alpha, 0.0, 0.7);
-                } else {
-                    // STANDALONE MODE: Full opaque ice material
-                    finalColor = uColor;
+                // ═══ FRESNEL REFLECTION ═══
+                // Ice is very reflective at glancing angles
+                float fresnel = pow(edgeness, 2.0) * progressRamp;
+                vec3 fresnelColor = vec3(0.6, 0.8, 1.2) * fresnel * 0.7;
 
-                    // Frost patches whiten the surface
-                    vec3 frostWhite = vec3(0.6, 0.72, 0.82);
-                    finalColor = mix(finalColor, frostWhite, frostMask * 0.5);
+                // ═══ EDGE EMISSION ═══
+                // Cold blue glow at freezing boundary
+                float edgeBand = smoothstep(threshold - 0.05, threshold - 0.01, consumeField)
+                               * smoothstep(threshold + 0.03, threshold, consumeField);
+                float pulse = 0.90 + 0.10 * sin(uTime * uPulseSpeed);
+                edgeBand *= pulse;
 
-                    // Cracks brighten along fracture lines
-                    vec3 crackColor = uColor * 0.3;
-                    finalColor = mix(finalColor, crackColor, crackIntensity * 0.55);
+                // ═══ COMPOSITE ═══
+                vec3 color = baseColor;
+                color += frostColor * consumed;
+                color += specColor * consumed;
+                color += fresnelColor;
+                color += vec3(0.4, 0.6, 1.0) * edgeBand * 0.5 * dissolveIn;
 
-                    // Subsurface scattering
-                    vec3 scatterColor = vec3(0.4, 0.6, 0.8);
-                    float scatter = uSubsurfaceScatter * (1.0 - abs(dot(normal, viewDir)));
-                    finalColor = mix(finalColor, scatterColor, scatter * 0.25);
+                // ═══ ALPHA ═══
+                float alpha = iceMask * uOpacity * dissolveIn * 0.65;
+                // Frost patches boost alpha slightly
+                alpha += frost * consumed * uOpacity * dissolveIn * 0.15;
+                // Edge band
+                float edgeAlpha = edgeBand * 0.4 * dissolveIn * uOpacity;
+                alpha = max(alpha, edgeAlpha);
+                // Fresnel
+                alpha = max(alpha, fresnel * dissolveIn * uOpacity * 0.35);
 
-                    // Specular highlights
-                    float specPower = mix(64.0, 16.0, uMelt);
-                    float spec = pow(max(dot(reflect(-viewDir, normal), vec3(0.5, 1.0, 0.5)), 0.0), specPower);
-                    vec3 specColor = vec3(0.6, 0.72, 0.85);
-                    finalColor = mix(finalColor, specColor, spec * (1.0 - uRoughness) * 0.35);
+                if (alpha < 0.01) discard;
 
-                    // Fresnel rim
-                    vec3 rimColor = vec3(0.5, 0.65, 0.82);
-                    finalColor = mix(finalColor, rimColor, fresnel * 0.3);
-
-                    // Clamp below bloom threshold
-                    finalColor = min(finalColor, vec3(0.78));
-
-                    float baseAlpha = uOpacity * 0.85;
-                    float fresnelAlpha = fresnel * 0.3;
-                    alpha = clamp(baseAlpha + fresnelAlpha, 0.5, 0.95);
-                }
-
-                gl_FragColor = vec4(finalColor, alpha);
+                gl_FragColor = vec4(color, alpha);
             }
         `,
 
         transparent: true,
-        side: THREE.DoubleSide,
-        blending: overlay ? THREE.AdditiveBlending : THREE.NormalBlending,
-        depthWrite: overlay ? false : true
+        blending: THREE.NormalBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
     });
 
-    // Store parameters for external access
     material.userData.melt = melt;
     material.userData.elementalType = 'ice';
 
@@ -309,10 +227,6 @@ export function createIceMaterial(options = {}) {
 
 /**
  * Update ice material animation
- * Call this each frame for animated ice (subtle shimmer)
- *
- * @param {THREE.ShaderMaterial} material - Ice material to update
- * @param {number} deltaTime - Time since last frame in seconds
  */
 export function updateIceMaterial(material, deltaTime) {
     if (material?.uniforms?.uTime) {
@@ -322,44 +236,34 @@ export function updateIceMaterial(material, deltaTime) {
 
 /**
  * Get physics configuration for ice element
- * Used by shatter system for shard behavior
- *
- * @param {number} melt - Melt parameter 0-1
- * @returns {Object} Physics configuration
  */
 export function getIcePhysics(melt = 0.0) {
-    // At high melt, transition to water physics
     if (melt > 0.8) {
         const waterViscosity = lerp(0.6, 0.3, (melt - 0.8) / 0.2);
         return getWaterPhysics(waterViscosity);
     }
 
     return {
-        gravity: lerp(1.3, 1.0, melt),              // Heavy when solid
-        bounce: lerp(0.1, 0.4, melt),               // Brittle → bouncy
+        gravity: lerp(1.3, 1.0, melt),
+        bounce: lerp(0.1, 0.4, melt),
         drag: lerp(0.01, 0.03, melt),
-        shatterThreshold: lerp(0.3, 0.6, melt),     // Easier to shatter when frozen
-        slideOnSurface: lerp(0.9, 0.5, melt),       // Slippery
-        brittleness: lerp(1.0, 0.3, melt),          // More brittle when frozen
-        crackOnImpact: melt < 0.5                    // Frozen ice shows cracks before shatter
+        shatterThreshold: lerp(0.3, 0.6, melt),
+        slideOnSurface: lerp(0.9, 0.5, melt),
+        brittleness: lerp(1.0, 0.3, melt),
+        crackOnImpact: melt < 0.5
     };
 }
 
 /**
  * Get crack style for ice element
- * Used by crack system for elemental crack appearance
- *
- * @param {number} melt - Melt parameter 0-1
- * @returns {Object} Crack style configuration
  */
 export function getIceCrackStyle(melt = 0.0) {
-    // Ice cracks are crystalline, geometric
     return {
         color: lerp(0xaaeeff, 0x88ddff, melt),
         emissive: lerp(0.4, 0.1, melt),
-        animated: false,  // Static crystalline cracks
+        animated: false,
         pattern: 'crystalline',
-        frostEdges: melt < 0.5  // Frost crystals on crack edges when frozen
+        frostEdges: melt < 0.5
     };
 }
 
