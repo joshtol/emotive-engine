@@ -102,14 +102,4 @@ export function isNewSpawnMode(type) {
     return type in SPAWN_MODES;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PRESETS - Reusable spawn mode configurations
-// ═══════════════════════════════════════════════════════════════════════════════
 
-export {
-    SPAWN_PRESETS,
-    createVortexConfig,
-    createTransportConfig,
-    createPhoenixConfig,
-    createDrillConfig,
-} from './presets/index.js';
