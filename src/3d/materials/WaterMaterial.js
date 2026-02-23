@@ -5,40 +5,31 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Standalone water material with viscosity-driven behavior
+ * @fileoverview Consuming water overlay for mascot mesh
  * @author Emotive Engine Team
  * @module materials/WaterMaterial
  *
- * ## Master Parameter: viscosity (0-1)
+ * ## Master Parameters
  *
- * | Viscosity | Visual                    | Physics           | Example |
- * |-----------|---------------------------|-------------------|---------|
- * | 0.0       | High refraction, beads    | Fast, high tension| Mercury |
- * | 0.3       | Clear, fast wobble        | Free flowing      | Water   |
- * | 0.7       | Slow wobble, stretchy     | Sluggish, cohesive| Honey   |
- * | 1.0       | Damped wobble, holds shape| Nearly solid      | Jello   |
+ * viscosity (0-1): Controls maximum consumption coverage and appearance
+ *   0.0 = Thin, fast-flowing water | 0.5 = Standard water | 1.0 = Thick, sluggish fluid
  *
- * ## Usage
+ * progress (0-1): Gesture progress drives the SPREAD of water over time
+ *   0.0 = Water just beginning to seep from above
+ *   1.0 = Full viscosity-dependent consumption achieved
  *
- * Standalone:
- *   const waterMesh = new THREE.Mesh(geometry, createWaterMaterial({ viscosity: 0.3 }));
- *
- * Shatter system:
- *   shatterSystem.shatter(mesh, dir, { elemental: 'water', elementalParam: 0.3 });
+ * Consuming water: fluid creeps downward from above using multi-scale FBM noise on
+ * object-space position. Fine tendrils of water drip ahead of the main consumption
+ * front. A thin caustic emission rim marks the wet boundary. Consumed areas show
+ * darkened, tinted surface with subtle flowing caustic patterns.
  */
 
 import * as THREE from 'three';
 
-/**
- * Interpolate between values based on parameter
- */
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
-/**
- * Interpolate between three values
- */
 function lerp3(low, mid, high, t) {
     if (t < 0.5) {
         return low + (mid - low) * (t * 2);
@@ -47,270 +38,189 @@ function lerp3(low, mid, high, t) {
 }
 
 /**
- * Get water color based on viscosity
- * Mercury = silvery, Water = blue, Honey = amber, Jello = tinted
- */
-function getWaterColor(viscosity, baseColor) {
-    if (baseColor) return baseColor.clone();
-
-    const color = new THREE.Color();
-
-    if (viscosity < 0.15) {
-        // Mercury - silvery metallic
-        color.setRGB(0.85, 0.85, 0.9);
-    } else if (viscosity < 0.5) {
-        // Water - blue tint
-        const t = (viscosity - 0.15) / 0.35;
-        color.setRGB(
-            lerp(0.85, 0.3, t),
-            lerp(0.85, 0.5, t),
-            lerp(0.9, 1.0, t)
-        );
-    } else if (viscosity < 0.8) {
-        // Honey - amber
-        const t = (viscosity - 0.5) / 0.3;
-        color.setRGB(
-            lerp(0.3, 0.9, t),
-            lerp(0.5, 0.7, t),
-            lerp(1.0, 0.2, t)
-        );
-    } else {
-        // Jello - can be any color, default to blue-green
-        color.setRGB(0.4, 0.8, 0.6);
-    }
-
-    return color;
-}
-
-/**
- * Create a water material with viscosity-driven appearance
+ * Create a water material with consuming fluid effect
  *
  * @param {Object} options
- * @param {number} [options.viscosity=0.3] - Master parameter (0=mercury, 0.3=water, 0.7=honey, 1=jello)
- * @param {THREE.Color} [options.color] - Override color (otherwise derived from viscosity)
- * @param {number} [options.clarity=0.9] - Clarity 0=murky, 1=crystal clear
- * @param {number} [options.opacity=0.85] - Base opacity
+ * @param {number} [options.viscosity=0.3] - Max consumption coverage and appearance (0=thin, 1=thick)
+ * @param {number} [options.opacity=0.7] - Base opacity
  * @returns {THREE.ShaderMaterial}
  */
 export function createWaterMaterial(options = {}) {
     const {
         viscosity = 0.3,
-        color = null,
-        clarity = 0.9,
-        opacity = 0.85,
-        overlay = false  // When true, use additive blending for overlay effect
+        opacity = 0.7
     } = options;
 
-    // Derive properties from viscosity
-    const waterColor = getWaterColor(viscosity, color);
-    const wobbleSpeed = lerp(4.0, 0.3, viscosity);          // Mercury fast, jello slow
-    const wobbleAmount = lerp(0.08, 0.15, viscosity);       // Jello wobbles more visibly
-    const wobbleDamping = lerp(0.1, 0.9, viscosity);        // Jello damps fast
-    const refractionStrength = lerp(0.3, 0.08, viscosity);  // Mercury high refraction
-    const fresnelPower = lerp(2.0, 4.0, viscosity);         // Jello has softer fresnel
-    const transmission = lerp(0.98, 0.75, viscosity) * clarity;
-    const ior = lerp3(1.5, 1.33, 1.35, viscosity);          // Mercury, water, jello
+    const pulseSpeed = lerp(1.5, 0.6, viscosity);
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
-            uColor: { value: waterColor },
-            uTransmission: { value: transmission },
-            uIOR: { value: ior },
-            uWobbleSpeed: { value: wobbleSpeed },
-            uWobbleAmount: { value: wobbleAmount },
-            uWobbleDamping: { value: wobbleDamping },
-            uRefractionStrength: { value: refractionStrength },
-            uFresnelPower: { value: fresnelPower },
-            uOpacity: { value: opacity },
-            uTime: { value: 0 },
             uViscosity: { value: viscosity },
-            uOverlay: { value: overlay ? 1.0 : 0.0 }
+            uProgress: { value: 0 },
+            uPulseSpeed: { value: pulseSpeed },
+            uOpacity: { value: opacity },
+            uTime: { value: 0 }
         },
 
         vertexShader: /* glsl */`
-            uniform float uWobbleSpeed;
-            uniform float uWobbleAmount;
-            uniform float uTime;
-            uniform float uViscosity;
-
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
-
-            // Simple 3D noise for wobble
-            float hash(vec3 p) {
-                p = fract(p * 0.3183099 + 0.1);
-                p *= 17.0;
-                return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-            }
-
-            float noise(vec3 p) {
-                vec3 i = floor(p);
-                vec3 f = fract(p);
-                f = f * f * (3.0 - 2.0 * f);
-
-                return mix(
-                    mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
-                        mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-                    mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-                        mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
-                    f.z
-                );
-            }
+            varying float vVerticalPos;
 
             void main() {
-                vUv = uv;
+                vPosition = position;
                 vNormal = normalMatrix * normal;
+                vVerticalPos = position.y;
 
-                // Wobble displacement - more for jello, faster for mercury/water
-                vec3 pos = position;
-
-                // Time-based wobble
-                float wobbleTime = uTime * uWobbleSpeed;
-
-                // Multiple octaves for organic feel
-                float n1 = noise(pos * 3.0 + wobbleTime * 0.7);
-                float n2 = noise(pos * 5.0 - wobbleTime * 1.1) * 0.5;
-                float wobble = (n1 + n2) * uWobbleAmount;
-
-                // Displace along normal
-                pos += normal * wobble;
-
-                // For jello: add a secondary slower "jiggle"
-                if (uViscosity > 0.7) {
-                    float jiggle = sin(wobbleTime * 0.5 + pos.y * 2.0) * 0.02;
-                    pos += normal * jiggle;
-                }
-
-                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                 vViewPosition = -mvPosition.xyz;
-                vPosition = pos;
 
                 gl_Position = projectionMatrix * mvPosition;
             }
         `,
 
         fragmentShader: /* glsl */`
-            uniform vec3 uColor;
-            uniform float uTransmission;
-            uniform float uRefractionStrength;
-            uniform float uFresnelPower;
-            uniform float uOpacity;
             uniform float uViscosity;
+            uniform float uProgress;
+            uniform float uPulseSpeed;
+            uniform float uOpacity;
             uniform float uTime;
-            uniform float uOverlay;
 
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
-            varying vec2 vUv;
+            varying float vVerticalPos;
 
-            // Simple 3D noise for internal patterns
-            float hash3(vec3 p) {
-                return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
             }
 
-            float noise3D(vec3 p) {
-                vec3 i = floor(p);
-                vec3 f = fract(p);
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
                 f = f * f * (3.0 - 2.0 * f);
-
                 return mix(
-                    mix(mix(hash3(i), hash3(i + vec3(1,0,0)), f.x),
-                        mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x), f.y),
-                    mix(mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x),
-                        mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x), f.y),
-                    f.z
+                    mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                    mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x),
+                    f.y
                 );
             }
 
             void main() {
                 vec3 normal = normalize(vNormal);
                 vec3 viewDir = normalize(vViewPosition);
+                float NdotV = abs(dot(normal, viewDir));
+                float edgeness = 1.0 - NdotV;
 
-                // Fresnel effect - stronger rim highlighting for wet look
-                float fresnel = pow(1.0 - abs(dot(normal, viewDir)), uFresnelPower);
+                // ═══ CONSUMPTION FIELD ═══
+                vec2 pos = vPosition.xz * 2.5 + vec2(vPosition.y * 0.8, -vPosition.y * 0.6);
 
-                // Base color - ensure it's clearly blue for water
-                vec3 baseColor = uColor;
+                float flowSpeed = mix(0.15, 0.06, uViscosity);
+                float n1 = noise(pos * 1.5 + uTime * flowSpeed);
+                float n2 = noise(pos * 4.0 - uTime * flowSpeed * 1.3);
+                float n3 = noise(pos * 9.0 + uTime * flowSpeed * 2.0);
+                float consumeField = n1 * 0.50 + n2 * 0.30 + n3 * 0.20;
 
-                // Internal caustic patterns using 3D position (works on any geometry)
-                float caustic1 = noise3D(vPosition * 8.0 + uTime * 0.5);
-                float caustic2 = noise3D(vPosition * 12.0 - uTime * 0.3);
-                float caustic3 = noise3D(vPosition * 4.0 + vec3(uTime * 0.2));
-                float caustics = caustic1 * caustic2 + caustic3 * 0.3;
+                consumeField += edgeness * 0.15;
 
-                // Moving light patterns inside the water
-                float internalLight = caustics * (0.3 + (1.0 - uViscosity) * 0.4);
+                // Downward bias: water runs down from top
+                float vertBias = smoothstep(-0.5, 0.5, vVerticalPos) * 0.25;
+                consumeField += vertBias;
 
-                // For water (low viscosity), add more caustic brightness
-                if (uViscosity < 0.5) {
-                    baseColor += vec3(0.1, 0.2, 0.3) * internalLight;
-                }
+                // ═══ DISSOLVE IN ═══
+                float rawDissolve = smoothstep(0.0, 0.35, uProgress);
+                float dissolveIn = rawDissolve * rawDissolve;
 
-                // Mercury gets bright specular highlights
-                if (uViscosity < 0.15) {
-                    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3));
-                    float spec = pow(max(dot(reflect(-viewDir, normal), lightDir), 0.0), 64.0);
-                    baseColor += vec3(1.0) * spec * 0.8;
-                }
+                // ═══ PROGRESS-DRIVEN THRESHOLD ═══
+                float rawRamp = smoothstep(0.05, 0.90, uProgress);
+                float progressRamp = rawRamp * rawRamp;
 
-                // Strong rim glow for wet/liquid appearance
-                vec3 rimColor = mix(baseColor * 1.8, vec3(0.6, 0.8, 1.0), 0.5);
-                vec3 finalColor = mix(baseColor, rimColor, fresnel * 0.7);
+                float targetThreshold = mix(0.85, 0.15, uViscosity);
+                float threshold = mix(0.95, targetThreshold, progressRamp);
 
-                // Add subtle iridescence
-                float iridescence = sin(dot(normal, viewDir) * 10.0 + uTime) * 0.1;
-                finalColor += vec3(iridescence * 0.3, iridescence * 0.5, iridescence);
+                float consumed = smoothstep(threshold, threshold - 0.05, consumeField);
 
-                // Ensure water is clearly visible - boost the blue
-                finalColor = max(finalColor, baseColor * 0.5);
+                // ═══ DRIP TENDRILS ═══
+                // Vertically stretched noise — looks like drips running down
+                vec2 dripPos = vec2(vPosition.x * 2.0, vPosition.y * 6.0);
+                float dripField = noise(dripPos * 3.0 + vec2(0.0, uTime * flowSpeed * 3.0)) * 0.6
+                                + noise(dripPos * 7.0 - vec2(0.0, uTime * flowSpeed * 2.0)) * 0.4;
+                float tendrilThreshold = threshold + 0.10;
+                float tendrils = smoothstep(tendrilThreshold, tendrilThreshold - 0.03,
+                                            dripField + edgeness * 0.12);
+                tendrils *= 0.4 * smoothstep(0.0, 0.4, uViscosity * progressRamp + 0.3);
 
-                float alpha;
+                float waterMask = max(consumed, tendrils);
 
-                if (uOverlay > 0.5) {
-                    // OVERLAY MODE: Only show rim highlights and caustic sparkles
-                    // No uniform wash - sparse visibility like wet gleams
+                // ═══ WET DARKENING BASE ═══
+                // Nearly black — the key to wet realism is DARKENING, not coloring.
+                // NormalBlending: result = src*alpha + bg*(1-alpha)
+                // Dark src at moderate alpha → darkens underlying surface.
+                vec3 baseColor = vec3(0.01, 0.02, 0.04);  // Near-black, hint of blue
 
-                    // Fresnel gives strong rim/edge highlights
-                    float rimAlpha = pow(fresnel, 2.0) * 0.8;
+                // ═══ SPECULAR HIGHLIGHTS ═══
+                // THE main visual cue for wetness: sharp glossy highlights.
+                // Values >1.0 are fine — they create highlights brighter than bg.
+                vec3 light1 = normalize(vec3(0.3, 1.0, 0.5));
+                vec3 half1 = normalize(light1 + viewDir);
+                float spec1 = pow(max(dot(normal, half1), 0.0), 128.0);
 
-                    // Caustics give internal sparkle points
-                    float sparkle = max(0.0, caustics - 0.5) * 2.0;  // Only bright caustic peaks
-                    float sparkleAlpha = sparkle * 0.4;
+                vec3 light2 = normalize(vec3(-0.6, 0.7, -0.4));
+                vec3 half2 = normalize(light2 + viewDir);
+                float spec2 = pow(max(dot(normal, half2), 0.0), 96.0);
 
-                    // Combine - primarily edges and sparkles
-                    alpha = rimAlpha + sparkleAlpha;
+                // Bright enough to exceed background through alpha blending
+                vec3 specColor = vec3(2.0, 2.2, 2.5) * spec1
+                               + vec3(1.2, 1.4, 1.7) * spec2;
 
-                    // Brighten the color for additive blending
-                    finalColor = mix(baseColor, vec3(0.6, 0.85, 1.0), fresnel * 0.6);
-                    finalColor += vec3(0.2, 0.4, 0.6) * sparkle;
+                // ═══ CAUSTIC SHIMMER ═══
+                // Very sparse, subtle — secondary to specular
+                float c1 = noise(pos * 6.0 + vec2(uTime * 0.18, -uTime * 0.12));
+                float c2 = noise(pos * 11.0 - vec2(uTime * 0.10, uTime * 0.14));
+                float c3 = noise(pos * 2.5 + uTime * 0.05);
+                float caustic = c1 * c2;
+                caustic *= smoothstep(0.35, 0.65, c3);  // Break mask erases most
+                caustic = smoothstep(0.32, 0.48, caustic);
+                vec3 causticColor = vec3(0.8, 1.0, 1.5) * caustic * 0.5;
 
-                    // Discard near-invisible pixels to avoid uniform wash
-                    if (alpha < 0.05) discard;
+                // ═══ FRESNEL REFLECTION ═══
+                // Wet surfaces reflect strongly at glancing angles
+                float fresnel = pow(edgeness, 2.0) * progressRamp;
+                vec3 fresnelColor = vec3(0.8, 1.0, 1.3) * fresnel * 0.8;
 
-                    alpha = clamp(alpha, 0.0, 0.7);
-                } else {
-                    // STANDALONE MODE: Full opaque water material
-                    float baseAlpha = uOpacity * 0.85;
-                    float fresnelAlpha = fresnel * 0.4;
-                    alpha = baseAlpha + fresnelAlpha;
-                    alpha = clamp(alpha, 0.5, 0.95);
-                }
+                // ═══ EDGE EMISSION ═══
+                float edgeBand = smoothstep(threshold - 0.05, threshold - 0.01, consumeField)
+                               * smoothstep(threshold + 0.03, threshold, consumeField);
+                float pulse = 0.85 + 0.15 * sin(uTime * uPulseSpeed);
+                edgeBand *= pulse;
 
-                gl_FragColor = vec4(finalColor, alpha);
+                // ═══ COMPOSITE ═══
+                vec3 color = baseColor;
+                color += specColor * consumed;
+                color += causticColor * consumed;
+                color += fresnelColor;
+                color += vec3(0.6, 0.8, 1.2) * edgeBand * 0.6 * dissolveIn;
+
+                // ═══ ALPHA ═══
+                // Moderate alpha — visible darkening with specular punch-through
+                float alpha = waterMask * uOpacity * dissolveIn * 0.65;
+                float edgeAlpha = edgeBand * 0.45 * dissolveIn * uOpacity;
+                alpha = max(alpha, edgeAlpha);
+                alpha = max(alpha, fresnel * dissolveIn * uOpacity * 0.4);
+
+                if (alpha < 0.01) discard;
+
+                gl_FragColor = vec4(color, alpha);
             }
         `,
 
         transparent: true,
-        side: THREE.DoubleSide,
-        // Overlay mode: additive blending, no depth write (like electric overlay)
-        blending: overlay ? THREE.AdditiveBlending : THREE.NormalBlending,
-        depthWrite: overlay ? false : true
+        blending: THREE.NormalBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
     });
 
-    // Store parameters for external access
     material.userData.viscosity = viscosity;
     material.userData.elementalType = 'water';
 
@@ -319,10 +229,6 @@ export function createWaterMaterial(options = {}) {
 
 /**
  * Update water material animation
- * Call this each frame for animated water
- *
- * @param {THREE.ShaderMaterial} material - Water material to update
- * @param {number} deltaTime - Time since last frame in seconds
  */
 export function updateWaterMaterial(material, deltaTime) {
     if (material?.uniforms?.uTime) {
@@ -332,48 +238,37 @@ export function updateWaterMaterial(material, deltaTime) {
 
 /**
  * Get physics configuration for water element
- * Used by shatter system for shard behavior
- *
- * @param {number} viscosity - Viscosity parameter 0-1
- * @returns {Object} Physics configuration
  */
 export function getWaterPhysics(viscosity = 0.3) {
     return {
-        gravity: lerp(1.0, 0.5, viscosity),              // Jello falls slower
-        bounce: lerp(0.7, 0.2, viscosity),               // Jello less bouncy
-        drag: lerp(0.01, 0.2, viscosity),                // Jello high drag
-        cohesion: lerp3(0.8, 0.2, 0.7, viscosity),       // Mercury/jello high, water low
-        spreadOnImpact: lerp(0.3, 0.1, viscosity),       // Jello splats less
-        surfaceTension: lerp3(0.9, 0.3, 0.6, viscosity), // Mercury high, water low, jello medium
+        gravity: lerp(1.0, 0.5, viscosity),
+        bounce: lerp(0.7, 0.2, viscosity),
+        drag: lerp(0.01, 0.2, viscosity),
+        cohesion: lerp3(0.8, 0.2, 0.7, viscosity),
+        spreadOnImpact: lerp(0.3, 0.1, viscosity),
+        surfaceTension: lerp3(0.9, 0.3, 0.6, viscosity),
         wobbleOnMove: true,
-        mergeOnContact: viscosity < 0.6                   // Water/mercury merge, honey/jello don't
+        mergeOnContact: viscosity < 0.6
     };
 }
 
 /**
  * Get crack style for water element
- * Used by crack system for elemental crack appearance
- *
- * @param {number} viscosity - Viscosity parameter 0-1
- * @returns {Object} Crack style configuration
  */
 export function getWaterCrackStyle(viscosity = 0.3) {
-    // Water cracks are subtle - more like wet seeping lines
-    // High viscosity (jello) = more visible cracks
-
     let color;
     if (viscosity < 0.15) {
-        color = 0xaaddff;  // Mercury - silvery
+        color = 0xaaddff;
     } else if (viscosity < 0.6) {
-        color = 0x4488ff;  // Water - blue
+        color = 0x4488ff;
     } else {
-        color = 0x88ffaa;  // Jello - tinted
+        color = 0x88ffaa;
     }
 
     return {
         color,
         emissive: lerp(0.3, 0.05, viscosity),
-        animated: viscosity < 0.5,  // Only low viscosity ripples
+        animated: viscosity < 0.5,
         pattern: viscosity > 0.7 ? 'crystalline' : 'organic'
     };
 }

@@ -2148,56 +2148,41 @@ export class Core3DManager {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // WATER OVERLAY - Fluid/wet effect shader overlay
+        // WATER OVERLAY - Consuming fluid effect with smooth fade-out
         // ═══════════════════════════════════════════════════════════════════════════
-        // Creates a duplicate mesh with water shader that renders on top,
-        // showing caustics, fresnel, and wet appearance.
         if (blended.waterOverlay && blended.waterOverlay.enabled) {
+            // Cancel any in-progress fade-out (new gesture started while old was fading)
+            this._waterOverlayFadingOut = false;
             const mesh = this.renderer?.coreMesh;
             const scene = this.renderer?.scene;
             if (mesh && scene) {
-                // Create overlay mesh if not already created
                 if (!this._waterOverlayMesh) {
-                    // Create water material in overlay mode (additive blending)
                     this._waterMaterial = createWaterMaterial({
-                        viscosity: 0.3,  // Watery (not thick)
-                        opacity: 0.5,   // Semi-transparent for overlay
-                        overlay: true    // Use additive blending like electric
+                        viscosity: blended.waterOverlay.viscosity || 0.3,
+                        opacity: 0.7
                     });
-
-                    // Clone the mesh geometry for the overlay
-                    this._waterOverlayMesh = new THREE.Mesh(
-                        mesh.geometry,
-                        this._waterMaterial
-                    );
-
-                    // Slightly larger to avoid z-fighting
-                    this._waterOverlayMesh.scale.setScalar(1.01);
-
-                    // Add as child of original mesh so it follows transforms
+                    this._waterOverlayMesh = new THREE.Mesh(mesh.geometry, this._waterMaterial);
+                    this._waterOverlayMesh.scale.setScalar(1.03);
                     mesh.add(this._waterOverlayMesh);
-
-                    // Render after original mesh
                     this._waterOverlayMesh.renderOrder = mesh.renderOrder + 1;
-
                 }
 
                 // Spawn 3D water elements - runs every frame but signature prevents respawn
                 const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.waterOverlay;
                 if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    // Create spawn signature from key config properties to detect gesture changes
-                    const spawnSignature = `water:${spawnMode}:${duration}:${animation?.type || 'default'}`;
+                    const modeSignature = Array.isArray(spawnMode)
+                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+                        : String(spawnMode);
+                    const spawnSignature = `water:${modeSignature}:${duration}:${animation?.type || 'default'}`;
 
-                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
                     this._spawnedSignatures = this._spawnedSignatures || new Set();
 
-                    // Only spawn if this signature hasn't been spawned yet in this session
                     if (!this._spawnedSignatures.has(spawnSignature)) {
                         this.elementSpawner.triggerExit(); // Exit ALL elements (crossfade)
                         this.elementSpawner.spawn('water', {
                             intensity: blended.waterOverlay.strength || 0.8,
                             mode: spawnMode,
-                            animation,      // Phase 11: Pass animation config with modelOverrides
+                            animation,
                             models,
                             count,
                             scale,
@@ -2209,42 +2194,64 @@ export class Core3DManager {
                     }
                 }
 
-                // Update water material each frame
+                // Update water material uniforms
                 if (this._waterMaterial?.uniforms?.uTime) {
                     this._waterMaterial.uniforms.uTime.value = blended.waterOverlay.time;
                 }
-                // Update opacity based on wetness
+                if (this._waterMaterial?.uniforms?.uViscosity) {
+                    this._waterMaterial.uniforms.uViscosity.value = blended.waterOverlay.viscosity || 0.3;
+                }
                 if (this._waterMaterial?.uniforms?.uOpacity) {
-                    this._waterMaterial.uniforms.uOpacity.value = Math.min(0.8, blended.waterOverlay.wetness);
+                    this._waterMaterial.uniforms.uOpacity.value = Math.min(0.7, blended.waterOverlay.wetness || blended.waterOverlay.strength || 0.7);
+                }
+                if (this._waterMaterial?.uniforms?.uProgress) {
+                    this._waterMaterial.uniforms.uProgress.value = blended.waterOverlay.progress ?? 0;
                 }
 
-                // Store gesture progress for element spawner animation
                 this._currentWaterProgress = blended.waterOverlay.progress ?? null;
             }
         } else if (this._waterOverlayMesh) {
-            // Remove overlay mesh when water effect ends
-            const mesh = this.renderer?.coreMesh;
-            if (mesh && this._waterOverlayMesh.parent) {
-                mesh.remove(this._waterOverlayMesh);
-            }
-            // Dispose resources
-            if (this._waterMaterial) {
-                this._waterMaterial.dispose();
-                this._waterMaterial = null;
-            }
-            this._waterOverlayMesh = null;
-
-            // Gracefully exit water elements (fade out)
-            if (this.elementSpawner) {
-                this.elementSpawner.triggerExit('water');
+            // Fade out overlay smoothly — water recedes before disappearing
+            if (!this._waterOverlayFadingOut) {
+                this._waterOverlayFadingOut = true;
+                if (this.elementSpawner) {
+                    this.elementSpawner.triggerExit('water');
+                }
+                this._elementSpawnSignature = null;
+                this._spawnedSignatures = null;
             }
 
-            // Clear spawn tracking so next gesture session starts fresh
-            this._elementSpawnSignature = null;
-            this._spawnedSignatures = null;
+            // Decay progress and opacity
+            if (this._waterMaterial?.uniforms?.uProgress) {
+                this._waterMaterial.uniforms.uProgress.value *= 0.88;
+            }
+            if (this._waterMaterial?.uniforms?.uOpacity) {
+                this._waterMaterial.uniforms.uOpacity.value *= 0.88;
 
-            // Clear water progress tracking
-            this._currentWaterProgress = null;
+                if (this._waterMaterial.uniforms.uOpacity.value < 0.005) {
+                    const mesh = this.renderer?.coreMesh;
+                    if (mesh && this._waterOverlayMesh.parent) {
+                        mesh.remove(this._waterOverlayMesh);
+                    }
+                    this._waterMaterial.dispose();
+                    this._waterMaterial = null;
+                    this._waterOverlayMesh = null;
+                    this._waterOverlayFadingOut = false;
+                    this._currentWaterProgress = null;
+                }
+            } else {
+                const mesh = this.renderer?.coreMesh;
+                if (mesh && this._waterOverlayMesh.parent) {
+                    mesh.remove(this._waterOverlayMesh);
+                }
+                if (this._waterMaterial) {
+                    this._waterMaterial.dispose();
+                    this._waterMaterial = null;
+                }
+                this._waterOverlayMesh = null;
+                this._waterOverlayFadingOut = false;
+                this._currentWaterProgress = null;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
