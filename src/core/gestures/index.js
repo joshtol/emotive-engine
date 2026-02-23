@@ -282,52 +282,52 @@ import {
     electricSurge,
     electricZap,
     zap as zapGesture
-} from './destruction/elemental/electricEffectFactory.js';
-import electricMeditation from './destruction/elemental/electricmeditation.js';
-import electricTwirl from './destruction/elemental/electrictwirl.js';
-import electricShield from './destruction/elemental/electricshield.js';
+} from './elemental/electric/electricEffectFactory.js';
+import electricMeditation from './elemental/electric/electricmeditation.js';
+import electricTwirl from './elemental/electric/electrictwirl.js';
+import electricShield from './elemental/electric/electricshield.js';
 // destruction/elemental/ - Water effect gestures (self-contained gesture files)
-import waterSplash from './destruction/elemental/watersplash.js';
-import waterDrench from './destruction/elemental/waterdrench.js';
-import waterSoak from './destruction/elemental/watersoak.js';
-import waterFlow from './destruction/elemental/waterflow.js';
-import waterTide from './destruction/elemental/watertide.js';
-import waterLiquefy from './destruction/elemental/waterliquefy.js';
-import waterPool from './destruction/elemental/waterpool.js';
-import waterVortex from './destruction/elemental/watervortex.js';
+import waterSplash from './elemental/water/watersplash.js';
+import waterDrench from './elemental/water/waterdrench.js';
+import waterSoak from './elemental/water/watersoak.js';
+import waterFlow from './elemental/water/waterflow.js';
+import waterTide from './elemental/water/watertide.js';
+import waterLiquefy from './elemental/water/waterliquefy.js';
+import waterPool from './elemental/water/waterpool.js';
+import waterVortex from './elemental/water/watervortex.js';
 // destruction/elemental/ - Water effect gestures (new GPU-instanced gestures)
-import waterCrown from './destruction/elemental/watercrown.js';
-import waterDance from './destruction/elemental/waterdance.js';
-import waterDrill from './destruction/elemental/waterdrill.js';
-import waterHelix from './destruction/elemental/waterhelix.js';
-import waterMeditation from './destruction/elemental/watermeditation.js';
-import waterPillar from './destruction/elemental/waterpillar.js';
-import waterFlourish from './destruction/elemental/waterflourish.js';
-import waterBarrage from './destruction/elemental/waterbarrage.js';
-import waterImpact from './destruction/elemental/waterimpact.js';
-import waterCrush from './destruction/elemental/watercrush.js';
-import waterTwirl from './destruction/elemental/watertwirl.js';
-import waterShield from './destruction/elemental/watershield.js';
+import waterCrown from './elemental/water/watercrown.js';
+import waterDance from './elemental/water/waterdance.js';
+import waterDrill from './elemental/water/waterdrill.js';
+import waterHelix from './elemental/water/waterhelix.js';
+import waterMeditation from './elemental/water/watermeditation.js';
+import waterPillar from './elemental/water/waterpillar.js';
+import waterFlourish from './elemental/water/waterflourish.js';
+import waterBarrage from './elemental/water/waterbarrage.js';
+import waterImpact from './elemental/water/waterimpact.js';
+import waterCrush from './elemental/water/watercrush.js';
+import waterTwirl from './elemental/water/watertwirl.js';
+import waterShield from './elemental/water/watershield.js';
 // destruction/elemental/ - Fire effect gestures (self-contained gesture files)
-import fireBurn from './destruction/elemental/burn.js';
-import fireScorch from './destruction/elemental/scorch.js';
-import fireCombust from './destruction/elemental/combust.js';
-import fireRadiate from './destruction/elemental/radiate.js';
-import fireBlaze from './destruction/elemental/blaze.js';
-import flameVortexGesture from './destruction/elemental/flameVortex.js';
-import firedanceGesture from './destruction/elemental/firedance.js';
-import phoenixGesture from './destruction/elemental/phoenix.js';
-import fireflourishGesture from './destruction/elemental/fireflourish.js';
-import firecrownGesture from './destruction/elemental/firecrown.js';
-import firemeditationGesture from './destruction/elemental/firemeditation.js';
-import firedrillGesture from './destruction/elemental/firedrill.js';
-import firepillarGesture from './destruction/elemental/firepillar.js';
-import firehelixGesture from './destruction/elemental/firehelix.js';
-import firebarrageGesture from './destruction/elemental/firebarrage.js';
-import fireimpactGesture from './destruction/elemental/fireimpact.js';
-import fireblastGesture from './destruction/elemental/fireblast.js';
-import fireTwirl from './destruction/elemental/firetwirl.js';
-import fireShield from './destruction/elemental/fireshield.js';
+import fireBurn from './elemental/fire/burn.js';
+import fireScorch from './elemental/fire/scorch.js';
+import fireCombust from './elemental/fire/combust.js';
+import fireRadiate from './elemental/fire/radiate.js';
+import fireBlaze from './elemental/fire/blaze.js';
+import flameVortexGesture from './elemental/fire/flameVortex.js';
+import firedanceGesture from './elemental/fire/firedance.js';
+import phoenixGesture from './elemental/fire/phoenix.js';
+import fireflourishGesture from './elemental/fire/fireflourish.js';
+import firecrownGesture from './elemental/fire/firecrown.js';
+import firemeditationGesture from './elemental/fire/firemeditation.js';
+import firedrillGesture from './elemental/fire/firedrill.js';
+import firepillarGesture from './elemental/fire/firepillar.js';
+import firehelixGesture from './elemental/fire/firehelix.js';
+import firebarrageGesture from './elemental/fire/firebarrage.js';
+import fireimpactGesture from './elemental/fire/fireimpact.js';
+import fireblastGesture from './elemental/fire/fireblast.js';
+import fireTwirl from './elemental/fire/firetwirl.js';
+import fireShield from './elemental/fire/fireshield.js';
 // destruction/elemental/ - Void effect gestures (no shatter, absorption/corruption visuals)
 import {
     drain as voidDrain,
@@ -344,10 +344,10 @@ import {
     voidVortex,
     voidBarrage,
     voidImpact
-} from './destruction/elemental/voidEffectFactory.js';
-import voidMeditation from './destruction/elemental/voidmeditation.js';
-import voidTwirl from './destruction/elemental/voidtwirl.js';
-import voidShield from './destruction/elemental/voidshield.js';
+} from './elemental/void/voidEffectFactory.js';
+import voidMeditation from './elemental/void/voidmeditation.js';
+import voidTwirl from './elemental/void/voidtwirl.js';
+import voidShield from './elemental/void/voidshield.js';
 // destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
 // Matches fire/water pattern: axis-travel, anchor, radial-burst spawn modes
 import {
@@ -363,78 +363,78 @@ import {
     flourish as iceFlourish,
     barrage as iceBarrage,
     impact as iceImpact
-} from './destruction/elemental/iceEffectFactory.js';
-import iceMist from './destruction/elemental/icemist.js';
-import iceShiver from './destruction/elemental/iceshiver.js';
-import iceTwirl from './destruction/elemental/icetwirl.js';
-import iceShield from './destruction/elemental/iceshield.js';
+} from './elemental/ice/iceEffectFactory.js';
+import iceMist from './elemental/ice/icemist.js';
+import iceShiver from './elemental/ice/iceshiver.js';
+import iceTwirl from './elemental/ice/icetwirl.js';
+import iceShield from './elemental/ice/iceshield.js';
 // destruction/elemental/ - Light effect gestures (all modern instanced pattern)
-import lightBlind from './destruction/elemental/lightblind.js';
-import lightPurify from './destruction/elemental/lightpurify.js';
-import lightCleanse from './destruction/elemental/lightcleanse.js';
-import lightRadiate from './destruction/elemental/lightradiate.js';
-import lightGlow from './destruction/elemental/lightglow.js';
-import lightBeacon from './destruction/elemental/lightbeacon.js';
-import lightAscend from './destruction/elemental/lightascend.js';
-import lightIlluminate from './destruction/elemental/lightilluminate.js';
-import lightDissolve from './destruction/elemental/lightdissolve.js';
-import lightMeditation from './destruction/elemental/lightmeditation.js';
-import lightCrown from './destruction/elemental/lightcrown.js';
-import lightDance from './destruction/elemental/lightdance.js';
-import lightHelix from './destruction/elemental/lighthelix.js';
-import lightPillar from './destruction/elemental/lightpillar.js';
-import lightDrill from './destruction/elemental/lightdrill.js';
-import lightFlourish from './destruction/elemental/lightflourish.js';
-import lightVortex from './destruction/elemental/lightvortex.js';
-import lightBarrage from './destruction/elemental/lightbarrage.js';
-import lightImpact from './destruction/elemental/lightimpact.js';
-import lightBlast from './destruction/elemental/lightblast.js';
-import lightSurge from './destruction/elemental/lightsurge.js';
-import lightTwirl from './destruction/elemental/lighttwirl.js';
-import lightShield from './destruction/elemental/lightshield.js';
+import lightBlind from './elemental/light/lightblind.js';
+import lightPurify from './elemental/light/lightpurify.js';
+import lightCleanse from './elemental/light/lightcleanse.js';
+import lightRadiate from './elemental/light/lightradiate.js';
+import lightGlow from './elemental/light/lightglow.js';
+import lightBeacon from './elemental/light/lightbeacon.js';
+import lightAscend from './elemental/light/lightascend.js';
+import lightIlluminate from './elemental/light/lightilluminate.js';
+import lightDissolve from './elemental/light/lightdissolve.js';
+import lightMeditation from './elemental/light/lightmeditation.js';
+import lightCrown from './elemental/light/lightcrown.js';
+import lightDance from './elemental/light/lightdance.js';
+import lightHelix from './elemental/light/lighthelix.js';
+import lightPillar from './elemental/light/lightpillar.js';
+import lightDrill from './elemental/light/lightdrill.js';
+import lightFlourish from './elemental/light/lightflourish.js';
+import lightVortex from './elemental/light/lightvortex.js';
+import lightBarrage from './elemental/light/lightbarrage.js';
+import lightImpact from './elemental/light/lightimpact.js';
+import lightBlast from './elemental/light/lightblast.js';
+import lightSurge from './elemental/light/lightsurge.js';
+import lightTwirl from './elemental/light/lighttwirl.js';
+import lightShield from './elemental/light/lightshield.js';
 // destruction/elemental/ - Earth effect gestures (stone/petrification visuals)
-import earthPetrify from './destruction/elemental/earthpetrify.js';
-import earthBurden from './destruction/elemental/earthburden.js';
-import earthRumble from './destruction/elemental/earthrumble.js';
-import earthQuake from './destruction/elemental/earthquake.js';
-import earthEncase from './destruction/elemental/earthencase.js';
-import earthCrumble from './destruction/elemental/earthcrumble.js';
-import earthShatter from './destruction/elemental/earthshatter.js';
-import earthErode from './destruction/elemental/eartherode.js';
-import earthMeditation from './destruction/elemental/earthmeditation.js';
-import earthCrown from './destruction/elemental/earthcrown.js';
-import earthDance from './destruction/elemental/earthdance.js';
-import earthHelix from './destruction/elemental/earthhelix.js';
-import earthPillar from './destruction/elemental/earthpillar.js';
-import earthDrill from './destruction/elemental/earthdrill.js';
-import earthFlourish from './destruction/elemental/earthflourish.js';
-import earthVortex from './destruction/elemental/earthvortex.js';
-import earthBarrage from './destruction/elemental/earthbarrage.js';
-import earthImpact from './destruction/elemental/earthimpact.js';
-import earthBlast from './destruction/elemental/earthblast.js';
-import earthSurge from './destruction/elemental/earthsurge.js';
-import earthTwirl from './destruction/elemental/earthtwirl.js';
-import earthShield from './destruction/elemental/earthshield.js';
+import earthPetrify from './elemental/earth/earthpetrify.js';
+import earthBurden from './elemental/earth/earthburden.js';
+import earthRumble from './elemental/earth/earthrumble.js';
+import earthQuake from './elemental/earth/earthquake.js';
+import earthEncase from './elemental/earth/earthencase.js';
+import earthCrumble from './elemental/earth/earthcrumble.js';
+import earthShatter from './elemental/earth/earthshatter.js';
+import earthErode from './elemental/earth/eartherode.js';
+import earthMeditation from './elemental/earth/earthmeditation.js';
+import earthCrown from './elemental/earth/earthcrown.js';
+import earthDance from './elemental/earth/earthdance.js';
+import earthHelix from './elemental/earth/earthhelix.js';
+import earthPillar from './elemental/earth/earthpillar.js';
+import earthDrill from './elemental/earth/earthdrill.js';
+import earthFlourish from './elemental/earth/earthflourish.js';
+import earthVortex from './elemental/earth/earthvortex.js';
+import earthBarrage from './elemental/earth/earthbarrage.js';
+import earthImpact from './elemental/earth/earthimpact.js';
+import earthBlast from './elemental/earth/earthblast.js';
+import earthSurge from './elemental/earth/earthsurge.js';
+import earthTwirl from './elemental/earth/earthtwirl.js';
+import earthShield from './elemental/earth/earthshield.js';
 // destruction/elemental/ - Nature instanced ring/spectacle gestures (modern pattern)
-import natureEntangle from './destruction/elemental/entangle.js';
-import natureRoot from './destruction/elemental/root.js';
-import natureTwirl from './destruction/elemental/naturetwirl.js';
-import natureConstrict from './destruction/elemental/natureconstrict.js';
-import natureBloom from './destruction/elemental/bloom.js';
-import natureCrown from './destruction/elemental/naturecrown.js';
-import natureDance from './destruction/elemental/naturedance.js';
-import natureDrill from './destruction/elemental/naturedrill.js';
-import natureRingFlourish from './destruction/elemental/natureflourish.js';
-import natureHelix from './destruction/elemental/naturehelix.js';
-import natureMeditation from './destruction/elemental/naturemeditation.js';
-import naturePillar from './destruction/elemental/naturepillar.js';
-import natureVortex from './destruction/elemental/naturevortex.js';
-import natureBarrage from './destruction/elemental/naturebarrage.js';
-import natureShield from './destruction/elemental/natureshield.js';
-import seedBurst from './destruction/elemental/seedburst.js';
-import seedPod from './destruction/elemental/seedpod.js';
-import natureCleanse from './destruction/elemental/naturecleanse.js';
-import natureSplinter from './destruction/elemental/naturesplinter.js';
+import natureEntangle from './elemental/nature/entangle.js';
+import natureRoot from './elemental/nature/root.js';
+import natureTwirl from './elemental/nature/naturetwirl.js';
+import natureConstrict from './elemental/nature/natureconstrict.js';
+import natureBloom from './elemental/nature/bloom.js';
+import natureCrown from './elemental/nature/naturecrown.js';
+import natureDance from './elemental/nature/naturedance.js';
+import natureDrill from './elemental/nature/naturedrill.js';
+import natureRingFlourish from './elemental/nature/natureflourish.js';
+import natureHelix from './elemental/nature/naturehelix.js';
+import natureMeditation from './elemental/nature/naturemeditation.js';
+import naturePillar from './elemental/nature/naturepillar.js';
+import natureVortex from './elemental/nature/naturevortex.js';
+import natureBarrage from './elemental/nature/naturebarrage.js';
+import natureShield from './elemental/nature/natureshield.js';
+import seedBurst from './elemental/nature/seedburst.js';
+import seedPod from './elemental/nature/seedpod.js';
+import natureCleanse from './elemental/nature/naturecleanse.js';
+import natureSplinter from './elemental/nature/naturesplinter.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
