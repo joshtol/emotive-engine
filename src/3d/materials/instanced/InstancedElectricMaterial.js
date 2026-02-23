@@ -35,7 +35,7 @@ import {
     INSTANCED_ATTRIBUTES_VERTEX,
     INSTANCED_ATTRIBUTES_FRAGMENT,
     createInstancedUniforms
-} from './InstancedShaderUtils.js';
+} from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
@@ -57,7 +57,7 @@ import {
     setGrain,
     resetGrain,
     resetAnimation
-} from './cores/InstancedAnimationCore.js';
+} from '../cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELECTRIC DEFAULTS

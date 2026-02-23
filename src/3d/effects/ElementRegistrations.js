@@ -45,7 +45,7 @@ import {
     resetAnimation as resetFireAnimation,
     setRelay as setFireRelay,
     resetRelay as resetFireRelay
-} from '../materials/InstancedFireMaterial.js';
+} from '../materials/instanced/InstancedFireMaterial.js';
 
 import {
     createInstancedWaterMaterial,
@@ -60,7 +60,7 @@ import {
     resetAnimation as resetWaterAnimation,
     setRelay as setWaterRelay,
     resetRelay as resetWaterRelay
-} from '../materials/InstancedWaterMaterial.js';
+} from '../materials/instanced/InstancedWaterMaterial.js';
 
 import {
     createInstancedIceMaterial,
@@ -77,7 +77,7 @@ import {
     resetAnimation as resetIceAnimation,
     setRelay as setIceRelay,
     resetRelay as resetIceRelay
-} from '../materials/InstancedIceMaterial.js';
+} from '../materials/instanced/InstancedIceMaterial.js';
 
 import {
     createInstancedElectricMaterial,
@@ -94,7 +94,7 @@ import {
     resetFlash as resetElectricFlash,
     setRelay as setElectricRelay,
     resetRelay as resetElectricRelay
-} from '../materials/InstancedElectricMaterial.js';
+} from '../materials/instanced/InstancedElectricMaterial.js';
 
 import {
     createInstancedVoidMaterial,
@@ -109,7 +109,7 @@ import {
     resetAnimation as resetVoidAnimation,
     setRelay as setVoidRelay,
     resetRelay as resetVoidRelay
-} from '../materials/InstancedVoidMaterial.js';
+} from '../materials/instanced/InstancedVoidMaterial.js';
 
 import {
     createInstancedLightMaterial,
@@ -124,7 +124,7 @@ import {
     resetAnimation as resetLightAnimation,
     setRelay as setLightRelay,
     resetRelay as resetLightRelay
-} from '../materials/InstancedLightMaterial.js';
+} from '../materials/instanced/InstancedLightMaterial.js';
 
 import {
     createInstancedEarthMaterial,
@@ -141,7 +141,7 @@ import {
     resetAnimation as resetEarthAnimation,
     setRelay as setEarthRelay,
     resetRelay as resetEarthRelay
-} from '../materials/InstancedEarthMaterial.js';
+} from '../materials/instanced/InstancedEarthMaterial.js';
 
 import {
     createInstancedNatureMaterial,
@@ -156,7 +156,7 @@ import {
     resetAnimation as resetNatureAnimation,
     setRelay as setNatureRelay,
     resetRelay as resetNatureRelay
-} from '../materials/InstancedNatureMaterial.js';
+} from '../materials/instanced/InstancedNatureMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ELEMENT REGISTRATIONS (after all imports are resolved)

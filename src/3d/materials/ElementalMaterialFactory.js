@@ -46,35 +46,35 @@ import {
     updateFireMaterial,
     getFirePhysics,
     getFireCrackStyle
-} from './FireMaterial.js';
+} from './overlays/FireMaterial.js';
 
 import {
     createWaterMaterial,
     updateWaterMaterial,
     getWaterPhysics,
     getWaterCrackStyle
-} from './WaterMaterial.js';
+} from './overlays/WaterMaterial.js';
 
 import {
     createIceMaterial,
     updateIceMaterial,
     getIcePhysics,
     getIceCrackStyle
-} from './IceMaterial.js';
+} from './overlays/IceMaterial.js';
 
 import {
     createElectricMaterial,
     updateElectricMaterial,
     getElectricPhysics,
     getElectricCrackStyle
-} from './ElectricMaterial.js';
+} from './overlays/ElectricMaterial.js';
 
 import {
     createVoidMaterial,
     updateVoidMaterial,
     getVoidPhysics,
     getVoidCrackStyle
-} from './VoidMaterial.js';
+} from './overlays/VoidMaterial.js';
 
 /**
  * Registry of all elemental types with their handlers

@@ -1,39 +1,39 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
- *    ●●  ENGINE - Instanced Void Material
+ *    ●●  ENGINE - Instanced Light Material
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview GPU-instanced black hole singularity material with gravitational lensing
- * @module materials/InstancedVoidMaterial
+ * @fileoverview GPU-instanced holy radiance material with additive light stacking
+ * @module materials/InstancedLightMaterial
  *
  * Uses per-instance attributes for:
  * - Time-offset animation (each instance has unique phase)
- * - Model selection (merged geometry with multiple void model variants)
+ * - Model selection (merged geometry with multiple light model variants)
  * - Trail rendering (main + 3 trail copies per logical element)
  * - Spawn/exit fade transitions
  * - Velocity for motion blur
  *
- * ## Master Parameter: depth (0-1)
+ * ## Master Parameter: radiance (0-1)
  *
- * | Depth | Visual                         | Example       |
- * |-------|--------------------------------|---------------|
- * | 0.0   | Slight lensing, faint ring     | Spatial tear  |
- * | 0.5   | Noticeable lensing, dark core  | Dark mass     |
- * | 1.0   | Full singularity, total black  | Black hole    |
+ * | Radiance | Visual                    | Effect              | Example       |
+ * |----------|---------------------------|---------------------|---------------|
+ * | 0.0      | Soft warm glow            | Gentle warmth       | Candlelight   |
+ * | 0.5      | Golden rays emanating     | Purifying presence  | Divine light  |
+ * | 1.0      | Blinding brilliance       | Overwhelming purity | Ascension     |
  *
- * ## Visual Model: Black Hole Singularity
+ * ## Visual Model: Holy Radiance
  *
- * Three layers compose the black hole aesthetic:
- * 1. Event Horizon — absolute black core (no light escapes)
- * 2. Photon Ring — razor-thin bright ring at the horizon boundary
- * 3. Gravitational Lensing — background warped inward via screen-space refraction
+ * Three layers compose the light aesthetic:
+ * 1. Core Glow — warm golden base color, NdotV-driven brightness
+ * 2. Light Rays — procedural radial rays emanating from object, fresnel-driven
+ * 3. Sparkles — sparse white-hot flickers exceeding 1.0 for bloom catchment
  *
- * Uses screen-space background sampling (like ice refraction) to warp
- * the scene behind each void element, creating visible spacetime distortion.
- * CustomBlending with the lensed result as color — black in the center,
- * warped background at the edges, thin bright photon ring at the boundary.
+ * AdditiveBlending so light ADDS to the scene and stacks naturally
+ * (multiple light elements build from golden → white-hot, like fire).
+ * Alpha driven by brightness — dark areas invisible, bright areas opaque.
+ * No bloom compression — light IS brightness. Let it bloom freely.
  */
 
 import * as THREE from 'three';
@@ -41,7 +41,7 @@ import {
     INSTANCED_ATTRIBUTES_VERTEX,
     INSTANCED_ATTRIBUTES_FRAGMENT,
     createInstancedUniforms
-} from './InstancedShaderUtils.js';
+} from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
@@ -63,20 +63,21 @@ import {
     setGrain,
     resetGrain,
     resetAnimation
-} from './cores/InstancedAnimationCore.js';
+} from '../cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// VOID DEFAULTS
+// LIGHT DEFAULTS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VOID_DEFAULTS = {
-    depth: 0.5,
+const LIGHT_DEFAULTS = {
+    radiance: 0.5,
     intensity: 1.5,
-    opacity: 1.0,
-    tendrilSpeed: 0.3,   // Breathing/animation speed (time dilation feel)
-    edgeGlow: 0.7,       // Photon ring brightness
-    fadeInDuration: 0.2,
-    fadeOutDuration: 0.4
+    opacity: 0.45,        // Low for additive stacking — gradual gold→white buildup
+    pulseSpeed: 1.0,
+    rayIntensity: 0.5,
+    sparkleRate: 4.0,
+    fadeInDuration: 0.15,
+    fadeOutDuration: 0.3
 };
 
 function lerp(a, b, t) {
@@ -84,18 +85,19 @@ function lerp(a, b, t) {
 }
 
 /**
- * Derive visual parameters from depth level.
- * Higher depth = stronger lensing, brighter photon ring, deeper black.
+ * Derive visual parameters from radiance level.
+ * Higher radiance = brighter core, stronger rays, more sparkles.
  *
- * @param {number} depth - Master parameter 0-1
+ * @param {number} radiance - Master parameter 0-1
  * @param {Object} [overrides] - Optional overrides for individual parameters
  * @returns {Object} Derived parameters
  */
-function deriveVoidParameters(depth, overrides = {}) {
+function deriveLightParameters(radiance, overrides = {}) {
     return {
-        intensity: overrides.intensity ?? lerp(1.0, 2.5, depth),
-        tendrilSpeed: overrides.tendrilSpeed ?? lerp(0.2, 0.5, depth),
-        edgeGlow: overrides.edgeGlow ?? lerp(0.5, 1.0, depth)
+        intensity: overrides.intensity ?? lerp(1.0, 2.5, radiance),
+        pulseSpeed: overrides.pulseSpeed ?? lerp(0.5, 2.5, radiance),
+        rayIntensity: overrides.rayIntensity ?? lerp(0.2, 0.8, radiance),
+        sparkleRate: overrides.sparkleRate ?? lerp(2.0, 8.0, radiance)
     };
 }
 
@@ -137,8 +139,8 @@ const VERTEX_SHADER = /* glsl */`
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
 uniform float uFadeOutDuration;
-uniform float uDepth;
-uniform int uDiskMode;
+uniform float uRadiance;
+uniform float uPulseSpeed;
 
 // Arc visibility uniforms (for vortex effects)
 uniform int uAnimationType;
@@ -160,12 +162,9 @@ varying vec3 vWorldPosition;
 varying vec3 vInstancePosition;
 varying vec3 vNormal;
 varying vec3 vViewDir;
-varying vec3 vViewPosition;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
-varying float vDopplerAngleXY;  // Pre-computed atan(pos.y, pos.x) for disk mode
-varying float vDopplerAngleXZ;  // Pre-computed atan(pos.z, pos.x) for non-disk mode
 
 ${NOISE_GLSL}
 
@@ -213,24 +212,21 @@ void main() {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // VOID: Slow breathing — event horizon pulsation (time dilation feel)
+    // LIGHT: Radiant pulse — gentle outward breathing along normal
+    // Each instance breathes independently via aRandomSeed phase offset.
+    // Subtle displacement (0.02) — enough to feel alive, not enough to deform.
     // ═══════════════════════════════════════════════════════════════════════════════
 
     float instanceTime = vLocalTime + aRandomSeed * 10.0;
-    // Disk mode: ZERO vertex displacement — must stay perfectly round
-    float breathe = uDiskMode == 1 ? 0.0 : sin(instanceTime * 0.3) * 0.008 * uDepth;
+    float breathe = sin(instanceTime * uPulseSpeed + aRandomSeed * 6.28) * 0.02 * uRadiance;
 
     vPosition = selectedPosition;
     vRandomSeed = aRandomSeed;
     vVerticalGradient = clamp((selectedPosition.y + 0.5) / 1.0, 0.0, 1.0);
 
-    // Pre-compute atan for Doppler asymmetry — saves 30 ops/fragment
-    vDopplerAngleXY = atan(selectedPosition.y, selectedPosition.x);
-    vDopplerAngleXZ = atan(selectedPosition.z, selectedPosition.x);
-
     vec3 displaced = selectedPosition + selectedNormal * breathe + trailOffset;
 
-    // View-space normal (for screen-aligned lensing direction on 3D geometry)
+    // Normal transform through instance matrix
     vNormal = normalMatrix * mat3(instanceMatrix) * selectedNormal;
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -241,10 +237,6 @@ void main() {
     vec4 worldPos = modelMatrix * instancePosition;
     vWorldPosition = worldPos.xyz;
     vViewDir = normalize(cameraPosition - worldPos.xyz);
-
-    // View-space position (for proper NdotV in fragment)
-    vec4 viewPos = modelViewMatrix * instancePosition;
-    vViewPosition = viewPos.xyz;
 
     // Instance origin in world space (for trail dissolve)
     vec4 instanceOrigin = modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
@@ -287,7 +279,7 @@ void main() {
         vArcVisibility = maxVis;
     }
 
-    gl_Position = projectionMatrix * viewPos;
+    gl_Position = projectionMatrix * modelViewMatrix * instancePosition;
 }
 `;
 
@@ -297,18 +289,13 @@ void main() {
 
 const FRAGMENT_SHADER = /* glsl */`
 uniform float uGlobalTime;
-uniform float uDepth;
+uniform float uRadiance;
 uniform float uIntensity;
 uniform float uOpacity;
-uniform float uTendrilSpeed;    // Breathing/animation speed
-uniform float uEdgeGlow;        // Photon ring brightness
+uniform float uPulseSpeed;
+uniform float uRayIntensity;
+uniform float uSparkleRate;
 uniform float uBloomThreshold;
-uniform int uDiskMode;
-
-// Screen-space gravitational lensing
-uniform sampler2D uBackgroundTexture;
-uniform vec2 uResolution;
-uniform int uHasBackground;
 
 // Animation system uniforms (glow, cutout, travel, etc.) from shared core
 ${ANIMATION_UNIFORMS_FRAGMENT}
@@ -321,12 +308,9 @@ varying vec3 vWorldPosition;
 varying vec3 vInstancePosition;
 varying vec3 vNormal;
 varying vec3 vViewDir;
-varying vec3 vViewPosition;
 varying float vRandomSeed;
 varying float vArcVisibility;
 varying float vVerticalGradient;
-varying float vDopplerAngleXY;
-varying float vDopplerAngleXZ;
 
 ${NOISE_GLSL}
 ${CUTOUT_PATTERN_FUNC_GLSL}
@@ -335,228 +319,136 @@ void main() {
     // Early discard for fully faded instances
     if (vInstanceAlpha < 0.01) discard;
 
+    vec3 normal = normalize(vNormal);
+    vec3 viewDir = normalize(vViewDir);
+
     // Local time (required by CUTOUT_GLSL and GRAIN_GLSL)
     float localTime = vLocalTime;
+    float instanceTime = localTime + vRandomSeed * 10.0;
 
-    // View-space normal (screen-aligned for lensing direction)
-    vec3 normal = normalize(vNormal);
-
-    // Proper view-space NdotV (both vectors in view space)
-    vec3 viewDirVS = -normalize(vViewPosition);
-    float NdotV = max(0.0, dot(normal, viewDirVS));
-    float edgeness = 1.0 - NdotV; // 0 = face-on (event horizon), 1 = silhouette
+    // NdotV for fresnel and core intensity
+    float NdotV = max(0.0, dot(normal, viewDir));
+    float fresnel = pow(1.0 - NdotV, 2.5);
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // DISK MODE — billboard singularity with built-in gravitational lensing.
+    // LAYER 1: CORE GLOW — warm golden base, brighter face-on
     //
-    // The disk is a perfect circle (billboard PlaneGeometry). It handles its
-    // OWN background warping here in the shader — the DistortionManager
-    // post-process is disabled (distortionStrength: 0) so the disk geometry
-    // stays perfectly round on screen.
+    // Golden at low radiance, white-gold at high radiance.
+    // NdotV drives brightness: face-on = bright core, edges = softer.
+    // The decoupled approach from fire: color is always warm (never dark),
+    // visibility is controlled by alpha alone.
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    // Radiance-driven color: golden → white-gold
+    vec3 warmGold = vec3(1.0, 0.85, 0.4);
+    vec3 whiteGold = vec3(1.0, 0.97, 0.88);
+    vec3 lightColor = mix(warmGold, whiteGold, uRadiance);
+
+    // Core brightness: face-on bright, edges fade to transparent.
+    // Lower floor (0.3 not 0.5) so silhouette edges are dim → soft alpha falloff.
+    // Noise breaks up the uniform blob — prevents bloom mip-level banding.
+    float brightNoise = noise(vPosition * 4.0 + vec3(instanceTime * 0.5));
+    float coreBrightness = (0.3 + NdotV * 0.7) * (0.5 + brightNoise);
+
+    // Gentle breathing pulse
+    float pulse = 1.0 + sin(instanceTime * uPulseSpeed) * 0.12;
+
+    vec3 coreGlow = lightColor * coreBrightness * pulse;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // LAYER 2: LIGHT RAYS — organic "god rays" emanating from object
     //
-    // Three zones from center outward:
-    //   1. Event horizon (diskDist < horizonRadius): absolute black
-    //   2. Photon ring (thin band at horizon boundary): bright amber emission
-    //   3. Lensing zone (horizonRadius → edge): warped background, fading out
+    // 5 primary rays with noise-varying width per-ray for organic feel.
+    // Per-ray shimmer makes each beam flicker independently.
+    // 9 thin secondary filament rays for complexity.
+    // Majestic slow rotation. Visible at edges + transition zone.
     // ═══════════════════════════════════════════════════════════════════════════════
-    if (uDiskMode == 1) {
-        float diskDist = length(vPosition.xy * 2.0);
-        if (diskDist > 1.0) discard;
 
-        float instanceTime = vLocalTime + vRandomSeed * 10.0;
+    float angle = atan(vPosition.z, vPosition.x);
 
-        // Event horizon radius — everything inside is absolute black
-        float horizonRadius = 0.50;
+    // Primary god rays: 5 beams with noise-modulated width
+    float rayAngle = angle + instanceTime * 0.2;
+    float rayBase = sin(rayAngle * 5.0) * 0.5 + 0.5;
 
-        // ═══════════════════════════════════════════════════════════════════
-        // GRAVITATIONAL LENSING — warp background around singularity
-        //
-        // Billboard local XY maps directly to screen right/up (camera-facing),
-        // so vPosition.xy gives us the screen-aligned lensing direction.
-        // Offset UV OUTWARD from center → samples from further out →
-        // image appears pulled inward toward singularity.
-        // ═══════════════════════════════════════════════════════════════════
-        vec2 screenUV = gl_FragCoord.xy / uResolution;
+    // Noise varies the sharpening power per-ray — some sharp, some wide
+    float edgeNoise = noise(vec3(angle * 2.5, instanceTime * 0.3, vRandomSeed * 5.0));
+    float ray = pow(rayBase, 2.0 + edgeNoise * 3.0);
 
-        vec2 diskXY = vPosition.xy * 2.0;
-        vec2 lensDir = length(diskXY) > 0.001 ? normalize(diskXY) : vec2(0.0);
+    // Per-ray shimmer: each ray flickers at its own rate
+    float shimmerPos = floor(angle * 5.0 / 6.28318) * 7.13;
+    float shimmer = 0.7 + 0.3 * sin(instanceTime * 1.5 + shimmerPos);
+    ray *= shimmer;
 
-        // Lensing strength: strongest near horizon, fading toward edge
-        // Scale by vInstanceAlpha so lensing fades gradually during exit (not binary pop)
-        float lensMask = smoothstep(1.0, horizonRadius + 0.10, diskDist);
-        float lensAmount = lensMask * 0.08 * uIntensity / 1.5 * vInstanceAlpha;
+    // Thin secondary filament rays (more numerous, fainter)
+    float ray2 = sin(rayAngle * 9.0 + 1.8) * 0.5 + 0.5;
+    ray2 = pow(ray2, 5.0) * 0.25;
 
-        // Horizon mask: 0 inside event horizon (black), 1 outside (show lensed bg)
-        // Fade toward 1.0 (show unwarped bg) as instance fades out
-        float horizonMask = mix(1.0, smoothstep(horizonRadius - 0.03, horizonRadius + 0.08, diskDist), vInstanceAlpha);
+    float rayPattern = (ray + ray2) * uRayIntensity;
 
-        // Sample with chromatic aberration (wavelength-dependent bending)
-        vec3 lensedBg = vec3(0.0);
-        if (uHasBackground == 1) {
-            vec2 lensOffset = lensDir * lensAmount;
-            float chrAb = lensAmount * 0.08;
-            lensedBg.r = texture2D(uBackgroundTexture, screenUV + lensOffset + lensDir * chrAb).r;
-            lensedBg.g = texture2D(uBackgroundTexture, screenUV + lensOffset).g;
-            lensedBg.b = texture2D(uBackgroundTexture, screenUV + lensOffset - lensDir * chrAb).b;
-        }
-
-        // Black center + lensed edges
-        vec3 color = lensedBg * horizonMask;
-
-        // ═══════════════════════════════════════════════════════════════════
-        // PHOTON RING — bright band at horizon boundary
-        // ═══════════════════════════════════════════════════════════════════
-        float ring = smoothstep(horizonRadius - 0.08, horizonRadius, diskDist)
-                   * smoothstep(horizonRadius + 0.06, horizonRadius, diskDist);
-        ring = pow(ring, 1.5);
-
-        // Shimmer — photons in unstable orbit
-        float shimmer = 0.9 + 0.1 * sin(instanceTime * 2.5 + diskDist * 40.0);
-        ring *= shimmer;
-
-        // Doppler asymmetry — slow rotation brightens approaching side
-        float dopplerAngle = vDopplerAngleXY;
-        float dopplerPhase = dopplerAngle + instanceTime * 0.4;
-        float doppler = 0.82 + 0.18 * sin(dopplerPhase);
-        ring *= doppler;
-
-        // Warm amber ring color — gravitationally redshifted photons
-        vec3 ringBase   = vec3(0.90, 0.55, 0.15);
-        vec3 ringBright = vec3(1.00, 0.90, 0.65);
-        vec3 ringColor  = mix(ringBase, ringBright, pow(ring, 2.0));
-
-        float softCap = uBloomThreshold + 0.30;
-        float ringBrightness = min(1.5, softCap) * uEdgeGlow;
-        color += ringColor * ring * ringBrightness * vInstanceAlpha;
-
-        // Instance fade — gradual (lensing already scaled by vInstanceAlpha above)
-        if (vInstanceAlpha < 0.02) discard;
-
-        // Cutout/grain (for gestures that use them)
-        float alpha = 1.0;
-        ${CUTOUT_GLSL}
-        alpha *= trailAlpha;
-        ${GRAIN_GLSL}
-        if (alpha < 0.1) discard;
-
-        gl_FragColor = vec4(color, 1.0);
-        return;
-    }
-
-    // Per-instance time
-    float instanceTime = vLocalTime + vRandomSeed * 10.0;
+    // Rays visible at edges (fresnel) and core-to-edge transition zone
+    float rayMask = fresnel * 0.6 + 0.4;
+    vec3 rays = lightColor * 1.3 * rayPattern * rayMask;
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // NOISE SMOOTHING — subtle world-space noise hides polygon seams
-    // Must be very small (0.02) — photon ring is only 0.18 wide, so even
-    // ±0.01 perturbation is ~5% of ring width. Larger values (0.1) made
-    // the singularity visibly blobby instead of a perfect circle.
-    // ═══════════════════════════════════════════════════════════════════════════════
-    float t = instanceTime * uTendrilSpeed;
-    vec3 np = vWorldPosition * 5.0;
-    float smoothNoise = noise(np * 2.0 + vec3(t * 0.3, -t * 0.2, t * 0.15));
-    float smoothEdge = edgeness + (smoothNoise - 0.5) * 0.02;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // GRAVITATIONAL LENSING — screen-space background distortion
+    // LAYER 3: SPARKLES — sparse white-hot flickers for bloom catchment
     //
-    // For 3D geometry (void-orb, void-ring, void-wrap): warps background
-    // through the geometry surface using view-space normals for lens direction.
-    // For disk mode (void-disk): lensing is handled above using diskDist.
-    // ═══════════════════════════════════════════════════════════════════════════════
-    vec2 screenUV = gl_FragCoord.xy / uResolution;
-
-    // Lensing direction: view-space normal .xy → screen-space direction.
-    // Positive offset = sample further out = image appears pulled inward.
-    vec2 lensDir = normal.xy;
-    float lensMag = length(lensDir);
-    lensDir = lensMag > 0.001 ? lensDir / lensMag : vec2(0.0);
-
-    // Event horizon boundary — below this = absolute black, above = lensing
-    float horizonEdge = 0.45;
-
-    // Lensing strength ramps up beyond the horizon
-    // Scale by vInstanceAlpha so lensing fades gradually during exit (not binary pop)
-    float lensMask = smoothstep(horizonEdge, horizonEdge + 0.30, smoothEdge);
-    float lensAmount = lensMask * 0.06 * uIntensity / 1.5 * vInstanceAlpha;
-
-    // Event horizon mask: 0 = pure black, 1 = shows lensed background
-    // Fade toward 1.0 (show unwarped bg) as instance fades out
-    float horizonMask = mix(1.0, smoothstep(horizonEdge - 0.05, horizonEdge + 0.10, smoothEdge), vInstanceAlpha);
-
-    // Sample lensed background with subtle chromatic aberration (wavelength-dependent bending)
-    vec3 lensedBg = vec3(0.0);
-    if (uHasBackground == 1) {
-        vec2 lensOffset = lensDir * lensAmount;
-        float chrAb = lensAmount * 0.08;  // Subtle prismatic shift, not rainbow
-        lensedBg.r = texture2D(uBackgroundTexture, screenUV + lensOffset + lensDir * chrAb).r;
-        lensedBg.g = texture2D(uBackgroundTexture, screenUV + lensOffset).g;
-        lensedBg.b = texture2D(uBackgroundTexture, screenUV + lensOffset - lensDir * chrAb).b;
-    }
-
-    // Composite: black center + gravitationally lensed edges
-    vec3 color = lensedBg * horizonMask;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // PHOTON RING — thin bright emission at the horizon boundary
-    // Photons in unstable orbits pile up at the photon sphere, creating
-    // the bright ring visible in the reference image.
-    // ═══════════════════════════════════════════════════════════════════════════════
-    float ring = smoothstep(horizonEdge - 0.10, horizonEdge, smoothEdge)
-               * smoothstep(horizonEdge + 0.08, horizonEdge, smoothEdge);
-    ring = pow(ring, 1.5);
-
-    // Shimmer — photons in unstable orbit
-    float shimmer = 0.9 + 0.1 * sin(instanceTime * 2.5 + smoothEdge * 25.0 + smoothNoise * 10.0);
-    ring *= shimmer;
-
-    // Doppler asymmetry — rotating singularity brightens the approaching side.
-    // Uses object-space vertex angle (pre-computed in vertex shader).
-    // Subtle: dim side still at 65% — must preserve circular read.
-    float dopplerAngle = vDopplerAngleXZ;
-    float dopplerPhase = dopplerAngle + instanceTime * 0.4;  // Slow rotation
-    float doppler = 0.82 + 0.18 * sin(dopplerPhase);         // 0.64 to 1.0 range
-    ring *= doppler;
-
-    // Warm amber photon ring — gravitationally redshifted photons
-    // Slightly hotter than overlay edge emission to read as distinct ring
-    vec3 ringBase   = vec3(0.90, 0.55, 0.15);
-    vec3 ringBright = vec3(1.00, 0.90, 0.65);
-    vec3 ringColor  = mix(ringBase, ringBright, pow(ring, 2.0));
-
-    float softCap = uBloomThreshold + 0.30;
-    float ringBrightness = min(1.5, softCap) * uEdgeGlow;
-    color += ringColor * ring * ringBrightness * vInstanceAlpha;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // VISIBILITY — discard invisible pixels, everything else is fully opaque.
-    // Lensing, horizon mask, and photon ring all scale by vInstanceAlpha above,
-    // so elements fade gracefully during exit instead of binary popping.
+    // Hash-based: top 3% of surface gets a sparkle.
+    // Pure white vec3(1.5) exceeds 1.0 for bloom.
+    // Time-quantized so sparkles flicker discretely (not smooth).
+    // Multiplied by radiance so low radiance = no sparkles.
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    // Instance fade — gradual (lensing already scaled by vInstanceAlpha)
-    if (vInstanceAlpha < 0.02) discard;
+    // Discrete time steps for flickering sparkle (not smooth)
+    float sparkleTime = floor(instanceTime * uSparkleRate);
+    vec3 sparklePos = vPosition * 30.0 + vec3(sparkleTime * 1.7, sparkleTime * 2.3, sparkleTime * 0.9);
+    float sparkleNoise = noiseHash(sparklePos);
 
-    // Arc visibility (for vortex/relay effects)
+    // Top 3% → sparkle
+    float sparkleMask = step(0.97, sparkleNoise) * uRadiance;
+    vec3 sparkles = vec3(1.5) * sparkleMask;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COMBINE — all layers contribute to brightness
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    vec3 color = (coreGlow + rays + sparkles) * uIntensity * uGlowScale;
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ALPHA — brightness-driven (like electricity's bolt-brightness approach)
+    //
+    // No base glow → dark areas invisible, prevents model silhouette reveal.
+    // Wide smoothstep for gradual buildup via additive stacking.
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    float brightness = (coreBrightness * pulse + rayPattern * rayMask + sparkleMask * 2.0);
+    // Wide smoothstep range: noise variation maps to a smooth gradient (not binary on/off).
+    // Old (0.15, 0.9) collapsed most brightness to alpha≈1.0 → hard edges → bloom banding.
+    float alpha = smoothstep(0.2, 1.4, brightness) * uOpacity;
+
+    // Subtle fresnel (0.05 not 0.15) — too much hardens silhouette edges, worsening bloom
+    alpha += fresnel * 0.05 * uRadiance;
+    alpha = clamp(alpha, 0.0, 1.0);
+
+    // Apply instance alpha (spawn/exit fade + trail fade)
+    alpha *= vInstanceAlpha;
+
+    // Apply arc visibility (for vortex/relay effects)
     if (vArcVisibility < 0.999) {
+        alpha *= vArcVisibility;
+        color *= mix(0.3, 1.0, vArcVisibility);
         if (vArcVisibility < 0.05) discard;
     }
 
-    // Cutout/grain reduce alpha to create holes (tears in spacetime).
-    // Visible pixels are ALWAYS alpha=1.0. Low-alpha pixels are discarded.
-    float alpha = 1.0;
+    // Discard invisible pixels
+    if (alpha < 0.05) discard;
+
+    // Shared cutout system from InstancedAnimationCore
     ${CUTOUT_GLSL}
-    alpha *= trailAlpha;
+
+    // Grain effect
     ${GRAIN_GLSL}
 
-    // Binary: visible (alpha=1) or discarded. No partial transparency.
-    if (alpha < 0.1) discard;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // FINAL OUTPUT — always opaque
-    // Color already composited: black center + lensed edges + photon ring
-    // ═══════════════════════════════════════════════════════════════════════════════
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, alpha);
 }
 `;
 
@@ -565,32 +457,34 @@ void main() {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 /**
- * Create an instanced procedural void material (black hole singularity)
+ * Create an instanced procedural light material (holy radiance)
  *
  * @param {Object} options - Configuration options
- * @param {number} [options.depth=0.5] - Master parameter (0=spatial tear, 0.5=dark mass, 1=singularity)
- * @param {number} [options.intensity] - Lensing strength + photon ring (derived from depth if not set)
- * @param {number} [options.opacity=0.95] - Base opacity
- * @param {number} [options.tendrilSpeed] - Breathing speed (derived from depth if not set)
- * @param {number} [options.edgeGlow] - Photon ring brightness (derived from depth if not set)
- * @param {number} [options.fadeInDuration=0.2] - Spawn fade duration (seconds)
- * @param {number} [options.fadeOutDuration=0.4] - Exit fade duration (seconds)
+ * @param {number} [options.radiance=0.5] - Master parameter (0=candlelight, 0.5=divine, 1=blinding)
+ * @param {number} [options.intensity] - Brightness multiplier (derived from radiance if not set)
+ * @param {number} [options.opacity=0.45] - Base opacity (low for additive stacking)
+ * @param {number} [options.pulseSpeed] - Breathing pulse speed (derived from radiance if not set)
+ * @param {number} [options.rayIntensity] - Light ray strength (derived from radiance if not set)
+ * @param {number} [options.sparkleRate] - Sparkle flicker rate (derived from radiance if not set)
+ * @param {number} [options.fadeInDuration=0.15] - Spawn fade duration (seconds)
+ * @param {number} [options.fadeOutDuration=0.3] - Exit fade duration (seconds)
  * @returns {THREE.ShaderMaterial}
  */
-export function createInstancedVoidMaterial(options = {}) {
+export function createInstancedLightMaterial(options = {}) {
     const {
-        depth = VOID_DEFAULTS.depth,
+        radiance = LIGHT_DEFAULTS.radiance,
         intensity = null,
-        opacity = VOID_DEFAULTS.opacity,
-        tendrilSpeed = null,
-        edgeGlow = null,
-        fadeInDuration = VOID_DEFAULTS.fadeInDuration,
-        fadeOutDuration = VOID_DEFAULTS.fadeOutDuration
+        opacity = LIGHT_DEFAULTS.opacity,
+        pulseSpeed = null,
+        rayIntensity = null,
+        sparkleRate = null,
+        fadeInDuration = LIGHT_DEFAULTS.fadeInDuration,
+        fadeOutDuration = LIGHT_DEFAULTS.fadeOutDuration
     } = options;
 
-    // Derive depth-dependent parameters
-    const derived = deriveVoidParameters(depth, {
-        intensity, tendrilSpeed, edgeGlow
+    // Derive radiance-dependent parameters
+    const derived = deriveLightParameters(radiance, {
+        intensity, pulseSpeed, rayIntensity, sparkleRate
     });
 
     const material = new THREE.ShaderMaterial({
@@ -601,47 +495,42 @@ export function createInstancedVoidMaterial(options = {}) {
             uFadeOutDuration: { value: fadeOutDuration },
             // Animation uniforms (cutout, glow, etc. from shared core)
             ...createAnimationUniforms(),
-            // Void uniforms
-            uDiskMode: { value: 0 },
-            uDepth: { value: depth },
+            // Light uniforms
+            uRadiance: { value: radiance },
             uIntensity: { value: derived.intensity },
             uOpacity: { value: opacity },
-            uTendrilSpeed: { value: derived.tendrilSpeed },
-            uEdgeGlow: { value: derived.edgeGlow },
+            uPulseSpeed: { value: derived.pulseSpeed },
+            uRayIntensity: { value: derived.rayIntensity },
+            uSparkleRate: { value: derived.sparkleRate },
             uBloomThreshold: { value: 0.85 },
             uRelayCount: { value: 3 },
             uRelayArcWidth: { value: 3.14159 },
-            uRelayFloor: { value: 0.0 },
-            // Screen-space gravitational lensing
-            uBackgroundTexture: { value: null },
-            uResolution: { value: new THREE.Vector2(1, 1) },
-            uHasBackground: { value: 0 }
+            uRelayFloor: { value: 0.0 }
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
-        transparent: true,       // Needed for arc discard path
-        blending: THREE.NormalBlending,
-        depthWrite: true,
-        side: THREE.DoubleSide
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.FrontSide
     });
 
-    material.userData.depth = depth;
-    material.userData.elementalType = 'void';
+    material.userData.radiance = radiance;
+    material.userData.elementalType = 'light';
     material.userData.isProcedural = true;
     material.userData.isInstanced = true;
-    material.userData.needsRefraction = true; // Register for screen-space background pass
 
     return material;
 }
 
 /**
- * Update the global time uniform for instanced void material.
+ * Update the global time uniform for instanced light material.
  * Also handles gesture progress and glow ramping via shared animation system.
- * @param {THREE.ShaderMaterial} material - Instanced void material
+ * @param {THREE.ShaderMaterial} material - Instanced light material
  * @param {number} time - Current global time in seconds
  * @param {number} [gestureProgress=0] - Gesture progress 0-1 (for arc animation)
  */
-export function updateInstancedVoidMaterial(material, time, gestureProgress = 0) {
+export function updateInstancedLightMaterial(material, time, gestureProgress = 0) {
     if (material?.uniforms?.uGlobalTime) {
         material.uniforms.uGlobalTime.value = time;
     }
@@ -650,56 +539,57 @@ export function updateInstancedVoidMaterial(material, time, gestureProgress = 0)
 }
 
 /**
- * Set depth on existing instanced void material.
- * Updates all depth-dependent parameters (intensity, animation speed, photon ring).
- * @param {THREE.ShaderMaterial} material - Instanced void material
- * @param {number} depth - New depth level (0-1)
+ * Set radiance on existing instanced light material.
+ * Updates all radiance-dependent parameters (intensity, pulse, rays, sparkles).
+ * @param {THREE.ShaderMaterial} material - Instanced light material
+ * @param {number} radiance - New radiance level (0-1)
  */
-export function setInstancedVoidDepth(material, depth) {
+export function setInstancedLightRadiance(material, radiance) {
     if (!material?.uniforms) return;
 
-    const derived = deriveVoidParameters(depth);
-    material.uniforms.uDepth.value = depth;
+    const derived = deriveLightParameters(radiance);
+    material.uniforms.uRadiance.value = radiance;
     material.uniforms.uIntensity.value = derived.intensity;
-    material.uniforms.uTendrilSpeed.value = derived.tendrilSpeed;
-    material.uniforms.uEdgeGlow.value = derived.edgeGlow;
-    material.userData.depth = depth;
+    material.uniforms.uPulseSpeed.value = derived.pulseSpeed;
+    material.uniforms.uRayIntensity.value = derived.rayIntensity;
+    material.uniforms.uSparkleRate.value = derived.sparkleRate;
+    material.userData.radiance = radiance;
 }
 
 /**
- * Set per-mascot bloom threshold for void elements.
- * @param {THREE.ShaderMaterial} material - Instanced void material
+ * Set per-mascot bloom threshold for light elements.
+ * @param {THREE.ShaderMaterial} material - Instanced light material
  * @param {number} threshold - Bloom threshold (0.35 for crystal/heart/rough, 0.85 for moon/star)
  */
-export function setInstancedVoidBloomThreshold(material, threshold) {
+export function setInstancedLightBloomThreshold(material, threshold) {
     if (material?.uniforms?.uBloomThreshold) {
         material.uniforms.uBloomThreshold.value = threshold;
     }
 }
 
 /**
- * Configure shader animation for void elements.
+ * Configure shader animation for light elements.
  * Uses the shared animation system from InstancedAnimationCore.
- * @param {THREE.ShaderMaterial} material - Instanced void material
+ * @param {THREE.ShaderMaterial} material - Instanced light material
  * @param {Object} config - Animation config (see InstancedAnimationCore.setShaderAnimation)
  */
-export const setInstancedVoidArcAnimation = setShaderAnimation;
+export const setInstancedLightArcAnimation = setShaderAnimation;
 
 /**
- * Configure gesture-driven glow ramping for void effects.
- * @param {THREE.ShaderMaterial} material - Instanced void material
+ * Configure gesture-driven glow ramping for light effects.
+ * @param {THREE.ShaderMaterial} material - Instanced light material
  * @param {Object} config - Glow configuration (see InstancedAnimationCore.setGestureGlow)
  */
-export function setInstancedVoidGestureGlow(material, config) {
+export function setInstancedLightGestureGlow(material, config) {
     setGestureGlow(material, config);
 }
 
 /**
- * Configure cutout effect for void elements.
- * @param {THREE.ShaderMaterial} material - Instanced void material
+ * Configure cutout effect for light elements.
+ * @param {THREE.ShaderMaterial} material - Instanced light material
  * @param {number|Object} config - Cutout strength (0-1) or config object
  */
-export function setInstancedVoidCutout(material, config) {
+export function setInstancedLightCutout(material, config) {
     setCutout(material, config);
 }
 
@@ -727,13 +617,13 @@ export function resetRelay(material) {
 export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
 
 export default {
-    createInstancedVoidMaterial,
-    updateInstancedVoidMaterial,
-    setInstancedVoidDepth,
-    setInstancedVoidBloomThreshold,
-    setInstancedVoidGestureGlow,
-    setInstancedVoidCutout,
-    setInstancedVoidArcAnimation,
+    createInstancedLightMaterial,
+    updateInstancedLightMaterial,
+    setInstancedLightRadiance,
+    setInstancedLightBloomThreshold,
+    setInstancedLightGestureGlow,
+    setInstancedLightCutout,
+    setInstancedLightArcAnimation,
     setShaderAnimation,
     setGestureGlow,
     setGlowScale,

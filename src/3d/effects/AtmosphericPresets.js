@@ -14,13 +14,13 @@
  * into a fully-resolved config that ParticleAtmosphericsManager can use directly.
  */
 
-import { createSmokeParticleMaterial } from '../materials/SmokeParticleMaterial.js';
-import { createMistParticleMaterial } from '../materials/MistParticleMaterial.js';
-import { createSprayParticleMaterial } from '../materials/SprayParticleMaterial.js';
-import { createVoidParticleMaterial } from '../materials/VoidParticleMaterial.js';
-import { createFireflyParticleMaterial } from '../materials/FireflyParticleMaterial.js';
-import { createDustParticleMaterial } from '../materials/DustParticleMaterial.js';
-import { createLeafParticleMaterial } from '../materials/LeafParticleMaterial.js';
+import { createSmokeParticleMaterial } from '../materials/particles/SmokeParticleMaterial.js';
+import { createMistParticleMaterial } from '../materials/particles/MistParticleMaterial.js';
+import { createSprayParticleMaterial } from '../materials/particles/SprayParticleMaterial.js';
+import { createVoidParticleMaterial } from '../materials/particles/VoidParticleMaterial.js';
+import { createFireflyParticleMaterial } from '../materials/particles/FireflyParticleMaterial.js';
+import { createDustParticleMaterial } from '../materials/particles/DustParticleMaterial.js';
+import { createLeafParticleMaterial } from '../materials/particles/LeafParticleMaterial.js';
 
 // =================================================================================================
 // MATERIAL FACTORIES (keyed by preset material name)

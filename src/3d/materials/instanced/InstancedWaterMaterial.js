@@ -5,7 +5,7 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview GPU-instanced version of ProceduralWaterMaterial
+ * @fileoverview GPU-instanced water material for element models
  * @module materials/InstancedWaterMaterial
  *
  * Uses per-instance attributes for:
@@ -24,7 +24,7 @@ import {
     INSTANCED_ATTRIBUTES_VERTEX,
     INSTANCED_ATTRIBUTES_FRAGMENT,
     createInstancedUniforms
-} from './InstancedShaderUtils.js';
+} from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
@@ -46,20 +46,464 @@ import {
     setGrain,
     resetGrain,
     resetAnimation
-} from './cores/InstancedAnimationCore.js';
-import {
-    NOISE_GLSL,
-    WATER_COLOR_GLSL,
-    WATER_FRAGMENT_CORE,
-    WATER_ARC_FOAM_GLSL,
-    WATER_CUTOUT_FOAM_GLSL,
-    WATER_DRIP_ANTICIPATION_GLSL,
-    WATER_FLOOR_AND_DISCARD_GLSL,
-    lerp3,
-    WATER_DEFAULTS
-} from './cores/WaterShaderCore.js';
+} from '../cores/InstancedAnimationCore.js';
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// WATER UTILITIES (inlined from WaterShaderCore.js — single consumer)
+// ═══════════════════════════════════════════════════════════════════════════════════════
 
-// GLSL code is imported from WaterShaderCore.js
+function lerp3(low, mid, high, t) {
+    if (t < 0.5) {
+        return low + (mid - low) * (t * 2);
+    }
+    return mid + (high - mid) * ((t - 0.5) * 2);
+}
+
+const WATER_DEFAULTS = {
+    turbulence: 0.5,
+    intensity: 1.0,
+    opacity: 0.85,
+    displacementStrength: 0.08,
+    flowSpeed: 1.0,
+    noiseScale: 3.0,
+    edgeFade: 0.15,
+    glowScale: 1.0,
+    fadeInDuration: 0.3,
+    fadeOutDuration: 0.5,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// WATER GLSL (inlined from WaterShaderCore.js — single consumer)
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const NOISE_GLSL = /* glsl */`
+// Permutation polynomial hash
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+// 3D Simplex noise
+float snoise(vec3 v) {
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+
+    vec3 i = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+
+    i = mod289(i);
+    vec4 p = permute(permute(permute(
+        i.z + vec4(0.0, i1.z, i2.z, 1.0))
+        + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+        + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+
+    vec4 x = x_ *ns.x + ns.yyyy;
+    vec4 y = y_ *ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}
+
+// Fractal Brownian Motion - 4 octaves for fluid motion
+float fbm4(vec3 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+
+    for (int i = 0; i < 4; i++) {
+        value += amplitude * snoise(p * frequency);
+        frequency *= 2.0;
+        amplitude *= 0.5;
+    }
+    return value;
+}
+
+// Hash function for Voronoi and bubble patterns
+float hash(vec3 p) {
+    p = fract(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+// 3D value noise (trilinear interpolated hash)
+float noise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    return mix(
+        mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+            mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+        mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+            mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+        f.z
+    );
+}
+
+// Animated 2D Voronoi for caustic ray patterns (Euclidean distance)
+vec3 voronoiCaustic(vec2 p, float time) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float d1 = 10.0, d2 = 10.0;
+    float cell1Hash = 0.0;
+
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            vec2 nb = vec2(float(x), float(y));
+            vec2 cell = i + nb;
+            float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+            float h2 = fract(sin(dot(cell, vec2(269.5, 183.3))) * 43758.5453);
+            vec2 pt = nb + vec2(h, h2) + vec2(
+                (fract(time * 0.48 + h) * 2.0 - 1.0) * 0.15,
+                (fract(time * 0.40 + h2) * 2.0 - 1.0) * 0.15
+            );
+            float d = length(f - pt);
+            if (d < d1) { d2 = d1; d1 = d; cell1Hash = h; }
+            else if (d < d2) { d2 = d; }
+        }
+    }
+    return vec3(d2 - d1, cell1Hash, 0.0);
+}
+
+// Water bubbles with rising animation
+vec2 waterBubbles3D(vec3 p, float scale, float density, float time) {
+    vec3 sp = p * scale + vec3(0.0, time * 0.3, 0.0);
+    vec3 i = floor(sp);
+    vec3 f = fract(sp);
+
+    float bright = 0.0;
+    float ringDark = 0.0;
+
+    for (int x = 0; x <= 1; x++) {
+        for (int y = 0; y <= 1; y++) {
+            for (int z = 0; z <= 1; z++) {
+                vec3 nb = vec3(float(x), float(y), float(z));
+                vec3 cid = i + nb;
+
+                float exists = hash(cid * 1.7 + 3.73);
+                if (exists < density) {
+                    vec3 center = nb + vec3(
+                        hash(cid + 0.37),
+                        hash(cid + 1.51),
+                        hash(cid + 2.93)
+                    ) * 0.6 + 0.2;
+                    float r = mix(0.10, 0.25, hash(cid + 4.31));
+                    float d = length(f - center);
+
+                    if (d < r) {
+                        float nd = d / r;
+                        bright += (1.0 - nd * nd) * 0.55;
+                        ringDark += smoothstep(0.65, 0.95, nd) * 0.5;
+                        vec3 sphereDir = normalize(f - center);
+                        bright += pow(max(dot(sphereDir, normalize(vec3(0.3, 0.8, 0.2))), 0.0), 6.0) * 0.2;
+                    }
+                }
+            }
+        }
+    }
+    return vec2(bright, ringDark);
+}
+`;
+
+const WATER_COLOR_GLSL = /* glsl */`
+const vec3 WATER_DEEP = vec3(0.05, 0.15, 0.35);
+const vec3 WATER_MID = vec3(0.15, 0.4, 0.6);
+const vec3 WATER_BRIGHT = vec3(0.3, 0.6, 0.8);
+const vec3 WATER_FOAM = vec3(0.85, 0.92, 1.0);
+const vec3 WATER_SUBSURFACE = vec3(0.2, 0.5, 0.7);
+
+vec3 waterColor(float intensity, float turbulence) {
+    vec3 color;
+    if (intensity < 0.5) {
+        color = mix(WATER_DEEP, WATER_MID, intensity * 2.0);
+    } else if (intensity < 0.8) {
+        color = mix(WATER_MID, WATER_BRIGHT, (intensity - 0.5) * 3.33);
+    } else {
+        color = mix(WATER_BRIGHT, WATER_FOAM, (intensity - 0.8) * 5.0);
+    }
+    return color;
+}
+`;
+
+const WATER_FRAGMENT_CORE = /* glsl */`
+    vec3 viewDir = normalize(vViewDir);
+
+    vec3 worldNormal = normalize(vWorldNormal);
+    if (length(vWorldNormal) < 0.01) worldNormal = viewDir;
+    worldNormal = faceforward(worldNormal, -viewDir, worldNormal);
+
+    float smoothNdotV = max(0.0, dot(worldNormal, viewDir));
+    float fresnel = pow(1.0 - smoothNdotV, 3.0);
+    float thickness = smoothNdotV * smoothNdotV * 0.5;
+
+    float F0 = 0.02;
+    float schlick = F0 + (1.0 - F0) * fresnel;
+
+    vec3 waterBodyColor = vec3(0.05, 0.15, 0.30) * uTint;
+    vec3 transmittedLight;
+    float bgPresence = 1.0;
+
+    if (uHasBackground == 1) {
+        vec2 screenUV = gl_FragCoord.xy / uResolution;
+
+        vec3 I_vs = normalize(vViewPosition);
+        vec3 N_vs = faceforward(normalize(vNormal), I_vs, normalize(vNormal));
+
+        vec3 refDir = refract(I_vs, N_vs, 0.75);
+        if (length(refDir) < 0.1) refDir = I_vs;
+        float physDistortion = 0.04 + thickness * 0.10;
+        vec2 physOffset = refDir.xy * physDistortion;
+
+        float rt = uGlobalTime * 0.001;
+        vec2 ripple1 = vec2(
+            sin(vPosition.x * 8.0 + rt * 4.0) * cos(vPosition.z * 6.0 + rt * 3.0),
+            cos(vPosition.x * 7.0 - rt * 3.5) * sin(vPosition.z * 9.0 + rt * 2.5)
+        ) * 0.15;
+        vec2 ripple2 = vec2(
+            sin(vPosition.x * 15.0 - rt * 5.0 + 1.7) * cos(vPosition.z * 12.0 + rt * 4.5),
+            cos(vPosition.x * 13.0 + rt * 6.0) * sin(vPosition.z * 16.0 - rt * 3.0)
+        ) * 0.08;
+        vec2 rippleOffset = (ripple1 + ripple2) * 0.60;
+
+        vec2 totalOffset = physOffset + rippleOffset;
+
+        vec4 bgCenter = texture2D(uBackgroundTexture, clamp(screenUV + totalOffset, 0.0, 1.0));
+        bgPresence = smoothstep(0.05, 0.3, bgCenter.a);
+
+        vec3 refractedBg;
+        if (bgPresence > 0.1) {
+            refractedBg = vec3(
+                texture2D(uBackgroundTexture, clamp(screenUV + totalOffset * 0.97, 0.0, 1.0)).r,
+                bgCenter.g,
+                texture2D(uBackgroundTexture, clamp(screenUV + totalOffset * 1.03, 0.0, 1.0)).b
+            );
+        } else {
+            refractedBg = bgCenter.rgb;
+        }
+
+        vec3 skyTint = vec3(0.12, 0.20, 0.30) * uTint;
+        vec3 ambientLift = mix(skyTint, vec3(0.03, 0.06, 0.10), bgPresence);
+        refractedBg += ambientLift * (vec3(1.0) - refractedBg);
+
+        transmittedLight = mix(refractedBg, waterBodyColor, thickness * 0.15);
+    } else {
+        vec3 voidColor = vec3(0.08, 0.15, 0.25);
+        transmittedLight = mix(voidColor, waterBodyColor, thickness * 0.3);
+    }
+
+    vec3 absorptionTint = mix(vec3(1.0), vec3(0.65, 0.85, 1.0), 0.20 + thickness * 0.8);
+    transmittedLight *= absorptionTint;
+
+    transmittedLight *= (1.0 - fresnel * 0.08);
+
+    vec2 parallaxDir = viewDir.xz / max(smoothNdotV, 0.25);
+    vec2 coarseParallax = parallaxDir * 0.08;
+    vec2 fineParallax = parallaxDir * 0.12;
+
+    float breakNoise = noise(vec3(vPosition.xz * 0.4, 0.0));
+    float causticMask = smoothstep(0.55, 0.85, breakNoise);
+
+    float causticTime = uGlobalTime * 0.001;
+
+    vec3 coarseCaustic = voronoiCaustic(
+        (vPosition.xz + coarseParallax) * 3.0 + vec2(vRandomSeed * 3.0),
+        causticTime
+    );
+    vec3 fineCaustic = voronoiCaustic(
+        (vPosition.xz + fineParallax) * 6.0 + vec2(vRandomSeed * 5.7),
+        causticTime * 1.3
+    );
+
+    float coarseAngle = coarseCaustic.y * 6.28318;
+    vec2 coarsePlaneDir = vec2(cos(coarseAngle), sin(coarseAngle));
+    float coarseSparkle = abs(dot(coarsePlaneDir, viewDir.xz));
+    coarseSparkle = mix(0.1, 1.0, coarseSparkle);
+
+    float fineAngle = fineCaustic.y * 6.28318;
+    vec2 finePlaneDir = vec2(cos(fineAngle), sin(fineAngle));
+    float fineSparkle = abs(dot(finePlaneDir, viewDir.xz));
+    fineSparkle = mix(0.1, 1.0, fineSparkle);
+
+    float coarseBright = 1.0 - smoothstep(0.0, 0.03, coarseCaustic.x);
+    float fineBright = 1.0 - smoothstep(0.0, 0.02, fineCaustic.x);
+
+    float causticCombined = (coarseBright * coarseSparkle * 0.6 + fineBright * fineSparkle * 0.4) * causticMask;
+
+    transmittedLight *= 1.0 + causticCombined * 0.04;
+
+    vec3 bubbleParallax = viewDir * 0.08 / max(smoothNdotV, 0.25);
+    vec3 bubbleSamplePos = vPosition + bubbleParallax + vec3(vRandomSeed * 10.0);
+
+    float bubbleClusterMask = 0.5 + 0.5 * causticMask;
+
+    vec2 bub = waterBubbles3D(bubbleSamplePos, 20.0, 0.50, uGlobalTime * 0.001);
+
+    float fizz = smoothstep(0.84, 0.90, noise(bubbleSamplePos * 40.0)) * 0.15;
+
+    float bubbleBright = (bub.x + fizz) * bubbleClusterMask;
+    float bubbleRing = bub.y * bubbleClusterMask;
+
+    vec3 wetReflDir = reflect(-viewDir, worldNormal);
+
+    float wetSpec1 = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 128.0);
+    float wetSpec2 = pow(max(dot(wetReflDir, normalize(vec3(-0.4, 0.8, -0.4))), 0.0), 128.0) * 0.7;
+    float wetSpec3 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.6, 0.7))), 0.0), 96.0) * 0.5;
+    float wetSpec4 = pow(max(dot(wetReflDir, normalize(vec3(0.2, 0.9, -0.3))), 0.0), 160.0) * 0.4;
+    float broadSpec = (wetSpec1 + wetSpec2 + wetSpec3 + wetSpec4) * 1.5;
+
+    float spark1 = pow(max(dot(wetReflDir, normalize(vec3(0.5, 1.0, 0.3))), 0.0), 512.0);
+    float spark2 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.9, 0.4))), 0.0), 512.0) * 0.6;
+    float spark3 = pow(max(dot(wetReflDir, normalize(vec3(0.4, 0.7, -0.5))), 0.0), 384.0) * 0.4;
+
+    float sparkleAnim = snoise(vPosition * 8.0 + vec3(localTime * 0.004)) * 0.5 + 0.5;
+
+    float sharpSpec = (spark1 + spark2 + spark3) * sparkleAnim * 3.0 * uSparkleIntensity;
+
+    vec3 specContrib = vec3(0.85, 0.92, 1.0) * (broadSpec + sharpSpec);
+
+    vec3 color = transmittedLight;
+
+    float softCap = uBloomThreshold + 0.40;
+    float maxChannel = max(color.r, max(color.g, color.b));
+    if (maxChannel > softCap) {
+        color *= softCap / maxChannel;
+    }
+
+    color += specContrib;
+    color += vec3(0.80, 0.85, 0.92) * bubbleBright * 0.35;
+    color -= vec3(0.05, 0.04, 0.02) * bubbleRing;
+
+    float edgeAlpha = smoothstep(0.08, 0.60, smoothNdotV) * 0.25;
+    float skyAlpha = mix(0.25, 1.0, bgPresence);
+    float alpha = edgeAlpha * skyAlpha;
+`;
+
+const WATER_ARC_FOAM_GLSL = /* glsl */`
+    float arcEdgeFoam = smoothstep(0.5, 0.85, vArcVisibility) * (1.0 - smoothstep(0.85, 1.0, vArcVisibility));
+    float leadingFoam = smoothstep(0.0, 0.3, vArcVisibility) * (1.0 - smoothstep(0.3, 0.5, vArcVisibility));
+    float totalFoam = max(arcEdgeFoam, leadingFoam * 0.7);
+
+    float foamShimmer = 0.8 + 0.2 * sin(localTime * 0.005 + vPosition.x * 10.0);
+    color = mix(color, WATER_FOAM * foamShimmer, totalFoam * 0.35);
+
+    float arcEdgeIntensity = 1.0 - vArcVisibility;
+    vec3 edgeGlow = WATER_FOAM * (0.8 + 0.15 * uGlowScale);
+    color = mix(color, edgeGlow, arcEdgeIntensity * 0.2 * uGlowScale);
+
+    color += arcEdgeIntensity * vec3(0.1, 0.2, 0.25) * 0.3 * uGlowScale;
+
+    alpha = mix(alpha, min(1.0, alpha + 0.3), totalFoam);
+
+    alpha = mix(alpha, min(1.0, alpha + 0.15), arcEdgeIntensity * 0.4);
+`;
+
+const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
+    if (uCutoutStrength > 0.01 && finalCutout < 0.99) {
+        float cutoutThreshold = 0.5;
+
+        float nearEdge = smoothstep(cutoutThreshold, cutoutThreshold + 0.15, finalCutout);
+        float farEdge = smoothstep(cutoutThreshold + 0.3, cutoutThreshold + 0.5, finalCutout);
+
+        float innerRim = nearEdge * (1.0 - smoothstep(cutoutThreshold + 0.15, cutoutThreshold + 0.25, finalCutout));
+
+        float outerGlow = nearEdge * (1.0 - farEdge) * 0.4;
+
+        float foamSparkle = sin(localTime * 0.008 + vPosition.x * 15.0 + vPosition.z * 12.0) * 0.5 + 0.5;
+        foamSparkle *= sin(localTime * 0.006 - vPosition.y * 18.0) * 0.5 + 0.5;
+        foamSparkle = pow(foamSparkle, 3.0) * innerRim;
+
+        color = mix(color, WATER_FOAM * 0.9, innerRim * uCutoutStrength * 0.3);
+        color = mix(color, WATER_BRIGHT * 0.8, outerGlow * uCutoutStrength * 0.2);
+        color = mix(color, vec3(1.0), foamSparkle * uCutoutStrength * uSparkleIntensity * 0.15);
+    }
+`;
+
+const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
+    float dripHash1 = snoise(vPosition * 8.0 + vec3(12.34, 56.78, 90.12));
+    float dripHash2 = snoise(vPosition * 8.0 + vec3(98.76, 54.32, 10.98));
+    float dripHash3 = snoise(vPosition * 6.0 + vec3(45.67, 23.45, 67.89));
+
+    float dripPoint1 = smoothstep(0.65, 0.85, dripHash1);
+    float dripPoint2 = smoothstep(0.7, 0.88, dripHash2);
+    float dripPoint3 = smoothstep(0.72, 0.9, dripHash3);
+
+    float dripPhase1 = localTime * 0.003 + dripHash1 * 6.28318;
+    float dripPhase2 = localTime * 0.0025 + dripHash2 * 6.28318;
+    float dripPhase3 = localTime * 0.002 + dripHash3 * 6.28318;
+
+    float dripPulse1 = pow(fract(dripPhase1 * 0.15), 3.0);
+    float dripPulse2 = pow(fract(dripPhase2 * 0.12), 3.0);
+    float dripPulse3 = pow(fract(dripPhase3 * 0.1), 2.5);
+
+    float dripFlash1 = smoothstep(0.85, 0.95, dripPulse1) * (1.0 - smoothstep(0.95, 1.0, dripPulse1));
+    float dripFlash2 = smoothstep(0.85, 0.95, dripPulse2) * (1.0 - smoothstep(0.95, 1.0, dripPulse2));
+    float dripFlash3 = smoothstep(0.88, 0.96, dripPulse3) * (1.0 - smoothstep(0.96, 1.0, dripPulse3));
+
+    float tensionBulge1 = smoothstep(0.5, 0.85, dripPulse1) * dripPoint1;
+    float tensionBulge2 = smoothstep(0.5, 0.85, dripPulse2) * dripPoint2;
+    float tensionBulge = (tensionBulge1 + tensionBulge2) * 0.5;
+
+    float dripIntensity = dripPoint1 * (dripPulse1 * 0.35 + dripFlash1 * 0.65)
+                        + dripPoint2 * (dripPulse2 * 0.35 + dripFlash2 * 0.65)
+                        + dripPoint3 * (dripPulse3 * 0.3 + dripFlash3 * 0.7);
+
+    float flashTotal = dripFlash1 + dripFlash2 + dripFlash3;
+    vec3 dripColor = mix(WATER_BRIGHT, WATER_FOAM, min(1.0, flashTotal));
+
+    float rainbowPhase = localTime * 0.002 + vPosition.x * 5.0;
+    vec3 rainbowTint = vec3(
+        0.5 + 0.5 * sin(rainbowPhase),
+        0.5 + 0.5 * sin(rainbowPhase + 2.094),
+        0.5 + 0.5 * sin(rainbowPhase + 4.189)
+    );
+    dripColor = mix(dripColor, dripColor * rainbowTint, flashTotal * 0.15);
+
+    color += dripIntensity * dripColor * 0.15 * uGlowScale;
+
+    color += tensionBulge * WATER_BRIGHT * 0.10;
+`;
+
+const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
+    if (alpha < 0.1) discard;
+`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // INSTANCED VERTEX SHADER

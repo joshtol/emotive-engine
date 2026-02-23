@@ -47,7 +47,7 @@ import {
     INSTANCED_ATTRIBUTES_VERTEX,
     INSTANCED_ATTRIBUTES_FRAGMENT,
     createInstancedUniforms
-} from './InstancedShaderUtils.js';
+} from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
     CUTOUT_PATTERNS,
@@ -69,14 +69,14 @@ import {
     setGrain,
     resetGrain,
     resetAnimation
-} from './cores/InstancedAnimationCore.js';
+} from '../cores/InstancedAnimationCore.js';
 import {
     WETNESS_UNIFORMS_GLSL,
     WETNESS_FUNC_GLSL,
     createWetnessUniforms,
     setWetness,
     resetWetness
-} from './cores/WetnessCore.js';
+} from '../cores/WetnessCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // EARTH DEFAULTS
