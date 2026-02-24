@@ -175,7 +175,7 @@ export default function MascotRenderer({
 
       if (!existingScript) {
         const script = document.createElement('script')
-        script.src = `/emotive-engine-3d.js?v=${Date.now()}`
+        script.src = `/emotive-engine-3d.umd.js?v=${Date.now()}`
         script.async = true
         document.head.appendChild(script)
       }

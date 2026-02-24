@@ -220,7 +220,7 @@ export default function GameMain({ currentUndertone, onGesture, onMascotReady, e
       const existingScript = document.querySelector('script[src*="/emotive-engine-3d"]')
       if (!existingScript) {
         const script = document.createElement('script')
-        script.src = `/emotive-engine-3d.js?v=${Date.now()}`
+        script.src = `/emotive-engine-3d.umd.js?v=${Date.now()}`
         script.async = true
         document.head.appendChild(script)
       }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const ENGINE_3D_SCRIPT_ID = 'emotive-engine-3d-script'
-const ENGINE_3D_SCRIPT_SRC = '/emotive-engine-3d.js'
+const ENGINE_3D_SCRIPT_SRC = '/emotive-engine-3d.umd.js'
 
 export interface Use3DMascotControllerOptions {
   /** Container element ID for the 3D canvas */
