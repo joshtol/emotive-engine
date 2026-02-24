@@ -1663,14 +1663,16 @@
         // ═══════════════════════════════════════════════════════════════════════════
 
         const soulPresets = [
-            { a: 'nebula' },                              // 100% nebula
-            { a: 'spiral', b: 'orbital', blend: 0.35 },   // spiral + orbital rings
-            { a: 'tidal' },                                // 100% tidal
-            { a: 'hotspot', b: 'radial', blend: 0.4 },    // hotspot + radial pulse
-            { a: 'orbital' },                              // 100% orbital
-            { a: 'nebula', b: 'spiral', blend: 0.3 },     // nebula + spiral thread
-            { a: 'radial', b: 'tidal', blend: 0.35 },     // radial + tidal modulation
-            { a: 'hotspot' },                              // 100% hotspot
+            { a: 'nebula',  b: 'spiral',  blend: 0.35 },  // nebula with spiral threads
+            { a: 'spiral',  b: 'orbital', blend: 0.4  },  // spiral + orbital rings
+            { a: 'tidal',   b: 'nebula',  blend: 0.3  },  // tidal with nebula haze
+            { a: 'hotspot', b: 'radial',  blend: 0.4  },  // hotspot + radial pulse
+            { a: 'orbital', b: 'tidal',   blend: 0.35 },  // orbital + tidal sway
+            { a: 'radial',  b: 'spiral',  blend: 0.3  },  // radial + spiral overlay
+            { a: 'nebula',  b: 'hotspot', blend: 0.35 },  // nebula + hotspot flicker
+            { a: 'spiral',  b: 'tidal',   blend: 0.4  },  // spiral + tidal modulation
+            { a: 'hotspot', b: 'orbital', blend: 0.3  },  // hotspot + orbital sweep
+            { a: 'tidal',   b: 'radial',  blend: 0.35 },  // tidal + radial pulse
         ];
         let currentPresetIndex = 0;
 
@@ -1680,17 +1682,12 @@
             const soul = mascot.core3D?.crystalSoul;
             if (!soul) return;
 
-            if (preset.b) {
-                soul.setMix(preset.a, preset.b, preset.blend);
-                console.log(`[Soul] Mix: ${preset.a} + ${preset.b} (${Math.round((1 - preset.blend) * 100)}/${Math.round(preset.blend * 100)})`);
-            } else {
-                soul.setBehavior(preset.a);
-                console.log(`[Soul] Behavior: ${preset.a}`);
-            }
+            soul.setMix(preset.a, preset.b, preset.blend, 3000);
+            console.log(`[Soul] ${preset.a} + ${preset.b} (${Math.round((1 - preset.blend) * 100)}/${Math.round(preset.blend * 100)})`);
         }
 
-        // Cycle every 8 seconds (with 2s crossfade transition)
-        setInterval(cycleSoulBehavior, 8000);
+        // Cycle every 6 seconds (with 3s crossfade for continuous blending)
+        setInterval(cycleSoulBehavior, 6000);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE

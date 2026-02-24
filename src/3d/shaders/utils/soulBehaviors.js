@@ -99,7 +99,7 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
         if (crossWaveEnabled > 0.5) {
             float ct = time * crossWaveSpeed * behaviorSpeed;
             float wave = sin(pos.x * 4.0 + pos.z * 2.0 - ct) * 0.5 + 0.5;
-            crossWaveEnergy = pow(wave, 4.0);
+            crossWaveEnergy = pow(wave, 2.5);
         }
 
         float normalizedDrift = min(1.0, driftEnergy * 0.5);
@@ -115,10 +115,10 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
         float height = pos.y;
         // Primary helix: angle + height coupled with time for corkscrew
         float helix = sin(angle * 2.0 - height * 4.0 + t * 6.28318) * 0.5 + 0.5;
-        helix = pow(helix, 3.0);
+        helix = pow(helix, 2.0);
         // Counter-helix for depth
         float helix2 = sin(-angle * 1.5 + height * 3.0 + t * 4.0) * 0.5 + 0.5;
-        helix2 = pow(helix2, 4.0) * 0.4;
+        helix2 = pow(helix2, 2.5) * 0.4;
         // Noise breakup so helices aren't perfectly smooth
         float breakup = noise3D(pos * 3.0 + vec3(0.0, t, 0.0));
         return 0.53 + (helix + helix2) * breakup * 0.07;
@@ -132,8 +132,8 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
         float distFromTide = pos.y - tideLevel;
         // Bright below tide surface, dark above
         float tideMask = 1.0 - smoothstep(0.0, 0.25, distFromTide);
-        // Thin bright crest band at surface
-        float crest = exp(-distFromTide * distFromTide * 80.0);
+        // Thin bright crest band at surface (softened for gentler pulse)
+        float crest = exp(-distFromTide * distFromTide * 40.0);
         // Surface turbulence
         float turbulence = noise3D(pos * 4.0 + vec3(t * 0.5, 0.0, t * 0.3)) * 0.15;
         return 0.53 + (tideMask * 0.04) + (crest * 0.03) + turbulence * tideMask * 0.02;
@@ -164,7 +164,7 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
         for (int i = 0; i < 3; i++) {
             float offset = float(i) * 0.33;
             float shellRadius = fract(t * 0.5 + offset) * 1.5;
-            float shell = exp(-(dist - shellRadius) * (dist - shellRadius) * 60.0);
+            float shell = exp(-(dist - shellRadius) * (dist - shellRadius) * 30.0);
             float fade = 1.0 - fract(t * 0.5 + offset);
             energy += shell * fade;
         }

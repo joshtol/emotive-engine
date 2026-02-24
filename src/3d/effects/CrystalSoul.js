@@ -79,19 +79,21 @@ const soulFragmentShader = `
     ${SOUL_BEHAVIOR_FUNC_GLSL}
 
     void main() {
-        // Dispatch to active behavior — returns energy in 0.53+ range
-        float rawEffectActivity = calculateSoulBehavior(
+        // Dispatch to active behavior — returns energy in 0.53-0.60 range
+        float rawBehavior = calculateSoulBehavior(
             vPosition, time, uBehaviorSpeed,
             driftEnabled, driftSpeed,
             crossWaveEnabled, crossWaveSpeed,
             phaseOffset1, phaseOffset2, phaseOffset3
         );
 
-        // Clamp for color intensity (floor: guaranteed visible, ceiling: no blowout)
-        float effectActivity = clamp(rawEffectActivity, 0.53, 0.60);
+        // Expand narrow behavior range [0.53, 0.60] to full [0, 1] display range
+        // Behaviors output tight range for mixing stability; remap here for contrast
+        float rawEffectActivity = clamp((rawBehavior - 0.53) / 0.07, 0.0, 1.0);
 
-        // Total energy for color calculation (reduced for subtler bloom)
-        float totalEnergy = 0.25 + effectActivity * 0.55; // Base glow + effect contribution
+        // Total energy for color calculation
+        // Compress range so dim↔bright swing is gentler (less pulsing)
+        float totalEnergy = 0.30 + rawEffectActivity * 0.38;
 
         // Edge glow - adds rim lighting
         vec3 viewDir = normalize(-vPosition);
@@ -131,13 +133,13 @@ const soulFragmentShader = `
             coreColor = mix(coreColor, blendResult, blendLayer2Strength);
         }
 
-        // Ghost mode: ONLY the traveling fire bands are visible
+        // Ghost mode: ONLY the traveling energy bands are visible
         // Everything below the threshold is completely invisible
         float alpha = baseOpacity;
         if (ghostMode > 0.01) {
-            // High threshold - only the peaks of the thin bands pass through
-            float threshold = 0.4 + ghostMode * 0.4; // 0.4-0.8 range
-            float visibility = smoothstep(threshold, threshold + 0.05, rawEffectActivity);
+            // Threshold splits the 0-1 range: below = invisible, above = visible
+            float threshold = ghostMode * 0.5; // 0.0-0.5 range
+            float visibility = smoothstep(threshold, threshold + 0.25, rawEffectActivity);
 
             // Hard cutoff - only bright fire bands visible
             alpha = visibility * baseOpacity;

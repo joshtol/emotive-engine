@@ -905,6 +905,12 @@ export class ThreeRenderer {
         this.coreMesh = new THREE.Mesh(geometry, material);
         this.coreMesh.name = 'coreMascot';
 
+        // Render crystal before other transparent objects (instanced elements) so its
+        // depth is in the buffer when crowns/rings depth-test against it.
+        // Overlay meshes use coreMesh.renderOrder + N, so they still render after.
+        if (material.transparent) {
+            this.coreMesh.renderOrder = -1;
+        }
 
         if (this.options.enableShadows) {
             this.coreMesh.castShadow = true;

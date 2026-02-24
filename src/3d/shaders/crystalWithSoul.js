@@ -886,9 +886,8 @@ void main() {
             soulGlow *= mix(vec3(1.0), gemHue, tintAmount);
         }
 
-        // Add soul glow to final color — clamp contribution to prevent overbright bloom
-        // Soul fills most of the crystal interior; keep it subtle so shell facets stay visible
-        finalColor += min(soulGlow * 0.8, vec3(0.25));
+        // Add soul glow to final color
+        finalColor += soulGlow * 0.55;
     }
 
     // ═══════════════════════════════════════════════════════════════════════

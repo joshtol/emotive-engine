@@ -208,7 +208,7 @@ function createCrystalMaterial(glowColor, glowIntensity, textureType = 'crystal'
         fragmentShader,
         transparent: true,
         side: THREE.DoubleSide,
-        depthWrite: false,  // Don't write depth so inner soul can render through
+        depthWrite: true,   // Soul renders to separate RT via texture sampling, not depth
         blending: THREE.NormalBlending
     });
 
