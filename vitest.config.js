@@ -12,11 +12,15 @@ export default defineConfig({
             '**/*.spec.ts',
             '**/*.e2e.ts'
         ],
-        // Forks pool with singleFork — all tests run in one forked process.
+        // Forks pool (vitest 3.x default). Each test file gets its own
+        // forked process with fresh memory, preventing the 275 MB
+        // accumulation that crashes v8's RegExpCompiler zone allocator.
         pool: 'forks',
         poolOptions: {
             forks: {
-                singleFork: true
+                // MUST be false — singleFork: true crams all 487 tests
+                // into one process whose RegExpCompiler OOMs at ~275 MB.
+                singleFork: false
             }
         },
         // Increase timeouts for large test suite

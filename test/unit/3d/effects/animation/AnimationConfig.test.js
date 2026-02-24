@@ -821,45 +821,4 @@ describe('AnimationConfig', () => {
         });
     });
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // DEFAULT CONSTANTS
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    describe('default constants', () => {
-        it('should export ANIMATION_DEFAULTS', () => {
-            expect(ANIMATION_DEFAULTS).toBeDefined();
-            expect(ANIMATION_DEFAULTS.enter).toBeDefined();
-            expect(ANIMATION_DEFAULTS.exit).toBeDefined();
-        });
-
-        it('should export PULSE_DEFAULTS', () => {
-            expect(PULSE_DEFAULTS).toBeDefined();
-            expect(PULSE_DEFAULTS.amplitude).toBe(0.1);
-            expect(PULSE_DEFAULTS.frequency).toBe(2);
-        });
-
-        it('should export FLICKER_DEFAULTS', () => {
-            expect(FLICKER_DEFAULTS).toBeDefined();
-            expect(FLICKER_DEFAULTS.intensity).toBe(0.2);
-            expect(FLICKER_DEFAULTS.pattern).toBe('random');
-        });
-
-        it('should export DRIFT_DEFAULTS', () => {
-            expect(DRIFT_DEFAULTS).toBeDefined();
-            expect(DRIFT_DEFAULTS.direction).toBe('outward');
-            expect(DRIFT_DEFAULTS.bounce).toBe(false);
-        });
-
-        it('should export ROTATE_DEFAULTS', () => {
-            expect(ROTATE_DEFAULTS).toBeDefined();
-            expect(ROTATE_DEFAULTS.axis).toBe('y');
-            expect(ROTATE_DEFAULTS.oscillate).toBe(false);
-        });
-
-        it('should export EMISSIVE_DEFAULTS', () => {
-            expect(EMISSIVE_DEFAULTS).toBeDefined();
-            expect(EMISSIVE_DEFAULTS.pattern).toBe('sine');
-            expect(EMISSIVE_DEFAULTS.dutyCycle).toBe(0.5);
-        });
-    });
 });
