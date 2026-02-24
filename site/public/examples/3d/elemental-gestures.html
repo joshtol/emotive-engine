@@ -455,29 +455,29 @@
             border-radius: 2px;
         }
 
+        /* Toast hidden on desktop */
+        .mobile-toast { display: none; }
+
         @media (max-width: 1000px) {
             .gesture-tooltip {
                 display: none !important;
             }
 
-            /* 1. Remove nested scrolling — let button grids flow naturally */
+            /* Remove nested scrolling — keep 2-col layout, just uncap height */
             .right-menu .button-grid {
                 max-height: none;
                 overflow-y: visible;
                 padding-right: 0;
-                grid-template-columns: repeat(4, 1fr);
             }
 
-            /* 3. Touch-friendly gesture buttons */
+            /* Touch-friendly gesture buttons */
             .gesture-btn {
-                min-height: 44px;
-                padding: 6px 4px;
-                font-size: 11px;
+                min-height: 48px;
+                padding: 8px 6px;
             }
-            .gesture-btn .emoji { font-size: 18px; }
             .gesture-btn:hover { transform: none; }
 
-            /* 4. Floating toast near canvas */
+            /* Floating toast near canvas */
             .mobile-toast {
                 display: block;
                 position: absolute;
@@ -506,7 +506,7 @@
             /* Hide left-menu info section on mobile — toast replaces it */
             #info-section { display: none; }
 
-            /* 7. Smaller GPU monitor */
+            /* Smaller GPU monitor */
             #gpu-monitor-display {
                 font-size: 9px !important;
                 padding: 6px 8px !important;
@@ -515,16 +515,11 @@
                 min-width: 60px !important;
             }
 
-            /* 8. Hide stats grid — dev info wastes space on mobile */
+            /* Hide stats grid on mobile */
             .stats-grid { display: none; }
         }
 
         @media (max-width: 600px) {
-            .right-menu .button-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            /* 5. Camera hint wrapping on small screens */
             .camera-hint {
                 white-space: normal;
                 text-align: center;
@@ -532,17 +527,7 @@
                 font-size: 10px;
                 margin: 0 auto;
             }
-
-            .gesture-btn {
-                min-height: 40px;
-                padding: 5px 3px;
-                font-size: 10px;
-            }
-            .gesture-btn .emoji { font-size: 16px; }
         }
-
-        /* Toast hidden on desktop */
-        .mobile-toast { display: none; }
     </style>
 </head>
 <body>
