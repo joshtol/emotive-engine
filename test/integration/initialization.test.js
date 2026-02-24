@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Integration Tests - Initialization Flow
  * Tests the InitializationManager phases and manager wiring

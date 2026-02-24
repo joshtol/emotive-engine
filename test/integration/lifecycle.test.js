@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Integration Tests - Full Lifecycle
  * Tests the complete lifecycle of EmotiveMascot from construction to destruction

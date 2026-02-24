@@ -44,12 +44,8 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run tests (sharded to prevent v8 zone allocator OOM)
-      run: |
-        for shard in 1 2 3 4; do
-          echo "--- Shard $shard/4 ---"
-          npx vitest run --shard=$shard/4
-        done
+    - name: Run tests
+      run: npm test
 
   build:
     runs-on: ubuntu-latest

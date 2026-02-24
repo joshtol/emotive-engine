@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * AudioHandler Tests
  * Tests for the audio management module

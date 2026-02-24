@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Core3DManager Tests
  * Tests for the 3D rendering manager constructor validation
