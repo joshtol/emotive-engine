@@ -459,7 +459,90 @@
             .gesture-tooltip {
                 display: none !important;
             }
+
+            /* 1. Remove nested scrolling — let button grids flow naturally */
+            .right-menu .button-grid {
+                max-height: none;
+                overflow-y: visible;
+                padding-right: 0;
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            /* 3. Touch-friendly gesture buttons */
+            .gesture-btn {
+                min-height: 44px;
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+            .gesture-btn .emoji { font-size: 18px; }
+            .gesture-btn:hover { transform: none; }
+
+            /* 4. Floating toast near canvas */
+            .mobile-toast {
+                display: block;
+                position: absolute;
+                bottom: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(var(--accent-rgb), 0.4);
+                border-radius: 20px;
+                padding: 6px 16px;
+                font-size: 12px;
+                color: white;
+                z-index: 200;
+                opacity: 0;
+                transition: opacity 0.2s;
+                pointer-events: none;
+                white-space: nowrap;
+                max-width: 90%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .mobile-toast.visible { opacity: 1; }
+
+            /* Hide left-menu info section on mobile — toast replaces it */
+            #info-section { display: none; }
+
+            /* 7. Smaller GPU monitor */
+            #gpu-monitor-display {
+                font-size: 9px !important;
+                padding: 6px 8px !important;
+                right: 4px !important;
+                top: 4px !important;
+                min-width: 60px !important;
+            }
+
+            /* 8. Hide stats grid — dev info wastes space on mobile */
+            .stats-grid { display: none; }
         }
+
+        @media (max-width: 600px) {
+            .right-menu .button-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            /* 5. Camera hint wrapping on small screens */
+            .camera-hint {
+                white-space: normal;
+                text-align: center;
+                max-width: 90%;
+                font-size: 10px;
+                margin: 0 auto;
+            }
+
+            .gesture-btn {
+                min-height: 40px;
+                padding: 5px 3px;
+                font-size: 10px;
+            }
+            .gesture-btn .emoji { font-size: 16px; }
+        }
+
+        /* Toast hidden on desktop */
+        .mobile-toast { display: none; }
     </style>
 </head>
 <body>
@@ -572,6 +655,7 @@
     <div class="center-content">
         <div id="animation-container"></div>
         <div class="camera-hint">Drag to rotate | Scroll to zoom | Click elements to unleash</div>
+        <div class="mobile-toast" id="mobile-toast"></div>
         <div class="gesture-tooltip" id="gesture-tooltip">
             <span class="tooltip-name"></span>
             <span class="tooltip-element"></span>
@@ -1022,18 +1106,47 @@
         // EVENT HANDLERS
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Left-menu section toggle (Search & Filters)
-        const filtersSection = document.getElementById('filters-section');
-        if (filtersSection) {
-            const header = filtersSection.querySelector('h2');
-            const content = filtersSection.querySelector('.section-content');
-            if (header && content) {
-                header.style.cursor = 'pointer';
-                header.addEventListener('click', () => {
-                    header.classList.toggle('collapsed');
-                    content.classList.toggle('collapsed');
+        // Section toggling handled by demo-utils.js (auto-initializes on all .section h2)
+        // No page-specific toggle handlers needed — demo-utils covers all sections.
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MOBILE: Accordion behavior — one element section open at a time
+        // ═══════════════════════════════════════════════════════════════════════════
+        const isMobile = () => window.matchMedia('(max-width: 1000px)').matches;
+
+        // Element section headers (exclude Visuals which has .has-toggle)
+        // NOTE: demo-utils.js already handles the actual toggle via DOMContentLoaded.
+        // This handler ONLY collapses other sections (accordion) — no toggle here.
+        const elementHeaders = document.querySelectorAll('.right-menu > .section > h2:not(.has-toggle)');
+        elementHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                // Only accordion on mobile, and only when opening (currently collapsed)
+                if (!isMobile() || !header.classList.contains('collapsed')) return;
+
+                elementHeaders.forEach(otherH2 => {
+                    if (otherH2 !== header && !otherH2.classList.contains('collapsed')) {
+                        otherH2.classList.add('collapsed');
+                        const otherContent = otherH2.nextElementSibling;
+                        if (otherContent) otherContent.classList.add('collapsed');
+                    }
                 });
-            }
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MOBILE: Toast notification for gesture info
+        // ═══════════════════════════════════════════════════════════════════════════
+        const mobileToast = document.getElementById('mobile-toast');
+        let toastTimeout = null;
+
+        function showMobileToast(text) {
+            if (!isMobile() || !mobileToast) return;
+            mobileToast.textContent = text;
+            mobileToast.classList.add('visible');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                mobileToast.classList.remove('visible');
+            }, 2000);
         }
 
         // Geometry button clicks
@@ -1056,6 +1169,10 @@
             showTooltip(btn);
 
             const gestureName = btn.dataset.gesture;
+            const element = btn.dataset.element;
+            const meta = elementMeta[element];
+            if (meta) showMobileToast(`${meta.emoji} ${gestureName}  [${meta.name}]`);
+
             mascot.express(gestureName);
         });
 
