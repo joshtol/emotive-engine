@@ -5,105 +5,54 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview DIY velocity-based motion blur post-processing pass
+ * @fileoverview Element-isolated velocity-based motion blur for instanced elements.
  * @module effects/VelocityMotionBlurPass
  *
- * A custom post-processing pass that creates motion blur by sampling along
- * velocity vectors. Works with Three.js EffectComposer.
- *
  * Two-pass approach:
- * 1. Velocity pass: Renders velocity vectors to a texture (via a separate render)
- * 2. Blur pass: Samples the color buffer along velocity direction
+ * 1. Velocity pass: Renders instanced meshes to a velocity+mask buffer
+ *    (RG = velocity, A = element coverage mask)
+ * 2. Blur pass: Samples scene along velocity vectors with depth-aware isolation.
+ *    - Only element pixels (velocity alpha > 0.5) enter the blur path.
+ *    - Each blur sample compares depth against the center pixel — samples at a
+ *      different depth layer (mascot, background) are rejected.
+ *    - This makes it physically impossible for the blur to read or modify any
+ *      pixel that isn't part of the moving instanced elements.
  *
- * For instanced elements, velocity is stored in per-instance attributes and
- * rendered to the velocity buffer. For non-instanced objects, velocity can be
- * derived from previous frame transforms.
- *
- * ## Usage
- *
- * ```javascript
- * import { VelocityMotionBlurPass } from './VelocityMotionBlurPass.js';
- *
- * const composer = new EffectComposer(renderer);
- * composer.addPass(new RenderPass(scene, camera));
- * composer.addPass(new VelocityMotionBlurPass(scene, camera, {
- *     samples: 8,
- *     intensity: 1.0
- * }));
- * ```
+ * Depth buffer is reused from RenderPass (zero extra cost — same as AO pass).
  */
 
 import * as THREE from 'three';
+import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // VELOCITY RENDER MATERIAL
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-/**
- * Material that outputs velocity as color for the velocity buffer.
- * For instanced elements, reads velocity from per-instance attribute.
- * For regular objects, uses uniform-based velocity.
- */
 const VELOCITY_VERTEX_SHADER = /* glsl */`
-uniform mat4 uPrevModelViewMatrix;  // Previous frame's modelViewMatrix
-uniform mat4 uPrevProjectionMatrix; // Previous frame's projectionMatrix
-uniform float uIsInstanced;
-
-// Instance attribute for instanced rendering
 attribute vec4 aVelocity;
-
 varying vec4 vVelocity;
-varying vec4 vCurrentPos;
-varying vec4 vPrevPos;
 
 void main() {
-    // Current position
-    vec4 worldPos = modelMatrix * vec4(position, 1.0);
-    vCurrentPos = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-
-    // For instanced elements, use the velocity attribute directly
-    if (uIsInstanced > 0.5) {
-        vVelocity = aVelocity;
-        vPrevPos = vCurrentPos;  // Will calculate screen-space velocity in fragment
-    } else {
-        // For non-instanced, calculate from previous frame transform
-        vPrevPos = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
-        vVelocity = vec4(0.0);  // Will calculate in fragment
-    }
-
-    gl_Position = vCurrentPos;
+    vec4 localPos = vec4(position, 1.0);
+    #ifdef USE_INSTANCING
+        localPos = instanceMatrix * localPos;
+    #endif
+    vVelocity = aVelocity;
+    gl_Position = projectionMatrix * modelViewMatrix * localPos;
 }
 `;
 
 const VELOCITY_FRAGMENT_SHADER = /* glsl */`
-uniform float uIsInstanced;
-uniform vec2 uResolution;
-
 varying vec4 vVelocity;
-varying vec4 vCurrentPos;
-varying vec4 vPrevPos;
 
 void main() {
-    vec2 velocity;
-
-    if (uIsInstanced > 0.5) {
-        // Convert world-space velocity to screen-space
-        // Approximate: project velocity direction
-        velocity = vVelocity.xy * vVelocity.w * 0.01;  // Scale by speed
-    } else {
-        // Calculate screen-space velocity from position difference
-        vec2 currentScreen = (vCurrentPos.xy / vCurrentPos.w) * 0.5 + 0.5;
-        vec2 prevScreen = (vPrevPos.xy / vPrevPos.w) * 0.5 + 0.5;
-        velocity = (currentScreen - prevScreen) * uResolution;
-    }
-
-    // Encode velocity in RG channels (signed, -1 to 1 mapped to 0 to 1)
+    vec2 velocity = vVelocity.xy * 0.5;
     gl_FragColor = vec4(velocity * 0.5 + 0.5, 0.0, 1.0);
 }
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// MOTION BLUR SHADER
+// BLUR + COMPOSITE SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 const BLUR_VERTEX_SHADER = /* glsl */`
@@ -115,56 +64,97 @@ void main() {
 }
 `;
 
+/**
+ * Depth-aware element-isolated blur.
+ *
+ * Gate 1: velocity alpha — non-element pixels pass through unchanged.
+ * Gate 2: per-sample depth comparison — samples at a different depth layer
+ *         (mascot behind, background, other objects) are rejected.
+ *
+ * Result: only element-depth pixels contribute to blur. The mascot and
+ * background are never read, never modified. A blurred element racing in
+ * front of the mascot appears blurry while the mascot stays crystal sharp.
+ */
 const BLUR_FRAGMENT_SHADER = /* glsl */`
-uniform sampler2D tColor;        // Color buffer from previous pass
-uniform sampler2D tVelocity;     // Velocity buffer
-uniform float uIntensity;        // Blur intensity multiplier
-uniform int uSamples;            // Number of samples (performance vs quality)
-uniform vec2 uResolution;
+uniform sampler2D tColor;
+uniform sampler2D tVelocity;
+uniform sampler2D tDepth;
+uniform float uIntensity;
+uniform float cameraNear;
+uniform float cameraFar;
+uniform float uDepthThreshold;
 
 varying vec2 vUv;
 
+float linDepth(float d) {
+    return (cameraNear * cameraFar) / (cameraFar - d * (cameraFar - cameraNear));
+}
+
+// Per-pixel jitter to break banding — cheap interleaved gradient noise
+float interleavedGradientNoise(vec2 coord) {
+    return fract(52.9829189 * fract(0.06711056 * coord.x + 0.00583715 * coord.y));
+}
+
 void main() {
-    // Sample velocity at this pixel
-    vec4 velocityData = texture2D(tVelocity, vUv);
-    vec2 velocity = (velocityData.rg - 0.5) * 2.0;  // Decode from 0-1 to -1-1
+    vec4 velData = texture2D(tVelocity, vUv);
 
-    // Scale velocity by intensity
-    velocity *= uIntensity;
-
-    // Skip blur for static pixels
-    float speed = length(velocity);
-    if (speed < 0.001) {
+    // Gate 1: Non-element pixel — pass through scene untouched.
+    if (velData.a < 0.5) {
         gl_FragColor = texture2D(tColor, vUv);
         return;
     }
 
-    // Calculate sample step
-    vec2 texelSize = 1.0 / uResolution;
-    vec2 step = velocity * texelSize;
+    // Decode velocity from RG channels
+    vec2 velocity = (velData.rg - 0.5) * 2.0;
+    velocity *= uIntensity;
 
-    // Accumulate samples along velocity direction
+    // Stationary element — no blur needed
+    float speed = length(velocity);
+    if (speed < 0.0001) {
+        gl_FragColor = texture2D(tColor, vUv);
+        return;
+    }
+
+    // Clamp max blur to ~29px at 1920px
+    if (speed > 0.015) velocity *= 0.015 / speed;
+
+    // Center pixel depth for comparison
+    float centerDepth = linDepth(texture2D(tDepth, vUv).x);
+
+    // Per-pixel jitter offset — shifts sample positions to break banding
+    float jitter = (interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 16.0;
+
+    // 16 samples along velocity direction with per-sample isolation.
     vec4 color = vec4(0.0);
     float totalWeight = 0.0;
 
-    for (int i = 0; i < 16; i++) {  // Max 16 samples (loop unrolling limit)
-        if (i >= uSamples) break;
+    for (int i = 0; i < 16; i++) {
+        float t = (float(i) + 0.5) / 16.0 - 0.5 + jitter;
+        vec2 sampleUv = clamp(vUv + velocity * t, vec2(0.001), vec2(0.999));
 
-        float t = float(i) / float(uSamples - 1) - 0.5;  // -0.5 to 0.5
-        vec2 sampleUv = vUv + step * t;
+        // Gate A: velocity alpha — only sample element-covered pixels
+        if (texture2D(tVelocity, sampleUv).a < 0.5) continue;
 
-        // Clamp to texture bounds
-        sampleUv = clamp(sampleUv, vec2(0.001), vec2(0.999));
+        // Gate B: depth — reject samples at a different depth layer
+        float sampleDepth = linDepth(texture2D(tDepth, sampleUv).x);
+        if (abs(sampleDepth - centerDepth) > uDepthThreshold) continue;
 
-        // Weight samples - center samples are more important
+        // Tent weight — center samples contribute more than edge samples
         float weight = 1.0 - abs(t * 2.0);
-        weight = max(weight, 0.1);
-
+        weight = max(weight, 0.15);
         color += texture2D(tColor, sampleUv) * weight;
         totalWeight += weight;
     }
 
-    gl_FragColor = color / totalWeight;
+    // Fallback: all samples rejected (element at depth boundary)
+    if (totalWeight < 0.001) {
+        gl_FragColor = texture2D(tColor, vUv);
+        return;
+    }
+
+    // Preserve original alpha (canvas uses premultiplied alpha)
+    vec4 original = texture2D(tColor, vUv);
+    gl_FragColor = vec4((color / totalWeight).rgb, original.a);
 }
 `;
 
@@ -172,175 +162,115 @@ void main() {
 // VELOCITY MOTION BLUR PASS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-/**
- * Post-processing pass that applies velocity-based motion blur.
- *
- * This is a DIY implementation that doesn't require additional dependencies.
- * It works by:
- * 1. Rendering a velocity buffer (objects render their velocity as color)
- * 2. Blurring the scene along the velocity direction
- */
-export class VelocityMotionBlurPass {
+export class VelocityMotionBlurPass extends Pass {
     /**
-     * @param {THREE.Scene} scene - Scene to render velocity from
-     * @param {THREE.Camera} camera - Camera for rendering
+     * @param {THREE.Camera} camera - Camera for velocity rendering
      * @param {Object} options - Configuration
-     * @param {number} [options.samples=8] - Blur samples (more = smoother but slower)
-     * @param {number} [options.intensity=1.0] - Blur intensity multiplier
-     * @param {number} [options.width] - Render target width (defaults to renderer width)
-     * @param {number} [options.height] - Render target height (defaults to renderer height)
+     * @param {number} [options.intensity=1.5] - Blur intensity multiplier
+     * @param {number} [options.depthThreshold=0.5] - Max linear depth difference for same-layer
      */
-    constructor(scene, camera, options = {}) {
-        this.scene = scene;
+    constructor(camera, options = {}) {
+        super();
         this.camera = camera;
-        this.enabled = true;
-        this.needsSwap = true;
-        this.clear = false;
-        this.renderToScreen = false;
 
-        const {
-            samples = 8,
-            intensity = 1.0,
-            width = null,
-            height = null
-        } = options;
-
-        this.samples = samples;
+        const { intensity = 1.0, depthThreshold = 0.5 } = options;
         this.intensity = intensity;
+        this.depthThreshold = depthThreshold;
 
-        // Create velocity render target (will be sized on first render)
+        // Velocity render target (created on first render at correct size)
         this.velocityTarget = null;
-        this.targetWidth = width;
-        this.targetHeight = height;
+        this._targetWidth = 0;
+        this._targetHeight = 0;
 
-        // Create velocity material
+        // Velocity material — instanced, uses aVelocity attribute
         this.velocityMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                uPrevModelViewMatrix: { value: new THREE.Matrix4() },
-                uPrevProjectionMatrix: { value: new THREE.Matrix4() },
-                uIsInstanced: { value: 0.0 },
-                uResolution: { value: new THREE.Vector2() }
-            },
             vertexShader: VELOCITY_VERTEX_SHADER,
             fragmentShader: VELOCITY_FRAGMENT_SHADER
         });
 
-        // Create blur material
+        // Blur material
         this.blurMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 tColor: { value: null },
                 tVelocity: { value: null },
+                tDepth: { value: null },
                 uIntensity: { value: intensity },
-                uSamples: { value: samples },
-                uResolution: { value: new THREE.Vector2() }
+                cameraNear: { value: camera.near },
+                cameraFar: { value: camera.far },
+                uDepthThreshold: { value: depthThreshold }
             },
             vertexShader: BLUR_VERTEX_SHADER,
             fragmentShader: BLUR_FRAGMENT_SHADER
         });
 
-        // Fullscreen quad for blur pass
         this.fsQuad = new FullScreenQuad(this.blurMaterial);
 
-        // Track objects for velocity calculation
-        this.prevMatrices = new WeakMap();
-
-        // List of instanced meshes to include in velocity pass
+        // Registered instanced meshes
         this.instancedMeshes = new Set();
+
+        // Temporary scene for velocity rendering
+        this._velocityScene = new THREE.Scene();
     }
 
-    /**
-     * Registers an instanced mesh for velocity rendering.
-     * The mesh must have an aVelocity attribute.
-     * @param {THREE.InstancedMesh} mesh
-     */
+    /** Register an instanced mesh (must have aVelocity attribute). */
     addInstancedMesh(mesh) {
         this.instancedMeshes.add(mesh);
     }
 
-    /**
-     * Removes an instanced mesh from velocity rendering.
-     * @param {THREE.InstancedMesh} mesh
-     */
+    /** Unregister an instanced mesh. */
     removeInstancedMesh(mesh) {
         this.instancedMeshes.delete(mesh);
     }
 
-    /**
-     * Sets the blur intensity.
-     * @param {number} intensity
-     */
     setIntensity(intensity) {
         this.intensity = intensity;
         this.blurMaterial.uniforms.uIntensity.value = intensity;
     }
 
-    /**
-     * Sets the number of blur samples.
-     * @param {number} samples
-     */
-    setSamples(samples) {
-        this.samples = Math.min(16, Math.max(2, samples));
-        this.blurMaterial.uniforms.uSamples.value = this.samples;
+    setDepthThreshold(threshold) {
+        this.depthThreshold = threshold;
+        this.blurMaterial.uniforms.uDepthThreshold.value = threshold;
     }
 
-    /**
-     * Sets render target size.
-     * @param {number} width
-     * @param {number} height
-     */
     setSize(width, height) {
-        this.targetWidth = width;
-        this.targetHeight = height;
-
-        if (this.velocityTarget) {
-            this.velocityTarget.setSize(width, height);
-        }
-
-        this.velocityMaterial.uniforms.uResolution.value.set(width, height);
-        this.blurMaterial.uniforms.uResolution.value.set(width, height);
+        this._targetWidth = width;
+        this._targetHeight = height;
+        if (this.velocityTarget) this.velocityTarget.setSize(width, height);
     }
 
-    /**
-     * Renders the motion blur pass.
-     * @param {THREE.WebGLRenderer} renderer
-     * @param {THREE.WebGLRenderTarget} writeBuffer
-     * @param {THREE.WebGLRenderTarget} readBuffer
-     */
     render(renderer, writeBuffer, readBuffer) {
-        if (!this.enabled) {
-            // Pass through without blur
-            if (this.renderToScreen) {
-                renderer.setRenderTarget(null);
-                this.fsQuad.material = new THREE.MeshBasicMaterial({ map: readBuffer.texture });
-                this.fsQuad.render(renderer);
-            }
-            return;
-        }
+        if (!this.enabled) return;
 
-        const width = this.targetWidth || readBuffer.width;
-        const height = this.targetHeight || readBuffer.height;
+        // Depth texture from RenderPass — same as AO, zero extra cost
+        const { depthTexture } = readBuffer;
+        if (!depthTexture) return;
+
+        const width = this._targetWidth || readBuffer.width;
+        const height = this._targetHeight || readBuffer.height;
 
         // Create/resize velocity target if needed
         if (!this.velocityTarget || this.velocityTarget.width !== width || this.velocityTarget.height !== height) {
-            if (this.velocityTarget) {
-                this.velocityTarget.dispose();
-            }
+            if (this.velocityTarget) this.velocityTarget.dispose();
             this.velocityTarget = new THREE.WebGLRenderTarget(width, height, {
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 format: THREE.RGBAFormat,
                 type: THREE.FloatType
             });
-            this.velocityMaterial.uniforms.uResolution.value.set(width, height);
-            this.blurMaterial.uniforms.uResolution.value.set(width, height);
         }
 
-        // Pass 1: Render velocity buffer
+        // Pass 1: Render velocity + element mask buffer
         this._renderVelocityPass(renderer);
 
-        // Pass 2: Apply motion blur
+        // Update camera uniforms (may change if camera zooms)
+        const cam = this.camera;
+        this.blurMaterial.uniforms.cameraNear.value = cam.near;
+        this.blurMaterial.uniforms.cameraFar.value = cam.far;
+
+        // Pass 2: Blur composite with depth-aware sampling
         this.blurMaterial.uniforms.tColor.value = readBuffer.texture;
         this.blurMaterial.uniforms.tVelocity.value = this.velocityTarget.texture;
+        this.blurMaterial.uniforms.tDepth.value = depthTexture;
 
         if (this.renderToScreen) {
             renderer.setRenderTarget(null);
@@ -352,216 +282,65 @@ export class VelocityMotionBlurPass {
         this.fsQuad.render(renderer);
     }
 
-    /**
-     * Renders the velocity pass.
-     * @private
-     */
+    /** @private Renders instanced meshes with velocity material to velocity buffer. */
     _renderVelocityPass(renderer) {
         const currentRenderTarget = renderer.getRenderTarget();
+        const currentClearColor = new THREE.Color();
+        const currentClearAlpha = renderer.getClearAlpha();
+        renderer.getClearColor(currentClearColor);
+        const currentAutoClear = renderer.autoClear;
 
+        // Clear velocity target: RG=0.5 (zero velocity), A=0 (no element)
         renderer.setRenderTarget(this.velocityTarget);
-        renderer.setClearColor(0x808080);  // Neutral velocity (0,0)
+        renderer.setClearColor(0x808000, 0.0);
         renderer.clear();
+        renderer.autoClear = false;
 
-        // Render instanced meshes with velocity
+        const originalParents = new Map();
+        const originalMaterials = new Map();
+        const savedWorldMatrices = new Map();
+
         for (const mesh of this.instancedMeshes) {
-            if (!mesh.visible) continue;
+            if (!mesh.visible || mesh.count === 0) continue;
 
-            const originalMaterial = mesh.material;
+            // Capture world transform BEFORE reparenting — pool meshes live
+            // inside a container Group at the mascot's position. Reparenting
+            // to the flat velocity scene would lose that offset, causing the
+            // velocity buffer to mark the wrong screen pixels.
+            savedWorldMatrices.set(mesh, mesh.matrixWorld.clone());
+
+            originalParents.set(mesh, mesh.parent);
+            originalMaterials.set(mesh, mesh.material);
             mesh.material = this.velocityMaterial;
-            this.velocityMaterial.uniforms.uIsInstanced.value = 1.0;
+            this._velocityScene.add(mesh);
 
-            renderer.render(mesh, this.camera);
-
-            mesh.material = originalMaterial;
+            // Force the saved world matrix — prevents renderer.render() from
+            // recomputing it relative to the velocity scene's identity root.
+            mesh.matrixWorldAutoUpdate = false;
+            mesh.matrixWorld.copy(savedWorldMatrices.get(mesh));
         }
 
-        // Could also render non-instanced objects using prev frame transforms
-        // For now, we focus on instanced elements
+        if (this._velocityScene.children.length > 0) {
+            renderer.render(this._velocityScene, this.camera);
+        }
 
+        for (const [mesh, parent] of originalParents) {
+            this._velocityScene.remove(mesh);
+            mesh.material = originalMaterials.get(mesh);
+            mesh.matrixWorldAutoUpdate = true;
+            if (parent) parent.add(mesh);
+        }
+
+        renderer.autoClear = currentAutoClear;
+        renderer.setClearColor(currentClearColor, currentClearAlpha);
         renderer.setRenderTarget(currentRenderTarget);
     }
 
-    /**
-     * Disposes of resources.
-     */
     dispose() {
-        if (this.velocityTarget) {
-            this.velocityTarget.dispose();
-        }
+        if (this.velocityTarget) this.velocityTarget.dispose();
         this.velocityMaterial.dispose();
         this.blurMaterial.dispose();
         this.fsQuad.dispose();
         this.instancedMeshes.clear();
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// FULLSCREEN QUAD HELPER
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-/**
- * Simple fullscreen quad for post-processing.
- * Three.js has FullScreenQuad in examples, but we include our own for zero deps.
- */
-class FullScreenQuad {
-    constructor(material) {
-        this._mesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(2, 2),
-            material
-        );
-        this._camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    }
-
-    get material() {
-        return this._mesh.material;
-    }
-
-    set material(value) {
-        this._mesh.material = value;
-    }
-
-    render(renderer) {
-        renderer.render(this._mesh, this._camera);
-    }
-
-    dispose() {
-        this._mesh.geometry.dispose();
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// SIMPLIFIED MOTION BLUR (No velocity buffer)
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-/**
- * Simpler motion blur that uses camera movement instead of per-object velocity.
- * Lower quality but easier to integrate and faster.
- */
-export class SimpleMotionBlurPass {
-    /**
-     * @param {Object} options - Configuration
-     * @param {number} [options.samples=8] - Blur samples
-     * @param {number} [options.intensity=1.0] - Blur intensity
-     * @param {THREE.Vector2} [options.direction] - Blur direction (null = radial)
-     */
-    constructor(options = {}) {
-        this.enabled = true;
-        this.needsSwap = true;
-        this.clear = false;
-        this.renderToScreen = false;
-
-        const {
-            samples = 8,
-            intensity = 1.0,
-            direction = null
-        } = options;
-
-        this.samples = samples;
-        this.intensity = intensity;
-        this.direction = direction;
-
-        // Simple directional blur shader
-        this.material = new THREE.ShaderMaterial({
-            uniforms: {
-                tDiffuse: { value: null },
-                uIntensity: { value: intensity },
-                uSamples: { value: samples },
-                uDirection: { value: direction || new THREE.Vector2(0.5, 0.5) },
-                uCenter: { value: new THREE.Vector2(0.5, 0.5) },
-                uRadial: { value: direction ? 0.0 : 1.0 }
-            },
-            vertexShader: /* glsl */`
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: /* glsl */`
-                uniform sampler2D tDiffuse;
-                uniform float uIntensity;
-                uniform int uSamples;
-                uniform vec2 uDirection;
-                uniform vec2 uCenter;
-                uniform float uRadial;
-                varying vec2 vUv;
-
-                void main() {
-                    vec2 dir;
-                    if (uRadial > 0.5) {
-                        // Radial blur from center
-                        dir = (vUv - uCenter) * uIntensity * 0.1;
-                    } else {
-                        // Directional blur
-                        dir = uDirection * uIntensity * 0.01;
-                    }
-
-                    vec4 color = vec4(0.0);
-                    float totalWeight = 0.0;
-
-                    for (int i = 0; i < 16; i++) {
-                        if (i >= uSamples) break;
-                        float t = float(i) / float(uSamples - 1) - 0.5;
-                        vec2 sampleUv = clamp(vUv + dir * t, 0.001, 0.999);
-                        float weight = 1.0 - abs(t * 2.0);
-                        color += texture2D(tDiffuse, sampleUv) * weight;
-                        totalWeight += weight;
-                    }
-
-                    gl_FragColor = color / totalWeight;
-                }
-            `
-        });
-
-        this.fsQuad = new FullScreenQuad(this.material);
-    }
-
-    setIntensity(intensity) {
-        this.intensity = intensity;
-        this.material.uniforms.uIntensity.value = intensity;
-    }
-
-    setSamples(samples) {
-        this.samples = Math.min(16, Math.max(2, samples));
-        this.material.uniforms.uSamples.value = this.samples;
-    }
-
-    setDirection(x, y) {
-        this.material.uniforms.uDirection.value.set(x, y);
-        this.material.uniforms.uRadial.value = 0.0;
-    }
-
-    setRadial(centerX = 0.5, centerY = 0.5) {
-        this.material.uniforms.uCenter.value.set(centerX, centerY);
-        this.material.uniforms.uRadial.value = 1.0;
-    }
-
-    setSize(/* width, height */) {
-        // Not needed for this simple pass
-    }
-
-    render(renderer, writeBuffer, readBuffer) {
-        if (!this.enabled || this.intensity < 0.01) {
-            return;
-        }
-
-        this.material.uniforms.tDiffuse.value = readBuffer.texture;
-
-        if (this.renderToScreen) {
-            renderer.setRenderTarget(null);
-        } else {
-            renderer.setRenderTarget(writeBuffer);
-            if (this.clear) renderer.clear();
-        }
-
-        this.fsQuad.render(renderer);
-    }
-
-    dispose() {
-        this.material.dispose();
-        this.fsQuad.dispose();
-    }
-}
-
-export default { VelocityMotionBlurPass, SimpleMotionBlurPass };

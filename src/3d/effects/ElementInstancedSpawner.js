@@ -335,6 +335,11 @@ export class ElementInstancedSpawner {
             this._renderer.addRefractionMesh(pool.mesh);
         }
 
+        // Register mesh for velocity-based motion blur
+        if (this._renderer?.motionBlurPass) {
+            this._renderer.motionBlurPass.addInstancedMesh(pool.mesh);
+        }
+
         // Register distortion config if element type has one (and not already registered)
         if (this._distortionManager && config.distortion &&
             !this._distortionManager.hasElement(elementType)) {
@@ -1923,6 +1928,9 @@ export class ElementInstancedSpawner {
         // Skip ALL work if no elements are active and no pools exist
         // This ensures demos that don't use elemental gestures have zero overhead
         if (this.activeElements.size === 0 && this.pools.size === 0) {
+            if (this._renderer?.motionBlurPass) {
+                this._renderer.motionBlurPass.enabled = false;
+            }
             return;
         }
 
@@ -1945,8 +1953,17 @@ export class ElementInstancedSpawner {
                     this._particleAtmospherics.syncSources(type, this.activeElements, this.container);
                 }
             }
+            // Disable motion blur when no elements are active
+            if (this._renderer?.motionBlurPass) {
+                this._renderer.motionBlurPass.enabled = false;
+            }
             this._checkPoolCleanup();
             return;
+        }
+
+        // Enable motion blur when instanced elements are actively moving
+        if (this._renderer?.motionBlurPass) {
+            this._renderer.motionBlurPass.enabled = true;
         }
 
         // Sync container transform with mascot (position, rotation, scale)
@@ -2401,6 +2418,10 @@ export class ElementInstancedSpawner {
                 if (this._renderer && pool.mesh?.material?.userData?.needsRefraction) {
                     this._renderer.removeRefractionMesh(pool.mesh);
                 }
+                // Unregister from motion blur before disposal
+                if (this._renderer?.motionBlurPass) {
+                    this._renderer.motionBlurPass.removeInstancedMesh(pool.mesh);
+                }
                 // Pool has been inactive - dispose it
                 pool.dispose();
                 this.pools.delete(type);
@@ -2440,10 +2461,13 @@ export class ElementInstancedSpawner {
         // Clear all elements
         this.despawnAll();
 
-        // Dispose pools (unregister refraction meshes first)
+        // Dispose pools (unregister refraction/motion blur meshes first)
         for (const pool of this.pools.values()) {
             if (this._renderer && pool.mesh?.material?.userData?.needsRefraction) {
                 this._renderer.removeRefractionMesh(pool.mesh);
+            }
+            if (this._renderer?.motionBlurPass) {
+                this._renderer.motionBlurPass.removeInstancedMesh(pool.mesh);
             }
             pool.dispose();
         }

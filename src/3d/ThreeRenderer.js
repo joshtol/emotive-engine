@@ -19,6 +19,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPassAlpha } from './UnrealBloomPassAlpha.js';
 import { DistortionShader } from './DistortionPass.js';
 import { AmbientOcclusionPass } from './AmbientOcclusionPass.js';
+import { VelocityMotionBlurPass } from './effects/VelocityMotionBlurPass.js';
 import { DistortionManager } from './effects/DistortionManager.js';
 import { ParticleAtmosphericsManager } from './effects/ParticleAtmosphericsManager.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -482,6 +483,12 @@ export class ThreeRenderer {
         this.aoPass.enabled = false;  // Off by default — enabled per-element by Core3DManager
         this.composer.addPass(this.aoPass);
 
+        // Motion blur pass — velocity-based per-object blur for instanced elements
+        // Placed after AO, before distortion/bloom. Off by default — auto-enabled by spawner.
+        this.motionBlurPass = new VelocityMotionBlurPass(this.camera);
+        this.motionBlurPass.enabled = false;
+        this.composer.addPass(this.motionBlurPass);
+
         // Distortion pass slot — added here (before bloom) so bloom stays last.
         // The actual ShaderPass is created later in the distortion section and inserted here.
         this._distortionPassIndex = this.composer.passes.length;
@@ -831,7 +838,6 @@ export class ThreeRenderer {
         // Remove existing mesh if present
         if (this.coreMesh) {
             this.scene.remove(this.coreMesh);
-
             // Handle Group disposal differently
             if (this.coreMesh.isGroup) {
                 this.coreMesh.traverse(child => {
@@ -2014,6 +2020,11 @@ export class ThreeRenderer {
                 this.bloomPass.setSize(halfWidth, halfHeight);
             }
 
+            // Motion blur pass - full resolution
+            if (this.motionBlurPass) {
+                this.motionBlurPass.setSize(drawingBufferSize.x, drawingBufferSize.y);
+            }
+
             // Resize particle render target (needs full resolution for sharp particles)
             if (this.particleRenderTarget) {
                 this.particleRenderTarget.setSize(drawingBufferSize.x, drawingBufferSize.y);
@@ -2154,6 +2165,12 @@ export class ThreeRenderer {
         if (this.aoPass) {
             this.aoPass.dispose();
             this.aoPass = null;
+        }
+
+        // Dispose motion blur pass
+        if (this.motionBlurPass) {
+            this.motionBlurPass.dispose();
+            this.motionBlurPass = null;
         }
 
         // Dispose composer
