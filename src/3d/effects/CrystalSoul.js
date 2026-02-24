@@ -23,11 +23,14 @@ let inclusionGeometryLoading = null;
 const soulVertexShader = `
     varying vec3 vPosition;
     varying vec3 vNormal;
+    varying vec3 vViewPosition;
 
     void main() {
         vPosition = position;
         vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vViewPosition = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
     }
 `;
 
@@ -61,18 +64,41 @@ const soulFragmentShader = `
 
     varying vec3 vPosition;
     varying vec3 vNormal;
+    varying vec3 vViewPosition;
 
     // Blend modes (injected from blendModesGLSL)
     ${blendModesGLSL}
 
-    // Smooth noise function
+    // Sin-free hash — fract/dot arithmetic (no sin())
+    float soulHash(vec3 p) {
+        p = fract(p * vec3(443.8975, 397.2973, 491.1871));
+        p += dot(p.zxy, p.yxz + 19.19);
+        return fract(p.x * p.y * p.z);
+    }
+
+    // True 3D noise — 8 hash lookups with trilinear interpolation
+    // (Previous version only interpolated x/y — missing z caused visible banding)
     float noise3D(vec3 p) {
         vec3 i = floor(p);
         vec3 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        float n = i.x + i.y * 157.0 + i.z * 113.0;
-        vec4 v = fract(sin(vec4(n, n+1.0, n+157.0, n+158.0)) * 43758.5453);
-        return mix(mix(v.x, v.y, f.x), mix(v.z, v.w, f.x), f.y);
+        f = f * f * (3.0 - 2.0 * f); // smoothstep
+
+        // 8 cube corners
+        float a = soulHash(i);
+        float b = soulHash(i + vec3(1, 0, 0));
+        float c = soulHash(i + vec3(0, 1, 0));
+        float d = soulHash(i + vec3(1, 1, 0));
+        float e = soulHash(i + vec3(0, 0, 1));
+        float g = soulHash(i + vec3(1, 0, 1));
+        float h = soulHash(i + vec3(0, 1, 1));
+        float j = soulHash(i + vec3(1, 1, 1));
+
+        // Trilinear interpolation
+        return mix(
+            mix(mix(a, b, f.x), mix(c, d, f.x), f.y),
+            mix(mix(e, g, f.x), mix(h, j, f.x), f.y),
+            f.z
+        );
     }
 
     // Soul behavior functions (must come after noise3D)
@@ -95,8 +121,8 @@ const soulFragmentShader = `
         // Compress range so dim↔bright swing is gentler (less pulsing)
         float totalEnergy = 0.30 + rawEffectActivity * 0.38;
 
-        // Edge glow - adds rim lighting
-        vec3 viewDir = normalize(-vPosition);
+        // Edge glow - adds rim lighting (proper camera-relative view direction)
+        vec3 viewDir = normalize(vViewPosition);
         float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
         edgeGlow = pow(edgeGlow, 2.0) * 0.4;
 
@@ -122,15 +148,17 @@ const soulFragmentShader = `
         coreColor += driftedColor * edgeGlow * 0.3;
 
         // Apply blend layers to the entire soul color
+        // Mix factor clamped to [0,1] — strength > 1.0 only scales the blend color,
+        // it must NOT extrapolate the mix (which causes blowout/crushing)
         if (blendLayer1Enabled > 0.5) {
             int mode = int(blendLayer1Mode + 0.5);
             vec3 blendResult = applyBlendMode(coreColor, emotionColor * blendLayer1Strength, mode);
-            coreColor = mix(coreColor, blendResult, blendLayer1Strength);
+            coreColor = mix(coreColor, blendResult, min(blendLayer1Strength, 1.0));
         }
         if (blendLayer2Enabled > 0.5) {
             int mode = int(blendLayer2Mode + 0.5);
             vec3 blendResult = applyBlendMode(coreColor, emotionColor * blendLayer2Strength, mode);
-            coreColor = mix(coreColor, blendResult, blendLayer2Strength);
+            coreColor = mix(coreColor, blendResult, min(blendLayer2Strength, 1.0));
         }
 
         // Ghost mode: ONLY the traveling energy bands are visible
@@ -138,20 +166,27 @@ const soulFragmentShader = `
         float alpha = baseOpacity;
         if (ghostMode > 0.01) {
             // Threshold splits the 0-1 range: below = invisible, above = visible
-            float threshold = ghostMode * 0.5; // 0.0-0.5 range
-            float visibility = smoothstep(threshold, threshold + 0.25, rawEffectActivity);
+            float threshold = ghostMode * 0.4; // 0.0-0.4 range (softer than 0.5)
+            float visibility = smoothstep(threshold, threshold + 0.35, rawEffectActivity);
 
-            // Hard cutoff - only bright fire bands visible
+            // Soft cutoff - dim areas fade rather than hard-clip
             alpha = visibility * baseOpacity;
 
-            // Discard everything that isn't a bright fire band
-            if (alpha < 0.05) {
+            // Discard only truly invisible fragments
+            if (alpha < 0.02) {
                 discard;
             }
 
-            // Boost color intensity for visible fire
-            coreColor *= 1.2 + visibility * 0.6;
+            // Boost color intensity for visible bands
+            coreColor *= 1.0 + visibility * 0.3;
         }
+
+        // Fade near outer boundary so soul doesn't overbloom where it clips crystal shell
+        // Inclusion geometry is ~0.15 radius; wider fade (0.06-0.20) for gentler edge
+        float boundaryDist = length(vPosition);
+        float boundaryFade = 1.0 - smoothstep(0.06, 0.20, boundaryDist);
+        alpha *= boundaryFade;
+        if (alpha < 0.01) discard;
 
         // Output the computed core color
         gl_FragColor = vec4(coreColor, alpha);
