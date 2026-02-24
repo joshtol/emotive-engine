@@ -1068,6 +1068,9 @@ export class Core3DManager {
             this.crystalSoul = null;
         }
 
+        // Invalidate renderer's cached soul reference so it re-traverses on next render
+        if (this.renderer) this.renderer.invalidateSoulCache();
+
         if (!this.coreMesh) {
             return;
         }
@@ -1641,6 +1644,7 @@ export class Core3DManager {
                     this.crystalSoul = null;
                     this.crystalInnerCore = null;
                     this.crystalInnerCoreMaterial = null;
+                    if (this.renderer) this.renderer.invalidateSoulCache();
                 }
             }
 
@@ -3815,6 +3819,9 @@ export class Core3DManager {
             this.crystalSoul.dispose();
             this.crystalSoul = null;
         }
+
+        // Invalidate renderer's cached soul reference so it re-traverses on next render
+        if (this.renderer) this.renderer.invalidateSoulCache();
 
         if (!this.coreMesh) {
             return;

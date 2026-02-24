@@ -284,9 +284,10 @@ float calculateFire(vec3 normal, vec3 viewDir, vec3 lightDir) {
     // Combine fire points - only keep the brightest peaks
     float fire = fire1 + fire2 * 0.7 + fire3 * 0.5;
 
-    // Facet edges catch more fire
-    float edgeFactor = length(fwidth(normal)) * 20.0;
-    fire *= (1.0 + edgeFactor * 2.0);
+    // Facet edges catch more fire — kept mild to avoid bloom strobe
+    // (fwidth jitters per-frame on rotating geometry, amplifying the pow-512 strobing)
+    float edgeFactor = length(fwidth(normal)) * 8.0;
+    fire *= (1.0 + edgeFactor * 0.5);
 
     return fire;
 }
@@ -519,11 +520,7 @@ void main() {
         vec2 refractionOffset = refractedDir.xy * refractionStrength * 0.1;
 
         // Sample at fragment position with refraction offset
-        // The soul texture contains the soul rendered at its actual screen position
-        vec2 soulUV = fragUV + refractionOffset;
-
-        // Clamp to valid UV range
-        soulUV = clamp(soulUV, 0.0, 1.0);
+        vec2 soulUV = clamp(fragUV + refractionOffset, 0.0, 1.0);
 
         // Sample the soul texture
         vec4 soulSample = texture2D(soulTexture, soulUV);
@@ -889,8 +886,9 @@ void main() {
             soulGlow *= mix(vec3(1.0), gemHue, tintAmount);
         }
 
-        // Add soul glow to final color
-        finalColor += soulGlow * 0.8;
+        // Add soul glow to final color — clamp contribution to prevent overbright bloom
+        // Soul fills most of the crystal interior; keep it subtle so shell facets stay visible
+        finalColor += min(soulGlow * 0.8, vec3(0.25));
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -983,7 +981,7 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
 
     // Soul refraction - optical lensing of inner soul through crystal
     refractionIndex: 1.5,       // Index of refraction (1.5 glass, 2.4 diamond)
-    refractionStrength: 0.5,    // Distortion magnitude - higher for more pronounced lensing
+    refractionStrength: 0.15,   // Distortion magnitude — kept low to avoid facet-normal jitter
     resolution: [1920, 1080],   // Screen resolution (updated at runtime)
     soulTextureSize: [1920, 1080], // Soul render target size (updated at runtime)
     soulScreenCenter: [0.5, 0.5],  // Soul center in screen UV (updated at runtime)

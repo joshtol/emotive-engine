@@ -146,10 +146,10 @@ export class CanvasLayerManager {
             this.canvas2D.width = width;
             this.canvas2D.height = height;
         }
-        if (this.webglCanvas) {
-            this.webglCanvas.width = width;
-            this.webglCanvas.height = height;
-        }
+        // NOTE: Do NOT set webglCanvas.width/height here — Three.js owns the WebGL
+        // canvas and manages its drawing buffer via renderer.setSize(). Directly
+        // setting canvas.width behind Three.js's back resets the WebGL drawing buffer
+        // and can desync Three.js's internal cached dimensions.
     }
 
     /**

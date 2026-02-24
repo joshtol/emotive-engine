@@ -621,7 +621,7 @@ void main() {
     // SCHLICK FRESNEL — dielectric reflection coefficient
     // Head-on: mostly transmitted (see through). Glancing: mostly reflected.
     // ═══════════════════════════════════════════════════════════════════════════════
-    float F0 = 0.02; // ice IOR ~1.31
+    float F0 = 0.02;
     float schlick = F0 + (1.0 - F0) * fresnel;
 
     // ═══════════════════════════════════════════════════════════════════════════════

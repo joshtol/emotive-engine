@@ -171,6 +171,15 @@ export class ThreeRenderer {
     }
 
     /**
+     * Invalidate the cached soul mesh reference.
+     * Must be called whenever the CrystalSoul is disposed or recreated
+     * so the next render frame re-traverses the scene to find the new mesh.
+     */
+    invalidateSoulCache() {
+        this._cachedSoulMesh = null;
+    }
+
+    /**
      * Setup camera controls (OrbitControls)
      * Allows mouse/touch interaction to rotate and zoom the camera
      */
@@ -1309,7 +1318,7 @@ export class ThreeRenderer {
                 // Crystal/rough/heart need bloom for light emission effect
                 targetStrength = 1.5;   // Moderate bloom - 2.5 was way too intense
                 targetRadius = 0.5;     // Moderate spread
-                targetThreshold = 0.5;  // Mid threshold - catches speculars without blowing out
+                targetThreshold = 0.65; // Above individual caps (0.5) so only combined peaks bloom — prevents fwidth wobble
             } else if (this.materialMode === 'glass') {
                 // Glass mode needs much lower bloom strength to avoid haziness
                 // Since we're using white emissive at fixed intensity for uniformity
@@ -2007,7 +2016,10 @@ export class ThreeRenderer {
             const drawingBufferSize = new THREE.Vector2();
             this.renderer.getDrawingBufferSize(drawingBufferSize);
 
-            this.composer.setSize(drawingBufferSize.x, drawingBufferSize.y);
+            // CRITICAL: composer.setSize() expects CSS logical pixels, NOT drawing buffer pixels.
+            // It internally multiplies by its own _pixelRatio (copied from renderer).
+            // Passing drawingBufferSize would double-scale: CSS×DPR×DPR, breaking soul UV mapping.
+            this.composer.setSize(width, height);
 
             // PERFORMANCE: Resize bloom passes to half resolution
             // Bloom is inherently blurry so half resolution is visually identical

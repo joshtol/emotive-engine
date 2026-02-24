@@ -791,7 +791,7 @@
             enableControls: true,
             enableShatter: true,
             autoRotate: true,
-            cameraDistance: 1.2,
+            cameraDistance: 1.45,
             fov: 30,
             minZoom: 0.9,
             maxZoom: 2.0,
@@ -1657,6 +1657,40 @@
 
         console.log('[GPU Monitor] Enhanced. Press G to toggle, click to expand.');
         console.log('[GPU Monitor] Console: gpuMonitor.report() | gpuMonitor.copyToClipboard()');
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SOUL BEHAVIOR CYCLING
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const soulPresets = [
+            { a: 'nebula' },                              // 100% nebula
+            { a: 'spiral', b: 'orbital', blend: 0.35 },   // spiral + orbital rings
+            { a: 'tidal' },                                // 100% tidal
+            { a: 'hotspot', b: 'radial', blend: 0.4 },    // hotspot + radial pulse
+            { a: 'orbital' },                              // 100% orbital
+            { a: 'nebula', b: 'spiral', blend: 0.3 },     // nebula + spiral thread
+            { a: 'radial', b: 'tidal', blend: 0.35 },     // radial + tidal modulation
+            { a: 'hotspot' },                              // 100% hotspot
+        ];
+        let currentPresetIndex = 0;
+
+        function cycleSoulBehavior() {
+            currentPresetIndex = (currentPresetIndex + 1) % soulPresets.length;
+            const preset = soulPresets[currentPresetIndex];
+            const soul = mascot.core3D?.crystalSoul;
+            if (!soul) return;
+
+            if (preset.b) {
+                soul.setMix(preset.a, preset.b, preset.blend);
+                console.log(`[Soul] Mix: ${preset.a} + ${preset.b} (${Math.round((1 - preset.blend) * 100)}/${Math.round(preset.blend * 100)})`);
+            } else {
+                soul.setBehavior(preset.a);
+                console.log(`[Soul] Behavior: ${preset.a}`);
+            }
+        }
+
+        // Cycle every 8 seconds (with 2s crossfade transition)
+        setInterval(cycleSoulBehavior, 8000);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE

@@ -9,6 +9,11 @@
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { blendModesGLSL } from '../shaders/utils/blendModes.js';
+import {
+    SOUL_BEHAVIOR_UNIFORMS_GLSL, SOUL_BEHAVIOR_FUNC_GLSL,
+    SOUL_BEHAVIOR_NAMES, createSoulBehaviorUniforms, setSoulBehavior,
+    resolveBehaviorMode
+} from '../shaders/utils/soulBehaviors.js';
 
 // Cache for loaded inclusion geometry
 let inclusionGeometryCache = null;
@@ -40,6 +45,8 @@ const soulFragmentShader = `
     uniform float phaseOffset1;   // Phase offset for primary drift (radians)
     uniform float phaseOffset2;   // Phase offset for secondary drift (radians)
     uniform float phaseOffset3;   // Phase offset for crosswave (radians)
+    uniform float colorDriftSpeed;   // Speed of color drift (default 0.15)
+    uniform float colorDriftAmount;  // How far colors drift from base (default 0.3)
 
     // Blend layer uniforms
     uniform float blendLayer1Mode;
@@ -48,6 +55,9 @@ const soulFragmentShader = `
     uniform float blendLayer2Mode;
     uniform float blendLayer2Strength;
     uniform float blendLayer2Enabled;
+
+    // Soul behavior system
+    ${SOUL_BEHAVIOR_UNIFORMS_GLSL}
 
     varying vec3 vPosition;
     varying vec3 vNormal;
@@ -65,75 +75,20 @@ const soulFragmentShader = `
         return mix(mix(v.x, v.y, f.x), mix(v.z, v.w, f.x), f.y);
     }
 
+    // Soul behavior functions (must come after noise3D)
+    ${SOUL_BEHAVIOR_FUNC_GLSL}
+
     void main() {
-        // Drifting energy clouds - slow, ethereal movement
-        // Start with zero energy - only effects add to it
-        float driftEnergy = 0.0;
-        float crossWaveEnergy = 0.0;
+        // Dispatch to active behavior — returns energy in 0.53+ range
+        float rawEffectActivity = calculateSoulBehavior(
+            vPosition, time, uBehaviorSpeed,
+            driftEnabled, driftSpeed,
+            crossWaveEnabled, crossWaveSpeed,
+            phaseOffset1, phaseOffset2, phaseOffset3
+        );
 
-        // Spatially triangulated fire bands - each owns a 120° wedge of the geometry
-        // Bands can never overlap because they're physically separated
-        float angle = atan(vPosition.x, vPosition.z); // -π to π
-        float normalizedAngle = (angle + 3.14159) / 6.28318; // 0 to 1
-
-        // Determine which zone this fragment belongs to (0, 1, or 2)
-        float zone = floor(normalizedAngle * 3.0);
-        float zonePos = fract(normalizedAngle * 3.0); // Position within zone (0-1)
-
-        // Time-based phase for each zone (120° offset in time)
-        float phaseSpeed = 0.15;
-        float t = time * phaseSpeed;
-        float phase1Time = sin(t + phaseOffset1) * 0.5 + 0.5;
-        float phase2Time = sin(t + phaseOffset2) * 0.5 + 0.5;
-        float phase3Time = sin(t + phaseOffset3) * 0.5 + 0.5;
-
-        // Only ONE phase affects this fragment - the one that owns this spatial zone
-        float activePhase = zone < 1.0 ? phase1Time : (zone < 2.0 ? phase2Time : phase3Time);
-
-        float primaryDrift = 0.0;
-        float secondaryDrift = 0.0;
-
-        if (driftEnabled > 0.5) {
-            float t = time * driftSpeed;
-            // OPTIMIZED: Reduced from 4 noise calls to 2 for better performance
-            // Primary drift - single noise call with combined coordinates
-            float drift1 = noise3D(vPosition * 2.0 + vec3(t, t * 0.7, t * 0.3));
-            primaryDrift = max(0.0, drift1 - 0.3) * 1.5; // Adjusted threshold for single noise
-
-            // Secondary drift - offset phase to fill gaps
-            float drift2 = noise3D(vPosition * 2.5 - vec3(t * 0.6, t * 0.4, t));
-            secondaryDrift = max(0.0, drift2 - 0.3) * 1.5;
-
-            driftEnergy = primaryDrift + secondaryDrift;
-        }
-
-        // Horizontal cross wave - thin bands sweeping across
-        float rawCrossWave = 0.0;
-        if (crossWaveEnabled > 0.5) {
-            float t = time * crossWaveSpeed;
-            float wave = sin(vPosition.x * 4.0 + vPosition.z * 2.0 - t) * 0.5 + 0.5;
-            // pow(4) for thin bright bands
-            rawCrossWave = pow(wave, 4.0);
-            crossWaveEnergy = rawCrossWave;
-        }
-
-        // Mix the effects - normalize to prevent blowout
-        // driftEnergy can be 0-2 (two drifts), rawCrossWave is 0-1
-        float normalizedDrift = min(1.0, driftEnergy * 0.5);
-        float normalizedWave = rawCrossWave;
-
-        // activePhase is 0-1, remap to visibility range
-        // 0.53 floor (just above 0.52 threshold), 0.58 ceiling (subtle glow)
-        float remappedPhase = 0.53 + activePhase * 0.05;
-
-        // Effects add subtle variation (max 0.05)
-        float effectContrib = (normalizedDrift * 0.03) + (normalizedWave * 0.02);
-        float phasedActivity = remappedPhase + effectContrib;
-
-        // Keep unclamped for visibility threshold check (ghost mode needs full range)
-        float rawEffectActivity = phasedActivity;
         // Clamp for color intensity (floor: guaranteed visible, ceiling: no blowout)
-        float effectActivity = clamp(phasedActivity, 0.53, 0.60);
+        float effectActivity = clamp(rawEffectActivity, 0.53, 0.60);
 
         // Total energy for color calculation (reduced for subtler bloom)
         float totalEnergy = 0.25 + effectActivity * 0.55; // Base glow + effect contribution
@@ -143,9 +98,26 @@ const soulFragmentShader = `
         float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
         edgeGlow = pow(edgeGlow, 2.0) * 0.4;
 
+        // Color drift — warm/cool variants derived from the emotion color itself
+        // Warm: boost reds/greens, pull back blues (shift toward warmer hue)
+        vec3 warmColor = emotionColor * vec3(1.2, 1.05, 0.8);
+        // Cool: boost blues, pull back reds (shift toward cooler hue)
+        vec3 coolColor = emotionColor * vec3(0.8, 0.95, 1.25);
+
+        // Spatially-varying blend using noise + slow time drift
+        float driftT = time * colorDriftSpeed;
+        float spatialDrift = noise3D(vPosition * 2.0 + vec3(driftT, driftT * 0.7, driftT * 0.4));
+        float spatialDrift2 = noise3D(vPosition * 4.0 - vec3(driftT * 0.5, driftT * 0.3, driftT * 0.8));
+        // Blend factor: 0 to 1 range (warm to cool)
+        float driftFactor = spatialDrift * 0.65 + spatialDrift2 * 0.35;
+
+        // Blend: warm ← emotionColor → cool
+        vec3 driftedColor = mix(warmColor, coolColor, driftFactor) * colorDriftAmount
+                          + emotionColor * (1.0 - colorDriftAmount);
+
         // Final color before blend layers
-        vec3 coreColor = emotionColor * totalEnergy * energyIntensity;
-        coreColor += emotionColor * edgeGlow * 0.3;
+        vec3 coreColor = driftedColor * totalEnergy * energyIntensity;
+        coreColor += driftedColor * edgeGlow * 0.3;
 
         // Apply blend layers to the entire soul color
         if (blendLayer1Enabled > 0.5) {
@@ -209,6 +181,10 @@ export class CrystalSoul {
         this.baseScale = 1.0;  // Full size by default (size=1.0)
         this._pendingParent = null;
         this._disposed = false;  // Track disposal state for async safety
+
+        // Behavior mix state — AB pair is the current settled state
+        this._mixState = { modeA: 0, modeB: 0, blend: 0.0 };
+        this._crossfade = null;  // { targetA, targetB, targetBlend, progress, duration }
 
         this._createMesh();
     }
@@ -302,6 +278,11 @@ export class CrystalSoul {
                 phaseOffset1: { value: 0.0 },
                 phaseOffset2: { value: 2.094 },  // 2π/3 = 120°
                 phaseOffset3: { value: 4.189 },  // 4π/3 = 240°
+                // Color drift uniforms
+                colorDriftSpeed: { value: 0.15 },    // Slow organic drift
+                colorDriftAmount: { value: 0.3 },    // Subtle but visible shift
+                // Soul behavior uniforms
+                ...createSoulBehaviorUniforms(),
                 // Blend layer uniforms - Quartz preset defaults
                 blendLayer1Mode: { value: 2 },       // Color Burn
                 blendLayer1Strength: { value: 2.3 },
@@ -430,6 +411,30 @@ export class CrystalSoul {
 
         // Note: energyIntensity is fixed at 0.8 (set in constructor, no per-frame update needed)
 
+        // Tick crossfade between AB (current) and CD (target) pairs
+        if (this._crossfade) {
+            const cf = this._crossfade;
+            cf.progress += deltaTime / cf.duration;
+            if (cf.progress >= 1.0) {
+                // Complete: copy CD → AB, reset crossfade
+                this._mixState.modeA = cf.targetA;
+                this._mixState.modeB = cf.targetB;
+                this._mixState.blend = cf.targetBlend;
+                if (uniforms.uBehaviorMode) uniforms.uBehaviorMode.value = cf.targetA;
+                if (uniforms.uBehaviorModeB) uniforms.uBehaviorModeB.value = cf.targetB;
+                if (uniforms.uBehaviorBlend) uniforms.uBehaviorBlend.value = cf.targetBlend;
+                if (uniforms.uBehaviorCrossfade) uniforms.uBehaviorCrossfade.value = 0.0;
+                this._crossfade = null;
+            } else {
+                // Ease-in-out cubic
+                const p = cf.progress;
+                const eased = p < 0.5
+                    ? 4.0 * p * p * p
+                    : 1.0 - Math.pow(-2.0 * p + 2.0, 3) / 2.0;
+                if (uniforms.uBehaviorCrossfade) uniforms.uBehaviorCrossfade.value = eased;
+            }
+        }
+
         // Apply breathing scale
         if (this.mesh) {
             this.mesh.scale.setScalar(this.baseScale * breathScale);
@@ -483,6 +488,106 @@ export class CrystalSoul {
         }
         if (params.phaseOffset3 !== undefined && uniforms.phaseOffset3) {
             uniforms.phaseOffset3.value = params.phaseOffset3;
+        }
+        // Color drift
+        if (params.colorDriftSpeed !== undefined && uniforms.colorDriftSpeed) {
+            uniforms.colorDriftSpeed.value = params.colorDriftSpeed;
+        }
+        if (params.colorDriftAmount !== undefined && uniforms.colorDriftAmount) {
+            uniforms.colorDriftAmount.value = Math.max(0, Math.min(1.0, params.colorDriftAmount));
+        }
+        // Behavior mode (string name or integer)
+        if (params.behaviorMode !== undefined) {
+            this.setBehavior(params.behaviorMode);
+        }
+        if (params.behaviorSpeed !== undefined) {
+            setSoulBehavior(this.material, undefined, params.behaviorSpeed);
+        }
+        // Mix params
+        if (params.mixA !== undefined && params.mixB !== undefined) {
+            this.setMix(params.mixA, params.mixB, params.mixBlend ?? 0.5);
+        }
+    }
+
+    /**
+     * Mix two behaviors with adjustable weight
+     * @param {string|number} modeA - Primary behavior name or integer
+     * @param {string|number} modeB - Secondary behavior name or integer
+     * @param {number} blend - Blend ratio (0.0 = all A, 1.0 = all B)
+     * @param {number} [transitionMs=2000] - Ease duration in ms (0 for instant)
+     */
+    setMix(modeA, modeB, blend, transitionMs = 2000) {
+        if (!this.material?.uniforms) return;
+        const u = this.material.uniforms;
+
+        const intA = resolveBehaviorMode(modeA);
+        const intB = resolveBehaviorMode(modeB);
+        const targetBlend = Math.max(0, Math.min(1, blend));
+
+        // No change from current settled state?
+        if (!this._crossfade
+            && intA === this._mixState.modeA && intB === this._mixState.modeB
+            && targetBlend === this._mixState.blend) {
+            return;
+        }
+
+        if (transitionMs <= 0) {
+            // Instant — set AB directly, no crossfade
+            this._mixState.modeA = intA;
+            this._mixState.modeB = intB;
+            this._mixState.blend = targetBlend;
+            if (u.uBehaviorMode) u.uBehaviorMode.value = intA;
+            if (u.uBehaviorModeB) u.uBehaviorModeB.value = intB;
+            if (u.uBehaviorBlend) u.uBehaviorBlend.value = targetBlend;
+            if (u.uBehaviorCrossfade) u.uBehaviorCrossfade.value = 0.0;
+            this._crossfade = null;
+            return;
+        }
+
+        // If mid-crossfade, snap AB to the old target to settle it, then start fresh
+        if (this._crossfade) {
+            const old = this._crossfade;
+            this._mixState.modeA = old.targetA;
+            this._mixState.modeB = old.targetB;
+            this._mixState.blend = old.targetBlend;
+            if (u.uBehaviorMode) u.uBehaviorMode.value = old.targetA;
+            if (u.uBehaviorModeB) u.uBehaviorModeB.value = old.targetB;
+            if (u.uBehaviorBlend) u.uBehaviorBlend.value = old.targetBlend;
+            if (u.uBehaviorCrossfade) u.uBehaviorCrossfade.value = 0.0;
+            this._crossfade = null;
+        }
+
+        // Set CD uniforms for the new target
+        if (u.uBehaviorModeC) u.uBehaviorModeC.value = intA;
+        if (u.uBehaviorModeD) u.uBehaviorModeD.value = intB;
+        if (u.uBehaviorBlendCD) u.uBehaviorBlendCD.value = targetBlend;
+        if (u.uBehaviorCrossfade) u.uBehaviorCrossfade.value = 0.0;
+
+        // Start crossfade from AB (current) → CD (target)
+        this._crossfade = {
+            targetA: intA,
+            targetB: intB,
+            targetBlend,
+            progress: 0,
+            duration: transitionMs
+        };
+    }
+
+    /**
+     * Set a single soul behavior mode with crossfade transition
+     * @param {string|number} mode - Behavior name ('nebula', 'spiral', 'tidal',
+     *   'orbital', 'radial', 'hotspot') or integer (0-5)
+     * @param {number} [speed] - Optional speed multiplier (0.1-5.0)
+     * @param {number} [transitionMs=2000] - Crossfade duration in ms (0 for instant)
+     */
+    setBehavior(mode, speed, transitionMs = 2000) {
+        if (speed !== undefined) {
+            setSoulBehavior(this.material, undefined, speed);
+        }
+        if (mode !== undefined) {
+            const modeInt = resolveBehaviorMode(mode);
+            // Single behavior = both slots same mode, blend irrelevant
+            this.setMix(modeInt, modeInt, 0.0, transitionMs);
         }
     }
 
