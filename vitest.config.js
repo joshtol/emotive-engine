@@ -12,28 +12,12 @@ export default defineConfig({
             '**/*.spec.ts',
             '**/*.e2e.ts'
         ],
-        // Forks pool (vitest 3.x default). Each test file gets its own
-        // forked process with fresh memory, preventing the 275 MB
-        // accumulation that crashes v8's RegExpCompiler zone allocator.
+        // OOM prevention: CI uses --shard to split into separate processes
+        // (v8 RegExpCompiler zone allocator accumulates across files in one process).
+        // These settings are for local runs; CI sharding in .github/workflows/ci.yml.
         pool: 'forks',
-        poolOptions: {
-            forks: {
-                // MUST be false — singleFork: true crams all 487 tests
-                // into one process whose RegExpCompiler OOMs at ~275 MB.
-                singleFork: false
-            }
-        },
-        // Increase timeouts for large test suite
         testTimeout: 30000,
         hookTimeout: 30000,
-        // Reduce memory pressure
-        maxConcurrency: 3,
-        // Isolate tests to prevent leaks
-        isolate: true,
-        // Use minimal reporter to reduce memory overhead
-        reporters: [['default', { summary: false }]],
-        // Disable file parallelization
-        fileParallelism: false,
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html', 'lcov'],

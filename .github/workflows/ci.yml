@@ -44,21 +44,12 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run tests
-      run: npm test
-
-    - name: Generate coverage report
-      run: npm run test:coverage
-      if: matrix.node-version == '20.x'
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      if: matrix.node-version == '20.x'
-      with:
-        file: ./coverage/coverage-final.json
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+    - name: Run tests (sharded to prevent v8 zone allocator OOM)
+      run: |
+        for shard in 1 2 3 4; do
+          echo "--- Shard $shard/4 ---"
+          npx vitest run --shard=$shard/4
+        done
 
   build:
     runs-on: ubuntu-latest
