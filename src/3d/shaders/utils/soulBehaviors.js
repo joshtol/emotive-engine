@@ -49,6 +49,7 @@ export const SOUL_BEHAVIOR_UNIFORMS_GLSL = /* glsl */`
     uniform float uBehaviorBlendCD;   // 0.0 = all C, 1.0 = all D
     uniform float uBehaviorCrossfade; // 0.0 = current (AB), 1.0 = target (CD)
     uniform float uBehaviorSpeed;
+    uniform float uBaselineStrength;  // 0.0 = no baseline, 1.0 = full nebula floor
 `;
 
 // ─────────────────────────────────────────────────────────────────────
@@ -156,18 +157,29 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
     }
 
     // --- Behavior 4: Radial Pulse ---
+    // Dual overlapping wavefronts offset by half-cycle.
+    // Prevents light-switch effect: one is always fading in as the other fades out.
     float soulBehaviorRadial(vec3 pos, float time, float behaviorSpeed) {
-        float t = time * 0.35 * behaviorSpeed;
+        float t = time * 0.2 * behaviorSpeed;
         float dist = length(pos);
-        float energy = 0.0;
-        // Three shells expanding outward from staggered origins
-        for (int i = 0; i < 3; i++) {
-            float offset = float(i) * 0.33;
-            float shellRadius = fract(t * 0.5 + offset) * 1.5;
-            float shell = exp(-(dist - shellRadius) * (dist - shellRadius) * 30.0);
-            float fade = 1.0 - fract(t * 0.5 + offset);
-            energy += shell * fade;
-        }
+
+        // Wavefront A
+        float phaseA = fract(t * 0.3);
+        float radiusA = phaseA * 1.5;
+        float shellA = exp(-(dist - radiusA) * (dist - radiusA) * 20.0);
+        // Smooth fade: raised cosine (0→1→0 over cycle, no discontinuity)
+        float fadeA = 0.5 + 0.5 * cos(phaseA * 6.28318);
+        float energyA = shellA * fadeA;
+
+        // Wavefront B — half-cycle offset
+        float phaseB = fract(t * 0.3 + 0.5);
+        float radiusB = phaseB * 1.5;
+        float shellB = exp(-(dist - radiusB) * (dist - radiusB) * 20.0);
+        float fadeB = 0.5 + 0.5 * cos(phaseB * 6.28318);
+        float energyB = shellB * fadeB;
+
+        float energy = max(energyA, energyB);
+
         // Noise breaks perfect spherical symmetry
         float noiseMod = noise3D(normalize(pos + vec3(0.001)) * 5.0 + vec3(t * 0.2));
         energy *= (0.7 + noiseMod * 0.3);
@@ -230,13 +242,23 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // MIX + CROSSFADE — Blend within a pair, then crossfade between pairs
+    // MIX + CROSSFADE — Baseline floor + active accent
+    //
+    // Nebula drift always runs as an ambient baseline floor.
+    // Active behaviors (AB/CD crossfade system) accentuate on top.
+    // uBaselineStrength controls how much baseline shows (0 = off, 1 = full).
     // ═══════════════════════════════════════════════════════════════════
     float calculateSoulBehavior(vec3 pos, float time, float behaviorSpeed,
         float driftEnabled, float driftSpeed,
         float crossWaveEnabled, float crossWaveSpeed,
         float phaseOffset1, float phaseOffset2, float phaseOffset3)
     {
+        // Always-on baseline: nebula drift provides ambient energy floor
+        float baseline = soulBehaviorNebula(pos, time,
+            driftEnabled, driftSpeed, crossWaveEnabled, crossWaveSpeed,
+            phaseOffset1, phaseOffset2, phaseOffset3, behaviorSpeed);
+        float baseEnergy = baseline - 0.53; // [0, ~0.07]
+
         // Current mix (AB pair)
         float energyA = dispatchSoulBehavior(uBehaviorMode, pos, time, behaviorSpeed,
             driftEnabled, driftSpeed, crossWaveEnabled, crossWaveSpeed,
@@ -249,22 +271,26 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
             currentMix = mix(energyA, energyB, uBehaviorBlend);
         }
 
-        // No crossfade active — return current mix directly
-        if (uBehaviorCrossfade < 0.001) return currentMix;
-
-        // Target mix (CD pair)
-        float energyC = dispatchSoulBehavior(uBehaviorModeC, pos, time, behaviorSpeed,
-            driftEnabled, driftSpeed, crossWaveEnabled, crossWaveSpeed,
-            phaseOffset1, phaseOffset2, phaseOffset3);
-        float targetMix = energyC;
-        if (uBehaviorBlendCD > 0.001) {
-            float energyD = dispatchSoulBehavior(uBehaviorModeD, pos, time, behaviorSpeed,
+        // Crossfade to target (CD pair) if active
+        if (uBehaviorCrossfade >= 0.001) {
+            float energyC = dispatchSoulBehavior(uBehaviorModeC, pos, time, behaviorSpeed,
                 driftEnabled, driftSpeed, crossWaveEnabled, crossWaveSpeed,
                 phaseOffset1, phaseOffset2, phaseOffset3);
-            targetMix = mix(energyC, energyD, uBehaviorBlendCD);
+            float targetMix = energyC;
+            if (uBehaviorBlendCD > 0.001) {
+                float energyD = dispatchSoulBehavior(uBehaviorModeD, pos, time, behaviorSpeed,
+                    driftEnabled, driftSpeed, crossWaveEnabled, crossWaveSpeed,
+                    phaseOffset1, phaseOffset2, phaseOffset3);
+                targetMix = mix(energyC, energyD, uBehaviorBlendCD);
+            }
+            currentMix = mix(currentMix, targetMix, uBehaviorCrossfade);
         }
 
-        return mix(currentMix, targetMix, uBehaviorCrossfade);
+        float activeEnergy = currentMix - 0.53; // [0, ~0.07]
+
+        // Combine: baseline floor + active accent
+        // Peaks from both add together → more dynamic range
+        return 0.53 + baseEnergy * uBaselineStrength + activeEnergy;
     }
 `;
 
@@ -275,6 +301,7 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
 export const SOUL_BEHAVIOR_DEFAULTS = {
     behaviorMode: SOUL_BEHAVIORS.NEBULA_DRIFT,
     behaviorSpeed: 1.0,
+    baselineStrength: 0.5,  // Nebula floor at half-strength by default
 };
 
 export function createSoulBehaviorUniforms(defaults = {}) {
@@ -288,6 +315,7 @@ export function createSoulBehaviorUniforms(defaults = {}) {
         uBehaviorBlendCD: { value: 0.0 },
         uBehaviorCrossfade: { value: 0.0 },
         uBehaviorSpeed: { value: defaults.behaviorSpeed ?? SOUL_BEHAVIOR_DEFAULTS.behaviorSpeed },
+        uBaselineStrength: { value: defaults.baselineStrength ?? SOUL_BEHAVIOR_DEFAULTS.baselineStrength },
     };
 }
 
@@ -323,4 +351,5 @@ export function resetSoulBehavior(material) {
     if (u.uBehaviorBlendCD) u.uBehaviorBlendCD.value = 0.0;
     if (u.uBehaviorCrossfade) u.uBehaviorCrossfade.value = 0.0;
     if (u.uBehaviorSpeed) u.uBehaviorSpeed.value = SOUL_BEHAVIOR_DEFAULTS.behaviorSpeed;
+    if (u.uBaselineStrength) u.uBaselineStrength.value = SOUL_BEHAVIOR_DEFAULTS.baselineStrength;
 }

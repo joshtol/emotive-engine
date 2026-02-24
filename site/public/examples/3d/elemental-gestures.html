@@ -555,6 +555,32 @@
             </div>
         </div>
 
+        <div class="section">
+            <h2 class="has-toggle">
+                <span>Emotion</span>
+                <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
+            </h2>
+            <div class="section-content">
+                <div class="button-grid" style="max-height: none;">
+                    <button data-action="emotion" data-value="neutral" class="active">😐 Neutral</button>
+                    <button data-action="emotion" data-value="joy">😊 Joy</button>
+                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
+                    <button data-action="emotion" data-value="anger">😠 Anger</button>
+                    <button data-action="emotion" data-value="fear">😨 Fear</button>
+                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
+                    <button data-action="emotion" data-value="love">💕 Love</button>
+                    <button data-action="emotion" data-value="excited">😆 Excited</button>
+                    <button data-action="emotion" data-value="calm">😌 Calm</button>
+                    <button data-action="emotion" data-value="euphoria">🤩 Euphoria</button>
+                    <button data-action="emotion" data-value="focused">🎯 Focused</button>
+                    <button data-action="emotion" data-value="resting">😴 Resting</button>
+                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
+                    <button data-action="emotion" data-value="suspicion">🧐 Suspicion</button>
+                    <button data-action="emotion" data-value="glitch">🌈 Glitch</button>
+                </div>
+            </div>
+        </div>
+
         <div class="section" id="filters-section">
             <h2 class="collapsed">Search & Filters</h2>
             <div class="section-content collapsed">
@@ -776,7 +802,7 @@
 
     <script type="module">
         import EmotiveMascot3D, { profiler } from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+        import { setupParticlesToggle, setupVisualToggles, setupWobbleToggle } from '/examples/3d/demo-utils.js';
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE MASCOT
@@ -1153,6 +1179,21 @@
             document.querySelectorAll('[data-action="geometry"]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         });
+
+        // Emotion button clicks
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="emotion"]');
+            if (!btn) return;
+
+            const value = btn.dataset.value;
+            mascot.setEmotion(value);
+
+            document.querySelectorAll('[data-action="emotion"]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+
+        // Wobble toggle (uses shared demo-utils pattern)
+        setupWobbleToggle(() => mascot);
 
         // Gesture button clicks
         document.addEventListener('click', e => {
@@ -1662,17 +1703,20 @@
         // SOUL BEHAVIOR CYCLING
         // ═══════════════════════════════════════════════════════════════════════════
 
+        // Soul behavior presets — nebula baseline always runs as ambient floor.
+        // Active behaviors accentuate on top. Single behaviors showcase clearly,
+        // mixed pairs create complex layered patterns.
         const soulPresets = [
-            { a: 'nebula',  b: 'spiral',  blend: 0.35 },  // nebula with spiral threads
-            { a: 'spiral',  b: 'orbital', blend: 0.4  },  // spiral + orbital rings
-            { a: 'tidal',   b: 'nebula',  blend: 0.3  },  // tidal with nebula haze
-            { a: 'hotspot', b: 'radial',  blend: 0.4  },  // hotspot + radial pulse
-            { a: 'orbital', b: 'tidal',   blend: 0.35 },  // orbital + tidal sway
-            { a: 'radial',  b: 'spiral',  blend: 0.3  },  // radial + spiral overlay
-            { a: 'nebula',  b: 'hotspot', blend: 0.35 },  // nebula + hotspot flicker
-            { a: 'spiral',  b: 'tidal',   blend: 0.4  },  // spiral + tidal modulation
-            { a: 'hotspot', b: 'orbital', blend: 0.3  },  // hotspot + orbital sweep
-            { a: 'tidal',   b: 'radial',  blend: 0.35 },  // tidal + radial pulse
+            { a: 'spiral',  b: 'spiral',  blend: 0.0  },  // spiral corkscrew accent
+            { a: 'tidal',   b: 'tidal',   blend: 0.0  },  // tidal breathing accent
+            { a: 'orbital', b: 'orbital', blend: 0.0  },  // orbital rings accent
+            { a: 'hotspot', b: 'hotspot', blend: 0.0  },  // wandering hotspot accent
+            { a: 'radial',  b: 'radial',  blend: 0.0  },  // radial pulse accent
+            { a: 'spiral',  b: 'tidal',   blend: 0.5  },  // spiral + tidal layers
+            { a: 'orbital', b: 'hotspot', blend: 0.4  },  // orbital + hotspot
+            { a: 'radial',  b: 'spiral',  blend: 0.35 },  // radial + spiral
+            { a: 'tidal',   b: 'orbital', blend: 0.4  },  // tidal + orbital
+            { a: 'hotspot', b: 'radial',  blend: 0.45 },  // hotspot + radial
         ];
         let currentPresetIndex = 0;
 
@@ -1683,11 +1727,14 @@
             if (!soul) return;
 
             soul.setMix(preset.a, preset.b, preset.blend, 3000);
-            console.log(`[Soul] ${preset.a} + ${preset.b} (${Math.round((1 - preset.blend) * 100)}/${Math.round(preset.blend * 100)})`);
+            const label = preset.blend === 0.0
+                ? `[Soul] accent: ${preset.a}`
+                : `[Soul] accent: ${preset.a} + ${preset.b} (${Math.round((1 - preset.blend) * 100)}/${Math.round(preset.blend * 100)})`;
+            console.log(label);
         }
 
-        // Cycle every 6 seconds (with 3s crossfade for continuous blending)
-        setInterval(cycleSoulBehavior, 6000);
+        // Cycle every 8 seconds (3s crossfade + 5s hold for each accent)
+        setInterval(cycleSoulBehavior, 8000);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE

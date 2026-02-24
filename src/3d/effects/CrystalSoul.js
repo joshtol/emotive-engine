@@ -118,13 +118,13 @@ const soulFragmentShader = `
         float rawEffectActivity = clamp((rawBehavior - 0.53) / 0.07, 0.0, 1.0);
 
         // Total energy for color calculation
-        // Compress range so dim↔bright swing is gentler (less pulsing)
-        float totalEnergy = 0.30 + rawEffectActivity * 0.38;
+        // Wider range for more visible contrast between dim and bright regions
+        float totalEnergy = 0.15 + rawEffectActivity * 0.60;
 
         // Edge glow - adds rim lighting (proper camera-relative view direction)
         vec3 viewDir = normalize(vViewPosition);
         float edgeGlow = 1.0 - abs(dot(vNormal, viewDir));
-        edgeGlow = pow(edgeGlow, 2.0) * 0.4;
+        edgeGlow = pow(edgeGlow, 1.5) * 0.6;
 
         // Color drift — warm/cool variants derived from the emotion color itself
         // Warm: boost reds/greens, pull back blues (shift toward warmer hue)
@@ -145,7 +145,7 @@ const soulFragmentShader = `
 
         // Final color before blend layers
         vec3 coreColor = driftedColor * totalEnergy * energyIntensity;
-        coreColor += driftedColor * edgeGlow * 0.3;
+        coreColor += driftedColor * edgeGlow * 0.5;
 
         // Apply blend layers to the entire soul color
         // Mix factor clamped to [0,1] — strength > 1.0 only scales the blend color,
@@ -177,8 +177,8 @@ const soulFragmentShader = `
                 discard;
             }
 
-            // Boost color intensity for visible bands
-            coreColor *= 1.0 + visibility * 0.3;
+            // Boost color intensity for visible bands — punch through the crystal
+            coreColor *= 1.0 + visibility * 0.5;
         }
 
         // Fade near outer boundary so soul doesn't overbloom where it clips crystal shell
@@ -304,7 +304,7 @@ export class CrystalSoul {
             uniforms: {
                 time: { value: 0 },
                 emotionColor: { value: new THREE.Color(1, 1, 1) },
-                energyIntensity: { value: 0.8 },  // Fixed value - no per-frame update needed
+                energyIntensity: { value: 1.0 },  // Fixed value - no per-frame update needed
                 driftEnabled: { value: 1.0 },
                 driftSpeed: { value: 0.5 },
                 crossWaveEnabled: { value: 1.0 },
@@ -317,7 +317,7 @@ export class CrystalSoul {
                 phaseOffset3: { value: 4.189 },  // 4π/3 = 240°
                 // Color drift uniforms
                 colorDriftSpeed: { value: 0.15 },    // Slow organic drift
-                colorDriftAmount: { value: 0.3 },    // Subtle but visible shift
+                colorDriftAmount: { value: 0.45 },   // More visible warm/cool variation
                 // Soul behavior uniforms
                 ...createSoulBehaviorUniforms(),
                 // Blend layer uniforms - Quartz preset defaults
@@ -539,6 +539,10 @@ export class CrystalSoul {
         }
         if (params.behaviorSpeed !== undefined) {
             setSoulBehavior(this.material, undefined, params.behaviorSpeed);
+        }
+        // Baseline strength (nebula floor)
+        if (params.baselineStrength !== undefined && uniforms.uBaselineStrength) {
+            uniforms.uBaselineStrength.value = Math.max(0, Math.min(1.0, params.baselineStrength));
         }
         // Mix params
         if (params.mixA !== undefined && params.mixB !== undefined) {

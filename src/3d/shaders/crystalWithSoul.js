@@ -454,8 +454,8 @@ void main() {
     // Reduced intensity to prevent blowout - soul should be visible but not white
     float glowCurve = sqrt(innerGlowStrength * glowIntensity) * 0.5;
     vec3 soulColor = emotionColor * soulIntensity * glowCurve;
-    // Clamp soul color to prevent blowout
-    soulColor = min(soulColor, vec3(0.8));
+    // Clamp soul color to prevent blowout (relaxed to let more energy through)
+    soulColor = min(soulColor, vec3(1.2));
 
     // ═══════════════════════════════════════════════════════════════════════
     // REFRACTED SOUL SAMPLING - True optical lensing through crystal
@@ -622,7 +622,7 @@ void main() {
 
     // Add soul glow on top (additive, not replacement) - concentrated in center
     // Soul should illuminate dark areas but not wash out entirely
-    float soulBlendFactor = soulIntensity * 0.6;
+    float soulBlendFactor = soulIntensity * 0.8;
     finalColor += soulColor * soulBlendFactor;
 
     // Apply texture - blend based on texture brightness and strength
@@ -850,10 +850,16 @@ void main() {
             soulGlow *= mix(vec3(1.0), gemHue, tintAmount);
         }
 
-        // Attenuate soul glow at crystal edges where clipping causes overbloom
+        // Soul must punch through the crystal's thickness darkening.
+        // Inverse thickness gating: strong in dark center, mild at bright edges.
+        float soulStrength = mix(0.8, 0.25, smoothstep(0.15, 0.7, thicknessMultiplier));
         float crystalFacing = abs(dot(normal, viewDir));
-        float soulEdgeAtten = smoothstep(0.0, 0.35, crystalFacing);
-        finalColor += soulGlow * 0.55 * soulEdgeAtten;
+        float soulEdgeAtten = smoothstep(0.0, 0.25, crystalFacing);
+        vec3 soulContrib = soulGlow * soulStrength * soulEdgeAtten;
+        // Luminance-based soft cap: preserve hue, prevent white bloom blowout
+        float soulLum = dot(soulContrib, vec3(0.299, 0.587, 0.114));
+        soulContrib *= min(1.0, 0.45 / max(soulLum, 0.001));
+        finalColor += soulContrib;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
