@@ -12,15 +12,16 @@ export default defineConfig({
             '**/*.spec.ts',
             '**/*.e2e.ts'
         ],
-        // Vitest 3.x defaults to 'forks' pool (child processes).
-        // singleFork: true runs all tests in one forked process.
-        // execArgv passes --max-old-space-size to the child process
-        // (the flag on the parent `node` command does NOT propagate to forks).
+        // Forks pool — child process inherits NODE_OPTIONS from environment.
+        // CI sets NODE_OPTIONS='--max-old-space-size=8192' so the forked worker
+        // has enough total process memory for v8's RegExpCompiler zone allocator
+        // (which is separate from --max-old-space-size JS heap limit).
+        // Threads pool deadlocks on Windows with jsdom, so forks is required.
         pool: 'forks',
         poolOptions: {
             forks: {
                 singleFork: true,
-                execArgv: ['--max-old-space-size=4096']
+                execArgv: ['--max-old-space-size=8192']
             }
         },
         // Increase timeouts for large test suite
