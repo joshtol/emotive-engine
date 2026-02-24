@@ -100,20 +100,18 @@ function deriveElectricParameters(charge, overrides = {}) {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 const NOISE_GLSL = /* glsl */`
-// 2D hash for Voronoi cell positions
+// 2D hash for Voronoi cell positions — sin-free
 vec2 hash2(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    return fract(sin(p) * 43758.5453);
+    p = fract(p * vec2(0.1031, 0.1030));
+    p += dot(p, p.yx + 33.33);
+    return fract((p.xx + p.yx) * p.yx);
 }
 
-// 3D vector hash for Voronoi cell positions (matches overlay shader)
+// 3D vector hash for Voronoi cell positions — sin-free (fract/dot only)
 vec3 hash3(vec3 p) {
-    p = vec3(
-        dot(p, vec3(127.1, 311.7, 74.7)),
-        dot(p, vec3(269.5, 183.3, 246.1)),
-        dot(p, vec3(113.5, 271.9, 124.6))
-    );
-    return fract(sin(p) * 43758.5453);
+    p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yzx + 33.33);
+    return fract((p.xxy + p.yzz) * p.zyx);
 }
 
 // 3D hash for value noise (required by cutout system's snoise)
@@ -168,9 +166,9 @@ float voronoiEdge2D(vec2 p, float time, float jitter) {
     vec2 n = floor(p);
     vec2 f = fract(p);
 
-    // Single pass: track two closest cell centers (was 18 → 9 iterations)
-    float d1 = 10.0;
-    float d2 = 10.0;
+    // Single pass: squared-distance comparison (saves 7 sqrt per call)
+    float d1sq = 10.0;
+    float d2sq = 10.0;
     vec2 closestPoint = vec2(0.0);
     vec2 secondPoint = vec2(0.0);
 
@@ -182,17 +180,17 @@ float voronoiEdge2D(vec2 p, float time, float jitter) {
             vec2 cellOffset = cellHash * jitter;
             cellOffset += (fract(time * 0.48 + cellHash) * 2.0 - 1.0) * 0.15;
 
-            vec2 cellPoint = neighbor + cellOffset;
-            float d = length(cellPoint - f);
+            vec2 diff = neighbor + cellOffset - f;
+            float dsq = dot(diff, diff);
 
-            if (d < d1) {
-                d2 = d1;
+            if (dsq < d1sq) {
+                d2sq = d1sq;
                 secondPoint = closestPoint;
-                d1 = d;
-                closestPoint = cellPoint;
-            } else if (d < d2) {
-                d2 = d;
-                secondPoint = cellPoint;
+                d1sq = dsq;
+                closestPoint = neighbor + cellOffset;
+            } else if (dsq < d2sq) {
+                d2sq = dsq;
+                secondPoint = neighbor + cellOffset;
             }
         }
     }
@@ -204,18 +202,17 @@ float voronoiEdge2D(vec2 p, float time, float jitter) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// 3D Voronoi edge distance — single-pass optimization
-// Tracks closest + second-closest cells in one 27-iteration pass (was 54 iterations).
-// Edge distance = perpendicular bisector between the two nearest cells.
-// Mathematically identical to two-pass: nearest edge is always between F1 and F2.
+// 3D Voronoi edge distance — single-pass, squared-distance comparison
+// Uses dot(d,d) instead of length(d) in the loop (saves 25 sqrt per call).
+// sqrt is monotonic so nearest-neighbor selection is identical.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 float voronoiEdge3D(vec3 p, float time, float jitter) {
     vec3 n = floor(p);
     vec3 f = fract(p);
 
-    // Single pass: track two closest cell centers
-    float d1 = 10.0;
-    float d2 = 10.0;
+    // Single pass: track two closest cell centers (squared distances for comparison)
+    float d1sq = 10.0;
+    float d2sq = 10.0;
     vec3 closestPoint = vec3(0.0);
     vec3 secondPoint = vec3(0.0);
 
@@ -228,17 +225,17 @@ float voronoiEdge3D(vec3 p, float time, float jitter) {
                 vec3 cellOffset = cellHash * jitter;
                 cellOffset += (fract(time * 0.48 + cellHash) * 2.0 - 1.0) * 0.15;
 
-                vec3 cellPoint = neighbor + cellOffset;
-                float d = length(cellPoint - f);
+                vec3 diff = neighbor + cellOffset - f;
+                float dsq = dot(diff, diff);  // squared distance — no sqrt needed
 
-                if (d < d1) {
-                    d2 = d1;
+                if (dsq < d1sq) {
+                    d2sq = d1sq;
                     secondPoint = closestPoint;
-                    d1 = d;
-                    closestPoint = cellPoint;
-                } else if (d < d2) {
-                    d2 = d;
-                    secondPoint = cellPoint;
+                    d1sq = dsq;
+                    closestPoint = neighbor + cellOffset;
+                } else if (dsq < d2sq) {
+                    d2sq = dsq;
+                    secondPoint = neighbor + cellOffset;
                 }
             }
         }
@@ -246,7 +243,7 @@ float voronoiEdge3D(vec3 p, float time, float jitter) {
 
     // Edge distance: perpendicular bisector between two closest cells
     vec3 toCenter = (closestPoint + secondPoint) * 0.5;
-    vec3 cellDiff = normalize(secondPoint - closestPoint);
+    vec3 cellDiff = normalize(secondPoint - closestPoint);  // only sqrt needed here
     return abs(dot(toCenter - f, cellDiff));
 }
 
