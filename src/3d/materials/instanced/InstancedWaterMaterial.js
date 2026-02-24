@@ -178,29 +178,33 @@ float noise(vec3 p) {
     );
 }
 
-// Animated 2D Voronoi for caustic ray patterns (Euclidean distance)
+// Animated 2D Voronoi for caustic ray patterns — sin-free hash, squared distance comparison
 vec3 voronoiCaustic(vec2 p, float time) {
     vec2 i = floor(p);
     vec2 f = fract(p);
-    float d1 = 10.0, d2 = 10.0;
+    float d1sq = 10.0, d2sq = 10.0;
     float cell1Hash = 0.0;
 
     for (int x = -1; x <= 1; x++) {
         for (int y = -1; y <= 1; y++) {
             vec2 nb = vec2(float(x), float(y));
             vec2 cell = i + nb;
-            float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
-            float h2 = fract(sin(dot(cell, vec2(269.5, 183.3))) * 43758.5453);
+            // Sin-free 2D hash
+            vec2 ch = fract(vec2(dot(cell, vec2(127.1, 311.7)), dot(cell, vec2(269.5, 183.3))) * 0.0243902);
+            ch = fract(ch * (ch + 33.33));
+            float h = ch.x;
+            float h2 = ch.y;
             vec2 pt = nb + vec2(h, h2) + vec2(
                 (fract(time * 0.48 + h) * 2.0 - 1.0) * 0.15,
                 (fract(time * 0.40 + h2) * 2.0 - 1.0) * 0.15
             );
-            float d = length(f - pt);
-            if (d < d1) { d2 = d1; d1 = d; cell1Hash = h; }
-            else if (d < d2) { d2 = d; }
+            vec2 diff = f - pt;
+            float dsq = dot(diff, diff);
+            if (dsq < d1sq) { d2sq = d1sq; d1sq = dsq; cell1Hash = h; }
+            else if (dsq < d2sq) { d2sq = dsq; }
         }
     }
-    return vec3(d2 - d1, cell1Hash, 0.0);
+    return vec3(sqrt(d2sq) - sqrt(d1sq), cell1Hash, 0.0);
 }
 
 // Water bubbles with rising animation
@@ -393,7 +397,7 @@ const WATER_FRAGMENT_CORE = /* glsl */`
     float spark2 = pow(max(dot(wetReflDir, normalize(vec3(-0.3, 0.9, 0.4))), 0.0), 512.0) * 0.6;
     float spark3 = pow(max(dot(wetReflDir, normalize(vec3(0.4, 0.7, -0.5))), 0.0), 384.0) * 0.4;
 
-    float sparkleAnim = snoise(vPosition * 8.0 + vec3(localTime * 0.004)) * 0.5 + 0.5;
+    float sparkleAnim = noise(vPosition * 8.0 + vec3(localTime * 0.004));
 
     float sharpSpec = (spark1 + spark2 + spark3) * sparkleAnim * 3.0 * uSparkleIntensity;
 
@@ -457,9 +461,10 @@ const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
 `;
 
 const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
-    float dripHash1 = snoise(vPosition * 8.0 + vec3(12.34, 56.78, 90.12));
-    float dripHash2 = snoise(vPosition * 8.0 + vec3(98.76, 54.32, 10.98));
-    float dripHash3 = snoise(vPosition * 6.0 + vec3(45.67, 23.45, 67.89));
+    // Hash-based noise instead of snoise — these just drive threshold masks
+    float dripHash1 = noise(vPosition * 8.0 + vec3(12.34, 56.78, 90.12)) * 2.0 - 1.0;
+    float dripHash2 = noise(vPosition * 8.0 + vec3(98.76, 54.32, 10.98)) * 2.0 - 1.0;
+    float dripHash3 = noise(vPosition * 6.0 + vec3(45.67, 23.45, 67.89)) * 2.0 - 1.0;
 
     float dripPoint1 = smoothstep(0.65, 0.85, dripHash1);
     float dripPoint2 = smoothstep(0.7, 0.88, dripHash2);
