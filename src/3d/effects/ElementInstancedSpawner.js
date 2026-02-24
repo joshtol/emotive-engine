@@ -1964,6 +1964,11 @@ export class ElementInstancedSpawner {
         // Enable motion blur when instanced elements are actively moving
         if (this._renderer?.motionBlurPass) {
             this._renderer.motionBlurPass.enabled = true;
+            // Normalize blur intensity by frame rate — velocity is computed as
+            // position delta per frame, so at 30fps velocity is 2× the 60fps value.
+            // Scale intensity inversely to keep blur visually consistent across devices.
+            const refDt = 1 / 60;
+            this._renderer.motionBlurPass.setIntensity(Math.min(refDt / deltaTime, 1.0));
         }
 
         // Sync container transform with mascot (position, rotation, scale)

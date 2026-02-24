@@ -459,6 +459,14 @@
         .mobile-toast { display: none; }
 
         @media (max-width: 1000px) {
+            /* Darken panel backgrounds for readability over photo bg */
+            .left-menu,
+            .right-menu {
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+            }
+
             .gesture-tooltip {
                 display: none !important;
             }
