@@ -12,11 +12,15 @@ export default defineConfig({
             '**/*.spec.ts',
             '**/*.e2e.ts'
         ],
-        // Fix IPC errors with large test suites (5000+ tests)
-        // Use singleThread mode to eliminate worker process memory overhead
+        // Vitest 3.x defaults to 'forks' pool (child processes).
+        // singleFork: true runs all tests in one forked process.
+        // execArgv passes --max-old-space-size to the child process
+        // (the flag on the parent `node` command does NOT propagate to forks).
+        pool: 'forks',
         poolOptions: {
-            threads: {
-                singleThread: true // Run all tests in main thread to avoid IPC/memory issues
+            forks: {
+                singleFork: true,
+                execArgv: ['--max-old-space-size=4096']
             }
         },
         // Increase timeouts for large test suite
