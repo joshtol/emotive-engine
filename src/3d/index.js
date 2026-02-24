@@ -51,6 +51,7 @@ import { applySSSPreset as applySSS, SSSPresets } from './presets/SSSPresets.js'
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
 import { DanceChoreographer } from './animation/DanceChoreographer.js';
+import { ResizeObserverManager } from './managers/ResizeObserverManager.js';
 import { FRAME_TIMING, ACCESSIBILITY } from '../core/config/defaults.js';
 
 /**
@@ -109,6 +110,7 @@ export class EmotiveMascot3D {
 
         // Canvas layer manager (dual canvas architecture)
         this._canvasLayerManager = null;
+        this._resizeObserver = null;
         this.container = null;
         this.webglCanvas = null;
         this.canvas2D = null;
@@ -329,6 +331,16 @@ export class EmotiveMascot3D {
                 this.particleSystem.canvasWidth = this.canvas2D.width;
                 this.particleSystem.canvasHeight = this.canvas2D.height;
             }
+
+            // Observe container for resize (orientation change, layout shift, viewport resize)
+            this._resizeObserver = new ResizeObserverManager(this.container, (width, height) => {
+                this._canvasLayerManager.resize(width, height);
+                this.core3D.renderer.resize(width, height);
+                if (this.particleSystem) {
+                    this.particleSystem.canvasWidth = width;
+                    this.particleSystem.canvasHeight = height;
+                }
+            });
 
             // Initialize dance choreographer (for auto-dancing when BPM locks)
             this.danceChoreographer = new DanceChoreographer();
@@ -2189,6 +2201,12 @@ export class EmotiveMascot3D {
         if (this.danceChoreographer) {
             this.danceChoreographer.destroy();
             this.danceChoreographer = null;
+        }
+
+        // Clean up resize observer
+        if (this._resizeObserver) {
+            this._resizeObserver.destroy();
+            this._resizeObserver = null;
         }
 
         // Clean up canvas layers

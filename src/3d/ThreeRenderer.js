@@ -73,8 +73,9 @@ export class ThreeRenderer {
         // CRITICAL: Disable autoClear for transparency to work in newer Three.js versions
         this.renderer.autoClear = false;
 
-        // Use device pixel ratio capped at 1.5 for balance between quality and performance
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        // Use device pixel ratio capped at 2.0 for balance between quality and performance
+        // DPR 2 devices render at native; DPR 3 devices at 67% native (was 50% at 1.5 cap)
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
         this.renderer.setSize(canvas.width, canvas.height, false);
 
         // Enable shadows if requested
