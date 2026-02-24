@@ -3,8 +3,6 @@
  * @module core/morpher/TransitionManager
  */
 
-// import { shapeCache } from '../cache/ShapeCache.js';
-
 export class TransitionManager {
     constructor(morpher) {
         this.morpher = morpher;

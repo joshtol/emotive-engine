@@ -404,15 +404,6 @@ export class DanceChoreographer {
         // Skip rest of update if not enabled
         if (!this.enabled) return;
 
-        // Debug: Log barProgress periodically (every ~2 seconds) - disabled in production
-        // if (!this._lastBarProgressLog || performance.now() - this._lastBarProgressLog > 2000) {
-        //     const barProg = this.rhythmAdapter?.barProgress ?? 'N/A';
-        //     const beatProg = this.rhythmAdapter?.beatProgress ?? 'N/A';
-        //     const isPlaying = this.rhythmAdapter?.isPlaying?.() ?? false;
-        //     console.warn(`[DanceChoreographer] barProgress=${typeof barProg === 'number' ? barProg.toFixed(3) : barProg}, beatProgress=${typeof beatProg === 'number' ? beatProg.toFixed(3) : beatProg}, isPlaying=${isPlaying}, barCount=${this.barCount}`);
-        //     this._lastBarProgressLog = performance.now();
-        // }
-
         // Get audio data from deformer if not provided
         const audio = audioData || this._getAudioData();
 
@@ -620,11 +611,6 @@ export class DanceChoreographer {
 
         // Check if it's time for a gesture (bar-aligned)
         if (this.barCount % gestureFrequency !== 0) {
-            // Debug logging disabled in production
-            // if (this.barCount > 0 && this.barCount % 8 === 0 && this._lastLoggedBar !== this.barCount) {
-            //     console.warn(`[DanceChoreographer] Waiting... barCount=${this.barCount}, freq=${gestureFrequency}, mod=${this.barCount % gestureFrequency}`);
-            //     this._lastLoggedBar = this.barCount;
-            // }
             return;
         }
         if (this._lastGestureBar === this.barCount) return;
@@ -908,10 +894,6 @@ export class DanceChoreographer {
         if (finalCandidates.length === 0) return;
 
         const newTarget = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
-        // Debug labels - uncomment for debugging:
-        // const targetLabel = this._getTargetLabel(newTarget);
-        // const currentLabel = this._getTargetLabel(this._currentTarget);
-        // console.warn(`[DanceChoreographer] Morphing: ${currentLabel} → ${targetLabel} (reason: ${_reason}) at bar ${this.barCount}`);
 
         // Apply the morph target
         this._applyMorphTarget(newTarget);
@@ -948,11 +930,6 @@ export class DanceChoreographer {
 
         // Only return if we're not already at base
         if (targetsEqual(this._currentTarget, this._baseTarget)) return;
-
-        // Debug labels - uncomment for debugging:
-        // const currentLabel = this._getTargetLabel(this._currentTarget);
-        // const baseLabel = this._getTargetLabel(this._baseTarget);
-        // console.warn(`[DanceChoreographer] Returning: ${currentLabel} → ${baseLabel} at bar ${this.barCount}`);
 
         // Apply the base target
         this._applyMorphTarget(this._baseTarget);

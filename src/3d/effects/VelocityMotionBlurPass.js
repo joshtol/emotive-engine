@@ -10,7 +10,7 @@
  *
  * Two-pass approach:
  * 1. Velocity pass: Renders instanced meshes to a velocity+mask buffer
- *    (RG = velocity, A = element coverage mask)
+ *    (RG = screen-space velocity in UV coords, A = element coverage mask)
  * 2. Blur pass: Samples scene along velocity vectors with depth-aware isolation.
  *    - Only element pixels (velocity alpha > 0.5) enter the blur path.
  *    - Each blur sample compares depth against the center pixel — samples at a
@@ -19,35 +19,57 @@
  *      pixel that isn't part of the moving instanced elements.
  *
  * Depth buffer is reused from RenderPass (zero extra cost — same as AO pass).
+ *
+ * Velocity is projected to screen space (UV coordinates) in the velocity vertex
+ * shader, making blur strength resolution-independent — same visual result on
+ * mobile (375px) and desktop (1920px).
  */
 
 import * as THREE from 'three';
 import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// VELOCITY RENDER MATERIAL
+// VELOCITY RENDER MATERIAL — Projects world-space velocity to screen-space UV
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 const VELOCITY_VERTEX_SHADER = /* glsl */`
 attribute vec4 aVelocity;
-varying vec4 vVelocity;
+varying vec2 vScreenVelocity;
 
 void main() {
     vec4 localPos = vec4(position, 1.0);
     #ifdef USE_INSTANCING
         localPos = instanceMatrix * localPos;
     #endif
-    vVelocity = aVelocity;
-    gl_Position = projectionMatrix * modelViewMatrix * localPos;
+
+    // Current world position
+    vec4 worldPos = modelMatrix * localPos;
+
+    // Project current position to clip space
+    vec4 clipPos = projectionMatrix * viewMatrix * worldPos;
+
+    // Previous world position (subtract world-space velocity)
+    vec4 prevWorldPos = vec4(worldPos.xyz - aVelocity.xyz, 1.0);
+    vec4 prevClipPos = projectionMatrix * viewMatrix * prevWorldPos;
+
+    // Screen-space velocity in UV coordinates
+    // NDC is [-1,1], UV is [0,1] — scale by 0.5
+    vec2 ndcCurr = clipPos.xy / clipPos.w;
+    vec2 ndcPrev = prevClipPos.xy / prevClipPos.w;
+    vScreenVelocity = (ndcCurr - ndcPrev) * 0.5;
+
+    gl_Position = clipPos;
 }
 `;
 
 const VELOCITY_FRAGMENT_SHADER = /* glsl */`
-varying vec4 vVelocity;
+varying vec2 vScreenVelocity;
 
 void main() {
-    vec2 velocity = vVelocity.xy * 0.5;
-    gl_FragColor = vec4(velocity * 0.5 + 0.5, 0.0, 1.0);
+    // Clamp screen-space velocity to ±50% of screen (sanity limit)
+    vec2 vel = clamp(vScreenVelocity, vec2(-0.5), vec2(0.5));
+    // Encode: bias to [0,1] range (0.5 = zero velocity)
+    gl_FragColor = vec4(vel * 0.5 + 0.5, 0.0, 1.0);
 }
 `;
 
@@ -104,7 +126,7 @@ void main() {
         return;
     }
 
-    // Decode velocity from RG channels
+    // Decode screen-space velocity from RG channels (UV coordinates)
     vec2 velocity = (velData.rg - 0.5) * 2.0;
     velocity *= uIntensity;
 
@@ -115,21 +137,23 @@ void main() {
         return;
     }
 
-    // Clamp max blur to ~29px at 1920px
-    if (speed > 0.015) velocity *= 0.015 / speed;
+    // Clamp max blur to 2% of screen (resolution-independent)
+    // ~38px at 1920px, ~7.5px at 375px — subtle streaks, never smear
+    if (speed > 0.02) velocity *= 0.02 / speed;
 
     // Center pixel depth for comparison
     float centerDepth = linDepth(texture2D(tDepth, vUv).x);
 
     // Per-pixel jitter offset — shifts sample positions to break banding
-    float jitter = (interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 16.0;
+    float jitter = (interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 8.0;
 
-    // 16 samples along velocity direction with per-sample isolation.
+    // 8 samples along velocity direction with per-sample isolation.
+    // 8 is enough with jitter — halves texture lookups vs 16 (24 vs 48).
     vec4 color = vec4(0.0);
     float totalWeight = 0.0;
 
-    for (int i = 0; i < 16; i++) {
-        float t = (float(i) + 0.5) / 16.0 - 0.5 + jitter;
+    for (int i = 0; i < 8; i++) {
+        float t = (float(i) + 0.5) / 8.0 - 0.5 + jitter;
         vec2 sampleUv = clamp(vUv + velocity * t, vec2(0.001), vec2(0.999));
 
         // Gate A: velocity alpha — only sample element-covered pixels
@@ -166,7 +190,7 @@ export class VelocityMotionBlurPass extends Pass {
     /**
      * @param {THREE.Camera} camera - Camera for velocity rendering
      * @param {Object} options - Configuration
-     * @param {number} [options.intensity=1.5] - Blur intensity multiplier
+     * @param {number} [options.intensity=1.0] - Blur intensity multiplier
      * @param {number} [options.depthThreshold=0.5] - Max linear depth difference for same-layer
      */
     constructor(camera, options = {}) {
@@ -266,6 +290,11 @@ export class VelocityMotionBlurPass extends Pass {
         const cam = this.camera;
         this.blurMaterial.uniforms.cameraNear.value = cam.near;
         this.blurMaterial.uniforms.cameraFar.value = cam.far;
+
+        // Adaptive depth threshold — scale with camera range so it works
+        // correctly regardless of near/far setup
+        const range = cam.far - cam.near;
+        this.blurMaterial.uniforms.uDepthThreshold.value = Math.max(0.1, range * 0.005);
 
         // Pass 2: Blur composite with depth-aware sampling
         this.blurMaterial.uniforms.tColor.value = readBuffer.texture;

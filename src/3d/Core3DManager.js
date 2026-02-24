@@ -115,9 +115,6 @@ export class Core3DManager {
         this._ready = false;  // Flag indicating all async loading is complete
         this._readyPromise = null;  // Promise that resolves when ready
 
-        // Debug logging flags (set externally to enable motion debug logging)
-        this.debugMotionLogging = false;  // Set to true to enable motion debug logs
-
         // Asset base path for textures and models (configurable for GitHub Pages, etc.)
         // Empty string triggers auto-detection in ThreeRenderer
         this.assetBasePath = options.assetBasePath !== undefined ? options.assetBasePath : '';
@@ -2077,35 +2074,12 @@ export class Core3DManager {
                     this._electricOverlayMesh.renderOrder = mesh.renderOrder + 1;
                 }
 
-                // Spawn 3D electricity elements - runs every frame but signature prevents respawn
-                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.electricOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    // Create spawn signature from key config properties to detect gesture changes
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
-                    const spawnSignature = `electricity:${modeSignature}:${duration}:${animation?.type || 'default'}`;
-
-                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
-                    this._electricSpawnedSignatures = this._electricSpawnedSignatures || new Set();
-
-                    // Only spawn if this signature hasn't been spawned yet in this session
-                    if (!this._electricSpawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit('electricity'); // Exit electricity elements (crossfade)
-                        this.elementSpawner.spawn('electricity', {
-                            intensity: blended.electricOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: duration || 2000
-                        });
-                        this._electricSpawnedSignatures.add(spawnSignature);
-                        this._electricSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D electricity elements
+                this._spawnElement('electricity', blended.electricOverlay, {
+                    signatureSet: '_electricSpawnedSignatures',
+                    signatureKey: '_electricSpawnSignature',
+                    exitScope: 'electricity'
+                });
 
                 // Update electric material each frame
                 if (this._electricMaterial?.uniforms?.uTime) {
@@ -2165,32 +2139,8 @@ export class Core3DManager {
                     this._waterOverlayMesh.renderOrder = mesh.renderOrder + 1;
                 }
 
-                // Spawn 3D water elements - runs every frame but signature prevents respawn
-                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.waterOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : String(spawnMode);
-                    const spawnSignature = `water:${modeSignature}:${duration}:${animation?.type || 'default'}`;
-
-                    this._spawnedSignatures = this._spawnedSignatures || new Set();
-
-                    if (!this._spawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit(); // Exit ALL elements (crossfade)
-                        this.elementSpawner.spawn('water', {
-                            intensity: blended.waterOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: duration || 1500
-                        });
-                        this._spawnedSignatures.add(spawnSignature);
-                        this._elementSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D water elements
+                this._spawnElement('water', blended.waterOverlay, { defaultDuration: 1500 });
 
                 // Update water material uniforms
                 if (this._waterMaterial?.uniforms?.uTime) {
@@ -2272,32 +2222,8 @@ export class Core3DManager {
                     this._fireOverlayMesh.renderOrder = mesh.renderOrder + 2;
                 }
 
-                // Spawn 3D fire elements - runs every frame but signature prevents respawn
-                const {spawnMode, animation, models, count, scale, embedDepth} = blended.fireOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : String(spawnMode);
-                    const spawnSignature = `fire:${modeSignature}:${blended.fireOverlay.duration}:${animation?.type || 'default'}`;
-
-                    this._spawnedSignatures = this._spawnedSignatures || new Set();
-
-                    if (!this._spawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit(); // Exit ALL elements (crossfade)
-                        this.elementSpawner.spawn('fire', {
-                            intensity: blended.fireOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: blended.fireOverlay.duration || 2000
-                        });
-                        this._spawnedSignatures.add(spawnSignature);
-                        this._elementSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D fire elements
+                this._spawnElement('fire', blended.fireOverlay);
 
                 // Update fire material uniforms
                 if (this._fireMaterial?.uniforms?.uTime) {
@@ -2438,40 +2364,20 @@ export class Core3DManager {
                     this._voidOverlayMesh.renderOrder = mesh.renderOrder + 3;
                 }
 
-                // Spawn 3D void elements — matching fire/ice/electric signature-based dedup
-                const {spawnMode, animation, models, count, scale, embedDepth, duration, distortionStrength} = blended.voidOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    // Create spawn signature from key config properties to detect gesture changes
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
-                    const spawnSignature = `void:${modeSignature}:${duration}:${animation?.type || 'default'}`;
-
-                    this._voidSpawnedSignatures = this._voidSpawnedSignatures || new Set();
-
-                    if (!this._voidSpawnedSignatures.has(spawnSignature)) {
-                        // Per-gesture distortion strength override (only on gesture change)
+                // Spawn 3D void elements
+                this._spawnElement('void', blended.voidOverlay, {
+                    signatureSet: '_voidSpawnedSignatures',
+                    signatureKey: '_voidSpawnSignature',
+                    exitScope: 'void',
+                    onBeforeSpawn: () => {
                         if (this.elementSpawner._distortionManager) {
+                            const ds = blended.voidOverlay.distortionStrength;
                             this.elementSpawner._distortionManager.setDistortionStrength(
-                                'void',
-                                distortionStrength !== undefined ? distortionStrength : null
+                                'void', ds !== undefined ? ds : null
                             );
                         }
-                        this.elementSpawner.triggerExit('void'); // Exit void elements (crossfade)
-                        this.elementSpawner.spawn('void', {
-                            intensity: blended.voidOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: duration || 2000
-                        });
-                        this._voidSpawnedSignatures.add(spawnSignature);
-                        this._voidSpawnSignature = spawnSignature;
                     }
-                }
+                });
 
                 // Update void material each frame
                 if (this._voidMaterial?.uniforms?.uTime) {
@@ -2571,32 +2477,12 @@ export class Core3DManager {
                     }
                 }
 
-                // Spawn 3D ice crystals - matching fire spawn pattern with signature tracking
-                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.iceOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
-                    const spawnSignature = `ice:${modeSignature}:${duration}:${animation?.type || 'default'}`;
-
-                    this._iceSpawnedSignatures = this._iceSpawnedSignatures || new Set();
-
-                    if (!this._iceSpawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit('ice');
-                        this.elementSpawner.spawn('ice', {
-                            intensity: blended.iceOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: duration || 2000
-                        });
-                        this._iceSpawnedSignatures.add(spawnSignature);
-                        this._iceSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D ice crystals
+                this._spawnElement('ice', blended.iceOverlay, {
+                    signatureSet: '_iceSpawnedSignatures',
+                    signatureKey: '_iceSpawnSignature',
+                    exitScope: 'ice'
+                });
 
                 // Update ice material uniforms
                 if (this._iceMaterial?.uniforms?.uTime) {
@@ -2807,36 +2693,12 @@ export class Core3DManager {
                     this._lightOverlayMesh.renderOrder = mesh.renderOrder + 3;
                 }
 
-                // Spawn 3D light elements if gesture requests it via spawnMode
-                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.lightOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    // Create spawn signature from key config properties to detect gesture changes
-                    // Handle array spawnMode (spawn layers) by stringifying for reliable signature
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
-                    const spawnSignature = `light:${modeSignature}:${duration}:${animation?.type || 'default'}`;
-
-                    // Track spawned signatures to prevent re-spawning for gestures we've already handled
-                    this._lightSpawnedSignatures = this._lightSpawnedSignatures || new Set();
-
-                    // Only spawn if this signature hasn't been spawned yet in this session
-                    if (!this._lightSpawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit('light'); // Exit light elements (crossfade)
-                        this.elementSpawner.spawn('light', {
-                            intensity: blended.lightOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,      // Pass animation config with modelOverrides
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: duration || 2000
-                        });
-                        this._lightSpawnedSignatures.add(spawnSignature);
-                        this._lightSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D light elements
+                this._spawnElement('light', blended.lightOverlay, {
+                    signatureSet: '_lightSpawnedSignatures',
+                    signatureKey: '_lightSpawnSignature',
+                    exitScope: 'light'
+                });
 
                 // Update light overlay material each frame
                 if (this._lightMaterial?.uniforms?.uTime) {
@@ -2930,36 +2792,12 @@ export class Core3DManager {
                     }
                 }
 
-                // Spawn 3D earth elements if gesture requests it via spawnMode
-                const {spawnMode, animation, models, count, scale, embedDepth, duration} = blended.earthOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    // Create spawn signature from key config properties to detect gesture changes
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
-                    const spawnSignature = `earth:${modeSignature}:${duration}:${animation?.type || 'default'}`;
-
-                    // Track spawned signatures to prevent re-spawning
-                    this._earthSpawnedSignatures = this._earthSpawnedSignatures || new Set();
-
-                    if (!this._earthSpawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit('earth');
-                        this.elementSpawner.spawn('earth', {
-                            intensity: blended.earthOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: duration || 2000
-                        }).catch(err => {
-                            console.error('[Core3DManager] Earth spawn error:', err);
-                        });
-                        this._earthSpawnedSignatures.add(spawnSignature);
-                        this._earthSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D earth elements
+                this._spawnElement('earth', blended.earthOverlay, {
+                    signatureSet: '_earthSpawnedSignatures',
+                    signatureKey: '_earthSpawnSignature',
+                    exitScope: 'earth'
+                });
 
                 // Update earth overlay material each frame
                 if (this._earthMaterial?.uniforms?.uTime) {
@@ -3057,34 +2895,8 @@ export class Core3DManager {
                     this._natureOverlayMesh.renderOrder = mesh.renderOrder + 1;
                 }
 
-                // Spawn 3D nature elements — signature-based dedup
-                const {spawnMode, animation, models, count, scale, embedDepth} = blended.natureOverlay;
-                if (spawnMode && spawnMode !== 'none' && this.elementSpawner) {
-                    const modeSignature = Array.isArray(spawnMode)
-                        ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-                        : String(spawnMode);
-                    const spawnSignature = `nature:${modeSignature}:${blended.natureOverlay.duration}:${animation?.type || 'default'}`;
-
-                    this._spawnedSignatures = this._spawnedSignatures || new Set();
-
-                    if (!this._spawnedSignatures.has(spawnSignature)) {
-                        this.elementSpawner.triggerExit();
-                        this.elementSpawner.spawn('nature', {
-                            intensity: blended.natureOverlay.strength || 0.8,
-                            mode: spawnMode,
-                            animation,
-                            models,
-                            count,
-                            scale,
-                            embedDepth,
-                            gestureDuration: blended.natureOverlay.duration || 3000
-                        }).catch(err => {
-                            console.error('[Core3DManager] Nature spawn error:', err);
-                        });
-                        this._spawnedSignatures.add(spawnSignature);
-                        this._elementSpawnSignature = spawnSignature;
-                    }
-                }
+                // Spawn 3D nature elements
+                this._spawnElement('nature', blended.natureOverlay, { defaultDuration: 3000 });
 
                 // Update nature material uniforms
                 if (this._natureMaterial?.uniforms?.uTime) {
@@ -3564,42 +3376,6 @@ export class Core3DManager {
             this.elementSpawner.update(deltaTime / 1000, gestureProgress);  // Convert ms to seconds
         }
         profiler.end('elementSpawner');
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // MOTION DEBUG LOGGING - Track all sources of movement
-        // Only logs when debugMotionLogging is enabled (e.g., when LLM interpreter is active)
-        // ═══════════════════════════════════════════════════════════════════════════
-        if (this.debugMotionLogging) {
-            if (!this._motionLogInterval) this._motionLogInterval = 0;
-            this._motionLogInterval += deltaTime;
-            if (this._motionLogInterval >= 200) { // Log every 200ms
-                this._motionLogInterval = 0;
-
-                const hasGestures = blended.hasAbsoluteGestures || blended.hasAccentGestures;
-                const gesturePos = blended.position;
-                const gestureRot = blended.rotation;
-                const gestureScale = blended.scale;
-
-                // Only log when something interesting is happening
-                const significantMotion =
-                    Math.abs(gesturePos[0]) > 0.001 || Math.abs(gesturePos[1]) > 0.001 || Math.abs(gesturePos[2]) > 0.001 ||
-                    Math.abs(gestureRot[0]) > 0.001 || Math.abs(gestureRot[1]) > 0.001 || Math.abs(gestureRot[2]) > 0.001 ||
-                    Math.abs(gestureScale - 1.0) > 0.001 ||
-                    (rhythmMod && (Math.abs(rhythmMod.grooveOffset[1]) > 0.001 || Math.abs(rhythmMod.grooveScale - 1.0) > 0.001));
-
-                if (significantMotion || hasGestures) {
-                    console.log('[Motion] ═══════════════════════════════════════');
-                    console.log(`[Motion] GESTURE: pos=[${gesturePos.map(p => p.toFixed(3)).join(', ')}] rot=[${gestureRot.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${gestureScale.toFixed(3)} hasAbs=${hasAbsolute}`);
-
-                    if (rhythmMod) {
-                        console.log(`[Motion] GROOVE: offset=[${rhythmMod.grooveOffset.map(o => o.toFixed(3)).join(', ')}] rot=[${rhythmMod.grooveRotation.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${rhythmMod.grooveScale.toFixed(3)} blend=${grooveBlend.toFixed(2)}`);
-                    }
-
-                    console.log(`[Motion] BOOST: pos=[${posBoost.map(p => p.toFixed(3)).join(', ')}] rot=[${rotBoost.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${scaleBoost.toFixed(3)}`);
-                    console.log(`[Motion] FINAL: pos=[${this.position.map(p => p.toFixed(3)).join(', ')}] rot=[${this.rotation.map(r => (r * 180 / Math.PI).toFixed(1)).join(', ')}°] scale=${this.scale.toFixed(3)}`);
-                }
-            }
-        }
 
         // Apply blink effects (AFTER gestures, blending with other animations)
         if (blinkState.isBlinking) {
@@ -4405,6 +4181,56 @@ export class Core3DManager {
         };
 
         return emotionGrooveMap[emotion] || 'groove1';
+    }
+
+    /**
+     * Spawn 3D instanced elements with signature-based dedup.
+     * Prevents re-spawning the same gesture configuration on every frame.
+     * @param {string} elementType - Element type ('fire', 'water', 'ice', etc.)
+     * @param {Object} overlay - The blended overlay object (e.g., blended.fireOverlay)
+     * @param {Object} [options] - Options
+     * @param {string} [options.signatureSet='_spawnedSignatures'] - Property name for the signature Set
+     * @param {string} [options.signatureKey='_elementSpawnSignature'] - Property name for tracking current signature
+     * @param {string} [options.exitScope] - Element type to pass to triggerExit (undefined = exit all)
+     * @param {number} [options.defaultDuration=2000] - Default gesture duration if not in overlay
+     * @param {Function} [options.onBeforeSpawn] - Callback before spawning (e.g., set distortion)
+     * @private
+     */
+    _spawnElement(elementType, overlay, options = {}) {
+        if (!this.elementSpawner) return;
+        const { spawnMode, animation, models, count, scale, embedDepth, duration } = overlay;
+        if (!spawnMode || spawnMode === 'none') return;
+
+        const modeSignature = Array.isArray(spawnMode)
+            ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
+            : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+        const effectiveDuration = duration || overlay.duration;
+        const spawnSignature = `${elementType}:${modeSignature}:${effectiveDuration}:${animation?.type || 'default'}`;
+
+        const sigSetKey = options.signatureSet || '_spawnedSignatures';
+        this[sigSetKey] = this[sigSetKey] || new Set();
+        if (this[sigSetKey].has(spawnSignature)) return;
+
+        options.onBeforeSpawn?.();
+
+        this.elementSpawner.triggerExit(options.exitScope);
+        const result = this.elementSpawner.spawn(elementType, {
+            intensity: overlay.strength || 0.8,
+            mode: spawnMode,
+            animation,
+            models,
+            count,
+            scale,
+            embedDepth,
+            gestureDuration: effectiveDuration || options.defaultDuration || 2000
+        });
+        if (result?.catch) {
+            result.catch(err => console.error(`[Core3DManager] ${elementType} spawn error:`, err));
+        }
+
+        this[sigSetKey].add(spawnSignature);
+        const sigKey = options.signatureKey || '_elementSpawnSignature';
+        this[sigKey] = spawnSignature;
     }
 
     /**

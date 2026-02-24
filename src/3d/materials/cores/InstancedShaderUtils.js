@@ -168,102 +168,6 @@ if (finalAlpha < 0.01) discard;
 // UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-/**
- * Injects instancing attributes into an existing vertex shader.
- * @param {string} vertexShader - Original vertex shader code
- * @param {Object} options - Injection options
- * @param {boolean} [options.modelSelection=true] - Include model selection code
- * @param {boolean} [options.trailOffset=true] - Include trail offset code
- * @returns {string} Modified vertex shader with instancing support
- */
-export function injectInstancedVertex(vertexShader, options = {}) {
-    const {
-        modelSelection = true,
-        trailOffset = true
-    } = options;
-
-    let modified = vertexShader;
-
-    // Add attribute declarations after existing uniforms
-    const uniformMatch = modified.match(/uniform[^;]+;/g);
-    if (uniformMatch) {
-        const lastUniform = uniformMatch[uniformMatch.length - 1];
-        const insertPoint = modified.indexOf(lastUniform) + lastUniform.length;
-        modified = `${modified.slice(0, insertPoint) 
-        }\n\n// Instancing attributes\n${INSTANCED_ATTRIBUTES_VERTEX 
-        }${modified.slice(insertPoint)}`;
-    }
-
-    // Find main() function and inject time calculation after it starts
-    const mainStart = modified.indexOf('void main()');
-    if (mainStart !== -1) {
-        const braceStart = modified.indexOf('{', mainStart);
-        if (braceStart !== -1) {
-            let injection = `\n    // === INSTANCING: Time-offset animation ===\n${ 
-                INSTANCED_TIME_CALC_VERTEX}`;
-
-            if (modelSelection) {
-                injection += `\n\n    // === INSTANCING: Model selection ===\n${ 
-                    MODEL_SELECTION_VERTEX}`;
-            }
-
-            if (trailOffset) {
-                injection += `\n\n    // === INSTANCING: Trail offset ===\n${ 
-                    TRAIL_OFFSET_VERTEX}`;
-            }
-
-            modified = modified.slice(0, braceStart + 1) +
-                injection +
-                modified.slice(braceStart + 1);
-        }
-    }
-
-    // Replace 'position' with 'selectedPosition' if model selection is enabled
-    if (modelSelection) {
-        // Be careful to only replace variable usage, not declarations
-        modified = modified.replace(/\bposition\b(?!\s*[=])/g, (match, offset) => {
-            // Don't replace the original 'position' in model selection code
-            const before = modified.slice(Math.max(0, offset - 50), offset);
-            if (before.includes('selectedPosition =') || before.includes('attribute vec3 position')) {
-                return match;
-            }
-            return 'selectedPosition';
-        });
-    }
-
-    return modified;
-}
-
-/**
- * Injects instancing varyings into an existing fragment shader.
- * @param {string} fragmentShader - Original fragment shader code
- * @returns {string} Modified fragment shader with instancing support
- */
-export function injectInstancedFragment(fragmentShader) {
-    let modified = fragmentShader;
-
-    // Add varying declarations after existing uniforms/varyings
-    const varyingMatch = modified.match(/varying[^;]+;/g);
-    if (varyingMatch) {
-        const lastVarying = varyingMatch[varyingMatch.length - 1];
-        const insertPoint = modified.indexOf(lastVarying) + lastVarying.length;
-        modified = `${modified.slice(0, insertPoint) 
-        }\n\n// Instancing varyings\n${INSTANCED_ATTRIBUTES_FRAGMENT 
-        }${modified.slice(insertPoint)}`;
-    }
-
-    // Find the gl_FragColor assignment and inject alpha modification before it
-    const fragColorMatch = modified.match(/gl_FragColor\s*=\s*vec4\([^)]+\);/);
-    if (fragColorMatch) {
-        const insertPoint = modified.indexOf(fragColorMatch[0]);
-        modified = `${modified.slice(0, insertPoint) 
-        }// === INSTANCING: Apply instance alpha ===\n    ` +
-            `alpha *= vInstanceAlpha;\n    if (alpha < 0.01) discard;\n\n    ${ 
-                modified.slice(insertPoint)}`;
-    }
-
-    return modified;
-}
 
 /**
  * Creates the additional uniforms needed for instanced rendering.
@@ -287,7 +191,5 @@ export default {
     MODEL_SELECTION_FRAGMENT,
     TRAIL_OFFSET_VERTEX,
     INSTANCED_ALPHA_FRAGMENT,
-    injectInstancedVertex,
-    injectInstancedFragment,
     createInstancedUniforms
 };

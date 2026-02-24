@@ -465,13 +465,6 @@ class AnimationController {
                     if (currentGesture && currentGesture.particleMotion) {
                         gestureMotion = currentGesture.particleMotion;
                         gestureProgress = currentGesture.progress || 0;
-                        if (gestureMotion?.type === 'rain') {
-                            console.log('[ANIMATION_CONTROLLER] Got RAIN gesture from renderer:', {
-                                gestureMotionType: gestureMotion.type,
-                                gestureProgress: gestureProgress.toFixed(3),
-                                particleCount: this.subsystems.particleSystem?.particles?.length
-                            });
-                        }
                     }
                 }
 
@@ -486,9 +479,6 @@ class AnimationController {
                 );
 
                 // Update particles with gesture motion if available
-                if (gestureMotion?.type === 'rain') {
-                    console.log('[ANIMATION_CONTROLLER] Calling particleSystem.update() with RAIN motion');
-                }
                 this.subsystems.particleSystem.update(deltaTime, center.x, center.y, gestureMotion, gestureProgress);
             }
         }

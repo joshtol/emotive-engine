@@ -253,8 +253,24 @@ export function getNaturePhysics(growth = 0.5) {
     };
 }
 
+export function getNatureCrackStyle(growth = 0.5) {
+    const r = Math.round(lerp(0.2, 0.3, growth) * 255);
+    const g = Math.round(lerp(0.5, 0.7, growth) * 255);
+    const b = Math.round(lerp(0.15, 0.2, growth) * 255);
+    const hex = (r << 16) | (g << 8) | b;
+
+    return {
+        color: hex,
+        emissive: lerp(0.3, 1.2, growth),
+        animated: true,
+        pattern: 'vine',
+        flickerSpeed: lerp(0.3, 0.8, growth)
+    };
+}
+
 export default {
     createNatureMaterial,
     updateNatureMaterial,
-    getNaturePhysics
+    getNaturePhysics,
+    getNatureCrackStyle
 };

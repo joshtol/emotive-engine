@@ -41,7 +41,6 @@
  */
 
 import { getGesture } from './gestures/gestureCacheWrapper.js';
-// import { getGestureProperties } from './gestures/gestureCacheWrapper.js'; // Unused - available for future use
 import { getEmotionModifiers } from './emotions/index.js';
 import { emotionCache } from './cache/EmotionCache.js';
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
@@ -127,8 +126,6 @@ class GestureCompositor {
             easing: 'sine'
         };
         
-        // Use cached gesture properties if available for better performance
-        // const cachedProperties = getGestureProperties(gesture);
         const emotionMod = emotionCache && emotionCache.isInitialized ? 
             emotionCache.getModifiers(emotion) : getEmotionModifiers(emotion);
         const undertoneMod = getUndertoneModifier(undertone);

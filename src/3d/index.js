@@ -166,7 +166,8 @@ export class EmotiveMascot3D {
         // Intent parser for feel() API
         this._intentParser = new IntentParser();
         this._feelRateLimiter = {
-            calls: [],
+            calls: new Array(10).fill(0),
+            index: 0,
             windowMs: 1000,
             maxCallsPerSecond: 10
         };
@@ -835,15 +836,18 @@ export class EmotiveMascot3D {
             return { success: false, error: 'Engine destroyed', parsed: null };
         }
 
-        // Rate limiting
+        // Rate limiting (circular buffer — no array allocation per call)
         const now = Date.now();
         const limiter = this._feelRateLimiter;
 
-        // Remove calls outside the window
-        limiter.calls = limiter.calls.filter(t => now - t < limiter.windowMs);
+        // Count calls within the window
+        let callsInWindow = 0;
+        for (let i = 0; i < limiter.maxCallsPerSecond; i++) {
+            if (now - limiter.calls[i] < limiter.windowMs) callsInWindow++;
+        }
 
         // Check rate limit
-        if (limiter.calls.length >= limiter.maxCallsPerSecond) {
+        if (callsInWindow >= limiter.maxCallsPerSecond) {
             console.warn(`[EmotiveMascot3D] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`);
             return {
                 success: false,
@@ -852,8 +856,9 @@ export class EmotiveMascot3D {
             };
         }
 
-        // Record this call
-        limiter.calls.push(now);
+        // Record this call in circular buffer
+        limiter.calls[limiter.index] = now;
+        limiter.index = (limiter.index + 1) % limiter.maxCallsPerSecond;
 
         // Parse the intent
         const parsed = this._intentParser.parse(intent);
@@ -2214,7 +2219,11 @@ export default EmotiveMascot3D;
 
 // Named exports for tree-shaking
 export { Core3DManager } from './Core3DManager.js';
-export * from './geometries/index.js';
+export { createSphere } from './geometries/Sphere.js';
+export { createCrystal } from './geometries/Crystal.js';
+export { createDiamond } from './geometries/Diamond.js';
+export { createSunGeometry, createSunMaterial, updateSunMaterial, disposeSun } from './geometries/Sun.js';
+export { createMoon, createMoonMaterial, createMoonCrescentMaterial, createMoonFallbackMaterial, updateMoonGlow, updateCrescentShadow, disposeMoon } from './geometries/Moon.js';
 
 // Export moon phase utilities
 export {

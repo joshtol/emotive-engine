@@ -65,14 +65,6 @@ export function cachedCos(angle) {
     return COS_CACHE[index];
 }
 
-// Export for debugging and testing
-export const _DEBUG = {
-    CACHE_PRECISION,
-    CACHE_SIZE,
-    SIN_CACHE,
-    COS_CACHE
-};
-
 export default {
     cachedSin,
     cachedCos

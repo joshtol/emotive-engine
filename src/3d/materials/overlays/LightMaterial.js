@@ -236,8 +236,25 @@ export function getLightPhysics(radiance = 0.5) {
     };
 }
 
+export function getLightCrackStyle(radiance = 0.5) {
+    const warmth = lerp(0.9, 1.0, radiance);
+    const r = Math.round(warmth * 255);
+    const g = Math.round(lerp(0.85, 0.95, radiance) * 255);
+    const b = Math.round(lerp(0.6, 0.8, radiance) * 255);
+    const hex = (r << 16) | (g << 8) | b;
+
+    return {
+        color: hex,
+        emissive: lerp(1.5, 4.0, radiance),
+        animated: true,
+        pattern: 'radiant',
+        flickerSpeed: lerp(0.5, 1.5, radiance)
+    };
+}
+
 export default {
     createLightMaterial,
     updateLightMaterial,
-    getLightPhysics
+    getLightPhysics,
+    getLightCrackStyle
 };

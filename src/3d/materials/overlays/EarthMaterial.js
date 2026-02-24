@@ -450,8 +450,24 @@ export function getEarthPhysics(petrification = 0.5) {
     };
 }
 
+export function getEarthCrackStyle(petrification = 0.5) {
+    const r = Math.round(lerp(0.45, 0.35, petrification) * 255);
+    const g = Math.round(lerp(0.35, 0.25, petrification) * 255);
+    const b = Math.round(lerp(0.25, 0.15, petrification) * 255);
+    const hex = (r << 16) | (g << 8) | b;
+
+    return {
+        color: hex,
+        emissive: lerp(0.2, 0.8, petrification),
+        animated: false,
+        pattern: 'fracture',
+        flickerSpeed: 0
+    };
+}
+
 export default {
     createEarthMaterial,
     updateEarthMaterial,
-    getEarthPhysics
+    getEarthPhysics,
+    getEarthCrackStyle
 };
