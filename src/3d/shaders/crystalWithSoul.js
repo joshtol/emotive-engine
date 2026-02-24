@@ -211,18 +211,10 @@ float noise3D(vec3 p) {
     return n;
 }
 
-// Fractal Brownian Motion for natural-looking frosted texture
+// Single-octave noise for frosted texture (was 3-octave FBM — at 0.03 strength
+// the extra octaves were imperceptible)
 float fbm(vec3 p) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    float frequency = 1.0;
-
-    for (int i = 0; i < 3; i++) {
-        value += amplitude * noise3D(p * frequency);
-        frequency *= 2.0;
-        amplitude *= 0.5;
-    }
-    return value;
+    return noise3D(p) * 0.5;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -267,22 +259,17 @@ float calculateFacetSpecular(vec3 normal, vec3 viewDir, vec3 lightDir, float pow
 // Calculate "fire" - intense sparkle points that real gems exhibit
 // These are concentrated, view-dependent highlights from light dispersion
 float calculateFire(vec3 normal, vec3 viewDir, vec3 lightDir) {
-    // Primary fire highlight - VERY sharp falloff for pinpoint sparkles
+    // Primary fire highlight — reduced exponent (256 vs 512), still pinpoint
     vec3 reflectDir = reflect(-lightDir, normal);
-    float fire1 = pow(max(0.0, dot(reflectDir, viewDir)), 512.0);
+    float fire1 = pow(max(0.0, dot(reflectDir, viewDir)), 256.0);
 
-    // Secondary fire from different light angle (simulates environment)
+    // Secondary fire from different light angle
     vec3 lightDir2 = normalize(vec3(-0.3, 0.8, 0.5));
     vec3 reflectDir2 = reflect(-lightDir2, normal);
-    float fire2 = pow(max(0.0, dot(reflectDir2, viewDir)), 384.0);
+    float fire2 = pow(max(0.0, dot(reflectDir2, viewDir)), 128.0);
 
-    // Third fire point for more sparkle
-    vec3 lightDir3 = normalize(vec3(0.7, 0.4, -0.6));
-    vec3 reflectDir3 = reflect(-lightDir3, normal);
-    float fire3 = pow(max(0.0, dot(reflectDir3, viewDir)), 256.0);
-
-    // Combine fire points - only keep the brightest peaks
-    float fire = fire1 + fire2 * 0.7 + fire3 * 0.5;
+    // Combine fire points (was 3, now 2 — third added minimal visible sparkle)
+    float fire = fire1 + fire2 * 0.7;
 
     // Facet edges catch more fire — kept mild to avoid bloom strobe
     // (fwidth jitters per-frame on rotating geometry, amplifying the pow-512 strobing)
@@ -400,55 +387,32 @@ void main() {
     // Now with CHROMATIC ABERRATION - different wavelengths refract differently
     // ═══════════════════════════════════════════════════════════════════════
 
-    // Refract view direction through gem surface with different IOR per wavelength
-    // Red refracts less (higher IOR ratio), blue refracts more (lower IOR ratio)
-    // Chromatic separation is REDUCED for colored gems to avoid color contamination
-    // Quartz (low sssStrength) gets full rainbow, colored gems get subtle dispersion
+    // Single refraction direction (green IOR) — compute monochrome caustic, then
+    // apply chromatic shift. Saves 2 refract() + 6 sin() vs per-channel computation.
     float chromaticStrength = 1.0 - clamp((sssStrength - 0.5) * 0.8, 0.0, 0.8);
-    float iorR = mix(0.57, 0.70, chromaticStrength); // Red - approaches green for colored gems
-    float iorB = mix(0.57, 0.44, chromaticStrength); // Blue - approaches green for colored gems
-    vec3 refractDirR = refract(-viewDir, normal, iorR);
-    vec3 refractDirG = refract(-viewDir, normal, 0.57); // Green - always medium
-    vec3 refractDirB = refract(-viewDir, normal, iorB);
+    vec3 refractDir = refract(-viewDir, normal, 0.57);
 
     // Animated drift
     float causticTime = time * causticSpeed;
     vec3 drift = vec3(causticTime * 0.3, causticTime * 0.2, causticTime * 0.1);
 
-    // Sample positions for each color channel
-    // Offset is also reduced for colored gems to minimize chromatic contamination
     float spatialOffset = mix(1.0, 3.0, chromaticStrength);
-    vec3 causticPosR = vPosition * causticScale + refractDirR * spatialOffset + drift;
-    vec3 causticPosG = vPosition * causticScale + refractDirG * spatialOffset + drift;
-    vec3 causticPosB = vPosition * causticScale + refractDirB * spatialOffset + drift;
+    vec3 causticPos = vPosition * causticScale + refractDir * spatialOffset + drift;
 
-    // Create caustic pattern for each channel
-    // Red channel
-    float waveR1 = sin(causticPosR.x * 2.0 + causticPosR.y * 1.5 + causticPosR.z);
-    float waveR2 = sin(causticPosR.y * 2.3 - causticPosR.x * 1.2 + causticPosR.z * 1.8);
-    float waveR3 = sin(causticPosR.z * 1.9 + causticPosR.x * 0.8 - causticPosR.y * 1.4);
-    float interferenceR = (waveR1 + waveR2 + waveR3) / 3.0;
-    float causticR = smoothstep(0.3, 0.8, interferenceR);
+    // 3-wave interference pattern (monochrome)
+    float wave1 = sin(causticPos.x * 2.0 + causticPos.y * 1.5 + causticPos.z);
+    float wave2 = sin(causticPos.y * 2.3 - causticPos.x * 1.2 + causticPos.z * 1.8);
+    float wave3 = sin(causticPos.z * 1.9 + causticPos.x * 0.8 - causticPos.y * 1.4);
+    float interference = (wave1 + wave2 + wave3) / 3.0;
+    float causticMono = smoothstep(0.3, 0.8, interference);
 
-    // Green channel
-    float waveG1 = sin(causticPosG.x * 2.0 + causticPosG.y * 1.5 + causticPosG.z);
-    float waveG2 = sin(causticPosG.y * 2.3 - causticPosG.x * 1.2 + causticPosG.z * 1.8);
-    float waveG3 = sin(causticPosG.z * 1.9 + causticPosG.x * 0.8 - causticPosG.y * 1.4);
-    float interferenceG = (waveG1 + waveG2 + waveG3) / 3.0;
-    float causticG = smoothstep(0.3, 0.8, interferenceG);
-
-    // Blue channel
-    float waveB1 = sin(causticPosB.x * 2.0 + causticPosB.y * 1.5 + causticPosB.z);
-    float waveB2 = sin(causticPosB.y * 2.3 - causticPosB.x * 1.2 + causticPosB.z * 1.8);
-    float waveB3 = sin(causticPosB.z * 1.9 + causticPosB.x * 0.8 - causticPosB.y * 1.4);
-    float interferenceB = (waveB1 + waveB2 + waveB3) / 3.0;
-    float causticB = smoothstep(0.3, 0.8, interferenceB);
-
-    // Combine into RGB caustic with chromatic separation
-    vec3 causticRGB = vec3(causticR, causticG, causticB);
+    // Chromatic shift: offset R and B slightly from mono value for rainbow fringe
+    float causticR = smoothstep(0.3, 0.8, interference + chromaticStrength * 0.08);
+    float causticB = smoothstep(0.3, 0.8, interference - chromaticStrength * 0.08);
+    vec3 causticRGB = vec3(causticR, causticMono, causticB);
 
     // Add noise variation to break up uniformity
-    float noiseVar = noise3D(causticPosG * 0.5);
+    float noiseVar = noise3D(causticPos * 0.5);
     causticRGB *= (0.7 + noiseVar * 0.6);
 
     // Clamp caustic peaks to prevent hot spot blobs
@@ -886,8 +850,10 @@ void main() {
             soulGlow *= mix(vec3(1.0), gemHue, tintAmount);
         }
 
-        // Add soul glow to final color
-        finalColor += soulGlow * 0.55;
+        // Attenuate soul glow at crystal edges where clipping causes overbloom
+        float crystalFacing = abs(dot(normal, viewDir));
+        float soulEdgeAtten = smoothstep(0.0, 0.35, crystalFacing);
+        finalColor += soulGlow * 0.55 * soulEdgeAtten;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -895,13 +861,9 @@ void main() {
     // Adds pure emotion color as light shining through the gem from the soul
     // ═══════════════════════════════════════════════════════════════════════
     if (emotionColorBleed > 0.001 && sssStrength > 0.01) {
-        // Inner glow based on thickness - thinner areas show more soul light
-        float innerGlow = 1.0 - abs(dot(normal, viewDir)); // Edges are thin
-        innerGlow = pow(innerGlow, 1.5) * emotionColorBleed;
-
-        // Also add glow near the core
+        // Core proximity glow (not edge-based — avoids adding to edge bloom)
         float coreProximity = exp(-distFromCenter * 2.0);
-        innerGlow += coreProximity * emotionColorBleed * 0.5;
+        float innerGlow = coreProximity * emotionColorBleed * 0.5;
 
         // Add pure emotion color as inner light
         finalColor += emotionColor * innerGlow * 0.4;
