@@ -156,13 +156,32 @@ float snoise(vec3 v) {
     return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
 }
 
-// Fractal Brownian Motion - 3 octaves
+// Cheap hash-based noise for modulation/variation (much faster than snoise)
+float cheapHash(vec3 p) {
+    p = fract(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+float cheapNoise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(mix(cheapHash(i), cheapHash(i + vec3(1,0,0)), f.x),
+            mix(cheapHash(i + vec3(0,1,0)), cheapHash(i + vec3(1,1,0)), f.x), f.y),
+        mix(mix(cheapHash(i + vec3(0,0,1)), cheapHash(i + vec3(1,0,1)), f.x),
+            mix(cheapHash(i + vec3(0,1,1)), cheapHash(i + vec3(1,1,1)), f.x), f.y),
+        f.z
+    );
+}
+
+// Fractal Brownian Motion - 2 octaves (was 3 — 3rd at 4x adds minimal visible detail)
 float fbm3(vec3 p) {
     float value = 0.0;
     float amplitude = 0.5;
     float frequency = 1.0;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
         value += amplitude * snoise(p * frequency);
         frequency *= 2.0;
         amplitude *= 0.5;
@@ -357,7 +376,7 @@ void main() {
     vec3 noisePos = selectedPosition * 3.0 + vec3(instanceVariation, -effectiveLocalTime * 0.001, instanceVariation);
     float noiseValue = fbm3(noisePos);
 
-    float posVariation = snoise(selectedPosition * 5.0 + vec3(aRandomSeed * 10.0)) * 0.3 + 0.85;
+    float posVariation = cheapNoise(selectedPosition * 5.0 + vec3(aRandomSeed * 10.0)) * 0.6 - 0.3 + 0.85;
 
     float heightFactor = pow(vVerticalGradient, 0.5);
     float displacement = noiseValue * uDisplacementStrength * (0.3 + heightFactor * 0.7) * posVariation * fadeFactor;
@@ -365,8 +384,8 @@ void main() {
     vec3 displaced = selectedPosition + selectedNormal * displacement;
     displaced.y += heightFactor * uFlameHeight * (0.5 + noiseValue * 0.5) * fadeFactor;
 
-    float turbX = snoise(noisePos + vec3(100.0, 0.0, 0.0)) * uTurbulence * heightFactor * posVariation * fadeFactor;
-    float turbZ = snoise(noisePos + vec3(0.0, 0.0, 100.0)) * uTurbulence * heightFactor * posVariation * fadeFactor;
+    float turbX = (cheapNoise(noisePos + vec3(100.0, 0.0, 0.0)) * 2.0 - 1.0) * uTurbulence * heightFactor * posVariation * fadeFactor;
+    float turbZ = (cheapNoise(noisePos + vec3(0.0, 0.0, 100.0)) * 2.0 - 1.0) * uTurbulence * heightFactor * posVariation * fadeFactor;
     displaced.x += turbX * 0.3;
     displaced.z += turbZ * 0.3;
 
@@ -531,8 +550,8 @@ void main() {
     // Layered turbulence (lite — large+medium only, drops fine+micro snoise)
     float flame = layeredTurbulenceLite(noisePos, localTime);
 
-    // Position-based variation for non-uniform flames
-    float posVariation = snoise(vPosition * 7.0) * 0.15 + 0.92;
+    // Position-based variation for non-uniform flames (cheapNoise sufficient for modulation)
+    float posVariation = cheapNoise(vPosition * 7.0) * 0.30 - 0.15 + 0.92;
     flame *= posVariation;
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -558,8 +577,8 @@ void main() {
     float flickerCombined = (f1 + f2 + f3) * 0.5 + 0.5;
     float flicker = 1.0 - uFlickerAmount + uFlickerAmount * flickerCombined;
 
-    // Micro-flicker for fine detail
-    float microFlicker = 0.95 + 0.05 * snoise(vec3(localTime * 0.004, vPosition.yz * 6.0));
+    // Micro-flicker for fine detail (cheapNoise — 5% variance doesn't need simplex)
+    float microFlicker = 0.95 + 0.05 * (cheapNoise(vec3(localTime * 0.004, vPosition.yz * 6.0)) * 2.0 - 1.0);
     flicker *= microFlicker;
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -593,7 +612,7 @@ void main() {
 
     if (uEmberDensity > 0.01) {
         vec3 emberPos = vPosition * 15.0 + vec3(localTime * 0.002, -localTime * 0.008, localTime * 0.001);
-        float emberNoise = snoise(emberPos);
+        float emberNoise = cheapNoise(emberPos) * 2.0 - 1.0;
 
         // Sparse bright spots via threshold
         float emberThreshold = 0.75 - uEmberDensity * 0.3;
@@ -602,8 +621,8 @@ void main() {
         // Embers concentrate near top (rising sparks)
         embers *= smoothstep(0.2, 0.8, vVerticalGradient);
 
-        // Flicker embers
-        float emberFlicker = 0.7 + 0.3 * snoise(vec3(localTime * 0.02, emberPos.xy));
+        // Flicker embers (cheapNoise — modulation only)
+        float emberFlicker = 0.7 + 0.3 * (cheapNoise(vec3(localTime * 0.02, emberPos.xy)) * 2.0 - 1.0);
         embers *= emberFlicker;
 
         // Add white-hot ember color (scaled by uGlowScale for gesture glow ramping)
