@@ -10,12 +10,21 @@ describe('ErrorTracker', () => {
     let errorTracker;
 
     beforeEach(() => {
+        // Suppress massive console output from ErrorTracker's handleCriticalError
+        // and sendReport — they dump full error objects with stack traces to stderr.
+        // Vitest's reporter processes captured stderr with regex operations; the
+        // deeply nested objects create pathologically large strings that crash v8's
+        // RegExpCompiler zone allocator on CI runners with limited memory.
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+
         // Disable global handlers for testing
         errorTracker = new ErrorTracker({ enabled: false });
     });
 
     afterEach(() => {
         errorTracker.destroy();
+        vi.restoreAllMocks();
     });
 
     describe('Constructor', () => {

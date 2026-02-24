@@ -33,14 +33,10 @@ jobs:
 
       - name: Run tests
         run: npm test
-        env:
-          NODE_OPTIONS: '--max-old-space-size=8192'
 
       - name: Generate coverage report
         if: matrix.node-version == 20
         run: npm run test:coverage
-        env:
-          NODE_OPTIONS: '--max-old-space-size=8192'
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == 20
