@@ -13,6 +13,7 @@ export default defineConfig({
             '**/*.e2e.ts'
         ],
         pool: 'threads',
+        passWithNoTests: true,
         testTimeout: 30000,
         coverage: {
             provider: 'v8',

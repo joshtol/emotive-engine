@@ -261,28 +261,26 @@ import { createShatterGesture } from './destruction/shatter/shatterFactory.js';
 // destruction/dissolve/
 import { createDissolveGesture } from './destruction/dissolve/dissolveFactory.js';
 // destruction/elemental/ - Electric effect gestures (no shatter, just visual effects)
-import {
-    shock as electricShock,
-    overload as electricOverload,
-    glitch as electricGlitch,
-    crackle as electricCrackle,
-    charge as electricCharge,
-    aura as electricAura,
-    staticElectric as electricStatic,
-    electricCrown,
-    electricDance,
-    electricHelix,
-    electricPillar,
-    electricDrill,
-    electricFlourish,
-    electricVortex,
-    electricBarrage,
-    electricImpact,
-    electricBlast,
-    electricSurge,
-    electricZap,
-    zap as zapGesture
-} from './elemental/electric/electricEffectFactory.js';
+import electricShock from './elemental/electric/electricshock.js';
+import electricOverload from './elemental/electric/electricoverload.js';
+import electricGlitch from './elemental/electric/electricglitch.js';
+import electricCrackle from './elemental/electric/electriccrackle.js';
+import electricCharge from './elemental/electric/electriccharge.js';
+import electricAura from './elemental/electric/electricaura.js';
+import electricStatic from './elemental/electric/electricstatic.js';
+import electricCrown from './elemental/electric/electriccrown.js';
+import electricDance from './elemental/electric/electricdance.js';
+import electricHelix from './elemental/electric/electrichelix.js';
+import electricPillar from './elemental/electric/electricpillar.js';
+import electricDrill from './elemental/electric/electricdrill.js';
+import electricFlourish from './elemental/electric/electricflourish.js';
+import electricVortex from './elemental/electric/electricvortex.js';
+import electricBarrage from './elemental/electric/electricbarrage.js';
+import electricImpact from './elemental/electric/electricimpact.js';
+import electricBlast from './elemental/electric/electricblast.js';
+import electricSurge from './elemental/electric/electricsurge.js';
+import electricZap from './elemental/electric/electriczap.js';
+const zapGesture = electricZap;
 import electricMeditation from './elemental/electric/electricmeditation.js';
 import electricTwirl from './elemental/electric/electrictwirl.js';
 import electricShield from './elemental/electric/electricshield.js';
@@ -329,41 +327,37 @@ import fireblastGesture from './elemental/fire/fireblast.js';
 import fireTwirl from './elemental/fire/firetwirl.js';
 import fireShield from './elemental/fire/fireshield.js';
 // destruction/elemental/ - Void effect gestures (no shatter, absorption/corruption visuals)
-import {
-    drain as voidDrain,
-    hollow as voidHollow,
-    corrupt as voidCorrupt,
-    consume as voidConsume,
-    singularity as voidSingularity,
-    voidCrown,
-    voidDance,
-    voidHelix,
-    voidPillar,
-    voidDrill,
-    voidFlourish,
-    voidVortex,
-    voidBarrage,
-    voidImpact
-} from './elemental/void/voidEffectFactory.js';
+import voidDrain from './elemental/void/voiddrain.js';
+import voidHollow from './elemental/void/voidhollow.js';
+import voidCorrupt from './elemental/void/voidcorrupt.js';
+import voidConsume from './elemental/void/voidconsume.js';
+import voidSingularity from './elemental/void/voidsingularity.js';
+import voidCrown from './elemental/void/voidcrown.js';
+import voidDance from './elemental/void/voiddance.js';
+import voidHelix from './elemental/void/voidhelix.js';
+import voidPillar from './elemental/void/voidpillar.js';
+import voidDrill from './elemental/void/voiddrill.js';
+import voidFlourish from './elemental/void/voidflourish.js';
+import voidVortex from './elemental/void/voidvortex.js';
+import voidBarrage from './elemental/void/voidbarrage.js';
+import voidImpact from './elemental/void/voidimpact.js';
 import voidMeditation from './elemental/void/voidmeditation.js';
 import voidTwirl from './elemental/void/voidtwirl.js';
 import voidShield from './elemental/void/voidshield.js';
 // destruction/elemental/ - Ice effect gestures (frost/freezing visuals)
 // Matches fire/water pattern: axis-travel, anchor, radial-burst spawn modes
-import {
-    crown as iceCrown,
-    dance as iceDance,
-    pillar as icePillar,
-    helix as iceHelix,
-    meditation as iceMeditation,
-    vortex as iceVortex,
-    splash as iceSplash,
-    encase as iceEncase,
-    drill as iceDrill,
-    flourish as iceFlourish,
-    barrage as iceBarrage,
-    impact as iceImpact
-} from './elemental/ice/iceEffectFactory.js';
+import iceCrown from './elemental/ice/icecrown.js';
+import iceDance from './elemental/ice/icedance.js';
+import icePillar from './elemental/ice/icepillar.js';
+import iceHelix from './elemental/ice/icehelix.js';
+import iceMeditation from './elemental/ice/icemeditation.js';
+import iceVortex from './elemental/ice/icevortex.js';
+import iceSplash from './elemental/ice/icesplash.js';
+import iceEncase from './elemental/ice/iceencase.js';
+import iceDrill from './elemental/ice/icedrill.js';
+import iceFlourish from './elemental/ice/iceflourish.js';
+import iceBarrage from './elemental/ice/icebarrage.js';
+import iceImpact from './elemental/ice/iceimpact.js';
 import iceMist from './elemental/ice/icemist.js';
 import iceShiver from './elemental/ice/iceshiver.js';
 import iceTwirl from './elemental/ice/icetwirl.js';
