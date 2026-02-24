@@ -142,11 +142,11 @@ float snoise(vec3 p) {
     return noise(p) * 2.0 - 1.0;
 }
 
-// FBM for rocky surface detail
+// FBM for rocky surface detail (3 octaves — 4th at 14.4x is sub-pixel)
 float fbm(vec3 p) {
     float value = 0.0;
     float amp = 0.5;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         value += amp * noise(p);
         p *= 2.0;
         amp *= 0.5;
@@ -417,15 +417,15 @@ void main() {
     // Slight warm ochre in sparse patches, blue-grey dominant.
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    float mineralNoise1 = noise(vPosition * 1.5 + vec3(vRandomSeed * 4.0));
+    float mineralNoise1 = noise(vPosition * 1.8 + vec3(vRandomSeed * 4.0));
     float mineralNoise2 = noise(vPosition * 0.8 + vec3(vRandomSeed * 2.5, 1.3, 0.7));
 
     // Mineral masks — computed here but applied AFTER diffuse lighting
     // Pre-diffuse mixing loses warmth through shade noise, diffuse, crevice, grain.
     // Post-diffuse multiplicative tint preserves warm/cool contrast on screen.
+    // Both warm masks derived from single noise (was 2 calls) — different threshold bands
     float ochreMask = smoothstep(0.42, 0.65, mineralNoise1);
-    float mineralNoise3 = noise(vPosition * 2.5 + vec3(vRandomSeed * 6.0, 0.0, 3.0));
-    float warmMask = smoothstep(0.45, 0.68, mineralNoise3);
+    float warmMask = smoothstep(0.35, 0.58, mineralNoise1);
 
     // Blue-grey patches — cool mineral zones, characteristic of real stone
     vec3 blueGrey = vec3(0.22, 0.24, 0.30);  // Blue-grey mineral
@@ -461,8 +461,9 @@ void main() {
     float rockNoise = rockLarge * 0.7 + rockMedium * 0.3;
     float detailNoise = noise(vPosition * 10.0 + vec3(vRandomSeed * 7.0));
 
-    // Zone noise for gritty/polished regions (also controls grain amplitude later)
-    float zoneNoise = noise(vPosition * 1.8 + vec3(vRandomSeed * 4.5));
+    // Zone classification derived from rockLarge (same 1.8 scale — saves a noise call)
+    // fract() decorrelates so grit zones aren't visually locked to rock relief
+    float zoneNoise = fract(rockLarge * 2.7 + 0.3);
     float grittyZone = smoothstep(0.30, 0.55, zoneNoise);    // 0=smooth, 1=gritty
     float polishedZone = smoothstep(0.78, 0.88, zoneNoise);  // top slice = polished
 
@@ -583,17 +584,15 @@ void main() {
     vec2 crackPos = vPosition.xz * 2.5 + vec2(vPosition.y * 0.7, vRandomSeed * 2.0);
     float crackEdge = voronoiEdge(crackPos);
 
-    // Break mask — erases ~35% of all crack features for natural variation
-    float breakNoise = noise(vec3(crackPos * 0.5, vRandomSeed * 5.0));
-    float breakMask = smoothstep(0.25, 0.50, breakNoise);
+    // Crack masks consolidated: 2 noise calls instead of 4
+    // crackMaskA: break erasure (low band) + calcite selection (high band)
+    float crackMaskA = noise(vec3(crackPos * 0.6, vRandomSeed * 4.0));
+    float breakMask = smoothstep(0.25, 0.50, crackMaskA);
+    float isCalcite = smoothstep(0.55, 0.72, crackMaskA);  // upper band = calcite
 
-    // Calcite selection — separate noise decides which surviving cracks are bright
-    float calciteNoise = noise(vec3(crackPos * 0.7, vRandomSeed * 3.0 + 7.0));
-    float isCalcite = smoothstep(0.42, 0.58, calciteNoise);  // ~40% of cracks become calcite
-
-    // Per-crack width variation — geological fractures taper and vary
-    float widthNoise = noise(vec3(crackPos * 1.2, vRandomSeed * 8.0));
-    float crackWidth = mix(0.03, 0.08, widthNoise);  // hairline → wide gape
+    // crackMaskB: width variation + stain selection (Y-coupled for drip direction)
+    float crackMaskB = noise(vec3(crackPos * 1.0, vRandomSeed * 6.0 + vPosition.y * 2.0));
+    float crackWidth = mix(0.03, 0.08, crackMaskB);  // hairline → wide gape
 
     // Dark crack lines — empty crevices (deeper on dark stone)
     float darkCrackLine = 1.0 - smoothstep(0.0, crackWidth, crackEdge);
@@ -612,7 +611,7 @@ void main() {
     float crackLine = max(darkCrackLine, calciteLine);
 
     // Rare mica sparkle — cool silver in dark cracks, top 15%
-    float micaMask = smoothstep(0.85, 1.0, breakNoise) * (1.0 - isCalcite);
+    float micaMask = smoothstep(0.85, 1.0, crackMaskA) * (1.0 - isCalcite);
     float micaShimmer = 0.6 + 0.4 * sin(instanceTime * uPulseSpeed * 2.0 + crackEdge * 20.0);
     vec3 micaColor = vec3(0.30, 0.30, 0.35) * micaShimmer * uVeinIntensity;  // Subtle silver, not bright
     float micaLine = (1.0 - smoothstep(0.0, 0.04, crackEdge)) * micaMask;  // Wider spread, less point-like
@@ -621,9 +620,8 @@ void main() {
     // MINERAL STAINING — very sparse warm hints near cracks (Seiryu has minimal)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    float stainNoise = noise(vec3(crackPos * 0.8, vPosition.y * 3.0));
     float stainZone = smoothstep(0.0, 0.08, crackEdge) * (1.0 - smoothstep(0.08, 0.25, crackEdge));
-    float stainDrip = smoothstep(0.55, 0.70, stainNoise);  // Rarer
+    float stainDrip = smoothstep(0.55, 0.70, crackMaskB);  // Reuses crackMaskB (Y-coupled)
     vec3 stainColor = vec3(0.28, 0.27, 0.24);  // Muted neutral deposit
     stoneColor = mix(stoneColor, stainColor, stainZone * stainDrip * breakMask * 0.08);
 
