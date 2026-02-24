@@ -383,7 +383,8 @@ describe('Initialization Flow Integration', () => {
         it('should set initial emotion from config', () => {
             mascot = new EmotiveMascot({
                 canvasId: 'init-test-canvas',
-                defaultEmotion: 'joy'
+                defaultEmotion: 'joy',
+                enableAudio: false
             });
 
             // State machine stores emotion in state.emotion
@@ -391,7 +392,7 @@ describe('Initialization Flow Integration', () => {
         });
 
         it('should initialize rhythmIntegration', () => {
-            mascot = new EmotiveMascot({ canvasId: 'init-test-canvas' });
+            mascot = new EmotiveMascot({ canvasId: 'init-test-canvas', enableAudio: false });
 
             expect(mascot.rhythmIntegration).toBeDefined();
         });
