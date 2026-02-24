@@ -177,23 +177,22 @@ float voronoi2D(vec2 p) {
 
 const NATURE_GLSL = /* glsl */`
 // Branching vein pattern using FBM-derivative approach.
-// Computes gradient of noise field, takes absolute directional derivative to create
-// branching line structures. NOT Voronoi -- produces organic, tree-like veins
-// that branch and merge naturally like real leaf venation.
+// Forward differences (3 fbm3) instead of central differences (4 fbm4).
+// fbm3 sufficient — 4th octave at 6% weight contributes negligibly to gradient.
 float branchingVeins(vec2 p, float scale) {
     vec3 sp = vec3(p * scale, 0.0);
 
-    // Compute FBM and its gradient via central differences
+    // Forward differences: base + 2 offsets (was 4 central diff calls)
     float eps = 0.05;
-    float dx = fbm4(sp + vec3(eps, 0.0, 0.0)) - fbm4(sp - vec3(eps, 0.0, 0.0));
-    float dy = fbm4(sp + vec3(0.0, eps, 0.0)) - fbm4(sp - vec3(0.0, eps, 0.0));
+    float base = fbm3(sp);
+    float dx = fbm3(sp + vec3(eps, 0.0, 0.0)) - base;
+    float dy = fbm3(sp + vec3(0.0, eps, 0.0)) - base;
 
-    // Gradient magnitude -- high where noise field changes rapidly
-    float gradMag = length(vec2(dx, dy)) / (2.0 * eps);
+    // Gradient magnitude
+    float gradMag = length(vec2(dx, dy)) / eps;
 
-    // Take abs of directional derivative along a diagonal to get branching lines.
-    // The diagonal direction creates asymmetric branching like real veins.
-    float dirDeriv = abs(dx * 0.7 + dy * 0.7) / (2.0 * eps);
+    // Directional derivative along diagonal for asymmetric branching
+    float dirDeriv = abs(dx * 0.7 + dy * 0.7) / eps;
 
     // Combine: high gradient + directional alignment = vein
     float vein = smoothstep(0.3, 0.8, gradMag) * smoothstep(0.2, 0.6, dirDeriv);
@@ -492,9 +491,9 @@ void main() {
     // Growth-driven base blend
     vec3 baseColor = mix(barkBrown, lushGreen, uGrowth);
 
-    // Organic FBM noise variation -- per-instance offset prevents repetition
-    // fbm3: 4th octave (6.25% weight) is sub-pixel on small ring geometry
-    float organicNoise = fbm3(vPosition * 3.0 + vec3(vRandomSeed * 5.0));
+    // Organic noise variation -- 2 octaves sufficient for ±15% color variation
+    float organicNoise = noise(vPosition * 3.0 + vec3(vRandomSeed * 5.0)) * 0.5
+                       + noise(vPosition * 6.03 + vec3(vRandomSeed * 5.0)) * 0.25;
     baseColor *= 0.85 + organicNoise * 0.30; // +/-15% variation
 
     // Per-instance color shift -- each nature element is unique
