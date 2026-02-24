@@ -546,6 +546,7 @@ input[type="range"]::-moz-range-thumb {
         width: 100%;
         padding: 10px;
         background: inherit;
+        overflow: hidden;
     }
 
     /* Spacer to push menus below the fixed animation frame */
