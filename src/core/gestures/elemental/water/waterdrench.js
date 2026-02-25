@@ -110,8 +110,8 @@ const WATERDRENCH_CONFIG = {
                 strengthCurve: 'fadeOut',    // Fade as it expands
                 trailDissolve: {
                     enabled: true,
-                    offset: -0.3,
-                    softness: 1.4            // Original values that hid bottom
+                    offset: -1.5,
+                    softness: 2.5            // Wide gradient — umbrella silhouette without hard clip
                 }
             },
             // Grain: film grain for spray texture

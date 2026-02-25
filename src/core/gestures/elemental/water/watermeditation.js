@@ -25,6 +25,7 @@ const WATERMEDITATION_CONFIG = {
     duration: 4000,
     beats: 8,
     intensity: 0.7,
+    mascotGlow: 0.4,
     category: 'emanating',
     turbulence: 0.1,
 

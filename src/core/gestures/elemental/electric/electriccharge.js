@@ -32,6 +32,7 @@ const ELECTRICCHARGE_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 1.2,
+    mascotGlow: 0.4,
     category: 'powered',
 
     spawnMode: {

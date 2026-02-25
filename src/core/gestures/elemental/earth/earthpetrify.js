@@ -28,6 +28,7 @@ const EARTHPETRIFY_CONFIG = {
     duration: 3500,
     beats: 5,
     intensity: 1.2,
+    mascotGlow: 0.4,
     category: 'afflicted',
     petrification: 0.95,
 

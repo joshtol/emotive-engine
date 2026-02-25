@@ -42,9 +42,10 @@ const WATERTIDE_CONFIG = {
     emoji: '🌊',
     type: 'blending',
     description: 'Single wave with animated tidal cutout',
-    duration: 1500,
+    duration: 2500,
     beats: 2,
     intensity: 0.8,
+    mascotGlow: 0.2,
     category: 'ambient',
     turbulence: 0.3,
 

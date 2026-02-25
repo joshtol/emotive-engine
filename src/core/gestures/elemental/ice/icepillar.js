@@ -11,18 +11,16 @@
  * @complexity ⭐⭐⭐ Advanced
  *
  * VISUAL DIAGRAM:
- *         ═══════════        ← Layer 3: Top crystals (VORONOI, oscillate)
- *         ═══════════
- *          ═════════         ← Layer 2: Middle crystals (CRACKS, radial)
- *           ═══════
- *            ═════           ← Layer 1: Bottom crystals (CELLULAR, angular)
+ *         ═══════════        ← Layer 3: Top crystal (VORONOI, oscillate)
+ *          ═════════         ← Layer 2: Middle crystal (CRACKS, radial)
+ *            ═════           ← Layer 1: Bottom crystal (CELLULAR, angular)
  *             ★              ← Mascot at base
  *
  * FEATURES:
- * - THREE LAYERS with different cutout animations
- * - Layer 1: 2 bottom crystals with CELLULAR + angular travel
- * - Layer 2: 2 middle crystals with CRACKS + radial travel
- * - Layer 3: 2 top crystals with VORONOI + oscillate travel
+ * - THREE LAYERS with different cutout animations (1 ring per layer = 3 total)
+ * - Layer 1: 1 bottom crystal with CELLULAR + angular travel
+ * - Layer 2: 1 middle crystal with CRACKS + radial travel
+ * - Layer 3: 1 top crystal with VORONOI + oscillate travel
  * - GPU-instanced rendering via ElementInstancedSpawner
  *
  * USED BY:
@@ -115,13 +113,14 @@ const ICEPILLAR_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.4,
     category: 'transform',
     frost: 0.8,
 
-    // THREE LAYERS - each with different cutout
+    // THREE LAYERS - 1 ring per layer = 3 total for pillar effect
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Bottom 2 crystals - CELLULAR pattern, angular travel
+        // LAYER 1: Bottom crystal - CELLULAR pattern, angular travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -137,17 +136,11 @@ const ICEPILLAR_CONFIG = {
                 orientation: 'flat',
                 startOffset: 0
             },
-            formation: {
-                type: 'stack',
-                count: 2,
-                spacing: 0.25
-            },
-            count: 2,
+            count: 1,
             scale: 1.6,
             models: ['ice-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                stagger: 0.03,
                 cutout: {
                     strength: 0.55,
                     primary: { pattern: 0, scale: 1.2, weight: 1.0 },    // CELLULAR
@@ -157,20 +150,13 @@ const ICEPILLAR_CONFIG = {
                     travelSpeed: 1.2,
                     strengthCurve: 'fadeIn',
                     fadeInDuration: 0.3,
-                    geometricMask: {
-                        type: 'distance',
-                        core: 0.1,
-                        tip: 0.25
-                    }
+                    geometricMask: { type: 'distance', core: 0.1, tip: 0.25 }
                 },
-                rotate: [
-                    { axis: 'z', rotations: 0.3, phase: 0 },
-                    { axis: 'z', rotations: 0.3, phase: 180 }
-                ]
+                rotate: { axis: 'z', rotations: 0.3, phase: 0 }
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Middle 2 crystals - CRACKS pattern, radial travel
+        // LAYER 2: Middle crystal - CRACKS pattern, radial travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -186,17 +172,11 @@ const ICEPILLAR_CONFIG = {
                 orientation: 'flat',
                 startOffset: 0.5
             },
-            formation: {
-                type: 'stack',
-                count: 2,
-                spacing: 0.25
-            },
-            count: 2,
+            count: 1,
             scale: 1.6,
             models: ['ice-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                stagger: 0.05,
                 cutout: {
                     strength: 0.6,
                     primary: { pattern: 8, scale: 1.4, weight: 1.0 },    // CRACKS
@@ -207,20 +187,13 @@ const ICEPILLAR_CONFIG = {
                     strengthCurve: 'bell',
                     bellPeakAt: 0.5,
                     bellWidth: 0.5,
-                    geometricMask: {
-                        type: 'tip-boost',
-                        core: 0.0,
-                        tip: 0.2
-                    }
+                    geometricMask: { type: 'tip-boost', core: 0.0, tip: 0.2 }
                 },
-                rotate: [
-                    { axis: 'z', rotations: -0.5, phase: 60 },
-                    { axis: 'z', rotations: -0.5, phase: 240 }
-                ]
+                rotate: { axis: 'z', rotations: -0.5, phase: 60 }
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Top 2 crystals - VORONOI pattern, oscillate travel
+        // LAYER 3: Top crystal - VORONOI pattern, oscillate travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -236,17 +209,11 @@ const ICEPILLAR_CONFIG = {
                 orientation: 'flat',
                 startOffset: 1.0
             },
-            formation: {
-                type: 'stack',
-                count: 2,
-                spacing: 0.25
-            },
-            count: 2,
+            count: 1,
             scale: 1.6,
             models: ['ice-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                stagger: 0.07,
                 cutout: {
                     strength: 0.65,
                     primary: { pattern: 3, scale: 1.3, weight: 1.0 },    // VORONOI
@@ -256,16 +223,9 @@ const ICEPILLAR_CONFIG = {
                     travelSpeed: 2.0,
                     strengthCurve: 'fadeOut',
                     fadeOutDuration: 0.4,
-                    geometricMask: {
-                        type: 'distance',
-                        core: 0.15,
-                        tip: 0.3
-                    }
+                    geometricMask: { type: 'distance', core: 0.15, tip: 0.3 }
                 },
-                rotate: [
-                    { axis: 'z', rotations: 0.7, phase: 90 },
-                    { axis: 'z', rotations: 0.7, phase: 270 }
-                ]
+                rotate: { axis: 'z', rotations: 0.7, phase: 90 }
             }
         }
     ],
@@ -288,8 +248,8 @@ const ICEPILLAR_CONFIG = {
  * Icepillar gesture - majestic rising pillar of ice.
  *
  * Uses THREE SPAWN LAYERS with different cutouts:
- * - Layer 1: 2 bottom crystals with CELLULAR + angular travel
- * - Layer 2: 2 middle crystals with CRACKS + radial travel
- * - Layer 3: 2 top crystals with VORONOI + oscillate travel
+ * - Layer 1: 1 bottom crystal with CELLULAR + angular travel
+ * - Layer 2: 1 middle crystal with CRACKS + radial travel
+ * - Layer 3: 1 top crystal with VORONOI + oscillate travel
  */
 export default buildIceEffectGesture(ICEPILLAR_CONFIG);

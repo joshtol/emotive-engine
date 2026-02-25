@@ -42,6 +42,7 @@ const LIGHTILLUMINATE_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 1.0,
+    mascotGlow: 0.5,
     category: 'emanating',
     radiance: 0.65,
 

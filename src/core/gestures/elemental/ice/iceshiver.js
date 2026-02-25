@@ -42,6 +42,7 @@ const ICESHIVER_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 0.9,
+    mascotGlow: 0.2,
     category: 'afflicted',
     frost: 0.5,
 

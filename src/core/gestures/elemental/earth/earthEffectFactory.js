@@ -282,7 +282,8 @@ export function buildEarthEffectGesture(config) {
                     (glowMax - glowMin) * flickerValue * effectStrength;
 
                 // Negative glow boost — earth DARKENS (opposite of light)
-                const glowBoost = -0.15 * effectStrength * cfg.intensity * (cfg.petrification || 0.5);
+                const glowBoost = -0.15 * effectStrength * cfg.intensity * (cfg.petrification || 0.5)
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION

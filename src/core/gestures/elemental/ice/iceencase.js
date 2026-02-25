@@ -46,6 +46,7 @@ const ICEENCASE_CONFIG = {
     duration: 3500,
     beats: 5,
     intensity: 1.2,
+    mascotGlow: 0.5,
     category: 'transform',
     frost: 0.85,
 

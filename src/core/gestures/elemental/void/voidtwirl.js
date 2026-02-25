@@ -25,6 +25,7 @@ const VOIDTWIRL_CONFIG = {
     intensity: 1.5,
     category: 'afflicted',
     growth: 0.9,
+    distortionStrength: 0,
 
     spawnMode: [
         // Ring A — lower-left — relay 2, CW

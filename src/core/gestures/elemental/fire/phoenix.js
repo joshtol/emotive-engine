@@ -47,6 +47,7 @@ const PHOENIX_CONFIG = {
     duration: 4000,
     beats: 4,
     intensity: 1.7,
+    mascotGlow: 1.0,
     category: 'radiating',
     temperature: 0.85,              // Hot ascending flames
 

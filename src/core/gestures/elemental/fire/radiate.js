@@ -43,6 +43,7 @@ const RADIATE_CONFIG = {
     duration: 1500,
     beats: 4,
     intensity: 0.8,
+    mascotGlow: 0.4,
     category: 'radiating',
     temperature: 0.4,
 

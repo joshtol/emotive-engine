@@ -43,6 +43,7 @@ const FIRESHIELD_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.0,
+    mascotGlow: 0.5,
     category: 'radiating',
     temperature: 0.7,
 
@@ -53,7 +54,7 @@ const FIRESHIELD_CONFIG = {
             count: 1, scale: 1.5, models: ['flame-ring'],
             animation: {
                 ...SHARED_RING_ANIMATION, appearAt: 0.0,
-                rotate: { axis: 'x', rotations: 0.75, phase: 0 }, renderOrder: 6,
+                rotate: { axis: 'x', rotations: 2.5, phase: 0 }, renderOrder: 6,
                 modelOverrides: { 'flame-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 }, orientationOverride: 'flat' } }
             }
         },
@@ -63,7 +64,7 @@ const FIRESHIELD_CONFIG = {
             count: 1, scale: 1.5, models: ['flame-ring'],
             animation: {
                 ...SHARED_RING_ANIMATION, appearAt: 0.03,
-                rotate: { axis: 'y', rotations: -0.75, phase: 0 }, renderOrder: 8,
+                rotate: { axis: 'y', rotations: -2.5, phase: 0 }, renderOrder: 8,
                 modelOverrides: { 'flame-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 }, orientationOverride: 'vertical' } }
             }
         },
@@ -73,7 +74,7 @@ const FIRESHIELD_CONFIG = {
             count: 1, scale: 1.5, models: ['flame-ring'],
             animation: {
                 ...SHARED_RING_ANIMATION, appearAt: 0.06,
-                rotate: { axis: 'x', rotations: 0.75, phase: 60 }, renderOrder: 10,
+                rotate: { axis: 'x', rotations: 2.5, phase: 60 }, renderOrder: 10,
                 modelOverrides: { 'flame-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 }, orientationOverride: 'vertical' } }
             }
         },
@@ -83,7 +84,7 @@ const FIRESHIELD_CONFIG = {
             count: 1, scale: 1.5, models: ['flame-ring'],
             animation: {
                 ...SHARED_RING_ANIMATION, appearAt: 0.09,
-                rotate: { axis: 'y', rotations: -0.75, phase: 120 }, renderOrder: 12,
+                rotate: { axis: 'y', rotations: -2.5, phase: 120 }, renderOrder: 12,
                 modelOverrides: { 'flame-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 }, orientationOverride: 'vertical' } }
             }
         },
@@ -93,7 +94,7 @@ const FIRESHIELD_CONFIG = {
             count: 1, scale: 1.5, models: ['flame-ring'],
             animation: {
                 ...SHARED_RING_ANIMATION, appearAt: 0.12,
-                rotate: { axis: 'x', rotations: 0.75, phase: 45 }, renderOrder: 14,
+                rotate: { axis: 'x', rotations: 2.5, phase: 45 }, renderOrder: 14,
                 modelOverrides: { 'flame-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 }, orientationOverride: 'radial' } }
             }
         },
@@ -103,7 +104,7 @@ const FIRESHIELD_CONFIG = {
             count: 1, scale: 1.5, models: ['flame-ring'],
             animation: {
                 ...SHARED_RING_ANIMATION, appearAt: 0.15,
-                rotate: { axis: 'y', rotations: -0.75, phase: -45 },
+                rotate: { axis: 'y', rotations: -2.5, phase: -45 },
                 atmospherics: [{ preset: 'smoke', targets: ['flame-ring'], anchor: 'around', intensity: 0.2, sizeScale: 0.7, progressCurve: 'sustain' }],
                 renderOrder: 16,
                 modelOverrides: { 'flame-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 }, orientationOverride: 'radial' } }

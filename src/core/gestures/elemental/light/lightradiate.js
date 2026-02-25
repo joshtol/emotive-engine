@@ -36,6 +36,7 @@ const LIGHTRADIATE_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 1.4,
+    mascotGlow: 0.8,
     category: 'emanating',
     radiance: 0.9,
 

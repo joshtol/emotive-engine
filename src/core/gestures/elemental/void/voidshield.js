@@ -43,8 +43,10 @@ const VOIDSHIELD_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.0,
+    mascotGlow: 0.2,
     category: 'manifestation',
     depth: 0.65,
+    distortionStrength: 0,
 
     spawnMode: [
         {

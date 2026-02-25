@@ -76,10 +76,10 @@ const WATERHELIX_CONFIG = {
         models: ['splash-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.7,
+            disappearAt: 0.85,
             stagger: 0.06,
             enter: {
-                type: 'scale',
+                type: 'fade',
                 duration: 0.15,
                 easing: 'easeOut'
             },

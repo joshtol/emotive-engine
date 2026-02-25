@@ -227,7 +227,8 @@ export function buildIceEffectGesture(config) {
                     ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) * flickerValue * effectStrength;
 
                 // Ice glow boost - cold blue shimmer
-                const glowBoost = 0.15 * effectStrength * cfg.intensity * frostLevel;
+                const glowBoost = 0.15 * effectStrength * cfg.intensity * frostLevel
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION

@@ -31,6 +31,7 @@ const ELECTRICOVERLOAD_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 2.0,
+    mascotGlow: 0.6,
     category: 'electrocute',
 
     spawnMode: {

@@ -23,6 +23,7 @@ const ELECTRICAURA_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.0,
+    mascotGlow: 0.5,
     category: 'powered',
 
     spawnMode: {

@@ -38,6 +38,7 @@ const LIGHTCLEANSE_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 0.9,
+    mascotGlow: 0.6,
     category: 'afflicted',
     radiance: 0.6,
 

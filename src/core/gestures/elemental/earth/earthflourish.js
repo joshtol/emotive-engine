@@ -25,6 +25,7 @@ const EARTHFLOURISH_CONFIG = {
     duration: 1200,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.3,
     category: 'manifestation',
     petrification: 0.6,
 

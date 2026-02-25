@@ -25,6 +25,7 @@ const ELECTRICMEDITATION_CONFIG = {
     duration: 4000,
     beats: 8,
     intensity: 0.7,
+    mascotGlow: 0.4,
     category: 'emanating',
     charge: 0.4,
 

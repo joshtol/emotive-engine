@@ -9,10 +9,10 @@
  * @module gestures/destruction/elemental/earthpillar
  *
  * FEATURES:
- * - THREE LAYERS with different cutout animations
- * - Layer 1: 2 bottom rings with CELLULAR + angular travel
- * - Layer 2: 2 middle rings with CRACKS + radial travel
- * - Layer 3: 2 top rings with VORONOI + oscillate travel
+ * - THREE LAYERS with different cutout animations (1 ring per layer = 3 total)
+ * - Layer 1: 1 bottom ring with CELLULAR + angular travel
+ * - Layer 2: 1 middle ring with CRACKS + radial travel
+ * - Layer 3: 1 top ring with VORONOI + oscillate travel
  */
 
 import { buildEarthEffectGesture } from './earthEffectFactory.js';
@@ -97,12 +97,13 @@ const EARTHPILLAR_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.4,
     category: 'manifestation',
     petrification: 0.8,
 
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 1: Bottom 2 rings - CELLULAR pattern, angular travel
+        // LAYER 1: Bottom ring - CELLULAR pattern, angular travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -118,17 +119,11 @@ const EARTHPILLAR_CONFIG = {
                 orientation: 'flat',
                 startOffset: 0
             },
-            formation: {
-                type: 'stack',
-                count: 2,
-                spacing: 0.25
-            },
-            count: 2,
+            count: 1,
             scale: 1.6,
             models: ['earth-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                stagger: 0.03,
                 cutout: {
                     strength: 0.55,
                     primary: { pattern: 0, scale: 1.2, weight: 1.0 },
@@ -138,20 +133,13 @@ const EARTHPILLAR_CONFIG = {
                     travelSpeed: 1.2,
                     strengthCurve: 'fadeIn',
                     fadeInDuration: 0.3,
-                    geometricMask: {
-                        type: 'distance',
-                        core: 0.1,
-                        tip: 0.25
-                    }
+                    geometricMask: { type: 'distance', core: 0.1, tip: 0.25 }
                 },
-                rotate: [
-                    { axis: 'z', rotations: 0.3, phase: 0 },
-                    { axis: 'z', rotations: 0.3, phase: 180 }
-                ]
+                rotate: { axis: 'z', rotations: 0.3, phase: 0 }
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Middle 2 rings - CRACKS pattern, radial travel
+        // LAYER 2: Middle ring - CRACKS pattern, radial travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -167,17 +155,11 @@ const EARTHPILLAR_CONFIG = {
                 orientation: 'flat',
                 startOffset: 0.5
             },
-            formation: {
-                type: 'stack',
-                count: 2,
-                spacing: 0.25
-            },
-            count: 2,
+            count: 1,
             scale: 1.6,
             models: ['earth-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                stagger: 0.05,
                 cutout: {
                     strength: 0.6,
                     primary: { pattern: 8, scale: 1.4, weight: 1.0 },
@@ -188,20 +170,13 @@ const EARTHPILLAR_CONFIG = {
                     strengthCurve: 'bell',
                     bellPeakAt: 0.5,
                     bellWidth: 0.5,
-                    geometricMask: {
-                        type: 'tip-boost',
-                        core: 0.0,
-                        tip: 0.2
-                    }
+                    geometricMask: { type: 'tip-boost', core: 0.0, tip: 0.2 }
                 },
-                rotate: [
-                    { axis: 'z', rotations: -0.5, phase: 60 },
-                    { axis: 'z', rotations: -0.5, phase: 240 }
-                ]
+                rotate: { axis: 'z', rotations: -0.5, phase: 60 }
             }
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Top 2 rings - VORONOI pattern, oscillate travel
+        // LAYER 3: Top ring - VORONOI pattern, oscillate travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -217,17 +192,11 @@ const EARTHPILLAR_CONFIG = {
                 orientation: 'flat',
                 startOffset: 1.0
             },
-            formation: {
-                type: 'stack',
-                count: 2,
-                spacing: 0.25
-            },
-            count: 2,
+            count: 1,
             scale: 1.6,
             models: ['earth-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                stagger: 0.07,
                 cutout: {
                     strength: 0.65,
                     primary: { pattern: 3, scale: 1.3, weight: 1.0 },
@@ -237,16 +206,9 @@ const EARTHPILLAR_CONFIG = {
                     travelSpeed: 2.0,
                     strengthCurve: 'fadeOut',
                     fadeOutDuration: 0.4,
-                    geometricMask: {
-                        type: 'distance',
-                        core: 0.15,
-                        tip: 0.3
-                    }
+                    geometricMask: { type: 'distance', core: 0.15, tip: 0.3 }
                 },
-                rotate: [
-                    { axis: 'z', rotations: 0.7, phase: 90 },
-                    { axis: 'z', rotations: 0.7, phase: 270 }
-                ]
+                rotate: { axis: 'z', rotations: 0.7, phase: 90 }
             }
         }
     ],

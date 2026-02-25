@@ -44,7 +44,7 @@ const WATERDANCE_CONFIG = {
     emoji: '💃',
     type: 'blending',
     description: 'Vertical splash rings dancing and rising',
-    duration: 1500,
+    duration: 2000,
     beats: 3,
     intensity: 1.3,
     category: 'ambient',
@@ -76,7 +76,7 @@ const WATERDANCE_CONFIG = {
         models: ['splash-ring'],
         animation: {
             appearAt: 0.02,
-            disappearAt: 0.5,           // Start fading at halfway point
+            disappearAt: 0.75,          // Start fading at 75%
             stagger: 0.02,
             enter: {
                 type: 'fade',

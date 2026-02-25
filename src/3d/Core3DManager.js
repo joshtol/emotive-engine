@@ -2382,6 +2382,15 @@ export class Core3DManager {
                         }
                     }
                 });
+                // Apply distortion override AFTER spawn too — on first fire, the distortion
+                // mesh doesn't exist during onBeforeSpawn (registered during spawn), so the
+                // pre-spawn call is a no-op and the default strength (0.028) persists.
+                if (this.elementSpawner._distortionManager) {
+                    const ds = blended.voidOverlay.distortionStrength;
+                    this.elementSpawner._distortionManager.setDistortionStrength(
+                        'void', ds !== undefined ? ds : null
+                    );
+                }
 
                 // Update void material each frame
                 if (this._voidMaterial?.uniforms?.uTime) {
@@ -2564,10 +2573,9 @@ export class Core3DManager {
                 this._iceSpawnedSignatures = null;
             }
 
-            // Decay progress, opacity, and tint strength
-            if (this._iceMaterial?.uniforms?.uProgress) {
-                this._iceMaterial.uniforms.uProgress.value *= 0.88;
-            }
+            // Keep uProgress at its final value — dissolveIn = smoothstep(0,0.35,p)²
+            // collapses too fast if decayed, causing a visible snap.
+            // uOpacity decay alone drives a smooth fade.
             this._iceFadeStrength = (this._iceFadeStrength || 1.0) * 0.88;
 
             // Fade mascot tint during fade-out
@@ -2833,10 +2841,9 @@ export class Core3DManager {
                 this._earthSpawnedSignatures = null;
             }
 
-            // Decay progress back toward 0 — consuming stone retreats
-            if (this._earthMaterial?.uniforms?.uProgress) {
-                this._earthMaterial.uniforms.uProgress.value *= 0.88;
-            }
+            // Keep uProgress at its final value — dissolveIn = smoothstep(0,0.35,p)²
+            // collapses too fast if decayed, causing a visible snap.
+            // uOpacity decay alone drives a smooth fade.
             // Also decay opacity
             if (this._earthMaterial?.uniforms?.uOpacity) {
                 this._earthMaterial.uniforms.uOpacity.value *= 0.88;
@@ -2915,7 +2922,6 @@ export class Core3DManager {
                 if (this._natureMaterial?.uniforms?.uProgress) {
                     this._natureMaterial.uniforms.uProgress.value = blended.natureOverlay.progress ?? 0;
                 }
-
                 this._currentNatureProgress = blended.natureOverlay.progress ?? null;
             }
         } else if (this._natureOverlayMesh) {

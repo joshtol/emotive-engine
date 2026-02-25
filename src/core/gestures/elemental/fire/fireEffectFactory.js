@@ -226,7 +226,8 @@ export function buildFireEffectGesture(config) {
                 const glowIntensity = cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
 
-                const glowBoost = (flickerValue * 0.7 + 0.3) * effectStrength * cfg.intensity;
+                const glowBoost = (flickerValue * 0.7 + 0.3) * effectStrength * cfg.intensity
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION - Use custom rotation if provided

@@ -25,6 +25,7 @@ const NATUREFLOURISH_CONFIG = {
     duration: 1200,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.3,
     category: 'manifestation',
     growth: 0.6,
 

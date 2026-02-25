@@ -114,7 +114,7 @@ void main() {
     // Reconstruct normal from depth derivatives
     vec3 normal = normalize(cross(dFdx(viewPos), dFdy(viewPos)));
 
-    vec2 noiseUV = vUv * resolution / 8.0;
+    vec2 noiseUV = vUv * resolution / 64.0;
     vec2 noise = texture2D(tNoise, noiseUV).rg;
     mat2 rotMat = mat2(noise.x, -noise.y, noise.y, noise.x);
 
@@ -125,6 +125,8 @@ void main() {
         float fi = float(i);
         float angle = fi * GOLDEN_ANGLE;
         float r = sqrt((fi + 0.5) / 16.0) * fineScreenR;
+        // Per-sample radius jitter — breaks Fibonacci ring banding
+        r *= (0.85 + 0.3 * fract(noise.x * (fi + 1.0) * 7.3));
         vec2 dir = rotMat * vec2(cos(angle), sin(angle));
         vec2 sUV = clamp(vUv + dir * r * texelSize, vec2(0.0), vec2(1.0));
 
@@ -152,6 +154,8 @@ void main() {
         float fi = float(i);
         float angle = (fi + 16.0) * GOLDEN_ANGLE;
         float r = sqrt((fi + 0.5) / 16.0) * coarseScreenR;
+        // Per-sample radius jitter — breaks Fibonacci ring banding
+        r *= (0.85 + 0.3 * fract(noise.y * (fi + 1.0) * 11.7));
         vec2 dir = rotMat * vec2(cos(angle), sin(angle));
         vec2 sUV = clamp(vUv + dir * r * texelSize, vec2(0.0), vec2(1.0));
 
@@ -262,9 +266,9 @@ void main() {
     vec3 totalColor = vec3(0.0);
     float totalWeight = 0.0;
 
-    // 5x5 bilateral box blur with Gaussian spatial weighting
-    for (int x = -2; x <= 2; x++) {
-        for (int y = -2; y <= 2; y++) {
+    // 7x7 bilateral blur with Gaussian spatial weighting
+    for (int x = -3; x <= 3; x++) {
+        for (int y = -3; y <= 3; y++) {
             vec2 sUV = vUv + vec2(float(x), float(y)) * texelSize;
 
             float sDepth = linDepth(textureLod(tDepth, sUV, 0.0).x);
@@ -272,9 +276,9 @@ void main() {
 
             // Bilateral weight: preserve edges at depth discontinuities
             float w = exp(-depthDiff * depthDiff * invThreshSq);
-            // Spatial Gaussian weight (sigma ~1.5 pixels)
+            // Spatial Gaussian weight (sigma ~2 pixels)
             float dist2 = float(x * x + y * y);
-            w *= exp(-dist2 / 4.5);
+            w *= exp(-dist2 / 8.0);
 
             totalColor += texture2D(tAO, sUV).rgb * w;
             totalWeight += w;
@@ -293,7 +297,12 @@ const COMPOSITE_FRAGMENT = /* glsl */`
 uniform sampler2D tAO;
 varying vec2 vUv;
 void main() {
-    gl_FragColor = texture2D(tAO, vUv);
+    vec4 ao = texture2D(tAO, vUv);
+    // Interleaved Gradient Noise dithering (Jimenez 2014)
+    // Breaks banding into imperceptible noise
+    float ign = fract(52.9829189 * fract(0.06711056 * gl_FragCoord.x + 0.00583715 * gl_FragCoord.y));
+    ao.rgb += (ign - 0.5) / 32.0;
+    gl_FragColor = ao;
 }
 `;
 
@@ -347,8 +356,8 @@ class AmbientOcclusionPass extends Pass {
         this.aoTarget = new THREE.WebGLRenderTarget(this._halfWidth, this._halfHeight, halfOpts);
         this.blurTarget = new THREE.WebGLRenderTarget(this._halfWidth, this._halfHeight, halfOpts);
 
-        // 8x8 noise texture for per-pixel rotation (reduces visible banding)
-        const noiseSize = 8;
+        // 64x64 noise texture for per-pixel rotation (reduces visible banding)
+        const noiseSize = 64;
         const noiseData = new Float32Array(noiseSize * noiseSize * 4);
         for (let i = 0; i < noiseSize * noiseSize; i++) {
             const stride = i * 4;
@@ -478,7 +487,7 @@ class AmbientOcclusionPass extends Pass {
         renderer.clear();
         this._fsQuad.render(renderer);
 
-        // ── Step 2: Bilateral blur (half-resolution, edge-preserving) ──
+        // ── Step 2a: First bilateral blur pass (aoTarget → blurTarget) ──
         const blurU = this.blurMaterial.uniforms;
         blurU.tAO.value = this.aoTarget.texture;
         blurU.tDepth.value = depthTexture;
@@ -491,6 +500,12 @@ class AmbientOcclusionPass extends Pass {
         renderer.clear();
         this._fsQuad.render(renderer);
 
+        // ── Step 2b: Second bilateral blur pass (blurTarget → aoTarget) ──
+        blurU.tAO.value = this.blurTarget.texture;
+        renderer.setRenderTarget(this.aoTarget);
+        renderer.clear();
+        this._fsQuad.render(renderer);
+
         // ── Step 3: Copy scene from readBuffer to writeBuffer ──
         this.copyMaterial.uniforms.tDiffuse.value = readBuffer.texture;
         this._fsQuad.material = this.copyMaterial;
@@ -499,7 +514,7 @@ class AmbientOcclusionPass extends Pass {
         this._fsQuad.render(renderer);
 
         // ── Step 4: Composite blurred AO with multiply blend on top ──
-        this.compositeMaterial.uniforms.tAO.value = this.blurTarget.texture;
+        this.compositeMaterial.uniforms.tAO.value = this.aoTarget.texture;
         this._fsQuad.material = this.compositeMaterial;
         // Don't clear — blend on top of the copied scene
         this._fsQuad.render(renderer);

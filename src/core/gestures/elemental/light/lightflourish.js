@@ -31,6 +31,7 @@ const LIGHTFLOURISH_CONFIG = {
     duration: 1500,
     beats: 4,
     intensity: 1.4,
+    mascotGlow: 0.3,
     category: 'manifestation',
     radiance: 0.85,
 

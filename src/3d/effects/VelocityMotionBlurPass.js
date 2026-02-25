@@ -42,20 +42,31 @@ void main() {
         localPos = instanceMatrix * localPos;
     #endif
 
-    // Current world position
+    // Current world position (vertex)
     vec4 worldPos = modelMatrix * localPos;
 
     // Project current position to clip space
     vec4 clipPos = projectionMatrix * viewMatrix * worldPos;
 
-    // Previous world position (subtract world-space velocity)
-    vec4 prevWorldPos = vec4(worldPos.xyz - aVelocity.xyz, 1.0);
-    vec4 prevClipPos = projectionMatrix * viewMatrix * prevWorldPos;
+    // Compute screen-space velocity at INSTANCE CENTER only.
+    // aVelocity is the translational velocity of the instance center (container space).
+    // Using the vertex position would include rotational displacement as fake velocity —
+    // a spinning ring's edge vertices would get tangential blur even when barely translating.
+    // By projecting the center and its previous position, rotation is excluded cleanly.
+    #ifdef USE_INSTANCING
+        vec3 instanceCenter = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    #else
+        vec3 instanceCenter = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    #endif
+    vec3 prevCenter = instanceCenter - (mat3(modelMatrix) * aVelocity.xyz);
+
+    vec4 centerClip = projectionMatrix * viewMatrix * vec4(instanceCenter, 1.0);
+    vec4 prevCenterClip = projectionMatrix * viewMatrix * vec4(prevCenter, 1.0);
 
     // Screen-space velocity in UV coordinates
     // NDC is [-1,1], UV is [0,1] — scale by 0.5
-    vec2 ndcCurr = clipPos.xy / clipPos.w;
-    vec2 ndcPrev = prevClipPos.xy / prevClipPos.w;
+    vec2 ndcCurr = centerClip.xy / centerClip.w;
+    vec2 ndcPrev = prevCenterClip.xy / prevCenterClip.w;
     vScreenVelocity = (ndcCurr - ndcPrev) * 0.5;
 
     gl_Position = clipPos;

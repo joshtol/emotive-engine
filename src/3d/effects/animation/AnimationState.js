@@ -775,8 +775,13 @@ export class AnimationState {
     /**
      * Force transition to exit state
      */
-    triggerExit() {
+    triggerExit(time = null) {
         if (this.state !== AnimationStates.EXITING && this.state !== AnimationStates.DEAD) {
+            // Set exitStartTime so _updateExiting calculates elapsed correctly.
+            // Without this, exitStartTime stays at 0 → elapsed is huge → instant death.
+            if (time !== null && this.exitStartTime === 0) {
+                this.exitStartTime = time;
+            }
             this._transitionTo(AnimationStates.EXITING);
             this._fireEvent('onExitStart');
         }

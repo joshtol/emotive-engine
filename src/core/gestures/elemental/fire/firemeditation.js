@@ -96,6 +96,7 @@ const FIREMEDITATION_CONFIG = {
     duration: 3000,
     beats: 6,
     intensity: 1.5,
+    mascotGlow: 0.4,
     category: 'afflicted',
     temperature: 0.5,
 

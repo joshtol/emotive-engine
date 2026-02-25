@@ -88,8 +88,10 @@ const VOIDMEDITATION_CONFIG = {
     duration: 3000,
     beats: 6,
     intensity: 1.5,
+    mascotGlow: 0.2,
     category: 'emanating',
     entropy: 0.3,
+    distortionStrength: 0,
 
     spawnMode: [
         // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══

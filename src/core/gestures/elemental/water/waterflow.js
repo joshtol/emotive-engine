@@ -43,6 +43,7 @@ const WATERFLOW_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 0.7,
+    mascotGlow: 0.2,
     category: 'ambient',
     turbulence: 0.2,
 

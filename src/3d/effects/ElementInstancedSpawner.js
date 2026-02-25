@@ -620,7 +620,7 @@ export class ElementInstancedSpawner {
         if (material) {
             delete material.userData.gestureGlow;
             if (material.uniforms?.uGlowScale) {
-                material.uniforms.uGlowScale.value = 0.1;
+                material.uniforms.uGlowScale.value = 1.0;
             }
         }
         // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
@@ -1291,28 +1291,12 @@ export class ElementInstancedSpawner {
             // Generate element ID
             const elementId = `${elementType}_${this._nextId++}`;
 
-            // Spawn in pool - pass arc phase for shader arc visibility
-            // For staggered animations, use time-based offset so each ring's arc starts fresh
-            // when that ring appears (converts stagger timing to angle offset in shader)
-            // IMPORTANT: Only pass numeric arcPhase when stagger + arcSpeed are configured.
-            // Passing 0 (a number) triggers relay encoding (aRandomSeed = 100+), which makes
-            // the shader treat the ring as a relay element with partial visibility clipping.
-            // Pass null for normal rendering (aRandomSeed = Math.random() in [0,1)).
-            let arcPhase = null;
-            const stagger = animation.stagger || 0;
-            const shaderAnim = modelOverrides[modelName]?.shaderAnimation;
-            if (stagger > 0 && shaderAnim?.arcSpeed) {
-                // Time offset: negative angle to delay arc start based on element index
-                // arcAngle in shader = gestureProgress * arcSpeed * 2π + arcPhase
-                // Setting arcPhase = -stagger * index * arcSpeed * 2π makes each element
-                // start its arc animation when it appears, not at gesture start
-                // NOTE: Do NOT add formationData.rotationOffset here — that pushes
-                // aRandomSeed above 100 for all elements, triggering relay mode.
-                const timeOffset = stagger * i * shaderAnim.arcSpeed * Math.PI * 2;
-                arcPhase = -timeOffset;
-                DEBUG && console.log(`[ElementInstancedSpawner] Arc time offset for element ${i}: stagger=${stagger}, arcSpeed=${shaderAnim.arcSpeed}, arcPhase=${arcPhase.toFixed(3)}`);
-            }
-            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex, arcPhase);
+            // Spawn in pool — arcPhase=null for axis-travel elements (normal random seed).
+            // Per-instance arc phase only works in the relay shader branch (aRandomSeed >= 100).
+            // The normal arc branch uses the uniform uArcPhase, so per-instance encoding
+            // from stagger has no effect and only corrupts the random seed.
+            // Relay gestures pass arcPhase/relayIndex through anchor mode's modelOverrides.
+            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex);
 
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
@@ -1891,7 +1875,7 @@ export class ElementInstancedSpawner {
             if (elementType && data.type !== elementType) continue;
 
             if (data.animState) {
-                data.animState.triggerExit();
+                data.animState.triggerExit(this.time);
             } else {
                 // No animation state - use pool's built-in fade
                 const pool = this.pools.get(data.type);

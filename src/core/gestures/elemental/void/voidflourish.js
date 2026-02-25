@@ -35,6 +35,7 @@ const VOIDFLOURISH_CONFIG = {
     duration: 1200,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.2,
     category: 'manifestation',
     depth: 0.55,
     distortionStrength: 0.003,

@@ -46,6 +46,7 @@ const WATERPOOL_CONFIG = {
     duration: 2800,
     beats: 4,
     intensity: 0.7,
+    mascotGlow: 0.3,
     category: 'transform',
     turbulence: 0.2,
 
@@ -225,7 +226,7 @@ const WATERPOOL_CONFIG = {
                 appearAt: 0.15,
                 disappearAt: 0.8,
                 stagger: 0.1,
-                enter: { type: 'scale', duration: 0.15, easing: 'easeOut' },
+                enter: { type: 'fade', duration: 0.15, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.1, geometryStability: true },
                 cutout: {

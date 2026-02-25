@@ -45,6 +45,7 @@ const LIGHTASCEND_CONFIG = {
     duration: 3000,
     beats: 5,
     intensity: 1.3,
+    mascotGlow: 0.5,
     category: 'transform',
     radiance: 0.85,
 

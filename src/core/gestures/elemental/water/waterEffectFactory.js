@@ -295,7 +295,8 @@ export function buildWaterEffectGesture(config) {
                 const glowIntensity = cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * glowPulse * effectStrength;
 
-                const glowBoost = glowPulse * 0.6 * effectStrength * cfg.intensity;
+                const glowBoost = glowPulse * 0.6 * effectStrength * cfg.intensity
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION

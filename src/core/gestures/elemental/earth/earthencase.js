@@ -25,6 +25,7 @@ const EARTHENCASE_CONFIG = {
     duration: 3500,
     beats: 5,
     intensity: 1.2,
+    mascotGlow: 0.4,
     category: 'transform',
     petrification: 0.85,
 

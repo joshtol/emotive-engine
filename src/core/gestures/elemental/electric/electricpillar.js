@@ -54,6 +54,7 @@ const ELECTRICPILLAR_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.4,
     category: 'powered',
 
     spawnMode: [

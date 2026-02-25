@@ -90,6 +90,7 @@ const VOIDPILLAR_CONFIG = {
     duration: 2500,
     beats: 4,
     intensity: 1.2,
+    mascotGlow: 0.2,
     category: 'manifestation',
     depth: 0.65,
     distortionStrength: 0.008,

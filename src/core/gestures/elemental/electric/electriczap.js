@@ -34,6 +34,7 @@ const ELECTRICZAP_CONFIG = {
     duration: 2000,
     beats: 4,
     intensity: 1.7,
+    mascotGlow: 0.5,
     category: 'powered',
 
     spawnMode: [

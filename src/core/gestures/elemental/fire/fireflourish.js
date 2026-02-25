@@ -46,6 +46,7 @@ const FIREFLOURISH_CONFIG = {
     duration: 1200,             // Fast triplet flourish
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.3,
     category: 'radiating',
     temperature: 0.65,          // Hot orange-white
 

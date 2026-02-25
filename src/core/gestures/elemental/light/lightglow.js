@@ -36,6 +36,7 @@ const LIGHTGLOW_CONFIG = {
     duration: 3500,
     beats: 5,
     intensity: 0.6,
+    mascotGlow: 0.5,
     category: 'emanating',
     radiance: 0.4,
 

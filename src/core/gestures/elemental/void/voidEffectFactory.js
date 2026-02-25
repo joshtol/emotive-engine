@@ -250,7 +250,8 @@ export function buildVoidEffectGesture(config) {
                 const glowIntensity = 1.0 + (glowRange - 1.0) * effectStrength;
 
                 // Negative glow boost — void DIMS
-                const glowBoost = -(cfg.dimStrength || 0.3) * effectStrength * cfg.intensity;
+                const glowBoost = -(cfg.dimStrength || 0.3) * effectStrength * cfg.intensity
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION

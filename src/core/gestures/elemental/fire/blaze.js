@@ -42,6 +42,7 @@ const BLAZE_CONFIG = {
     duration: 1800,
     beats: 3,
     intensity: 1.3,
+    mascotGlow: 0.6,
     category: 'radiating',
     temperature: 0.75,
 

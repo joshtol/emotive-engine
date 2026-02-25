@@ -754,7 +754,8 @@ export function buildElectricEffectGesture(config) {
 
                 const glowIntensity = cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
-                const glowBoost = (flickerValue * 0.8 + 0.2) * effectStrength * cfg.intensity;
+                const glowBoost = (flickerValue * 0.8 + 0.2) * effectStrength * cfg.intensity
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN — with new instanced spawner fields

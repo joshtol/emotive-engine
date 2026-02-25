@@ -34,6 +34,7 @@ const ELECTRICFLOURISH_CONFIG = {
     duration: 1200,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.3,
     category: 'powered',
 
     spawnMode: [

@@ -88,6 +88,7 @@ const LIGHTMEDITATION_CONFIG = {
     duration: 3000,
     beats: 6,
     intensity: 1.5,
+    mascotGlow: 0.3,
     category: 'emanating',
     luminosity: 0.5,
 

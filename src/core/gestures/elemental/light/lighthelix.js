@@ -5,24 +5,21 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Lighthelix gesture - double helix of light fragments spiraling upward
+ * @fileoverview Lighthelix gesture - double helix of light rings spiraling upward
  * @module gestures/destruction/elemental/lighthelix
  *
  * VISUAL DIAGRAM:
- *       ✦             ✧        TOP — wide, brilliant
- *          ✧       ✦
- *           ✦   ✧
- *            ✧ ✦                ← Counter-rotating strands of prisms & sparkles
- *            ✦✧                    spiraling upward in DNA helix
- *            ★                  BOTTOM — tight seed
- *           /|\
+ *        ○   ●        TOP
+ *       ●     ○
+ *        ○   ●        ← Two interleaved
+ *       ●     ○          spirals rising
+ *        ○   ●
+ *       ●     ○       BOTTOM
  *
  * FEATURES:
- * - 10 fragments in DNA double helix (5 per strand, 180° offset)
- * - Strand A: prism-shard (refractive crystals), counter-clockwise
- * - Strand B: sparkle-star + light-ray (sparkles & beams), clockwise
- * - Tight seed at feet → wide expansion above head
- * - Camera billboard — floating shards of light
+ * - 6 sun-ring elements in double helix formation (strands: 2)
+ * - DNA-style interleaved spiral ascending
+ * - Matches firehelix pattern with light-appropriate visuals
  */
 
 import { buildLightEffectGesture } from './lightEffectFactory.js';
@@ -31,7 +28,7 @@ const LIGHTHELIX_CONFIG = {
     name: 'lighthelix',
     emoji: '🧬',
     type: 'blending',
-    description: 'Double helix of light fragments counter-spiraling upward',
+    description: 'Double helix of light rings spiraling upward',
     duration: 2000,
     beats: 4,
     intensity: 1.2,
@@ -45,69 +42,65 @@ const LIGHTHELIX_CONFIG = {
             start: 'bottom',
             end: 'above',
             easing: 'easeInOut',
-            startScale: 0.7,
-            endScale: 1.8,
-            startDiameter: 0.4,
-            endDiameter: 2.8,
-            orientation: 'camera'
+            startScale: 0.9,
+            endScale: 1.1,
+            startDiameter: 1.8,
+            endDiameter: 2.0,
+            orientation: 'vertical'
         },
         formation: {
             type: 'spiral',
-            count: 10,
+            count: 6,
             strands: 2,
-            spacing: 0.08,
-            arcOffset: 180,
-            phaseOffset: 0.03
+            spacing: 0.2,
+            arcOffset: 120,
+            phaseOffset: 0.05
         },
-        count: 10,
-        scale: 1.2,
-        models: ['sun-ring', 'sparkle-star', 'prism-shard', 'sun-ring', 'prism-shard', 'sparkle-star', 'sun-ring', 'prism-shard', 'sparkle-star', 'sun-ring'],
+        count: 6,
+        scale: 0.7,
+        models: ['sun-ring'],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.40,
-            stagger: 0.02,
-            enter: { type: 'scale', duration: 0.1, easing: 'easeOut' },
-            exit: { type: 'fade', duration: 0.4, easing: 'easeIn' },
+            disappearAt: 0.7,
+            stagger: 0.06,
+            enter: { type: 'scale', duration: 0.15, easing: 'easeOut' },
+            exit: { type: 'fade', duration: 0.5, easing: 'easeIn' },
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
-            pulse: { amplitude: 0.12, frequency: 4, easing: 'easeInOut', perElement: true },
-            emissive: { min: 1.0, max: 2.0, frequency: 4, pattern: 'sine' },
+            pulse: { amplitude: 0.06, frequency: 4, easing: 'easeInOut' },
+            emissive: { min: 1.2, max: 2.5, frequency: 6, pattern: 'sine' },
             cutout: {
-                strength: 0.4,
-                primary: { pattern: 5, scale: 1.0, weight: 0.7 },    // EMBERS
-                secondary: { pattern: 0, scale: 0.8, weight: 0.5 },  // CELLULAR
-                blend: 'multiply',
+                strength: 0.8,
+                primary: { pattern: 5, scale: 2.0, weight: 1.0 },    // EMBERS - sparkly light
+                secondary: { pattern: 0, scale: 1.8, weight: 0.6 },  // CELLULAR - organic breakup
+                blend: 'max',
                 travel: 'angular',
                 travelSpeed: 3.0,
                 strengthCurve: 'bell',
                 bellPeakAt: 0.5,
-                trailDissolve: { enabled: true, offset: -0.5, softness: 1.5 }
+                geometricMask: { type: 'distance', core: 0.1, tip: 0.25 }
             },
+            grain: { type: 3, strength: 0.05, scale: 0.2, speed: 1.0, blend: 'multiply' },
             atmospherics: [{
                 preset: 'firefly',
                 targets: null,
-                anchor: 'around',
-                intensity: 0.35,
+                anchor: 'above',
+                intensity: 0.3,
                 sizeScale: 0.6,
                 progressCurve: 'sustain',
                 velocityInheritance: 0.5,
                 centrifugal: { speed: 0.8, tangentialBias: 0.4 },
             }],
-            rotate: [
-                { axis: 'y', rotations: 4, phase: 0 },
-                { axis: 'y', rotations: -4, phase: 180 },
-                { axis: 'y', rotations: 4, phase: 0 },
-                { axis: 'y', rotations: -4, phase: 180 },
-                { axis: 'y', rotations: 4, phase: 0 },
-                { axis: 'y', rotations: -4, phase: 180 },
-                { axis: 'y', rotations: 4, phase: 0 },
-                { axis: 'y', rotations: -4, phase: 180 },
-                { axis: 'y', rotations: 4, phase: 0 },
-                { axis: 'y', rotations: -4, phase: 180 },
-            ],
-            scaleVariance: 0.3,
+            rotate: { axis: 'y', rotations: 2, phase: 0 },
+            scaleVariance: 0.1,
             lifetimeVariance: 0.1,
             blending: 'additive',
             renderOrder: 15,
+            modelOverrides: {
+                'sun-ring': {
+                    shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 1.5, arcCount: 1 },
+                    orientationOverride: 'vertical'
+                }
+            }
         }
     },
 

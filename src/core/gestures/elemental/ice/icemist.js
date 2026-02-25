@@ -48,6 +48,7 @@ const ICEMIST_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 0.7,
+    mascotGlow: 0.3,
     category: 'emanating',
     frost: 0.4,
 

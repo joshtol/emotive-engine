@@ -279,7 +279,8 @@ export function buildLightEffectGesture(config) {
                     (glowMax - glowMin) * flickerValue * effectStrength;
 
                 // Positive glow boost — light BRIGHTENS
-                const glowBoost = 0.4 * effectStrength * cfg.intensity * (cfg.radiance || 0.5);
+                const glowBoost = 0.4 * effectStrength * cfg.intensity * (cfg.radiance || 0.5)
+                    + (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION

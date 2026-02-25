@@ -44,6 +44,7 @@ const ICECROWN_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.0,
+    mascotGlow: 0.3,
     category: 'transform',
     frost: 0.65,
 

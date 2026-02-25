@@ -6,14 +6,12 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Waterpillar gesture - majestic rising pillar of stacked water rings
- * @author Emotive Engine Team
  * @module gestures/destruction/elemental/waterpillar
- * @complexity ⭐⭐⭐ Advanced
  *
  * VISUAL DIAGRAM:
- *         ═══════════        ← Layer 3: Top rings (RIPPLES, oscillate)
+ *         ═══════════        ← Layer 3: Top rings (EMBERS, oscillate)
  *         ═══════════
- *          ═════════         ← Layer 2: Middle rings (CELLULAR, radial)
+ *          ═════════         ← Layer 2: Middle rings (DISSOLVE, radial)
  *           ═══════
  *            ═════           ← Layer 1: Bottom rings (WAVES, angular)
  *             ★              ← Mascot at base
@@ -21,16 +19,10 @@
  * FEATURES:
  * - THREE LAYERS with different cutout animations
  * - Layer 1: 2 bottom rings with WAVES + angular travel
- * - Layer 2: 2 middle rings with CELLULAR + radial travel
- * - Layer 3: 2 top rings with RIPPLES + oscillate travel
+ * - Layer 2: 2 middle rings with DISSOLVE + radial travel
+ * - Layer 3: 2 top rings with EMBERS + oscillate travel
  * - Each layer animates differently to break uniformity
  * - GPU-instanced rendering via ElementInstancedSpawner
- *
- * USED BY:
- * - Pillar of water effects
- * - Divine/summoning power
- * - Majestic water displays
- * - Ascending power themes
  */
 
 import { buildWaterEffectGesture } from './waterEffectFactory.js';
@@ -45,11 +37,9 @@ const SHARED_ANIMATION = {
         easing: 'easeOut'
     },
     exit: {
-        type: 'burst-fade',
-        duration: 0.4,
-        easing: 'easeIn',
-        burstScale: 1.2,
-        burstDirection: 'up'
+        type: 'fade',
+        duration: 0.3,
+        easing: 'easeIn'
     },
     procedural: {
         scaleSmoothing: 0.1,
@@ -64,36 +54,26 @@ const SHARED_ANIMATION = {
         }
     },
     pulse: {
-        amplitude: 0.08,
+        amplitude: 0.05,
         frequency: 3,
-        easing: 'easeInOut',
-        perElement: true,
-        phaseOffset: 30
+        easing: 'easeInOut'
     },
-    // Grain: cinematic film grain for realistic water pillar
-    grain: {
-        type: 3,              // FILM - perlin + white hybrid
-        strength: 0.3,
-        scale: 0.35,
-        speed: 0.6,
-        blend: 'multiply'
+    emissive: {
+        min: 0.8,
+        max: 1.6,
+        frequency: 4,
+        pattern: 'sine'
     },
-    // Slow upward drift - enhances rising sensation
-    drift: {
-        speed: 0.15,
-        distance: 0.08,
-        direction: { x: 0, y: 1, z: 0 },
-        easing: 'easeOut'
-    },
-    // Gentle tilt wobble - majestic swaying
-    tilt: {
-        axis: 'x',
-        oscillate: true,
-        range: 0.08,
-        speed: 1.5,
-        perElement: true,
-        phaseOffset: 15
-    },
+    // No grain — multiply grain on transparent refraction = dark speckles
+    atmospherics: [{
+        preset: 'spray',
+        targets: ['splash-ring'],
+        anchor: 'above',
+        intensity: 0.4,
+        sizeScale: 1.0,
+        progressCurve: 'sustain',
+        velocityInheritance: 0.5,
+    }],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'normal',
@@ -107,17 +87,7 @@ const SHARED_ANIMATION = {
                 arcCount: 3
             }
         }
-    },
-    // Sustained spray rising with pillar — inherits upward axis-travel motion
-    atmospherics: [{
-        preset: 'spray',
-        targets: ['splash-ring'],
-        anchor: 'above',
-        intensity: 0.3,
-        sizeScale: 1.0,
-        progressCurve: 'sustain',
-        velocityInheritance: 0.5,
-    }],
+    }
 };
 
 /**
@@ -132,6 +102,7 @@ const WATERPILLAR_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.4,
     category: 'ambient',
     turbulence: 0.25,
 
@@ -152,7 +123,7 @@ const WATERPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 0          // Bottom layer (positions 0, 0.25)
+                startOffset: 0
             },
             formation: {
                 type: 'stack',
@@ -165,23 +136,21 @@ const WATERPILLAR_CONFIG = {
             animation: {
                 ...SHARED_ANIMATION,
                 stagger: 0.03,
-                // WAVES + CELLULAR - flowing ripples
                 cutout: {
-                    strength: 0.55,
-                    primary: { pattern: 4, scale: 1.4, weight: 1.0 },    // WAVES
-                    secondary: { pattern: 0, scale: 0.8, weight: 0.35 }, // CELLULAR
-                    blend: 'multiply',
+                    strength: 0.6,
+                    primary: { pattern: 4, scale: 2.0, weight: 1.0 },
+                    secondary: { pattern: 7, scale: 1.5, weight: 0.4 },
+                    blend: 'add',
                     travel: 'angular',
-                    travelSpeed: 1.0,
+                    travelSpeed: 1.2,
                     strengthCurve: 'fadeIn',
                     fadeInDuration: 0.3,
-                    trailDissolve: {
-                        enabled: true,
-                        offset: -0.5,
-                        softness: 1.2
+                    geometricMask: {
+                        type: 'distance',
+                        core: 0.1,
+                        tip: 0.25
                     }
                 },
-                // Layer 1: Slow clockwise spin
                 rotate: [
                     { axis: 'z', rotations: 0.3, phase: 0 },
                     { axis: 'z', rotations: 0.3, phase: 180 }
@@ -190,7 +159,7 @@ const WATERPILLAR_CONFIG = {
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 2: Middle 2 rings - CELLULAR pattern, radial travel
+        // LAYER 2: Middle 2 rings - DISSOLVE pattern, radial travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -204,7 +173,7 @@ const WATERPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 0.5        // Middle layer (positions 0.5, 0.75)
+                startOffset: 0.5
             },
             formation: {
                 type: 'stack',
@@ -217,33 +186,31 @@ const WATERPILLAR_CONFIG = {
             animation: {
                 ...SHARED_ANIMATION,
                 stagger: 0.05,
-                // CELLULAR + RIPPLES - organic bubbling
                 cutout: {
-                    strength: 0.6,
-                    primary: { pattern: 0, scale: 1.2, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 1, scale: 1.5, weight: 0.5 },  // RIPPLES
+                    strength: 0.65,
+                    primary: { pattern: 7, scale: 1.8, weight: 1.0 },
+                    secondary: { pattern: 5, scale: 1.5, weight: 0.5 },
                     blend: 'multiply',
                     travel: 'radial',
-                    travelSpeed: 1.5,
+                    travelSpeed: 1.8,
                     strengthCurve: 'bell',
                     bellPeakAt: 0.5,
                     bellWidth: 0.5,
-                    trailDissolve: {
-                        enabled: true,
-                        offset: -0.4,
-                        softness: 1.0
+                    geometricMask: {
+                        type: 'tip-boost',
+                        core: 0.0,
+                        tip: 0.2
                     }
                 },
-                // Layer 2: Medium counter-clockwise spin
                 rotate: [
-                    { axis: 'z', rotations: -0.5, phase: 60 },
-                    { axis: 'z', rotations: -0.5, phase: 240 }
+                    { axis: 'z', rotations: -0.6, phase: 60 },
+                    { axis: 'z', rotations: -0.6, phase: 240 }
                 ]
             }
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
-        // LAYER 3: Top 2 rings - RIPPLES pattern, oscillate travel
+        // LAYER 3: Top 2 rings - EMBERS pattern, oscillate travel
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'axis-travel',
@@ -257,7 +224,7 @@ const WATERPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 1.0        // Top layer (positions 1.0, 1.25)
+                startOffset: 1.0
             },
             formation: {
                 type: 'stack',
@@ -270,54 +237,37 @@ const WATERPILLAR_CONFIG = {
             animation: {
                 ...SHARED_ANIMATION,
                 stagger: 0.07,
-                // RIPPLES + DISSOLVE - dispersing spray
                 cutout: {
-                    strength: 0.65,
-                    primary: { pattern: 1, scale: 1.8, weight: 1.0 },    // RIPPLES
-                    secondary: { pattern: 7, scale: 1.5, weight: 0.4 },  // DISSOLVE
+                    strength: 0.7,
+                    primary: { pattern: 5, scale: 1.5, weight: 1.0 },
+                    secondary: { pattern: 6, scale: 2.0, weight: 0.4 },
                     blend: 'add',
                     travel: 'oscillate',
-                    travelSpeed: 2.0,
+                    travelSpeed: 2.5,
                     strengthCurve: 'fadeOut',
                     fadeOutDuration: 0.4,
-                    trailDissolve: {
-                        enabled: true,
-                        offset: -0.3,
-                        softness: 0.8
+                    geometricMask: {
+                        type: 'distance',
+                        core: 0.15,
+                        tip: 0.3
                     }
                 },
-                // Layer 3: Fast clockwise spin
                 rotate: [
-                    { axis: 'z', rotations: 0.7, phase: 90 },
-                    { axis: 'z', rotations: 0.7, phase: 270 }
+                    { axis: 'z', rotations: 0.9, phase: 90 },
+                    { axis: 'z', rotations: 0.9, phase: 270 }
                 ]
             }
         }
     ],
 
-    // Wobble - minimal for solid pillar
-    wobbleFrequency: 1.5,
-    wobbleAmplitude: 0.005,
-    wobbleDecay: 0.3,
-    // Scale - stable with slight breathing
-    scaleWobble: 0.008,
-    scaleFrequency: 2,
-    scaleGrowth: 0.025,
     // Glow - powerful water blue
     glowColor: [0.25, 0.55, 0.9],
     glowIntensityMin: 1.0,
     glowIntensityMax: 2.0,
-    glowPulseRate: 3
+    glowPulseRate: 3,
+    // Scale - stable with slight breathing
+    scaleVibration: 0.008,
+    scaleFrequency: 3,
 };
 
-/**
- * Waterpillar gesture - majestic rising pillar of water.
- *
- * Uses THREE SPAWN LAYERS with different cutouts:
- * - Layer 1: 2 bottom rings with WAVES + angular travel
- * - Layer 2: 2 middle rings with CELLULAR + radial travel
- * - Layer 3: 2 top rings with RIPPLES + oscillate travel
- *
- * Each layer animates independently, breaking the uniform pattern.
- */
 export default buildWaterEffectGesture(WATERPILLAR_CONFIG);

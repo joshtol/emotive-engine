@@ -44,6 +44,7 @@ const LIGHTPURIFY_CONFIG = {
     duration: 3000,
     beats: 5,
     intensity: 1.1,
+    mascotGlow: 0.5,
     category: 'afflicted',
     radiance: 0.7,
 

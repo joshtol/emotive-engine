@@ -123,12 +123,18 @@ export function parseAxisTravelConfig(config, resolveLandmark) {
         endDiameter: axisTravel.endDiameter ?? 1.0,
         // 'mascot' = diameter values are multiples of mascot width (1.0 = mascot width)
         diameterUnit: axisTravel.diameterUnit || null,
+        // uniformDiameter: when true, diameter scales all 3 axes equally (for non-ring models)
+        // Default false: only XY (ring face) are scaled, Z (thickness) stays uniform
+        uniformDiameter: axisTravel.uniformDiameter || false,
         reverseAt: axisTravel.reverseAt ?? null,
         // holdAt: gesture progress (0-1) at which travel completes and holds at end position
         holdAt: axisTravel.holdAt ?? null,
 
         // Orientation (unified naming, normalized)
         orientation: normalizeOrientation(rawOrientation),
+        // verticalEdgeAlign: when true (default), vertical rings get Y offset so bottom EDGE
+        // touches landmark instead of center. Set false for non-ring models using 'vertical'.
+        verticalEdgeAlign: axisTravel.verticalEdgeAlign !== false,
 
         // Formation settings
         formation: parseFormation(formation),
@@ -296,7 +302,7 @@ export function calculateAxisTravelPosition(axisConfig, formationData, gesturePr
 
     // For vertical rings, offset so the bottom EDGE touches the landmark (not the center)
     // Ring radius ≈ diameter * mascotRadius * scale * base_model_factor
-    if (axisConfig.orientation === 'vertical' && axisConfig.axis === 'y') {
+    if (axisConfig.orientation === 'vertical' && axisConfig.axis === 'y' && axisConfig.verticalEdgeAlign) {
         const ringRadius = diameter * mascotRadius * scale * 0.25;  // 0.25 empirical for ring model size
         axisPos += ringRadius;
     }

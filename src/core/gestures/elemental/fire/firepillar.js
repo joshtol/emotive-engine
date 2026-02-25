@@ -122,6 +122,7 @@ const FIREPILLAR_CONFIG = {
     duration: 3000,
     beats: 4,
     intensity: 1.3,
+    mascotGlow: 0.5,
     category: 'radiating',
     temperature: 0.7,
 

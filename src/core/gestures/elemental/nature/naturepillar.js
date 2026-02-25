@@ -88,6 +88,7 @@ const NATUREPILLAR_CONFIG = {
     duration: 2500,
     beats: 5,
     intensity: 1.2,
+    mascotGlow: 0.4,
     category: 'emanating',
     growth: 0.85,
 
