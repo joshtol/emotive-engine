@@ -5,30 +5,22 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Natureconstrict gesture - massive organic vine sculptures materializing
+ * @fileoverview Natureconstrict gesture - massive vine sculptures squeeze inward
  * @module gestures/destruction/elemental/natureconstrict
  *
- * CONCEPT: Giant organic vine pieces materialize around the mascot like nature
- * spontaneously sculpting itself into existence. Each piece is a different model —
- * s-vines, twisted vines, thorn curls, u-vines — rendered LARGE with the arc
- * shader animation sweeping across them, making each vine appear to GROW into
- * being from nothing. Camera-billboarded for maximum visual impact.
+ * CONCEPT: Giant organic vine pieces orbit wide and CONSTRICT inward onto the
+ * mascot like a fist closing. Each piece is a different model — s-vines, twisted
+ * vines, thorn curls, u-vines — rendered LARGE with arc shader animation. They
+ * start spread out and squeeze to center while slowly revolving, creating
+ * visceral tightening pressure. A vine-cluster centerpiece materializes at peak
+ * squeeze as the knot that locks everything tight.
  *
- * Layer 1: 4 large organic pieces orbiting at mascot width, each a different
- *          model, with arc animation creating a grow-in reveal effect.
- * Layer 2: 1 large vine-twist anchored at center, camera-facing, as the
- *          centerpiece of the composition.
+ * Layer 1: 4 large organic pieces orbiting — start wide, squeeze to center
+ *          while slowly revolving. Arc animation sweeps life across them.
+ * Layer 2: 1 large vine-cluster anchored at center — the knot, appears at
+ *          peak squeeze with falling-leaves volumetrics.
  *
- * The arc animation on non-ring geometry creates organic grow-patterns —
- * arcs of visibility sweeping across the vine surface like life spreading
- * through the material.
- *
- * VISUAL DIAGRAM (front view):
- *      🌿          🌿
- *         ╲  🌿  ╱
- *           ╲★╱         ← Massive vine sculptures around mascot
- *         ╱     ╲
- *      🌿          🌿
+ * The squeeze is the motion itself — no extra ring needed.
  */
 
 import { buildNatureEffectGesture } from './natureEffectFactory.js';
@@ -37,7 +29,7 @@ const NATURECONSTRICT_CONFIG = {
     name: 'natureconstrict',
     emoji: '🌺',
     type: 'blending',
-    description: 'Living sculpture — giant vine shapes materialize and grow around the mascot',
+    description: 'Living squeeze — giant vine shapes orbit wide then constrict onto the mascot',
     duration: 2500,
     beats: 4,
     intensity: 1.0,
@@ -46,16 +38,17 @@ const NATURECONSTRICT_CONFIG = {
 
     spawnMode: [
         // ═════════════════════════════════════════════════════════════════════
-        // LAYER 1: 4 organic models clustered at center, mascot-sized+
+        // LAYER 1: 4 organic models — orbit wide, squeeze inward
         // ═════════════════════════════════════════════════════════════════════
         {
             type: 'orbit',
             orbit: {
                 height: 'center',
                 endHeight: 'center',
-                radius: 0.0,
+                radius: 0.5,
                 endRadius: 0.0,
-                speed: 0,
+                speed: 0.4,
+                easing: 'easeInCubic',
                 startScale: 0.0,
                 endScale: 1.0,
                 orientation: 'camera'
@@ -70,7 +63,7 @@ const NATURECONSTRICT_CONFIG = {
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.80,
-                stagger: 0.15,
+                stagger: 0.12,
                 enter: {
                     type: 'scale',
                     duration: 0.2,
@@ -145,7 +138,7 @@ const NATURECONSTRICT_CONFIG = {
         },
 
         // ═════════════════════════════════════════════════════════════════════
-        // LAYER 2: Centerpiece — large vine-twist at center, camera-facing
+        // LAYER 2: Centerpiece — vine-cluster at center, appears at peak squeeze
         // ═════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
@@ -162,7 +155,7 @@ const NATURECONSTRICT_CONFIG = {
             scale: 2.0,
             models: ['vine-cluster'],
             animation: {
-                appearAt: 0.1,
+                appearAt: 0.25,
                 disappearAt: 0.80,
                 enter: {
                     type: 'scale',
@@ -212,7 +205,7 @@ const NATURECONSTRICT_CONFIG = {
                     preset: 'falling-leaves',
                     targets: null,
                     anchor: 'around',
-                    intensity: 0.3,
+                    intensity: 0.4,
                     sizeScale: 0.8,
                     progressCurve: 'sustain',
                 }],
@@ -234,9 +227,42 @@ const NATURECONSTRICT_CONFIG = {
     glowFlickerRate: 3,
     scaleVibration: 0.01,
     scaleFrequency: 2,
-    tremor: 0.002,
-    tremorFrequency: 2,
-    decayRate: 0.18
+    tremor: 0.003,
+    tremorFrequency: 3,
+    decayRate: 0.18,
+
+    // Squeeze tension: calm → accelerating close → peak tremor → release
+    parameterAnimation: {
+        growth: {
+            keyframes: [
+                { at: 0.0, value: 0.3 },
+                { at: 0.2, value: 0.6 },
+                { at: 0.5, value: 0.85 },
+                { at: 0.7, value: 0.95 },
+                { at: 0.85, value: 0.6 },
+                { at: 1.0, value: 0.0 }
+            ]
+        },
+        tremor: {
+            keyframes: [
+                { at: 0.0, value: 0.003 },
+                { at: 0.4, value: 0.003 },
+                { at: 0.6, value: 0.008 },
+                { at: 0.75, value: 0.018 },
+                { at: 0.85, value: 0.005 },
+                { at: 1.0, value: 0.0 }
+            ]
+        },
+        scaleVibration: {
+            keyframes: [
+                { at: 0.0, value: 0.01 },
+                { at: 0.5, value: 0.01 },
+                { at: 0.7, value: 0.03 },
+                { at: 0.85, value: 0.01 },
+                { at: 1.0, value: 0.0 }
+            ]
+        }
+    }
 };
 
 export default buildNatureEffectGesture(NATURECONSTRICT_CONFIG);

@@ -429,6 +429,8 @@ import seedBurst from './elemental/nature/seedburst.js';
 import seedPod from './elemental/nature/seedpod.js';
 import natureCleanse from './elemental/nature/naturecleanse.js';
 import natureSplinter from './elemental/nature/naturesplinter.js';
+import natureSprout from './elemental/nature/sprout.js';
+import natureFlourish from './elemental/nature/flourish.js';
 // destruction/reform/
 import morph from './destruction/reform/morph.js';
 
@@ -748,7 +750,8 @@ function _regLazy(name, loader, group) {
     natureBloom, natureCrown, natureDance, natureDrill, natureRingFlourish,
     natureHelix, natureMeditation, naturePillar, natureVortex,
     natureBarrage, natureShield, seedBurst, seedPod,
-    natureCleanse, natureSplinter
+    natureCleanse, natureSplinter,
+    natureSprout, natureFlourish
 ].forEach(g => _regEager(g, _transformNames));
 
 // ── TRANSFORM gestures — factory-generated (LAZY) ────────────────────────────────────

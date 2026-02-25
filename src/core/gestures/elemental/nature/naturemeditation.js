@@ -27,6 +27,7 @@ const NATUREMEDITATION_CONFIG = {
     intensity: 0.7,
     category: 'emanating',
     growth: 0.3,
+    mascotGlow: 0.4,
 
     spawnMode: [
         // ═══ ICETWIRL ORIGINAL ═══

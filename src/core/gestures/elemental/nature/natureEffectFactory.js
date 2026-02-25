@@ -188,7 +188,10 @@ export function buildNatureEffectGesture(config) {
                 }
                 const glowIntensity = (cfg.glowIntensityMin || 0.5) +
                     ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) * flickerValue * effectStrength;
-                const glowBoost = 0.2 * effectStrength * (cfg.intensity || 1) * (cfg.growth || 0.5);
+                // mascotGlow: opt-in additive boost to screen-space glow layer
+                // Shared pattern — any elemental factory can use config.mascotGlow
+                const baseGlowBoost = 0.2 * effectStrength * (cfg.intensity || 1) * (cfg.growth || 0.5);
+                const glowBoost = baseGlowBoost + (config.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN

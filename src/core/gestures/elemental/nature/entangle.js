@@ -12,7 +12,8 @@
  * Layer 1: 6 flat vine-rings descending from above → feet, narrowing diameter.
  *          Arc animation sweeps create the illusion of vines wrapping tighter.
  * Layer 2: 6 mixed organic models surface-spawned on mascot body — the
- *          squeeze contact points where vines grip the surface.
+ *          squeeze contact points where vines grip the surface. They drift
+ *          INWARD and pulse harder as the squeeze intensifies.
  *
  * Like iceencase for the surface layer, naturedrill-like axis-travel for wrapping.
  */
@@ -138,8 +139,8 @@ const NATUREENTANGLE_CONFIG = {
             }
         },
 
-        // ── Layer 2: 6 mixed organic pieces surface-spawned (squeeze grip) ───
-        // Like iceencase: models growing ON mascot surface as the vines squeeze
+        // ── Layer 2: 6 mixed organic pieces surface-spawned (squeeze grip) ──
+        // The grip points — drift INWARD as the squeeze tightens, pulse harder
         {
             type: 'surface',
             pattern: 'shell',
@@ -169,18 +170,19 @@ const NATUREENTANGLE_CONFIG = {
                     geometryStability: true
                 },
                 pulse: {
-                    amplitude: 0.04,
-                    frequency: 1.5,
+                    amplitude: 0.08,
+                    frequency: 2.5,
                     easing: 'easeInOut',
                     sync: 'global'
                 },
-                emissive: { min: 0.3, max: 0.7, frequency: 1.5, pattern: 'sine' },
+                emissive: { min: 0.4, max: 0.9, frequency: 2, pattern: 'sine' },
                 rotate: {
                     axis: 'y',
-                    speed: 0.006,
+                    speed: 0.01,
                     oscillate: true,
-                    range: Math.PI / 20
+                    range: Math.PI / 10
                 },
+                drift: { direction: 'inward', speed: 0.012, noise: 0.06 },
                 scaleVariance: 0.2,
                 blending: 'normal',
                 renderOrder: 8,
@@ -205,10 +207,31 @@ const NATUREENTANGLE_CONFIG = {
     glowFlickerRate: 3,
     scaleVibration: 0.012,
     scaleFrequency: 3,
-    scaleContract: 0.02,
     tremor: 0.004,
     tremorFrequency: 4,
-    decayRate: 0.18
+    decayRate: 0.18,
+
+    // Squeeze builds, peak tremor at max tightness
+    parameterAnimation: {
+        growth: {
+            keyframes: [
+                { at: 0.0, value: 0.3 },
+                { at: 0.3, value: 0.7 },
+                { at: 0.65, value: 0.85 },
+                { at: 0.8, value: 0.6 },
+                { at: 1.0, value: 0.0 }
+            ]
+        },
+        tremor: {
+            keyframes: [
+                { at: 0.0, value: 0.004 },
+                { at: 0.5, value: 0.004 },
+                { at: 0.7, value: 0.012 },
+                { at: 0.85, value: 0.018 },
+                { at: 1.0, value: 0.0 }
+            ]
+        }
+    }
 };
 
 export default buildNatureEffectGesture(NATUREENTANGLE_CONFIG);

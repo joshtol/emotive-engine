@@ -12,10 +12,9 @@
  * tight flat vine-rings ascending rapidly from feet to above head.
  * Layer 2 is the canopy — five vine-rings anchored above the mascot,
  * tilted outward at different angles like branches spreading into a crown.
- * The canopy rings start small and expand outward, creating the silhouette
- * of a tree canopy unfurling.
  *
- * Trunk grows FIRST (fast upward rush), then canopy SPREADS (slower unfurl).
+ * Trunk grows FIRST (fast upward rush), then canopy SPREADS (slower unfurl)
+ * with falling-leaves cascading from the branches.
  * Together they create the unmistakable shape of a tree blossoming overhead.
  *
  * VISUAL DIAGRAM (side view):
@@ -34,12 +33,13 @@ const NATUREBLOOM_CONFIG = {
     name: 'naturebloom',
     emoji: '🌸',
     type: 'blending',
-    description: 'Canopy growth — trunk rises, then branches spread into a living crown',
+    description: 'Canopy growth — trunk rises, then branches spread with falling leaves',
     duration: 2000,
     beats: 4,
     intensity: 1.2,
     category: 'emanating',
     growth: 0.8,
+    mascotGlow: 0.8,
 
     spawnMode: [
         // ═════════════════════════════════════════════════════════════════════
@@ -139,7 +139,7 @@ const NATUREBLOOM_CONFIG = {
         // LAYER 2: Canopy — 5 tilted rings spreading outward above head
         // ═════════════════════════════════════════════════════════════════════
 
-        // ── Branch 1: directly above center, slightly tilted ─────────────
+        // ── Branch 1: directly above center, slightly tilted ──
         {
             type: 'anchor',
             anchor: {
@@ -190,6 +190,15 @@ const NATUREBLOOM_CONFIG = {
                     bellPeakAt: 0.5
                 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                atmospherics: [{
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.5,
+                    sizeScale: 0.9,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.3,
+                }],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {
@@ -201,7 +210,7 @@ const NATUREBLOOM_CONFIG = {
             }
         },
 
-        // ── Branch 2: tilted at 0° (radial) ─────────────────────────────
+        // ── Branch 2: tilted at 0° (radial) ──
         {
             type: 'anchor',
             anchor: {
@@ -219,29 +228,22 @@ const NATUREBLOOM_CONFIG = {
             animation: {
                 appearAt: 0.30,
                 disappearAt: 0.85,
-                enter: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeInCubic'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                pulse: {
-                    amplitude: 0.04,
-                    frequency: 1.5,
-                    easing: 'easeInOut',
-                    sync: 'global'
-                },
+                enter: { type: 'scale', duration: 0.2, easing: 'easeOutBack' },
+                exit: { type: 'scale', duration: 0.2, easing: 'easeInCubic' },
+                procedural: { scaleSmoothing: 0.08, geometryStability: true },
+                pulse: { amplitude: 0.04, frequency: 1.5, easing: 'easeInOut', sync: 'global' },
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'y', rotations: -0.35, phase: 0 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
+                atmospherics: [{
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.25,
+                }],
                 blending: 'normal',
                 renderOrder: 12,
                 modelOverrides: {
@@ -253,7 +255,7 @@ const NATUREBLOOM_CONFIG = {
             }
         },
 
-        // ── Branch 3: tilted at 90° ─────────────────────────────────────
+        // ── Branch 3: tilted at 90° ──
         {
             type: 'anchor',
             anchor: {
@@ -271,31 +273,13 @@ const NATUREBLOOM_CONFIG = {
             animation: {
                 appearAt: 0.35,
                 disappearAt: 0.85,
-                enter: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeInCubic'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                pulse: {
-                    amplitude: 0.04,
-                    frequency: 1.5,
-                    easing: 'easeInOut',
-                    sync: 'global'
-                },
+                enter: { type: 'scale', duration: 0.2, easing: 'easeOutBack' },
+                exit: { type: 'scale', duration: 0.2, easing: 'easeInCubic' },
+                procedural: { scaleSmoothing: 0.08, geometryStability: true },
+                pulse: { amplitude: 0.04, frequency: 1.5, easing: 'easeInOut', sync: 'global' },
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'x', rotations: 0.35, phase: 90 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
-                blending: 'normal',
-                renderOrder: 14,
                 atmospherics: [{
                     preset: 'falling-leaves',
                     targets: ['vine-ring'],
@@ -303,7 +287,10 @@ const NATUREBLOOM_CONFIG = {
                     intensity: 0.3,
                     sizeScale: 0.8,
                     progressCurve: 'sustain',
+                    velocityInheritance: 0.25,
                 }],
+                blending: 'normal',
+                renderOrder: 14,
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
@@ -313,7 +300,7 @@ const NATUREBLOOM_CONFIG = {
             }
         },
 
-        // ── Branch 4: tilted at 180° ────────────────────────────────────
+        // ── Branch 4: tilted at 180° ──
         {
             type: 'anchor',
             anchor: {
@@ -331,26 +318,10 @@ const NATUREBLOOM_CONFIG = {
             animation: {
                 appearAt: 0.40,
                 disappearAt: 0.85,
-                enter: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeInCubic'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                pulse: {
-                    amplitude: 0.04,
-                    frequency: 1.5,
-                    easing: 'easeInOut',
-                    sync: 'global'
-                },
+                enter: { type: 'scale', duration: 0.2, easing: 'easeOutBack' },
+                exit: { type: 'scale', duration: 0.2, easing: 'easeInCubic' },
+                procedural: { scaleSmoothing: 0.08, geometryStability: true },
+                pulse: { amplitude: 0.04, frequency: 1.5, easing: 'easeInOut', sync: 'global' },
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'y', rotations: -0.4, phase: 180 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
@@ -365,7 +336,7 @@ const NATUREBLOOM_CONFIG = {
             }
         },
 
-        // ── Branch 5: tilted at 270° ────────────────────────────────────
+        // ── Branch 5: tilted at 270° ──
         {
             type: 'anchor',
             anchor: {
@@ -383,26 +354,10 @@ const NATUREBLOOM_CONFIG = {
             animation: {
                 appearAt: 0.45,
                 disappearAt: 0.85,
-                enter: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeOutBack'
-                },
-                exit: {
-                    type: 'scale',
-                    duration: 0.2,
-                    easing: 'easeInCubic'
-                },
-                procedural: {
-                    scaleSmoothing: 0.08,
-                    geometryStability: true
-                },
-                pulse: {
-                    amplitude: 0.04,
-                    frequency: 1.5,
-                    easing: 'easeInOut',
-                    sync: 'global'
-                },
+                enter: { type: 'scale', duration: 0.2, easing: 'easeOutBack' },
+                exit: { type: 'scale', duration: 0.2, easing: 'easeInCubic' },
+                procedural: { scaleSmoothing: 0.08, geometryStability: true },
+                pulse: { amplitude: 0.04, frequency: 1.5, easing: 'easeInOut', sync: 'global' },
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'x', rotations: 0.3, phase: 270 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
@@ -424,10 +379,32 @@ const NATUREBLOOM_CONFIG = {
     glowFlickerRate: 3,
     scaleVibration: 0.01,
     scaleFrequency: 2,
-    scaleGrow: 0.02,
     tremor: 0.003,
     tremorFrequency: 3,
-    decayRate: 0.16
+    decayRate: 0.16,
+
+    // Tree growth: trunk rush → canopy unfurl → full bloom → fade
+    parameterAnimation: {
+        growth: {
+            keyframes: [
+                { at: 0.0, value: 0.3 },
+                { at: 0.15, value: 0.6 },
+                { at: 0.35, value: 0.75 },
+                { at: 0.6, value: 0.95 },
+                { at: 0.8, value: 0.7 },
+                { at: 1.0, value: 0.0 }
+            ]
+        },
+        scaleVibration: {
+            keyframes: [
+                { at: 0.0, value: 0.01 },
+                { at: 0.5, value: 0.01 },
+                { at: 0.7, value: 0.02 },
+                { at: 0.85, value: 0.03 },
+                { at: 1.0, value: 0.0 }
+            ]
+        }
+    }
 };
 
 export default buildNatureEffectGesture(NATUREBLOOM_CONFIG);

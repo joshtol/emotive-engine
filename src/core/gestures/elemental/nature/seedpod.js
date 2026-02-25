@@ -12,13 +12,16 @@
  * rise from below simultaneously, meeting at the mascot's center to form
  * a sealed pod. The top rings shrink as they close in (tapering to a point),
  * while bottom rings hold wider (the pod's base). A central vine-cluster
- * appears at the seam where the halves meet.
+ * appears at the seam where the halves meet — the lock.
+ *
+ * The drama is the convergence itself — two halves rushing together,
+ * the tremor at the moment they meet, and the vine-cluster sealing it.
  *
  * VISUAL DIAGRAM (side view, closing sequence):
  *     ═══          ← Top rings descend, narrowing
  *      ═════
  *       ═══════
- *         [★]        ← Mascot encased at center
+ *        [★🌿]     ← Vine-cluster lock at the seam
  *       ═══════
  *      ═════
  *     ═══          ← Bottom rings rise, narrowing
@@ -30,7 +33,7 @@ const SEEDPOD_CONFIG = {
     name: 'seedpod',
     emoji: '🫘',
     type: 'blending',
-    description: 'Closing enclosure — vine rings converge from above and below to seal the mascot in a pod',
+    description: 'Closing enclosure — vine rings converge from above and below to seal the mascot',
     duration: 2500,
     beats: 4,
     intensity: 1.2,
@@ -161,7 +164,7 @@ const SEEDPOD_CONFIG = {
         },
 
         // =================================================================
-        // LAYER 3: Central vine-cluster at the seam where halves meet
+        // LAYER 3: Central vine-cluster — the lock at the seam
         // =================================================================
         {
             type: 'anchor',
@@ -180,10 +183,10 @@ const SEEDPOD_CONFIG = {
             animation: {
                 appearAt: 0.45,
                 disappearAt: 0.88,
-                enter: { type: 'scale', duration: 0.25, easing: 'easeOutCubic' },
+                enter: { type: 'scale', duration: 0.25, easing: 'easeOutBack' },
                 exit: { type: 'scale', duration: 0.1, easing: 'easeInCubic' },
                 procedural: { scaleSmoothing: 0.1, geometryStability: true },
-                pulse: { amplitude: 0.05, frequency: 2, easing: 'easeInOut', sync: 'global' },
+                pulse: { amplitude: 0.06, frequency: 2, easing: 'easeInOut', sync: 'global' },
                 emissive: { min: 0.8, max: 1.6, frequency: 2, pattern: 'sine' },
                 rotate: { axis: 'z', rotations: -0.3, phase: 45 },
                 cutout: {
@@ -200,8 +203,8 @@ const SEEDPOD_CONFIG = {
                     preset: 'falling-leaves',
                     targets: null,
                     anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.7,
+                    intensity: 0.4,
+                    sizeScale: 0.8,
                     progressCurve: 'rampUp',
                 }],
                 blending: 'normal',
@@ -224,7 +227,30 @@ const SEEDPOD_CONFIG = {
     scaleFrequency: 2,
     tremor: 0.003,
     tremorFrequency: 3,
-    decayRate: 0.18
+    decayRate: 0.18,
+
+    // Pod closes: converge → impact tremor at seal → settle → release
+    parameterAnimation: {
+        growth: {
+            keyframes: [
+                { at: 0.0, value: 0.2 },
+                { at: 0.3, value: 0.5 },
+                { at: 0.55, value: 0.8 },
+                { at: 0.7, value: 0.9 },
+                { at: 0.85, value: 0.6 },
+                { at: 1.0, value: 0.0 }
+            ]
+        },
+        tremor: {
+            keyframes: [
+                { at: 0.0, value: 0.003 },
+                { at: 0.5, value: 0.003 },
+                { at: 0.62, value: 0.015 },
+                { at: 0.72, value: 0.005 },
+                { at: 1.0, value: 0.0 }
+            ]
+        }
+    }
 };
 
 export default buildNatureEffectGesture(SEEDPOD_CONFIG);

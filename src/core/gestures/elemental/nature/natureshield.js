@@ -63,6 +63,7 @@ const NATURESHIELD_CONFIG = {
     intensity: 1.0,
     category: 'emanating',
     growth: 0.7,
+    mascotGlow: 0.4,
 
     spawnMode: [
         // ── Ring 1: Flat — flips on X axis (front-to-back tumble) CW ─────

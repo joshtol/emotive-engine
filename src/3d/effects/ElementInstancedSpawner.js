@@ -504,6 +504,13 @@ export class ElementInstancedSpawner {
             if (material?.uniforms?.uDiskMode) {
                 material.uniforms.uDiskMode.value = 0;
             }
+            // Reset gesture glow to prevent bleeding between gestures
+            if (material) {
+                delete material.userData.gestureGlow;
+                if (material.uniforms?.uGlowScale) {
+                    material.uniforms.uGlowScale.value = 1.0;
+                }
+            }
             // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
             if (this._particleAtmospherics) {
                 this._particleAtmospherics.forceStopGesture(elementType);
@@ -608,6 +615,13 @@ export class ElementInstancedSpawner {
         // Reset disk mode (only singularity uses it)
         if (material?.uniforms?.uDiskMode) {
             material.uniforms.uDiskMode.value = 0;
+        }
+        // Reset gesture glow to prevent bleeding between gestures
+        if (material) {
+            delete material.userData.gestureGlow;
+            if (material.uniforms?.uGlowScale) {
+                material.uniforms.uGlowScale.value = 0.1;
+            }
         }
         // Force-stop atmospherics from previous gesture (immediate cleanup on interruption)
         if (this._particleAtmospherics) {
@@ -1190,14 +1204,17 @@ export class ElementInstancedSpawner {
                 ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
                 : 1.0;
 
-            // Scale XY (circular face) by diameter, Z (thickness) stays uniform
-            // Ring model is in XY plane - diameter affects the circular face
+            // Scale by diameter — non-uniform (XY face only) or uniform (all axes)
             const effectiveDiameter = initialResult.diameter * diameterFactor;
-            _temp.scale.set(
-                initialScale * effectiveDiameter,
-                initialScale * effectiveDiameter,
-                initialScale
-            );
+            if (axisConfig.uniformDiameter) {
+                _temp.scale.setScalar(initialScale * effectiveDiameter);
+            } else {
+                _temp.scale.set(
+                    initialScale * effectiveDiameter,
+                    initialScale * effectiveDiameter,
+                    initialScale
+                );
+            }
 
             // Determine ring orientation:
             // 1. Use per-model orientationOverride from modelOverrides if specified
@@ -1277,7 +1294,11 @@ export class ElementInstancedSpawner {
             // Spawn in pool - pass arc phase for shader arc visibility
             // For staggered animations, use time-based offset so each ring's arc starts fresh
             // when that ring appears (converts stagger timing to angle offset in shader)
-            let arcPhase = formationData.rotationOffset || 0;
+            // IMPORTANT: Only pass numeric arcPhase when stagger + arcSpeed are configured.
+            // Passing 0 (a number) triggers relay encoding (aRandomSeed = 100+), which makes
+            // the shader treat the ring as a relay element with partial visibility clipping.
+            // Pass null for normal rendering (aRandomSeed = Math.random() in [0,1)).
+            let arcPhase = null;
             const stagger = animation.stagger || 0;
             const shaderAnim = modelOverrides[modelName]?.shaderAnimation;
             if (stagger > 0 && shaderAnim?.arcSpeed) {
@@ -1285,6 +1306,8 @@ export class ElementInstancedSpawner {
                 // arcAngle in shader = gestureProgress * arcSpeed * 2π + arcPhase
                 // Setting arcPhase = -stagger * index * arcSpeed * 2π makes each element
                 // start its arc animation when it appears, not at gesture start
+                // NOTE: Do NOT add formationData.rotationOffset here — that pushes
+                // aRandomSeed above 100 for all elements, triggering relay mode.
                 const timeOffset = stagger * i * shaderAnim.arcSpeed * Math.PI * 2;
                 arcPhase = -timeOffset;
                 DEBUG && console.log(`[ElementInstancedSpawner] Arc time offset for element ${i}: stagger=${stagger}, arcSpeed=${shaderAnim.arcSpeed}, arcPhase=${arcPhase.toFixed(3)}`);
@@ -1318,7 +1341,8 @@ export class ElementInstancedSpawner {
                         config: axisConfig,
                         formationData,
                         initialResult,
-                        diameterFactor
+                        diameterFactor,
+                        uniformDiameter: axisConfig.uniformDiameter || false
                     }
                 });
                 spawnedIds.push(elementId);
@@ -2053,8 +2077,7 @@ export class ElementInstancedSpawner {
                 // Apply calculated position
                 finalPosition = result.position;
 
-                // Apply scale with diameter (XY circular face)
-                // Ring model is in XY plane - diameter affects the circular face, Z is thickness
+                // Apply scale with diameter
                 // Include per-element scaleMultiplier from formation (for mandala varied ring sizes)
                 // NOTE: Do NOT multiply by fadeProgress here — that causes shrinking on exit.
                 // Exit animations that want scale changes use animState.scale directly.
@@ -2063,11 +2086,15 @@ export class ElementInstancedSpawner {
                 const enterFade = animState.state === AnimationStates.ENTERING ? animState.fadeProgress : 1.0;
                 const animScale = baseScale * result.scale * formationScaleMultiplier * enterFade;
                 const effectiveDiameter = result.diameter * (axisTravel.diameterFactor || 1.0);
-                _temp.scale.set(
-                    animScale * effectiveDiameter,
-                    animScale * effectiveDiameter,
-                    animScale
-                );
+                if (axisTravel.uniformDiameter) {
+                    _temp.scale.setScalar(animScale * effectiveDiameter);
+                } else {
+                    _temp.scale.set(
+                        animScale * effectiveDiameter,
+                        animScale * effectiveDiameter,
+                        animScale
+                    );
+                }
                 finalScale = animScale;
 
                 // Update base position for any drift effects
