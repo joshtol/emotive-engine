@@ -1,10 +1,25 @@
 /**
  * Test setup file for Emotive Engine
- * This file will be used for future test development
+ * Provides minimal stubs for browser APIs referenced by source modules
  */
 
-// Placeholder for future test setup
-export const testSetup = {
-    version: '4.0.0',
-    description: 'Emotive Engine test setup'
-};
+// Suppress console noise during tests
+const originalWarn = console.warn;
+const originalError = console.error;
+
+beforeAll(() => {
+    console.warn = (...args) => {
+        // Allow test-specific warnings through, suppress engine noise
+        if (args[0]?.includes?.('[EmotiveMascot]')) return;
+        originalWarn(...args);
+    };
+    console.error = (...args) => {
+        if (args[0]?.includes?.('[EmotiveMascot]')) return;
+        originalError(...args);
+    };
+});
+
+afterAll(() => {
+    console.warn = originalWarn;
+    console.error = originalError;
+});
