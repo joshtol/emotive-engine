@@ -299,7 +299,9 @@ export class Core3DManager {
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
-        this._skipRenderFrames = 0; // Frame counter for post-morph render skipping
+        this._postSwapHold = false;     // Hold morph at scale=0 after geometry swap
+        this._postSwapHoldTime = 0;     // Timestamp when post-swap hold started
+        this._postSwapFrameCount = 0;   // Frames elapsed since swap (min 2 for stability)
 
         // Blink animator (emotion-aware)
         this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
@@ -1448,6 +1450,24 @@ export class Core3DManager {
     }
 
     /**
+     * Check if the current custom material's textures have finished loading.
+     * Three.js textureLoader.load() returns a Texture immediately but the
+     * image data arrives asynchronously — .image is null until loaded.
+     * @returns {boolean} True if all textures are ready (or no custom material)
+     */
+    _isMaterialTextureReady() {
+        if (!this.customMaterial) return true;
+        const {uniforms} = this.customMaterial;
+        for (const key of Object.keys(uniforms)) {
+            const val = uniforms[key].value;
+            if (val && val.isTexture && !val.image) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Get current morph state for debugging/UI
      * @returns {Object} Morph state including progress, target, etc.
      */
@@ -1512,19 +1532,17 @@ export class Core3DManager {
             this.geometryMorpher.pauseAtSwap();
         }
 
-        // Check if async geometry finished loading while paused
-        if (morphState.waitingForGeometry && this._targetGeometry && !this._pendingGeometryLoad) {
+        // Check if async geometry finished loading while paused (pre-swap hold only)
+        if (morphState.waitingForGeometry && this._targetGeometry && !this._pendingGeometryLoad && !this._postSwapHold) {
             this.geometryMorpher.resumeFromSwap();
             // Re-trigger swap by setting hasSwappedGeometry back to false
             this.geometryMorpher.hasSwappedGeometry = false;
         }
 
-        // Swap geometry at midpoint (when scale is at minimum) for smooth transition
-        // Skip render for multiple frames after swap to let Three.js scene fully stabilize
-        // Single-frame skip isn't enough - null refs can persist for 1-2 additional frames
+        // Swap geometry at midpoint (when scale is at minimum ~0) for smooth transition
+        // After swap, pause the morph clock at scale=0 until material textures
+        // are loaded and Three.js scene has stabilized (min 2 frames).
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
-            // Skip render for 3 frames after swap to ensure scene is fully stable
-            this._skipRenderFrames = 3;
             // ═══════════════════════════════════════════════════════════════════
             // RESET OLD GEOMETRY STATE
             // Clear shader uniforms to defaults before swapping to prevent
@@ -1713,6 +1731,27 @@ export class Core3DManager {
                     this.calibrationRotation[1] = 0;
                     this.calibrationRotation[2] = 0;
                 }
+            }
+
+            // Hold morph at scale=0 until material textures are loaded
+            // and Three.js scene has stabilized (min 2 frames).
+            // Unlike the old _skipRenderFrames approach, this freezes the
+            // morph clock so the grow phase starts cleanly from scale=0.
+            this.geometryMorpher.pauseAtSwap();
+            this._postSwapHold = true;
+            this._postSwapHoldTime = Date.now();
+            this._postSwapFrameCount = 0;
+        }
+
+        // Post-swap hold: wait for material textures + scene stabilization before growing
+        if (this._postSwapHold && morphState.waitingForGeometry) {
+            this._postSwapFrameCount++;
+            const texturesReady = this._isMaterialTextureReady();
+            const minFramesPassed = this._postSwapFrameCount >= 2;
+            const timedOut = Date.now() - this._postSwapHoldTime > 500;
+            if ((texturesReady && minFramesPassed) || timedOut) {
+                this.geometryMorpher.resumeFromSwap();
+                this._postSwapHold = false;
             }
         }
 
@@ -3638,14 +3677,6 @@ export class Core3DManager {
                 const normalizedCoreColor = this._normalizedGlowColor || [1, 1, 1];
                 this.updateCrystalInnerCore(normalizedCoreColor, deltaTime);
             }
-        }
-
-        // Skip render for multiple frames after morph swap
-        // This prevents Three.js from iterating the scene while it's stabilizing
-        // The mascot is at scale ~0 during swap anyway, so skipping a few frames is invisible
-        if (this._skipRenderFrames > 0) {
-            this._skipRenderFrames--;
-            return;
         }
 
         // Render with Three.js

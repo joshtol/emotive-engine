@@ -205,20 +205,16 @@ export class GeometryMorpher {
         const elapsed = Date.now() - this.morphStartTime;
         const rawProgress = Math.min(elapsed / this.morphDuration, 1.0);
 
-        // Apply easing
+        // Apply easing — easeInOutCubic + per-phase quadratic already
+        // provides smooth motion. No additional smoothing filter needed;
+        // the old 60/40 EMA caused visualProgress to lag behind morphProgress,
+        // so the geometry swap at progress=0.5 happened while scale was still ~12%
+        // visible, producing a choppy pop.
         this.morphProgress = this.applyEasing(rawProgress);
-
-        // Smooth visual progress for ultra-smooth rendering (like 2D)
-        // Lighter smoothing (60/40) so scale can reach 0 at midpoint
-        this.visualProgress = this.visualProgress * 0.6 + this.morphProgress * 0.4;
-
-        // Snap to target when close (ensures we hit 0 at midpoint and 1 at end)
-        if (Math.abs(this.visualProgress - this.morphProgress) < 0.01) {
-            this.visualProgress = this.morphProgress;
-        }
+        this.visualProgress = this.morphProgress;
 
         // Calculate scale multiplier for shrink/grow effect
-        const scaleMultiplier = this.calculateScaleMultiplier(this.visualProgress);
+        const scaleMultiplier = this.calculateScaleMultiplier(this.morphProgress);
 
         // Signal to swap geometry at midpoint (when scale is at minimum ~0.5)
         // This makes the swap imperceptible

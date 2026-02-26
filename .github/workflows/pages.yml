@@ -571,12 +571,37 @@ jobs:
                 <div class="section-header">
                   <div class="section-icon webgl">&#x1F48E;</div>
                   <h2>3D WebGL Examples</h2>
-                  <span class="section-count">5 demos</span>
+                  <span class="section-count">6 demos</span>
                 </div>
 
                 <div class="bento-grid">
-                  <!-- Featured: 3D Demo -->
-                  <a href="examples/3d/3d-demo.html" class="card featured">
+                  <!-- Featured: Elemental Gestures -->
+                  <a href="examples/3d/elemental-gestures.html" class="card featured">
+                    <div class="card-preview">
+                      <img src="assets/previews/elemental-gestures.gif" alt="Elemental Gestures" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F525;</span></div>
+                      <div class="play-indicator"></div>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-meta">
+                        <span class="card-category webgl">WebGL</span>
+                        <span class="complexity">
+                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span>
+                        </span>
+                      </div>
+                      <h3>Elemental Gestures</h3>
+                      <p>8 elemental systems, 130+ gestures with GPU-instanced 3D effects. Fire, Water, Ice, Electricity, Earth, Nature, Light, Void — each with custom GLSL shaders, bloom, AO, and motion blur.</p>
+                      <div class="card-tags">
+                        <span class="tag">8 elements</span>
+                        <span class="tag">130+ gestures</span>
+                        <span class="tag">GLSL shaders</span>
+                        <span class="tag">post-processing</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  <!-- 3D Demo -->
+                  <a href="examples/3d/3d-demo.html" class="card medium">
                     <div class="card-preview">
                       <img src="assets/previews/3d-demo.gif" alt="3D Demo" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                       <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F310;</span></div>

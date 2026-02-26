@@ -31,6 +31,39 @@ open examples/hello-world.html
 
 ---
 
+## 🔥 3D Elemental Gestures — Flagship Demo
+
+<div align="center">
+
+<img src="../assets/previews/elemental-gestures.gif" alt="Elemental Gestures Demo" width="800" />
+
+</div>
+
+### **[elemental-gestures.html](3d/elemental-gestures.html)** ⭐⭐⭐ Advanced
+
+The most visually rich example — 8 elemental systems with 130+ unique gestures,
+GPU-instanced 3D effects, and custom GLSL shaders.
+
+**Elements:** Fire, Water, Ice, Electricity, Earth, Nature, Light, Void
+
+**Features demonstrated:**
+
+- **GPU-instanced rendering** — dozens of 3D elements per gesture at 60fps
+- **Custom GLSL materials** — per-element shaders (ice refraction, fire
+  turbulence, electric Voronoi bolts)
+- **Gesture choreography** — crowns, shields, pillars, vortexes, helixes,
+  barrages, meditations
+- **Post-processing pipeline** — bloom, ambient occlusion, distortion, velocity
+  motion blur
+- **mascotGlow system** — screen-space radiance halo on 53 gestures
+- **Cutout + grain** — two-layer noise patterns for organic edge dissolve
+
+**Complexity:** ⭐⭐⭐ Advanced
+
+**Requires:** `npm run build` (full 3D build)
+
+---
+
 ## 📚 Core Feature Examples
 
 ### **[basic-usage.html](basic-usage.html)** ⭐⭐ Intermediate
@@ -256,6 +289,7 @@ npm run serve
 
 | Example                                                                    | Complexity        | Best For                |
 | -------------------------------------------------------------------------- | ----------------- | ----------------------- |
+| **[elemental-gestures.html](3d/elemental-gestures.html)**                  | ⭐⭐⭐ Advanced   | 3D elemental effects    |
 | **[hello-world.html](hello-world.html)**                                   | ⭐ Beginner       | First-time learning     |
 | **[basic-usage.html](basic-usage.html)**                                   | ⭐⭐ Intermediate | Learning all features   |
 | **[breathing-app.html](breathing-app.html)**                               | ⭐⭐ Intermediate | Timed animations        |
