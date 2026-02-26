@@ -71,7 +71,7 @@ jobs:
 
       - name: Notify Slack (optional)
         if: success()
-        uses: slackapi/slack-github-action@v1
+        uses: slackapi/slack-github-action@v2
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
