@@ -43,10 +43,9 @@ import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion, listEmotions, hasEmotion } from '../core/emotions/index.js';
 import { getGesture, listGestures, warmUpGestures as _warmUpGestures, GESTURE_CATEGORIES } from '../core/gestures/index.js';
 import { FrameBudgetScheduler } from './FrameBudgetScheduler.js';
-// Import from ElementRegistrations (not ElementTypeRegistry directly) to ensure
-// all element types are registered — the register() calls are side effects in
-// ElementRegistrations.js that rollup will tree-shake if imported via the bare registry.
-import { ElementTypeRegistry } from './effects/ElementRegistrations.js';
+// Import bare registry — element type registrations are side effects in
+// ElementRegistrations.js, loaded only by index-with-elementals.js.
+import { ElementTypeRegistry } from './effects/ElementTypeRegistry.js';
 import { applySSSPreset as applySSS, SSSPresets } from './presets/SSSPresets.js';
 import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';

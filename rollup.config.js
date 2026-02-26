@@ -239,4 +239,88 @@ builds.push({
     }
 });
 
+// 3D build WITH ELEMENTALS (full elemental system — 151+ gestures, instanced materials)
+// Three.js is a peer dependency - not bundled (for npm consumers with bundlers)
+builds.push({
+    input: 'src/3d/index-with-elementals.js',
+    output: [
+        {
+            // ES Module - three.js external (for bundlers like Webpack, Vite)
+            file: 'dist/emotive-mascot-3d-elementals.js',
+            format: 'es',
+            sourcemap: true,
+            inlineDynamicImports: true,
+            banner: `/*! Emotive Engine 3D + Elementals v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+        },
+        {
+            // UMD - three.js external (expects global THREE)
+            file: 'dist/emotive-mascot-3d-elementals.umd.js',
+            format: 'umd',
+            name: 'EmotiveMascot3D',
+            exports: 'named',
+            sourcemap: true,
+            inlineDynamicImports: true,
+            banner: `/*! Emotive Engine 3D + Elementals v${process.env.npm_package_version || '3.0.0'} | MIT License */`,
+            globals: {
+                three: 'THREE'
+            }
+        }
+    ],
+    external: ['three'],
+    plugins: [
+        ...threeDPlugins,
+        ...(isProduction ? [terser({
+            compress: {
+                drop_console: false,
+                drop_debugger: true,
+                passes: 2
+            },
+            mangle: {
+                properties: false
+            },
+            format: {
+                comments: false
+            }
+        })] : [])
+    ],
+    treeshake: {
+        moduleSideEffects: true  // Preserve side-effect imports (element registrations + gesture registration)
+    }
+});
+
+// 3D build WITH ELEMENTALS BUNDLED (includes Three.js - for static HTML examples)
+builds.push({
+    input: 'src/3d/index-with-elementals.js',
+    output: [
+        {
+            // ES Module with Three.js bundled - for static HTML demos
+            file: 'dist/emotive-mascot-3d-elementals.bundled.js',
+            format: 'es',
+            sourcemap: true,
+            inlineDynamicImports: true,
+            banner: `/*! Emotive Engine 3D + Elementals (bundled) v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+        }
+    ],
+    // No external - bundle everything including Three.js
+    plugins: [
+        ...threeDPlugins,
+        ...(isProduction ? [terser({
+            compress: {
+                drop_console: false,
+                drop_debugger: true,
+                passes: 2
+            },
+            mangle: {
+                properties: false
+            },
+            format: {
+                comments: false
+            }
+        })] : [])
+    ],
+    treeshake: {
+        moduleSideEffects: true  // Preserve side-effect imports (element registrations + gesture registration)
+    }
+});
+
 export default builds;

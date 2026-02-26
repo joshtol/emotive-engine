@@ -26,8 +26,8 @@ import { ElementInstancePool, SLOTS_PER_ELEMENT } from './ElementInstancePool.js
 import { MergedGeometryBuilder } from './MergedGeometryBuilder.js';
 
 // Element type registry - decouples spawner from specific element implementations
-// Import from ElementRegistrations to ensure all element types are registered
-import { ElementTypeRegistry } from './ElementRegistrations.js';
+// Import bare registry — element registrations are side effects loaded by index-with-elementals.js
+import { ElementTypeRegistry } from './ElementTypeRegistry.js';
 
 // Spatial reference for mascot-relative positioning
 import { MascotSpatialRef } from './MascotSpatialRef.js';

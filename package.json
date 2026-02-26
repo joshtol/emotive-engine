@@ -121,7 +121,10 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "src/3d/effects/ElementRegistrations.js",
+    "src/core/gestures/elemental-gestures.js"
+  ],
   "devDependencies": {
     "@gltf-transform/cli": "^4.3.0",
     "@rollup/plugin-commonjs": "^28.0.6",

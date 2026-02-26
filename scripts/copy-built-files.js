@@ -67,6 +67,33 @@ const PUBLIC_FILES_TO_COPY = [
     {
         src: 'emotive-mascot-3d.bundled.js.map',
         dest: 'emotive-engine-3d.bundled.js.map'
+    },
+    // 3D Engine WITH ELEMENTALS (ES Module)
+    {
+        src: 'emotive-mascot-3d-elementals.js',
+        dest: 'emotive-engine-3d-elementals.js'
+    },
+    {
+        src: 'emotive-mascot-3d-elementals.js.map',
+        dest: 'emotive-mascot-3d-elementals.js.map'
+    },
+    // 3D Engine WITH ELEMENTALS (UMD fallback)
+    {
+        src: 'emotive-mascot-3d-elementals.umd.js',
+        dest: 'emotive-engine-3d-elementals.umd.js'
+    },
+    {
+        src: 'emotive-mascot-3d-elementals.umd.js.map',
+        dest: 'emotive-mascot-3d-elementals.umd.js.map'
+    },
+    // 3D Engine WITH ELEMENTALS BUNDLED (includes Three.js - for static HTML demos)
+    {
+        src: 'emotive-mascot-3d-elementals.bundled.js',
+        dest: 'emotive-engine-3d-elementals.bundled.js'
+    },
+    {
+        src: 'emotive-mascot-3d-elementals.bundled.js.map',
+        dest: 'emotive-engine-3d-elementals.bundled.js.map'
     }
 ];
 
