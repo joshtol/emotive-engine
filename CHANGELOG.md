@@ -9,33 +9,142 @@ and this project uses
 
 ## [Unreleased]
 
-### 🎵 Groove Preset System
+## [3.3.8] - 2026-02-26
 
-#### Frame-Rate Independent Timing
+### 🌊 Elemental Effects System
 
-- **FIXED** Groove animation desync on frame drops by removing `grooveTime`
-  accumulator
-- **CHANGED** Groove now computed from absolute `beatProgress`/`barProgress`
-  (performance.now() based)
-- **ADDED** deltaTime clamping (50ms max) to prevent smoothing overshoot during
-  frame drops
-- **INCREASED** `grooveSmoothingSpeed` to 12.0 for tighter beat sync
+- **ADDED** complete elemental effects architecture with GPU-instanced
+  rendering, per-element materials, model spawning, and overlay shaders for 8
+  element types
+- **ADDED** fire element system — FBM-based overlay shader, instanced flame
+  materials with decoupled color/alpha, 16 gestures including blaze, radiate,
+  scorch, firepillar (3-layer split), firehelix, firedrill, fireflourish (sword
+  flourish trail), and firemeditation
+- **ADDED** water element system — screen-space refraction shader, deep blue
+  color palette, additive blending rewrite, spray particle atmospherics with
+  velocity physics, 19 gestures including watertide (camera-locked wave-curl),
+  watersplash, waterflow, watervortex (spiral cutout), and watertwirl
+- **ADDED** ice element system — instanced ice material with Snell's law
+  refraction, chromatic dispersion, Voronoi crack lines (Chebyshev distance),
+  volumetric bubbles, internal fracture planes, frost veins with break-mask
+  clustering, and per-element bloom threshold control
+- **ADDED** electricity element system — 3D Voronoi edge-distance lightning
+  shader (3-scale bolts), GPU-instanced materials matching overlay, lightning
+  flash mechanic (opt-in per-gesture with exponential decay), 19 gestures
+  including zap (4-event flash), surge, blast, and electric aura
+- **ADDED** void element system — ProceduralVoidMaterial with rift support,
+  darkness absorption overlay, distortion, and atmospherics
+- **ADDED** earth and light element systems with SSAO contact shadows, warm
+  color realism, 16-bit AO targets, and soft dust particles
+- **ADDED** nature element system — modern overlay with consumption-field
+  pattern, falling leaf particle volumetrics, branching vein shader
+- **ADDED** soul behavior system with mix/crossfade transitions, true 3D noise,
+  and stable blend layers
+- **ADDED** mascotGlow effect across all elements
+- **ADDED** per-mascot bloom threshold system with soft clamp
+- **ADDED** ElementTypeRegistry with registration-based architecture replacing
+  legacy ElementSpawner
 
-#### Groove Presets
+### ✨ Visual Effect Systems
 
-- **ADDED** `groove1`: Subtle, elegant - gentle bounce and sway (default)
-- **ADDED** `groove2`: Energetic, bouncy - pronounced vertical motion, playful
-- **ADDED** `groove3`: Smooth, flowing - emphasis on rotation and sway, languid
-- **ADDED** Seamless morphing between groove presets during transitions
+- **ADDED** two-layer composable cutout system with blend modes, angular/radial
+  travel modes, bellWidth parameter, and geometric masks
+- **ADDED** discard-based grain system (film grain type) for all elements
+- **ADDED** post-processing heat shimmer distortion for fire gestures
+- **ADDED** ice cold-air refraction distortion effect
+- **ADDED** per-gesture targeted particle atmospheric system with velocity
+  physics
+- **ADDED** smoke atmospherics to all 17 fire gestures
+- **ADDED** mist atmospherics to all 15 ice gestures with wispy shader
+- **ADDED** ozone atmospherics to all 19 electricity gestures
+- **ADDED** spray particle atmospherics for water gestures
+- **ADDED** depth-aware velocity motion blur with element isolation
+- **FIXED** dark edge halos eliminated with premultipliedAlpha and bloom tuning
+- **FIXED** bloom restored to 0.75 resolution with bicubic upsampling and
+  dithering
 
-#### API
+### 🎭 Gesture Expansion
 
-- **ADDED** `mascot.setGroove(name)` - Immediate switch to groove preset
-- **ADDED** `mascot.setGroove(name, { bars: N })` - Morph over N bars
-- **ADDED** `mascot.setGroove(name, { duration: N })` - Morph over N seconds
-- **ADDED** `mascot.getGroovePresets()` - Returns available preset names
-- **ADDED** `mascot.getCurrentGroove()` - Returns active preset name
-- **EXPORTED** `GROOVE_PRESETS` constant for preset inspection
+- **ADDED** 14 directional dance gestures (step/slide/lean/kick in 4 directions)
+  with factory pattern and camera-relative movement
+- **ADDED** runtime geometry shatter system with LRU cache, crystal materials,
+  and soul reveal effect
+- **ADDED** shader-based mesh deformation for localized impact effects
+- **ADDED** object-space persistent crack damage system
+- **ADDED** generalized relay arc system for chained effects
+- **ADDED** twirl and meditation gesture archetypes with distinct per-element
+  patterns
+- **ADDED** mandala and positioned formation types for XYZ ring placement
+- **ADDED** strands parameter for double helix spiral formations
+- **REFACTORED** gestures reorganized into 6 semantic categories and per-element
+  subdirectories
+- **REMOVED** poison/smoke elements and all hardcoded factory gestures
+
+### 🎵 Audio & LLM Integration
+
+- **ADDED** LLM Audio Interpreter for semantic lyrics-to-action mapping
+- **ADDED** LRC lyrics auto-loading support
+
+### 🎯 UP-RESONANCE Engine
+
+- **ADDED** rhythm-emotion integration system with 7 engine features
+- **ADDED** emotion event hooks for external integrations
+- **ADDED** grade-to-emotion feedback loop linking rhythm accuracy to emotional
+  state
+- **ADDED** emotion dampening system for resilience and smooth state transitions
+- **ADDED** effective BPM query with emotion modifiers
+- **ADDED** state serialization for persistence and session restore
+- **ADDED** difficulty presets and assist modes for accessibility
+- **ADDED** timed auto-expiring modifier system
+- **ADDED** stance registry, scene transitions, and ambient mood systems
+- **ADDED** frame-budget-aware gesture loading for zero initial chug
+
+### ⚡ Performance Optimizations
+
+- **OPTIMIZED** ice shader — dropped fine crack layer (~120 ALU saved),
+  bubbleField reduced to 2D (27→9 iterations), cached Voronoi cells
+- **OPTIMIZED** fire shader — replaced 8 simplex noise calls with cheap hash
+  noise, reduced layeredTurbulence from 4 to 2 layers
+- **OPTIMIZED** water shader — sin-free caustic hash, squared distance
+  calculations
+- **OPTIMIZED** electric shader — sin-free hash in Voronoi, dropped tertiary
+  scale (saves 27 iterations/frag), removed sparks3D
+- **OPTIMIZED** nature shader — forward diff + fbm3 in branchingVeins, dropped
+  fine vein pass (saves 16 noise calls)
+- **OPTIMIZED** earth shader — consolidated fragment noise calls (~22% fewer
+  hash ops)
+- **OPTIMIZED** crystal shader — monochrome caustics, single-octave FBM
+- **OPTIMIZED** DoubleSide changed to FrontSide for additive-blended materials
+- **OPTIMIZED** trail copies reduced from 3 to 1, halving instance count
+- **OPTIMIZED** lazy-load element pools to eliminate GPU overhead at startup
+- **FIXED** 20fps idle performance regression
+
+### 🏗️ Architecture & Refactoring
+
+- **REFACTORED** fire, water, and ice overlay materials to modern
+  consumption-field pattern
+- **REFACTORED** all water materials rewritten to additive blending
+- **REFACTORED** materials directory overhauled — dead code deleted, shader
+  cores inlined, reorganized into subdirectories
+- **ADDED** elemental system split into separate bundle
+- **ADDED** gyroscope rotation and additive emotion blending for animations
+- **ADDED** per-element rotation with musical timing
+- **ADDED** ResizeObserver for dynamic canvas sizing with DPR cap raised to 2.0
+- **REMOVED** circular dependencies in gesture factories
+
+### 🔧 Build & Code Quality
+
+- **MIGRATED** ESLint to flat config with eslint-config-prettier integration
+- **INTEGRATED** Prettier for consistent code formatting across 690+ files
+- **ADDED** Dependabot for automated npm and GitHub Actions dependency updates
+- **FIXED** CI test stability — vitest sharding, threads pool, memory limits
+- **REMOVED** debug artifacts, dev audio tracks, and internal documentation
+
+### 📱 Site & Mobile
+
+- **ADDED** elemental gestures demo page with mobile responsive 2-col grid
+- **FIXED** GitHub Pages deployment with relative paths and bundled Three.js
+- **FIXED** 3D canvas clipping and mobile panel readability
 
 ## [3.3.8] - 2026-01-14
 
@@ -158,6 +267,177 @@ and this project uses
   controls)
     - Toggle setup functions now support deferred mascot initialization
     - Handlers check mascot availability at click time instead of setup time
+
+## [3.3.0] - 2026-01-14
+
+### 🎵 Groove Preset System
+
+#### Frame-Rate Independent Timing
+
+- **FIXED** Groove animation desync on frame drops by removing `grooveTime`
+  accumulator
+- **CHANGED** Groove now computed from absolute `beatProgress`/`barProgress`
+  (performance.now() based)
+- **ADDED** deltaTime clamping (50ms max) to prevent smoothing overshoot during
+  frame drops
+- **INCREASED** `grooveSmoothingSpeed` to 12.0 for tighter beat sync
+
+#### Groove Presets
+
+- **ADDED** `groove1`: Subtle, elegant - gentle bounce and sway (default)
+- **ADDED** `groove2`: Energetic, bouncy - pronounced vertical motion, playful
+- **ADDED** `groove3`: Smooth, flowing - emphasis on rotation and sway, languid
+- **ADDED** Seamless morphing between groove presets during transitions
+
+#### API
+
+- **ADDED** `mascot.setGroove(name)` - Immediate switch to groove preset
+- **ADDED** `mascot.setGroove(name, { bars: N })` - Morph over N bars
+- **ADDED** `mascot.setGroove(name, { duration: N })` - Morph over N seconds
+- **ADDED** `mascot.getGroovePresets()` - Returns available preset names
+- **ADDED** `mascot.getCurrentGroove()` - Returns active preset name
+- **EXPORTED** `GROOVE_PRESETS` constant for preset inspection
+
+#### Groove Confidence
+
+- **ADDED** Groove confidence system (0.15-1.0) that ramps animation intensity
+  as BPM detection locks in
+    - Creates natural "searching -> confident -> grooving" animation progression
+
+#### Enhanced Groove Features
+
+- **ADDED** Easing curves (bounce/elastic/sine) for groove character
+- **ADDED** Accent and downbeat response with smooth cosine curves
+- **ADDED** `grooveGlow` channel for beat-synced glow pulsing
+- **ADDED** Multi-axis motion: Z-drift, X/Y tilt for organic 3D feel
+- **CHANGED** Groove blends at 30% during gestures instead of disabling
+- **ADDED** Emotion-to-groove mapping (energetic→groove2, calm→groove1,
+  zen→groove3)
+- **REDUCED** Breathing depth to 40% during groove to avoid visual interference
+- **FIXED** Phantom bar counting and morphs when rhythm is not playing
+
+### 🎮 Camera-Relative Gesture System
+
+- **ADDED** Camera-relative position support in GestureBlender
+- **ADDED** World-space transform of camera-relative coordinates in
+  Core3DManager
+- **UPDATED** Nod, headBob, wiggle, and burst gestures to move toward/away from
+  camera
+- **ADDED** DanceChoreographer for beat-synchronized dance choreography
+
+### 🏗️ Dependency Injection Architecture
+
+Major internal refactor replacing implicit `mascot` references with explicit
+dependency injection across 6 domains and 27+ manager classes.
+
+- **ADDED** `CoreContext` with `createCoreContext()` and mock helpers for
+  testing
+- **ADDED** `SharedState` observable state container
+- **REFACTORED** All 6 manager domains to DI pattern (State, Rendering,
+  Animation, Audio, Control, Performance/System)
+- **UPDATED** InitializationManager to use explicit DI construction
+- **REMOVED** Legacy `_diStyle` flags and backward-compatibility mode
+- **ADDED** Constructor validation with explicit error messages to all managers
+- **EXTRACTED** `MascotStateManager` class to centralize mutable state with
+  `stateChange` events
+- **EXTRACTED** `ModularHandlersInitializer` from InitializationManager
+
+### 🌐 Multi-Instance & SSR Support
+
+- **REMOVED** Global singleton from `AnimationLoopManager` — supports multiple
+  mascot instances on one page
+- **ADDED** SSR guards with descriptive error message at top of `init()`
+- **EXPORTED** `isSSR()` helper for framework detection (Next.js, Nuxt 3)
+
+### ✨ Developer Experience & API Quality
+
+- **ADDED** Input validation to `setEmotion()`, `express()`, `morphTo()` with
+  helpful warnings
+- **ADDED** `getAvailableEmotions()`, `getAvailableGestures()`,
+  `getAvailableGeometries()` discovery helpers
+- **STANDARDIZED** All state-changing methods return `this` for chaining
+- **ADDED** "Did you mean?" suggestions with Levenshtein distance for typos
+- **ADDED** `EmotionConfig` and `GestureConfig` TypeScript interfaces
+- **ADDED** Centralized magic numbers in `config/defaults.js`
+- **ADDED** Unified deltaTime caps across the entire codebase
+- **ADDED** `prefers-reduced-motion` detection and automatic animation scaling
+- **IMPROVED** Error messages with dynamic values and consistent prefixes
+
+### 🐛 Bug Fixes & Reliability
+
+- **FIXED** WebGL context loss and restore for custom materials
+- **FIXED** HDRI loading on GitHub Pages with auto-detected base path
+- **RESOLVED** All ESLint warnings and errors across core files
+
+### 🧪 Testing
+
+- **ADDED** 379 new tests bringing total from 518 to 897 (+73%)
+    - Integration tests for 10-phase initialization flow
+    - Unit tests for EventManager, EmotionCache, GestureCache, ShapeCache
+    - Unit tests for ErrorTracker, ErrorBoundary, StateStore, DegradationManager
+    - EmotiveMascot3D unit tests and API parity tests
+- **ADDED** Performance benchmarks for particle, emotion, cache, and suggestion
+  systems
+
+### 🔧 Refactoring
+
+- **EXTRACTED** `BehaviorController` from Core3DManager
+- **EXTRACTED** `AudioBridge` from EmotiveMascot3D
+- **EXTRACTED** `CanvasLayerManager` from EmotiveMascot3D
+- **CONSOLIDATED** Rotation files and removed dead code
+
+## [3.2.3] - 2025-12-20
+
+### 🛠️ Fixes
+
+- **REPLACED** deprecated `RGBELoader` with `HDRLoader` for future-proof HDR
+  environment loading
+- **ELIMINATED** magenta flash on 3D initialization with multi-path HDR loading
+  fallback
+- **EXPORTED** `CrystalSoul` class for external geometry preloading workflows
+- **ADDED** null check for geometry parameters to prevent runtime errors
+
+### 📝 TypeScript
+
+- **COMPLETED** TypeScript definitions covering the full public API surface
+
+### 🏗️ Refactoring
+
+- **EXTRACTED** discrete managers from `Core3DManager` for cleaner separation of
+  concerns
+- **EXTRACTED** `CameraPresetManager` from `ThreeRenderer`
+- **DELEGATED** eclipse and breathing effects to dedicated manager classes
+
+## [3.2.1] - 2025-12-15
+
+### ✨ feel() API — Natural Language LLM Integration
+
+- **ADDED** `feel()` API for natural-language emotion control — connect any LLM
+  and drive the mascot with plain English (e.g.
+  `mascot.feel('happy, bouncing')`)
+- **ADDED** `breathePhase()` API for meditation and breathing-exercise control
+- **ADDED** LLM Integration Guide documentation
+
+### 💎 Star Crystal Geometry
+
+- **ADDED** Star crystal geometry with citrine, topaz, and diamond SSS presets
+- **ADDED** 3D fine-tuning and undertone visibility improvements
+
+### 🌐 GitHub Pages Gallery
+
+- **LAUNCHED** GitHub Pages example gallery with animated bento grid hero and
+  live 3D crystal mascot
+- **ADDED** `assetBasePath` option for flexible deployment paths (CDN,
+  subfolders, GitHub Pages)
+- **ADDED** Preview GIFs and demo gallery to README
+
+### 🐛 Fixes
+
+- **IMPROVED** Mobile responsiveness for examples and Cherokee page
+- **FIXED** Android viewport handling and vertical scroll issues
+- **CORRECTED** Moon texture folder casing for case-sensitive Linux deployments
+- **REMOVED** BlackHole geometry and all references (scope reduction)
+- **RENAMED** site title from "Rhythm Game" to "Emotion-Driven Animation"
 
 ## [3.2.0] - 2025-12-12 - 3D Engine & Audio Sync
 
@@ -735,7 +1015,7 @@ fake methods like:
 ✅ Everything now matches [examples/hello-world.html](examples/hello-world.html)
 and other working examples!
 
-## [3.0.0] - 2025-10-20 - Semantic Performance System 🎭
+## [2.9.0] - 2025-10-20 - Semantic Performance System 🎭
 
 ### 🎯 Major Feature: Context-Aware Performance Choreography
 
@@ -1069,8 +1349,6 @@ This production-ready release was achieved through systematic planning, rigorous
 testing, and careful refactoring. Special thanks to the 10-day production plan
 framework that guided this transformation.
 
----
-
 ### ✨ Public API Enhancements
 
 #### Instant Emotion Transitions
@@ -1098,7 +1376,17 @@ framework that guided this transformation.
 - **Added** examples for all parameter formats
 - **Documented** use case for instant transitions to prevent particle artifacts
 
-## [2.6.0] - 2026-01-14
+---
+
+## Pre-Public Development History
+
+_The versions below track internal development milestones before the first
+public release (v2.5.0, October 2025). Version numbers were restarted for the
+public release._
+
+---
+
+## [2.6.0] - 2025-01-14
 
 ### 🎯 Rotation & Braking System Overhaul
 

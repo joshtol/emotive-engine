@@ -243,8 +243,7 @@ src/
 │   ├── easing.js                   # Easing functions
 │   ├── PositionController.js       # Position management
 │   ├── browserCompatibility.js     # Browser detection
-│   ├── debugger.js                 # Debug utilities
-│   └── sentry.js                   # Error reporting
+│   └── debugger.js                 # Debug utilities
 │
 ├── EmotiveMascot.js                # Internal orchestrator
 ├── EmotiveMascotPublic.js          # Public API wrapper

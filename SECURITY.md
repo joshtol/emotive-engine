@@ -108,7 +108,6 @@ Emotive Engine implements multiple security layers:
 
 ### Monitoring
 
-- **Sentry Integration**: Optional error tracking (user-configured)
 - **Performance Monitoring**: Built-in performance APIs
 - **Audit Logging**: Available through custom event handlers
 
@@ -315,7 +314,7 @@ We thank the following security researchers for responsible disclosure:
 
 ---
 
-**Last Updated**: 2025-01-27 **Version**: 2.0
+**Last Updated**: 2026-02-26 **Version**: 3.3.8
 
 ---
 
