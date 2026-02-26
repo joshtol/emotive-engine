@@ -56,7 +56,9 @@ jobs:
             dist/emotive-mascot.umd.js
             dist/emotive-mascot.lean.umd.js
             dist/emotive-mascot-3d.umd.js
+            dist/emotive-mascot-3d-elementals.umd.js
             types/index.d.ts
+            types/3d.d.ts
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') || contains(steps.version.outputs.VERSION, 'rc') }}
         env:

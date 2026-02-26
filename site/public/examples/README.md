@@ -534,9 +534,12 @@ mascot.on('resize', data => {
 
 ## 📚 Additional Resources
 
-- **[Main README](../README.md)** - Project overview and features
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
-- **[ARCHITECTURE.md](../docs/ARCHITECTURE.md)** - Codebase architecture
+- **[Main README](https://github.com/joshtol/emotive-engine#readme)** - Project
+  overview and features
+- **[CONTRIBUTING.md](https://github.com/joshtol/emotive-engine/blob/main/CONTRIBUTING.md)** -
+  Contribution guidelines
+- **[ARCHITECTURE.md](https://github.com/joshtol/emotive-engine/blob/main/docs/ARCHITECTURE.md)** -
+  Codebase architecture
 - **[LLM Integration Guide](llm-integration/README.md)** - AI integration docs
 
 ---

@@ -178,12 +178,6 @@ We follow **responsible disclosure** principles:
 const mascot = new EmotiveMascot({
     canvasId: 'safe-canvas',
     emotion: 'neutral',
-    performanceMode: 'balanced',
-    sentry: {
-        enabled: true,
-        dsn: 'YOUR_SENTRY_DSN',
-        environment: 'production',
-    },
 });
 
 // ❌ Bad: Accepting untrusted user input
@@ -257,12 +251,8 @@ our implementation.
 
 ### Third-Party Dependencies
 
-We minimize dependencies but include:
-
-- `@sentry/browser` (error tracking)
-- `@babel/runtime` (polyfills)
-
-All dependencies are:
+Emotive Engine has zero runtime dependencies. The only peer dependency is
+`three` (for the 3D module). All dev dependencies are:
 
 - Regularly audited for vulnerabilities
 - Pinned to specific versions
@@ -279,9 +269,9 @@ have minimal practical risk for typical use cases.
 
 ### Third-Party Audits
 
-| Date    | Auditor | Scope                         | Report |
-| ------- | ------- | ----------------------------- | ------ |
-| 2025-Q2 | Planned | Full codebase security review | TBD    |
+| Date | Auditor | Scope                         | Report |
+| ---- | ------- | ----------------------------- | ------ |
+| —    | Planned | Full codebase security review | TBD    |
 
 ### Internal Reviews
 

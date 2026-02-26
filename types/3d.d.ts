@@ -460,7 +460,7 @@ export class EmotiveMascot3D {
     getAvailableGeometries(): string[];
 
     /** Set groove preset */
-    setGroove(preset: string): EmotiveMascot3D;
+    setGroove(preset: string, options?: { bars?: number; duration?: number }): EmotiveMascot3D;
 
     /** Enable crystal soul effect */
     enableCrystalSoul(): EmotiveMascot3D;
@@ -870,6 +870,13 @@ export function getBlendModeName(index: number): BlendMode;
 
 /** Get blend mode index by name */
 export function getBlendModeIndex(name: BlendMode): number;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILITY EXPORTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Check if running in a server-side rendering environment */
+export function isSSR(): boolean;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEFAULT EXPORT
