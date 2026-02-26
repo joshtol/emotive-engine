@@ -16,9 +16,11 @@
 - [Features](#features)
 - [Demo Gallery](#demo-gallery)
 - [Installation](#installation)
+- [3D Assets (Models & Textures)](#3d-assets-models--textures)
 - [LLM Integration with feel()](#llm-integration-with-feel)
 - [Emotions](#emotions)
 - [Gestures](#gestures)
+- [Elemental Gestures (3D)](#elemental-gestures-3d)
 - [3D Geometries](#3d-geometries)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
@@ -97,7 +99,7 @@ rendering.
 **Shared across both modes:**
 
 - 15 emotional states with smooth transitions
-- 60+ expressive gestures including directional movements
+- 180+ base gestures including directional movements
 - **Natural language `feel()` API** for LLM integration
 - TypeScript definitions
 - Unified API
@@ -201,6 +203,49 @@ Or via CDN:
 
 ---
 
+## 3D Assets (Models & Textures)
+
+The npm package ships **JavaScript only** — GLB models, textures, and HDRI maps
+are **not** included to keep the package lean (~4 MB vs ~28 MB).
+
+The assets live in the repository under `assets/models/` and `assets/textures/`.
+To use 3D mode, self-host them and point the engine at your copy:
+
+```javascript
+const mascot = new EmotiveMascot3D({
+    coreGeometry: 'crystal',
+    assetBasePath: '/assets', // wherever you host the assets folder
+});
+```
+
+### Hosting Options
+
+| Option                | Example `assetBasePath`                                                  |
+| --------------------- | ------------------------------------------------------------------------ |
+| **Copy to `public/`** | `'/assets'`                                                              |
+| **CDN / S3**          | `'https://cdn.example.com/emotive-engine/assets'`                        |
+| **GitHub Pages**      | `'https://joshtol.github.io/emotive-engine/assets'`                      |
+| **unpkg (repo)**      | `'https://raw.githubusercontent.com/joshtol/emotive-engine/main/assets'` |
+
+The expected directory structure under your `assetBasePath`:
+
+```
+<assetBasePath>/
+├── models/
+│   └── Elements/       # GLB models for elemental effects
+├── textures/
+│   ├── Crystal/        # Crystal & heart geometry textures
+│   ├── Moon/           # Moon geometry textures
+│   └── Sun/            # Sun geometry textures
+└── hdri/               # Environment maps (optional, enhances reflections)
+```
+
+> Assets are available in the repository under `assets/` and `public/hdri/`.
+
+> **2D mode does not require any external assets** — it works out of the box.
+
+---
+
 ## Quick Start
 
 ### 3D Mode (WebGL)
@@ -209,7 +254,8 @@ Or via CDN:
 import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
 
 const mascot = new EmotiveMascot3D({
-    coreGeometry: 'crystal', // crystal, moon, sun, heart, sphere
+    coreGeometry: 'crystal', // crystal, diamond, heart, moon, rough, sphere, star, sun
+    assetBasePath: '/assets', // path to self-hosted assets (see 3D Assets section)
     enableParticles: true,
     enablePostProcessing: true,
 });
@@ -304,7 +350,7 @@ mascot.setEmotion('calm', 'peaceful'); // with undertone
 
 ## Gestures
 
-60+ expressive gestures in multiple categories:
+180+ base gestures in multiple categories:
 
 **Motion:** `bounce`, `pulse`, `shake`, `nod`, `sway`, `float`, `wiggle`, `lean`
 
@@ -335,15 +381,50 @@ mascot.feel('look to the stars'); // Natural language → pointUp
 
 ---
 
+## Elemental Gestures (3D)
+
+The elemental bundle adds **160+ gestures** across 8 elements, each with custom
+GLSL shaders, instanced GPU models, and per-element bloom thresholds:
+
+| Element         | Gestures | Key Effects                                |
+| --------------- | -------- | ------------------------------------------ |
+| **Fire**        | 19       | Additive flame stacking, decoupled alpha   |
+| **Water**       | 20       | Splash rings, flow dynamics                |
+| **Ice**         | 16       | Voronoi cracks, subsurface refraction      |
+| **Electricity** | 22       | 3D Voronoi bolts, lightning flash mechanic |
+| **Earth**       | 22       | Petrify, rumble, quake effects             |
+| **Nature**      | 21       | Entangle, bloom, seed burst                |
+| **Light**       | 23       | Purify, beacon, ascend                     |
+| **Void**        | 17       | Singularity, drain, corruption             |
+
+```javascript
+// Use the elementals bundle for 3D elemental gestures
+import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
+import '@joshtol/emotive-engine/src/core/gestures/elemental-gestures.js';
+import '@joshtol/emotive-engine/src/3d/effects/ElementRegistrations.js';
+
+mascot.express('firecrown');
+mascot.express('icevortex');
+mascot.express('electricZap');
+```
+
+> Elemental gestures require the 3D assets to be self-hosted — see
+> [3D Assets](#3d-assets-models--textures).
+
+---
+
 ## 3D Geometries
 
 | Geometry  | Description               | Shader                   |
 | --------- | ------------------------- | ------------------------ |
 | `crystal` | Faceted hexagonal crystal | Subsurface scattering    |
-| `moon`    | Realistic lunar surface   | Custom phase shader      |
-| `sun`     | Solar sphere with corona  | Emissive + corona layers |
+| `diamond` | Brilliant-cut diamond     | Subsurface scattering    |
 | `heart`   | Heart-shaped crystal      | Subsurface scattering    |
+| `moon`    | Realistic lunar surface   | Custom phase shader      |
+| `rough`   | Rough organic crystal     | Subsurface scattering    |
 | `sphere`  | Smooth sphere             | Standard PBR             |
+| `star`    | Five-pointed star         | Subsurface scattering    |
+| `sun`     | Solar sphere with corona  | Emissive + corona layers |
 
 ```javascript
 mascot.morphTo('heart'); // Runtime geometry morphing
@@ -364,11 +445,11 @@ setMoonPhase(mascot.core3D, MOON_PHASES.CRESCENT_WAXING);
 ### Eclipse Effects
 
 ```javascript
-// Solar eclipse with corona
-mascot.core3D.setSolarEclipse(0.8); // 0-1 coverage
+// Solar eclipse (animated transition)
+mascot.startSolarEclipse({ type: 'total' }); // 'total' or 'annular'
 
 // Lunar eclipse (blood moon)
-mascot.core3D.setLunarEclipse(1.0); // Full umbra
+mascot.startLunarEclipse({ type: 'total' }); // 'total', 'partial', or 'penumbral'
 ```
 
 ---
@@ -380,7 +461,8 @@ mascot.core3D.setLunarEclipse(1.0); // Full umbra
 ```javascript
 new EmotiveMascot3D({
     // Geometry
-    coreGeometry: 'crystal',
+    coreGeometry: 'crystal', // crystal, diamond, heart, moon, rough, sphere, star, sun
+    assetBasePath: '/assets',
 
     // Rendering
     enableParticles: true,
