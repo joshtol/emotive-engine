@@ -5,7 +5,7 @@
  * Keeps: All emotions, gestures, color interpolation, particle system
  *
  * @module emotive-engine/lean
- * @version 3.3.0
+ * @version 3.3.8
  */
 
 // ============================================================================

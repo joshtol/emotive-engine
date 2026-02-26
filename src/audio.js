@@ -4,7 +4,7 @@
  * Optimized for music-reactive applications
  *
  * @module emotive-engine/audio
- * @version 3.3.0
+ * @version 3.3.8
  */
 
 // ============================================================================

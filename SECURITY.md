@@ -103,8 +103,8 @@ Emotive Engine implements multiple security layers:
 
 - **Supply Chain**: Dependencies pinned to specific versions
 - **Build Reproducibility**: Deterministic builds with checksums
-- **Code Signing**: Releases signed with GPG key (coming soon)
-- **SBOM**: Software Bill of Materials available (coming soon)
+- **Code Signing**: Planned for future releases
+- **SBOM**: Planned for future releases
 
 ### Monitoring
 

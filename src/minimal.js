@@ -4,7 +4,7 @@
  * No audio features - optimized for smallest bundle size
  *
  * @module emotive-engine/minimal
- * @version 3.3.0
+ * @version 3.3.8
  */
 
 // ============================================================================

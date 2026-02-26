@@ -5,7 +5,7 @@
  * It provides a clean API surface for consumers.
  *
  * @module emotive-engine
- * @version 3.3.0
+ * @version 3.3.8
  */
 
 // ============================================================================

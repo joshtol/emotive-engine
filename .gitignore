@@ -127,4 +127,8 @@ test-output.txt
 calibration-output.log
 docs/GDD.md
 docs/UP-MATS.md
-src/3d/effects/DISTORTION.md
+src/**/*.md
+
+# Dev/test audio tracks (calibration clicks, BPM test files)
+site/public/assets/tracks/calibration/
+site/public/assets/tracks/test/
