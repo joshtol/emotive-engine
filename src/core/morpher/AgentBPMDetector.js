@@ -446,8 +446,6 @@ export class AgentBPMDetector {
                     this.lockStage = 2;
                     this.stage2CorrectionApplied = true;
                     this.correctionType = 'halved';
-                    // Debug: const reason = shouldHalveByPattern
-                    //     ? `pattern: ${positiveChecks}/${this._recentSubdivisionChecks.length} checks, altScore=${(avgAltScore*100).toFixed(0)}%`
                 }
             }
 

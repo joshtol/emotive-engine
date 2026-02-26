@@ -128,6 +128,7 @@ calibration-output.log
 docs/GDD.md
 docs/UP-MATS.md
 src/**/*.md
+assets/**/*.md
 
 # Dev/test audio tracks (calibration clicks, BPM test files)
 site/public/assets/tracks/calibration/
