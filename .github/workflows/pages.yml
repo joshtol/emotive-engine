@@ -63,6 +63,8 @@ jobs:
           #   /examples/3d/layer-utils.js → ./layer-utils.js
           #   /assets/ → ../../assets/
           find _pages/examples/3d -name "*.html" -exec sed -i \
+            -e "s|'/emotive-engine-3d-elementals.bundled.js'|'../../emotive-engine-3d-elementals.bundled.js'|g" \
+            -e "s|\"/emotive-engine-3d-elementals.bundled.js\"|\"../../emotive-engine-3d-elementals.bundled.js\"|g" \
             -e "s|'/emotive-engine-3d.bundled.js'|'../../emotive-engine-3d.bundled.js'|g" \
             -e "s|\"/emotive-engine-3d.bundled.js\"|\"../../emotive-engine-3d.bundled.js\"|g" \
             -e 's|href="/examples/3d-example-style.css"|href="../3d-example-style.css"|g' \
@@ -90,6 +92,9 @@ jobs:
           # 3D examples reference /emotive-engine-3d.bundled.js at root
           # Copy the bundled version (includes Three.js) for static HTML demos
           cp dist/emotive-mascot-3d.bundled.js _pages/emotive-engine-3d.bundled.js
+
+          # Elementals bundle (includes Three.js + all elemental gestures/materials)
+          cp dist/emotive-mascot-3d-elementals.bundled.js _pages/emotive-engine-3d-elementals.bundled.js
 
           # Create index.html that lists all examples
           cat > _pages/index.html << 'INDEXEOF'
