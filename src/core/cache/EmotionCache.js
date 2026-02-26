@@ -150,7 +150,6 @@ export class EmotionCache {
         }
         
         this.stats.misses++;
-        console.warn(`[EmotionCache] Cache miss for emotion '${emotionName}', consider adding to pre-cache`);
         return getEmotion(emotionName);
     }
     

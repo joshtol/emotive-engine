@@ -90,8 +90,6 @@ export class MascotSpatialRef {
         // Ensure reasonable minimum radius (matches original ElementSpawner)
         this.radius = Math.max(0.1, this.radius);
 
-        // Debug: log calculated radius
-        console.log(`[MascotSpatialRef] Calculated radius: ${this.radius.toFixed(3)}`);
 
         this._computeLandmarks();
     }

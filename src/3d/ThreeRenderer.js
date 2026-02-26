@@ -1634,13 +1634,6 @@ export class ThreeRenderer {
                     const d = params.deformation;
 
                     if (d && d.enabled && d.strength > 0.001) {
-                        // Log deformation data (throttled to once per second)
-                        if (!this._lastDeformLog || Date.now() - this._lastDeformLog > 1000) {
-                            const ip = d.impactPoint;
-                            console.log(`🥊 DEFORMATION: strength=${d.strength.toFixed(3)} impactPoint=[${ip[0].toFixed(3)}, ${ip[1].toFixed(3)}, ${ip[2].toFixed(3)}] falloff=${d.falloffRadius}`);
-                            this._lastDeformLog = Date.now();
-                        }
-
                         this.coreMesh.material.uniforms.deformationStrength.value = d.strength;
 
                         if (d.impactPoint && this.coreMesh.material.uniforms.impactPoint) {

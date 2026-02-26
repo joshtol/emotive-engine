@@ -443,17 +443,6 @@ class ShatterSystem {
         let baseMaterial = null;
         let elementalPhysics = null;
 
-        // ═══════════════════════════════════════════════════════════════
-        // DEBUG LOGGING - ShatterSystem received elemental config
-        // ═══════════════════════════════════════════════════════════════
-        console.log('[SHATTER_SYSTEM] 📥 shatter() called with:', {
-            elemental,
-            elementalParam,
-            overlay,
-            overlayParam,
-            isElementSupported: elemental ? isElementSupported(elemental) : 'N/A',
-            hasCachedMaterial: !!this.shardMaterialCache?.baseMaterial
-        });
 
         // Check for elemental material first
         // CACHE: Reuse existing material if same element type (avoid rapid create/dispose)
@@ -465,11 +454,6 @@ class ShatterSystem {
                 elementalPhysics = getElementalPhysics(elemental, elementalParam);
                 this._currentElementalParam = elementalParam;
 
-                console.log('[SHATTER_SYSTEM] ♻️ Reusing cached elemental material:', {
-                    elemental,
-                    elementalParam,
-                    materialType: baseMaterial?.type
-                });
             } else {
                 // Different element - dispose old and create new
                 if (this._currentElementalMaterial) {
@@ -480,12 +464,6 @@ class ShatterSystem {
                 baseMaterial = createElementalMaterial(elemental, elementalParam);
                 elementalPhysics = getElementalPhysics(elemental, elementalParam);
 
-                console.log('[SHATTER_SYSTEM] ✨ Created new elemental material:', {
-                    elemental,
-                    elementalParam,
-                    materialCreated: !!baseMaterial,
-                    materialType: baseMaterial?.type
-                });
 
                 // Store for reuse
                 this._currentElementalMaterial = baseMaterial;
@@ -501,11 +479,6 @@ class ShatterSystem {
             }
             // Fall back to cached material
             baseMaterial = this.shardMaterialCache?.baseMaterial || null;
-            console.log('[SHATTER_SYSTEM] 📦 Using cached/default material:', {
-                hasCachedMaterial: !!baseMaterial,
-                cachedMaterialType: baseMaterial?.type,
-                reason: elemental ? `Element '${elemental}' not supported` : 'No elemental specified'
-            });
 
             // Defensive re-extraction: if cache has no texture but mesh now does, re-extract
             if (this.shardMaterialCache && baseMaterial && !baseMaterial.map && mesh.material) {
@@ -551,13 +524,6 @@ class ShatterSystem {
         this._currentOverlay = overlay;
         this._currentOverlayParam = overlayParam;
 
-        console.log('[SHATTER_SYSTEM] 🚀 Calling shardPool.activate() with:', {
-            baseMaterialExists: !!baseMaterial,
-            baseMaterialType: baseMaterial?.type,
-            baseMaterialElementalType: baseMaterial?.userData?.elementalType,
-            elementalType: elemental,
-            elementalPhysicsExists: !!elementalPhysics
-        });
 
         const activatedCount = this.shardPool.activate(shards, worldImpact, worldDirection, {
             explosionForce: effectiveExplosionForce,

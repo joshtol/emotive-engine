@@ -238,7 +238,6 @@ export class AudioInterpreter {
             return false;
         }
         this.enabled = true;
-        console.log('[AudioInterpreter] Enabled:', this.endpoint);
         return true;
     }
 
@@ -248,7 +247,6 @@ export class AudioInterpreter {
             clearTimeout(this.bufferTimeout);
             this.bufferTimeout = null;
         }
-        console.log('[AudioInterpreter] Disabled');
     }
 
     updateCurrentState(state) {

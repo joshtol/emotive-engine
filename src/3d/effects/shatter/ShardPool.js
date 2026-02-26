@@ -360,15 +360,6 @@ class ShardPool {
                 // DEBUG LOGGING - ShardPool material assignment
                 // ═══════════════════════════════════════════════════════════════
                 if (i === 0) { // Only log for first shard
-                    console.log('[SHARD_POOL] 📋 First shard material info:', {
-                        baseMaterialType: baseMaterial.type,
-                        baseMaterialName: baseMaterial.name,
-                        baseMaterialUserData: baseMaterial.userData,
-                        isShaderMaterial: baseMaterial.type === 'ShaderMaterial',
-                        hasElementalType: !!baseMaterial.userData?.elementalType,
-                        elementalType: baseMaterial.userData?.elementalType,
-                        uniforms: baseMaterial.uniforms ? Object.keys(baseMaterial.uniforms) : 'N/A'
-                    });
                 }
 
                 // Dispose old material if it was a dynamic clone (not the shared default)
@@ -384,11 +375,6 @@ class ShardPool {
                     baseMaterial.userData?.elementalType;
 
                 if (i === 0) { // Only log for first shard
-                    console.log('[SHARD_POOL] 🎨 Material decision:', {
-                        isElementalShader,
-                        willUseSharedMaterial: isElementalShader,
-                        willClone: !isElementalShader
-                    });
                 }
 
                 if (isElementalShader) {
@@ -409,7 +395,6 @@ class ShardPool {
                 }
             } else {
                 if (i === 0) { // Only log for first shard
-                    console.log('[SHARD_POOL] ⚠️ No baseMaterial provided, using default crystal material');
                 }
             }
 
@@ -426,13 +411,6 @@ class ShardPool {
                 shard.userData.state.isFiery = false;
                 // Elemental materials handle their own opacity via uniforms
                 // Don't set material.opacity as it doesn't affect ShaderMaterial
-
-                if (i === 0) {
-                    console.log('[SHARD_POOL] ✨ Elemental material - skipping emissive/fiery handling:', {
-                        elementalType: baseMaterial.userData?.elementalType,
-                        uniformKeys: Object.keys(baseMaterial.uniforms || {})
-                    });
-                }
             }
             // Set emissive intensity based on material type:
             // - Textured materials (moon): low glow so texture shows through

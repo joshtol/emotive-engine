@@ -74,7 +74,7 @@ export default {
     /**
      * Initialize rain data for a particle - capture current position
      */
-    initialize(particle, motion) {
+    initialize(particle, _motion) {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
@@ -94,11 +94,6 @@ export default {
             wobbleSpeed: 0.3 + Math.random() * 0.4,
             initialized: true
         };
-        console.log('[RAIN] initialize() - Captured particle position:', {
-            originalX: particle.x,
-            originalY: particle.y,
-            particleId: particle.id || 'no-id'
-        });
     },
 
     /**
@@ -107,11 +102,9 @@ export default {
     apply(particle, progress, motion, dt) {
         // dt may be undefined in 3D renderer - default to 1
         const safeDt = (typeof dt === 'number') ? dt : 1;
-        console.log('[RAIN] apply() CALLED - progress:', progress?.toFixed?.(3) || progress, 'dt:', safeDt);
 
         // Initialize on first frame - capture current position
         if (!particle.gestureData?.rain?.initialized) {
-            console.log('[RAIN] apply() - First frame, initializing...');
             this.initialize(particle, motion);
         }
 
@@ -128,19 +121,10 @@ export default {
         data.wobblePhase += data.wobbleSpeed * safeDt * 0.1;
         const wobble = Math.sin(data.wobblePhase) * (config.wobbleAmount || 1.5);
 
-        const oldY = particle.y;
-
         // DIRECTLY set particle position - fall from original position
         particle.x = data.originalX + wobble;
         particle.y = data.originalY + totalFall;
 
-        console.log('[RAIN] apply() - Setting position:', {
-            originalY: data.originalY,
-            totalFall: totalFall?.toFixed?.(1) || totalFall,
-            newY: particle.y?.toFixed?.(1) || particle.y,
-            oldY: oldY?.toFixed?.(1) || oldY,
-            progress: progress?.toFixed?.(3) || progress
-        });
 
         // Set velocity to match falling direction (for trail effects)
         particle.vx = wobble * 0.3;

@@ -80,7 +80,6 @@ export const ElementTypeRegistry = {
             ...config
         });
 
-        console.log(`[ElementTypeRegistry] Registered element type: ${type} (${config.models.length} models)`);
     },
 
     /**

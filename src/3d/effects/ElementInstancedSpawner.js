@@ -86,9 +86,6 @@ import {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-// Debug logging - set to true to enable verbose console output
-const DEBUG = false;
-
 const MAX_ELEMENTS_PER_TYPE = 48;  // Max logical elements per type (×4 for trails = 192 instances)
 
 // Default scale multiplier for surface mode elements (matches original ElementSpawner)
@@ -218,7 +215,6 @@ export class ElementInstancedSpawner {
         if (coreMesh) {
             this.spatialRef.initialize(coreMesh);
         }
-        DEBUG && console.log('[ElementInstancedSpawner] Initialized with coreMesh');
     }
 
     /**
@@ -356,7 +352,6 @@ export class ElementInstancedSpawner {
         // Particle atmospherics are now per-gesture (started in _applyShaderAnimationOverrides)
         // No registration needed here — emitters are created on-demand from gesture configs
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Initialized ${elementType} pool with ${geometries.length} models, ${MAX_ELEMENTS_PER_TYPE * SLOTS_PER_ELEMENT} max instances`);
 
         return pool;
     }
@@ -465,7 +460,6 @@ export class ElementInstancedSpawner {
         // Each layer can have its own type, timing (appearAt/disappearAt), models, etc.
         // ═══════════════════════════════════════════════════════════════════════════════════════
         if (Array.isArray(mode)) {
-            DEBUG && console.log(`[ElementInstancedSpawner] spawn ${elementType}: ${mode.length} layers`);
 
             // Ensure pool is initialized first
             const pool = await this.initializePool(elementType);
@@ -636,7 +630,6 @@ export class ElementInstancedSpawner {
 
         // Determine spawn mode type
         const modeType = typeof mode === 'object' ? (mode.type || 'surface') : mode;
-        DEBUG && console.log(`[ElementInstancedSpawner] spawn ${elementType}: modeType=${modeType}`);
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
         // AXIS-TRAVEL MODE
@@ -731,7 +724,6 @@ export class ElementInstancedSpawner {
             }
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} elements (fallback orbit)`);
         return spawnedIds;
     }
 
@@ -855,7 +847,6 @@ export class ElementInstancedSpawner {
         }
 
         this._modelGeometryDiameters.set(modelName, diameter);
-        DEBUG && console.log(`[ElementInstancedSpawner] Model geometry diameter for ${modelName}: ${diameter.toFixed(3)}`);
         return diameter;
     }
 
@@ -877,7 +868,6 @@ export class ElementInstancedSpawner {
         // 2*mascotRadius = geomDiameter * sizeFraction.base * mascotRadius * scaleMultiplier * 1.0
         // factor = 2 / (geomDiameter * sizeFraction.base * scaleMultiplier)
         const factor = 2.0 / (geomDiameter * sizeFraction.base * scaleMultiplier);
-        DEBUG && console.log(`[ElementInstancedSpawner] Mascot diameter factor for ${modelName}: ${factor.toFixed(3)} (geom=${geomDiameter.toFixed(3)}, sizeFrac=${sizeFraction.base.toFixed(4)}, scale=${scaleMultiplier})`);
         return factor;
     }
 
@@ -1016,7 +1006,6 @@ export class ElementInstancedSpawner {
             for (const modelName of modelNames) {
                 const overrides = modelOverrides[modelName];
                 if (overrides?.shaderAnimation) {
-                    DEBUG && console.log(`[ElementInstancedSpawner] Applying shader animation for ${modelName}:`, overrides.shaderAnimation);
                     elementConfig.setShaderAnimation(material, overrides.shaderAnimation);
                     break;  // Apply once per spawn (all elements use same settings)
                 }
@@ -1035,7 +1024,6 @@ export class ElementInstancedSpawner {
 
         // Apply gestureGlow from animation config
         if (animation?.gestureGlow && elementConfig?.setGestureGlow) {
-            DEBUG && console.log(`[ElementInstancedSpawner] Applying gesture glow for ${elementType}:`, animation.gestureGlow);
             elementConfig.setGestureGlow(material, animation.gestureGlow);
         }
 
@@ -1043,14 +1031,12 @@ export class ElementInstancedSpawner {
         // Only set if explicitly defined - don't reset to 0 (that's done at gesture start in spawn())
         // This allows multi-layer gestures where only some layers define cutout
         if (elementConfig?.setCutout && animation?.cutout !== undefined) {
-            DEBUG && console.log(`[ElementInstancedSpawner] Applying cutout for ${elementType}:`, animation.cutout);
             elementConfig.setCutout(material, animation.cutout);
         }
 
         // Apply grain from animation config (noise texture for gritty realism)
         // Only set if explicitly defined - don't reset to 0 (that's done at gesture start in spawn())
         if (elementConfig?.setGrain && animation?.grain !== undefined) {
-            DEBUG && console.log(`[ElementInstancedSpawner] Applying grain for ${elementType}:`, animation.grain);
             elementConfig.setGrain(material, animation.grain);
         }
 
@@ -1112,7 +1098,6 @@ export class ElementInstancedSpawner {
         // Tag spawned elements with layer index for debugging
         const layerTag = `layer${layerIndex}`;
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Layer ${layerIndex}: type=${layerType}, models=${layerModels?.join(',') || 'default'}`);
 
         // Dispatch to appropriate spawn method based on layer type
         // NOTE: We don't call despawn() here - already done once by spawn() for all layers
@@ -1171,7 +1156,6 @@ export class ElementInstancedSpawner {
         // Apply shader animation settings and gesture glow if configured
         this._applyShaderAnimationOverrides(elementType, axisConfig.models, modelOverrides, elementConfig, animation);
 
-        DEBUG && console.log(`[ElementInstancedSpawner] axis-travel: ${formationElements.length} formation elements, models: ${axisConfig.models.join(', ')}`);
 
         const spawnedIds = [];
         const availableModels = axisConfig.models.length > 0
@@ -1224,7 +1208,6 @@ export class ElementInstancedSpawner {
             const configOrientation = perModelOrientation || axisConfig.orientation;
             const modelOrientation = getModelOrientation(modelName);
             const orientationMode = configOrientation || modelOrientation.mode || 'outward';
-            DEBUG && console.log(`[ElementInstancedSpawner] Ring orientation for ${modelName}: config=${configOrientation}, model=${modelOrientation.mode}, resolved=${orientationMode}`);
 
             // Build rotation: first apply ring orientation, then formation arcOffset
             // Note: flame-ring model's circular face is in XY plane (faces -Z)
@@ -1333,7 +1316,6 @@ export class ElementInstancedSpawner {
             }
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} axis-travel elements`);
         return spawnedIds;
     }
 
@@ -1367,7 +1349,6 @@ export class ElementInstancedSpawner {
         // Apply shader animation settings and gesture glow if configured
         this._applyShaderAnimationOverrides(elementType, anchorConfig.models, modelOverrides, elementConfig, animation);
 
-        DEBUG && console.log(`[ElementInstancedSpawner] anchor: landmark=${anchorConfig.landmark}, landmarkY=${anchorConfig.landmarkY.toFixed(3)}, offset=(${anchorConfig.offset.x}, ${anchorConfig.offset.y}, ${anchorConfig.offset.z}), orientation=${anchorConfig.orientation}`);
 
         const spawnedIds = [];
         const availableModels = anchorConfig.models.length > 0
@@ -1479,7 +1460,6 @@ export class ElementInstancedSpawner {
             }
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} anchor elements`);
         return spawnedIds;
     }
 
@@ -1512,7 +1492,6 @@ export class ElementInstancedSpawner {
         // Apply shader animation settings and gesture glow if configured
         this._applyShaderAnimationOverrides(elementType, burstConfig.models, modelOverrides, elementConfig, animation);
 
-        DEBUG && console.log(`[ElementInstancedSpawner] radial-burst: count=${burstConfig.count}, startRadius=${burstConfig.startRadius}, endRadius=${burstConfig.endRadius}`);
 
         const spawnedIds = [];
         const availableModels = burstConfig.models.length > 0
@@ -1581,7 +1560,6 @@ export class ElementInstancedSpawner {
             }
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} radial-burst elements`);
         return spawnedIds;
     }
 
@@ -1618,7 +1596,6 @@ export class ElementInstancedSpawner {
         // Apply shader animation settings and gesture glow if configured
         this._applyShaderAnimationOverrides(elementType, orbitConfig.models, modelOverrides, elementConfig, animation);
 
-        DEBUG && console.log(`[ElementInstancedSpawner] orbit: ${formationElements.length} elements, radius=${orbitConfig.radius}, height=${orbitConfig.height}`);
 
         const spawnedIds = [];
         const availableModels = orbitConfig.models.length > 0
@@ -1713,7 +1690,6 @@ export class ElementInstancedSpawner {
             }
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} orbit elements`);
         return spawnedIds;
     }
 
@@ -1769,7 +1745,6 @@ export class ElementInstancedSpawner {
             return [];
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] surface: ${surfacePoints.length} points sampled, pattern=${surfaceConfig.pattern}`);
 
         const spawnedIds = [];
         const availableModels = surfaceConfig.models.length > 0
@@ -1849,7 +1824,6 @@ export class ElementInstancedSpawner {
             }
         }
 
-        DEBUG && console.log(`[ElementInstancedSpawner] Spawned ${spawnedIds.length} ${elementType} surface elements`);
         return spawnedIds;
     }
 

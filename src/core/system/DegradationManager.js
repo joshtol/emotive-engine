@@ -225,18 +225,12 @@ export class DegradationManager {
      * Start performance monitoring
      */
     startMonitoring() {
-        // TEMPORARILY DISABLED - DO NOT MONITOR
-        return;
-        
-        // eslint-disable-next-line no-unreachable
         if (this.isMonitoring) return;
-        
+
         this.isMonitoring = true;
         this.monitoringInterval = setInterval(() => {
             this.checkPerformance();
-        }, 1000); // Check every second
-        
-        // Performance monitoring started
+        }, 1000);
     }
 
     /**

@@ -260,7 +260,6 @@ export class ShapeCache {
         }
         
         this.stats.misses++;
-        console.warn(`[ShapeCache] Cache miss for shape '${shapeName}', consider adding to pre-cache`);
         return SHAPE_DEFINITIONS[shapeName] || null;
     }
     

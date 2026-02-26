@@ -29,9 +29,6 @@ npm install @joshtol/emotive-engine
 [Full Documentation](#api-reference) |
 [LLM Integration](./docs/LLM_INTEGRATION.md)
 
-<!-- TODO: Create CodeSandbox template and update this link -->
-<!-- [![Edit on CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/emotive-engine-starter) -->
-
 <div align="center">
 
 <img src="assets/previews/3d-demo.gif" alt="Emotive Engine 3D Demo" width="100%" />

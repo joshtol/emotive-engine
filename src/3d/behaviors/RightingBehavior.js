@@ -104,11 +104,6 @@ export default class RightingBehavior {
             euler[1] += this.angularVelocity.y * dt;
         }
 
-        // TODO: Center of mass offset affects torque magnitude
-        // More bottom-heavy (larger -Y offset) = stronger righting
-        // For now, centerOfMass is stored but not used in calculation
-        // Future: torque = crossProduct(centerOfMass, gravityDirection) * strength
-
         return euler;
     }
 

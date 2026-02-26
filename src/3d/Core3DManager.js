@@ -3283,21 +3283,6 @@ export class Core3DManager {
                 // NORMAL SHATTER - From IDLE state
                 // ═══════════════════════════════════════════════════════════════
                 else if (this.shatterSystem.isIdle()) {
-                // ═══════════════════════════════════════════════════════════════
-                // DEBUG LOGGING - Core3DManager shatter config
-                // ═══════════════════════════════════════════════════════════════
-                    console.log('[CORE_3D] 🎭 Shatter triggered with config:', {
-                        variant: s.variant,
-                        elemental: s.elemental,
-                        elementalParam: s.elementalParam,
-                        overlay: s.overlay,
-                        overlayParam: s.overlayParam,
-                        intensity: s.intensity,
-                        isDualMode: s.isDualMode,
-                        dualModeType: s.dualModeType,
-                        fullShatterConfig: s
-                    });
-
                     const ip = s.impactPoint || [0, 0, 0.4];
 
                     // Transform impact point from camera-relative to world space
@@ -3987,7 +3972,6 @@ export class Core3DManager {
 
         // Option 2: Immediate preload of specified elements
         if (this._preloadElements.length > 0) {
-            console.log(`[Core3D] Preloading specified elements: ${this._preloadElements.join(', ')}`);
             this._preloadElements.forEach(type => {
                 if (ALL_ELEMENT_TYPES.includes(type)) {
                     this.elementSpawner.preloadModels(type);
@@ -4015,8 +3999,6 @@ export class Core3DManager {
         const toPrewarm = ALL_ELEMENT_TYPES.filter(type => !alreadyLoaded.has(type));
 
         if (toPrewarm.length === 0) return;
-
-        console.log(`[Core3D] Background pre-warming elements: ${toPrewarm.join(', ')}`);
 
         // Load one at a time with small delays to avoid blocking the main thread
         for (const type of toPrewarm) {

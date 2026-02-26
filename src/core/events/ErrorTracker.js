@@ -362,9 +362,6 @@ export class ErrorTracker {
             this.callbacks.onReport(report);
         }
 
-        // In production, you would send this to your error tracking service
-        console.warn('Error report generated:', report);
-
         return report;
     }
 

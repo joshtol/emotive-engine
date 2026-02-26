@@ -395,8 +395,7 @@ export class DanceChoreographer {
                 const status = bpmDetector.getStatus();
                 if (status?.finalized) {
                     this.enable();
-                    this.setIntensity(1.0); // Full intensity when auto-enabled
-                    // Debug: console.warn('[DanceChoreographer] Auto-enabled at full intensity - BPM locked!');
+                    this.setIntensity(1.0);
                 }
             }
         }
@@ -499,7 +498,6 @@ export class DanceChoreographer {
         if (wrapped) {
             this.barCount++;
             this._gesturesThisBar = 0;
-            // Debug: console.warn(`[DanceChoreographer] Bar transition! barCount=${this.barCount} (${this.lastBarProgress.toFixed(2)} → ${currentBarProgress.toFixed(2)})`);
         }
 
         this.lastBarProgress = currentBarProgress;
@@ -620,7 +618,6 @@ export class DanceChoreographer {
         const gesture = this._selectGesture(gestureType, audio);
 
         if (gesture) {
-            // Debug: console.warn(`[DanceChoreographer] Triggering gesture: ${Array.isArray(gesture) ? gesture.join('+') : gesture} at bar ${this.barCount}`);
             this._executeGesture(gesture);
             this._lastGestureBar = this.barCount;
             this.lastGestureTime = now;
@@ -1196,8 +1193,6 @@ export class DanceChoreographer {
 
         const newEmotion = candidates[Math.floor(Math.random() * candidates.length)];
 
-        // Debug: console.warn(`[DanceChoreographer] Emotion: ${this._currentEmotion} → ${newEmotion} (reason: ${_reason}, energy: ${energy.toFixed(2)}) at bar ${this.barCount}`);
-
         // Apply emotion via mascot
         if (typeof this.mascot.setEmotion === 'function') {
             this.mascot.setEmotion(newEmotion);
@@ -1229,8 +1224,6 @@ export class DanceChoreographer {
 
         // Only return if we're not already at base
         if (this._currentEmotion === this._baseEmotion) return;
-
-        // Debug: console.warn(`[DanceChoreographer] Emotion return: ${this._currentEmotion} → ${this._baseEmotion} at bar ${this.barCount}`);
 
         // Apply base emotion via mascot
         if (typeof this.mascot.setEmotion === 'function') {

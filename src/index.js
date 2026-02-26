@@ -135,7 +135,7 @@ export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '3.3.0';
+export const VERSION = '3.3.8';
 export const ENGINE_NAME = 'Emotive Engine';
 
 // ============================================================================
