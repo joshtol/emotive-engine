@@ -22,8 +22,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT,
-    createInstancedUniforms
+    INSTANCED_ATTRIBUTES_FRAGMENT
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,

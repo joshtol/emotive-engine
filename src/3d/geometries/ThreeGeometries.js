@@ -10,7 +10,6 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createMoon } from './Moon.js';
-// eslint-disable-next-line no-unused-vars
 import { createSunGeometry as _createSunGeometry } from './Sun.js'; // Re-exported via index
 import { loadHeartGeometry } from './Heart.js';
 import { loadStarGeometry } from './Star.js';

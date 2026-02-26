@@ -84,7 +84,7 @@ class ParticleEmitter {
     /**
      * Create InstancedBufferGeometry with a unit quad and per-instance attributes.
      */
-    _createGeometry(maxParticles) {
+    _createGeometry(_maxParticles) {
         const geo = new THREE.InstancedBufferGeometry();
 
         // Base quad: 4 vertices, 6 indices (two triangles)
@@ -247,7 +247,7 @@ class ParticleEmitter {
     /**
      * Mark a buffer attribute dirty — full upload (no partial range).
      */
-    _markDirty(attr, instanceCount) {
+    _markDirty(attr, _instanceCount) {
         if (!attr) return;
         attr.needsUpdate = true;
     }

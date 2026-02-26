@@ -35,7 +35,7 @@ function cloneTrailMaterial(material) {
     if (cloned.isShaderMaterial && cloned.uniforms) {
         const newUniforms = {};
         for (const [key, uniform] of Object.entries(cloned.uniforms)) {
-            const value = uniform.value;
+            const { value } = uniform;
             if (value instanceof THREE.Color) {
                 newUniforms[key] = { value: value.clone() };
             } else if (value instanceof THREE.Vector2) {
@@ -50,12 +50,12 @@ function cloneTrailMaterial(material) {
                 newUniforms[key] = { value: value.clone() };
             } else if (value instanceof THREE.Texture) {
                 // Textures are shared (don't clone)
-                newUniforms[key] = { value: value };
+                newUniforms[key] = { value };
             } else if (Array.isArray(value)) {
                 newUniforms[key] = { value: [...value] };
             } else {
                 // Primitive values (number, boolean, etc.)
-                newUniforms[key] = { value: value };
+                newUniforms[key] = { value };
             }
         }
         cloned.uniforms = newUniforms;

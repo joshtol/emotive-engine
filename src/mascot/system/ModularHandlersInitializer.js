@@ -71,7 +71,7 @@ export class ModularHandlersInitializer {
      * Layer 1: Initialize managers with minimal dependencies
      * @private
      */
-    _initializeLayer1(m, config) {
+    _initializeLayer1(m, _config) {
         // AudioHandler - depends on audio systems
         m.audioHandler = new AudioHandler({
             audioAnalyzer: m.audioAnalyzer,

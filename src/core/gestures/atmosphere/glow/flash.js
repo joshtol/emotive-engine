@@ -150,7 +150,6 @@ export default {
     '3d': {
         evaluate(progress, motion) {
             const config = { ...this.config, ...motion };
-            // eslint-disable-next-line no-unused-vars
             const _strength = motion.strength || 1.0; // Reserved for future intensity scaling
 
             // Quick flash intensity spike then fade (normalized to ±40% max)

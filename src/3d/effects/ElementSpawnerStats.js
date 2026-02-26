@@ -10,6 +10,7 @@
  *
  * Extracted to avoid circular dependencies between ElementSpawner and Trail.
  */
+/* eslint-disable no-console */
 
 // Maximum active materials before forcing cleanup (GPU memory protection)
 // Reduced from 150 to 80 for more aggressive GPU protection
@@ -76,7 +77,7 @@ if (typeof window !== 'undefined') {
     };
 
     // Diagnostic function for debugging GPU issues
-    window.ELEMENT_SPAWNER_DUMP = (renderer) => {
+    window.ELEMENT_SPAWNER_DUMP = renderer => {
         console.log('═══════════════════════════════════════════════════');
         console.log('ELEMENT SPAWNER RESOURCE DUMP');
         console.log('═══════════════════════════════════════════════════');
@@ -103,7 +104,7 @@ if (typeof window !== 'undefined') {
 
         // WebGL info if renderer provided
         if (renderer?.info) {
-            const info = renderer.info;
+            const { info } = renderer;
             console.log('WebGL Memory:', {
                 geometries: info.memory.geometries,
                 textures: info.memory.textures

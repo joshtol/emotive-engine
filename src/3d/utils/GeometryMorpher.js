@@ -69,7 +69,6 @@ export class GeometryMorpher {
                 // In GROW phase (already swapped to old target)
                 // Need to shrink back down, swap to NEW target, then grow
                 // Calculate how long it takes to shrink from current scale to 0
-                // eslint-disable-next-line no-unused-vars
                 const _shrinkDuration = duration * 0.5; // Half duration for shrink (reserved for future optimization)
 
                 // Reset to shrink phase with current scale as starting point

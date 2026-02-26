@@ -63,7 +63,7 @@ export class AudioLayerManager {
         const layer = this._layers.get(name);
         if (!layer) return;
         if (layer.sourceNode) {
-            try { layer.sourceNode.stop(); } catch (_) { /* already stopped */ }
+            try { layer.sourceNode.stop(); } catch { /* already stopped */ }
         }
         layer.gainNode.disconnect();
         this._layers.delete(name);
@@ -115,7 +115,7 @@ export class AudioLayerManager {
     _stopAllSources() {
         for (const [, layer] of this._layers) {
             if (layer.sourceNode) {
-                try { layer.sourceNode.stop(); } catch (_) { /* already stopped */ }
+                try { layer.sourceNode.stop(); } catch { /* already stopped */ }
                 layer.sourceNode = null;
             }
         }

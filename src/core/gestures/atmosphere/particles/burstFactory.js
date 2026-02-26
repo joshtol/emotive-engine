@@ -30,7 +30,6 @@ export function createBurstGesture(direction) {
     if (!dir) throw new Error(`Invalid burst direction: ${direction}`);
 
     const isVertical = direction === 'up' || direction === 'down';
-    const isPositive = direction === 'down' || direction === 'right';
 
     return {
         name: `burst${capitalize(direction)}`,
@@ -71,7 +70,7 @@ export function createBurstGesture(direction) {
             }
         },
 
-        apply(particle, progress, motion, dt, centerX, centerY) {
+        apply(particle, progress, motion, dt, _centerX, _centerY) {
             const config = { ...this.config, ...motion };
             const decay = config.decay || 0.5;
             const strength = (config.strength || 2.0) * (1 - progress * decay);
@@ -97,7 +96,7 @@ export function createBurstGesture(direction) {
             evaluate(progress, motion) {
                 const config = motion.config || this.config || {};
                 const strength = config.strength || 2.0;
-                const direction = config.direction || 'up';
+                const burstDirection = config.direction || 'up';
 
                 // Phase 1: Explosive burst (0-0.15)
                 // Phase 2: Recoil (0.15-0.35)
@@ -107,7 +106,7 @@ export function createBurstGesture(direction) {
 
                 // Direction vectors for 3D
                 const dirVec = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] };
-                const [dx, dy] = dirVec[direction] || [0, 1];
+                const [dx, dy] = dirVec[burstDirection] || [0, 1];
 
                 if (progress < 0.15) {
                     // Explosive burst

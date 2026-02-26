@@ -52,7 +52,7 @@ export default {
         }
     },
 
-    initialize(particle, motion) {
+    initialize(particle, _motion) {
         if (!particle.gestureData) particle.gestureData = {};
 
         particle.gestureData.fizz = {

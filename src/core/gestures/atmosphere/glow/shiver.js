@@ -53,7 +53,7 @@ export default {
         }
     },
 
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, _dt, _centerX, _centerY) {
         const config = { ...this.config, ...motion };
         const strength = config.strength || 1.0;
         const frequency = config.frequency || 30;

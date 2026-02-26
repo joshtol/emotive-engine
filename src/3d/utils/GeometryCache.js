@@ -139,7 +139,6 @@ export async function preloadAll(options = {}) {
  * Call on app shutdown to free GPU memory
  */
 export function dispose() {
-    // eslint-disable-next-line no-unused-vars
     for (const [_type, entry] of cache.entries()) {
         if (entry.material) {
             disposeCustomMaterial(entry.material);

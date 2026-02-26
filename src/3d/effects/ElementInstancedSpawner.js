@@ -22,7 +22,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Pool and geometry utilities
-import { ElementInstancePool, SLOTS_PER_ELEMENT } from './ElementInstancePool.js';
+import { ElementInstancePool } from './ElementInstancePool.js';
 import { MergedGeometryBuilder } from './MergedGeometryBuilder.js';
 
 // Element type registry - decouples spawner from specific element implementations
@@ -678,7 +678,7 @@ export class ElementInstancedSpawner {
      * Fallback spawn for unknown modes - simple orbit positioning.
      * @private
      */
-    _spawnOrbitFallback(elementType, count, models, animConfig, camera) {
+    _spawnOrbitFallback(elementType, count, models, animConfig, _camera) {
         const ctx = this._getSpawnContext(elementType);
         if (!ctx) return [];
 
@@ -788,7 +788,7 @@ export class ElementInstancedSpawner {
      * Generates spawn rotation based on pattern.
      * @private
      */
-    _generateSpawnRotation(pattern, position) {
+    _generateSpawnRotation(_pattern, _position) {
         const quat = _temp.quaternion;
 
         // Random rotation for most patterns (use shared _temp.euler to avoid allocation)
@@ -829,7 +829,7 @@ export class ElementInstancedSpawner {
      * @returns {number} Model diameter in model space (from bounding sphere)
      * @private
      */
-    _getModelGeometryDiameter(modelName, elementType) {
+    _getModelGeometryDiameter(modelName, _elementType) {
         if (this._modelGeometryDiameters.has(modelName)) {
             return this._modelGeometryDiameters.get(modelName);
         }

@@ -246,7 +246,6 @@ export default class RotationBehavior {
         // Figure-8 pattern using Lissajous curves
         const orbitSpeed = this.speed * 0.5; // Slower for smooth orbits
         const x = Math.sin(time * orbitSpeed * Math.PI * 2) * 0.1;
-        // eslint-disable-next-line no-unused-vars
         const _y = Math.sin(time * orbitSpeed * Math.PI * 2 * 2) * 0.1; // Double frequency for figure-8 (unused)
         const z = Math.sin(time * orbitSpeed * Math.PI * 2 * 0.5) * 0.05;
 

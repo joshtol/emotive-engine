@@ -22,14 +22,6 @@
  */
 
 /**
- * Easing function for crack propagation
- * Fast initial spread, slows at edges
- */
-function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-}
-
-/**
  * Create a directional crack gesture
  * @param {string} direction - Direction of impact: 'front', 'back', 'left', 'right', 'up', 'down'
  * @returns {Object} Gesture definition

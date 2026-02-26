@@ -42,7 +42,7 @@ export function parseOrbitConfig(config, resolveLandmark) {
         if (typeof orbit.endHeight === 'string') {
             endHeight = resolveLandmark(orbit.endHeight);
         } else if (typeof orbit.endHeight === 'number') {
-            endHeight = orbit.endHeight;
+            ({ endHeight } = orbit);
         }
     }
 
@@ -261,7 +261,7 @@ export class OrbitMode extends BaseSpawnMode {
      * @param {number} deltaTime - Time since last frame
      * @param {number} gestureProgress - Current gesture progress (0-1) - not used for orbit
      */
-    updateElement(mesh, deltaTime, gestureProgress) {
+    updateElement(mesh, deltaTime, _gestureProgress) {
         if (mesh.userData.orbitAngle === undefined) return;
 
         // Very slow orbit (~35 minutes per revolution)

@@ -1008,7 +1008,6 @@ export class Particle3DTranslator {
         // Initialize orbital parameters on first call
         if (!behaviorData.orbitRadius) {
             // Spawn particles between ISCO (2.5x) and outer disk (8x)
-            // eslint-disable-next-line no-unused-vars
             const _seed = particle.x * 0.1 + particle.y * 0.2; // Reserved for future seeded randomness
             behaviorData.orbitRadius = SCHWARZSCHILD_RADIUS * (2.5 + Math.random() * 5.5);
 

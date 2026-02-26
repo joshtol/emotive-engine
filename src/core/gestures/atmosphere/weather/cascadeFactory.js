@@ -96,7 +96,7 @@ export function createCascadeGesture(direction) {
             };
         },
 
-        apply(particle, progress, motion, dt, centerX, centerY) {
+        apply(particle, progress, motion, dt, _centerX, _centerY) {
             if (!particle.gestureData?.cascade?.initialized) {
                 this.initialize(particle, motion);
             }
@@ -156,7 +156,7 @@ export function createCascadeGesture(direction) {
             evaluate(progress, motion) {
                 const config = motion.config || this.config || {};
                 const strength = config.strength || 1.0;
-                const direction = config.direction || 'down';
+                const cascadeDirection = config.direction || 'down';
 
                 // Simplified 3D: average cascade effect
                 const easedProgress = 1 - Math.pow(1 - progress, 2);
@@ -165,7 +165,7 @@ export function createCascadeGesture(direction) {
                 let posX = 0, posY = 0;
                 const moveAmount = easedProgress * 0.3 * strength;
 
-                switch (direction) {
+                switch (cascadeDirection) {
                 case 'down': posY = -moveAmount; break;
                 case 'up': posY = moveAmount; break;
                 case 'left': posX = -moveAmount; break;
@@ -174,15 +174,15 @@ export function createCascadeGesture(direction) {
 
                 // Wobble perpendicular to direction
                 const wobble = Math.sin(progress * Math.PI * 4) * 0.03 * strength;
-                if (direction === 'down' || direction === 'up') {
+                if (cascadeDirection === 'down' || cascadeDirection === 'up') {
                     posX += wobble;
                 } else {
                     posY += wobble;
                 }
 
                 // Slight tilt in direction of movement
-                const rotZ = direction === 'left' ? 0.1 : direction === 'right' ? -0.1 : 0;
-                const rotX = direction === 'down' ? 0.05 : direction === 'up' ? -0.05 : 0;
+                const rotZ = cascadeDirection === 'left' ? 0.1 : cascadeDirection === 'right' ? -0.1 : 0;
+                const rotX = cascadeDirection === 'down' ? 0.05 : cascadeDirection === 'up' ? -0.05 : 0;
 
                 // Fade envelope
                 const fadeEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;

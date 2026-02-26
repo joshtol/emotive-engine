@@ -30,8 +30,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT,
-    createInstancedUniforms
+    INSTANCED_ATTRIBUTES_FRAGMENT
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -1052,14 +1051,6 @@ void main() {
     gl_FragColor = vec4(color, alpha);
 }
 `;
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // MATERIAL FACTORY

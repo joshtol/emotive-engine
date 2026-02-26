@@ -13,8 +13,6 @@
  */
 
 import {
-    AddEquation,
-    AdditiveBlending,
     Color,
     CustomBlending,
     HalfFloatType,

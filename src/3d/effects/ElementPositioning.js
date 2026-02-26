@@ -97,7 +97,7 @@ export function sampleSurfacePoints(geometry, count, mascotRadius, config = {}, 
     // Build weighted vertex list based on pattern and camera
     // Use temp pool vectors for calculations, only clone when storing in candidates
     const candidates = [];
-    const cameraDir = _tempPool.cameraDir;
+    const { cameraDir } = _tempPool;
     if (camera) {
         cameraDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
     } else {

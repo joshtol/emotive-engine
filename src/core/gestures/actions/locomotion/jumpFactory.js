@@ -32,7 +32,6 @@ export function createJumpGesture(direction) {
     if (!dir) throw new Error(`Invalid jump direction: ${direction}`);
 
     const isVertical = direction === 'up' || direction === 'down';
-    const isPositive = direction === 'up' || direction === 'right';
 
     return {
         name: `jump${capitalize(direction)}`,
@@ -91,7 +90,7 @@ export function createJumpGesture(direction) {
             }
         },
 
-        initialize(particle, motion, centerX, centerY) {
+        initialize(particle, _motion, _centerX, _centerY) {
             if (!particle.gestureData) {
                 particle.gestureData = {};
             }

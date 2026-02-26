@@ -29,8 +29,6 @@ export function createSwarmGesture(direction) {
     const dir = DIRECTIONS[direction];
     if (!dir) throw new Error(`Invalid swarm direction: ${direction}`);
 
-    const isVertical = direction === 'up' || direction === 'down';
-
     return {
         name: `swarm${capitalize(direction)}`,
         emoji: direction === 'up' ? '🦅' : direction === 'down' ? '🦆' : '🐟',
@@ -60,7 +58,7 @@ export function createSwarmGesture(direction) {
             timingSync: 'onBeat'
         },
 
-        initialize(particle, motion, centerX, centerY) {
+        initialize(particle, _motion, _centerX, _centerY) {
             if (!particle.gestureData) particle.gestureData = {};
 
             particle.gestureData.swarm = {
@@ -153,12 +151,12 @@ export function createSwarmGesture(direction) {
             evaluate(progress, motion) {
                 const config = motion.config || this.config || {};
                 const strength = config.strength || 1.0;
-                const direction = config.direction || 'up';
+                const swarmDirection = config.direction || 'up';
                 const clusterPhase = config.clusterPhase || 0.3;
 
                 // Direction vectors
                 const dirVec = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] };
-                const [dx, dy] = dirVec[direction] || [0, 1];
+                const [dx, dy] = dirVec[swarmDirection] || [0, 1];
 
                 let posX = 0, posY = 0, scale = 1.0;
 

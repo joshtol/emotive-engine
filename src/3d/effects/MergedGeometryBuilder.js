@@ -67,7 +67,7 @@ export class MergedGeometryBuilder {
 
         for (const geometry of this.geometries) {
             // Ensure geometry has an index (convert non-indexed to indexed)
-            let indexed = geometry.index
+            const indexed = geometry.index
                 ? geometry
                 : this._convertToIndexed(geometry);
 

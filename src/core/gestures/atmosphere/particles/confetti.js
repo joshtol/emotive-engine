@@ -49,7 +49,7 @@ export default {
         timingSync: 'onBeat'
     },
 
-    initialize(particle, motion) {
+    initialize(particle, _motion) {
         if (!particle.gestureData) particle.gestureData = {};
 
         // Each particle gets random confetti properties
@@ -67,7 +67,7 @@ export default {
         };
     },
 
-    apply(particle, progress, motion, dt, centerX, centerY) {
+    apply(particle, progress, motion, _dt, _centerX, _centerY) {
         if (!particle.gestureData?.confetti?.initialized) {
             this.initialize(particle, motion);
         }

@@ -108,10 +108,6 @@ export default {
             // Multiple overlapping waves for organic feel
             const time = progress * Math.PI * waveCount * 2;
             const wave1 = Math.sin(time);
-            const wave2 = Math.sin(time + Math.PI / 3) * 0.7;
-            const wave3 = Math.sin(time + Math.PI * 2 / 3) * 0.4;
-            const combinedWave = (wave1 + wave2 + wave3) / 2.1;
-
             // NON-UNIFORM SCALE: Wave ripples through the mascot vertically
             // When wave is at "top", stretch Y and compress X/Z
             // When wave is at "bottom", compress Y and stretch X/Z

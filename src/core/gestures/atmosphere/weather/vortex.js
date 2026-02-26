@@ -77,7 +77,6 @@ export default {
         }
 
         const config = { ...this.config, ...motion };
-        const strength = config.strength || 1.0;
         const data = particle.gestureData.vortex;
 
         const isInward = config.direction !== 'outward';

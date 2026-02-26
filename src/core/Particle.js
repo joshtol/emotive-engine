@@ -36,7 +36,7 @@ import { FRAME_TIMING } from './config/defaults.js';
  */
 
 // Import behaviors
-import { initializeBehavior, updateBehavior } from './particles/behaviors/index.js';
+import { initializeBehavior } from './particles/behaviors/index.js';
 
 // Import utilities
 // import { selectWeightedColor } from './particles/utils/colorUtils.js'; // Unused - available for future use

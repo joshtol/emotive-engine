@@ -66,7 +66,12 @@ export default [
             'linebreak-style': 'off', // Disabled for Windows development
             'quotes': ['error', 'single', { avoidEscape: true }],
             'semi': ['error', 'always'],
-            'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+            'no-unused-vars': ['warn', {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
+                destructuredArrayIgnorePattern: '^_'
+            }],
             'no-console': ['warn', { allow: ['warn', 'error'] }],
             'prefer-const': 'error',
             'arrow-parens': ['error', 'as-needed'],
@@ -145,9 +150,9 @@ export default [
         ignores: [
             'dist/',
             'node_modules/',
+            'site/js/**',
+            'site/public/**',
             'site/dist/',
-            'site/public/emotive-engine*.js',
-            'site/public/sw.js',
             'site/next.config*.js',
             'coverage/',
             '*.min.js',

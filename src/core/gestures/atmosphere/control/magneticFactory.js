@@ -58,9 +58,6 @@ export function createMagneticGesture(direction) {
         repel: 'Magnetic repulsion from center'
     };
 
-    // Determine if this is attract (toward) or repel (away) mode
-    const isAttractMode = direction !== 'repel';
-
     return {
         name: `magnetic${capitalize(direction)}`,
         emoji: emojis[direction],
@@ -94,7 +91,7 @@ export function createMagneticGesture(direction) {
         },
 
         // 2D particle effects (inherited from base magnetic)
-        initialize(particle, motion, centerX, centerY) {
+        initialize(particle, _motion, _centerX, _centerY) {
             if (!particle.gestureData) particle.gestureData = {};
 
             particle.gestureData.magnetic = {

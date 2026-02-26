@@ -784,7 +784,6 @@ export class DanceChoreographer {
 
         // Get current energy levels
         const avgBass = this._getSmoothedEnergy(this._bassHistory);
-        // eslint-disable-next-line no-unused-vars
         const _avgVocal = this._getSmoothedEnergy(this._vocalHistory); // Reserved for vocal-reactive morphs
 
         // Morph triggers:

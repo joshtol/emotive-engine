@@ -44,8 +44,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT,
-    createInstancedUniforms
+    INSTANCED_ATTRIBUTES_FRAGMENT
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -82,10 +81,6 @@ const NATURE_DEFAULTS = {
     fadeInDuration: 0.2,
     fadeOutDuration: 0.4
 };
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
 
 // ===========================================================================================
 // NOISE GLSL (shared noise functions -- hash, noise, snoise, fbm4, hash2, voronoi2D)

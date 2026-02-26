@@ -162,9 +162,6 @@ export class AnimationLoopManager {
             this.frameTimeHistory.shift();
         }
 
-        // Performance marker start
-        const frameStartTime = performance.now();
-
         // Group callbacks by priority
         const callbacksByPriority = this.groupCallbacksByPriority();
 

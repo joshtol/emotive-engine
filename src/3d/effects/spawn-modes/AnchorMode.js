@@ -160,7 +160,7 @@ export class AnchorMode extends BaseSpawnMode {
      * @param {Object} config - Parsed configuration
      * @param {number} index - Element index
      */
-    positionElement(mesh, config, index) {
+    positionElement(mesh, config, _index) {
         // Calculate final position
         const {x} = config.offset;
         const y = config.landmarkY + config.offset.y;
@@ -200,7 +200,7 @@ export class AnchorMode extends BaseSpawnMode {
      * @param {number} deltaTime - Time since last frame
      * @param {number} gestureProgress - Current gesture progress (0-1)
      */
-    updateElement(mesh, deltaTime, gestureProgress) {
+    updateElement(mesh, _deltaTime, _gestureProgress) {
         const {anchor} = mesh.userData;
         if (!anchor) return;
 

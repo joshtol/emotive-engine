@@ -53,7 +53,7 @@ export default {
         }
     },
 
-    initialize(particle, motion, centerX, centerY) {
+    initialize(particle, _motion, _centerX, _centerY) {
         if (!particle.gestureData) particle.gestureData = {};
 
         particle.gestureData.magnetic = {

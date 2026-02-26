@@ -40,7 +40,6 @@ class ShardGenerator {
     static generate(geometry, options = {}) {
         const {
             shardCount = 30,
-            minShardSize = 0.05,
             seed = Date.now(),
             preserveUVs = true
         } = options;

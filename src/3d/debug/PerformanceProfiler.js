@@ -20,6 +20,8 @@
  *   profiler.setGL(renderer.getContext());
  *   profiler.enableGPUSync(); // Forces GPU sync for accurate timing (slower!)
  */
+/* eslint-disable no-console */
+
 export class PerformanceProfiler {
     constructor() {
         this.enabled = false;

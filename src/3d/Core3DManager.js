@@ -42,14 +42,14 @@ import { BehaviorController } from './managers/BehaviorController.js';
 import { BreathingPhaseManager } from './managers/BreathingPhaseManager.js';
 import { ShatterSystem } from './effects/shatter/ShatterSystem.js';
 import { ObjectSpaceCrackManager } from './effects/ObjectSpaceCrackManager.js';
-import { createElectricMaterial, updateElectricMaterial } from './materials/overlays/ElectricMaterial.js';
-import { createWaterMaterial, updateWaterMaterial } from './materials/overlays/WaterMaterial.js';
-import { createFireMaterial, updateFireMaterial } from './materials/overlays/FireMaterial.js';
-import { createVoidMaterial, updateVoidMaterial } from './materials/overlays/VoidMaterial.js';
-import { createIceMaterial, updateIceMaterial } from './materials/overlays/IceMaterial.js';
-import { createLightMaterial, updateLightMaterial } from './materials/overlays/LightMaterial.js';
-import { createEarthMaterial, updateEarthMaterial } from './materials/overlays/EarthMaterial.js';
-import { createNatureMaterial, updateNatureMaterial } from './materials/overlays/NatureMaterial.js';
+import { createElectricMaterial } from './materials/overlays/ElectricMaterial.js';
+import { createWaterMaterial } from './materials/overlays/WaterMaterial.js';
+import { createFireMaterial } from './materials/overlays/FireMaterial.js';
+import { createVoidMaterial } from './materials/overlays/VoidMaterial.js';
+import { createIceMaterial } from './materials/overlays/IceMaterial.js';
+import { createLightMaterial } from './materials/overlays/LightMaterial.js';
+import { createEarthMaterial } from './materials/overlays/EarthMaterial.js';
+import { createNatureMaterial } from './materials/overlays/NatureMaterial.js';
 import { SmokeParticleSystem } from './effects/SmokeParticleSystem.js';
 import { ElementInstancedSpawner } from './effects/ElementInstancedSpawner.js';
 import { profiler } from './debug/PerformanceProfiler.js';
@@ -187,7 +187,7 @@ export class Core3DManager {
         // This re-runs shard precomputation so shards get the actual texture
         // Capture geometryType NOW to ensure correct type even if morph happens before texture loads
         const geometryTypeForCallback = this.geometryType;
-        const onTextureReady = material => {
+        const onTextureReady = _material => {
             if (this.shatterSystem && this.renderer?.coreMesh) {
                 this.shatterSystem.precomputeShards(
                     this.renderer.coreMesh,
@@ -1576,7 +1576,7 @@ export class Core3DManager {
             // This re-runs shard precomputation so shards get the actual texture
             // IMPORTANT: Capture geometryType NOW because _targetGeometryType gets cleared after morph
             const geometryTypeForCallback = this._targetGeometryType;
-            const onTextureReady = material => {
+            const onTextureReady = _material => {
                 if (this.shatterSystem && this.renderer?.coreMesh) {
                     this.shatterSystem.precomputeShards(
                         this.renderer.coreMesh,
@@ -2363,8 +2363,8 @@ export class Core3DManager {
                 }
 
                 // Update particle system each frame
-                const deltaTime = this._lastDeltaTime || 0.016;
-                this._smokeParticleSystem.update(deltaTime, {
+                const smokeDt = this._lastDeltaTime || 0.016;
+                this._smokeParticleSystem.update(smokeDt, {
                     thickness: blended.smokeOverlay.thickness,
                     category: smokeCategory,
                     tint: blended.smokeOverlay.tint,
@@ -3565,15 +3565,15 @@ export class Core3DManager {
                     this._colorTransitionProgress = Math.min(this._colorTransitionProgress, 1);
 
                     // Ease-out curve for smooth deceleration
-                    const t = 1 - Math.pow(1 - this._colorTransitionProgress, 2);
+                    const tColor = 1 - Math.pow(1 - this._colorTransitionProgress, 2);
 
                     // Lerp each channel
                     const start = this._colorTransitionStart || this._normalizedGlowColor || [1, 1, 1];
                     const target = this._targetGlowColor;
                     this._normalizedGlowColor = [
-                        start[0] + (target[0] - start[0]) * t,
-                        start[1] + (target[1] - start[1]) * t,
-                        start[2] + (target[2] - start[2]) * t
+                        start[0] + (target[0] - start[0]) * tColor,
+                        start[1] + (target[1] - start[1]) * tColor,
+                        start[2] + (target[2] - start[2]) * tColor
                     ];
                 }
 

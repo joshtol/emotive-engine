@@ -940,7 +940,7 @@ export function warmUpGestures({ onBatch, onComplete } = {}) {
             });
         });
         if (pluginBatch.length && onBatch) onBatch(pluginBatch);
-    } catch (_e) { /* no plugins */ }
+    } catch { /* no plugins */ }
 
     if (onComplete) onComplete();
 

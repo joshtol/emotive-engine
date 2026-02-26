@@ -11,7 +11,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { blendModesGLSL } from '../shaders/utils/blendModes.js';
 import {
     SOUL_BEHAVIOR_UNIFORMS_GLSL, SOUL_BEHAVIOR_FUNC_GLSL,
-    SOUL_BEHAVIOR_NAMES, createSoulBehaviorUniforms, setSoulBehavior,
+    createSoulBehaviorUniforms, setSoulBehavior,
     resolveBehaviorMode
 } from '../shaders/utils/soulBehaviors.js';
 

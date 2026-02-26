@@ -82,12 +82,11 @@ export function createDriftGesture(direction) {
             }
         },
 
-        initialize(particle, motion, centerX, centerY) {
+        initialize(particle, _motion, _centerX, _centerY) {
             if (!particle.gestureData) {
                 particle.gestureData = {};
             }
 
-            const config = { ...this.config, ...motion };
             const homeRadius = (30 + Math.random() * 30) * particle.scaleFactor;
 
             // For directional drift, start from current position

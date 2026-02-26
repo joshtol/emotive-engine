@@ -171,7 +171,7 @@ export class SurfaceMode extends BaseSpawnMode {
      * @param {number} deltaTime - Time since last frame
      * @param {number} gestureProgress - Current gesture progress (0-1)
      */
-    updateElement(mesh, deltaTime, gestureProgress) {
+    updateElement(_mesh, _deltaTime, _gestureProgress) {
         // Surface mode elements are static - no animation
         // All animation handled by the animation system (AnimationState)
     }

@@ -45,7 +45,7 @@ export class BaseSpawnMode {
      * @returns {Object} Parsed configuration with resolved values
      * @abstract
      */
-    parseConfig(config) {
+    parseConfig(_config) {
         throw new Error('parseConfig must be implemented by subclass');
     }
 
@@ -56,7 +56,7 @@ export class BaseSpawnMode {
      * @param {number} index - Element index in spawn batch
      * @abstract
      */
-    positionElement(mesh, config, index) {
+    positionElement(_mesh, _config, _index) {
         throw new Error('positionElement must be implemented by subclass');
     }
 
@@ -67,7 +67,7 @@ export class BaseSpawnMode {
      * @param {number} gestureProgress - Current gesture progress (0-1)
      * @abstract
      */
-    updateElement(mesh, deltaTime, gestureProgress) {
+    updateElement(_mesh, _deltaTime, _gestureProgress) {
         throw new Error('updateElement must be implemented by subclass');
     }
 

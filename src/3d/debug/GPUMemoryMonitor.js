@@ -9,6 +9,7 @@
  *   monitor.snapshot('after gesture');
  *   monitor.report();
  */
+/* eslint-disable no-console */
 
 export class GPUMemoryMonitor {
     constructor(renderer) {

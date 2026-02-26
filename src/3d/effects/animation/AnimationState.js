@@ -193,7 +193,7 @@ export class AnimationState {
      * Get appear time with stagger offset
      * @private
      */
-    _getAppearTime(gestureProgress) {
+    _getAppearTime(_gestureProgress) {
         // Beat sync mode - return special sentinel if waiting for beat
         const {appearOnBeat} = this.config.timing;
         if (appearOnBeat !== null) {
@@ -222,7 +222,7 @@ export class AnimationState {
      * Get disappear time
      * @private
      */
-    _getDisappearTime(gestureProgress) {
+    _getDisappearTime(_gestureProgress) {
         const baseDisappear = this.config.getDisappearTime();
 
         // Apply lifetime variance

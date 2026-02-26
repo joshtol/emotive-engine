@@ -124,7 +124,7 @@ export class ModifierManager {
     serialize() {
         const mods = [];
         for (const m of this._modifiers.values()) {
-            const { onTick, onExpire, ...serializableConfig } = m.config;
+            const { onTick: _onTick, onExpire: _onExpire, ...serializableConfig } = m.config;
             mods.push({ name: m.name, remaining: m.remaining, config: serializableConfig });
         }
         return mods;
