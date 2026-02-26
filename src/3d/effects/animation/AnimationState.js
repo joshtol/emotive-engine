@@ -23,11 +23,11 @@
  * Animation lifecycle states
  */
 export const AnimationStates = {
-    WAITING: 'waiting',     // Waiting for appear time (stagger delay)
-    ENTERING: 'entering',   // Enter animation playing
-    HOLDING: 'holding',     // Visible, continuous animations active
-    EXITING: 'exiting',     // Exit animation playing
-    DEAD: 'dead'            // Animation complete, ready for cleanup or respawn
+    WAITING: 'waiting', // Waiting for appear time (stagger delay)
+    ENTERING: 'entering', // Enter animation playing
+    HOLDING: 'holding', // Visible, continuous animations active
+    EXITING: 'exiting', // Exit animation playing
+    DEAD: 'dead', // Animation complete, ready for cleanup or respawn
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -60,10 +60,10 @@ export class AnimationState {
         this.progress = 0;
 
         // Absolute time tracking
-        this.birthTime = 0;           // When element was created
-        this.stateStartTime = 0;      // When current state began
-        this.enterCompleteTime = 0;   // When enter finished (for hold duration)
-        this.exitStartTime = 0;       // When exit began
+        this.birthTime = 0; // When element was created
+        this.stateStartTime = 0; // When current state began
+        this.enterCompleteTime = 0; // When enter finished (for hold duration)
+        this.exitStartTime = 0; // When exit began
 
         // Respawn tracking
         this.respawnCount = 0;
@@ -73,22 +73,22 @@ export class AnimationState {
         this.opacity = 0;
         this.scale = 0;
         this.emissive = 1;
-        this.fadeProgress = 0;  // Smooth fade 0-1 (no flicker) for stable geometry
+        this.fadeProgress = 0; // Smooth fade 0-1 (no flicker) for stable geometry
 
         // Hold animation state
-        this.holdTime = 0;            // Time since entering hold state
-        this.pulsePhase = 0;          // Phase offset for pulse (for staggered sync)
-        this.flickerValue = 1;        // Current flicker multiplier
-        this.driftOffset = { x: 0, y: 0, z: 0 };  // Current drift offset
-        this.rotationOffset = { x: 0, y: 0, z: 0 };  // Current rotation offset
+        this.holdTime = 0; // Time since entering hold state
+        this.pulsePhase = 0; // Phase offset for pulse (for staggered sync)
+        this.flickerValue = 1; // Current flicker multiplier
+        this.driftOffset = { x: 0, y: 0, z: 0 }; // Current drift offset
+        this.rotationOffset = { x: 0, y: 0, z: 0 }; // Current rotation offset
 
         // Beat sync state
-        this.currentBeat = 0;         // Current beat number (updated externally)
-        this.lastBeatTriggered = -1;  // Last beat that triggered an action
-        this.waitingForBeat = false;  // Whether we're waiting for a specific beat
+        this.currentBeat = 0; // Current beat number (updated externally)
+        this.lastBeatTriggered = -1; // Last beat that triggered an action
+        this.waitingForBeat = false; // Whether we're waiting for a specific beat
 
         // Gesture progress tracking (for temperature animation etc.)
-        this.gestureProgress = 0;     // Gesture progress 0-1
+        this.gestureProgress = 0; // Gesture progress 0-1
     }
 
     /**
@@ -101,7 +101,7 @@ export class AnimationState {
         this.bpm = bpm;
 
         // Check if we're waiting for this beat to appear
-        const {appearOnBeat} = this.config.timing;
+        const { appearOnBeat } = this.config.timing;
         if (appearOnBeat !== null && this.state === AnimationStates.WAITING) {
             if (beatNumber >= appearOnBeat && this.lastBeatTriggered < appearOnBeat) {
                 this.waitingForBeat = false;
@@ -155,24 +155,24 @@ export class AnimationState {
 
         // State machine
         switch (this.state) {
-        case AnimationStates.WAITING:
-            this._updateWaiting(currentTime, appearTime, time);
-            break;
+            case AnimationStates.WAITING:
+                this._updateWaiting(currentTime, appearTime, time);
+                break;
 
-        case AnimationStates.ENTERING:
-            this._updateEntering(time, deltaTime, currentTime, disappearTime);
-            break;
+            case AnimationStates.ENTERING:
+                this._updateEntering(time, deltaTime, currentTime, disappearTime);
+                break;
 
-        case AnimationStates.HOLDING:
-            this._updateHolding(time, deltaTime, currentTime, disappearTime);
-            break;
+            case AnimationStates.HOLDING:
+                this._updateHolding(time, deltaTime, currentTime, disappearTime);
+                break;
 
-        case AnimationStates.EXITING:
-            this._updateExiting(time, deltaTime);
-            break;
+            case AnimationStates.EXITING:
+                this._updateExiting(time, deltaTime);
+                break;
 
-        case AnimationStates.DEAD:
-            return this._handleDead();
+            case AnimationStates.DEAD:
+                return this._handleDead();
         }
 
         return !this.isDead;
@@ -195,7 +195,7 @@ export class AnimationState {
      */
     _getAppearTime(_gestureProgress) {
         // Beat sync mode - return special sentinel if waiting for beat
-        const {appearOnBeat} = this.config.timing;
+        const { appearOnBeat } = this.config.timing;
         if (appearOnBeat !== null) {
             // If we haven't reached the beat yet, return Infinity to stay waiting
             if (this.currentBeat < appearOnBeat) {
@@ -260,11 +260,12 @@ export class AnimationState {
      * @private
      */
     _updateEntering(time, deltaTime, currentTime, disappearTime) {
-        const {enter} = this.config;
+        const { enter } = this.config;
         // Convert progress-based duration to seconds (same formula as _updateExiting)
-        const duration = this.config.timing.mode === 'progress'
-            ? enter.duration * this.config.gestureDuration / 1000
-            : enter.durationMs / 1000;
+        const duration =
+            this.config.timing.mode === 'progress'
+                ? (enter.duration * this.config.gestureDuration) / 1000
+                : enter.durationMs / 1000;
 
         // Calculate progress through enter animation
         const elapsed = time - this.stateStartTime;
@@ -302,7 +303,7 @@ export class AnimationState {
      * @private
      */
     _applyEnterAnimation(progress) {
-        const {enter} = this.config;
+        const { enter } = this.config;
         const targetOpacity = this.elementConfig.opacity;
         const targetScale = this.elementConfig.scale;
 
@@ -310,61 +311,61 @@ export class AnimationState {
         this.fadeProgress = progress;
 
         switch (enter.type) {
-        case 'fade':
-            // Simple opacity fade
-            this.opacity = progress * targetOpacity;
-            this.scale = targetScale;
-            break;
+            case 'fade':
+                // Simple opacity fade
+                this.opacity = progress * targetOpacity;
+                this.scale = targetScale;
+                break;
 
-        case 'flash':
-            // Overbright then settle: 0 → peak → 1
-            if (progress < 0.5) {
-                // First half: ramp up to overbright
-                const flashProgress = progress * 2;
-                this.opacity = flashProgress * targetOpacity * 2; // Peak at 2x
-                this.emissive = 1 + flashProgress * 1.5; // Extra bright
-            } else {
-                // Second half: settle to normal
-                const settleProgress = (progress - 0.5) * 2;
-                this.opacity = targetOpacity * (2 - settleProgress); // 2x → 1x
-                this.emissive = 2.5 - settleProgress * 1.5; // Settle emissive
+            case 'flash':
+                // Overbright then settle: 0 → peak → 1
+                if (progress < 0.5) {
+                    // First half: ramp up to overbright
+                    const flashProgress = progress * 2;
+                    this.opacity = flashProgress * targetOpacity * 2; // Peak at 2x
+                    this.emissive = 1 + flashProgress * 1.5; // Extra bright
+                } else {
+                    // Second half: settle to normal
+                    const settleProgress = (progress - 0.5) * 2;
+                    this.opacity = targetOpacity * (2 - settleProgress); // 2x → 1x
+                    this.emissive = 2.5 - settleProgress * 1.5; // Settle emissive
+                }
+                this.scale = targetScale;
+                break;
+
+            case 'grow': {
+                // Scale from 0 to target
+                const scaleRange = enter.scale;
+                const startScale = scaleRange[0] * targetScale;
+                const endScale = scaleRange[1] * targetScale;
+                this.scale = startScale + progress * (endScale - startScale);
+                this.opacity = targetOpacity;
+                break;
             }
-            this.scale = targetScale;
-            break;
 
-        case 'grow': {
-            // Scale from 0 to target
-            const scaleRange = enter.scale;
-            const startScale = scaleRange[0] * targetScale;
-            const endScale = scaleRange[1] * targetScale;
-            this.scale = startScale + progress * (endScale - startScale);
-            this.opacity = targetOpacity;
-            break;
-        }
-
-        case 'pop': {
-            // Scale with overshoot: 0 → overshoot → target
-            const {overshoot} = enter;
-            if (progress < 0.7) {
-                // Scale up to overshoot
-                const popProgress = progress / 0.7;
-                this.scale = popProgress * targetScale * overshoot;
-            } else {
-                // Settle back to target
-                const settleProgress = (progress - 0.7) / 0.3;
-                const bounce = this.config.enter.easing(settleProgress);
-                this.scale = targetScale * (overshoot - (overshoot - 1) * bounce);
+            case 'pop': {
+                // Scale with overshoot: 0 → overshoot → target
+                const { overshoot } = enter;
+                if (progress < 0.7) {
+                    // Scale up to overshoot
+                    const popProgress = progress / 0.7;
+                    this.scale = popProgress * targetScale * overshoot;
+                } else {
+                    // Settle back to target
+                    const settleProgress = (progress - 0.7) / 0.3;
+                    const bounce = this.config.enter.easing(settleProgress);
+                    this.scale = targetScale * (overshoot - (overshoot - 1) * bounce);
+                }
+                this.opacity = targetOpacity;
+                break;
             }
-            this.opacity = targetOpacity;
-            break;
-        }
 
-        case 'none':
-        default:
-            // Instant appear
-            this.opacity = targetOpacity;
-            this.scale = targetScale;
-            break;
+            case 'none':
+            default:
+                // Instant appear
+                this.opacity = targetOpacity;
+                this.scale = targetScale;
+                break;
         }
     }
 
@@ -391,7 +392,7 @@ export class AnimationState {
      * @private
      */
     _applyHoldAnimations(time, deltaTime) {
-        const {hold} = this.config;
+        const { hold } = this.config;
         const baseOpacity = this.elementConfig.opacity;
         const baseScale = this.elementConfig.scale;
 
@@ -414,23 +415,23 @@ export class AnimationState {
         if (hold.flicker) {
             const f = hold.flicker;
             switch (f.pattern) {
-            case 'sine': {
-                const phase = time * f.rate * Math.PI * 2;
-                this.flickerValue = 1 + Math.sin(phase) * f.intensity;
-                break;
-            }
-            case 'square': {
-                const phase = (time * f.rate) % 1;
-                this.flickerValue = phase < 0.5 ? (1 + f.intensity) : (1 - f.intensity);
-                break;
-            }
-            case 'random':
-            default:
-                // Random flicker with some persistence
-                if (Math.random() < f.rate * deltaTime) {
-                    this.flickerValue = 1 + (Math.random() * 2 - 1) * f.intensity;
+                case 'sine': {
+                    const phase = time * f.rate * Math.PI * 2;
+                    this.flickerValue = 1 + Math.sin(phase) * f.intensity;
+                    break;
                 }
-                break;
+                case 'square': {
+                    const phase = (time * f.rate) % 1;
+                    this.flickerValue = phase < 0.5 ? 1 + f.intensity : 1 - f.intensity;
+                    break;
+                }
+                case 'random':
+                default:
+                    // Random flicker with some persistence
+                    if (Math.random() < f.rate * deltaTime) {
+                        this.flickerValue = 1 + (Math.random() * 2 - 1) * f.intensity;
+                    }
+                    break;
             }
             opacityMod *= this.flickerValue;
         }
@@ -439,24 +440,24 @@ export class AnimationState {
         if (hold.emissive) {
             const e = hold.emissive;
             switch (e.pattern) {
-            case 'sine': {
-                const phase = time * e.frequency * Math.PI * 2;
-                const wave = (Math.sin(phase) + 1) / 2; // 0-1
-                this.emissive = e.min + wave * (e.max - e.min);
-                break;
-            }
-            case 'sawtooth': {
-                const phase = (time * e.frequency) % 1;
-                this.emissive = e.min + phase * (e.max - e.min);
-                break;
-            }
-            case 'pulse': {
-                const phase = (time * e.frequency) % 1;
-                this.emissive = phase < e.dutyCycle ? e.max : e.min;
-                break;
-            }
-            default:
-                this.emissive = (e.min + e.max) / 2;
+                case 'sine': {
+                    const phase = time * e.frequency * Math.PI * 2;
+                    const wave = (Math.sin(phase) + 1) / 2; // 0-1
+                    this.emissive = e.min + wave * (e.max - e.min);
+                    break;
+                }
+                case 'sawtooth': {
+                    const phase = (time * e.frequency) % 1;
+                    this.emissive = e.min + phase * (e.max - e.min);
+                    break;
+                }
+                case 'pulse': {
+                    const phase = (time * e.frequency) % 1;
+                    this.emissive = phase < e.dutyCycle ? e.max : e.min;
+                    break;
+                }
+                default:
+                    this.emissive = (e.min + e.max) / 2;
             }
         }
 
@@ -475,47 +476,63 @@ export class AnimationState {
             const noiseZ = d.noise > 0 ? (Math.random() - 0.5) * d.noise * increment : 0;
 
             switch (d.direction) {
-            case 'outward':
-                // Move away from origin in all 3 axes
-                this.driftOffset.x += (this.driftOffset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
-                this.driftOffset.y += (this.driftOffset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
-                this.driftOffset.z += (this.driftOffset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
-                break;
-            case 'outward-flat':
-                // Move away from origin in XZ plane only (horizontal radiation)
-                this.driftOffset.x += (this.driftOffset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
-                this.driftOffset.z += (this.driftOffset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
-                // No Y movement - stays at same height
-                break;
-            case 'inward':
-                // Move toward origin
-                this.driftOffset.x -= (this.driftOffset.x || 0.001) > 0 ? increment : -increment;
-                this.driftOffset.y -= (this.driftOffset.y || 0.001) > 0 ? increment : -increment;
-                this.driftOffset.z -= (this.driftOffset.z || 0.001) > 0 ? increment : -increment;
-                break;
-            case 'up':
-                this.driftOffset.y += increment + noiseY;
-                break;
-            case 'down':
-                this.driftOffset.y -= increment + noiseY;
-                break;
-            case 'tangent':
-                // Flow along surface (horizontal drift)
-                this.driftOffset.x += increment + noiseX;
-                this.driftOffset.z += noiseZ;
-                break;
-            case 'random':
-                this.driftOffset.x += (Math.random() - 0.5) * increment * 2;
-                this.driftOffset.y += (Math.random() - 0.5) * increment * 2;
-                this.driftOffset.z += (Math.random() - 0.5) * increment * 2;
-                break;
+                case 'outward':
+                    // Move away from origin in all 3 axes
+                    this.driftOffset.x +=
+                        (this.driftOffset.x || 0.001) > 0
+                            ? increment + noiseX
+                            : -increment + noiseX;
+                    this.driftOffset.y +=
+                        (this.driftOffset.y || 0.001) > 0
+                            ? increment + noiseY
+                            : -increment + noiseY;
+                    this.driftOffset.z +=
+                        (this.driftOffset.z || 0.001) > 0
+                            ? increment + noiseZ
+                            : -increment + noiseZ;
+                    break;
+                case 'outward-flat':
+                    // Move away from origin in XZ plane only (horizontal radiation)
+                    this.driftOffset.x +=
+                        (this.driftOffset.x || 0.001) > 0
+                            ? increment + noiseX
+                            : -increment + noiseX;
+                    this.driftOffset.z +=
+                        (this.driftOffset.z || 0.001) > 0
+                            ? increment + noiseZ
+                            : -increment + noiseZ;
+                    // No Y movement - stays at same height
+                    break;
+                case 'inward':
+                    // Move toward origin
+                    this.driftOffset.x -=
+                        (this.driftOffset.x || 0.001) > 0 ? increment : -increment;
+                    this.driftOffset.y -=
+                        (this.driftOffset.y || 0.001) > 0 ? increment : -increment;
+                    this.driftOffset.z -=
+                        (this.driftOffset.z || 0.001) > 0 ? increment : -increment;
+                    break;
+                case 'up':
+                    this.driftOffset.y += increment + noiseY;
+                    break;
+                case 'down':
+                    this.driftOffset.y -= increment + noiseY;
+                    break;
+                case 'tangent':
+                    // Flow along surface (horizontal drift)
+                    this.driftOffset.x += increment + noiseX;
+                    this.driftOffset.z += noiseZ;
+                    break;
+                case 'random':
+                    this.driftOffset.x += (Math.random() - 0.5) * increment * 2;
+                    this.driftOffset.y += (Math.random() - 0.5) * increment * 2;
+                    this.driftOffset.z += (Math.random() - 0.5) * increment * 2;
+                    break;
             }
 
             // Clamp to distance limit (the configured total distance is the max)
             const dist = Math.sqrt(
-                this.driftOffset.x ** 2 +
-                this.driftOffset.y ** 2 +
-                this.driftOffset.z ** 2
+                this.driftOffset.x ** 2 + this.driftOffset.y ** 2 + this.driftOffset.z ** 2
             );
 
             if (dist > d.distance) {
@@ -549,7 +566,7 @@ export class AnimationState {
      * @private
      */
     _applyRotation(time, deltaTime) {
-        const {hold} = this.config;
+        const { hold } = this.config;
         if (!hold.rotate) return;
 
         const r = hold.rotate;
@@ -559,7 +576,7 @@ export class AnimationState {
         const { axis, rotations, phase, oscillate, range } = elemConfig;
 
         // Convert phase from degrees to radians
-        const phaseRad = (phase || 0) * Math.PI / 180;
+        const phaseRad = ((phase || 0) * Math.PI) / 180;
 
         if (oscillate) {
             // Oscillating rotation
@@ -589,10 +606,11 @@ export class AnimationState {
      * @private
      */
     _updateExiting(time, deltaTime) {
-        const {exit} = this.config;
-        const duration = this.config.timing.mode === 'progress'
-            ? exit.duration * this.config.gestureDuration / 1000
-            : exit.durationMs / 1000;
+        const { exit } = this.config;
+        const duration =
+            this.config.timing.mode === 'progress'
+                ? (exit.duration * this.config.gestureDuration) / 1000
+                : exit.durationMs / 1000;
 
         // Calculate progress through exit animation
         const elapsed = time - this.exitStartTime;
@@ -619,7 +637,7 @@ export class AnimationState {
      * @private
      */
     _applyExitAnimation(progress) {
-        const {exit} = this.config;
+        const { exit } = this.config;
         const currentOpacity = this.elementConfig.opacity;
         const currentScale = this.elementConfig.scale;
 
@@ -627,58 +645,58 @@ export class AnimationState {
         this.fadeProgress = 1 - progress;
 
         switch (exit.type) {
-        case 'fade':
-            // Simple opacity fade out
-            this.opacity = (1 - progress) * currentOpacity;
-            break;
+            case 'fade':
+                // Simple opacity fade out
+                this.opacity = (1 - progress) * currentOpacity;
+                break;
 
-        case 'flash':
-            // Flash bright then fade: 1 → peak → 0
-            if (progress < 0.3) {
-                // Flash up
-                const flashProgress = progress / 0.3;
-                this.opacity = currentOpacity * (1 + flashProgress);
-                this.emissive = 1 + flashProgress * 2;
-            } else {
-                // Fade out
-                const fadeProgress = (progress - 0.3) / 0.7;
-                this.opacity = currentOpacity * 2 * (1 - fadeProgress);
-                this.emissive = 3 * (1 - fadeProgress);
+            case 'flash':
+                // Flash bright then fade: 1 → peak → 0
+                if (progress < 0.3) {
+                    // Flash up
+                    const flashProgress = progress / 0.3;
+                    this.opacity = currentOpacity * (1 + flashProgress);
+                    this.emissive = 1 + flashProgress * 2;
+                } else {
+                    // Fade out
+                    const fadeProgress = (progress - 0.3) / 0.7;
+                    this.opacity = currentOpacity * 2 * (1 - fadeProgress);
+                    this.emissive = 3 * (1 - fadeProgress);
+                }
+                break;
+
+            case 'shrink': {
+                // Scale down to 0
+                const scaleRange = exit.scale;
+                const startScale = scaleRange[0] * currentScale;
+                const endScale = scaleRange[1] * currentScale;
+                this.scale = startScale + progress * (endScale - startScale);
+                this.opacity = currentOpacity;
+                break;
             }
-            break;
 
-        case 'shrink': {
-            // Scale down to 0
-            const scaleRange = exit.scale;
-            const startScale = scaleRange[0] * currentScale;
-            const endScale = scaleRange[1] * currentScale;
-            this.scale = startScale + progress * (endScale - startScale);
-            this.opacity = currentOpacity;
-            break;
-        }
-
-        case 'pop': {
-            // Quick shrink with slight bounce
-            if (progress < 0.2) {
-                // Slight expand before shrink
-                this.scale = currentScale * (1 + progress * 0.5);
-            } else {
-                // Rapid shrink
-                const shrinkProgress = (progress - 0.2) / 0.8;
-                this.scale = currentScale * 1.1 * (1 - shrinkProgress);
+            case 'pop': {
+                // Quick shrink with slight bounce
+                if (progress < 0.2) {
+                    // Slight expand before shrink
+                    this.scale = currentScale * (1 + progress * 0.5);
+                } else {
+                    // Rapid shrink
+                    const shrinkProgress = (progress - 0.2) / 0.8;
+                    this.scale = currentScale * 1.1 * (1 - shrinkProgress);
+                }
+                this.opacity = currentOpacity * (1 - progress * 0.5); // Slight fade too
+                break;
             }
-            this.opacity = currentOpacity * (1 - progress * 0.5); // Slight fade too
-            break;
-        }
 
-        case 'none':
-        default:
-            // Instant disappear at end
-            if (progress >= 1) {
-                this.opacity = 0;
-                this.scale = 0;
-            }
-            break;
+            case 'none':
+            default:
+                // Instant disappear at end
+                if (progress >= 1) {
+                    this.opacity = 0;
+                    this.scale = 0;
+                }
+                break;
         }
     }
 
@@ -687,11 +705,11 @@ export class AnimationState {
      * @private
      */
     _handleDead() {
-        const {lifecycle} = this.config;
+        const { lifecycle } = this.config;
 
         // Check if we should respawn
         if (lifecycle.respawn) {
-            const {maxRespawns} = lifecycle;
+            const { maxRespawns } = lifecycle;
             if (maxRespawns === -1 || this.respawnCount < maxRespawns) {
                 // Will respawn - set up waiting period
                 this.respawnCount++;
@@ -702,9 +720,10 @@ export class AnimationState {
                 this.progress = 0;
 
                 // Calculate respawn delay
-                const delay = lifecycle.respawnDelay > 0
-                    ? lifecycle.respawnDelay
-                    : lifecycle.respawnDelayMs / 1000;
+                const delay =
+                    lifecycle.respawnDelay > 0
+                        ? lifecycle.respawnDelay
+                        : lifecycle.respawnDelayMs / 1000;
 
                 this.birthTime = this.stateStartTime + delay;
                 return true; // Still alive
@@ -768,7 +787,7 @@ export class AnimationState {
             driftOffset: { ...this.driftOffset },
             rotationOffset: { ...this.rotationOffset },
             respawnCount: this.respawnCount,
-            config: this.config
+            config: this.config,
         };
     }
 

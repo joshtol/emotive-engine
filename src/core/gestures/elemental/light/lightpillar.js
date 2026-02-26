@@ -46,14 +46,14 @@ const LIGHTPILLAR_CONFIG = {
             startScale: 1.0,
             endScale: 1.0,
             startDiameter: 1.2,
-            endDiameter: 1.2,        // Uniform — pillar, not funnel
-            orientation: 'flat'
+            endDiameter: 1.2, // Uniform — pillar, not funnel
+            orientation: 'flat',
         },
         formation: {
             type: 'stack',
             count: 5,
-            spacing: 0.30,
-            phaseOffset: 0.04
+            spacing: 0.3,
+            phaseOffset: 0.04,
         },
         count: 5,
         scale: 1.1,
@@ -70,7 +70,7 @@ const LIGHTPILLAR_CONFIG = {
             rotate: { axis: 'z', rotations: 0.4, phase: 0 },
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 6, scale: 1.0, weight: 0.8 },   // SPIRAL
+                primary: { pattern: 6, scale: 1.0, weight: 0.8 }, // SPIRAL
                 secondary: { pattern: 5, scale: 1.5, weight: 0.4 }, // EMBERS
                 blend: 'add',
                 travel: 'linear',
@@ -79,16 +79,22 @@ const LIGHTPILLAR_CONFIG = {
                 bellPeakAt: 0.5,
             },
             grain: {
-                type: 3, strength: 0.15, scale: 0.2, speed: 0.8, blend: 'multiply'
+                type: 3,
+                strength: 0.15,
+                scale: 0.2,
+                speed: 0.8,
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: ['sun-ring'],
-                anchor: 'above',
-                intensity: 0.4,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: ['sun-ring'],
+                    anchor: 'above',
+                    intensity: 0.4,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.05,
             lifetimeVariance: 0.05,
             blending: 'additive',
@@ -99,12 +105,12 @@ const LIGHTPILLAR_CONFIG = {
                         type: 1,
                         arcWidth: 0.9,
                         arcSpeed: 0.4,
-                        arcCount: 2
+                        arcCount: 2,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
@@ -114,7 +120,7 @@ const LIGHTPILLAR_CONFIG = {
     glowFlickerRate: 2,
     scaleVibration: 0.006,
     scaleFrequency: 2,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTPILLAR_CONFIG);

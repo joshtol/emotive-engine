@@ -95,7 +95,10 @@ export class AudioBridge {
                 this._decodedAudioBuffer = audioBuffer;
                 this._audioBufferDuration = audioBuffer.duration;
             } catch (err) {
-                console.warn('[Audio] Buffer decode failed, falling back to MediaElementSource:', err.message);
+                console.warn(
+                    '[Audio] Buffer decode failed, falling back to MediaElementSource:',
+                    err.message
+                );
             }
         }
 
@@ -269,12 +272,12 @@ export class AudioBridge {
                 lockStage: 0,
                 correctionType: 'none',
                 finalized: false,
-                grooveConfidence: 1.0,  // Default to full when no detection active
+                grooveConfidence: 1.0, // Default to full when no detection active
                 agentCount: 0,
                 peakCount: 0,
                 histogramSize: 0,
                 topAgents: [],
-                intervalCount: 0
+                intervalCount: 0,
             };
         }
         return this._bpmDetector.getStatus();
@@ -346,7 +349,9 @@ export class AudioBridge {
                 if (isWorking) {
                     // Validation passed
                 } else if (retryCount < maxRetries) {
-                    console.warn(`[BPM] Analyzer validation FAILED - rebuilding audio pipeline (attempt ${retryCount + 1})`);
+                    console.warn(
+                        `[BPM] Analyzer validation FAILED - rebuilding audio pipeline (attempt ${retryCount + 1})`
+                    );
 
                     // Stop current detection
                     this._stopBPMDetection();
@@ -357,7 +362,9 @@ export class AudioBridge {
                     // Retry after rebuild
                     setTimeout(attemptStart, 100);
                 } else {
-                    console.error('[BPM] Analyzer validation FAILED after max retries - detection may not work');
+                    console.error(
+                        '[BPM] Analyzer validation FAILED after max retries - detection may not work'
+                    );
                 }
             }, 300); // Check after 300ms - enough time to see data if working
         };

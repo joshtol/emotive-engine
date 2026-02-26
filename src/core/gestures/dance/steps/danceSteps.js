@@ -29,15 +29,22 @@ export function createStepGesture(direction) {
 
     return {
         name: `step${capitalize(direction)}`,
-        emoji: direction === 'left' ? '👈' : direction === 'right' ? '👉' : direction === 'up' ? '👆' : '👇',
+        emoji:
+            direction === 'left'
+                ? '👈'
+                : direction === 'right'
+                  ? '👉'
+                  : direction === 'up'
+                    ? '👆'
+                    : '👇',
         type: 'blending',
         description: `Quick step ${direction} and return`,
 
         config: {
-            duration: 400,      // Fallback ~1 beat at 150 BPM
-            amplitude: 25,      // Movement distance in pixels
+            duration: 400, // Fallback ~1 beat at 150 BPM
+            amplitude: 25, // Movement distance in pixels
             strength: 0.7,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -50,14 +57,14 @@ export function createStepGesture(direction) {
 
             durationSync: {
                 mode: 'beats',
-                beats: 1          // Quick 1-beat step
+                beats: 1, // Quick 1-beat step
             },
 
             amplitudeSync: {
                 onBeat: 1.4,
                 offBeat: 0.8,
-                curve: 'snap'
-            }
+                curve: 'snap',
+            },
         },
 
         /**
@@ -68,8 +75,8 @@ export function createStepGesture(direction) {
             let amplitude = config.amplitude * config.strength * particle.scaleFactor;
 
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Sharp out, smooth back: quick snap to position, ease back to center
@@ -97,9 +104,7 @@ export function createStepGesture(direction) {
         },
 
         easeInOutCubic(t) {
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         },
 
         '3d': {
@@ -112,7 +117,7 @@ export function createStepGesture(direction) {
                 let amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
                 if (motion.rhythmModulation) {
-                    amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                    amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
                 }
 
                 // Sharp out, smooth back
@@ -129,7 +134,7 @@ export function createStepGesture(direction) {
 
                 // Lean into the step direction
                 const leanAmount = displacement * 0.12 * strength;
-                const rotZ = -dir.x * leanAmount;  // Lean opposite to movement
+                const rotZ = -dir.x * leanAmount; // Lean opposite to movement
                 const rotX = dir.y * leanAmount * 0.5;
 
                 // Use cameraRelativePosition for screen-space movement
@@ -137,10 +142,10 @@ export function createStepGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, 0, rotZ],
-                    scale: 1.0
+                    scale: 1.0,
                 };
-            }
-        }
+            },
+        },
     };
 }
 
@@ -160,10 +165,10 @@ export function createSlideGesture(direction) {
         description: `Smooth slide ${direction} and return`,
 
         config: {
-            duration: 800,      // Fallback ~2 beats at 150 BPM
-            amplitude: 35,      // Larger movement for slide
+            duration: 800, // Fallback ~2 beats at 150 BPM
+            amplitude: 35, // Larger movement for slide
             strength: 0.6,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -176,14 +181,14 @@ export function createSlideGesture(direction) {
 
             durationSync: {
                 mode: 'beats',
-                beats: 2          // Smooth 2-beat slide
+                beats: 2, // Smooth 2-beat slide
             },
 
             amplitudeSync: {
                 onBeat: 1.2,
                 offBeat: 0.9,
-                curve: 'ease'
-            }
+                curve: 'ease',
+            },
         },
 
         /**
@@ -194,8 +199,8 @@ export function createSlideGesture(direction) {
             let amplitude = config.amplitude * config.strength * particle.scaleFactor;
 
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Smooth sine curve: glide out and back
@@ -220,7 +225,7 @@ export function createSlideGesture(direction) {
                 let amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
                 if (motion.rhythmModulation) {
-                    amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                    amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
                 }
 
                 // Smooth sine curve for graceful glide
@@ -232,7 +237,7 @@ export function createSlideGesture(direction) {
                 // Gentle lean and rotation during slide
                 const leanAmount = displacement * 0.08 * strength;
                 const rotZ = -dir.x * leanAmount;
-                const rotY = dir.x * leanAmount * 0.5;  // Slight turn toward movement
+                const rotY = dir.x * leanAmount * 0.5; // Slight turn toward movement
 
                 // Subtle depth movement
                 const posZ = Math.sin(progress * Math.PI * 2) * 0.02 * strength;
@@ -241,9 +246,9 @@ export function createSlideGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, posZ],
                     rotation: [0, rotY, rotZ],
-                    scale: 1.0 + displacement * 0.03  // Slight expansion during slide
+                    scale: 1.0 + displacement * 0.03, // Slight expansion during slide
                 };
-            }
-        }
+            },
+        },
     };
 }

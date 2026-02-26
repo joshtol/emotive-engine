@@ -69,7 +69,18 @@ export class Particle3DOrchestrator {
      * @param {number} coreScale - Final core scale (baseScale * breath * morph * blink)
      * @param {number} coreRadius3D - Actual 3D core radius in world units (for particle orbit distance)
      */
-    update(deltaTime, emotion, undertone, activeAnimations, currentTime, corePosition, canvasSize, rotationState, coreScale, coreRadius3D) {
+    update(
+        deltaTime,
+        emotion,
+        undertone,
+        activeAnimations,
+        currentTime,
+        corePosition,
+        canvasSize,
+        rotationState,
+        coreScale,
+        coreRadius3D
+    ) {
         // Update translator with current 3D core radius for screen-size-independent orbits
         if (coreRadius3D !== undefined) {
             this.translator.setCoreRadius3D(coreRadius3D);
@@ -87,7 +98,14 @@ export class Particle3DOrchestrator {
         this._updatePhysics(emotionConfig, gestureData, deltaTime, canvasSize, undertone);
 
         // Step 5: Update rendering with visual effects and orbital physics
-        this._updateRendering(gestureData, corePosition, canvasSize, rotationState, deltaTime, coreScale);
+        this._updateRendering(
+            gestureData,
+            corePosition,
+            canvasSize,
+            rotationState,
+            deltaTime,
+            coreScale
+        );
     }
 
     /**
@@ -167,7 +185,7 @@ export class Particle3DOrchestrator {
             centerX,
             centerY,
             gestureData ? gestureData.motion : null, // gestureMotion
-            gestureData ? gestureData.progress : 0,  // gestureProgress
+            gestureData ? gestureData.progress : 0, // gestureProgress
             undertoneModifier
         );
     }
@@ -198,8 +216,8 @@ export class Particle3DOrchestrator {
             canvasSize,
             rotationState,
             deltaTime,
-            gestureData,  // Pass gesture data to detect spin gestures
-            coreScale,    // Pass core scale to maintain particle/core size ratio
+            gestureData, // Pass gesture data to detect spin gestures
+            coreScale, // Pass core scale to maintain particle/core size ratio
             this.geometryType // Pass geometry type for special rendering rules (e.g., black hole culling)
         );
 

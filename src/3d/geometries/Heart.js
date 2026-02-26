@@ -132,6 +132,6 @@ export function createHeart() {
     return {
         vertices: new Float32Array(positions),
         normals: new Float32Array(normals),
-        indices: index ? new Uint16Array(index) : null
+        indices: index ? new Uint16Array(index) : null,
     };
 }

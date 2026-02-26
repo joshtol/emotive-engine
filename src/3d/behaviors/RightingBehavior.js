@@ -64,8 +64,8 @@ export default class RightingBehavior {
 
         // Current orientation
         const pitch = euler[0]; // Rotation around X (forward/back tilt)
-        const yaw = euler[1];   // Rotation around Y (left/right spin)
-        const roll = euler[2];  // Rotation around Z (left/right tilt)
+        const yaw = euler[1]; // Rotation around Y (left/right spin)
+        const roll = euler[2]; // Rotation around Z (left/right tilt)
 
         // Calculate restoring torque based on center of mass
         // Torque = -k * angle (spring force, small angle approximation)
@@ -77,7 +77,7 @@ export default class RightingBehavior {
 
             // Apply torque to angular velocity with damping
             this.angularVelocity.x += pitchTorque * dt;
-            this.angularVelocity.x *= (1.0 - this.damping);
+            this.angularVelocity.x *= 1.0 - this.damping;
 
             // Update pitch from velocity
             euler[0] += this.angularVelocity.x * dt;
@@ -89,7 +89,7 @@ export default class RightingBehavior {
 
             // Apply torque to angular velocity with damping
             this.angularVelocity.z += rollTorque * dt;
-            this.angularVelocity.z *= (1.0 - this.damping);
+            this.angularVelocity.z *= 1.0 - this.damping;
 
             // Update roll from velocity
             euler[2] += this.angularVelocity.z * dt;
@@ -100,7 +100,7 @@ export default class RightingBehavior {
         if (this.axes.yaw) {
             const yawTorque = -yaw * this.strength;
             this.angularVelocity.y += yawTorque * dt;
-            this.angularVelocity.y *= (1.0 - this.damping);
+            this.angularVelocity.y *= 1.0 - this.damping;
             euler[1] += this.angularVelocity.y * dt;
         }
 

@@ -137,7 +137,7 @@ export class TrailState {
                 position: this.originalMesh.position.clone(),
                 rotation: this.originalMesh.rotation.clone(),
                 scale: this.originalMesh.scale.clone(),
-                time
+                time,
             });
             this.lastRecordTime = time;
 

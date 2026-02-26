@@ -14,7 +14,7 @@ export default {
     config: {
         duration: 400,
         musicalDuration: { musical: true, beats: 1 },
-        strength: 1.0
+        strength: 1.0,
     },
 
     rhythm: {
@@ -24,7 +24,7 @@ export default {
         durationSync: { mode: 'beats', beats: 1 },
         interruptible: true,
         priority: 4,
-        blendable: true
+        blendable: true,
     },
 
     apply: (_particle, _progress, _params) => false,
@@ -48,7 +48,7 @@ export default {
             } else {
                 // Return with style
                 const returnT = (progress - 0.7) / 0.3;
-                leanAmount = 1 - (returnT * returnT); // Ease in
+                leanAmount = 1 - returnT * returnT; // Ease in
             }
 
             // Alternate direction based on time for variety
@@ -68,8 +68,8 @@ export default {
                 scale: 1.0,
                 rotationBoost: [0, 0, rotZ],
                 positionBoost: [posX, leanAmount * 0.01 * strength, 0],
-                scaleBoost: 1.0 + scaleBoost * strength
+                scaleBoost: 1.0 + scaleBoost * strength,
             };
-        }
-    }
+        },
+    },
 };

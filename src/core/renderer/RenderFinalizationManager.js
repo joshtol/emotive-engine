@@ -26,7 +26,11 @@ export class RenderFinalizationManager {
     renderSleepIndicator(centerX, centerY, glowRadius, deltaTime) {
         // Add sleep indicator if sleeping
         if (this.renderer.state.sleeping) {
-            this.renderer.renderSleepIndicator(centerX, centerY - glowRadius - this.renderer.scaleValue(20), deltaTime);
+            this.renderer.renderSleepIndicator(
+                centerX,
+                centerY - glowRadius - this.renderer.scaleValue(20),
+                deltaTime
+            );
         }
     }
 
@@ -56,7 +60,11 @@ export class RenderFinalizationManager {
             const recordingEffect = getEffect('recording-glow');
             if (recordingEffect && recordingEffect.drawRecordingIndicator) {
                 // Use original context to draw on top of the blitted image
-                recordingEffect.drawRecordingIndicator(originalCtx, this.renderer.canvas.width, this.renderer.canvas.height);
+                recordingEffect.drawRecordingIndicator(
+                    originalCtx,
+                    this.renderer.canvas.width,
+                    this.renderer.canvas.height
+                );
             }
         }
     }
@@ -80,7 +88,16 @@ export class RenderFinalizationManager {
      * @param {Object} params - Finalization parameters
      */
     finalizeRender(params) {
-        const { centerX, centerY, glowRadius, deltaTime, originalCtx, logicalWidth, logicalHeight, frameStartTime } = params;
+        const {
+            centerX,
+            centerY,
+            glowRadius,
+            deltaTime,
+            originalCtx,
+            logicalWidth,
+            logicalHeight,
+            frameStartTime,
+        } = params;
 
         // Render sleep indicator
         this.renderSleepIndicator(centerX, centerY, glowRadius, deltaTime);

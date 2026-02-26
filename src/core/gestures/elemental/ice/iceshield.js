@@ -29,7 +29,7 @@ const SHARED_RING_ANIMATION = {
         blend: 'add',
         travel: 'angular',
         travelSpeed: 0.5,
-        strengthCurve: 'constant'
+        strengthCurve: 'constant',
     },
     grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.2, blend: 'multiply' },
     blending: 'normal',
@@ -50,66 +50,158 @@ const ICESHIELD_CONFIG = {
     spawnMode: [
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'flat', bob: { amplitude: 0.008, frequency: 0.3 } },
-            count: 1, scale: 4.5, models: ['ice-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'flat',
+                bob: { amplitude: 0.008, frequency: 0.3 },
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['ice-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.0,
-                rotate: { axis: 'x', rotations: 0.75, phase: 0 }, renderOrder: 6,
-                modelOverrides: { 'ice-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 }, orientationOverride: 'flat' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.0,
+                rotate: { axis: 'x', rotations: 0.75, phase: 0 },
+                renderOrder: 6,
+                modelOverrides: {
+                    'ice-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 },
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'vertical', bob: { amplitude: 0.008, frequency: 0.35 } },
-            count: 1, scale: 4.5, models: ['ice-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.35 },
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['ice-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.03,
-                rotate: { axis: 'y', rotations: -0.75, phase: 0 }, renderOrder: 8,
-                modelOverrides: { 'ice-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 }, orientationOverride: 'vertical' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.03,
+                rotate: { axis: 'y', rotations: -0.75, phase: 0 },
+                renderOrder: 8,
+                modelOverrides: {
+                    'ice-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'vertical', bob: { amplitude: 0.008, frequency: 0.4 } },
-            count: 1, scale: 4.5, models: ['ice-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.4 },
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['ice-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.06,
-                rotate: { axis: 'x', rotations: 0.75, phase: 60 }, renderOrder: 10,
-                modelOverrides: { 'ice-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 }, orientationOverride: 'vertical' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.06,
+                rotate: { axis: 'x', rotations: 0.75, phase: 60 },
+                renderOrder: 10,
+                modelOverrides: {
+                    'ice-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 },
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'vertical', bob: { amplitude: 0.008, frequency: 0.45 } },
-            count: 1, scale: 4.5, models: ['ice-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.45 },
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['ice-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.09,
-                rotate: { axis: 'y', rotations: -0.75, phase: 120 }, renderOrder: 12,
-                modelOverrides: { 'ice-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 }, orientationOverride: 'vertical' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.09,
+                rotate: { axis: 'y', rotations: -0.75, phase: 120 },
+                renderOrder: 12,
+                modelOverrides: {
+                    'ice-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'radial', bob: { amplitude: 0.008, frequency: 0.38 } },
-            count: 1, scale: 4.5, models: ['ice-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'radial',
+                bob: { amplitude: 0.008, frequency: 0.38 },
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['ice-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.12,
-                rotate: { axis: 'x', rotations: 0.75, phase: 45 }, renderOrder: 14,
-                modelOverrides: { 'ice-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 }, orientationOverride: 'radial' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.12,
+                rotate: { axis: 'x', rotations: 0.75, phase: 45 },
+                renderOrder: 14,
+                modelOverrides: {
+                    'ice-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 },
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'radial', bob: { amplitude: 0.008, frequency: 0.42 } },
-            count: 1, scale: 4.5, models: ['ice-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'radial',
+                bob: { amplitude: 0.008, frequency: 0.42 },
+            },
+            count: 1,
+            scale: 4.5,
+            models: ['ice-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.15,
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.15,
                 rotate: { axis: 'y', rotations: -0.75, phase: -45 },
-                atmospherics: [{ preset: 'mist', targets: ['ice-ring'], anchor: 'around', intensity: 0.2, sizeScale: 0.7, progressCurve: 'sustain' }],
+                atmospherics: [
+                    {
+                        preset: 'mist',
+                        targets: ['ice-ring'],
+                        anchor: 'around',
+                        intensity: 0.2,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 renderOrder: 16,
-                modelOverrides: { 'ice-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 }, orientationOverride: 'radial' } }
-            }
-        }
+                modelOverrides: {
+                    'ice-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 },
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.55, 0.8, 1.0],
@@ -120,7 +212,7 @@ const ICESHIELD_CONFIG = {
     scaleFrequency: 2,
     tremor: 0.002,
     tremorFrequency: 2,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildIceEffectGesture(ICESHIELD_CONFIG);

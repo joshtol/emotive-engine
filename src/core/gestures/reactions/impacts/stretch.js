@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Stretch Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Stretch gesture - scale particles along axes
@@ -10,13 +10,13 @@
  * @module gestures/transforms/stretch
  * @complexity ⭐⭐⭐ Intermediate-Advanced
  * @audience Transform patterns for complex animations
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Stretches or squashes the particle cloud along X and Y axes independently.        
- * ║ This is an OVERRIDE gesture that directly controls particle positions to          
- * ║ create elastic deformation effects.                                               
+ * ║ Stretches or squashes the particle cloud along X and Y axes independently.
+ * ║ This is an OVERRIDE gesture that directly controls particle positions to
+ * ║ create elastic deformation effects.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * VISUAL DIAGRAM:
@@ -26,7 +26,7 @@
  *      ⭐                                ·               ‾‾‾
  *                                        ·
  *                                        ↓
- * 
+ *
  * USED BY:
  * - Elastic animations
  * - Impact effects (squash on hit)
@@ -42,73 +42,73 @@ export default {
     emoji: '↔️',
     type: 'override', // Completely replaces motion
     description: 'Scale particles along X and Y axes',
-    
+
     // Default configuration
     config: {
-        duration: 2000,        // Legacy fallback
+        duration: 2000, // Legacy fallback
         musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
-        scaleX: 1.3,           // Horizontal scale factor
-        scaleY: 0.9,           // Vertical scale factor
-        alternate: false,      // Alternate between X and Y stretch
-        elastic: true,         // Add elastic overshoot
-        overshoot: 0.1,        // Elastic overshoot amount
-        frequency: 1,          // Number of stretches
-        easing: 'sine',        // Animation curve type
-        strength: 1.0,         // Motion strength
+        scaleX: 1.3, // Horizontal scale factor
+        scaleY: 0.9, // Vertical scale factor
+        alternate: false, // Alternate between X and Y stretch
+        elastic: true, // Add elastic overshoot
+        overshoot: 0.1, // Elastic overshoot amount
+        frequency: 1, // Number of stretches
+        easing: 'sine', // Animation curve type
+        strength: 1.0, // Motion strength
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'stretch',
-            scaleX: 1.8,       // Particle horizontal scale
-            scaleY: 0.6,       // Particle vertical scale
-            strength: 1.0
+            scaleX: 1.8, // Particle horizontal scale
+            scaleY: 0.6, // Particle vertical scale
+            strength: 1.0,
         },
-        centerBased: true,     // Scale from center vs. origin
-        preserveArea: false    // Keep total area constant
+        centerBased: true, // Scale from center vs. origin
+        preserveArea: false, // Keep total area constant
     },
-    
+
     // Rhythm configuration - stretch pulses with rhythm
     rhythm: {
         enabled: true,
-        syncMode: 'beat',  // Stretch on beats
+        syncMode: 'beat', // Stretch on beats
         durationSync: { mode: 'bars', bars: 1 }, // 1 bar duration
 
         // Scale modulation with rhythm
         scaleSync: {
-            onBeat: { x: 1.5, y: 0.7 },     // Stretch wide on beat
-            offBeat: { x: 0.8, y: 1.3 },     // Stretch tall off beat
-            subdivision: 'eighth',            // Change every 8th note
-            curve: 'elastic'                 // Bouncy stretch
+            onBeat: { x: 1.5, y: 0.7 }, // Stretch wide on beat
+            offBeat: { x: 0.8, y: 1.3 }, // Stretch tall off beat
+            subdivision: 'eighth', // Change every 8th note
+            curve: 'elastic', // Bouncy stretch
         },
-        
+
         // Alternation pattern
         alternateSync: {
-            pattern: 'XYXY',                 // X stretch, Y stretch pattern
-            beatsPerChange: 1,               // Change axis each beat
-            overlap: 0.1                      // Slight overlap in transitions
+            pattern: 'XYXY', // X stretch, Y stretch pattern
+            beatsPerChange: 1, // Change axis each beat
+            overlap: 0.1, // Slight overlap in transitions
         },
-        
+
         // Elastic overshoot on accents
         overshootSync: {
-            normal: 0.1,                     // Standard overshoot
-            accent: 0.3,                     // Big overshoot on accent
-            downbeat: 0.2,                   // Medium on downbeat
-            curve: 'spring'                  // Spring-like motion
+            normal: 0.1, // Standard overshoot
+            accent: 0.3, // Big overshoot on accent
+            downbeat: 0.2, // Medium on downbeat
+            curve: 'spring', // Spring-like motion
         },
-        
+
         // Area preservation modes
         preservationSync: {
-            verse: true,                     // Maintain area in verse
-            chorus: false,                   // Free deformation in chorus
-            bridge: true                     // Back to preservation
+            verse: true, // Maintain area in verse
+            chorus: false, // Free deformation in chorus
+            bridge: true, // Back to preservation
         },
-        
+
         // Musical dynamics
         dynamics: {
             forte: { scaleX: 2.0, scaleY: 0.5, overshoot: 0.4 },
-            piano: { scaleX: 1.1, scaleY: 0.95, overshoot: 0.05 }
-        }
+            piano: { scaleX: 1.1, scaleY: 0.95, overshoot: 0.05 },
+        },
     },
-    
+
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize
@@ -120,11 +120,11 @@ export default {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
-        
+
         // Calculate offset from center
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
-        
+
         particle.gestureData.stretch = {
             offsetX: dx,
             offsetY: dy,
@@ -132,10 +132,10 @@ export default {
             startY: particle.y,
             originalVx: particle.vx,
             originalVy: particle.vy,
-            initialized: true
+            initialized: true,
         };
     },
-    
+
     /**
      * Apply stretch motion to particle
      * @param {Particle} particle - The particle to animate
@@ -150,15 +150,15 @@ export default {
         if (!particle.gestureData?.stretch?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
         }
-        
+
         const data = particle.gestureData.stretch;
         const config = { ...this.config, ...motion };
         const strength = motion.strength || 1.0;
-        
+
         // Calculate scale factors
-        let {scaleX} = config;
-        let {scaleY} = config;
-        
+        let { scaleX } = config;
+        let { scaleY } = config;
+
         // Apply area preservation if enabled
         if (config.preserveArea && scaleX !== 1 && scaleY !== 1) {
             // Adjust scales to maintain area
@@ -167,7 +167,7 @@ export default {
             scaleX *= factor;
             scaleY *= factor;
         }
-        
+
         // Handle alternating stretch
         if (config.alternate) {
             // First half: stretch X
@@ -187,10 +187,10 @@ export default {
             scaleX = 1 + (scaleX - 1) * easeProgress * strength;
             scaleY = 1 + (scaleY - 1) * easeProgress * strength;
         }
-        
+
         // Calculate target position
         let targetX, targetY;
-        
+
         if (config.centerBased) {
             // Scale from center point
             targetX = centerX + data.offsetX * scaleX;
@@ -200,15 +200,15 @@ export default {
             targetX = data.startX * scaleX;
             targetY = data.startY * scaleY;
         }
-        
+
         // Apply position
         particle.x = targetX;
         particle.y = targetY;
-        
+
         // Set velocity based on stretch direction
         particle.vx = data.offsetX * (scaleX - 1) * strength * 0.1;
         particle.vy = data.offsetY * (scaleY - 1) * strength * 0.1;
-        
+
         // Smooth ending
         if (progress > 0.9) {
             const endFactor = (1 - progress) * 10;
@@ -216,7 +216,7 @@ export default {
             particle.vy = particle.vy * endFactor + data.originalVy * (1 - endFactor);
         }
     },
-    
+
     /**
      * Calculate progress with optional elastic overshoot
      * @param {number} progress - Raw progress (0-1)
@@ -227,15 +227,13 @@ export default {
         if (!config.elastic) {
             return this.easeInOutCubic(progress);
         }
-        
+
         // Elastic easing with overshoot
         if (progress === 0) return 0;
         if (progress === 1) return 1;
-        
+
         const overshoot = config.overshoot || 0.1;
 
-
-        
         if (progress < 0.5) {
             // Ease in with slight pull back
             const t = progress * 2;
@@ -246,7 +244,7 @@ export default {
             return 0.5 + 0.5 * this.easeOutElastic(t, overshoot);
         }
     },
-    
+
     /**
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
@@ -259,30 +257,31 @@ export default {
             delete particle.gestureData.stretch;
         }
     },
-    
+
     /**
      * Easing functions
      */
     easeInOutCubic(t) {
-        return t < 0.5 
-            ? 4 * t * t * t 
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
-    
+
     easeInElastic(t, overshoot) {
         if (t === 0) return 0;
         if (t === 1) return 1;
         const p = 0.3;
         const s = p / 4;
-        return -(Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1 - s) * (2 * Math.PI) / p)) * (1 + overshoot);
+        return (
+            -(Math.pow(2, 10 * (t - 1)) * Math.sin(((t - 1 - s) * (2 * Math.PI)) / p)) *
+            (1 + overshoot)
+        );
     },
-    
+
     easeOutElastic(t, overshoot) {
         if (t === 0) return 0;
         if (t === 1) return 1;
         const p = 0.3;
         const s = p / 4;
-        return Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) * (1 + overshoot) + 1;
+        return Math.pow(2, -10 * t) * Math.sin(((t - s) * (2 * Math.PI)) / p) * (1 + overshoot) + 1;
     },
 
     /**
@@ -297,12 +296,12 @@ export default {
          * @returns {Object} Transform with position, rotation, scale
          */
         evaluate(progress, motion) {
-            const {particle} = motion;
+            const { particle } = motion;
             if (!particle || !particle.gestureData?.stretch) {
                 return {
                     position: [0, 0, 0],
                     rotation: [0, 0, 0],
-                    scale: 1.0
+                    scale: 1.0,
                 };
             }
 
@@ -327,9 +326,10 @@ export default {
             let easeProgress;
             if (!config.elastic) {
                 // Simple cubic easing
-                easeProgress = progress < 0.5
-                    ? 4 * progress * progress * progress
-                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                easeProgress =
+                    progress < 0.5
+                        ? 4 * progress * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
             } else {
                 // Elastic easing with overshoot
                 const overshoot = config.overshoot || 0.1;
@@ -337,12 +337,23 @@ export default {
                     const t = progress * 2;
                     const p = 0.3;
                     const s = p / 4;
-                    easeProgress = 0.5 * (-(Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1 - s) * (2 * Math.PI) / p)) * (1 + overshoot));
+                    easeProgress =
+                        0.5 *
+                        (-(
+                            Math.pow(2, 10 * (t - 1)) * Math.sin(((t - 1 - s) * (2 * Math.PI)) / p)
+                        ) *
+                            (1 + overshoot));
                 } else {
                     const t = (progress - 0.5) * 2;
                     const p = 0.3;
                     const s = p / 4;
-                    easeProgress = 0.5 + 0.5 * (Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) * (1 + overshoot) + 1);
+                    easeProgress =
+                        0.5 +
+                        0.5 *
+                            (Math.pow(2, -10 * t) *
+                                Math.sin(((t - s) * (2 * Math.PI)) / p) *
+                                (1 + overshoot) +
+                                1);
                 }
             }
 
@@ -353,7 +364,7 @@ export default {
             if (progress > fadeOutStart) {
                 const fadeProgress = (progress - fadeOutStart) / (1.0 - fadeOutStart);
                 // Ease-out cubic for smooth deceleration
-                envelope = 1.0 - (fadeProgress * fadeProgress * fadeProgress);
+                envelope = 1.0 - fadeProgress * fadeProgress * fadeProgress;
             }
 
             // Handle alternating stretch - MUCH MORE DRAMATIC
@@ -383,8 +394,8 @@ export default {
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, wobble], // Z-axis wobble
-                scale: finalScale
+                scale: finalScale,
             };
-        }
-    }
+        },
+    },
 };

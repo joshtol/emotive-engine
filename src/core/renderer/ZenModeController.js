@@ -30,13 +30,13 @@ export class ZenModeController {
             arcHeight: 0,
             lotusMorph: 0, // 0 = circle, 1 = full lotus
             petalSpread: 0, // 0 = closed, 1 = fully open
-            smileCurve: 0  // 0 = straight, 1 = full smile
+            smileCurve: 0, // 0 = straight, 1 = full smile
         };
 
         // Animation loop callback IDs
         this.loopCallbackIds = {
             zenEnter: null,
-            zenExit: null
+            zenExit: null,
         };
     }
 
@@ -89,9 +89,9 @@ export class ZenModeController {
             scaleX: 1.0,
             scaleY: 1.0,
             arcHeight: 0,
-            lotusMorph: 0,     // 0 = no lotus, 1 = full lotus
-            petalSpread: 0,    // 0 = closed petals, 1 = full spread
-            smileCurve: 0      // 0 = no smile, 1 = full smile
+            lotusMorph: 0, // 0 = no lotus, 1 = full lotus
+            petalSpread: 0, // 0 = closed petals, 1 = full spread
+            smileCurve: 0, // 0 = no smile, 1 = full smile
         };
 
         const animate = () => {
@@ -119,7 +119,7 @@ export class ZenModeController {
                 this.zenTransition.petalSpread = lotusEased;
 
                 // Smile appears gradually
-                this.zenTransition.smileCurve = Math.sin(lotusProgress * Math.PI / 2);
+                this.zenTransition.smileCurve = Math.sin((lotusProgress * Math.PI) / 2);
 
                 // Register with AnimationLoopManager
                 this.loopCallbackIds.zenEnter = animationLoopManager.register(
@@ -191,7 +191,11 @@ export class ZenModeController {
 
                 // Start color transition at beginning of exit
                 if (progress === 0 || !this.renderer.colorTransition.active) {
-                    this.renderer.startColorTransition(targetColor, targetIntensity, straightenDuration);
+                    this.renderer.startColorTransition(
+                        targetColor,
+                        targetIntensity,
+                        straightenDuration
+                    );
                 }
 
                 this.zenTransition.arcHeight = 1.5 * (1 - eased);
@@ -224,7 +228,7 @@ export class ZenModeController {
                 // Slow blink (0-0.2)
                 if (awakeProgress < 0.2) {
                     const blinkProg = awakeProgress / 0.2;
-                    this.zenTransition.scaleY = 1.0 - (Math.sin(blinkProg * Math.PI) * 0.8);
+                    this.zenTransition.scaleY = 1.0 - Math.sin(blinkProg * Math.PI) * 0.8;
                 }
                 // Gentle shake (0.2-0.6)
                 else if (awakeProgress < 0.6) {
@@ -236,7 +240,7 @@ export class ZenModeController {
                 else {
                     const driftProg = (awakeProgress - 0.6) / 0.4;
                     this.renderer.state.driftY = -10 * driftProg;
-                    this.renderer.state.glowIntensity = 1.0 + (0.5 * driftProg);
+                    this.renderer.state.glowIntensity = 1.0 + 0.5 * driftProg;
                 }
 
                 this.loopCallbackIds.zenExit = animationLoopManager.register(
@@ -246,26 +250,32 @@ export class ZenModeController {
                 );
             } else if (elapsed < straightenDuration + awakeDuration + expandDuration) {
                 // Phase 3: Horizontal expansion (sunrise)
-                const expandProgress = (elapsed - straightenDuration - awakeDuration) / expandDuration;
-                const expandEased = Math.sin(expandProgress * Math.PI / 2);
+                const expandProgress =
+                    (elapsed - straightenDuration - awakeDuration) / expandDuration;
+                const expandEased = Math.sin((expandProgress * Math.PI) / 2);
 
                 this.zenTransition.scaleX = 1.0;
-                this.zenTransition.scaleY = 0.2 + (expandEased * 0.8);
+                this.zenTransition.scaleY = 0.2 + expandEased * 0.8;
                 this.renderer.state.driftY = -10 * (1 - expandProgress);
-                this.renderer.state.glowIntensity = 1.5 - (0.5 * expandProgress);
+                this.renderer.state.glowIntensity = 1.5 - 0.5 * expandProgress;
 
                 this.loopCallbackIds.zenExit = animationLoopManager.register(
                     animate,
                     AnimationPriority.MEDIUM,
                     this
                 );
-            } else if (elapsed < straightenDuration + awakeDuration + expandDuration + settleDuration) {
+            } else if (
+                elapsed <
+                straightenDuration + awakeDuration + expandDuration + settleDuration
+            ) {
                 // Phase 4: Final settle pulse
-                const settleProgress = (elapsed - straightenDuration - awakeDuration - expandDuration) / settleDuration;
+                const settleProgress =
+                    (elapsed - straightenDuration - awakeDuration - expandDuration) /
+                    settleDuration;
                 const pulse = Math.sin(settleProgress * Math.PI);
 
-                this.zenTransition.scaleX = 1.0 + (pulse * 0.05);
-                this.zenTransition.scaleY = 1.0 + (pulse * 0.05);
+                this.zenTransition.scaleX = 1.0 + pulse * 0.05;
+                this.zenTransition.scaleY = 1.0 + pulse * 0.05;
 
                 this.loopCallbackIds.zenExit = animationLoopManager.register(
                     animate,

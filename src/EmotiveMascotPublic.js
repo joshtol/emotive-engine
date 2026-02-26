@@ -57,38 +57,51 @@ class EmotiveMascotPublic {
         this._feelRateLimiter = {
             calls: [],
             maxCallsPerSecond: 10,
-            windowMs: 1000
+            windowMs: 1000,
         };
 
         // Initialize managers
         this._stanceRegistry = new StanceRegistry();
         this._audioManager = new AudioManager(() => this._getReal());
-        this._gestureController = new GestureController(
-            () => this._getReal(),
-            {
-                isRecording: () => this._isRecording,
-                startTime: () => this._recordingStartTime,
-                timeline: () => this._timeline
-            }
-        );
+        this._gestureController = new GestureController(() => this._getReal(), {
+            isRecording: () => this._isRecording,
+            startTime: () => this._recordingStartTime,
+            timeline: () => this._timeline,
+        });
         // Create state object with proper context binding
         const self = this;
-        this._timelineRecorder = new TimelineRecorder(
-            () => this._getReal(),
-            this._audioManager,
-            {
-                get timeline() { return self._timeline; },
-                set timeline(value) { self._timeline = value; },
-                get isRecording() { return self._isRecording; },
-                set isRecording(value) { self._isRecording = value; },
-                get recordingStartTime() { return self._recordingStartTime; },
-                set recordingStartTime(value) { self._recordingStartTime = value; },
-                get isPlaying() { return self._isPlaying; },
-                set isPlaying(value) { self._isPlaying = value; },
-                get playbackStartTime() { return self._playbackStartTime; },
-                set playbackStartTime(value) { self._playbackStartTime = value; }
-            }
-        );
+        this._timelineRecorder = new TimelineRecorder(() => this._getReal(), this._audioManager, {
+            get timeline() {
+                return self._timeline;
+            },
+            set timeline(value) {
+                self._timeline = value;
+            },
+            get isRecording() {
+                return self._isRecording;
+            },
+            set isRecording(value) {
+                self._isRecording = value;
+            },
+            get recordingStartTime() {
+                return self._recordingStartTime;
+            },
+            set recordingStartTime(value) {
+                self._recordingStartTime = value;
+            },
+            get isPlaying() {
+                return self._isPlaying;
+            },
+            set isPlaying(value) {
+                self._isPlaying = value;
+            },
+            get playbackStartTime() {
+                return self._playbackStartTime;
+            },
+            set playbackStartTime(value) {
+                self._playbackStartTime = value;
+            },
+        });
         this._elementAttachmentManager = new ElementAttachmentManager(
             () => this._getReal(),
             () => this._canvas,
@@ -117,27 +130,27 @@ class EmotiveMascotPublic {
     _getReal() {
         return this._realEngine || this._engine;
     }
-    
+
     /**
      * Sanitize configuration to prevent access to internal features
      * @private
      */
     _sanitizeConfig(config) {
         const safeConfig = { ...config };
-        
+
         // Remove any debug or internal flags
         delete safeConfig.enableDebug;
         delete safeConfig.enableInternalAPIs;
         delete safeConfig.exposeInternals;
-        
+
         // Force production mode
         safeConfig.mode = 'production';
-        
+
         // Enable gaze tracking by default
         if (safeConfig.enableGazeTracking === undefined) {
             safeConfig.enableGazeTracking = true;
         }
-        
+
         return safeConfig;
     }
 
@@ -158,7 +171,7 @@ class EmotiveMascotPublic {
             // Create engine instance with canvas
             const engineConfig = {
                 ...this._config,
-                canvasId: canvas  // This accepts either string ID or element
+                canvasId: canvas, // This accepts either string ID or element
             };
 
             // Create and initialize the engine - wrap in protective proxy
@@ -168,59 +181,95 @@ class EmotiveMascotPublic {
             Object.defineProperty(this, '_realEngine', {
                 value: engine,
                 writable: false,
-                enumerable: false,  // Hide from Object.keys()
-                configurable: false
+                enumerable: false, // Hide from Object.keys()
+                configurable: false,
             });
 
             // Create a protective proxy that hides internal components
             this._engine = new Proxy(engine, {
                 get(target, prop) {
-                // Block access to sensitive internal components
+                    // Block access to sensitive internal components
                     const blockedProps = [
-                        'soundSystem', 'stateMachine', 'emotionLibrary',
-                        'audioLevelProcessor', 'particleSystem', 'errorBoundary',
-                        'performanceMonitor', 'config', 'debugMode'
+                        'soundSystem',
+                        'stateMachine',
+                        'emotionLibrary',
+                        'audioLevelProcessor',
+                        'particleSystem',
+                        'errorBoundary',
+                        'performanceMonitor',
+                        'config',
+                        'debugMode',
                     ];
-                
+
                     if (blockedProps.includes(prop)) {
-                    // Return a dummy object that looks empty
-                        return new Proxy({}, {
-                            get() { return undefined; },
-                            set() { return false; },
-                            has() { return false; },
-                            ownKeys() { return []; },
-                            getOwnPropertyDescriptor() { return undefined; }
-                        });
+                        // Return a dummy object that looks empty
+                        return new Proxy(
+                            {},
+                            {
+                                get() {
+                                    return undefined;
+                                },
+                                set() {
+                                    return false;
+                                },
+                                has() {
+                                    return false;
+                                },
+                                ownKeys() {
+                                    return [];
+                                },
+                                getOwnPropertyDescriptor() {
+                                    return undefined;
+                                },
+                            }
+                        );
                     }
-                
+
                     // For allowed components, wrap them too
-                    if (prop === 'renderer' || prop === 'shapeMorpher' || 
-                    prop === 'audioAnalyzer' || prop === 'gazeTracker') {
+                    if (
+                        prop === 'renderer' ||
+                        prop === 'shapeMorpher' ||
+                        prop === 'audioAnalyzer' ||
+                        prop === 'gazeTracker'
+                    ) {
                         const component = target[prop];
                         if (!component) return undefined;
-                    
+
                         // Return wrapped version that hides internals
                         return new Proxy(component, {
                             get(compTarget, compProp) {
-                            // Only expose essential methods
+                                // Only expose essential methods
                                 const allowedMethods = {
-                                    'renderer': ['setBlinkingEnabled'],
-                                    'shapeMorpher': ['resetMusicDetection', 'frequencyData'],
-                                    'audioAnalyzer': ['microphoneStream', 'currentFrequencies'],
-                                    'gazeTracker': ['enable', 'disable', 'mousePos', 'updateTargetGaze', 'currentGaze', 'getState']
+                                    renderer: ['setBlinkingEnabled'],
+                                    shapeMorpher: ['resetMusicDetection', 'frequencyData'],
+                                    audioAnalyzer: ['microphoneStream', 'currentFrequencies'],
+                                    gazeTracker: [
+                                        'enable',
+                                        'disable',
+                                        'mousePos',
+                                        'updateTargetGaze',
+                                        'currentGaze',
+                                        'getState',
+                                    ],
                                 };
-                            
+
                                 if (allowedMethods[prop]?.includes(compProp)) {
                                     return compTarget[compProp];
                                 }
                                 return undefined;
                             },
-                            set() { return false; },
-                            has() { return false; },
-                            ownKeys() { return []; }
+                            set() {
+                                return false;
+                            },
+                            has() {
+                                return false;
+                            },
+                            ownKeys() {
+                                return [];
+                            },
                         });
                     }
-                
+
                     // Allow safe methods
                     return target[prop];
                 },
@@ -228,16 +277,24 @@ class EmotiveMascotPublic {
                     return false; // Prevent any modifications
                 },
                 has(target, prop) {
-                // Hide internal properties from 'in' operator
+                    // Hide internal properties from 'in' operator
                     const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];
                     return !blockedProps.includes(prop) && prop in target;
                 },
                 ownKeys(target) {
-                // Hide internal properties from Object.keys()
-                    const allowedKeys = ['canvas', 'start', 'stop', 'pause', 'resume', 
-                        'setEmotion', 'morphTo', 'express'];
+                    // Hide internal properties from Object.keys()
+                    const allowedKeys = [
+                        'canvas',
+                        'start',
+                        'stop',
+                        'pause',
+                        'resume',
+                        'setEmotion',
+                        'morphTo',
+                        'express',
+                    ];
                     return allowedKeys.filter(key => key in target);
-                }
+                },
             });
 
             // Store canvas reference
@@ -349,7 +406,7 @@ class EmotiveMascotPublic {
     stopRhythmSync() {
         return this._audioManager.stopRhythmSync();
     }
-    
+
     /**
      * Get performance metrics
      * @returns {Object} Performance data
@@ -363,7 +420,7 @@ class EmotiveMascotPublic {
             return {
                 fps: engine.performanceMonitor.getCurrentFPS() || 0,
                 frameTime: engine.performanceMonitor.getAverageFrameTime() || 0,
-                particleCount: engine.particleSystem?.activeParticles || 0
+                particleCount: engine.particleSystem?.activeParticles || 0,
             };
         }
 
@@ -372,7 +429,7 @@ class EmotiveMascotPublic {
             return {
                 fps: engine.animationController.currentFPS || 0,
                 frameTime: 1000 / 60, // Default to 60fps timing
-                particleCount: 0
+                particleCount: 0,
             };
         }
 
@@ -472,11 +529,13 @@ class EmotiveMascotPublic {
 
         // Check rate limit
         if (limiter.calls.length >= limiter.maxCallsPerSecond) {
-            console.warn(`[EmotiveMascot] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`);
+            console.warn(
+                `[EmotiveMascot] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`
+            );
             return {
                 success: false,
                 error: 'Rate limit exceeded',
-                parsed: null
+                parsed: null,
             };
         }
 
@@ -493,7 +552,7 @@ class EmotiveMascotPublic {
             return {
                 success: false,
                 error: validation.errors.join('; '),
-                parsed
+                parsed,
             };
         }
 
@@ -523,14 +582,14 @@ class EmotiveMascotPublic {
             return {
                 success: true,
                 error: null,
-                parsed
+                parsed,
             };
         } catch (error) {
             console.error('[EmotiveMascot] feel: Execution error:', error);
             return {
                 success: false,
                 error: error.message,
-                parsed
+                parsed,
             };
         }
     }
@@ -547,7 +606,7 @@ class EmotiveMascotPublic {
             emotions: IntentParser.getAvailableEmotions(),
             undertones: IntentParser.getAvailableUndertones(),
             gestures: IntentParser.getAvailableGestures(),
-            shapes: IntentParser.getAvailableShapes()
+            shapes: IntentParser.getAvailableShapes(),
         };
     }
 
@@ -591,9 +650,16 @@ class EmotiveMascotPublic {
                 // It's a timestamp (backwards compatibility)
                 recordTime = undertoneOrDurationOrOptions;
             }
-        } else if (undertoneOrDurationOrOptions && typeof undertoneOrDurationOrOptions === 'object') {
+        } else if (
+            undertoneOrDurationOrOptions &&
+            typeof undertoneOrDurationOrOptions === 'object'
+        ) {
             // It's an options object
-            const {undertone: newUndertone, duration: newDuration, intensity: newIntensity} = undertoneOrDurationOrOptions;
+            const {
+                undertone: newUndertone,
+                duration: newDuration,
+                intensity: newIntensity,
+            } = undertoneOrDurationOrOptions;
             undertone = newUndertone;
             if (newDuration !== undefined) duration = newDuration;
             if (newIntensity !== undefined) this._lastIntensity = newIntensity;
@@ -601,12 +667,12 @@ class EmotiveMascotPublic {
 
         // Record if in recording mode
         if (this._isRecording) {
-            const time = recordTime || (Date.now() - this._recordingStartTime);
+            const time = recordTime || Date.now() - this._recordingStartTime;
             this._timeline.push({
                 type: 'emotion',
                 name: emotion,
                 undertone,
-                time
+                time,
             });
         }
 
@@ -628,7 +694,7 @@ class EmotiveMascotPublic {
     setSoundEnabled(enabled) {
         const engine = this._getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
-        
+
         // Set sound state in the engine's sound system
         if (engine.soundSystem) {
             engine.soundSystem.enabled = enabled;
@@ -748,7 +814,7 @@ class EmotiveMascotPublic {
         engine.stateCoordinator._emit('emotionChanged', {
             emotion: engine.stateMachine.state.emotion,
             slots: engine.stateMachine.getSlots(),
-            restored: true
+            restored: true,
         });
         return this;
     }
@@ -885,7 +951,10 @@ class EmotiveMascotPublic {
             const stanceConfig = this._stanceRegistry.activate(shape);
             resolvedShape = stanceConfig.shape || shape;
             if (engine.stateCoordinator) {
-                engine.stateCoordinator._emit('stanceChanged', { name: shape, config: stanceConfig });
+                engine.stateCoordinator._emit('stanceChanged', {
+                    name: shape,
+                    config: stanceConfig,
+                });
             }
         }
 
@@ -896,19 +965,19 @@ class EmotiveMascotPublic {
         if (typeof configOrTimestamp === 'number') {
             timestamp = configOrTimestamp;
         } else if (configOrTimestamp && typeof configOrTimestamp === 'object') {
-            const {timestamp: newTimestamp, ...restConfig} = configOrTimestamp;
+            const { timestamp: newTimestamp, ...restConfig } = configOrTimestamp;
             config = restConfig;
             timestamp = newTimestamp;
         }
 
         // Record if in recording mode
         if (this._isRecording) {
-            const time = timestamp || (Date.now() - this._recordingStartTime);
+            const time = timestamp || Date.now() - this._recordingStartTime;
             this._timeline.push({
                 type: 'shape',
                 name: resolvedShape,
                 time,
-                config
+                config,
             });
         }
 
@@ -1029,7 +1098,7 @@ class EmotiveMascotPublic {
                 const centerY = window.innerHeight / 2;
                 const translateX = centerX + x;
                 const translateY = centerY + y;
-                const scale = 1 + (z * 0.001); // z affects scale
+                const scale = 1 + z * 0.001; // z affects scale
                 this._canvas.style.transform = `translate(${translateX}px, ${translateY}px) translate(-50%, -50%) scale(${scale})`;
             }
         }
@@ -1143,9 +1212,9 @@ class EmotiveMascotPublic {
      */
     setQuality(level) {
         const qualityMap = {
-            'low': { particleCount: 50, fps: 30 },
-            'medium': { particleCount: 100, fps: 60 },
-            'high': { particleCount: 200, fps: 60 }
+            low: { particleCount: 50, fps: 30 },
+            medium: { particleCount: 100, fps: 60 },
+            high: { particleCount: 200, fps: 60 },
         };
 
         const settings = qualityMap[level] || qualityMap['medium'];
@@ -1549,7 +1618,10 @@ class EmotiveMascotPublic {
 
             // Refresh particle pool when particle scale changes
             if (typeof scaleOrOptions === 'object' && scaleOrOptions.particles !== undefined) {
-                if (engine.particleSystem && typeof engine.particleSystem.refreshPool === 'function') {
+                if (
+                    engine.particleSystem &&
+                    typeof engine.particleSystem.refreshPool === 'function'
+                ) {
                     engine.particleSystem.refreshPool();
                 }
             }
@@ -1783,9 +1855,18 @@ class EmotiveMascotPublic {
      */
     getAvailableEmotions() {
         return [
-            'neutral', 'joy', 'sadness', 'anger', 'fear',
-            'surprise', 'disgust', 'love', 'euphoria',
-            'excited', 'suspicion', 'resting'
+            'neutral',
+            'joy',
+            'sadness',
+            'anger',
+            'fear',
+            'surprise',
+            'disgust',
+            'love',
+            'euphoria',
+            'excited',
+            'suspicion',
+            'resting',
         ];
     }
 
@@ -1794,10 +1875,7 @@ class EmotiveMascotPublic {
      * @returns {Array<string>} List of shape names
      */
     getAvailableShapes() {
-        return [
-            'circle', 'square', 'triangle', 'star',
-            'heart', 'moon', 'sun'
-        ];
+        return ['circle', 'square', 'triangle', 'star', 'heart', 'moon', 'sun'];
     }
 
     /**
@@ -1822,7 +1900,7 @@ class EmotiveMascotPublic {
             gestures: true,
             emotions: true,
             particles: true,
-            gazeTracking: true
+            gazeTracking: true,
         };
     }
 
@@ -1830,39 +1908,46 @@ class EmotiveMascotPublic {
     get renderer() {
         const engine = this._getReal();
         if (!engine || !engine.renderer) return null;
-        
+
         // Return safe proxy that only exposes necessary methods
         return new Proxy(engine.renderer, {
             get(target, prop) {
                 const allowed = ['setBlinkingEnabled'];
                 return allowed.includes(prop) ? target[prop] : undefined;
-            }
+            },
         });
     }
 
     get shapeMorpher() {
         const engine = this._getReal();
         if (!engine || !engine.shapeMorpher) return null;
-        
+
         // Return safe proxy
         return new Proxy(engine.shapeMorpher, {
             get(target, prop) {
                 const allowed = ['resetMusicDetection', 'frequencyData'];
                 return allowed.includes(prop) ? target[prop] : undefined;
-            }
+            },
         });
     }
 
     get gazeTracker() {
         const engine = this._getReal();
         if (!engine || !engine.gazeTracker) return null;
-        
+
         // Return safe proxy
         return new Proxy(engine.gazeTracker, {
             get(target, prop) {
-                const allowed = ['enable', 'disable', 'mousePos', 'updateTargetGaze', 'currentGaze', 'getState'];
+                const allowed = [
+                    'enable',
+                    'disable',
+                    'mousePos',
+                    'updateTargetGaze',
+                    'currentGaze',
+                    'getState',
+                ];
                 return allowed.includes(prop) ? target[prop] : undefined;
-            }
+            },
         });
     }
 

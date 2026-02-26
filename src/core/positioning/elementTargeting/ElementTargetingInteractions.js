@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting Interactions
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Element targeting with mouse and touch interaction capabilities
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/ElementTargetingInteractions
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides element targeting with interactive capabilities including mouse hover,    
- * ║ click tracking, touch gestures, and element interaction detection.                
+ * ║ Provides element targeting with interactive capabilities including mouse hover,
+ * ║ click tracking, touch gestures, and element interaction detection.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -35,7 +35,12 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithHover(targetSelector, hoverOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithHover(
+        targetSelector,
+        hoverOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -48,7 +53,7 @@ class ElementTargetingInteractions extends ElementTargeting {
             onMouseLeave = null,
             onHover = null,
             followMouse = false,
-            hoverDistance = 50
+            hoverDistance = 50,
         } = hoverOptions;
 
         let isHovering = false;
@@ -79,8 +84,7 @@ class ElementTargetingInteractions extends ElementTargeting {
                 const elementCenterY = rect.top + rect.height / 2;
 
                 const distance = Math.sqrt(
-                    Math.pow(mouseX - elementCenterX, 2) + 
-                    Math.pow(mouseY - elementCenterY, 2)
+                    Math.pow(mouseX - elementCenterX, 2) + Math.pow(mouseY - elementCenterY, 2)
                 );
 
                 if (distance <= hoverDistance) {
@@ -100,8 +104,8 @@ class ElementTargetingInteractions extends ElementTargeting {
             events: [
                 { event: 'mouseenter', handler: handleMouseEnter },
                 { event: 'mouseleave', handler: handleMouseLeave },
-                { event: 'mousemove', handler: handleMouseMove }
-            ]
+                { event: 'mousemove', handler: handleMouseMove },
+            ],
         });
 
         return () => {
@@ -122,7 +126,12 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithClick(targetSelector, clickOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithClick(
+        targetSelector,
+        clickOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -130,11 +139,7 @@ class ElementTargetingInteractions extends ElementTargeting {
         }
 
         const interactionId = `click-${Date.now()}-${Math.random()}`;
-        const {
-            onClick = null,
-            onDoubleClick = null,
-            maxClicks = 3
-        } = clickOptions;
+        const { onClick = null, onDoubleClick = null, maxClicks = 3 } = clickOptions;
 
         let clickCount_current = 0;
 
@@ -162,8 +167,8 @@ class ElementTargetingInteractions extends ElementTargeting {
             element,
             events: [
                 { event: 'click', handler: handleClick },
-                { event: 'dblclick', handler: handleDoubleClick }
-            ]
+                { event: 'dblclick', handler: handleDoubleClick },
+            ],
         });
 
         return () => {
@@ -184,7 +189,12 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithTouch(targetSelector, touchOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithTouch(
+        targetSelector,
+        touchOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -197,7 +207,7 @@ class ElementTargetingInteractions extends ElementTargeting {
             onTouchMove = null,
             onTouchEnd = null,
             onSwipe = null,
-            swipeThreshold = 50
+            swipeThreshold = 50,
         } = touchOptions;
 
         let touchStartX = 0;
@@ -238,9 +248,14 @@ class ElementTargetingInteractions extends ElementTargeting {
                 const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
                 if (distance > swipeThreshold && onSwipe) {
-                    const direction = Math.abs(deltaX) > Math.abs(deltaY) 
-                        ? (deltaX > 0 ? 'right' : 'left')
-                        : (deltaY > 0 ? 'down' : 'up');
+                    const direction =
+                        Math.abs(deltaX) > Math.abs(deltaY)
+                            ? deltaX > 0
+                                ? 'right'
+                                : 'left'
+                            : deltaY > 0
+                              ? 'down'
+                              : 'up';
                     onSwipe(direction, distance);
                 }
             }
@@ -255,8 +270,8 @@ class ElementTargetingInteractions extends ElementTargeting {
             events: [
                 { event: 'touchstart', handler: handleTouchStart },
                 { event: 'touchmove', handler: handleTouchMove },
-                { event: 'touchend', handler: handleTouchEnd }
-            ]
+                { event: 'touchend', handler: handleTouchEnd },
+            ],
         });
 
         return () => {
@@ -277,7 +292,12 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithFocus(targetSelector, focusOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithFocus(
+        targetSelector,
+        focusOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -285,16 +305,11 @@ class ElementTargetingInteractions extends ElementTargeting {
         }
 
         const interactionId = `focus-${Date.now()}-${Math.random()}`;
-        const {
-            onFocus = null,
-            onBlur = null,
-            onFocusIn = null,
-            onFocusOut = null
-        } = focusOptions;
+        const { onFocus = null, onBlur = null, onFocusIn = null, onFocusOut = null } = focusOptions;
 
         const handleFocus = event => {
             if (onFocus) onFocus(event);
-            
+
             // Move mascot to focused element
             const rect = element.getBoundingClientRect();
             const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
@@ -325,8 +340,8 @@ class ElementTargetingInteractions extends ElementTargeting {
                 { event: 'focus', handler: handleFocus },
                 { event: 'blur', handler: handleBlur },
                 { event: 'focusin', handler: handleFocusIn },
-                { event: 'focusout', handler: handleFocusOut }
-            ]
+                { event: 'focusout', handler: handleFocusOut },
+            ],
         });
 
         return () => {
@@ -347,7 +362,12 @@ class ElementTargetingInteractions extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithKeyboard(targetSelector, keyboardOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithKeyboard(
+        targetSelector,
+        keyboardOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -359,7 +379,7 @@ class ElementTargetingInteractions extends ElementTargeting {
             onKeyDown = null,
             onKeyUp = null,
             onKeyPress = null,
-            targetKeys = ['Enter', 'Space']
+            targetKeys = ['Enter', 'Space'],
         } = keyboardOptions;
 
         const handleKeyDown = event => {
@@ -391,8 +411,8 @@ class ElementTargetingInteractions extends ElementTargeting {
             events: [
                 { event: 'keydown', handler: handleKeyDown },
                 { event: 'keyup', handler: handleKeyUp },
-                { event: 'keypress', handler: handleKeyPress }
-            ]
+                { event: 'keypress', handler: handleKeyPress },
+            ],
         });
 
         return () => {
@@ -431,4 +451,3 @@ class ElementTargetingInteractions extends ElementTargeting {
 }
 
 export default ElementTargetingInteractions;
-

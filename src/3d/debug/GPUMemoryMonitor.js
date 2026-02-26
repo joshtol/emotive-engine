@@ -22,7 +22,7 @@ export class GPUMemoryMonitor {
      * @param {string} label - Label for this snapshot
      */
     snapshot(label) {
-        const {info} = this.renderer;
+        const { info } = this.renderer;
         const gl = this.renderer.getContext();
 
         this.snapshots.push({
@@ -30,19 +30,19 @@ export class GPUMemoryMonitor {
             timestamp: performance.now(),
             memory: {
                 geometries: info.memory.geometries,
-                textures: info.memory.textures
+                textures: info.memory.textures,
             },
             render: {
                 frame: info.render.frame,
                 calls: info.render.calls,
                 triangles: info.render.triangles,
                 points: info.render.points,
-                lines: info.render.lines
+                lines: info.render.lines,
             },
             programs: info.programs?.length || 'unknown',
             // WEBGL_debug_renderer_info if available
             renderer: gl.getParameter(gl.RENDERER),
-            vendor: gl.getParameter(gl.VENDOR)
+            vendor: gl.getParameter(gl.VENDOR),
         });
     }
 
@@ -72,15 +72,19 @@ export class GPUMemoryMonitor {
 
             const geoD = last.memory.geometries - first.memory.geometries;
             const texD = last.memory.textures - first.memory.textures;
-            const progD = (typeof last.programs === 'number' && typeof first.programs === 'number')
-                ? last.programs - first.programs : '?';
+            const progD =
+                typeof last.programs === 'number' && typeof first.programs === 'number'
+                    ? last.programs - first.programs
+                    : '?';
 
             console.log(`    Δ Geometries: ${geoD >= 0 ? '+' : ''}${geoD}`);
             console.log(`    Δ Textures: ${texD >= 0 ? '+' : ''}${texD}`);
             console.log(`    Δ Programs: ${progD >= 0 ? '+' : ''}${progD}`);
 
             if (geoD > 0 || texD > 0 || progD > 0) {
-                console.log('\n⚠️  POTENTIAL LEAK: Resources increased between first and last snapshot');
+                console.log(
+                    '\n⚠️  POTENTIAL LEAK: Resources increased between first and last snapshot'
+                );
             } else {
                 console.log('\n✓ No obvious resource accumulation detected');
             }
@@ -100,11 +104,11 @@ export class GPUMemoryMonitor {
      * Get current resource counts as an object
      */
     getCurrent() {
-        const {info} = this.renderer;
+        const { info } = this.renderer;
         return {
             geometries: info.memory.geometries,
             textures: info.memory.textures,
-            programs: info.programs?.length || 0
+            programs: info.programs?.length || 0,
         };
     }
 }

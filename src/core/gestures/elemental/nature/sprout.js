@@ -60,8 +60,8 @@ const CONFIG = {
                 lifetimeVariance: 0.12,
                 blending: 'normal',
                 renderOrder: 7,
-                intensityScaling: { scale: 1.18, emissiveMax: 1.2 }
-            }
+                intensityScaling: { scale: 1.18, emissiveMax: 1.2 },
+            },
         },
 
         // ── Layer 2: Rising u-vine wreath — bottom to center, gentle spin ──
@@ -89,35 +89,37 @@ const CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 rotate: { axis: 'y', rotations: 1.0 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['u-vine'],
-                    anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.7,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.2,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['u-vine'],
+                        anchor: 'around',
+                        intensity: 0.3,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.2,
+                    },
+                ],
                 modelOverrides: {
                     'u-vine': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.7,
                             arcSpeed: 0.8,
-                            arcCount: 1
-                        }
-                    }
-                }
-            }
-        }
+                            arcCount: 1,
+                        },
+                    },
+                },
+            },
+        },
     ],
 
     // Glow - bright spring green
@@ -136,9 +138,9 @@ const CONFIG = {
     // Post-processing
     cutout: {
         primary: { pattern: 'sprout', scale: 3.5, blend: 'multiply', travelSpeed: 0.35 },
-        secondary: { pattern: 'organic', scale: 6.0, blend: 'overlay', travelSpeed: 0.2 }
+        secondary: { pattern: 'organic', scale: 6.0, blend: 'overlay', travelSpeed: 0.2 },
     },
-    grain: { type: 3, strength: 0.03, blend: 'multiply', speed: 0.4 }
+    grain: { type: 3, strength: 0.03, blend: 'multiply', speed: 0.4 },
 };
 
 export default buildNatureEffectGesture(CONFIG);

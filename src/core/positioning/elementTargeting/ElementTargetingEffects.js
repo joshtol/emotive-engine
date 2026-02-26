@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting Effects
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Element targeting with visual effects for mascot movement
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/ElementTargetingEffects
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides element targeting with visual effects including trails, particles,       
- * ║ glow effects, and other visual enhancements for mascot movement.                  
+ * ║ Provides element targeting with visual effects including trails, particles,
+ * ║ glow effects, and other visual enhancements for mascot movement.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -38,7 +38,12 @@ class ElementTargetingEffects extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithTrail(targetSelector, trailOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithTrail(
+        targetSelector,
+        trailOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -51,7 +56,7 @@ class ElementTargetingEffects extends ElementTargeting {
             width = 3,
             opacity = 0.8,
             fadeSpeed = 0.95,
-            onComplete = null
+            onComplete = null,
         } = trailOptions;
 
         this.initializeEffectCanvas();
@@ -80,7 +85,7 @@ class ElementTargetingEffects extends ElementTargeting {
                 x: currentX,
                 y: currentY,
                 opacity: opacity * (1 - progress),
-                timestamp: currentTime
+                timestamp: currentTime,
             });
 
             // Remove old trail points
@@ -100,7 +105,11 @@ class ElementTargetingEffects extends ElementTargeting {
             this.drawTrail(color, width);
 
             // Update mascot position
-            this.positionController.setOffset(currentX - window.innerWidth / 2, currentY - window.innerHeight / 2, 0);
+            this.positionController.setOffset(
+                currentX - window.innerWidth / 2,
+                currentY - window.innerHeight / 2,
+                0
+            );
 
             if (progress < 1) {
                 this.activeEffects.set(effectId, animate);
@@ -126,7 +135,12 @@ class ElementTargetingEffects extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithParticles(targetSelector, particleOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithParticles(
+        targetSelector,
+        particleOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -140,7 +154,7 @@ class ElementTargetingEffects extends ElementTargeting {
             size = 2,
             speed = 2,
             life = 1000,
-            onComplete = null
+            onComplete = null,
         } = particleOptions;
 
         this.initializeEffectCanvas();
@@ -166,7 +180,7 @@ class ElementTargetingEffects extends ElementTargeting {
                 life,
                 maxLife: life,
                 color,
-                size
+                size,
             });
         }
 
@@ -193,7 +207,11 @@ class ElementTargetingEffects extends ElementTargeting {
             // Update mascot position
             const currentX = startX + (targetX - startX) * progress;
             const currentY = startY + (targetY - startY) * progress;
-            this.positionController.setOffset(currentX - window.innerWidth / 2, currentY - window.innerHeight / 2, 0);
+            this.positionController.setOffset(
+                currentX - window.innerWidth / 2,
+                currentY - window.innerHeight / 2,
+                0
+            );
 
             if (progress < 1 || this.particles.length > 0) {
                 this.activeEffects.set(effectId, animate);
@@ -219,7 +237,12 @@ class ElementTargetingEffects extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithGlow(targetSelector, glowOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithGlow(
+        targetSelector,
+        glowOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -232,7 +255,7 @@ class ElementTargetingEffects extends ElementTargeting {
             intensity = 50,
             radius = 100,
             duration = 1000,
-            onComplete = null
+            onComplete = null,
         } = glowOptions;
 
         this.initializeEffectCanvas();
@@ -259,7 +282,11 @@ class ElementTargetingEffects extends ElementTargeting {
             this.drawGlow(currentX, currentY, color, intensity, radius, progress);
 
             // Update mascot position
-            this.positionController.setOffset(currentX - window.innerWidth / 2, currentY - window.innerHeight / 2, 0);
+            this.positionController.setOffset(
+                currentX - window.innerWidth / 2,
+                currentY - window.innerHeight / 2,
+                0
+            );
 
             if (progress < 1) {
                 this.activeEffects.set(effectId, animate);
@@ -371,9 +398,11 @@ class ElementTargetingEffects extends ElementTargeting {
 
         const gradient = this.effectContext.createRadialGradient(x, y, 0, x, y, radius);
         // Ensure color is valid hex format and add alpha channel
-        const alpha = Math.floor(intensity * progress).toString(16).padStart(2, '0');
+        const alpha = Math.floor(intensity * progress)
+            .toString(16)
+            .padStart(2, '0');
         const validColor = color.startsWith('#') ? color : `#${color}`;
-        
+
         gradient.addColorStop(0, `${validColor}${alpha}`);
         gradient.addColorStop(1, `${validColor}00`);
 
@@ -399,13 +428,13 @@ class ElementTargetingEffects extends ElementTargeting {
      */
     destroy() {
         this.stopAllEffects();
-        
+
         if (this.effectCanvas) {
             document.body.removeChild(this.effectCanvas);
             this.effectCanvas = null;
             this.effectContext = null;
         }
-        
+
         super.destroy();
     }
 }

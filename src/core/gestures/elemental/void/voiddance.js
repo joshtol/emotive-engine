@@ -49,14 +49,14 @@ const VOIDDANCE_CONFIG = {
             endScale: 1.8,
             startDiameter: 1.3,
             endDiameter: 2.0,
-            orientation: 'flat'
+            orientation: 'flat',
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.0,
@@ -68,32 +68,32 @@ const VOIDDANCE_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             pulse: {
                 amplitude: 0.1,
                 frequency: 5,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.3,
                 max: 0.8,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             cutout: {
                 strength: 0.45,
-                primary: { pattern: 6, scale: 2.0, weight: 1.0 },    // SPIRAL
-                secondary: { pattern: 7, scale: 1.5, weight: 0.6 },  // DISSOLVE
+                primary: { pattern: 6, scale: 2.0, weight: 1.0 }, // SPIRAL
+                secondary: { pattern: 7, scale: 1.5, weight: 0.6 }, // DISSOLVE
                 blend: 'add',
                 travel: 'spiral',
                 travelSpeed: 2.5,
@@ -102,28 +102,30 @@ const VOIDDANCE_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.12,
-                    tip: 0.28
+                    tip: 0.28,
                 },
                 trailDissolve: {
                     enabled: true,
                     offset: -0.8,
-                    softness: 2.0
-                }
+                    softness: 2.0,
+                },
             },
-            atmospherics: [{
-                preset: 'darkness',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.5,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4,
-                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'darkness',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.5,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                    centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+                },
+            ],
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -2, phase: 60 },
-                { axis: 'y', rotations: 3, phase: 120 }
+                { axis: 'y', rotations: 3, phase: 120 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -132,15 +134,15 @@ const VOIDDANCE_CONFIG = {
             modelOverrides: {
                 'void-wrap': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
+                        type: 1, // ROTATING_ARC
                         arcWidth: 0.5,
-                        arcSpeed: 2.0,      // Moderate — rhythmic dance
-                        arcCount: 2
+                        arcSpeed: 2.0, // Moderate — rhythmic dance
+                        arcCount: 2,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     jitterAmount: 0,
@@ -154,7 +156,7 @@ const VOIDDANCE_CONFIG = {
     scaleVibration: 0.018,
     scaleFrequency: 4,
     scalePulse: true,
-    rotationDrift: 0.005
+    rotationDrift: 0.005,
 };
 
 export default buildVoidEffectGesture(VOIDDANCE_CONFIG);

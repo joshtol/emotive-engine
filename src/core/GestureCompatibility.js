@@ -10,34 +10,34 @@ export class GestureCompatibility {
         this.timingClasses = {
             downbeat: {
                 gestures: ['bounce', 'jump', 'headBob', 'spin', 'orbit'],
-                timing: 1.0,  // Fire on the beat
+                timing: 1.0, // Fire on the beat
                 priority: 1,
-                description: 'Strong emphasis on the downbeat'
+                description: 'Strong emphasis on the downbeat',
             },
             upbeat: {
                 gestures: ['wave', 'nod', 'point', 'reach'],
-                timing: 0.5,  // Fire on the half-beat
+                timing: 0.5, // Fire on the half-beat
                 priority: 2,
-                description: 'Medium emphasis on upbeat'
+                description: 'Medium emphasis on upbeat',
             },
             offbeat: {
                 gestures: ['wiggle', 'sway', 'lean', 'tilt', 'groove'],
-                timing: 0.5,  // Fire between beats (syncopated)
+                timing: 0.5, // Fire between beats (syncopated)
                 priority: 3,
-                description: 'Syncopated, creates groove'
+                description: 'Syncopated, creates groove',
             },
             subdivision: {
                 gestures: ['pulse', 'sparkle', 'flash', 'shimmer', 'flicker'],
-                timing: 0.25,  // Can fire on quarter beats
+                timing: 0.25, // Can fire on quarter beats
                 priority: 4,
-                description: 'Quick accents and fills'
+                description: 'Quick accents and fills',
             },
             continuous: {
                 gestures: ['breathe', 'float', 'rain'],
-                timing: -1,  // Can start anytime, flows across beats
+                timing: -1, // Can start anytime, flows across beats
                 priority: 5,
-                description: 'Ambient, continuous motion'
-            }
+                description: 'Ambient, continuous motion',
+            },
         };
 
         // Fill patterns for automatic motion between gestures
@@ -45,31 +45,31 @@ export class GestureCompatibility {
             subtle: ['breathe', 'float'],
             rhythmic: ['pulse', 'shimmer'],
             energetic: ['wiggle', 'sparkle'],
-            smooth: ['sway', 'glow']
+            smooth: ['sway', 'glow'],
         };
 
         // Dynamic density settings based on BPM
         this.densityProfiles = {
             sparse: {
                 fillProbability: 0.1,
-                subdivisionLevel: 2,  // Half notes only
-                description: 'Minimal movement'
+                subdivisionLevel: 2, // Half notes only
+                description: 'Minimal movement',
             },
             moderate: {
                 fillProbability: 0.3,
-                subdivisionLevel: 4,  // Quarter notes
-                description: 'Balanced movement'
+                subdivisionLevel: 4, // Quarter notes
+                description: 'Balanced movement',
             },
             dense: {
                 fillProbability: 0.5,
-                subdivisionLevel: 8,  // Eighth notes
-                description: 'Busy, energetic'
+                subdivisionLevel: 8, // Eighth notes
+                description: 'Busy, energetic',
             },
             chaos: {
                 fillProbability: 0.8,
-                subdivisionLevel: 16,  // Sixteenth notes
-                description: 'Maximum energy'
-            }
+                subdivisionLevel: 16, // Sixteenth notes
+                description: 'Maximum energy',
+            },
         };
 
         // Gesture group definitions
@@ -79,7 +79,7 @@ export class GestureCompatibility {
                 gestures: ['bounce', 'spin', 'orbit', 'sway', 'hula', 'jump', 'twist', 'groove'],
                 maxSimultaneous: 1,
                 priority: 1,
-                description: 'Primary body movements - mutually exclusive'
+                description: 'Primary body movements - mutually exclusive',
             },
 
             // Secondary movements - can layer 2 together
@@ -87,7 +87,7 @@ export class GestureCompatibility {
                 gestures: ['wave', 'nod', 'shake', 'point', 'lean', 'tilt', 'reach'],
                 maxSimultaneous: 2,
                 priority: 2,
-                description: 'Expressive gestures - can combine up to 2'
+                description: 'Expressive gestures - can combine up to 2',
             },
 
             // Dance moves - special category that can combine with effects
@@ -95,7 +95,7 @@ export class GestureCompatibility {
                 gestures: ['headBob', 'wiggle', 'runningman', 'charleston'],
                 maxSimultaneous: 1,
                 priority: 2,
-                description: 'Dance moves - one at a time but can add effects'
+                description: 'Dance moves - one at a time but can add effects',
             },
 
             // Visual effects - all can stack
@@ -103,7 +103,7 @@ export class GestureCompatibility {
                 gestures: ['pulse', 'glow', 'sparkle', 'flash', 'shimmer', 'flicker'],
                 maxSimultaneous: -1, // Unlimited
                 priority: 3,
-                description: 'Visual effects - all can layer together'
+                description: 'Visual effects - all can layer together',
             },
 
             // Ambient modifiers - always allowed to layer
@@ -111,8 +111,8 @@ export class GestureCompatibility {
                 gestures: ['breathe', 'float', 'rain'],
                 maxSimultaneous: -1, // Unlimited
                 priority: 4,
-                description: 'Ambient effects - always allowed'
-            }
+                description: 'Ambient effects - always allowed',
+            },
         };
 
         // Specific combinations that work well together
@@ -125,7 +125,7 @@ export class GestureCompatibility {
             ['sway', 'breathe'],
             ['float', 'shimmer'],
             ['orbit', 'sparkle'],
-            ['headBob', 'pulse']
+            ['headBob', 'pulse'],
         ];
 
         // Gestures that should never combine
@@ -134,7 +134,7 @@ export class GestureCompatibility {
             ['spin', 'orbit'],
             ['wave', 'point'],
             ['nod', 'shake'],
-            ['lean', 'tilt']
+            ['lean', 'tilt'],
         ];
 
         // Pre-defined chord combinations
@@ -145,7 +145,7 @@ export class GestureCompatibility {
             mystical: ['float', 'shimmer', 'breathe'],
             party: ['headBob', 'pulse', 'sparkle'],
             smooth: ['sway', 'glow', 'breathe'],
-            dramatic: ['spin', 'flash', 'sparkle']
+            dramatic: ['spin', 'flash', 'sparkle'],
         };
 
         // Chain definitions with simultaneous markers
@@ -158,7 +158,7 @@ export class GestureCompatibility {
             drift: 'sway+breathe+float+drift',
             chaos: 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
             morph: 'expand > contract > morph+glow > expand+flash',
-            
+
             // New chains - NO CONFLICTS WITH GESTURE NAMES
             rhythm: 'pulse > pulse+sparkle > pulse+flicker',
             spiral: 'spin > orbital > twist > orbital+sparkle',
@@ -166,7 +166,7 @@ export class GestureCompatibility {
             radiance: 'sparkle > pulse+flicker > shimmer',
             twinkle: 'sparkle > flash > pulse+sparkle > shimmer+flicker',
             stream: 'wave > nod+pulse > sparkle > flash',
-            
+
             // Legacy names for backward compatibility
             buildup: 'pulse > pulse > bounce+sparkle > spin+flash',
             cascade: 'wave > lean > tilt > spin > bounce+glow',
@@ -174,7 +174,7 @@ export class GestureCompatibility {
             smooth: 'sway+breathe > float > orbit+shimmer > sway+glow',
             custom: 'expand > contract > morph > expand+glow',
             greeting: 'wave+glow > nod+pulse > wave',
-            mystical: 'float+shimmer > orbit+breathe > spin+sparkle > float+glow'
+            mystical: 'float+shimmer > orbit+breathe > spin+sparkle > float+glow',
         };
     }
 
@@ -189,8 +189,8 @@ export class GestureCompatibility {
         if (gesture1 === gesture2) return false;
 
         // Check if they're in incompatible list
-        const incompatible = this.incompatiblePairs.some(pair =>
-            (pair.includes(gesture1) && pair.includes(gesture2))
+        const incompatible = this.incompatiblePairs.some(
+            pair => pair.includes(gesture1) && pair.includes(gesture2)
         );
         if (incompatible) return false;
 
@@ -249,7 +249,7 @@ export class GestureCompatibility {
         const used = new Set();
 
         // Normalize to gesture names
-        const normalizeGesture = g => typeof g === 'string' ? g : g.gestureName;
+        const normalizeGesture = g => (typeof g === 'string' ? g : g.gestureName);
 
         // Sort by priority
         const sorted = [...gestures].sort((a, b) => {
@@ -277,8 +277,10 @@ export class GestureCompatibility {
                 // Check group limits
                 const group = this.groups[this.getGestureGroup(gestureName)];
                 if (group && group.maxSimultaneous > 0) {
-                    const groupCount = chord.filter(c =>
-                        this.getGestureGroup(normalizeGesture(c)) === this.getGestureGroup(gestureName)
+                    const groupCount = chord.filter(
+                        c =>
+                            this.getGestureGroup(normalizeGesture(c)) ===
+                            this.getGestureGroup(gestureName)
                     ).length;
                     if (groupCount >= group.maxSimultaneous) {
                         continue; // Skip, group limit reached
@@ -309,7 +311,10 @@ export class GestureCompatibility {
         const steps = chainString.split('>').map(s => s.trim());
         return steps.map(step => {
             // Split by + for simultaneous gestures
-            return step.split('+').map(g => g.trim()).filter(g => g);
+            return step
+                .split('+')
+                .map(g => g.trim())
+                .filter(g => g);
         });
     }
 
@@ -319,9 +324,7 @@ export class GestureCompatibility {
      * @returns {boolean} - True if they enhance each other
      */
     isEnhancingCombination(gestures) {
-        const gestureNames = gestures.map(g =>
-            typeof g === 'string' ? g : g.gestureName
-        );
+        const gestureNames = gestures.map(g => (typeof g === 'string' ? g : g.gestureName));
 
         return this.enhancingCombinations.some(combo =>
             combo.every(gesture => gestureNames.includes(gesture))
@@ -348,9 +351,9 @@ export class GestureCompatibility {
 
         return {
             type: 'chord',
-            gestures: compatible.map(g => typeof g === 'string' ? g : g.gestureName),
+            gestures: compatible.map(g => (typeof g === 'string' ? g : g.gestureName)),
             isEnhancing,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         };
     }
 
@@ -385,7 +388,7 @@ export class GestureCompatibility {
             if (timingClass.gestures.includes(gesture)) {
                 return {
                     name: className,
-                    ...timingClass
+                    ...timingClass,
                 };
             }
         }
@@ -430,13 +433,13 @@ export class GestureCompatibility {
         // Determine fill pattern based on BPM
         let pattern;
         if (bpm < 80) {
-            pattern = 'energetic';  // More movement for slow tempos
+            pattern = 'energetic'; // More movement for slow tempos
         } else if (bpm < 120) {
             pattern = 'rhythmic';
         } else if (bpm < 160) {
             pattern = 'smooth';
         } else {
-            pattern = 'subtle';  // Less movement for fast tempos
+            pattern = 'subtle'; // Less movement for fast tempos
         }
 
         // Return fills based on probability
@@ -466,11 +469,11 @@ export class GestureCompatibility {
      * @returns {string} - Intensity level
      */
     getIntensityFromBPM(bpm) {
-        if (bpm < 60) return 'dense';      // Very slow needs more fills
+        if (bpm < 60) return 'dense'; // Very slow needs more fills
         if (bpm < 100) return 'moderate';
         if (bpm < 140) return 'moderate';
         if (bpm < 180) return 'sparse';
-        return 'sparse';  // Very fast needs less
+        return 'sparse'; // Very fast needs less
     }
 
     /**

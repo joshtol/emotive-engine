@@ -14,25 +14,25 @@ export class AccessibilityManager {
             enableFocusIndicators: config.enableFocusIndicators !== false,
             announceStateChanges: config.announceStateChanges !== false,
             colorBlindMode: config.colorBlindMode || 'none', // none, protanopia, deuteranopia, tritanopia
-            ...config
+            ...config,
         };
-        
+
         // Accessibility state
         this.reducedMotionPreferred = false;
         this.highContrastEnabled = false;
         this.screenReaderActive = false;
         this.keyboardNavigationActive = false;
         this.currentColorBlindMode = this.config.colorBlindMode;
-        
+
         // Focus management
         this.focusableElements = new Map();
         this.currentFocusIndex = -1;
         this.focusHistory = [];
-        
+
         // ARIA live region for announcements
         this.liveRegion = null;
         this.announcementQueue = [];
-        
+
         // Bound event handlers for proper cleanup
         this.boundHandleKeyDown = null;
         this.boundHandleKeyUp = null;
@@ -45,39 +45,42 @@ export class AccessibilityManager {
                 secondary: '#000000',
                 accent: '#FFFF00',
                 background: '#000000',
-                particles: '#FFFFFF'
+                particles: '#FFFFFF',
             },
-            protanopia: { // Red-blind
+            protanopia: {
+                // Red-blind
                 primary: '#0066CC',
                 secondary: '#FFCC00',
                 accent: '#00CCFF',
                 background: '#1A1A1A',
-                particles: '#66CCFF'
+                particles: '#66CCFF',
             },
-            deuteranopia: { // Green-blind
+            deuteranopia: {
+                // Green-blind
                 primary: '#0099FF',
                 secondary: '#FF9900',
                 accent: '#FF00FF',
                 background: '#1A1A1A',
-                particles: '#9966FF'
+                particles: '#9966FF',
             },
-            tritanopia: { // Blue-blind
+            tritanopia: {
+                // Blue-blind
                 primary: '#FF0066',
                 secondary: '#00FF66',
                 accent: '#FF6600',
                 background: '#1A1A1A',
-                particles: '#FFCC00'
-            }
+                particles: '#FFCC00',
+            },
         };
-        
+
         // Pattern overlays for color-blind modes
         this.patterns = {
             dots: 'dots',
             stripes: 'stripes',
             crosshatch: 'crosshatch',
-            solid: 'solid'
+            solid: 'solid',
         };
-        
+
         // Emotional state patterns for color-blind users
         this.statePatterns = {
             idle: this.patterns.solid,
@@ -87,33 +90,32 @@ export class AccessibilityManager {
             curious: this.patterns.crosshatch,
             frustrated: this.patterns.stripes,
             sad: this.patterns.dots,
-            neutral: this.patterns.solid
+            neutral: this.patterns.solid,
         };
-        
+
         // Initialize accessibility features
         this.initialize();
     }
-    
+
     /**
      * Initialize accessibility features
      */
     initialize() {
         // Detect user preferences
         this.detectUserPreferences();
-        
+
         // Set up ARIA live region
         this.setupLiveRegion();
-        
+
         // Set up keyboard navigation if enabled
         if (this.config.enableKeyboardNavigation) {
             this.setupKeyboardNavigation();
         }
-        
+
         // Listen for preference changes
         this.setupPreferenceListeners();
-        
     }
-    
+
     /**
      * Detect user accessibility preferences
      */
@@ -123,23 +125,23 @@ export class AccessibilityManager {
             const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
             this.reducedMotionPreferred = motionQuery.matches;
         }
-        
+
         // Detect high contrast preference
         if (this.config.enableHighContrast && window.matchMedia) {
             const contrastQuery = window.matchMedia('(prefers-contrast: high)');
             this.highContrastEnabled = contrastQuery.matches;
-            
+
             // Also check for Windows high contrast mode
             if (!this.highContrastEnabled) {
                 const windowsHCQuery = window.matchMedia('(-ms-high-contrast: active)');
                 this.highContrastEnabled = windowsHCQuery.matches;
             }
         }
-        
+
         // Detect screen reader (heuristic approach)
         this.detectScreenReader();
     }
-    
+
     /**
      * Detect if a screen reader is likely active
      */
@@ -147,25 +149,26 @@ export class AccessibilityManager {
         // Check for ARIA attributes being actively used
         const hasAriaLive = document.querySelector('[aria-live]');
         const hasAriaAtomic = document.querySelector('[aria-atomic]');
-        
+
         // Check for screen reader specific attributes
         const hasRole = document.querySelector('[role="application"]');
-        
+
         // Check user agent for assistive technology hints
         const userAgent = navigator.userAgent.toLowerCase();
-        const hasATHints = userAgent.includes('nvda') || 
-                          userAgent.includes('jaws') || 
-                          userAgent.includes('voiceover');
-        
+        const hasATHints =
+            userAgent.includes('nvda') ||
+            userAgent.includes('jaws') ||
+            userAgent.includes('voiceover');
+
         this.screenReaderActive = !!(hasAriaLive || hasAriaAtomic || hasRole || hasATHints);
     }
-    
+
     /**
      * Set up ARIA live region for announcements
      */
     setupLiveRegion() {
         if (!this.config.enableScreenReaderSupport) return;
-        
+
         // Create live region if it doesn't exist
         this.liveRegion = document.getElementById('mascot-announcements');
         if (!this.liveRegion) {
@@ -181,7 +184,7 @@ export class AccessibilityManager {
             document.body.appendChild(this.liveRegion);
         }
     }
-    
+
     /**
      * Set up keyboard navigation
      */
@@ -193,7 +196,7 @@ export class AccessibilityManager {
         document.addEventListener('keydown', this.boundHandleKeyDown);
         document.addEventListener('keyup', this.boundHandleKeyUp);
     }
-    
+
     /**
      * Set up listeners for preference changes
      */
@@ -205,7 +208,7 @@ export class AccessibilityManager {
                 this.reducedMotionPreferred = e.matches;
                 this.onPreferenceChange('reducedMotion', e.matches);
             });
-            
+
             // Listen for high contrast changes
             const contrastQuery = window.matchMedia('(prefers-contrast: high)');
             contrastQuery.addListener(e => {
@@ -214,37 +217,37 @@ export class AccessibilityManager {
             });
         }
     }
-    
+
     /**
      * Handle keyboard navigation
      * @param {KeyboardEvent} event - Keyboard event
      */
     handleKeyDown(event) {
         if (!this.config.enableKeyboardNavigation) return;
-        
+
         switch (event.key) {
-        case 'Tab':
-            event.preventDefault();
-            this.navigateFocus(event.shiftKey ? -1 : 1);
-            break;
-        case 'Enter':
-        case ' ':
-            this.activateCurrentFocus();
-            break;
-        case 'Escape':
-            this.clearFocus();
-            break;
-        case 'ArrowLeft':
-        case 'ArrowRight':
-        case 'ArrowUp':
-        case 'ArrowDown':
-            this.handleArrowNavigation(event.key);
-            break;
+            case 'Tab':
+                event.preventDefault();
+                this.navigateFocus(event.shiftKey ? -1 : 1);
+                break;
+            case 'Enter':
+            case ' ':
+                this.activateCurrentFocus();
+                break;
+            case 'Escape':
+                this.clearFocus();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowRight':
+            case 'ArrowUp':
+            case 'ArrowDown':
+                this.handleArrowNavigation(event.key);
+                break;
         }
-        
+
         this.keyboardNavigationActive = true;
     }
-    
+
     /**
      * Handle key up events
      * @param {KeyboardEvent} _event - Keyboard event (unused but kept for event handler signature)
@@ -252,7 +255,7 @@ export class AccessibilityManager {
     handleKeyUp(_event) {
         // Could be used for specific key release actions
     }
-    
+
     /**
      * Navigate focus between elements
      * @param {number} direction - Direction to navigate (1 or -1)
@@ -260,25 +263,25 @@ export class AccessibilityManager {
     navigateFocus(direction) {
         const focusableArray = Array.from(this.focusableElements.values());
         if (focusableArray.length === 0) return;
-        
+
         this.currentFocusIndex += direction;
-        
+
         // Wrap around
         if (this.currentFocusIndex < 0) {
             this.currentFocusIndex = focusableArray.length - 1;
         } else if (this.currentFocusIndex >= focusableArray.length) {
             this.currentFocusIndex = 0;
         }
-        
+
         const element = focusableArray[this.currentFocusIndex];
         this.setFocus(element);
-        
+
         // Announce focus change
         if (element.label) {
             this.announce(`Focused on ${element.label}`);
         }
     }
-    
+
     /**
      * Handle arrow key navigation
      * @param {string} key - Arrow key pressed
@@ -286,18 +289,18 @@ export class AccessibilityManager {
     handleArrowNavigation(key) {
         // This would be implemented based on spatial navigation needs
         const directions = {
-            'ArrowLeft': { x: -1, y: 0 },
-            'ArrowRight': { x: 1, y: 0 },
-            'ArrowUp': { x: 0, y: -1 },
-            'ArrowDown': { x: 0, y: 1 }
+            ArrowLeft: { x: -1, y: 0 },
+            ArrowRight: { x: 1, y: 0 },
+            ArrowUp: { x: 0, y: -1 },
+            ArrowDown: { x: 0, y: 1 },
         };
-        
+
         const direction = directions[key];
         if (direction && this.onArrowNavigation) {
             this.onArrowNavigation(direction);
         }
     }
-    
+
     /**
      * Register a focusable element
      * @param {string} id - Element identifier
@@ -309,10 +312,10 @@ export class AccessibilityManager {
             label: element.label || id,
             bounds: element.bounds || null,
             action: element.action || null,
-            type: element.type || 'button'
+            type: element.type || 'button',
         });
     }
-    
+
     /**
      * Unregister a focusable element
      * @param {string} id - Element identifier
@@ -320,7 +323,7 @@ export class AccessibilityManager {
     unregisterFocusableElement(id) {
         this.focusableElements.delete(id);
     }
-    
+
     /**
      * Set focus on an element
      * @param {Object} element - Element to focus
@@ -329,13 +332,13 @@ export class AccessibilityManager {
         if (this.onFocusChange) {
             this.onFocusChange(element);
         }
-        
+
         this.focusHistory.push(element.id);
         if (this.focusHistory.length > 10) {
             this.focusHistory.shift();
         }
     }
-    
+
     /**
      * Clear current focus
      */
@@ -344,10 +347,10 @@ export class AccessibilityManager {
         if (this.onFocusChange) {
             this.onFocusChange(null);
         }
-        
+
         this.announce('Focus cleared');
     }
-    
+
     /**
      * Activate the currently focused element
      */
@@ -361,7 +364,7 @@ export class AccessibilityManager {
             }
         }
     }
-    
+
     /**
      * Announce a message to screen readers
      * @param {string} message - Message to announce
@@ -369,39 +372,39 @@ export class AccessibilityManager {
      */
     announce(message, priority = 'polite') {
         if (!this.config.enableScreenReaderSupport || !this.liveRegion) return;
-        
+
         // Queue the announcement
         this.announcementQueue.push({ message, priority });
-        
+
         // Process queue
         this.processAnnouncementQueue();
     }
-    
+
     /**
      * Process announcement queue
      */
     processAnnouncementQueue() {
         if (this.announcementQueue.length === 0) return;
-        
+
         const { message, priority } = this.announcementQueue.shift();
-        
+
         // Update live region
         this.liveRegion.setAttribute('aria-live', priority);
         this.liveRegion.textContent = message;
-        
+
         // Clear after a delay to allow screen reader to announce
         setTimeout(() => {
             if (this.liveRegion) {
                 this.liveRegion.textContent = '';
             }
-            
+
             // Process next announcement if any
             if (this.announcementQueue.length > 0) {
                 this.processAnnouncementQueue();
             }
         }, 100);
     }
-    
+
     /**
      * Get adjusted animation settings based on accessibility preferences
      * @param {Object} originalSettings - Original animation settings
@@ -411,7 +414,7 @@ export class AccessibilityManager {
         if (!this.reducedMotionPreferred) {
             return originalSettings;
         }
-        
+
         // Reduce or disable animations for users who prefer reduced motion
         return {
             ...originalSettings,
@@ -420,10 +423,10 @@ export class AccessibilityManager {
             easing: 'linear',
             particlesEnabled: false,
             complexAnimations: false,
-            autoPlay: false
+            autoPlay: false,
         };
     }
-    
+
     /**
      * Get adjusted color scheme based on accessibility preferences
      * @param {Object} originalColors - Original color scheme
@@ -434,20 +437,23 @@ export class AccessibilityManager {
         if (!this.colorSchemes.normal) {
             this.colorSchemes.normal = { ...originalColors };
         }
-        
+
         // Apply high contrast if needed
         if (this.highContrastEnabled) {
             return this.colorSchemes.highContrast;
         }
-        
+
         // Apply color blind mode if set
-        if (this.currentColorBlindMode !== 'none' && this.colorSchemes[this.currentColorBlindMode]) {
+        if (
+            this.currentColorBlindMode !== 'none' &&
+            this.colorSchemes[this.currentColorBlindMode]
+        ) {
             return this.colorSchemes[this.currentColorBlindMode];
         }
-        
+
         return originalColors;
     }
-    
+
     /**
      * Get pattern for current state (for color blind users)
      * @param {string} state - Current emotional state
@@ -457,10 +463,10 @@ export class AccessibilityManager {
         if (this.currentColorBlindMode === 'none') {
             return this.patterns.solid;
         }
-        
+
         return this.statePatterns[state] || this.patterns.solid;
     }
-    
+
     /**
      * Apply pattern overlay to canvas
      * @param {CanvasRenderingContext2D} ctx - Canvas context
@@ -469,32 +475,32 @@ export class AccessibilityManager {
      */
     applyPatternOverlay(ctx, pattern, bounds) {
         if (pattern === this.patterns.solid) return;
-        
+
         ctx.save();
-        
+
         const patternCanvas = document.createElement('canvas');
         const patternCtx = patternCanvas.getContext('2d');
-        
+
         switch (pattern) {
-        case this.patterns.dots:
-            this.createDotPattern(patternCtx, patternCanvas);
-            break;
-        case this.patterns.stripes:
-            this.createStripePattern(patternCtx, patternCanvas);
-            break;
-        case this.patterns.crosshatch:
-            this.createCrosshatchPattern(patternCtx, patternCanvas);
-            break;
+            case this.patterns.dots:
+                this.createDotPattern(patternCtx, patternCanvas);
+                break;
+            case this.patterns.stripes:
+                this.createStripePattern(patternCtx, patternCanvas);
+                break;
+            case this.patterns.crosshatch:
+                this.createCrosshatchPattern(patternCtx, patternCanvas);
+                break;
         }
-        
+
         const canvasPattern = ctx.createPattern(patternCanvas, 'repeat');
         ctx.fillStyle = canvasPattern;
         ctx.globalAlpha = 0.3; // Semi-transparent overlay
         ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        
+
         ctx.restore();
     }
-    
+
     /**
      * Create dot pattern
      * @param {CanvasRenderingContext2D} ctx - Pattern canvas context
@@ -503,13 +509,13 @@ export class AccessibilityManager {
     createDotPattern(ctx, canvas) {
         canvas.width = 10;
         canvas.height = 10;
-        
+
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.arc(5, 5, 2, 0, Math.PI * 2);
         ctx.fill();
     }
-    
+
     /**
      * Create stripe pattern
      * @param {CanvasRenderingContext2D} ctx - Pattern canvas context
@@ -518,7 +524,7 @@ export class AccessibilityManager {
     createStripePattern(ctx, canvas) {
         canvas.width = 10;
         canvas.height = 10;
-        
+
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -526,7 +532,7 @@ export class AccessibilityManager {
         ctx.lineTo(10, 0);
         ctx.stroke();
     }
-    
+
     /**
      * Create crosshatch pattern
      * @param {CanvasRenderingContext2D} ctx - Pattern canvas context
@@ -535,22 +541,22 @@ export class AccessibilityManager {
     createCrosshatchPattern(ctx, canvas) {
         canvas.width = 10;
         canvas.height = 10;
-        
+
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 1;
-        
+
         // Diagonal lines
         ctx.beginPath();
         ctx.moveTo(0, 10);
         ctx.lineTo(10, 0);
         ctx.stroke();
-        
+
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(10, 10);
         ctx.stroke();
     }
-    
+
     /**
      * Set color blind mode
      * @param {string} mode - Color blind mode
@@ -560,15 +566,15 @@ export class AccessibilityManager {
         if (!validModes.includes(mode)) {
             return;
         }
-        
+
         this.currentColorBlindMode = mode;
         this.announce(`Color blind mode set to ${mode}`);
-        
+
         if (this.onColorSchemeChange) {
             this.onColorSchemeChange(this.getColorScheme());
         }
     }
-    
+
     /**
      * Get accessibility status report
      * @returns {Object} Accessibility status
@@ -580,32 +586,33 @@ export class AccessibilityManager {
             screenReader: this.screenReaderActive,
             keyboardNavigation: this.keyboardNavigationActive,
             colorBlindMode: this.currentColorBlindMode,
-            focusedElement: this.currentFocusIndex >= 0 ? 
-                Array.from(this.focusableElements.values())[this.currentFocusIndex] : null,
-            registeredElements: this.focusableElements.size
+            focusedElement:
+                this.currentFocusIndex >= 0
+                    ? Array.from(this.focusableElements.values())[this.currentFocusIndex]
+                    : null,
+            registeredElements: this.focusableElements.size,
         };
     }
-    
+
     /**
      * Handle preference change
      * @param {string} preference - Preference that changed
      * @param {*} value - New value
      */
     onPreferenceChange(preference, value) {
-        
         // Notify about the change
         this.announce(`${preference} is now ${value ? 'enabled' : 'disabled'}`);
-        
+
         // Trigger callbacks if set
         if (preference === 'reducedMotion' && this.onReducedMotionChange) {
             this.onReducedMotionChange(value);
         }
-        
+
         if (preference === 'highContrast' && this.onHighContrastChange) {
             this.onHighContrastChange(value);
         }
     }
-    
+
     /**
      * Create ARIA description for mascot state
      * @param {Object} state - Current mascot state
@@ -620,12 +627,12 @@ export class AccessibilityManager {
             curious: 'Mascot is curious and looking around',
             frustrated: 'Mascot is frustrated and shaking',
             sad: 'Mascot is sad and drooping',
-            neutral: 'Mascot is in a neutral state'
+            neutral: 'Mascot is in a neutral state',
         };
-        
+
         return descriptions[state.emotional] || 'Mascot is active';
     }
-    
+
     /**
      * Destroy accessibility manager
      */
@@ -639,17 +646,16 @@ export class AccessibilityManager {
             document.removeEventListener('keyup', this.boundHandleKeyUp);
             this.boundHandleKeyUp = null;
         }
-        
+
         // Remove live region
         if (this.liveRegion && this.liveRegion.parentNode) {
             this.liveRegion.parentNode.removeChild(this.liveRegion);
         }
-        
+
         // Clear data
         this.focusableElements.clear();
         this.announcementQueue = [];
         this.focusHistory = [];
-        
     }
 }
 

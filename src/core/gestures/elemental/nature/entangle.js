@@ -48,14 +48,14 @@ const NATUREENTANGLE_CONFIG = {
                 endDiameter: 1.0,
                 diameterUnit: 'mascot',
                 holdAt: 0.75,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: {
                 type: 'spiral',
                 count: 6,
                 spacing: 0.12,
                 arcOffset: 60,
-                phaseOffset: 0.03
+                phaseOffset: 0.03,
             },
             count: 6,
             scale: 2.0,
@@ -67,35 +67,35 @@ const NATUREENTANGLE_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.1,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.1,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.08,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.4,
                         peak: 0.8,
                         end: 0.6,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 pulse: {
                     amplitude: 0.05,
                     frequency: 2,
-                    easing: 'easeInOut'
+                    easing: 'easeInOut',
                 },
                 emissive: {
                     min: 0.5,
                     max: 1.0,
                     frequency: 2,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 cutout: {
                     strength: 0.5,
@@ -104,7 +104,7 @@ const NATUREENTANGLE_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'fadeIn'
+                    strengthCurve: 'fadeIn',
                 },
                 grain: { type: 3, strength: 0.2, scale: 0.3, speed: 0.8, blend: 'multiply' },
                 rotate: [
@@ -113,7 +113,7 @@ const NATUREENTANGLE_CONFIG = {
                     { axis: 'z', rotations: 1.5, phase: 120 },
                     { axis: 'z', rotations: -0.6, phase: 200 },
                     { axis: 'z', rotations: 1.0, phase: 270 },
-                    { axis: 'z', rotations: -1.4, phase: 160 }
+                    { axis: 'z', rotations: -1.4, phase: 160 },
                 ],
                 blending: 'normal',
                 renderOrder: 12,
@@ -123,20 +123,22 @@ const NATUREENTANGLE_CONFIG = {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 1.5,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'flat'
-                    }
+                        orientationOverride: 'flat',
+                    },
                 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                }]
-            }
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                    },
+                ],
+            },
         },
 
         // ── Layer 2: 6 mixed organic pieces surface-spawned (squeeze grip) ──
@@ -158,29 +160,29 @@ const NATUREENTANGLE_CONFIG = {
                 enter: {
                     type: 'grow',
                     duration: 0.15,
-                    easing: 'easeOutQuad'
+                    easing: 'easeOutQuad',
                 },
                 exit: {
                     type: 'shrink',
                     duration: 0.2,
-                    easing: 'easeInQuad'
+                    easing: 'easeInQuad',
                 },
                 procedural: {
                     scaleSmoothing: 0.08,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 pulse: {
                     amplitude: 0.08,
                     frequency: 2.5,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: { min: 0.4, max: 0.9, frequency: 2, pattern: 'sine' },
                 rotate: {
                     axis: 'y',
                     speed: 0.01,
                     oscillate: true,
-                    range: Math.PI / 10
+                    range: Math.PI / 10,
                 },
                 drift: { direction: 'inward', speed: 0.012, noise: 0.06 },
                 scaleVariance: 0.2,
@@ -188,17 +190,17 @@ const NATUREENTANGLE_CONFIG = {
                 renderOrder: 8,
                 modelOverrides: {
                     'vine-twist': {
-                        scaling: { mode: 'non-uniform', axes: { x: 1.2, y: 0.8, z: 1.2 } }
+                        scaling: { mode: 'non-uniform', axes: { x: 1.2, y: 0.8, z: 1.2 } },
                     },
                     'thorn-curl': {
-                        scaling: { mode: 'non-uniform', axes: { x: 0.85, y: 1.5, z: 0.85 } }
+                        scaling: { mode: 'non-uniform', axes: { x: 0.85, y: 1.5, z: 0.85 } },
                     },
                     's-vine': {
-                        scaling: { mode: 'non-uniform', axes: { x: 0.7, y: 1.6, z: 0.7 } }
-                    }
-                }
-            }
-        }
+                        scaling: { mode: 'non-uniform', axes: { x: 0.7, y: 1.6, z: 0.7 } },
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.2, 0.7, 0.25],
@@ -219,8 +221,8 @@ const NATUREENTANGLE_CONFIG = {
                 { at: 0.3, value: 0.7 },
                 { at: 0.65, value: 0.85 },
                 { at: 0.8, value: 0.6 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         tremor: {
             keyframes: [
@@ -228,10 +230,10 @@ const NATUREENTANGLE_CONFIG = {
                 { at: 0.5, value: 0.004 },
                 { at: 0.7, value: 0.012 },
                 { at: 0.85, value: 0.018 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
-    }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
+    },
 };
 
 export default buildNatureEffectGesture(NATUREENTANGLE_CONFIG);

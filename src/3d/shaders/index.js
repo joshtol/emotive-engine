@@ -6,9 +6,6 @@
  */
 
 // Re-export shadow shaders
-export {
-    getMoonCrescentShaders,
-    getShadowShaders
-} from './shadows/index.js';
+export { getMoonCrescentShaders, getShadowShaders } from './shadows/index.js';
 
 // Future: Other shader types (particles, effects, etc.) can be added here

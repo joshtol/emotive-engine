@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting Accessibility
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Element targeting with accessibility features for mascot movement
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/ElementTargetingAccessibility
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides element targeting with accessibility features including screen reader      
- * ║ support, keyboard navigation, high contrast mode, and reduced motion support.      
+ * ║ Provides element targeting with accessibility features including screen reader
+ * ║ support, keyboard navigation, high contrast mode, and reduced motion support.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -27,7 +27,7 @@ class ElementTargetingAccessibility extends ElementTargeting {
             keyboardNavigation: true,
             highContrast: false,
             reducedMotion: false,
-            announcements: true
+            announcements: true,
         };
         this.announcements = [];
         this.keyboardListeners = new Map();
@@ -43,7 +43,12 @@ class ElementTargetingAccessibility extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithScreenReader(targetSelector, screenReaderOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithScreenReader(
+        targetSelector,
+        screenReaderOptions = {},
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -54,7 +59,7 @@ class ElementTargetingAccessibility extends ElementTargeting {
             announce = true,
             announcement = 'Mascot moved to element',
             role = 'button',
-            label = element.textContent || element.alt || 'Interactive element'
+            label = element.textContent || element.alt || 'Interactive element',
         } = screenReaderOptions;
 
         // Move mascot to element
@@ -80,7 +85,12 @@ class ElementTargetingAccessibility extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithKeyboard(targetSelector, keyboardOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithKeyboard(
+        targetSelector,
+        keyboardOptions = {},
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -92,7 +102,7 @@ class ElementTargetingAccessibility extends ElementTargeting {
             onKeyUp = null,
             onEnter = null,
             onEscape = null,
-            onArrowKeys = null
+            onArrowKeys = null,
         } = keyboardOptions;
 
         const keyboardId = `keyboard-${Date.now()}-${Math.random()}`;
@@ -101,19 +111,19 @@ class ElementTargetingAccessibility extends ElementTargeting {
             if (onKeyDown) onKeyDown(event);
 
             switch (event.key) {
-            case 'Enter':
-            case ' ':
-                if (onEnter) onEnter(event);
-                break;
-            case 'Escape':
-                if (onEscape) onEscape(event);
-                break;
-            case 'ArrowUp':
-            case 'ArrowDown':
-            case 'ArrowLeft':
-            case 'ArrowRight':
-                if (onArrowKeys) onArrowKeys(event);
-                break;
+                case 'Enter':
+                case ' ':
+                    if (onEnter) onEnter(event);
+                    break;
+                case 'Escape':
+                    if (onEscape) onEscape(event);
+                    break;
+                case 'ArrowUp':
+                case 'ArrowDown':
+                case 'ArrowLeft':
+                case 'ArrowRight':
+                    if (onArrowKeys) onArrowKeys(event);
+                    break;
             }
         };
 
@@ -134,8 +144,8 @@ class ElementTargetingAccessibility extends ElementTargeting {
             element,
             events: [
                 { event: 'keydown', handler: handleKeyDown },
-                { event: 'keyup', handler: handleKeyUp }
-            ]
+                { event: 'keyup', handler: handleKeyUp },
+            ],
         });
 
         // Move mascot to element
@@ -159,7 +169,12 @@ class ElementTargetingAccessibility extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithHighContrast(targetSelector, contrastOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithHighContrast(
+        targetSelector,
+        contrastOptions = {},
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -170,7 +185,7 @@ class ElementTargetingAccessibility extends ElementTargeting {
             backgroundColor = '#000000',
             textColor = '#ffffff',
             borderColor = '#ffffff',
-            borderWidth = 2
+            borderWidth = 2,
         } = contrastOptions;
 
         // Apply high contrast styles
@@ -192,17 +207,19 @@ class ElementTargetingAccessibility extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithReducedMotion(targetSelector, motionOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithReducedMotion(
+        targetSelector,
+        motionOptions = {},
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
             return;
         }
 
-        const {
-            duration = 0,
-            easing = 'linear'
-        } = motionOptions;
+        const { duration = 0, easing = 'linear' } = motionOptions;
 
         // Check for reduced motion preference
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -223,18 +240,19 @@ class ElementTargetingAccessibility extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithFocus(targetSelector, focusOptions = {}, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithFocus(
+        targetSelector,
+        focusOptions = {},
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
             return;
         }
 
-        const {
-            autoFocus = false,
-            focusRing = true,
-            focusOrder = []
-        } = focusOptions;
+        const { autoFocus = false, focusRing = true, focusOrder = [] } = focusOptions;
 
         // Add to focus order
         if (focusOrder.length > 0) {
@@ -273,12 +291,13 @@ class ElementTargetingAccessibility extends ElementTargeting {
         if (direction === 'next') {
             this.currentFocusIndex = (this.currentFocusIndex + 1) % this.focusOrder.length;
         } else {
-            this.currentFocusIndex = (this.currentFocusIndex - 1 + this.focusOrder.length) % this.focusOrder.length;
+            this.currentFocusIndex =
+                (this.currentFocusIndex - 1 + this.focusOrder.length) % this.focusOrder.length;
         }
 
         const targetSelector = this.focusOrder[this.currentFocusIndex];
         const element = document.querySelector(targetSelector);
-        
+
         if (element) {
             element.focus();
             this.moveToElement(targetSelector, 'right', { x: 20, y: 0 });
@@ -309,7 +328,7 @@ class ElementTargetingAccessibility extends ElementTargeting {
 
         // Announce message
         liveRegion.textContent = message;
-        
+
         // Clear after announcement
         setTimeout(() => {
             liveRegion.textContent = '';
@@ -380,4 +399,3 @@ class ElementTargetingAccessibility extends ElementTargeting {
 }
 
 export default ElementTargetingAccessibility;
-

@@ -51,19 +51,19 @@ const ICEIMPACT_CONFIG = {
     spawnMode: {
         type: 'orbit',
         orbit: {
-            height: 'above',              // Start above mascot
-            endHeight: 'center',           // Crash down to center
-            radius: 3.5,                   // Far out — dramatic approach distance
-            endRadius: 0.1,               // Slam tight into mascot center
-            speed: 3,                      // 3 revolutions — long wind-up
-            easing: 'easeOut',            // Fast inward rush → visible convergence
-            startScale: 0.4,              // Small and distant at first
-            endScale: 1.8,                // Loom huge as they barrel in
-            orientation: 'vertical'
+            height: 'above', // Start above mascot
+            endHeight: 'center', // Crash down to center
+            radius: 3.5, // Far out — dramatic approach distance
+            endRadius: 0.1, // Slam tight into mascot center
+            speed: 3, // 3 revolutions — long wind-up
+            easing: 'easeOut', // Fast inward rush → visible convergence
+            startScale: 0.4, // Small and distant at first
+            endScale: 1.8, // Loom huge as they barrel in
+            orientation: 'vertical',
         },
         formation: {
             type: 'ring',
-            count: 7
+            count: 7,
         },
         count: 7,
         scale: 1.4,
@@ -75,47 +75,49 @@ const ICEIMPACT_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.06,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'burst-fade',
-                duration: 0.05,            // Snap-vanish on impact
+                duration: 0.05, // Snap-vanish on impact
                 easing: 'easeOut',
-                burstScale: 0.2            // Crushed small on impact
+                burstScale: 0.2, // Crushed small on impact
             },
             procedural: {
                 scaleSmoothing: 0.04,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 frost: {
                     start: 0.3,
                     peak: 0.95,
                     end: 0.9,
-                    curve: 'fadeIn'         // Frost intensifies as crystals converge
-                }
+                    curve: 'fadeIn', // Frost intensifies as crystals converge
+                },
             },
             pulse: {
                 amplitude: 0.12,
                 frequency: 8,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.0,
                 max: 3.0,
                 frequency: 9,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Per-gesture atmospheric particles: cold mist on impact
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.7,
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.7,
+                },
+            ],
             // Violent per-crystal tumbling — faster spins for aggressive motion
             rotate: [
                 { axis: 'z', rotations: -4, phase: 0 },
@@ -124,13 +126,13 @@ const ICEIMPACT_CONFIG = {
                 { axis: 'z', rotations: 4, phase: 155 },
                 { axis: 'x', rotations: -3.5, phase: 210 },
                 { axis: 'y', rotations: 3, phase: 260 },
-                { axis: 'z', rotations: -4.5, phase: 315 }
+                { axis: 'z', rotations: -4.5, phase: 315 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.08,
             blending: 'normal',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     // Glow - intense flash on impact
@@ -144,7 +146,7 @@ const ICEIMPACT_CONFIG = {
     scaleContract: 0.05,
     // Tremor - violent impact shaking
     tremor: 0.018,
-    tremorFrequency: 9
+    tremorFrequency: 9,
 };
 
 /**

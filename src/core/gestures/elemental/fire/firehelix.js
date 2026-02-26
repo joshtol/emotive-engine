@@ -43,7 +43,7 @@ const FIREHELIX_CONFIG = {
     emoji: '🧬',
     type: 'blending',
     description: 'DNA-style double helix ascending flame',
-    duration: 2000,         // Longer duration to appreciate the helix
+    duration: 2000, // Longer duration to appreciate the helix
     beats: 4,
     intensity: 1.2,
     category: 'radiating',
@@ -61,15 +61,15 @@ const FIREHELIX_CONFIG = {
             endScale: 1.1,
             startDiameter: 1.8,
             endDiameter: 2.0,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
-            count: 6,               // 3 per strand
-            strands: 2,             // Double helix!
-            spacing: 0.2,           // Spacing within each strand
-            arcOffset: 120,         // 120° between elements in same strand
-            phaseOffset: 0.05
+            count: 6, // 3 per strand
+            strands: 2, // Double helix!
+            spacing: 0.2, // Spacing within each strand
+            arcOffset: 120, // 120° between elements in same strand
+            phaseOffset: 0.05,
         },
         count: 6,
         scale: 0.7,
@@ -81,77 +81,79 @@ const FIREHELIX_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 temperature: {
                     start: 0.5,
                     peak: 0.8,
                     end: 0.6,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             flicker: {
                 intensity: 0.25,
                 rate: 12,
-                pattern: 'smooth'
+                pattern: 'smooth',
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 4,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.2,
                 max: 2.5,
                 frequency: 6,
-                pattern: 'smooth'
+                pattern: 'smooth',
             },
             // Two-layer: WAVES + SPIRAL for DNA energy flow
             cutout: {
                 strength: 0.8,
-                primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - energy flow
-                secondary: { pattern: 6, scale: 1.8, weight: 0.6 },  // SPIRAL - helix arms
-                blend: 'max',             // Smoother blend
+                primary: { pattern: 4, scale: 2.0, weight: 1.0 }, // WAVES - energy flow
+                secondary: { pattern: 6, scale: 1.8, weight: 0.6 }, // SPIRAL - helix arms
+                blend: 'max', // Smoother blend
                 travel: 'angular',
                 travelSpeed: 3.0,
-                strengthCurve: 'bell',    // Fade in and out
+                strengthCurve: 'bell', // Fade in and out
                 bellPeakAt: 0.5,
                 // Geometric mask: cutouts at ring edges
                 geometricMask: {
                     type: 'distance',
                     core: 0.1,
-                    tip: 0.25
-                }
+                    tip: 0.25,
+                },
             },
             // Grain: subtle perlin for DNA energy texture
             grain: {
-                type: 0,              // PERLIN - smooth flowing
+                type: 0, // PERLIN - smooth flowing
                 strength: 0.08,
                 scale: 0.2,
                 speed: 1.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: smoke from helix strands
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+                },
+            ],
             // Moderate rotation to show the helix structure
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,
@@ -164,19 +166,19 @@ const FIREHELIX_CONFIG = {
                         type: 1,
                         arcWidth: 0.6,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     // Mesh effects - warm mystical fire
     flickerFrequency: 10,
     flickerAmplitude: 0.012,
     flickerDecay: 0.15,
-    glowColor: [1.0, 0.5, 0.2],     // Warm orange
+    glowColor: [1.0, 0.5, 0.2], // Warm orange
     glowIntensityMin: 1.1,
     glowIntensityMax: 2.2,
     glowFlickerRate: 8,
@@ -184,7 +186,7 @@ const FIREHELIX_CONFIG = {
     scaleFrequency: 5,
     scaleGrowth: 0.02,
     rotationEffect: true,
-    rotationSpeed: 0.4
+    rotationSpeed: 0.4,
 };
 
 /**

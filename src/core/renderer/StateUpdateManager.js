@@ -18,7 +18,10 @@ export class StateUpdateManager {
      */
     updateUndertoneModifiers() {
         // Update undertone modifiers every frame during transitions
-        if (this.renderer.stateMachine && this.renderer.stateMachine.getWeightedUndertoneModifiers) {
+        if (
+            this.renderer.stateMachine &&
+            this.renderer.stateMachine.getWeightedUndertoneModifiers
+        ) {
             const weightedModifier = this.renderer.stateMachine.getWeightedUndertoneModifiers();
             if (weightedModifier) {
                 this.renderer.applyUndertoneModifiers(weightedModifier);
@@ -57,8 +60,12 @@ export class StateUpdateManager {
             // When gaze tracking is enabled, follow mouse/touch
             const smoothing = 0.15;
             const maxOffset = 50; // Maximum pixels the orb can move
-            this.renderer.state.gazeOffset.x += (this.renderer.state.gazeTarget.x * maxOffset - this.renderer.state.gazeOffset.x) * smoothing;
-            this.renderer.state.gazeOffset.y += (this.renderer.state.gazeTarget.y * maxOffset - this.renderer.state.gazeOffset.y) * smoothing;
+            this.renderer.state.gazeOffset.x +=
+                (this.renderer.state.gazeTarget.x * maxOffset - this.renderer.state.gazeOffset.x) *
+                smoothing;
+            this.renderer.state.gazeOffset.y +=
+                (this.renderer.state.gazeTarget.y * maxOffset - this.renderer.state.gazeOffset.y) *
+                smoothing;
         } else {
             // When gaze tracking is disabled, return to center
             const smoothing = 0.1;

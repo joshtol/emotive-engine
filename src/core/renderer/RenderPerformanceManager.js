@@ -33,7 +33,12 @@ export class RenderPerformanceManager {
             this.renderer.forceCleanRender = false;
             // Clear any rendering artifacts
             if (this.renderer.canvas && this.renderer.ctx) {
-                this.renderer.ctx.clearRect(0, 0, this.renderer.canvas.width, this.renderer.canvas.height);
+                this.renderer.ctx.clearRect(
+                    0,
+                    0,
+                    this.renderer.canvas.width,
+                    this.renderer.canvas.height
+                );
             }
         }
     }

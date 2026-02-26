@@ -47,14 +47,14 @@ const LIGHTDANCE_CONFIG = {
             endScale: 1.8,
             startDiameter: 1.3,
             endDiameter: 2.0,
-            orientation: 'vertical'      // Standing rings for coin-spin dance
+            orientation: 'vertical', // Standing rings for coin-spin dance
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
-            arcOffset: 120,              // DANCING COINS — 120° between rings
-            phaseOffset: 0
+            arcOffset: 120, // DANCING COINS — 120° between rings
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.0,
@@ -70,7 +70,7 @@ const LIGHTDANCE_CONFIG = {
             emissive: { min: 1.0, max: 2.2, frequency: 6, pattern: 'sine' },
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 5, scale: 1.0, weight: 0.8 },   // EMBERS — scattered sparks
+                primary: { pattern: 5, scale: 1.0, weight: 0.8 }, // EMBERS — scattered sparks
                 secondary: { pattern: 6, scale: 1.5, weight: 0.5 }, // SPIRAL — swirling arms
                 blend: 'add',
                 travel: 'spiral',
@@ -79,23 +79,29 @@ const LIGHTDANCE_CONFIG = {
                 bellPeakAt: 0.5,
             },
             grain: {
-                type: 3, strength: 0.08, scale: 0.15, speed: 1.0, blend: 'multiply'
+                type: 3,
+                strength: 0.08,
+                scale: 0.15,
+                speed: 1.0,
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4,
-                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                    centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+                },
+            ],
             // Dance partners: two mirror each other, one does a flourish
             rotate: [
-                { axis: 'y', rotations: 2, phase: 0 },     // Lead: 2 rotations
-                { axis: 'y', rotations: -2, phase: 60 },    // Partner: counter-rotation!
-                { axis: 'y', rotations: 3, phase: 120 }     // Flourish: faster accent
+                { axis: 'y', rotations: 2, phase: 0 }, // Lead: 2 rotations
+                { axis: 'y', rotations: -2, phase: 60 }, // Partner: counter-rotation!
+                { axis: 'y', rotations: 3, phase: 120 }, // Flourish: faster accent
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -107,23 +113,23 @@ const LIGHTDANCE_CONFIG = {
                         type: 1,
                         arcWidth: 0.6,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [1.0, 0.90, 0.55],
+    glowColor: [1.0, 0.9, 0.55],
     glowIntensityMin: 1.2,
     glowIntensityMax: 2.5,
     glowFlickerRate: 6,
     scaleVibration: 0.018,
     scaleFrequency: 4,
     scaleGrowth: 0.025,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildLightEffectGesture(LIGHTDANCE_CONFIG);

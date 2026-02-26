@@ -21,7 +21,7 @@ import * as THREE from 'three';
 // VERTEX SHADER (same GPU-deterministic billboard as smoke/mist/spray)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -83,7 +83,7 @@ void main() {
 // FIREFLY FRAGMENT SHADER
 // =================================================================================================
 
-const FIREFLY_FRAGMENT_GLSL = /* glsl */`
+const FIREFLY_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform float uTime;
 uniform vec3 uColor;
@@ -158,14 +158,14 @@ export function createFireflyParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'FireflyParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.85 },
-            uColor:              { value: new THREE.Color(...(config.color || [1.0, 0.85, 0.4])) },
-            uBuoyancy:           { value: config.buoyancy ?? 0.01 },
-            uDrag:               { value: config.drag ?? 0.8 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.85 },
+            uColor: { value: new THREE.Color(...(config.color || [1.0, 0.85, 0.4])) },
+            uBuoyancy: { value: config.buoyancy ?? 0.01 },
+            uDrag: { value: config.drag ?? 0.8 },
             uTurbulenceStrength: { value: config.turbulence ?? 0.15 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 0.8 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 0.0 },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 0.8 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 0.0 },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: FIREFLY_FRAGMENT_GLSL,

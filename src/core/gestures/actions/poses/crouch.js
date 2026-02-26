@@ -31,21 +31,21 @@ export default {
     config: {
         duration: 600,
         musicalDuration: { musical: true, beats: 1.5 },
-        depth: 0.3,           // How low to crouch
-        widen: 0.2,           // How much to widen
-        holdTime: 0.5,        // Portion of time to hold crouch (0-1)
+        depth: 0.3, // How low to crouch
+        widen: 0.2, // How much to widen
+        holdTime: 0.5, // Portion of time to hold crouch (0-1)
         strength: 1.0,
         particleMotion: {
             type: 'crouch',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'beats', beats: 1.5 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -63,17 +63,17 @@ export default {
 
             if (progress < downPhase) {
                 // Going down
-                crouchAmount = (progress / downPhase);
+                crouchAmount = progress / downPhase;
             } else if (progress < upPhase) {
                 // Holding
                 crouchAmount = 1.0;
             } else {
                 // Coming up
-                crouchAmount = 1 - ((progress - upPhase) / downPhase);
+                crouchAmount = 1 - (progress - upPhase) / downPhase;
             }
 
             // Ease the crouch
-            crouchAmount = Math.sin(crouchAmount * Math.PI / 2);
+            crouchAmount = Math.sin((crouchAmount * Math.PI) / 2);
 
             // Position drops down
             const yOffset = -crouchAmount * depth * strength;
@@ -94,8 +94,8 @@ export default {
                 rotation: [tiltX, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost: 0
+                glowBoost: 0,
             };
-        }
-    }
+        },
+    },
 };

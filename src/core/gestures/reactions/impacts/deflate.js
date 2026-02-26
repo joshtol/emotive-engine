@@ -31,21 +31,21 @@ export default {
     config: {
         duration: 1000,
         musicalDuration: { musical: true, beats: 2.5 },
-        minScale: 0.6,        // Minimum deflated size
-        droop: 0.15,          // How much to droop down
-        reinflate: true,      // Return to normal
+        minScale: 0.6, // Minimum deflated size
+        droop: 0.15, // How much to droop down
+        reinflate: true, // Return to normal
         strength: 1.0,
         particleMotion: {
             type: 'deflate',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'beats', beats: 2.5 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -67,7 +67,7 @@ export default {
                 deflateAmount = 1.0;
             } else {
                 // Slow reinflation
-                deflateAmount = 1 - ((progress - 0.7) / 0.3);
+                deflateAmount = 1 - (progress - 0.7) / 0.3;
                 deflateAmount = Math.pow(deflateAmount, 1.5);
             }
 
@@ -90,8 +90,8 @@ export default {
                 rotation: [tiltX, 0, tiltZ],
                 scale: scaleAmount,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

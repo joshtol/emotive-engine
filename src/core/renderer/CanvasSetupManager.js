@@ -28,7 +28,8 @@ export class CanvasSetupManager {
 
         // Get logical dimensions from canvasManager (not scaled by DPR)
         const logicalWidth = this.renderer.canvasManager.width || this.renderer.canvas.width || 400;
-        const logicalHeight = this.renderer.canvasManager.height || this.renderer.canvas.height || 400;
+        const logicalHeight =
+            this.renderer.canvasManager.height || this.renderer.canvas.height || 400;
 
         // Store original context and switch to offscreen for double buffering
         const originalCtx = this.renderer.ctx;
@@ -50,18 +51,28 @@ export class CanvasSetupManager {
         const backdropEffectiveCenter = this.renderer.getEffectiveCenter();
         const backdropCenterX = backdropEffectiveCenter.x;
         const backdropCenterY = backdropEffectiveCenter.y - this.renderer.config.topOffset;
-        const backdropScaleFactor = (backdropCanvasSize / this.renderer.config.referenceSize) *
-                                    this.renderer.config.baseScale *
-                                    (backdropEffectiveCenter.coreScale || backdropEffectiveCenter.scale);
-        const backdropBaseRadius = (this.renderer.config.referenceSize / this.renderer.config.coreSizeDivisor) * backdropScaleFactor;
+        const backdropScaleFactor =
+            (backdropCanvasSize / this.renderer.config.referenceSize) *
+            this.renderer.config.baseScale *
+            (backdropEffectiveCenter.coreScale || backdropEffectiveCenter.scale);
+        const backdropBaseRadius =
+            (this.renderer.config.referenceSize / this.renderer.config.coreSizeDivisor) *
+            backdropScaleFactor;
         const backdropCoreRadius = backdropBaseRadius;
 
         // Update and render backdrop to MAIN canvas (not offscreen)
         this.renderer.backdropRenderer.update(deltaTime);
         if (this.renderer.audioAnalyzer && this.renderer.audioAnalyzer.currentAmplitude) {
-            this.renderer.backdropRenderer.setAudioIntensity(this.renderer.audioAnalyzer.currentAmplitude);
+            this.renderer.backdropRenderer.setAudioIntensity(
+                this.renderer.audioAnalyzer.currentAmplitude
+            );
         }
-        this.renderer.backdropRenderer.render(backdropCenterX, backdropCenterY, backdropCoreRadius, originalCtx);
+        this.renderer.backdropRenderer.render(
+            backdropCenterX,
+            backdropCenterY,
+            backdropCoreRadius,
+            originalCtx
+        );
     }
 
     /**
@@ -72,7 +83,9 @@ export class CanvasSetupManager {
      */
     applyCanvasDecay(originalCtx, logicalWidth, logicalHeight) {
         // Scale decay with particle count to handle high-particle emotions like euphoria
-        const particleCount = this.renderer.particleSystem ? this.renderer.particleSystem.particles.length : 0;
+        const particleCount = this.renderer.particleSystem
+            ? this.renderer.particleSystem.particles.length
+            : 0;
         // Base decay: 12%, increased up to 20% for high particle counts
         const decayRate = 0.12 + Math.min(0.08, particleCount * 0.003);
 

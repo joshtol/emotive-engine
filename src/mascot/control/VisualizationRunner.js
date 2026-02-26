@@ -29,7 +29,8 @@ export class VisualizationRunner {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.animationController) throw new Error('VisualizationRunner: animationController required');
+        if (!deps.animationController)
+            throw new Error('VisualizationRunner: animationController required');
         if (!deps.stateMachine) throw new Error('VisualizationRunner: stateMachine required');
         if (!deps.config) throw new Error('VisualizationRunner: config required');
         if (!deps.state) throw new Error('VisualizationRunner: state required');
@@ -83,7 +84,7 @@ export class VisualizationRunner {
             // Spawn initial particles for classic mode
             if (this.config.renderingStyle === 'classic' && this.particleSystem) {
                 const currentState = this.stateMachine.getCurrentState();
-                const {emotion} = currentState;
+                const { emotion } = currentState;
                 // undertone not used for classic rendering
                 const emotionParams = getEmotionVisualParams(emotion);
 
@@ -169,7 +170,11 @@ export class VisualizationRunner {
      */
     update(deltaTime) {
         // Update audio level monitoring if speaking
-        if (this._state.speaking && this.audioLevelProcessor && this.audioLevelProcessor.isProcessingActive()) {
+        if (
+            this._state.speaking &&
+            this.audioLevelProcessor &&
+            this.audioLevelProcessor.isProcessingActive()
+        ) {
             this.audioLevelProcessor.updateAudioLevel(deltaTime);
         }
 
@@ -183,19 +188,18 @@ export class VisualizationRunner {
                 const currentEmotion = this.stateMachine.getCurrentState().emotion;
                 if (currentEmotion === 'suspicion') {
                     // Get mouse position and calculate distance to center
-                    const {mousePos} = this.gazeTracker;
+                    const { mousePos } = this.gazeTracker;
                     const centerX = this.canvas.width / 2;
                     const centerY = this.canvas.height / 2;
                     const distance = Math.sqrt(
-                        Math.pow(mousePos.x - centerX, 2) +
-                        Math.pow(mousePos.y - centerY, 2)
+                        Math.pow(mousePos.x - centerX, 2) + Math.pow(mousePos.y - centerY, 2)
                     );
 
                     // Get emotion configuration
                     const suspicionEmotion = getEmotion('suspicion');
                     if (suspicionEmotion && suspicionEmotion.visual) {
                         const maxDistance = Math.min(centerX, centerY);
-                        const threatLevel = Math.max(0, Math.min(1, 1 - (distance / maxDistance)));
+                        const threatLevel = Math.max(0, Math.min(1, 1 - distance / maxDistance));
                         suspicionEmotion.visual.threatLevel = threatLevel;
                     }
                 }
@@ -218,10 +222,10 @@ export class VisualizationRunner {
                 const gazeData = {
                     offset: {
                         x: gazeOffset.x + swayOffset.x,
-                        y: gazeOffset.y + swayOffset.y
+                        y: gazeOffset.y + swayOffset.y,
                     },
                     proximity: gazeState.proximity,
-                    isFocused: gazeState.isFocused
+                    isFocused: gazeState.isFocused,
                 };
 
                 // Pass to renderer

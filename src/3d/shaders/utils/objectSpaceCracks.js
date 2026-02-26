@@ -259,13 +259,13 @@ export const CRACK_DEFAULT_UNIFORMS = {
     crackDirection0: [0, 0, 0],
     crackDirection1: [0, 0, 0],
     crackDirection2: [0, 0, 0],
-    crackParams0: [0, 0, 0],  // propagation, amount, seed
+    crackParams0: [0, 0, 0], // propagation, amount, seed
     crackParams1: [0, 0, 0],
     crackParams2: [0, 0, 0],
     crackNumImpacts: 0,
-    crackColor: [0.15, 0.08, 0.05],      // Dark brown crack interior
-    crackGlowColor: [1.0, 0.6, 0.2],     // Orange-amber edge emission
-    crackGlowStrength: 0.5
+    crackColor: [0.15, 0.08, 0.05], // Dark brown crack interior
+    crackGlowColor: [1.0, 0.6, 0.2], // Orange-amber edge emission
+    crackGlowStrength: 0.5,
 };
 
 export { MAX_IMPACTS };

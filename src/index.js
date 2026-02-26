@@ -32,14 +32,29 @@ export { default as CanvasManager } from './core/canvas/CanvasManager.js';
 export { default as AnimationController } from './core/AnimationController.js';
 
 // Performance Optimization
-export { AnimationLoopManager, animationLoopManager, AnimationPriority } from './core/AnimationLoopManager.js';
+export {
+    AnimationLoopManager,
+    animationLoopManager,
+    AnimationPriority,
+} from './core/AnimationLoopManager.js';
 export { GradientCache, gradientCache } from './core/renderer/GradientCache.js';
 export { default as ContextStateManager } from './core/renderer/ContextStateManager.js';
 export { PerformanceMonitor, performanceMonitor } from './core/system/PerformanceMonitor.js';
 export { ErrorTracker, errorTracker } from './core/events/ErrorTracker.js';
-export { LazyLoader, lazyLoader, lazyLoad, preloadModules, prefetchModules } from './core/optimization/LazyLoader.js';
+export {
+    LazyLoader,
+    lazyLoader,
+    lazyLoad,
+    preloadModules,
+    prefetchModules,
+} from './core/optimization/LazyLoader.js';
 export { HealthCheck, healthCheck } from './core/system/HealthCheck.js';
-export { FeatureFlags, featureFlags, isFeatureEnabled, getFeatureVariant } from './core/system/FeatureFlags.js';
+export {
+    FeatureFlags,
+    featureFlags,
+    isFeatureEnabled,
+    getFeatureVariant,
+} from './core/system/FeatureFlags.js';
 
 // Particle System
 export { default as ParticleSystem } from './core/ParticleSystem.js';
@@ -71,7 +86,7 @@ export {
     getEmotionGestures,
     getEmotionRhythmModifiers,
     getBlendedRhythmModifiers,
-    pluginAdapter as emotionPluginAdapter
+    pluginAdapter as emotionPluginAdapter,
 } from './core/emotions/index.js';
 
 // Gestures
@@ -83,13 +98,11 @@ export {
     listGestures,
     GESTURE_REGISTRY,
     GESTURE_TYPES,
-    pluginAdapter as gesturePluginAdapter
+    pluginAdapter as gesturePluginAdapter,
 } from './core/gestures/index.js';
 
 // Particle Behaviors
-export {
-    pluginAdapter as particleBehaviorPluginAdapter
-} from './core/particles/behaviors/index.js';
+export { pluginAdapter as particleBehaviorPluginAdapter } from './core/particles/behaviors/index.js';
 
 // Groove Templates
 export { default as GrooveTemplates } from './core/audio/GrooveTemplates.js';
@@ -122,7 +135,7 @@ export {
     polyfillRequestAnimationFrame,
     polyfillPerformanceNow,
     polyfillWebAudio,
-    browserCompatibility
+    browserCompatibility,
 } from './utils/browserCompatibility.js';
 
 // ============================================================================
@@ -150,7 +163,7 @@ export const FEATURES = {
     particleSystem: true,
     accessibility: true,
     mobileOptimization: true,
-    performanceMonitoring: true
+    performanceMonitoring: true,
 };
 
 // ============================================================================
@@ -175,4 +188,3 @@ export default EmotiveMascotPublic;
  */
 // SDK helpers
 export { SiteController } from './sdk/site-controller.js';
-

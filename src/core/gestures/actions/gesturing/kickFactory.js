@@ -25,7 +25,9 @@ import { DIRECTIONS, capitalize } from '../../_shared/directions.js';
 export function createKickGesture(direction) {
     // Kick only supports left/right (side kicks)
     if (direction !== 'left' && direction !== 'right') {
-        throw new Error(`Invalid kick direction: ${direction}. Only 'left' and 'right' are supported.`);
+        throw new Error(
+            `Invalid kick direction: ${direction}. Only 'left' and 'right' are supported.`
+        );
     }
     const dir = DIRECTIONS[direction];
 
@@ -36,10 +38,10 @@ export function createKickGesture(direction) {
         description: `Quick kick ${direction} with snap return`,
 
         config: {
-            duration: 400,      // ~1 beat at 150 BPM
-            amplitude: 30,      // Kick distance in pixels
+            duration: 400, // ~1 beat at 150 BPM
+            amplitude: 30, // Kick distance in pixels
             strength: 0.8,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -52,19 +54,19 @@ export function createKickGesture(direction) {
 
             durationSync: {
                 mode: 'beats',
-                beats: 1
+                beats: 1,
             },
 
             amplitudeSync: {
                 onBeat: 1.5,
                 offBeat: 0.7,
-                curve: 'snap'
+                curve: 'snap',
             },
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.5
-            }
+                multiplier: 1.5,
+            },
         },
 
         apply(particle, progress, motion, dt, _centerX, _centerY) {
@@ -72,8 +74,8 @@ export function createKickGesture(direction) {
             let amplitude = config.amplitude * config.strength * particle.scaleFactor;
 
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Kick curve: fast out (0-0.25), hold (0.25-0.5), snap back (0.5-1.0)
@@ -116,7 +118,7 @@ export function createKickGesture(direction) {
                 let amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
                 if (motion.rhythmModulation) {
-                    amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
+                    amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
                 }
 
                 // Kick curve: fast out, hold, snap back
@@ -144,9 +146,9 @@ export function createKickGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, 0, rotZ],
-                    scale: 1.0 + displacement * 0.05 // Slight expansion on kick
+                    scale: 1.0 + displacement * 0.05, // Slight expansion on kick
                 };
-            }
-        }
+            },
+        },
     };
 }

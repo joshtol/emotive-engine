@@ -46,13 +46,24 @@ const NATURESPLINTER_CONFIG = {
             orientation: 'camera',
             startScale: 0.3,
             endScale: 1.0,
-            scaleEasing: 'easeOutQuad'
+            scaleEasing: 'easeOutQuad',
         },
         count: 12,
         scale: 0.7,
-        models: ['s-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch',
-            's-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch',
-            's-vine', 'thorn-curl', 'vine-twist', 'leaf-bunch'],
+        models: [
+            's-vine',
+            'thorn-curl',
+            'vine-twist',
+            'leaf-bunch',
+            's-vine',
+            'thorn-curl',
+            'vine-twist',
+            'leaf-bunch',
+            's-vine',
+            'thorn-curl',
+            'vine-twist',
+            'leaf-bunch',
+        ],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.5,
@@ -67,17 +78,19 @@ const NATURESPLINTER_CONFIG = {
                 blend: 'multiply',
                 travel: 'radial',
                 travelSpeed: 1.2,
-                strengthCurve: 'fadeOut'
+                strengthCurve: 'fadeOut',
             },
             grain: { type: 3, strength: 0.15, scale: 0.3, speed: 1.0, blend: 'multiply' },
-            atmospherics: [{
-                preset: 'falling-leaves',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.6,
-                sizeScale: 0.5,
-                progressCurve: 'burst',
-            }],
+            atmospherics: [
+                {
+                    preset: 'falling-leaves',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.6,
+                    sizeScale: 0.5,
+                    progressCurve: 'burst',
+                },
+            ],
             rotate: [
                 { axis: 'x', rotations: 4, phase: 0 },
                 { axis: 'z', rotations: -3, phase: 30 },
@@ -90,13 +103,13 @@ const NATURESPLINTER_CONFIG = {
                 { axis: 'y', rotations: 4, phase: 240 },
                 { axis: 'x', rotations: -3.5, phase: 270 },
                 { axis: 'z', rotations: 4.5, phase: 300 },
-                { axis: 'y', rotations: -3, phase: 330 }
+                { axis: 'y', rotations: -3, phase: 330 },
             ],
             scaleVariance: 0.4,
             lifetimeVariance: 0.15,
             blending: 'normal',
-            renderOrder: 14
-        }
+            renderOrder: 14,
+        },
     },
 
     shakeAmount: 0.04,
@@ -109,7 +122,7 @@ const NATURESPLINTER_CONFIG = {
     scaleVibration: 0.03,
     scaleFrequency: 8,
     tremor: 0.02,
-    tremorFrequency: 10
+    tremorFrequency: 10,
 };
 
 export default buildNatureEffectGesture(NATURESPLINTER_CONFIG);

@@ -39,7 +39,7 @@ const EARTHHELIX_CONFIG = {
             endScale: 1.1,
             startDiameter: 1.6,
             endDiameter: 1.8,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
@@ -47,7 +47,7 @@ const EARTHHELIX_CONFIG = {
             strands: 2,
             spacing: 0.2,
             arcOffset: 120,
-            phaseOffset: 0.05
+            phaseOffset: 0.05,
         },
         count: 6,
         scale: 1.2,
@@ -59,35 +59,35 @@ const EARTHHELIX_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 petrification: {
                     start: 0.5,
                     peak: 0.85,
                     end: 0.6,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 4,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.9,
                 max: 2.0,
                 frequency: 6,
-                pattern: 'smooth'
+                pattern: 'smooth',
             },
             cutout: {
                 strength: 0.7,
@@ -101,26 +101,28 @@ const EARTHHELIX_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.1,
-                    tip: 0.25
-                }
+                    tip: 0.25,
+                },
             },
             grain: {
                 type: 3,
                 strength: 0.15,
                 scale: 0.2,
                 speed: 1.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'earth-dust',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-dust',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+                },
+            ],
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,
             lifetimeVariance: 0.1,
@@ -132,15 +134,15 @@ const EARTHHELIX_CONFIG = {
                         type: 1,
                         arcWidth: 0.7,
                         arcSpeed: 1.2,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 1.0,
     glowIntensityMax: 1.8,
     glowFlickerRate: 8,
@@ -148,7 +150,7 @@ const EARTHHELIX_CONFIG = {
     scaleFrequency: 5,
     scaleGrowth: 0.02,
     tremor: 0.003,
-    tremorFrequency: 4
+    tremorFrequency: 4,
 };
 
 export default buildEarthEffectGesture(EARTHHELIX_CONFIG);

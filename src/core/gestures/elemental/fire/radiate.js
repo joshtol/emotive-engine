@@ -58,80 +58,80 @@ const RADIATE_CONFIG = {
             type: 'axis-travel',
             axisTravel: {
                 axis: 'y',
-                start: 'bottom',              // Spawn at feet
-                end: 'bottom',                // STAY at feet (no vertical travel)
+                start: 'bottom', // Spawn at feet
+                end: 'bottom', // STAY at feet (no vertical travel)
                 easing: 'linear',
                 startScale: 1.2,
-                endScale: 1.8,                // Grow slightly as they radiate
-                startDiameter: 1.2,           // Start circling close to mascot
-                endDiameter: 3.5,             // Expand outward dramatically
-                orientation: 'vertical'       // Standing rings (coins)
+                endScale: 1.8, // Grow slightly as they radiate
+                startDiameter: 1.2, // Start circling close to mascot
+                endDiameter: 3.5, // Expand outward dramatically
+                orientation: 'vertical', // Standing rings (coins)
             },
             formation: {
                 type: 'spiral',
                 count: 3,
                 spacing: 0,
-                arcOffset: 120,               // 3 rings at 120° apart
-                phaseOffset: 0
+                arcOffset: 120, // 3 rings at 120° apart
+                phaseOffset: 0,
             },
             count: 3,
             scale: 1.0,
             models: ['flame-ring'],
             animation: {
                 appearAt: 0.02,
-                disappearAt: 0.85,            // Start fading near end
-                stagger: 0.03,                // Near-simultaneous spawn
+                disappearAt: 0.85, // Start fading near end
+                stagger: 0.03, // Near-simultaneous spawn
                 enter: {
                     type: 'fade',
                     duration: 0.1,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
-                    duration: 0.13,           // Quick fade at end
-                    easing: 'easeOutQuad'
+                    duration: 0.13, // Quick fade at end
+                    easing: 'easeOutQuad',
                 },
                 procedural: {
                     scaleSmoothing: 0.08,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.7,
                         peak: 0.6,
                         end: 0.35,
-                        curve: 'linear'
-                    }
+                        curve: 'linear',
+                    },
                 },
                 flicker: {
                     intensity: 0.25,
                     rate: 10,
-                    pattern: 'smooth'
+                    pattern: 'smooth',
                 },
                 pulse: {
                     amplitude: 0.12,
                     frequency: 3,
-                    easing: 'easeInOut'
+                    easing: 'easeInOut',
                 },
                 emissive: {
                     min: 1.2,
                     max: 2.8,
                     frequency: 4,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 // Two-layer cutout: WAVES + SPIRAL for radiating energy
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES - radiating energy
-                    secondary: { pattern: 6, scale: 1.5, weight: 0.4 },  // SPIRAL - rotation
+                    primary: { pattern: 4, scale: 2.0, weight: 1.0 }, // WAVES - radiating energy
+                    secondary: { pattern: 6, scale: 1.5, weight: 0.4 }, // SPIRAL - rotation
                     blend: 'add',
                     travel: 'radial',
                     travelSpeed: 2.0,
                     geometricMask: {
                         type: 'distance',
                         core: 0.1,
-                        tip: 0.25
-                    }
+                        tip: 0.25,
+                    },
                 },
                 // Grain: subtle film grain
                 grain: {
@@ -139,21 +139,23 @@ const RADIATE_CONFIG = {
                     strength: 0.05,
                     scale: 0.15,
                     speed: 1.0,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
                 // Per-gesture atmospheric particles: smoke from radiating rings
-                atmospherics: [{
-                    preset: 'smoke',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.3,
-                    sizeScale: 0.7,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'smoke',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.3,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 rotate: [
                     { axis: 'y', rotations: 1.5, phase: 0 },
                     { axis: 'y', rotations: 1.5, phase: 120 },
-                    { axis: 'y', rotations: 1.5, phase: 240 }
+                    { axis: 'y', rotations: 1.5, phase: 240 },
                 ],
                 scaleVariance: 0.1,
                 lifetimeVariance: 0.05,
@@ -165,12 +167,12 @@ const RADIATE_CONFIG = {
                             type: 1,
                             arcWidth: 0.8,
                             arcSpeed: 0.8,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -183,78 +185,85 @@ const RADIATE_CONFIG = {
                 startRadius: 0.1,
                 endRadius: 1.2,
                 height: 0,
-                easing: 'easeOutExpo'
+                easing: 'easeOutExpo',
             },
             formation: {
                 type: 'ring',
                 count: 6,
-                startAngle: 0
+                startAngle: 0,
             },
             count: 6,
             scale: 1.0,
-            models: ['flame-tongue', 'fire-burst', 'flame-tongue', 'fire-burst', 'flame-tongue', 'fire-burst'],
+            models: [
+                'flame-tongue',
+                'fire-burst',
+                'flame-tongue',
+                'fire-burst',
+                'flame-tongue',
+                'fire-burst',
+            ],
             animation: {
                 appearAt: 0.45,
-                disappearAt: 0.80,
+                disappearAt: 0.8,
                 stagger: 0.02,
                 enter: {
                     type: 'scale',
                     duration: 0.08,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'burst-fade',
                     duration: 0.2,
                     easing: 'easeInCubic',
-                    burstScale: 1.3
+                    burstScale: 1.3,
                 },
                 procedural: {
                     scaleSmoothing: 0.06,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.7,
                         peak: 0.95,
                         end: 0.5,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 flicker: {
                     intensity: 0.4,
                     rate: 18,
-                    pattern: 'random'
+                    pattern: 'random',
                 },
                 pulse: {
                     amplitude: 0.15,
                     frequency: 8,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 emissive: {
                     min: 2.0,
                     max: 4.0,
                     frequency: 10,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 // Two-layer cutout: RADIAL + EMBERS for central burst
                 cutout: {
                     strength: 0.7,
-                    primary: { pattern: 2, scale: 2.5, weight: 1.0 },    // RADIAL - burst
-                    secondary: { pattern: 5, scale: 1.5, weight: 0.6 },  // EMBERS
+                    primary: { pattern: 2, scale: 2.5, weight: 1.0 }, // RADIAL - burst
+                    secondary: { pattern: 5, scale: 1.5, weight: 0.6 }, // EMBERS
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 4.0,
                     geometricMask: {
                         type: 'tip-boost',
                         core: 0.0,
-                        tip: 0.15
-                    }
+                        tip: 0.15,
+                    },
                 },
                 scalePerElement: [1.0, 0.8, 1.1, 0.75, 0.95, 0.85],
                 blending: 'additive',
-                renderOrder: 12
-            }
-        }
+                renderOrder: 12,
+            },
+        },
     ],
 
     // Mesh effects
@@ -269,7 +278,7 @@ const RADIATE_CONFIG = {
     scaleFrequency: 3,
     scaleGrowth: 0.02,
     rotationEffect: true,
-    rotationSpeed: 0.3
+    rotationSpeed: 0.3,
 };
 
 /**

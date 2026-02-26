@@ -84,7 +84,7 @@ export class SurfaceMode extends BaseSpawnMode {
             countOverride: config.count || null,
             scaleMultiplier: config.scale ?? 1.5,
             minDistanceFactor: config.minDistance ?? 0.18,
-            ephemeral: config.ephemeral || null
+            ephemeral: config.ephemeral || null,
         };
     }
 
@@ -102,12 +102,7 @@ export class SurfaceMode extends BaseSpawnMode {
 
         // Delegate to spawner's surface sampling method
         if (this.spawner?._sampleSurfacePoints) {
-            return this.spawner._sampleSurfacePoints(
-                coreMesh.geometry,
-                count,
-                config,
-                camera
-            );
+            return this.spawner._sampleSurfacePoints(coreMesh.geometry, count, config, camera);
         }
 
         return null;
@@ -134,7 +129,7 @@ export class SurfaceMode extends BaseSpawnMode {
         mesh.userData.surfaceNormal = {
             x: surfaceSample.normal.x,
             y: surfaceSample.normal.y,
-            z: surfaceSample.normal.z
+            z: surfaceSample.normal.z,
         };
 
         // Calculate embed depth offset
@@ -149,7 +144,13 @@ export class SurfaceMode extends BaseSpawnMode {
         // Orient element using spawner's method
         const cameraFacing = config.cameraFacing ?? 0.3;
         if (this.spawner?._orientElement) {
-            this.spawner._orientElement(mesh, surfaceSample.normal, cameraFacing, camera, modelName);
+            this.spawner._orientElement(
+                mesh,
+                surfaceSample.normal,
+                cameraFacing,
+                camera,
+                modelName
+            );
         }
 
         // Store surface data for animation

@@ -25,7 +25,13 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {Object} offset - Pixel offset
      * @param {Object} options - Path options
      */
-    moveToElementWithPath(targetSelector, pathPoints = [], _position = 'right', offset = { x: 20, y: 0 }, options = {}) {
+    moveToElementWithPath(
+        targetSelector,
+        pathPoints = [],
+        _position = 'right',
+        offset = { x: 20, y: 0 },
+        options = {}
+    ) {
         const pathId = `path-${Date.now()}-${Math.random()}`;
         const element = document.querySelector(targetSelector);
 
@@ -45,21 +51,28 @@ class ElementTargetingAdvanced extends ElementTargeting {
             const rawX = typeof point.x === 'number' ? point.x : 0;
             const rawY = typeof point.y === 'number' ? point.y : 0;
 
-            const useRelative = coordinateSystem === 'relative' || (coordinateSystem === 'auto' && rawX >= 0 && rawX <= 1 && rawY >= 0 && rawY <= 1);
+            const useRelative =
+                coordinateSystem === 'relative' ||
+                (coordinateSystem === 'auto' && rawX >= 0 && rawX <= 1 && rawY >= 0 && rawY <= 1);
             if (useRelative) {
                 return {
                     x: rawX * viewportWidth - halfViewportWidth,
-                    y: rawY * viewportHeight - halfViewportHeight
+                    y: rawY * viewportHeight - halfViewportHeight,
                 };
             }
 
-            if (coordinateSystem === 'offset' || (coordinateSystem === 'auto' && Math.abs(rawX) <= halfViewportWidth && Math.abs(rawY) <= halfViewportHeight)) {
+            if (
+                coordinateSystem === 'offset' ||
+                (coordinateSystem === 'auto' &&
+                    Math.abs(rawX) <= halfViewportWidth &&
+                    Math.abs(rawY) <= halfViewportHeight)
+            ) {
                 return { x: rawX, y: rawY };
             }
 
             return {
                 x: rawX - halfViewportWidth,
-                y: rawY - halfViewportHeight
+                y: rawY - halfViewportHeight,
             };
         };
 
@@ -68,13 +81,15 @@ class ElementTargetingAdvanced extends ElementTargeting {
         const rect = element.getBoundingClientRect();
         const targetPoint = {
             x: rect.left + rect.width / 2 + offset.x - halfViewportWidth,
-            y: rect.top + rect.height / 2 + offset.y - halfViewportHeight
+            y: rect.top + rect.height / 2 + offset.y - halfViewportHeight,
         };
 
-        const startOffsetRaw = this.positionController.getOffset ? this.positionController.getOffset() : { x: 0, y: 0 };
+        const startOffsetRaw = this.positionController.getOffset
+            ? this.positionController.getOffset()
+            : { x: 0, y: 0 };
         const startOffset = {
             x: typeof startOffsetRaw.x === 'number' ? startOffsetRaw.x : 0,
-            y: typeof startOffsetRaw.y === 'number' ? startOffsetRaw.y : 0
+            y: typeof startOffsetRaw.y === 'number' ? startOffsetRaw.y : 0,
         };
 
         const path = [startOffset, ...processedPathPoints, targetPoint];
@@ -114,7 +129,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
 
         const state = {
             covered: 0,
-            lastTimestamp: null
+            lastTimestamp: null,
         };
 
         const resolvePointOnPath = distance => {
@@ -134,15 +149,18 @@ class ElementTargetingAdvanced extends ElementTargeting {
                 const segmentEnd = cumulativeLengths[i + 1];
                 if (distance <= segmentEnd) {
                     const segmentLength = segmentLengths[i] || 1;
-                    const progress = segmentLength === 0 ? 0 : (distance - segmentStart) / segmentLength;
-                    const eased = this.positionController && typeof this.positionController.applyEasing === 'function'
-                        ? this.positionController.applyEasing(progress, easing)
-                        : progress;
+                    const progress =
+                        segmentLength === 0 ? 0 : (distance - segmentStart) / segmentLength;
+                    const eased =
+                        this.positionController &&
+                        typeof this.positionController.applyEasing === 'function'
+                            ? this.positionController.applyEasing(progress, easing)
+                            : progress;
                     const startPoint = path[i];
                     const endPoint = path[i + 1];
                     return {
                         x: startPoint.x + (endPoint.x - startPoint.x) * eased,
-                        y: startPoint.y + (endPoint.y - startPoint.y) * eased
+                        y: startPoint.y + (endPoint.y - startPoint.y) * eased,
                     };
                 }
             }
@@ -157,7 +175,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
                 }
                 this.activePaths.delete(pathId);
             },
-            frameId: null
+            frameId: null,
         };
 
         this.activePaths.set(pathId, pathEntry);
@@ -208,7 +226,13 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithEasing(targetSelector, easingFunction, duration = 1000, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithEasing(
+        targetSelector,
+        easingFunction,
+        duration = 1000,
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -256,7 +280,13 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithCollision(targetSelector, obstacles = [], avoidanceDistance = 100, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithCollision(
+        targetSelector,
+        obstacles = [],
+        avoidanceDistance = 100,
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -284,13 +314,15 @@ class ElementTargetingAdvanced extends ElementTargeting {
                 let hasCollision = false;
                 obstacles.forEach(obstacle => {
                     let obstacleX, obstacleY;
-                    
+
                     if (typeof obstacle === 'string') {
                         const obstacleElement = document.querySelector(obstacle);
                         if (obstacleElement) {
                             const obstacleRect = obstacleElement.getBoundingClientRect();
-                            obstacleX = obstacleRect.left + obstacleRect.width / 2 - window.innerWidth / 2;
-                            obstacleY = obstacleRect.top + obstacleRect.height / 2 - window.innerHeight / 2;
+                            obstacleX =
+                                obstacleRect.left + obstacleRect.width / 2 - window.innerWidth / 2;
+                            obstacleY =
+                                obstacleRect.top + obstacleRect.height / 2 - window.innerHeight / 2;
                         } else {
                             return;
                         }
@@ -300,8 +332,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
                     }
 
                     const distance = Math.sqrt(
-                        Math.pow(nextX - obstacleX, 2) + 
-                        Math.pow(nextY - obstacleY, 2)
+                        Math.pow(nextX - obstacleX, 2) + Math.pow(nextY - obstacleY, 2)
                     );
 
                     if (distance < avoidanceDistance) {
@@ -310,7 +341,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
                         const angle = Math.atan2(nextY - obstacleY, nextX - obstacleX);
                         const avoidanceX = obstacleX + Math.cos(angle) * avoidanceDistance;
                         const avoidanceY = obstacleY + Math.sin(angle) * avoidanceDistance;
-                        
+
                         currentX = avoidanceX;
                         currentY = avoidanceY;
                     }
@@ -336,7 +367,13 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithAudio(targetSelector, audioStream, sensitivity = 50, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithAudio(
+        targetSelector,
+        audioStream,
+        sensitivity = 50,
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -366,11 +403,11 @@ class ElementTargetingAdvanced extends ElementTargeting {
             for (let i = 0; i < audioData.length; i++) {
                 sum += audioData[i];
             }
-            const averageLevel = (sum / audioData.length) / 255;
+            const averageLevel = sum / audioData.length / 255;
 
             const audioOffset = averageLevel * sensitivity;
             const currentX = baseX + audioOffset;
-            const currentY = baseY + (audioOffset * 0.5);
+            const currentY = baseY + audioOffset * 0.5;
 
             this.positionController.setOffset(currentX, currentY, 0);
 
@@ -392,7 +429,12 @@ class ElementTargetingAdvanced extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithGaze(targetSelector, gazeOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithGaze(
+        targetSelector,
+        gazeOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -403,7 +445,7 @@ class ElementTargetingAdvanced extends ElementTargeting {
         if (!this.gazeTracker) {
             this.gazeTracker = {
                 x: window.innerWidth / 2,
-                y: window.innerHeight / 2
+                y: window.innerHeight / 2,
             };
         }
 
@@ -491,20 +533,12 @@ class ElementTargetingAdvanced extends ElementTargeting {
             this.audioContext.close();
             this.audioContext = null;
         }
-        
+
         this.audioAnalyser = null;
         this.gazeTracker = null;
-        
+
         super.destroy();
     }
 }
 
 export default ElementTargetingAdvanced;
-
-
-
-
-
-
-
-

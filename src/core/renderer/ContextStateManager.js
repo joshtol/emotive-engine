@@ -26,7 +26,7 @@ export class ContextStateManager {
             shadowColor: 'transparent',
             shadowOffsetX: 0,
             shadowOffsetY: 0,
-            font: '10px sans-serif'
+            font: '10px sans-serif',
         };
 
         // State stack for save/restore
@@ -37,7 +37,7 @@ export class ContextStateManager {
             saves: 0,
             restores: 0,
             stateChanges: 0,
-            redundantChanges: 0
+            redundantChanges: 0,
         };
     }
 
@@ -153,8 +153,7 @@ export class ContextStateManager {
      * Clear shadows efficiently
      */
     clearShadow() {
-        if (this.currentState.shadowBlur !== 0 ||
-            this.currentState.shadowColor !== 'transparent') {
+        if (this.currentState.shadowBlur !== 0 || this.currentState.shadowColor !== 'transparent') {
             this.setShadow(0, 'transparent', 0, 0);
         }
     }
@@ -179,16 +178,16 @@ export class ContextStateManager {
         this.stats.restores++;
     }
 
-
     /**
      * Get performance statistics
      * @returns {Object} Stats object
      */
     getStats() {
         const totalOperations = this.stats.stateChanges + this.stats.redundantChanges;
-        const redundancyRate = totalOperations > 0
-            ? (this.stats.redundantChanges / totalOperations * 100).toFixed(2)
-            : 0;
+        const redundancyRate =
+            totalOperations > 0
+                ? ((this.stats.redundantChanges / totalOperations) * 100).toFixed(2)
+                : 0;
 
         return {
             saves: this.stats.saves,
@@ -196,7 +195,7 @@ export class ContextStateManager {
             stateChanges: this.stats.stateChanges,
             redundantChanges: this.stats.redundantChanges,
             redundancyRate: `${redundancyRate}%`,
-            stackDepth: this.stateStack.length
+            stackDepth: this.stateStack.length,
         };
     }
 
@@ -208,7 +207,7 @@ export class ContextStateManager {
             saves: 0,
             restores: 0,
             stateChanges: 0,
-            redundantChanges: 0
+            redundantChanges: 0,
         };
     }
 
@@ -229,7 +228,7 @@ export class ContextStateManager {
             shadowColor: 'transparent',
             shadowOffsetX: 0,
             shadowOffsetY: 0,
-            font: '10px sans-serif'
+            font: '10px sans-serif',
         };
 
         // Clear state stack

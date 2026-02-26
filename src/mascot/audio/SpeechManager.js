@@ -109,7 +109,7 @@ export class SpeechManager {
             this._emit('tts:boundary', {
                 name: event.name,
                 charIndex: event.charIndex,
-                charLength: event.charLength
+                charLength: event.charLength,
             });
         };
     }
@@ -120,19 +120,23 @@ export class SpeechManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     startSpeaking(audioContext) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.validateAudioContext(audioContext)) {
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.validateAudioContext(audioContext)) {
+                    return this._chainTarget;
+                }
+
+                if (!this.initializeAudioProcessor(audioContext)) {
+                    return this._chainTarget;
+                }
+
+                this.activateSpeechMode(audioContext);
+
                 return this._chainTarget;
-            }
-
-            if (!this.initializeAudioProcessor(audioContext)) {
-                return this._chainTarget;
-            }
-
-            this.activateSpeechMode(audioContext);
-
-            return this._chainTarget;
-        }, 'speech-start', this._chainTarget)();
+            },
+            'speech-start',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -191,7 +195,7 @@ export class SpeechManager {
         this._emit('speechStarted', {
             audioContext,
             analyser: this.audioLevelProcessor.getAnalyser(),
-            chainTarget: this._chainTarget
+            chainTarget: this._chainTarget,
         });
     }
 
@@ -200,11 +204,15 @@ export class SpeechManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     stopSpeaking() {
-        return this.errorBoundary.wrap(() => {
-            if (this.audioHandler) {
-                return this.audioHandler.stopSpeaking();
-            }
-            return this._chainTarget;
-        }, 'speech-stop', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.audioHandler) {
+                    return this.audioHandler.stopSpeaking();
+                }
+                return this._chainTarget;
+            },
+            'speech-stop',
+            this._chainTarget
+        )();
     }
 }

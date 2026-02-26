@@ -36,7 +36,7 @@ const SHADER_EXTRACTORS = {
     /**
      * Crystal geometry - custom shader with emotion-driven colors
      */
-    'crystal': material => {
+    crystal: material => {
         const uniforms = material?.uniforms;
         return {
             type: 'physical',
@@ -50,14 +50,14 @@ const SHADER_EXTRACTORS = {
             thickness: 0.2,
             iridescence: 0.2,
             clearcoat: 0.3,
-            map: null  // Crystal uses procedural patterns
+            map: null, // Crystal uses procedural patterns
         };
     },
 
     /**
      * Rough crystal variant - same as crystal but slightly different defaults
      */
-    'rough': material => {
+    rough: material => {
         const uniforms = material?.uniforms;
         return {
             type: 'physical',
@@ -65,20 +65,20 @@ const SHADER_EXTRACTORS = {
             emissive: uniforms?.glowColor?.value?.clone() || new THREE.Color(0x5533aa),
             emissiveIntensity: 0.3,
             transmission: 0.2,
-            roughness: 0.35,  // Rougher surface
+            roughness: 0.35, // Rougher surface
             metalness: 0.0,
             ior: 1.4,
             thickness: 0.2,
             iridescence: 0.1,
             clearcoat: 0.2,
-            map: null
+            map: null,
         };
     },
 
     /**
      * Heart geometry - emotion-colored crystal variant
      */
-    'heart': material => {
+    heart: material => {
         const uniforms = material?.uniforms;
         return {
             type: 'physical',
@@ -92,14 +92,14 @@ const SHADER_EXTRACTORS = {
             thickness: 0.2,
             iridescence: 0.15,
             clearcoat: 0.25,
-            map: null
+            map: null,
         };
     },
 
     /**
      * Star geometry - bright, glowing crystal variant
      */
-    'star': material => {
+    star: material => {
         const uniforms = material?.uniforms;
         return {
             type: 'physical',
@@ -113,28 +113,28 @@ const SHADER_EXTRACTORS = {
             thickness: 0.15,
             iridescence: 0.3,
             clearcoat: 0.4,
-            map: null
+            map: null,
         };
     },
 
     /**
      * Sun geometry - emissive fire material
      */
-    'sun': material => {
+    sun: material => {
         const uniforms = material?.uniforms;
         return {
             type: 'physical',
             color: uniforms?.coreColor?.value?.clone() || new THREE.Color(0xffaa00),
             emissive: uniforms?.coronaColor?.value?.clone() || new THREE.Color(0xff6600),
             emissiveIntensity: 2.0,
-            transmission: 0.0,  // Sun is opaque fire
+            transmission: 0.0, // Sun is opaque fire
             roughness: 0.3,
             metalness: 0.0,
             ior: 1.0,
             thickness: 0.0,
             iridescence: 0.0,
             clearcoat: 0.0,
-            map: null  // Sun is procedural fire
+            map: null, // Sun is procedural fire
         };
     },
 
@@ -146,7 +146,7 @@ const SHADER_EXTRACTORS = {
      * to avoid tinting the texture. The emissive provides subtle visibility
      * in shadow but shouldn't colorize the rocky surface.
      */
-    'moon': material => {
+    moon: material => {
         const uniforms = material?.uniforms;
 
         return {
@@ -155,9 +155,9 @@ const SHADER_EXTRACTORS = {
             color: new THREE.Color(0xffffff),
             // NEUTRAL emissive - don't tint the texture with colored glow
             emissive: new THREE.Color(0x888888),
-            emissiveIntensity: 0.15,  // Low intensity - texture should dominate
-            transmission: 0.0,  // Moon is opaque rock
-            roughness: 0.85,    // Rocky, not shiny
+            emissiveIntensity: 0.15, // Low intensity - texture should dominate
+            transmission: 0.0, // Moon is opaque rock
+            roughness: 0.85, // Rocky, not shiny
             metalness: 0.0,
             ior: 1.0,
             thickness: 0.0,
@@ -165,21 +165,21 @@ const SHADER_EXTRACTORS = {
             clearcoat: 0.0,
             // Preserve texture from shader uniforms (colorMap, not map)
             map: uniforms?.colorMap?.value || null,
-            normalMap: uniforms?.normalMap?.value || null
+            normalMap: uniforms?.normalMap?.value || null,
         };
     },
 
     /**
      * Sphere - basic geometry fallback
      */
-    'sphere': material => {
+    sphere: material => {
         return SHADER_EXTRACTORS.default(material);
     },
 
     /**
      * Default extractor for unknown/standard materials
      */
-    'default': material => {
+    default: material => {
         // Handle both shader materials (with uniforms) and standard materials
         const uniforms = material?.uniforms;
 
@@ -187,13 +187,15 @@ const SHADER_EXTRACTORS = {
             // Custom shader - try common uniform names
             return {
                 type: 'physical',
-                color: uniforms.color?.value?.clone() ||
-                       uniforms.baseColor?.value?.clone() ||
-                       uniforms.diffuse?.value?.clone() ||
-                       new THREE.Color(0x888888),
-                emissive: uniforms.emissive?.value?.clone() ||
-                          uniforms.glowColor?.value?.clone() ||
-                          new THREE.Color(0x000000),
+                color:
+                    uniforms.color?.value?.clone() ||
+                    uniforms.baseColor?.value?.clone() ||
+                    uniforms.diffuse?.value?.clone() ||
+                    new THREE.Color(0x888888),
+                emissive:
+                    uniforms.emissive?.value?.clone() ||
+                    uniforms.glowColor?.value?.clone() ||
+                    new THREE.Color(0x000000),
                 emissiveIntensity: uniforms.emissiveIntensity?.value ?? 0.3,
                 transmission: 0.0,
                 roughness: uniforms.roughness?.value ?? 0.5,
@@ -202,7 +204,7 @@ const SHADER_EXTRACTORS = {
                 thickness: 0.0,
                 iridescence: 0.0,
                 clearcoat: 0.0,
-                map: uniforms.map?.value || uniforms.diffuseMap?.value || null
+                map: uniforms.map?.value || uniforms.diffuseMap?.value || null,
             };
         }
 
@@ -220,9 +222,9 @@ const SHADER_EXTRACTORS = {
             iridescence: material?.iridescence ?? 0.0,
             clearcoat: material?.clearcoat ?? 0.0,
             map: material?.map || null,
-            normalMap: material?.normalMap || null
+            normalMap: material?.normalMap || null,
         };
-    }
+    },
 };
 
 /**
@@ -250,7 +252,7 @@ export function createShardBaseMaterial(properties) {
         metalness: properties.metalness,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.9,
     };
 
     // Add physical properties if present
@@ -295,11 +297,7 @@ export function applyShardVariation(material, options = {}) {
     // Detect "fiery" materials like sun - high emissive intensity indicates fire/glow
     const isFiery = material.emissiveIntensity >= 1.5;
 
-    const {
-        hueRange = 0.1,
-        satRange = 0.1,
-        lightRange = 0.15
-    } = options;
+    const { hueRange = 0.1, satRange = 0.1, lightRange = 0.15 } = options;
 
     // Clone the color before modifying
     const color = material.color.clone();

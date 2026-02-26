@@ -19,35 +19,35 @@ export default {
 
     // Visual properties
     visual: {
-        glowColor: '#00CED1',       // Sharp cyan concentration
-        particleRate: 4,            // Focused flow - 4/sec with max 12 = ~3 sec particle life
-        minParticles: 5,            // Consistent focus presence
-        maxParticles: 12,           // Controlled attention display
+        glowColor: '#00CED1', // Sharp cyan concentration
+        particleRate: 4, // Focused flow - 4/sec with max 12 = ~3 sec particle life
+        minParticles: 5, // Consistent focus presence
+        maxParticles: 12, // Controlled attention display
         particleBehavior: 'directed', // Particles follow target
-        breathRate: 1.2,            // Steady, measured breathing
-        breathDepth: 0.08,          // Controlled, regular breaths
-        coreJitter: true,           // Minimal tracking adjustments
-        blinkRate: 0.7,             // Less frequent blinking (concentrating)
-        blinkSpeed: 1.0,            // Normal blink animation speed
+        breathRate: 1.2, // Steady, measured breathing
+        breathDepth: 0.08, // Controlled, regular breaths
+        coreJitter: true, // Minimal tracking adjustments
+        blinkRate: 0.7, // Less frequent blinking (concentrating)
+        blinkSpeed: 1.0, // Normal blink animation speed
         particleColors: [
-            { color: '#00CED1', weight: 30 },  // Primary focused cyan
-            { color: '#4A9FA0', weight: 20 },  // Muted concentration tone
-            { color: '#00FFFF', weight: 20 },  // Bright attention burst
-            { color: '#5FE5E7', weight: 15 },  // Light focus highlights
-            { color: '#006B6D', weight: 15 }   // Deep concentration base
+            { color: '#00CED1', weight: 30 }, // Primary focused cyan
+            { color: '#4A9FA0', weight: 20 }, // Muted concentration tone
+            { color: '#00FFFF', weight: 20 }, // Bright attention burst
+            { color: '#5FE5E7', weight: 15 }, // Light focus highlights
+            { color: '#006B6D', weight: 15 }, // Deep concentration base
         ],
-        eyeOpenness: 0.7,           // Narrowed for concentration
-        microAdjustments: true      // Subtle tracking movements
+        eyeOpenness: 0.7, // Narrowed for concentration
+        microAdjustments: true, // Subtle tracking movements
     },
 
     // Gesture modifiers
     modifiers: {
-        speed: 1.0,         // Baseline, deliberate pace
-        amplitude: 0.9,     // Controlled movement range
-        intensity: 1.1,     // Enhanced focus strength
-        smoothness: 1.1,    // Precise, smooth tracking
-        regularity: 1.2,    // Consistent, predictable patterns
-        addPrecision: true  // Enhanced accuracy mode
+        speed: 1.0, // Baseline, deliberate pace
+        amplitude: 0.9, // Controlled movement range
+        intensity: 1.1, // Enhanced focus strength
+        smoothness: 1.1, // Precise, smooth tracking
+        regularity: 1.2, // Consistent, predictable patterns
+        addPrecision: true, // Enhanced accuracy mode
     },
 
     // Typical gestures for focus
@@ -55,55 +55,55 @@ export default {
 
     // Transition configuration
     transitions: {
-        duration: 400,       // Moderate focus shift
-        easing: 'easeIn',   // Gradual concentration
-        priority: 5         // Mid-level attention priority
+        duration: 400, // Moderate focus shift
+        easing: 'easeIn', // Gradual concentration
+        priority: 5, // Mid-level attention priority
     },
 
     // Core appearance parameters
     getCoreParams(_state) {
         return {
-            scaleX: 1.1,              // Slightly widened awareness
-            scaleY: 0.7,              // Narrowed for concentration
-            eyeOpenness: 0.7,         // Focused gaze intensity
+            scaleX: 1.1, // Slightly widened awareness
+            scaleY: 0.7, // Narrowed for concentration
+            eyeOpenness: 0.7, // Focused gaze intensity
             eyeExpression: 'focused', // Concentrated expression
             pupilOffset: { x: 0, y: 0 }, // Centered attention
-            microAdjustments: true    // Small tracking movements
+            microAdjustments: true, // Small tracking movements
         };
     },
 
     // 3D rotation behavior and effects
     '3d': {
         rotation: {
-            type: 'still',              // Minimal rotation - locked concentration
-            speed: 0.5,                 // Very slow rotation
-            axes: [0, 0.1, 0],          // Minimal Y-axis drift
-            musicSync: false            // Focus doesn't sync to music
+            type: 'still', // Minimal rotation - locked concentration
+            speed: 0.5, // Very slow rotation
+            axes: [0, 0.1, 0], // Minimal Y-axis drift
+            musicSync: false, // Focus doesn't sync to music
         },
         glow: {
-            color: '#00CED1',           // Sharp cyan (matches visual.glowColor)
-            intensity: 1.2,             // Clear defined aura
+            color: '#00CED1', // Sharp cyan (matches visual.glowColor)
+            intensity: 1.2, // Clear defined aura
             pulse: {
-                speed: 1.2,             // Steady pulsing (matches breathRate)
-                range: [1.0, 1.3]       // Subtle pulse (controlled)
-            }
+                speed: 1.2, // Steady pulsing (matches breathRate)
+                range: [1.0, 1.3], // Subtle pulse (controlled)
+            },
         },
         scale: {
             base: 1.0,
             breathe: {
                 enabled: true,
-                depth: 0.08,            // Controlled breaths (matches breathDepth)
-                rate: 1.2               // Steady breathing (matches breathRate)
-            }
-        }
+                depth: 0.08, // Controlled breaths (matches breathDepth)
+                rate: 1.2, // Steady breathing (matches breathRate)
+            },
+        },
     },
 
     // Soul/energy animation parameters (geometry-agnostic)
     // Used by: Crystal (inner core), Sun (plasma flow), Moon (subtle glow pulse)
     soulAnimation: {
-        driftSpeed: 0.6,        // Energy movement speed - steady, directed
-        shimmerSpeed: 0.2,      // Vertical pulse speed - minimal distraction
-        turbulence: 0.1         // Chaos/randomness factor - laser-focused precision
+        driftSpeed: 0.6, // Energy movement speed - steady, directed
+        shimmerSpeed: 0.2, // Vertical pulse speed - minimal distraction
+        turbulence: 0.1, // Chaos/randomness factor - laser-focused precision
     },
 
     // Rhythm game modifiers
@@ -111,6 +111,6 @@ export default {
         windowMultiplier: 0.85,
         visualNoise: 0,
         inputDelay: 0,
-        tempoShift: 0
-    }
+        tempoShift: 0,
+    },
 };

@@ -17,8 +17,10 @@ export class FrustrationContextManager {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.errorBoundary) throw new Error('FrustrationContextManager: errorBoundary required');
-        if (!deps.contextManager) throw new Error('FrustrationContextManager: contextManager required');
+        if (!deps.errorBoundary)
+            throw new Error('FrustrationContextManager: errorBoundary required');
+        if (!deps.contextManager)
+            throw new Error('FrustrationContextManager: contextManager required');
 
         this.errorBoundary = deps.errorBoundary;
         this.contextManager = deps.contextManager;
@@ -31,14 +33,18 @@ export class FrustrationContextManager {
      * @returns {Object} Chain target for method chaining
      */
     updateContext(updates) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[FrustrationContextManager] ContextManager not initialized');
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.contextManager) {
+                    console.warn('[FrustrationContextManager] ContextManager not initialized');
+                    return this._chainTarget;
+                }
+                this.contextManager.update(updates);
                 return this._chainTarget;
-            }
-            this.contextManager.update(updates);
-            return this._chainTarget;
-        }, 'context-update', this._chainTarget)();
+            },
+            'context-update',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -47,14 +53,18 @@ export class FrustrationContextManager {
      * @returns {Object} Chain target for method chaining
      */
     incrementFrustration(amount = 10) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[FrustrationContextManager] ContextManager not initialized');
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.contextManager) {
+                    console.warn('[FrustrationContextManager] ContextManager not initialized');
+                    return this._chainTarget;
+                }
+                this.contextManager.incrementFrustration(amount);
                 return this._chainTarget;
-            }
-            this.contextManager.incrementFrustration(amount);
-            return this._chainTarget;
-        }, 'frustration-increment', this._chainTarget)();
+            },
+            'frustration-increment',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -63,14 +73,18 @@ export class FrustrationContextManager {
      * @returns {Object} Chain target for method chaining
      */
     decrementFrustration(amount = 10) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[FrustrationContextManager] ContextManager not initialized');
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.contextManager) {
+                    console.warn('[FrustrationContextManager] ContextManager not initialized');
+                    return this._chainTarget;
+                }
+                this.contextManager.decrementFrustration(amount);
                 return this._chainTarget;
-            }
-            this.contextManager.decrementFrustration(amount);
-            return this._chainTarget;
-        }, 'frustration-decrement', this._chainTarget)();
+            },
+            'frustration-decrement',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -78,13 +92,17 @@ export class FrustrationContextManager {
      * @returns {Object} Chain target for method chaining
      */
     resetFrustration() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                console.warn('[FrustrationContextManager] ContextManager not initialized');
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.contextManager) {
+                    console.warn('[FrustrationContextManager] ContextManager not initialized');
+                    return this._chainTarget;
+                }
+                this.contextManager.resetFrustration();
                 return this._chainTarget;
-            }
-            this.contextManager.resetFrustration();
-            return this._chainTarget;
-        }, 'frustration-reset', this._chainTarget)();
+            },
+            'frustration-reset',
+            this._chainTarget
+        )();
     }
 }

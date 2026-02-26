@@ -50,9 +50,12 @@ export class HealthCheckManager {
     constructor(deps) {
         // Required dependency validation
         if (!deps.errorBoundary) throw new Error('HealthCheckManager: errorBoundary required');
-        if (!deps.diagnosticsManager) throw new Error('HealthCheckManager: diagnosticsManager required');
-        if (!deps.mobileOptimization) throw new Error('HealthCheckManager: mobileOptimization required');
-        if (!deps.accessibilityManager) throw new Error('HealthCheckManager: accessibilityManager required');
+        if (!deps.diagnosticsManager)
+            throw new Error('HealthCheckManager: diagnosticsManager required');
+        if (!deps.mobileOptimization)
+            throw new Error('HealthCheckManager: mobileOptimization required');
+        if (!deps.accessibilityManager)
+            throw new Error('HealthCheckManager: accessibilityManager required');
         if (!deps.config) throw new Error('HealthCheckManager: config required');
 
         this.errorBoundary = deps.errorBoundary;
@@ -110,9 +113,13 @@ export class HealthCheckManager {
      * // This will trigger error boundary without crashing the app
      */
     triggerTestError(context = 'manual-test') {
-        return this.errorBoundary.wrap(() => {
-            throw new Error(`Test error triggered in context: ${context}`);
-        }, context, this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                throw new Error(`Test error triggered in context: ${context}`);
+            },
+            context,
+            this._chainTarget
+        )();
     }
 
     /**

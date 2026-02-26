@@ -45,7 +45,7 @@ const ELECTRICIMPACT_CONFIG = {
             easing: 'easeOut',
             startScale: 0.4,
             endScale: 1.8,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: { type: 'ring', count: 7 },
         count: 7,
@@ -60,15 +60,17 @@ const ELECTRICIMPACT_CONFIG = {
             procedural: { scaleSmoothing: 0.04, geometryStability: true },
             grain: { type: 3, strength: 0.15, scale: 0.3, speed: 2.5, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from impact
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 1.5,
-                sizeScale: 2.5,
-                progressCurve: 'burst',
-                velocityInheritance: 0.7,
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 1.5,
+                    sizeScale: 2.5,
+                    progressCurve: 'burst',
+                    velocityInheritance: 0.7,
+                },
+            ],
             pulse: { amplitude: 0.12, frequency: 8, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 3.0, frequency: 9, pattern: 'sine' },
             rotate: [
@@ -78,13 +80,13 @@ const ELECTRICIMPACT_CONFIG = {
                 { axis: 'z', rotations: 4, phase: 155 },
                 { axis: 'x', rotations: -3.5, phase: 210 },
                 { axis: 'y', rotations: 3, phase: 260 },
-                { axis: 'z', rotations: -4.5, phase: 315 }
+                { axis: 'z', rotations: -4.5, phase: 315 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.08,
             blending: 'additive',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     // Violent jitter from impact
@@ -96,7 +98,7 @@ const ELECTRICIMPACT_CONFIG = {
     glowIntensityMax: 2.8,
     glowFlickerRate: 20,
     scaleVibration: 0.03,
-    scaleFrequency: 15
+    scaleFrequency: 15,
 };
 
 export default buildElectricEffectGesture(ELECTRICIMPACT_CONFIG);

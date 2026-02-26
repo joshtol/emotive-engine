@@ -143,5 +143,5 @@ vec3 calculateImpactGlow(vec3 fragPos, vec3 emotionColor) {
 export const DEFORMATION_DEFAULT_UNIFORMS = {
     deformationStrength: 0.0,
     impactPoint: [0, 0, 0],
-    deformationFalloff: 0.5  // Increased for wider effect area
+    deformationFalloff: 0.5, // Increased for wider effect area
 };

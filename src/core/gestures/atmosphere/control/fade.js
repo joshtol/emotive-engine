@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Fade Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Fade gesture - opacity fade effect
@@ -17,54 +17,54 @@ export default {
     emoji: '👻',
     type: 'blending',
     description: 'Fade particle opacity',
-    
+
     // Default configuration
     config: {
-        duration: 2000,     // Legacy fallback
+        duration: 2000, // Legacy fallback
         musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
-        fadeIn: true,       // Enable fade in effect (for fade-out-and-back)
-        fadeOut: true,      // Enable fade out effect
-        minOpacity: 0,      // Minimum opacity level
-        maxOpacity: 1       // Maximum opacity level
+        fadeIn: true, // Enable fade in effect (for fade-out-and-back)
+        fadeOut: true, // Enable fade out effect
+        minOpacity: 0, // Minimum opacity level
+        maxOpacity: 1, // Maximum opacity level
     },
-    
+
     // Rhythm configuration - fades sync to musical dynamics
     rhythm: {
         enabled: true,
-        syncMode: 'dynamic',  // Fade with volume/intensity changes
+        syncMode: 'dynamic', // Fade with volume/intensity changes
         durationSync: { mode: 'bars', bars: 1 }, // 1 bar duration
 
         // Opacity modulation with beat
         opacitySync: {
-            onBeat: 0.9,              // Nearly visible on beat
-            offBeat: 0.3,             // Ghostly between beats
-            subdivision: 'eighth',     // Check every 8th note
-            curve: 'exponential'      // Sharp opacity changes
+            onBeat: 0.9, // Nearly visible on beat
+            offBeat: 0.3, // Ghostly between beats
+            subdivision: 'eighth', // Check every 8th note
+            curve: 'exponential', // Sharp opacity changes
         },
-        
+
         // Fade timing with musical structure
         fadePhaseSync: {
-            verse: { fadeIn: true, fadeOut: false },    // Build in verse
-            chorus: { fadeIn: false, fadeOut: false },  // Full visibility
-            bridge: { fadeIn: true, fadeOut: true },    // In and out
-            outro: { fadeIn: false, fadeOut: true }     // Fade to end
+            verse: { fadeIn: true, fadeOut: false }, // Build in verse
+            chorus: { fadeIn: false, fadeOut: false }, // Full visibility
+            bridge: { fadeIn: true, fadeOut: true }, // In and out
+            outro: { fadeIn: false, fadeOut: true }, // Fade to end
         },
-        
+
         // Pulse with rhythm
         pulseSync: {
             enabled: true,
-            frequency: 'quarter',     // Pulse every quarter note
-            intensity: 0.2,           // Pulse depth
-            onAccent: 0.4            // Deeper pulse on accents
+            frequency: 'quarter', // Pulse every quarter note
+            intensity: 0.2, // Pulse depth
+            onAccent: 0.4, // Deeper pulse on accents
         },
-        
+
         // Musical dynamics
         dynamics: {
-            forte: { minOpacity: 0.5, maxOpacity: 1.0 },    // More visible when loud
-            piano: { minOpacity: 0.0, maxOpacity: 0.4 }     // Ghostly when quiet
-        }
+            forte: { minOpacity: 0.5, maxOpacity: 1.0 }, // More visible when loud
+            piano: { minOpacity: 0.0, maxOpacity: 0.4 }, // Ghostly when quiet
+        },
     },
-    
+
     /**
      * Initialize fade data
      * Stores particle's original opacity
@@ -74,10 +74,10 @@ export default {
             particle.gestureData = {};
         }
         particle.gestureData.fade = {
-            baseOpacity: particle.opacity || particle.life || 1
+            baseOpacity: particle.opacity || particle.life || 1,
         };
     },
-    
+
     /**
      * Apply fade effect to particle
      * Smoothly transitions opacity based on configuration
@@ -86,10 +86,10 @@ export default {
         if (!particle.gestureData?.fade) {
             this.initialize(particle);
         }
-        
+
         const data = particle.gestureData.fade;
         const config = { ...this.config, ...motion };
-        
+
         let targetOpacity;
         if (config.fadeIn && !config.fadeOut) {
             // Fade in only - opacity increases over time
@@ -100,12 +100,15 @@ export default {
         } else {
             // Fade in then out - peak opacity at midpoint
             if (progress < 0.5) {
-                targetOpacity = config.minOpacity + (config.maxOpacity - config.minOpacity) * (progress * 2);
+                targetOpacity =
+                    config.minOpacity + (config.maxOpacity - config.minOpacity) * (progress * 2);
             } else {
-                targetOpacity = config.maxOpacity - (config.maxOpacity - config.minOpacity) * ((progress - 0.5) * 2);
+                targetOpacity =
+                    config.maxOpacity -
+                    (config.maxOpacity - config.minOpacity) * ((progress - 0.5) * 2);
             }
         }
-        
+
         // Apply calculated opacity
         particle.opacity = data.baseOpacity * targetOpacity;
         // Also update life property for particles that use it
@@ -113,7 +116,7 @@ export default {
             particle.life = particle.opacity;
         }
     },
-    
+
     /**
      * Clean up fade effect
      * Restores original opacity values
@@ -154,7 +157,7 @@ export default {
                 // Default: Fade OUT to nothing (0-50%), then fade BACK in (50-100%)
                 if (progress < 0.5) {
                     // Fade out: 1.0 → 0.0
-                    fadeAmount = 1 - (progress / 0.5);
+                    fadeAmount = 1 - progress / 0.5;
                 } else {
                     // Fade in: 0.0 → 1.0
                     fadeAmount = (progress - 0.5) / 0.5;
@@ -179,8 +182,8 @@ export default {
                 // Glow intensity fades with mesh (0 = invisible, 1 = full)
                 glowIntensity: easedFade,
                 // No glow boost
-                glowBoost: 0
+                glowBoost: 0,
             };
-        }
-    }
+        },
+    },
 };

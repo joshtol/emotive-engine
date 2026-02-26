@@ -41,7 +41,7 @@ export function createRushGesture(direction) {
         left: '⬅️',
         right: '➡️',
         up: '⬆️',
-        down: '⬇️'
+        down: '⬇️',
     };
 
     const descriptions = {
@@ -50,7 +50,7 @@ export function createRushGesture(direction) {
         left: 'Quick strafe left',
         right: 'Quick strafe right',
         up: 'Quick leap upward',
-        down: 'Quick dive downward'
+        down: 'Quick dive downward',
     };
 
     return {
@@ -67,8 +67,8 @@ export function createRushGesture(direction) {
             particleMotion: {
                 type: 'rush',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -79,8 +79,8 @@ export function createRushGesture(direction) {
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.4
-            }
+                multiplier: 1.4,
+            },
         },
 
         '3d': {
@@ -94,7 +94,9 @@ export function createRushGesture(direction) {
                 // Phase 2 (0.2-0.6): DASH!
                 // Phase 3 (0.6-1.0): Return/settle
 
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
                 let rotX = 0;
                 const rotY = 0;
                 let rotZ = 0;
@@ -109,12 +111,12 @@ export function createRushGesture(direction) {
                 // lean.x: positive = tilt top toward camera (forward lean)
                 // lean.z: positive = tilt top to viewer's left (CCW), negative = right (CW)
                 const dirVectors = {
-                    forward: { x: 0, y: 0, z: 1, lean: { x: 0.2, z: 0 } },   // Toward camera (camera faces +Z)
-                    back: { x: 0, y: 0, z: -1, lean: { x: -0.2, z: 0 } },    // Away from camera
-                    left: { x: -1, y: 0, z: 0, lean: { x: 0, z: 0.2 } },   // Lean INTO rush = top-left
-                    right: { x: 1, y: 0, z: 0, lean: { x: 0, z: -0.2 } },  // Lean INTO rush = top-right
+                    forward: { x: 0, y: 0, z: 1, lean: { x: 0.2, z: 0 } }, // Toward camera (camera faces +Z)
+                    back: { x: 0, y: 0, z: -1, lean: { x: -0.2, z: 0 } }, // Away from camera
+                    left: { x: -1, y: 0, z: 0, lean: { x: 0, z: 0.2 } }, // Lean INTO rush = top-left
+                    right: { x: 1, y: 0, z: 0, lean: { x: 0, z: -0.2 } }, // Lean INTO rush = top-right
                     up: { x: 0, y: 1, z: 0, lean: { x: -0.15, z: 0 } },
-                    down: { x: 0, y: -1, z: 0, lean: { x: 0.2, z: 0 } }
+                    down: { x: 0, y: -1, z: 0, lean: { x: 0.2, z: 0 } },
                 };
 
                 const dirVec = dirVectors[dir];
@@ -138,7 +140,6 @@ export function createRushGesture(direction) {
 
                     // Building glow
                     glowIntensity = 1.0 + leanEase * 0.3;
-
                 } else if (progress < 0.6) {
                     // Phase 2: DASH!
                     const dashT = (progress - 0.2) / 0.4;
@@ -171,13 +172,13 @@ export function createRushGesture(direction) {
                     // Motion blur wobble
                     const blur = Math.sin(dashT * Math.PI * 12) * (1 - dashT) * 0.015;
                     rotZ += blur * strength;
-
                 } else {
                     // Phase 3: Return/settle
                     const returnT = (progress - 0.6) / 0.4;
-                    const returnEase = returnT < 0.5
-                        ? 2 * returnT * returnT
-                        : 1 - Math.pow(-2 * returnT + 2, 2) / 2;
+                    const returnEase =
+                        returnT < 0.5
+                            ? 2 * returnT * returnT
+                            : 1 - Math.pow(-2 * returnT + 2, 2) / 2;
 
                     // Return from dash position
                     posX = dirVec.x * dashDistance * (1 - returnEase) * strength;
@@ -209,10 +210,10 @@ export function createRushGesture(direction) {
                     cameraRelativeRotation: [rotX, rotY, rotZ],
                     scale,
                     glowIntensity,
-                    glowBoost
+                    glowBoost,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

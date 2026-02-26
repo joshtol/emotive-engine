@@ -44,7 +44,7 @@ import {
     resetGrain as resetFireGrain,
     resetAnimation as resetFireAnimation,
     setRelay as setFireRelay,
-    resetRelay as resetFireRelay
+    resetRelay as resetFireRelay,
 } from '../materials/instanced/InstancedFireMaterial.js';
 
 import {
@@ -59,7 +59,7 @@ import {
     resetGrain as resetWaterGrain,
     resetAnimation as resetWaterAnimation,
     setRelay as setWaterRelay,
-    resetRelay as resetWaterRelay
+    resetRelay as resetWaterRelay,
 } from '../materials/instanced/InstancedWaterMaterial.js';
 
 import {
@@ -76,7 +76,7 @@ import {
     resetWetness as resetIceWetness,
     resetAnimation as resetIceAnimation,
     setRelay as setIceRelay,
-    resetRelay as resetIceRelay
+    resetRelay as resetIceRelay,
 } from '../materials/instanced/InstancedIceMaterial.js';
 
 import {
@@ -93,7 +93,7 @@ import {
     setFlash as setElectricFlash,
     resetFlash as resetElectricFlash,
     setRelay as setElectricRelay,
-    resetRelay as resetElectricRelay
+    resetRelay as resetElectricRelay,
 } from '../materials/instanced/InstancedElectricMaterial.js';
 
 import {
@@ -108,7 +108,7 @@ import {
     resetGrain as resetVoidGrain,
     resetAnimation as resetVoidAnimation,
     setRelay as setVoidRelay,
-    resetRelay as resetVoidRelay
+    resetRelay as resetVoidRelay,
 } from '../materials/instanced/InstancedVoidMaterial.js';
 
 import {
@@ -123,7 +123,7 @@ import {
     resetGrain as resetLightGrain,
     resetAnimation as resetLightAnimation,
     setRelay as setLightRelay,
-    resetRelay as resetLightRelay
+    resetRelay as resetLightRelay,
 } from '../materials/instanced/InstancedLightMaterial.js';
 
 import {
@@ -140,7 +140,7 @@ import {
     resetWetness as resetEarthWetness,
     resetAnimation as resetEarthAnimation,
     setRelay as setEarthRelay,
-    resetRelay as resetEarthRelay
+    resetRelay as resetEarthRelay,
 } from '../materials/instanced/InstancedEarthMaterial.js';
 
 import {
@@ -155,7 +155,7 @@ import {
     resetGrain as resetNatureGrain,
     resetAnimation as resetNatureAnimation,
     setRelay as setNatureRelay,
-    resetRelay as resetNatureRelay
+    resetRelay as resetNatureRelay,
 } from '../materials/instanced/InstancedNatureMaterial.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -169,7 +169,7 @@ ElementTypeRegistry.register('fire', {
         'flame-tongue.glb',
         'ember-cluster.glb',
         'fire-burst.glb',
-        'flame-ring.glb'
+        'flame-ring.glb',
     ],
     createMaterial: createInstancedFireMaterial,
     updateMaterial: updateInstancedFireMaterial,
@@ -202,7 +202,7 @@ ElementTypeRegistry.register('water', {
         'droplet-large.glb',
         'splash-ring.glb',
         'bubble-cluster.glb',
-        'wave-curl.glb'
+        'wave-curl.glb',
     ],
     createMaterial: createInstancedWaterMaterial,
     updateMaterial: updateInstancedWaterMaterial,
@@ -236,7 +236,7 @@ ElementTypeRegistry.register('ice', {
         'crystal-cluster.glb',
         'ice-spike.glb',
         'ice-ring.glb',
-        'ice-crown.glb'
+        'ice-crown.glb',
     ],
     createMaterial: createInstancedIceMaterial,
     updateMaterial: updateInstancedIceMaterial,
@@ -257,8 +257,8 @@ ElementTypeRegistry.register('ice', {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
         material: createIceDistortionMaterial,
         transform: {
-            padding: new THREE.Vector3(0.3, 0.5, 0.3),      // More vertical room for mist
-            centerOffset: new THREE.Vector3(0, -0.15, 0),    // Shift down — cold air sinks
+            padding: new THREE.Vector3(0.3, 0.5, 0.3), // More vertical room for mist
+            centerOffset: new THREE.Vector3(0, -0.15, 0), // Shift down — cold air sinks
         },
         billboard: true,
         strength: 0.003,
@@ -276,7 +276,7 @@ ElementTypeRegistry.register('electricity', {
         'lightning-ring.glb',
         'plasma-ring.glb',
         'arc-ring-small.glb',
-        'spark-spike.glb'
+        'spark-spike.glb',
     ],
     createMaterial: createInstancedElectricMaterial,
     updateMaterial: updateInstancedElectricMaterial,
@@ -316,7 +316,7 @@ ElementTypeRegistry.register('void', {
         'void-tendril-large.glb',
         'void-wrap.glb',
         'void-disk.glb',
-        'void-crown.glb'
+        'void-crown.glb',
     ],
     createMaterial: createInstancedVoidMaterial,
     updateMaterial: updateInstancedVoidMaterial,
@@ -335,7 +335,7 @@ ElementTypeRegistry.register('void', {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
         material: createVoidDistortionMaterial,
         transform: {
-            padding: new THREE.Vector3(0.8, 0.8, 0.8),  // Large — Kerr frame dragging extends far beyond event horizon
+            padding: new THREE.Vector3(0.8, 0.8, 0.8), // Large — Kerr frame dragging extends far beyond event horizon
         },
         billboard: true,
         strength: 0.028,
@@ -352,7 +352,7 @@ ElementTypeRegistry.register('light', {
         'light-ring.glb',
         'sun-ring.glb',
         'light-burst.glb',
-        'light-crown.glb'
+        'light-crown.glb',
     ],
     createMaterial: createInstancedLightMaterial,
     updateMaterial: updateInstancedLightMaterial,
@@ -374,7 +374,7 @@ ElementTypeRegistry.register('light', {
             padding: new THREE.Vector3(0.4, 0.5, 0.4), // More vertical — light rises
         },
         billboard: true,
-        strength: 0.004,  // Subtle holy shimmer — between fire (0.005) and water/ice (0.003)
+        strength: 0.004, // Subtle holy shimmer — between fire (0.005) and water/ice (0.003)
     },
 });
 
@@ -389,7 +389,7 @@ ElementTypeRegistry.register('earth', {
         'stone-ring.glb',
         'boulder.glb',
         'stone-spike.glb',
-        'earth-crown.glb'
+        'earth-crown.glb',
     ],
     createMaterial: createInstancedEarthMaterial,
     updateMaterial: updateInstancedEarthMaterial,
@@ -408,12 +408,12 @@ ElementTypeRegistry.register('earth', {
     scaleMultiplier: 1.0,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
-        material: createFireDistortionMaterial,  // Reuse fire distortion (earth has ~0 strength)
+        material: createFireDistortionMaterial, // Reuse fire distortion (earth has ~0 strength)
         transform: {
             padding: new THREE.Vector3(0.2, 0.2, 0.2),
         },
         billboard: true,
-        strength: 0.0,  // Earth is solid — no distortion by default
+        strength: 0.0, // Earth is solid — no distortion by default
     },
 });
 
@@ -427,7 +427,7 @@ ElementTypeRegistry.register('nature', {
         'leaf-bunch.glb',
         'vine-twist.glb',
         'u-vine.glb',
-        'thorn-curl.glb'
+        'thorn-curl.glb',
     ],
     createMaterial: createInstancedNatureMaterial,
     updateMaterial: updateInstancedNatureMaterial,
@@ -444,12 +444,12 @@ ElementTypeRegistry.register('nature', {
     scaleMultiplier: 1.2,
     distortion: {
         geometry: () => new THREE.PlaneGeometry(1.0, 1.0),
-        material: createFireDistortionMaterial,  // Reuse fire distortion (nature has minimal distortion)
+        material: createFireDistortionMaterial, // Reuse fire distortion (nature has minimal distortion)
         transform: {
             padding: new THREE.Vector3(0.2, 0.3, 0.2),
         },
         billboard: true,
-        strength: 0.002,  // Very subtle organic shimmer
+        strength: 0.002, // Very subtle organic shimmer
     },
 });
 

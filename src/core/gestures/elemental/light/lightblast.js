@@ -42,7 +42,7 @@ const LIGHTBLAST_CONFIG = {
     intensity: 1.8,
     category: 'manifestation',
     radiance: 1.0,
-    distortionStrength: 2.5,            // Heavy screen distortion
+    distortionStrength: 2.5, // Heavy screen distortion
 
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════
@@ -56,9 +56,11 @@ const LIGHTBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.15,
                 endScale: 3.5,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 1, scale: 2.5, models: ['light-burst'],
+            count: 1,
+            scale: 2.5,
+            models: ['light-burst'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.35,
@@ -67,17 +69,19 @@ const LIGHTBLAST_CONFIG = {
                 procedural: { scaleSmoothing: 0.02, geometryStability: true },
                 pulse: { amplitude: 0.15, frequency: 12, easing: 'easeOut' },
                 emissive: { min: 2.5, max: 4.5, frequency: 10, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'firefly',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 1.0,
-                    sizeScale: 2.5,
-                    progressCurve: 'pulse',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'firefly',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 1.0,
+                        sizeScale: 2.5,
+                        progressCurve: 'pulse',
+                    },
+                ],
                 blending: 'additive',
                 renderOrder: 18,
-            }
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -91,9 +95,11 @@ const LIGHTBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 4.0,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
-            count: 1, scale: 2.0, models: ['light-ring'],
+            count: 1,
+            scale: 2.0,
+            models: ['light-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.3,
@@ -105,10 +111,10 @@ const LIGHTBLAST_CONFIG = {
                 modelOverrides: {
                     'light-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // Shockwave 2 — second ripple, slightly delayed
         {
@@ -119,9 +125,11 @@ const LIGHTBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.15,
                 endScale: 3.5,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
-            count: 1, scale: 1.6, models: ['light-ring'],
+            count: 1,
+            scale: 1.6,
+            models: ['light-ring'],
             animation: {
                 appearAt: 0.06,
                 disappearAt: 0.35,
@@ -133,10 +141,10 @@ const LIGHTBLAST_CONFIG = {
                 modelOverrides: {
                     'light-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -153,9 +161,11 @@ const LIGHTBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 1.1,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 8, scale: 1.0, models: ['prism-shard'],
+            count: 8,
+            scale: 1.0,
+            models: ['prism-shard'],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.4,
@@ -171,13 +181,13 @@ const LIGHTBLAST_CONFIG = {
                     { axis: 'z', rotations: 2.5, phase: 180 },
                     { axis: 'z', rotations: -3.0, phase: 225 },
                     { axis: 'z', rotations: 2.0, phase: 270 },
-                    { axis: 'z', rotations: -2.5, phase: 315 }
+                    { axis: 'z', rotations: -2.5, phase: 315 },
                 ],
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.1,
                 blending: 'additive',
                 renderOrder: 19,
-            }
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -194,9 +204,11 @@ const LIGHTBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 0.6,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 4, scale: 0.7, models: ['sparkle-star'],
+            count: 4,
+            scale: 0.7,
+            models: ['sparkle-star'],
             animation: {
                 appearAt: 0.03,
                 disappearAt: 0.45,
@@ -208,18 +220,18 @@ const LIGHTBLAST_CONFIG = {
                     { axis: 'z', rotations: 1.5, phase: 0 },
                     { axis: 'z', rotations: -2.0, phase: 90 },
                     { axis: 'z', rotations: 1.5, phase: 180 },
-                    { axis: 'z', rotations: -1.5, phase: 270 }
+                    { axis: 'z', rotations: -1.5, phase: 270 },
                 ],
                 scaleVariance: 0.25,
                 blending: 'additive',
                 renderOrder: 20,
-            }
-        }
+            },
+        },
     ],
 
     decayRate: 0.1,
     endFlash: true,
-    glowColor: [1.0, 0.95, 0.60],
+    glowColor: [1.0, 0.95, 0.6],
     glowIntensityMin: 1.2,
     glowIntensityMax: 2.5,
     glowFlickerRate: 12,
@@ -227,7 +239,7 @@ const LIGHTBLAST_CONFIG = {
     scaleFrequency: 10,
     scalePulse: true,
     recoilAmount: 0.02,
-    recoilSpeed: 4
+    recoilSpeed: 4,
 };
 
 export default buildLightEffectGesture(LIGHTBLAST_CONFIG);

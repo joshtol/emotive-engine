@@ -2,41 +2,41 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                   ◐ ◑ ◒ ◓  DEGRADATION MANAGER  ◓ ◒ ◑ ◐                   
- *                                                                                    
+ *  └─○═╝
+ *                   ◐ ◑ ◒ ◓  DEGRADATION MANAGER  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Degradation Manager - Graceful Performance Optimization
  * @author Emotive Engine Team
  * @version 2.0.0
  * @module DegradationManager
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The ADAPTIVE BRAIN that ensures smooth performance across all devices.            
- * ║ Detects browser capabilities and system performance, then gracefully              
- * ║ degrades features to maintain 60fps. Better to look simpler than to lag!          
+ * ║ The ADAPTIVE BRAIN that ensures smooth performance across all devices.
+ * ║ Detects browser capabilities and system performance, then gracefully
+ * ║ degrades features to maintain 60fps. Better to look simpler than to lag!
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎯 QUALITY LEVELS                                                                  
+ * │ 🎯 QUALITY LEVELS
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • HIGH    : All features enabled, max particles                                   
- * │ • MEDIUM  : Reduced particles, simpler effects                                    
- * │ • LOW     : Minimal particles, basic animations                                   
- * │ • MINIMAL : Core functionality only, no particles                                 
+ * │ • HIGH    : All features enabled, max particles
+ * │ • MEDIUM  : Reduced particles, simpler effects
+ * │ • LOW     : Minimal particles, basic animations
+ * │ • MINIMAL : Core functionality only, no particles
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🔍 DETECTION METHODS                                                               
+ * │ 🔍 DETECTION METHODS
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Browser capability detection                                                    
- * │ • FPS monitoring (degrades if < 30fps)                                            
- * │ • Device memory estimation                                                        
- * │ • GPU tier detection                                                              
- * │ • Battery level monitoring                                                        
+ * │ • Browser capability detection
+ * │ • FPS monitoring (degrades if < 30fps)
+ * │ • Device memory estimation
+ * │ • GPU tier detection
+ * │ • Battery level monitoring
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -92,7 +92,7 @@ export class DegradationManager {
             warningFPS: config.warningFPS || 50, // FPS warning threshold (no degradation)
             criticalFPS: config.criticalFPS ?? config.performanceThreshold ?? 30, // FPS critical threshold
             requiredGoodFrames: config.requiredGoodFrames || 30, // Frames for recovery
-            ...config
+            ...config,
         };
 
         // Error logger for degradation events
@@ -110,7 +110,7 @@ export class DegradationManager {
                 canvasScale: 1.0,
                 animationComplexity: 1.0,
                 description: 'Full features and effects',
-                features: ['particles', 'audio', 'fullEffects', 'animations', 'highQuality']
+                features: ['particles', 'audio', 'fullEffects', 'animations', 'highQuality'],
             },
             {
                 name: 'reduced',
@@ -122,7 +122,7 @@ export class DegradationManager {
                 canvasScale: 0.9,
                 animationComplexity: 0.8,
                 description: 'Reduced visual effects',
-                features: ['particles', 'audio', 'animations', 'mediumQuality']
+                features: ['particles', 'audio', 'animations', 'mediumQuality'],
             },
             {
                 name: 'minimal',
@@ -134,11 +134,11 @@ export class DegradationManager {
                 canvasScale: 0.8,
                 animationComplexity: 0.6,
                 description: 'Minimal visual effects, no audio',
-                features: ['particles', 'animations', 'lowQuality']
+                features: ['particles', 'animations', 'lowQuality'],
             },
             {
                 name: 'emergency',
-                particleLimit: 5,  // Keep minimum particles even in emergency mode
+                particleLimit: 5, // Keep minimum particles even in emergency mode
                 audioEnabled: false,
                 fullEffects: false,
                 targetFPS: 15,
@@ -146,35 +146,35 @@ export class DegradationManager {
                 canvasScale: 0.7,
                 animationComplexity: 0.4,
                 description: 'Emergency mode - basic animation only',
-                features: ['animations', 'particles']
-            }
+                features: ['animations', 'particles'],
+            },
         ];
 
         this.currentLevel = 0; // Set to optimal since auto-optimization is disabled
         this.lastDegradationTime = 0;
         this.performanceHistory = [];
         this.maxHistorySize = 30; // 30 samples for averaging
-        
+
         // Feature availability based on browser capabilities
         this.availableFeatures = this.assessAvailableFeatures();
-        
+
         // Performance monitoring
         this.isMonitoring = false;
         this.monitoringInterval = null;
-        
+
         // Recovery management
         this.recoveryTimeout = null;
         this.consecutiveGoodFrames = 0;
         this.requiredGoodFrames = this.config.requiredGoodFrames; // Configurable frames for recovery
-        
+
         // Manual degradation controls
         this.manualOverride = null;
         this.disabledFeatures = new Set();
-        
+
         // Progressive enhancement tracking
         this.enhancementHistory = [];
         this.capabilityTests = new Map();
-        
+
         // DegradationManager initialized
     }
 
@@ -184,8 +184,8 @@ export class DegradationManager {
      */
     assessAvailableFeatures() {
         const features = browserCompatibility.featureDetection.getFeatures();
-        const {capabilities} = browserCompatibility;
-        
+        const { capabilities } = browserCompatibility;
+
         return {
             audio: features.webAudio && features.audioContext,
             particles: features.canvas2d,
@@ -193,7 +193,7 @@ export class DegradationManager {
             performance: features.performance,
             fullQuality: capabilities.level === 'full',
             reducedMotion: this.detectReducedMotion(),
-            highContrast: this.detectHighContrast()
+            highContrast: this.detectHighContrast(),
         };
     }
 
@@ -238,18 +238,18 @@ export class DegradationManager {
      */
     stopMonitoring() {
         if (!this.isMonitoring) return;
-        
+
         this.isMonitoring = false;
         if (this.monitoringInterval) {
             clearInterval(this.monitoringInterval);
             this.monitoringInterval = null;
         }
-        
+
         if (this.recoveryTimeout) {
             clearTimeout(this.recoveryTimeout);
             this.recoveryTimeout = null;
         }
-        
+
         // Performance monitoring stopped
     }
 
@@ -259,24 +259,28 @@ export class DegradationManager {
      */
     checkPerformance(metrics = {}) {
         if (!this.config.enableAutoOptimization) return;
-        
+
         const fps = metrics.fps || 60;
         const memoryUsage = metrics.memoryUsage || 0;
-        
+
         // Add to performance history
         this.performanceHistory.push({ fps, memoryUsage, timestamp: Date.now() });
         if (this.performanceHistory.length > this.maxHistorySize) {
             this.performanceHistory.shift();
         }
-        
+
         // Calculate average performance
-        const avgFPS = this.performanceHistory.reduce((sum, sample) => sum + sample.fps, 0) / this.performanceHistory.length;
-        const avgMemory = this.performanceHistory.reduce((sum, sample) => sum + sample.memoryUsage, 0) / this.performanceHistory.length;
-        
+        const avgFPS =
+            this.performanceHistory.reduce((sum, sample) => sum + sample.fps, 0) /
+            this.performanceHistory.length;
+        const avgMemory =
+            this.performanceHistory.reduce((sum, sample) => sum + sample.memoryUsage, 0) /
+            this.performanceHistory.length;
+
         // Check if degradation is needed
-        const needsDegradation = avgFPS < this.config.performanceThreshold || 
-                                avgMemory > this.config.memoryThreshold;
-        
+        const needsDegradation =
+            avgFPS < this.config.performanceThreshold || avgMemory > this.config.memoryThreshold;
+
         if (needsDegradation && this.canDegrade()) {
             this.applyDegradation();
         } else if (!needsDegradation && avgFPS > this.config.performanceThreshold * 1.1) {
@@ -297,9 +301,10 @@ export class DegradationManager {
     canDegrade() {
         const now = Date.now();
         const timeSinceLastDegradation = now - this.lastDegradationTime;
-        
-        return this.currentLevel < this.degradationLevels.length - 1 && 
-               timeSinceLastDegradation > 2000; // Minimum 2 seconds between degradations
+
+        return (
+            this.currentLevel < this.degradationLevels.length - 1 && timeSinceLastDegradation > 2000
+        ); // Minimum 2 seconds between degradations
     }
 
     /**
@@ -315,26 +320,26 @@ export class DegradationManager {
      */
     applyDegradation() {
         if (!this.canDegrade()) return;
-        
+
         this.currentLevel++;
         this.lastDegradationTime = Date.now();
         this.consecutiveGoodFrames = 0;
-        
+
         const level = this.getCurrentLevel();
         // Silently apply performance degradation
-        
+
         // Cancel any pending recovery
         if (this.recoveryTimeout) {
             clearTimeout(this.recoveryTimeout);
             this.recoveryTimeout = null;
         }
-        
+
         // Emit degradation event
         this.emit('degradationApplied', {
             level: level.name,
             index: this.currentLevel,
             reason: 'performance',
-            settings: level
+            settings: level,
         });
     }
 
@@ -343,12 +348,12 @@ export class DegradationManager {
      */
     scheduleRecovery() {
         if (this.recoveryTimeout) return; // Already scheduled
-        
+
         this.recoveryTimeout = setTimeout(() => {
             this.applyRecovery();
             this.recoveryTimeout = null;
         }, this.config.recoveryDelay);
-        
+
         // Recovery scheduled
     }
 
@@ -357,18 +362,18 @@ export class DegradationManager {
      */
     applyRecovery() {
         if (!this.canRecover()) return;
-        
+
         this.currentLevel--;
         this.consecutiveGoodFrames = 0;
-        
+
         const level = this.getCurrentLevel();
         // Performance recovery applied
-        
+
         // Emit recovery event
         this.emit('recoveryApplied', {
             level: level.name,
             index: this.currentLevel,
-            settings: level
+            settings: level,
         });
     }
 
@@ -378,7 +383,7 @@ export class DegradationManager {
      */
     setLevel(level) {
         let targetLevel;
-        
+
         if (typeof level === 'string') {
             targetLevel = this.degradationLevels.findIndex(l => l.name === level);
             if (targetLevel === -1) {
@@ -391,22 +396,22 @@ export class DegradationManager {
             // Invalid degradation level type
             return false;
         }
-        
+
         const previousLevel = this.currentLevel;
         this.currentLevel = targetLevel;
-        
+
         const levelInfo = this.getCurrentLevel();
         // Degradation level manually set
-        
+
         // Emit level change event
         this.emit('levelChanged', {
             previousLevel: this.degradationLevels[previousLevel].name,
             currentLevel: levelInfo.name,
             index: this.currentLevel,
             manual: true,
-            settings: levelInfo
+            settings: levelInfo,
         });
-        
+
         return true;
     }
 
@@ -444,20 +449,20 @@ export class DegradationManager {
         if (this.disabledFeatures.has(feature)) {
             return false;
         }
-        
+
         const currentLevel = this.getCurrentLevel();
-        
+
         switch (feature) {
-        case 'audio':
-            return this.availableFeatures.audio && currentLevel.audioEnabled;
-        case 'particles':
-            return this.availableFeatures.particles && currentLevel.particleLimit > 0;
-        case 'fullEffects':
-            return this.availableFeatures.fullQuality && currentLevel.fullEffects;
-        case 'animations':
-            return this.availableFeatures.animations;
-        default:
-            return this.availableFeatures[feature] || false;
+            case 'audio':
+                return this.availableFeatures.audio && currentLevel.audioEnabled;
+            case 'particles':
+                return this.availableFeatures.particles && currentLevel.particleLimit > 0;
+            case 'fullEffects':
+                return this.availableFeatures.fullQuality && currentLevel.fullEffects;
+            case 'animations':
+                return this.availableFeatures.animations;
+            default:
+                return this.availableFeatures[feature] || false;
         }
     }
 
@@ -468,7 +473,7 @@ export class DegradationManager {
     getRecommendedSettings() {
         const level = this.getCurrentLevel();
         const browserOpts = browserCompatibility.browserOptimizations.getOptimizations();
-        
+
         return {
             maxParticles: Math.min(level.particleLimit, browserOpts.particleLimit),
             enableAudio: level.audioEnabled && this.availableFeatures.audio,
@@ -476,7 +481,7 @@ export class DegradationManager {
             targetFPS: level.targetFPS,
             qualityLevel: level.qualityLevel,
             reducedMotion: this.availableFeatures.reducedMotion,
-            highContrast: this.availableFeatures.highContrast
+            highContrast: this.availableFeatures.highContrast,
         };
     }
 
@@ -490,15 +495,19 @@ export class DegradationManager {
                 avgFPS: 0,
                 avgMemory: 0,
                 samples: 0,
-                currentLevel: this.getCurrentLevel().name
+                currentLevel: this.getCurrentLevel().name,
             };
         }
-        
-        const avgFPS = this.performanceHistory.reduce((sum, sample) => sum + sample.fps, 0) / this.performanceHistory.length;
-        const avgMemory = this.performanceHistory.reduce((sum, sample) => sum + sample.memoryUsage, 0) / this.performanceHistory.length;
+
+        const avgFPS =
+            this.performanceHistory.reduce((sum, sample) => sum + sample.fps, 0) /
+            this.performanceHistory.length;
+        const avgMemory =
+            this.performanceHistory.reduce((sum, sample) => sum + sample.memoryUsage, 0) /
+            this.performanceHistory.length;
         const minFPS = Math.min(...this.performanceHistory.map(s => s.fps));
         const maxFPS = Math.max(...this.performanceHistory.map(s => s.fps));
-        
+
         return {
             avgFPS: Math.round(avgFPS * 10) / 10,
             avgMemory: Math.round(avgMemory * 10) / 10,
@@ -507,7 +516,7 @@ export class DegradationManager {
             samples: this.performanceHistory.length,
             currentLevel: this.getCurrentLevel().name,
             consecutiveGoodFrames: this.consecutiveGoodFrames,
-            isMonitoring: this.isMonitoring
+            isMonitoring: this.isMonitoring,
         };
     }
 
@@ -519,16 +528,16 @@ export class DegradationManager {
         this.performanceHistory = [];
         this.consecutiveGoodFrames = 0;
         this.lastDegradationTime = 0;
-        
+
         if (this.recoveryTimeout) {
             clearTimeout(this.recoveryTimeout);
             this.recoveryTimeout = null;
         }
-        
+
         // DegradationManager reset to optimal level
-        
+
         this.emit('reset', {
-            level: this.getCurrentLevel().name
+            level: this.getCurrentLevel().name,
         });
     }
 
@@ -578,7 +587,7 @@ export class DegradationManager {
         }
 
         this.disabledFeatures.add(feature);
-        
+
         this.errorLogger.logError(
             ErrorResponse.warning(
                 ErrorTypes.FEATURE_NOT_SUPPORTED,
@@ -614,7 +623,7 @@ export class DegradationManager {
         }
 
         this.disabledFeatures.delete(feature);
-        
+
         // Feature manually enabled
 
         this.emit('featureEnabled', { feature, manual: true });
@@ -683,11 +692,11 @@ export class DegradationManager {
                 feature,
                 supported: Boolean(result),
                 duration,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
 
             this.capabilityTests.set(feature, testResult);
-            
+
             // Capability test completed
 
             return ErrorResponse.success(testResult);
@@ -696,11 +705,11 @@ export class DegradationManager {
                 feature,
                 supported: false,
                 error: error.message,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
 
             this.capabilityTests.set(feature, testResult);
-            
+
             this.errorLogger.logError(
                 ErrorResponse.failure(
                     ErrorTypes.FEATURE_NOT_SUPPORTED,
@@ -767,7 +776,7 @@ export class DegradationManager {
         this.enhancementHistory.push({
             timestamp: Date.now(),
             level: currentLevel.name,
-            enhancements: [...enhancements]
+            enhancements: [...enhancements],
         });
 
         // Progressive enhancement applied
@@ -793,7 +802,7 @@ export class DegradationManager {
             manualOverride: this.manualOverride,
             browserCapabilities: this.availableFeatures,
             capabilityTests: this.getCapabilityTests(),
-            recommendations: []
+            recommendations: [],
         };
 
         // Check each feature availability
@@ -808,13 +817,15 @@ export class DegradationManager {
                 browserSupported,
                 levelSupported,
                 manuallyDisabled,
-                reason: !available ? this.getFeatureUnavailableReason(feature) : null
+                reason: !available ? this.getFeatureUnavailableReason(feature) : null,
             };
 
             // Generate recommendations
             if (!available && browserSupported && !manuallyDisabled) {
                 if (!levelSupported) {
-                    report.recommendations.push(`${feature} disabled due to performance level - consider improving performance`);
+                    report.recommendations.push(
+                        `${feature} disabled due to performance level - consider improving performance`
+                    );
                 }
             }
         }
@@ -831,16 +842,16 @@ export class DegradationManager {
         if (!this.availableFeatures[feature]) {
             return 'Browser does not support this feature';
         }
-        
+
         if (this.disabledFeatures.has(feature)) {
             return 'Feature manually disabled';
         }
-        
+
         const currentLevel = this.getCurrentLevel();
         if (!currentLevel.features.includes(feature)) {
             return `Feature disabled at ${currentLevel.name} performance level`;
         }
-        
+
         return 'Unknown reason';
     }
 
@@ -859,26 +870,25 @@ export class DegradationManager {
             if (this.manualOverride !== null) {
                 return ErrorResponse.success({
                     message: 'Performance check skipped - manual override active',
-                    manualOverride: this.getCurrentLevel().name
+                    manualOverride: this.getCurrentLevel().name,
                 });
             }
 
             this.checkPerformance(metrics);
-            
+
             return ErrorResponse.success({
                 message: 'Performance check completed',
                 currentLevel: this.getCurrentLevel().name,
-                metrics: this.getPerformanceStats()
+                metrics: this.getPerformanceStats(),
             });
         } catch (error) {
             this.errorLogger.logError(
-                ErrorResponse.failure(
-                    ErrorTypes.PERFORMANCE_DEGRADED,
-                    'Performance check failed',
-                    { error: error.message, metrics }
-                )
+                ErrorResponse.failure(ErrorTypes.PERFORMANCE_DEGRADED, 'Performance check failed', {
+                    error: error.message,
+                    metrics,
+                })
             );
-            
+
             return ErrorResponse.failure(
                 ErrorTypes.PERFORMANCE_DEGRADED,
                 'Performance check failed',
@@ -902,12 +912,12 @@ export class DegradationManager {
                 enableManualControls: this.config.enableManualControls,
                 enableProgressiveEnhancement: this.config.enableProgressiveEnhancement,
                 performanceThreshold: this.config.performanceThreshold,
-                memoryThreshold: this.config.memoryThreshold
+                memoryThreshold: this.config.memoryThreshold,
             },
             history: {
                 performance: this.performanceHistory.slice(-10), // Last 10 samples
-                enhancements: this.enhancementHistory.slice(-5) // Last 5 enhancements
-            }
+                enhancements: this.enhancementHistory.slice(-5), // Last 5 enhancements
+            },
         };
     }
 
@@ -922,7 +932,7 @@ export class DegradationManager {
         this.disabledFeatures.clear();
         this.onEvent = null;
         this.manualOverride = null;
-        
+
         // DegradationManager destroyed
     }
 }

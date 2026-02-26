@@ -55,14 +55,14 @@ const VOIDDRAIN_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'top',
-                offset: { x: 0, y: 0.2, z: 0 },   // Higher than crown position
-                orientation: 'flat',                // Horizontal — portal opening
+                offset: { x: 0, y: 0.2, z: 0 }, // Higher than crown position
+                orientation: 'flat', // Horizontal — portal opening
                 startScale: 0.3,
                 endScale: 1.0,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
-            scale: 0.9,                  // Moderate size — not as big as crown
+            scale: 0.9, // Moderate size — not as big as crown
             models: ['void-wrap'],
             animation: {
                 appearAt: 0.0,
@@ -74,8 +74,8 @@ const VOIDDRAIN_CONFIG = {
                 emissive: { min: 0.2, max: 0.6, frequency: 2, pattern: 'sine' },
                 cutout: {
                     strength: 0.35,
-                    primary: { pattern: 6, scale: 0.7, weight: 0.8 },    // SPIRAL — vortex pull
-                    secondary: { pattern: 3, scale: 1.0, weight: 0.3 },  // VORONOI
+                    primary: { pattern: 6, scale: 0.7, weight: 0.8 }, // SPIRAL — vortex pull
+                    secondary: { pattern: 3, scale: 1.0, weight: 0.3 }, // VORONOI
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.0,
@@ -83,32 +83,34 @@ const VOIDDRAIN_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.3,
-                        softness: 1.0
-                    }
+                        softness: 1.0,
+                    },
                 },
-                atmospherics: [{
-                    preset: 'darkness',
-                    targets: ['void-wrap'],
-                    anchor: 'above',
-                    intensity: 0.4,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                }],
-                rotate: { axis: 'z', rotations: 0.3, phase: 0 },   // Slow drain rotation
+                atmospherics: [
+                    {
+                        preset: 'darkness',
+                        targets: ['void-wrap'],
+                        anchor: 'above',
+                        intensity: 0.4,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                    },
+                ],
+                rotate: { axis: 'z', rotations: 0.3, phase: 0 }, // Slow drain rotation
                 blending: 'normal',
                 renderOrder: 2,
                 modelOverrides: {
                     'void-wrap': {
                         shaderAnimation: {
-                            type: 1,            // ROTATING_ARC
-                            arcWidth: 0.5,      // Half-ring — portal vortex feel
-                            arcSpeed: 1.0,      // Slow pull rotation
-                            arcCount: 2         // Two arcs — symmetrical portal
+                            type: 1, // ROTATING_ARC
+                            arcWidth: 0.5, // Half-ring — portal vortex feel
+                            arcSpeed: 1.0, // Slow pull rotation
+                            arcCount: 2, // Two arcs — symmetrical portal
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -120,20 +122,20 @@ const VOIDDRAIN_CONFIG = {
             axisTravel: {
                 axis: 'y',
                 start: 'center',
-                end: 'above',           // Rising toward the portal
-                easing: 'easeIn',       // Accelerates upward — pulled into portal
+                end: 'above', // Rising toward the portal
+                easing: 'easeIn', // Accelerates upward — pulled into portal
                 startScale: 1.0,
-                endScale: 0.3,          // Shrinks as it gets absorbed
+                endScale: 0.3, // Shrinks as it gets absorbed
                 startDiameter: 0.8,
-                endDiameter: 0.4,       // Narrows — converges on portal
-                orientation: 'camera'
+                endDiameter: 0.4, // Narrows — converges on portal
+                orientation: 'camera',
             },
             formation: {
                 type: 'spiral',
                 count: 3,
                 spacing: 0,
                 arcOffset: 120,
-                phaseOffset: 0.1
+                phaseOffset: 0.1,
             },
             count: 3,
             scale: 0.5,
@@ -141,7 +143,7 @@ const VOIDDRAIN_CONFIG = {
             animation: {
                 appearAt: 0.1,
                 disappearAt: 0.8,
-                stagger: 0.12,          // Staggered — continuous stream feel
+                stagger: 0.12, // Staggered — continuous stream feel
                 enter: { type: 'fade', duration: 0.1, easing: 'easeOut' },
                 exit: { type: 'shrink', duration: 0.1, easing: 'easeInCubic' },
                 procedural: { scaleSmoothing: 0.06, geometryStability: true },
@@ -149,7 +151,7 @@ const VOIDDRAIN_CONFIG = {
                 emissive: { min: 0.15, max: 0.5, frequency: 3, pattern: 'sine' },
                 cutout: {
                     strength: 0.45,
-                    primary: { pattern: 3, scale: 0.5, weight: 1.0 },    // VORONOI — dissolving
+                    primary: { pattern: 3, scale: 0.5, weight: 1.0 }, // VORONOI — dissolving
                     blend: 'multiply',
                     travel: 'vertical',
                     travelSpeed: 2.0,
@@ -157,15 +159,15 @@ const VOIDDRAIN_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.5,
-                        softness: 1.5
-                    }
+                        softness: 1.5,
+                    },
                 },
                 rotate: [
                     { axis: 'y', rotations: 1.0, phase: 0 },
                     { axis: 'y', rotations: 1.0, phase: 120 },
-                    { axis: 'y', rotations: 1.0, phase: 240 }
+                    { axis: 'y', rotations: 1.0, phase: 240 },
                 ],
-                opacityGradient: [1.0, 0.8, 0.5],   // Fades as it rises
+                opacityGradient: [1.0, 0.8, 0.5], // Fades as it rises
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
@@ -176,11 +178,11 @@ const VOIDDRAIN_CONFIG = {
                             type: 1,
                             arcWidth: 0.5,
                             arcSpeed: 1.5,
-                            arcCount: 1
-                        }
-                    }
-                }
-            }
+                            arcCount: 1,
+                        },
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -214,7 +216,7 @@ const VOIDDRAIN_CONFIG = {
                 modelOverrides: {
                     'void-shard': {
                         drift: { direction: 'inward', speed: 0.015, noise: 0.05 },
-                        opacityLink: 'dissipate'
+                        opacityLink: 'dissipate',
                     },
                     'corruption-patch': {
                         scaling: {
@@ -222,15 +224,15 @@ const VOIDDRAIN_CONFIG = {
                             axes: {
                                 x: { expand: true, rate: 1.2 },
                                 y: { expand: false, rate: 0.6 },
-                                z: { expand: true, rate: 1.2 }
-                            }
+                                z: { expand: true, rate: 1.2 },
+                            },
                         },
                         drift: { direction: 'outward-flat', speed: 0.01, adherence: 0.6 },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
+        },
     ],
 
     // Absorption effects — slow, mournful
@@ -246,7 +248,7 @@ const VOIDDRAIN_CONFIG = {
     scaleFrequency: 1.5,
     scaleShrink: 0.03,
     scalePulse: true,
-    decayRate: 0.25
+    decayRate: 0.25,
 };
 
 export default buildVoidEffectGesture(VOIDDRAIN_CONFIG);

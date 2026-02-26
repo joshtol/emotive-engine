@@ -47,7 +47,8 @@ export class SpeechReactivityManager {
     constructor(deps) {
         // Required dependency validation
         if (!deps.errorBoundary) throw new Error('SpeechReactivityManager: errorBoundary required');
-        if (!deps.audioLevelProcessor) throw new Error('SpeechReactivityManager: audioLevelProcessor required');
+        if (!deps.audioLevelProcessor)
+            throw new Error('SpeechReactivityManager: audioLevelProcessor required');
         if (!deps.state) throw new Error('SpeechReactivityManager: state required');
         if (!deps.emit) throw new Error('SpeechReactivityManager: emit required');
 
@@ -69,25 +70,29 @@ export class SpeechReactivityManager {
      * mascot.connectAudioSource(source);
      */
     connectAudioSource(audioSource) {
-        return this.errorBoundary.wrap(() => {
-            if (!this._state.audioAnalyser) {
-                // Speech reactivity not started. Call startSpeaking() first.
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this._state.audioAnalyser) {
+                    // Speech reactivity not started. Call startSpeaking() first.
+                    return this._chainTarget;
+                }
+
+                if (!audioSource || typeof audioSource.connect !== 'function') {
+                    // Invalid audio source provided to connectAudioSource()
+                    return this._chainTarget;
+                }
+
+                // Connect the audio source to our analyser
+                audioSource.connect(this._state.audioAnalyser);
+
+                // Audio source connected to speech analyser
+                this._emit('audioSourceConnected', { audioSource });
+
                 return this._chainTarget;
-            }
-
-            if (!audioSource || typeof audioSource.connect !== 'function') {
-                // Invalid audio source provided to connectAudioSource()
-                return this._chainTarget;
-            }
-
-            // Connect the audio source to our analyser
-            audioSource.connect(this._state.audioAnalyser);
-
-            // Audio source connected to speech analyser
-            this._emit('audioSourceConnected', { audioSource });
-
-            return this._chainTarget;
-        }, 'audio-source-connection', this._chainTarget)();
+            },
+            'audio-source-connection',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -125,16 +130,20 @@ export class SpeechReactivityManager {
      * mascot.setAudioSmoothing(0.3); // Less smoothing, more responsive
      */
     setAudioSmoothing(smoothing) {
-        return this.errorBoundary.wrap(() => {
-            const clampedSmoothing = Math.max(0, Math.min(1, smoothing));
+        return this.errorBoundary.wrap(
+            () => {
+                const clampedSmoothing = Math.max(0, Math.min(1, smoothing));
 
-            if (this._state.audioAnalyser) {
-                this._state.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
-                // Audio smoothing set
-            }
+                if (this._state.audioAnalyser) {
+                    this._state.audioAnalyser.smoothingTimeConstant = clampedSmoothing;
+                    // Audio smoothing set
+                }
 
-            return this._chainTarget;
-        }, 'audio-smoothing', this._chainTarget)();
+                return this._chainTarget;
+            },
+            'audio-smoothing',
+            this._chainTarget
+        )();
     }
 
     /**

@@ -36,13 +36,17 @@ export class OrbScaleAnimator {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     setOrbScale(scale, duration = 1000, easing = 'easeInOut') {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer) {
-                this.startScaleAnimation(scale, duration, easing);
-            }
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer) {
+                    this.startScaleAnimation(scale, duration, easing);
+                }
 
-            return this._chainTarget;
-        }, 'setOrbScale', this._chainTarget)();
+                return this._chainTarget;
+            },
+            'setOrbScale',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -87,17 +91,17 @@ export class OrbScaleAnimator {
      */
     applyEasing(progress, easing) {
         switch (easing) {
-        case 'easeIn':
-            return this.easeIn(progress);
+            case 'easeIn':
+                return this.easeIn(progress);
 
-        case 'easeOut':
-            return this.easeOut(progress);
+            case 'easeOut':
+                return this.easeOut(progress);
 
-        case 'easeInOut':
-            return this.easeInOut(progress);
+            case 'easeInOut':
+                return this.easeInOut(progress);
 
-        default: // 'linear'
-            return progress;
+            default: // 'linear'
+                return progress;
         }
     }
 
@@ -125,9 +129,7 @@ export class OrbScaleAnimator {
      * @returns {number} Eased progress
      */
     easeInOut(t) {
-        return t < 0.5
-            ? 2 * t * t
-            : -1 + (4 - 2 * t) * t;
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
     }
 
     /**

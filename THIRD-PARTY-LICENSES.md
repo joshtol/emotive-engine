@@ -47,3 +47,16 @@ The following textures are from
 > Licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 No modifications were made to these textures.
+
+---
+
+## Original Works
+
+All other assets in this repository are original works by the author (Joshua
+Tollette) and are licensed under the MIT License along with the rest of the
+project. This includes:
+
+- **3D Models** (`assets/models/`) — All GLB/OBJ geometry files
+- **SVG Assets** (`assets/*.svg`) — Logo and icon files
+- **Noise Textures** (`assets/textures/perlin-noise-512.png`) — Procedurally
+  generated

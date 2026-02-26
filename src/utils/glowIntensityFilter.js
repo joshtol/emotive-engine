@@ -46,7 +46,7 @@ export function normalizeColorLuminance(hexColor, targetLuminance = 0.5) {
     const b = parseInt(hexColor.slice(5, 7), 16) / 255;
 
     // Convert sRGB to linear RGB (inverse gamma)
-    const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const toLinear = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
     const rLin = toLinear(r);
     const gLin = toLinear(g);
     const bLin = toLinear(b);
@@ -71,12 +71,12 @@ export function normalizeColorLuminance(hexColor, targetLuminance = 0.5) {
     }
 
     // Convert back to sRGB (apply gamma)
-    const toSRGB = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    const toSRGB = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
 
     return {
         r: Math.min(1.0, Math.max(0, toSRGB(rLinScaled))),
         g: Math.min(1.0, Math.max(0, toSRGB(gLinScaled))),
-        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled)))
+        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled))),
     };
 }
 
@@ -92,7 +92,7 @@ export function normalizeRGBLuminance(rgb, targetLuminance = 0.5) {
     const [r, g, b] = rgb;
 
     // Convert sRGB to linear RGB (inverse gamma)
-    const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const toLinear = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
     const rLin = toLinear(r);
     const gLin = toLinear(g);
     const bLin = toLinear(b);
@@ -117,12 +117,12 @@ export function normalizeRGBLuminance(rgb, targetLuminance = 0.5) {
     }
 
     // Convert back to sRGB (apply gamma)
-    const toSRGB = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    const toSRGB = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
 
     return {
         r: Math.min(1.0, Math.max(0, toSRGB(rLinScaled))),
         g: Math.min(1.0, Math.max(0, toSRGB(gLinScaled))),
-        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled)))
+        b: Math.min(1.0, Math.max(0, toSRGB(bLinScaled))),
     };
 }
 
@@ -244,10 +244,16 @@ export function getGlowDiagnostics(hexColor) {
         color: hexColor,
         luminance: luminance.toFixed(4),
         intensity: intensity.toFixed(2),
-        category: luminance < 0.2 ? 'very dark' :
-            luminance < 0.4 ? 'dark' :
-                luminance < 0.6 ? 'medium' :
-                    luminance < 0.8 ? 'bright' : 'very bright'
+        category:
+            luminance < 0.2
+                ? 'very dark'
+                : luminance < 0.4
+                  ? 'dark'
+                  : luminance < 0.6
+                    ? 'medium'
+                    : luminance < 0.8
+                      ? 'bright'
+                      : 'very bright',
     };
 }
 
@@ -255,5 +261,5 @@ export default {
     calculateLuminance,
     getGlowIntensityForColor,
     getGlowIntensityWithEmphasis,
-    getGlowDiagnostics
+    getGlowDiagnostics,
 };

@@ -13,41 +13,98 @@
  */
 const MULTI_WORD_PHRASES = [
     // Gestures (3+ words)
-    'bouncing up and down', 'hopping around', 'rocking back and forth',
-    'side to side', 'light on feet', 'spring in step',
-    'leaning forward', 'leaning in', 'leaning closer', 'leaning toward',
-    'reaching out', 'reaching toward', 'pointing at', 'pointing to',
-    'waving hello', 'waving goodbye', 'nodding head', 'shaking head',
-    'head shake', 'head nod', 'head bob', 'head tilt',
-    'deep breath', 'taking a breath', 'breathing deeply',
-    'settling down', 'calming down', 'winding down',
-    'getting bigger', 'getting smaller', 'puffing up',
-    'spinning around', 'twirling around',
+    'bouncing up and down',
+    'hopping around',
+    'rocking back and forth',
+    'side to side',
+    'light on feet',
+    'spring in step',
+    'leaning forward',
+    'leaning in',
+    'leaning closer',
+    'leaning toward',
+    'reaching out',
+    'reaching toward',
+    'pointing at',
+    'pointing to',
+    'waving hello',
+    'waving goodbye',
+    'nodding head',
+    'shaking head',
+    'head shake',
+    'head nod',
+    'head bob',
+    'head tilt',
+    'deep breath',
+    'taking a breath',
+    'breathing deeply',
+    'settling down',
+    'calming down',
+    'winding down',
+    'getting bigger',
+    'getting smaller',
+    'puffing up',
+    'spinning around',
+    'twirling around',
 
     // Emotions (2-3 words)
-    'at peace', 'in love', 'on cloud nine', 'over the moon',
-    'on top of the world', 'in awe', 'grossed out', 'freaked out',
-    'low key', 'low-key', 'high key',
+    'at peace',
+    'in love',
+    'on cloud nine',
+    'over the moon',
+    'on top of the world',
+    'in awe',
+    'grossed out',
+    'freaked out',
+    'low key',
+    'low-key',
+    'high key',
 
     // Undertones (2 words)
-    'on edge', 'keyed up', 'wound up',
-    'low energy', 'no energy', 'running low',
+    'on edge',
+    'keyed up',
+    'wound up',
+    'low energy',
+    'no energy',
+    'running low',
 
     // Modifiers (2-3 words)
-    'just a bit', 'just a little', 'a little bit',
-    'kind of', 'sort of', 'a bit', 'a little', 'a lot',
-    'over the top', 'off the charts', 'through the roof',
-    'split second', 'one time', 'few times', 'many times',
-    'again and again', 'over and over', 'on repeat',
+    'just a bit',
+    'just a little',
+    'a little bit',
+    'kind of',
+    'sort of',
+    'a bit',
+    'a little',
+    'a lot',
+    'over the top',
+    'off the charts',
+    'through the roof',
+    'split second',
+    'one time',
+    'few times',
+    'many times',
+    'again and again',
+    'over and over',
+    'on repeat',
 
     // Shapes (2 words)
-    'blood moon', 'full moon', 'new moon', 'half moon',
-    'solar eclipse', 'lunar eclipse', 'total eclipse',
-    'ring of fire', 'diamond ring',
+    'blood moon',
+    'full moon',
+    'new moon',
+    'half moon',
+    'solar eclipse',
+    'lunar eclipse',
+    'total eclipse',
+    'ring of fire',
+    'diamond ring',
 
     // Slang (2 words)
-    'killing it', 'crushing it', 'nailed it',
-    'sussy baka', 'side eye'
+    'killing it',
+    'crushing it',
+    'nailed it',
+    'sussy baka',
+    'side eye',
 ];
 
 /**
@@ -59,14 +116,36 @@ const SEPARATORS = /[,;|/]+/;
  * Words to strip (articles, filler words that don't affect meaning)
  */
 const FILLER_WORDS = new Set([
-    'a', 'an', 'the',
-    'is', 'are', 'am', 'be', 'being', 'been',
-    'i', 'me', 'my',
-    'it', 'its',
-    'to', 'of', 'for', 'with', 'as',
-    'this', 'that', 'these', 'those',
-    'just', 'only', 'also', 'too',
-    'please', 'pls', 'plz'
+    'a',
+    'an',
+    'the',
+    'is',
+    'are',
+    'am',
+    'be',
+    'being',
+    'been',
+    'i',
+    'me',
+    'my',
+    'it',
+    'its',
+    'to',
+    'of',
+    'for',
+    'with',
+    'as',
+    'this',
+    'that',
+    'these',
+    'those',
+    'just',
+    'only',
+    'also',
+    'too',
+    'please',
+    'pls',
+    'plz',
 ]);
 
 /**
@@ -74,12 +153,31 @@ const FILLER_WORDS = new Set([
  * (they have meaning in our context)
  */
 const KEEP_WORDS = new Set([
-    'but', 'and', 'or', 'yet', 'while', 'although', // Connectors matter
-    'not', 'no', 'never', // Negations matter
-    'very', 'really', 'so', 'quite', 'rather', // Modifiers matter
-    'slightly', 'barely', 'extremely', 'completely', // Modifiers matter
-    'feeling', 'feel', 'feels', // Context hints
-    'become', 'becoming', 'morph', 'morphing' // Shape context
+    'but',
+    'and',
+    'or',
+    'yet',
+    'while',
+    'although', // Connectors matter
+    'not',
+    'no',
+    'never', // Negations matter
+    'very',
+    'really',
+    'so',
+    'quite',
+    'rather', // Modifiers matter
+    'slightly',
+    'barely',
+    'extremely',
+    'completely', // Modifiers matter
+    'feeling',
+    'feel',
+    'feels', // Context hints
+    'become',
+    'becoming',
+    'morph',
+    'morphing', // Shape context
 ]);
 
 /**
@@ -91,9 +189,9 @@ function normalize(str) {
     return str
         .toLowerCase()
         .trim()
-        .replace(/['']/g, "'")  // Normalize quotes
+        .replace(/['']/g, "'") // Normalize quotes
         .replace(/[""]/g, '"')
-        .replace(/\s+/g, ' ');  // Collapse whitespace
+        .replace(/\s+/g, ' '); // Collapse whitespace
 }
 
 /**
@@ -110,7 +208,10 @@ function extractPhrases(input) {
         const phraseNorm = normalize(phrase);
         if (processed.includes(phraseNorm)) {
             const placeholder = `__PHRASE_${placeholderIndex}__`;
-            processed = processed.replace(new RegExp(phraseNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder);
+            processed = processed.replace(
+                new RegExp(phraseNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+                placeholder
+            );
             phrases.set(placeholder, phraseNorm);
             placeholderIndex++;
         }
@@ -149,7 +250,8 @@ export function tokenize(intent) {
     const { processed, phrases } = extractPhrases(normalized);
 
     // Split by separators to get segments
-    const rawSegments = processed.split(SEPARATORS)
+    const rawSegments = processed
+        .split(SEPARATORS)
         .map(s => s.trim())
         .filter(s => s.length > 0);
 
@@ -209,7 +311,9 @@ export function isConnector(token) {
  * @returns {boolean}
  */
 export function isNegation(token) {
-    return ['not', 'no', 'never', "don't", 'dont', "doesn't", 'doesnt', "isn't", 'isnt'].includes(token);
+    return ['not', 'no', 'never', "don't", 'dont', "doesn't", 'doesnt', "isn't", 'isnt'].includes(
+        token
+    );
 }
 
 export default { tokenize, isConnector, isNegation };

@@ -75,21 +75,21 @@ export class BreathingAnimationController {
         let nextPhase = pattern.currentPhase;
 
         switch (pattern.currentPhase) {
-        case 'inhale':
-            ({ scale, nextPhase } = this.processInhalePhase(pattern, phaseElapsed, now));
-            break;
+            case 'inhale':
+                ({ scale, nextPhase } = this.processInhalePhase(pattern, phaseElapsed, now));
+                break;
 
-        case 'hold1':
-            ({ scale, nextPhase } = this.processHold1Phase(pattern, phaseElapsed, now));
-            break;
+            case 'hold1':
+                ({ scale, nextPhase } = this.processHold1Phase(pattern, phaseElapsed, now));
+                break;
 
-        case 'exhale':
-            ({ scale, nextPhase } = this.processExhalePhase(pattern, phaseElapsed, now));
-            break;
+            case 'exhale':
+                ({ scale, nextPhase } = this.processExhalePhase(pattern, phaseElapsed, now));
+                break;
 
-        case 'hold2':
-            ({ scale, nextPhase } = this.processHold2Phase(pattern, phaseElapsed, now));
-            break;
+            case 'hold2':
+                ({ scale, nextPhase } = this.processHold2Phase(pattern, phaseElapsed, now));
+                break;
         }
 
         return { scale, nextPhase };
@@ -113,7 +113,7 @@ export class BreathingAnimationController {
         } else {
             // Scale up during inhale
             const progress = phaseElapsed / pattern.inhale;
-            scale = 1.0 + (0.3 * progress); // Expand to 1.3x
+            scale = 1.0 + 0.3 * progress; // Expand to 1.3x
         }
 
         return { scale, nextPhase };
@@ -157,7 +157,7 @@ export class BreathingAnimationController {
         } else {
             // Scale down during exhale
             const progress = phaseElapsed / pattern.exhale;
-            scale = 1.3 - (0.4 * progress); // Contract to 0.9x
+            scale = 1.3 - 0.4 * progress; // Contract to 0.9x
         }
 
         return { scale, nextPhase };

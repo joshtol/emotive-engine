@@ -311,6 +311,6 @@ void main() {
 export function getSunWithBlendLayersShaders() {
     return {
         vertexShader: sunWithBlendLayersVertexShader,
-        fragmentShader: sunWithBlendLayersFragmentShader
+        fragmentShader: sunWithBlendLayersFragmentShader,
     };
 }

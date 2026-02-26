@@ -41,10 +41,7 @@ function lerp(a, b, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createLightMaterial(options = {}) {
-    const {
-        radiance = 0.5,
-        opacity = 0.8
-    } = options;
+    const { radiance = 0.5, opacity = 0.8 } = options;
 
     const pulseSpeed = lerp(0.8, 2.0, radiance);
 
@@ -54,10 +51,10 @@ export function createLightMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -73,7 +70,7 @@ export function createLightMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uRadiance;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -202,7 +199,7 @@ export function createLightMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.radiance = radiance;
@@ -232,7 +229,7 @@ export function getLightPhysics(radiance = 0.5) {
         lifetime: lerp(1.5, 3.0, radiance),
         emitLight: true,
         lightIntensity: radiance,
-        purifyNearby: radiance > 0.6
+        purifyNearby: radiance > 0.6,
     };
 }
 
@@ -248,7 +245,7 @@ export function getLightCrackStyle(radiance = 0.5) {
         emissive: lerp(1.5, 4.0, radiance),
         animated: true,
         pattern: 'radiant',
-        flickerSpeed: lerp(0.5, 1.5, radiance)
+        flickerSpeed: lerp(0.5, 1.5, radiance),
     };
 }
 
@@ -256,5 +253,5 @@ export default {
     createLightMaterial,
     updateLightMaterial,
     getLightPhysics,
-    getLightCrackStyle
+    getLightCrackStyle,
 };

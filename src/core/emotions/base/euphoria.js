@@ -19,37 +19,37 @@ export default {
 
     // Visual properties
     visual: {
-        glowColor: '#FFB6C1',       // Light pink euphoric glow
-        particleRate: 6,            // Radiant flow - 6/sec with max 30 = ~5 sec particle life
-        minParticles: 15,           // Abundant positive energy
-        maxParticles: 30,           // Radiant display limit
+        glowColor: '#FFB6C1', // Light pink euphoric glow
+        particleRate: 6, // Radiant flow - 6/sec with max 30 = ~5 sec particle life
+        minParticles: 15, // Abundant positive energy
+        maxParticles: 30, // Radiant display limit
         particleBehavior: 'radiant', // Outward radiating particles
-        breathRate: 1.3,            // Elevated, joyful breathing
-        breathDepth: 0.25,          // Full, satisfied breaths
-        coreJitter: false,          // Stable, confident core
-        blinkRate: 1.4,             // More frequent blinking (euphoric)
-        blinkSpeed: 1.1,            // Slightly faster blink animation
+        breathRate: 1.3, // Elevated, joyful breathing
+        breathDepth: 0.25, // Full, satisfied breaths
+        coreJitter: false, // Stable, confident core
+        blinkRate: 1.4, // More frequent blinking (euphoric)
+        blinkSpeed: 1.1, // Slightly faster blink animation
         particleColors: [
-            { color: '#FFB6C1', weight: 20 },  // Light pink bliss
-            { color: '#FFD700', weight: 18 },  // Golden joy
-            { color: '#87CEEB', weight: 15 },  // Sky blue serenity
-            { color: '#DDA0DD', weight: 15 },  // Plum transcendence
-            { color: '#98FB98', weight: 12 },  // Pale green harmony
-            { color: '#FFA07A', weight: 10 },  // Light salmon warmth
-            { color: '#E6E6FA', weight: 8 },   // Lavender dream
-            { color: '#FFFFFF', weight: 2 }    // Pure white sparkle
-        ]
+            { color: '#FFB6C1', weight: 20 }, // Light pink bliss
+            { color: '#FFD700', weight: 18 }, // Golden joy
+            { color: '#87CEEB', weight: 15 }, // Sky blue serenity
+            { color: '#DDA0DD', weight: 15 }, // Plum transcendence
+            { color: '#98FB98', weight: 12 }, // Pale green harmony
+            { color: '#FFA07A', weight: 10 }, // Light salmon warmth
+            { color: '#E6E6FA', weight: 8 }, // Lavender dream
+            { color: '#FFFFFF', weight: 2 }, // Pure white sparkle
+        ],
     },
 
     // Gesture modifiers
     modifiers: {
-        speed: 1.4,         // Energized, flowing pace
-        amplitude: 1.5,     // Expansive, reaching movements
-        intensity: 1.6,     // Powerful positive force
-        smoothness: 1.3,    // Extra fluid, graceful motion
-        regularity: 0.8,    // Natural variation in rhythm
-        addWarmth: true,    // Warm, inviting quality
-        addLift: true       // Upward, elevating tendency
+        speed: 1.4, // Energized, flowing pace
+        amplitude: 1.5, // Expansive, reaching movements
+        intensity: 1.6, // Powerful positive force
+        smoothness: 1.3, // Extra fluid, graceful motion
+        regularity: 0.8, // Natural variation in rhythm
+        addWarmth: true, // Warm, inviting quality
+        addLift: true, // Upward, elevating tendency
     },
 
     // Typical gestures for euphoria
@@ -57,43 +57,43 @@ export default {
 
     // Transition configuration
     transitions: {
-        duration: 600,           // Smooth emergence
-        easing: 'easeOutExpo',  // Explosive, radiant entrance
-        priority: 8             // High priority transcendent state
+        duration: 600, // Smooth emergence
+        easing: 'easeOutExpo', // Explosive, radiant entrance
+        priority: 8, // High priority transcendent state
     },
 
     // 3D rotation behavior and effects
     '3d': {
         rotation: {
-            type: 'rhythmic',           // Graceful, flowing pattern - transcendent dance
-            speed: 1.4,                 // Energized rotation (matches modifiers.speed)
-            axes: [0, 0.35, 0],         // Slightly faster than neutral
-            musicSync: true             // Euphoria syncs beautifully with music
+            type: 'rhythmic', // Graceful, flowing pattern - transcendent dance
+            speed: 1.4, // Energized rotation (matches modifiers.speed)
+            axes: [0, 0.35, 0], // Slightly faster than neutral
+            musicSync: true, // Euphoria syncs beautifully with music
         },
         glow: {
-            color: '#FFB6C1',           // Light pink (matches visual.glowColor)
-            intensity: 1.2,             // Bright radiance
+            color: '#FFB6C1', // Light pink (matches visual.glowColor)
+            intensity: 1.2, // Bright radiance
             pulse: {
-                speed: 1.3,             // Elevated pulsing (matches breathRate)
-                range: [0.9, 1.5]       // Graceful pulse variation
-            }
+                speed: 1.3, // Elevated pulsing (matches breathRate)
+                range: [0.9, 1.5], // Graceful pulse variation
+            },
         },
         scale: {
             base: 1.0,
             breathe: {
                 enabled: true,
-                depth: 0.25,            // Full satisfied breaths (matches breathDepth)
-                rate: 1.3               // Elevated breathing (matches breathRate)
-            }
-        }
+                depth: 0.25, // Full satisfied breaths (matches breathDepth)
+                rate: 1.3, // Elevated breathing (matches breathRate)
+            },
+        },
     },
 
     // Soul/energy animation parameters (geometry-agnostic)
     // Used by: Crystal (inner core), Sun (plasma flow), Moon (subtle glow pulse)
     soulAnimation: {
-        driftSpeed: 1.8,        // Energy movement speed - radiant, flowing
-        shimmerSpeed: 2.5,      // Vertical pulse speed - transcendent pulsing
-        turbulence: 0.7         // Chaos/randomness factor - ecstatic variation
+        driftSpeed: 1.8, // Energy movement speed - radiant, flowing
+        shimmerSpeed: 2.5, // Vertical pulse speed - transcendent pulsing
+        turbulence: 0.7, // Chaos/randomness factor - ecstatic variation
     },
 
     // Rhythm game modifiers
@@ -101,6 +101,6 @@ export default {
         windowMultiplier: 1.5,
         visualNoise: 0,
         inputDelay: 0,
-        tempoShift: 0
-    }
+        tempoShift: 0,
+    },
 };

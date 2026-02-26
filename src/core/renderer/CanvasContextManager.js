@@ -20,8 +20,8 @@ export class CanvasContextManager {
         if (!this.renderer.canvas || !this.renderer.ctx) return;
 
         // Save current dimensions
-        const {width} = this.renderer.canvas;
-        const {height} = this.renderer.canvas;
+        const { width } = this.renderer.canvas;
+        const { height } = this.renderer.canvas;
 
         // Reset main canvas context
         this.resetContext(this.renderer.ctx, width, height);

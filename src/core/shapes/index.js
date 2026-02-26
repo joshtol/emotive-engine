@@ -2,19 +2,19 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Shape System Registry
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central registry for all shape modules
  * @author Emotive Engine Team
  * @module shapes
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Manages the modular shape system, providing dynamic loading and registration      
+ * ║ Manages the modular shape system, providing dynamic loading and registration
  * ║ of shape definitions, shadows, and special effects. Each shape is a self-contained
- * ║ module with its own generation, effects, and rendering logic.                     
+ * ║ module with its own generation, effects, and rendering logic.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -36,7 +36,7 @@ const effectRenderers = new Map();
 export const SHAPE_CATEGORIES = {
     ASTRONOMICAL: 'astronomical',
     GEOMETRIC: 'geometric',
-    ORGANIC: 'organic'
+    ORGANIC: 'organic',
 };
 
 /**
@@ -48,14 +48,13 @@ export function registerShape(name, shapeModule) {
     if (!shapeModule.generate || typeof shapeModule.generate !== 'function') {
         throw new Error(`Shape module ${name} must have a generate function`);
     }
-    
+
     shapeRegistry.set(name, shapeModule);
-    
+
     // Register custom renderer if provided
     if (shapeModule.render && typeof shapeModule.render === 'function') {
         effectRenderers.set(name, shapeModule.render);
     }
-    
 }
 
 /**
@@ -85,7 +84,7 @@ export function generateShape(name, numPoints = 64) {
     if (!shape) {
         return generateCirclePoints(numPoints);
     }
-    
+
     return shape.generate(numPoints);
 }
 
@@ -102,12 +101,12 @@ export function getShapeShadow(name) {
             return cachedShape.shadow;
         }
     }
-    
+
     const shape = shapeRegistry.get(name);
     if (!shape) {
         return { type: 'none' };
     }
-    
+
     return shape.shadow || { type: 'none' };
 }
 
@@ -152,7 +151,7 @@ function generateCirclePoints(numPoints) {
         const angle = (i / numPoints) * Math.PI * 2;
         points.push({
             x: 0.5 + Math.cos(angle) * 0.5,
-            y: 0.5 + Math.sin(angle) * 0.5
+            y: 0.5 + Math.sin(angle) * 0.5,
         });
     }
     return points;
@@ -166,7 +165,7 @@ export async function loadShapes() {
     try {
         // Import shape definitions
         const { SHAPE_DEFINITIONS } = await import('./shapeDefinitions.js');
-        
+
         // Register each shape from definitions
         for (const [name, definition] of Object.entries(SHAPE_DEFINITIONS)) {
             // Create shape module from definition
@@ -184,12 +183,12 @@ export async function loadShapes() {
                     }
                     // Otherwise return pre-generated points
                     return definition.points || generateCirclePoints(numPoints);
-                }
+                },
             };
-            
+
             registerShape(name, shapeModule);
         }
-        
+
         return true;
     } catch {
         // Fallback - register basic shapes
@@ -214,7 +213,7 @@ function registerBasicShapes() {
         category: 'geometric',
         points: generateCirclePoints(64),
         shadow: { type: 'none' },
-        generate: generateCirclePoints
+        generate: generateCirclePoints,
     });
 }
 
@@ -231,36 +230,40 @@ export const ShapeTransitions = {
     getTransitionConfig(from, to) {
         const fromShape = getShape(from);
         const toShape = getShape(to);
-        
+
         // Special eclipse transitions
-        if (fromShape?.shadow?.type === 'none' && 
-            (toShape?.shadow?.type === 'lunar' || toShape?.shadow?.type === 'solar')) {
+        if (
+            fromShape?.shadow?.type === 'none' &&
+            (toShape?.shadow?.type === 'lunar' || toShape?.shadow?.type === 'solar')
+        ) {
             return {
                 type: 'eclipse_enter',
-                direction: toShape.shadow.type === 'lunar' ? 'left' : 'right'
+                direction: toShape.shadow.type === 'lunar' ? 'left' : 'right',
             };
         }
-        
-        if ((fromShape?.shadow?.type === 'lunar' || fromShape?.shadow?.type === 'solar') &&
-            toShape?.shadow?.type === 'none') {
+
+        if (
+            (fromShape?.shadow?.type === 'lunar' || fromShape?.shadow?.type === 'solar') &&
+            toShape?.shadow?.type === 'none'
+        ) {
             return {
                 type: 'eclipse_exit',
-                direction: fromShape.shadow.type === 'lunar' ? 'right' : 'left'
+                direction: fromShape.shadow.type === 'lunar' ? 'right' : 'left',
             };
         }
-        
+
         // Sun transitions need effect fading
         if (from === 'sun' && to !== 'sun') {
             return {
                 type: 'sun_fade',
-                fadeEffects: true
+                fadeEffects: true,
             };
         }
-        
+
         return {
-            type: 'standard'
+            type: 'standard',
         };
-    }
+    },
 };
 
 export default {
@@ -273,5 +276,5 @@ export default {
     getShapesByCategory,
     loadShapes,
     ShapeTransitions,
-    SHAPE_CATEGORIES
+    SHAPE_CATEGORIES,
 };

@@ -52,10 +52,14 @@ export class PerformanceMonitoringManager {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.diagnosticsManager) throw new Error('PerformanceMonitoringManager: diagnosticsManager required');
-        if (!deps.animationFrameController) throw new Error('PerformanceMonitoringManager: animationFrameController required');
-        if (!deps.animationController) throw new Error('PerformanceMonitoringManager: animationController required');
-        if (!deps.particleSystem) throw new Error('PerformanceMonitoringManager: particleSystem required');
+        if (!deps.diagnosticsManager)
+            throw new Error('PerformanceMonitoringManager: diagnosticsManager required');
+        if (!deps.animationFrameController)
+            throw new Error('PerformanceMonitoringManager: animationFrameController required');
+        if (!deps.animationController)
+            throw new Error('PerformanceMonitoringManager: animationController required');
+        if (!deps.particleSystem)
+            throw new Error('PerformanceMonitoringManager: particleSystem required');
         if (!deps.config) throw new Error('PerformanceMonitoringManager: config required');
         // Note: healthCheckManager can be null initially (set post-init)
 

@@ -30,14 +30,14 @@ export default {
     config: {
         duration: 800,
         musicalDuration: { musical: true, beats: 2 },
-        rotations: 1,         // Number of flips
-        height: 0.3,          // Arc height during flip
+        rotations: 1, // Number of flips
+        height: 0.3, // Arc height during flip
         direction: 'forward', // 'forward' or 'backward'
         strength: 1.0,
         particleMotion: {
             type: 'flip',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.3
-        }
+            multiplier: 1.3,
+        },
     },
 
     '3d': {
@@ -62,9 +62,10 @@ export default {
             // Front flip: rotate forward (top of head goes down first toward camera)
             // This is NEGATIVE X rotation in standard 3D (right-hand rule)
             // Use smooth cubic ease that guarantees exact completion
-            const easeProgress = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            const easeProgress =
+                progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
             // Ensure we hit exactly 0 at start and exactly 2π at end
             const targetAngle = -Math.PI * 2 * rotations; // Negative for forward flip
@@ -100,8 +101,8 @@ export default {
                 rotation: [flipAngle, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

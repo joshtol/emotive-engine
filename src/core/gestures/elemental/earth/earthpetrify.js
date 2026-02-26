@@ -42,7 +42,7 @@ const EARTHPETRIFY_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.3,
                 endScale: 1.2,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 2.0,
@@ -53,14 +53,16 @@ const EARTHPETRIFY_CONFIG = {
                 enter: { type: 'fade', duration: 0.1, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['earth-ring'],
-                    anchor: 'above',
-                    intensity: 0.3,
-                    sizeScale: 1.5,
-                    progressCurve: 'buildup',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['earth-ring'],
+                        anchor: 'above',
+                        intensity: 0.3,
+                        sizeScale: 1.5,
+                        progressCurve: 'buildup',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 4,
                 modelOverrides: {
@@ -69,12 +71,12 @@ const EARTHPETRIFY_CONFIG = {
                             type: 1,
                             arcWidth: 0.8,
                             arcSpeed: 0.5,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ── Layer 2: Converging rocks — orbit spiraling inward ──────────────
@@ -91,7 +93,7 @@ const EARTHPETRIFY_CONFIG = {
                 easing: 'easeInQuad',
                 startScale: 0.5,
                 endScale: 1.0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             count: 5,
             scale: 0.8,
@@ -107,14 +109,14 @@ const EARTHPETRIFY_CONFIG = {
                         start: 0.3,
                         peak: 0.95,
                         end: 0.9,
-                        curve: 'fadeIn'
-                    }
+                        curve: 'fadeIn',
+                    },
                 },
                 pulse: {
                     amplitude: 0.03,
                     frequency: 1,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: { min: 0.4, max: 0.9, frequency: 1.5, pattern: 'sine' },
                 rotate: [
@@ -122,21 +124,23 @@ const EARTHPETRIFY_CONFIG = {
                     { axis: 'z', rotations: 0.6, phase: 72 },
                     { axis: 'y', rotations: -0.5, phase: 144 },
                     { axis: 'x', rotations: 0.7, phase: 216 },
-                    { axis: 'z', rotations: -0.6, phase: 288 }
+                    { axis: 'z', rotations: -0.6, phase: 288 },
                 ],
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.8,
-                    progressCurve: 'buildup',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.8,
+                        progressCurve: 'buildup',
+                    },
+                ],
                 scaleVariance: 0.25,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
-                renderOrder: 8
-            }
+                renderOrder: 8,
+            },
         },
 
         // ── Layer 3: Stone-slab cap — descends from above to seal the tomb ──
@@ -148,7 +152,7 @@ const EARTHPETRIFY_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.1,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.5,
@@ -159,17 +163,19 @@ const EARTHPETRIFY_CONFIG = {
                 enter: { type: 'scale', duration: 0.15, easing: 'easeOutBounce' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 0.6, max: 1.2, frequency: 1, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'earth-gravel',
-                    targets: ['stone-slab'],
-                    anchor: 'below',
-                    intensity: 0.4,
-                    sizeScale: 0.6,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-gravel',
+                        targets: ['stone-slab'],
+                        anchor: 'below',
+                        intensity: 0.4,
+                        sizeScale: 0.6,
+                        progressCurve: 'burst',
+                    },
+                ],
                 blending: 'normal',
-                renderOrder: 12
-            }
+                renderOrder: 12,
+            },
         },
 
         // ── Layer 4: Stone-slab plate — seals from below ────────────────────
@@ -181,7 +187,7 @@ const EARTHPETRIFY_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.2,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.6,
@@ -192,31 +198,33 @@ const EARTHPETRIFY_CONFIG = {
                 enter: { type: 'scale', duration: 0.2, easing: 'easeOutQuad' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 0.4, max: 0.8, frequency: 1, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['stone-slab'],
-                    anchor: 'above',
-                    intensity: 0.2,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['stone-slab'],
+                        anchor: 'above',
+                        intensity: 0.2,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
-                renderOrder: 4
-            }
-        }
+                renderOrder: 4,
+            },
+        },
     ],
 
     sinkAmount: 0.02,
     sinkAcceleration: 0.4,
     scaleContract: 0.015,
     decayRate: 0.2,
-    glowColor: [0.65, 0.45, 0.20],
+    glowColor: [0.65, 0.45, 0.2],
     glowIntensityMin: 0.3,
     glowIntensityMax: 0.7,
     glowFlickerRate: 1.0,
     tremor: 0.008,
     tremorFrequency: 3,
-    tremorDecay: 0.7
+    tremorDecay: 0.7,
 };
 
 export default buildEarthEffectGesture(EARTHPETRIFY_CONFIG);

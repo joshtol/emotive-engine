@@ -34,46 +34,48 @@ const SHARED_ANIMATION = {
     enter: {
         type: 'scale',
         duration: 0.2,
-        easing: 'easeOut'
+        easing: 'easeOut',
     },
     exit: {
         type: 'fade',
         duration: 0.3,
-        easing: 'easeIn'
+        easing: 'easeIn',
     },
     procedural: {
         scaleSmoothing: 0.1,
-        geometryStability: true
+        geometryStability: true,
     },
     parameterAnimation: {
         turbulence: {
             start: 0.15,
             peak: 0.3,
             end: 0.2,
-            curve: 'bell'
-        }
+            curve: 'bell',
+        },
     },
     pulse: {
         amplitude: 0.05,
         frequency: 3,
-        easing: 'easeInOut'
+        easing: 'easeInOut',
     },
     emissive: {
         min: 0.8,
         max: 1.6,
         frequency: 4,
-        pattern: 'sine'
+        pattern: 'sine',
     },
     // No grain — multiply grain on transparent refraction = dark speckles
-    atmospherics: [{
-        preset: 'spray',
-        targets: ['splash-ring'],
-        anchor: 'above',
-        intensity: 0.4,
-        sizeScale: 1.0,
-        progressCurve: 'sustain',
-        velocityInheritance: 0.5,
-    }],
+    atmospherics: [
+        {
+            preset: 'spray',
+            targets: ['splash-ring'],
+            anchor: 'above',
+            intensity: 0.4,
+            sizeScale: 1.0,
+            progressCurve: 'sustain',
+            velocityInheritance: 0.5,
+        },
+    ],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'normal',
@@ -84,10 +86,10 @@ const SHARED_ANIMATION = {
                 type: 1,
                 arcWidth: 0.95,
                 arcSpeed: 0.8,
-                arcCount: 3
-            }
-        }
-    }
+                arcCount: 3,
+            },
+        },
+    },
 };
 
 /**
@@ -123,12 +125,12 @@ const WATERPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 0
+                startOffset: 0,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 1.0,
@@ -148,14 +150,14 @@ const WATERPILLAR_CONFIG = {
                     geometricMask: {
                         type: 'distance',
                         core: 0.1,
-                        tip: 0.25
-                    }
+                        tip: 0.25,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.3, phase: 0 },
-                    { axis: 'z', rotations: 0.3, phase: 180 }
-                ]
-            }
+                    { axis: 'z', rotations: 0.3, phase: 180 },
+                ],
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -173,12 +175,12 @@ const WATERPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 0.5
+                startOffset: 0.5,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 1.0,
@@ -199,14 +201,14 @@ const WATERPILLAR_CONFIG = {
                     geometricMask: {
                         type: 'tip-boost',
                         core: 0.0,
-                        tip: 0.2
-                    }
+                        tip: 0.2,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: -0.6, phase: 60 },
-                    { axis: 'z', rotations: -0.6, phase: 240 }
-                ]
-            }
+                    { axis: 'z', rotations: -0.6, phase: 240 },
+                ],
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -224,12 +226,12 @@ const WATERPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 1.0
+                startOffset: 1.0,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 1.0,
@@ -249,15 +251,15 @@ const WATERPILLAR_CONFIG = {
                     geometricMask: {
                         type: 'distance',
                         core: 0.15,
-                        tip: 0.3
-                    }
+                        tip: 0.3,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.9, phase: 90 },
-                    { axis: 'z', rotations: 0.9, phase: 270 }
-                ]
-            }
-        }
+                    { axis: 'z', rotations: 0.9, phase: 270 },
+                ],
+            },
+        },
     ],
 
     // Glow - powerful water blue

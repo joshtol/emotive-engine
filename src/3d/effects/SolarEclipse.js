@@ -81,18 +81,18 @@ export class SolarEclipse {
         const shadowGeometry = new THREE.CircleGeometry(initialShadowRadius, 256);
         const shadowMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
-            transparent: true,  // Enable transparency for multiply blending
+            transparent: true, // Enable transparency for multiply blending
             opacity: 1.0,
-            blending: THREE.MultiplyBlending,  // Black (0,0,0) * CoronaColor = Black (complete occlusion)
-            premultipliedAlpha: true,  // Required for MultiplyBlending
+            blending: THREE.MultiplyBlending, // Black (0,0,0) * CoronaColor = Black (complete occlusion)
+            premultipliedAlpha: true, // Required for MultiplyBlending
             side: THREE.DoubleSide,
-            depthWrite: false,   // Don't write to depth buffer (like coronas)
-            depthTest: false,    // Don't test depth - always render on top
-            fog: false
+            depthWrite: false, // Don't write to depth buffer (like coronas)
+            depthTest: false, // Don't test depth - always render on top
+            fog: false,
         });
 
         this.shadowDisk = new THREE.Mesh(shadowGeometry, shadowMaterial);
-        this.shadowDisk.renderOrder = 10000;  // Render AFTER coronas to occlude them
+        this.shadowDisk.renderOrder = 10000; // Render AFTER coronas to occlude them
 
         // Add to scene initially, will be re-parented to sun mesh if available
         this.shadowDisk.position.set(200, 0, 0); // Start off-screen
@@ -106,7 +106,7 @@ export class SolarEclipse {
     createCoronaDisk() {
         const coronaRadius = this.sunRadius * 2.05; // x sun diameter
         // RingGeometry with inner radius well inside sun, so corona overlaps bloomed edge
-        const innerRadius = this.sunRadius * 0.60; // 40% inside sun's edge
+        const innerRadius = this.sunRadius * 0.6; // 40% inside sun's edge
         const coronaGeometry = new THREE.RingGeometry(innerRadius, coronaRadius, 256);
 
         // Shader material with radial wave pattern
@@ -114,21 +114,21 @@ export class SolarEclipse {
             uniforms: {
                 time: { value: 0 },
                 glowColor: { value: new THREE.Color(0.9, 0.95, 1.0) }, // Cool white/blue-white
-                intensity: { value: 2.4 },  // Increased for stronger bloom
+                intensity: { value: 2.4 }, // Increased for stronger bloom
                 randomSeed: { value: this.randomSeed },
-                uvRotation: { value: 0.0 },  // UV rotation angle in radians
-                rayElongation: { value: 1.0 },  // Ray elongation factor (1.0 = circular, >1.0 = elongated)
-                uberHeroElongation: { value: 1.0 },  // Uber hero ray elongation (much more dramatic)
-                isTotalEclipse: { value: 0.0 },  // 1.0 = total eclipse effects enabled
+                uvRotation: { value: 0.0 }, // UV rotation angle in radians
+                rayElongation: { value: 1.0 }, // Ray elongation factor (1.0 = circular, >1.0 = elongated)
+                uberHeroElongation: { value: 1.0 }, // Uber hero ray elongation (much more dramatic)
+                isTotalEclipse: { value: 0.0 }, // 1.0 = total eclipse effects enabled
 
                 // Blend Layer Uniforms (up to 4 layers)
                 // Default: Soft Light @ 2.155 to fix black edges
-                layer1Mode: { value: 11.0 },  // Soft Light
+                layer1Mode: { value: 11.0 }, // Soft Light
                 layer1Strength: { value: 2.155 },
                 layer1Enabled: { value: 1.0 },
 
                 // Default: Darken @ 0.695 for depth
-                layer2Mode: { value: 5.0 },  // Overlay
+                layer2Mode: { value: 5.0 }, // Overlay
                 layer2Strength: { value: 0.695 },
                 layer2Enabled: { value: 1.0 },
 
@@ -138,7 +138,7 @@ export class SolarEclipse {
 
                 layer4Mode: { value: 0.0 },
                 layer4Strength: { value: 1.0 },
-                layer4Enabled: { value: 0.0 }
+                layer4Enabled: { value: 0.0 },
             },
             vertexShader: `
                 uniform float uvRotation;
@@ -438,9 +438,9 @@ export class SolarEclipse {
                 }
             `,
             transparent: true,
-            blending: THREE.AdditiveBlending,  // Additive blending to fill gap with sun bloom
+            blending: THREE.AdditiveBlending, // Additive blending to fill gap with sun bloom
             depthWrite: false,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
         });
 
         this.coronaDisk = new THREE.Mesh(coronaGeometry, coronaMaterial);
@@ -464,21 +464,21 @@ export class SolarEclipse {
             uniforms: {
                 time: { value: 0 },
                 glowColor: { value: new THREE.Color(0.9, 0.95, 1.0) },
-                intensity: { value: 2.4 },  // Increased for stronger bloom
+                intensity: { value: 2.4 }, // Increased for stronger bloom
                 randomSeed: { value: counterSeed },
-                uvRotation: { value: 0.0 },  // UV rotation angle in radians
-                rayElongation: { value: 1.0 },  // Ray elongation factor (1.0 = circular, >1.0 = elongated)
-                uberHeroElongation: { value: 1.0 },  // Uber hero ray elongation (much more dramatic)
-                isTotalEclipse: { value: 0.0 },  // 1.0 = total eclipse effects enabled
+                uvRotation: { value: 0.0 }, // UV rotation angle in radians
+                rayElongation: { value: 1.0 }, // Ray elongation factor (1.0 = circular, >1.0 = elongated)
+                uberHeroElongation: { value: 1.0 }, // Uber hero ray elongation (much more dramatic)
+                isTotalEclipse: { value: 0.0 }, // 1.0 = total eclipse effects enabled
 
                 // Blend Layer Uniforms (up to 4 layers) - shared with main corona
                 // Default: Soft Light @ 2.155 to fix black edges
-                layer1Mode: { value: 11.0 },  // Soft Light
+                layer1Mode: { value: 11.0 }, // Soft Light
                 layer1Strength: { value: 2.155 },
                 layer1Enabled: { value: 1.0 },
 
                 // Default: Darken @ 0.695 for depth
-                layer2Mode: { value: 5.0 },  // Overlay
+                layer2Mode: { value: 5.0 }, // Overlay
                 layer2Strength: { value: 0.695 },
                 layer2Enabled: { value: 1.0 },
 
@@ -488,14 +488,14 @@ export class SolarEclipse {
 
                 layer4Mode: { value: 0.0 },
                 layer4Strength: { value: 1.0 },
-                layer4Enabled: { value: 0.0 }
+                layer4Enabled: { value: 0.0 },
             },
             vertexShader: this.coronaDisk.material.vertexShader,
             fragmentShader: this.coronaDisk.material.fragmentShader,
             transparent: true,
-            blending: THREE.AdditiveBlending,  // Additive blending to fill gap with sun bloom
+            blending: THREE.AdditiveBlending, // Additive blending to fill gap with sun bloom
             depthWrite: false,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
         });
 
         this.counterCoronaDisk = new THREE.Mesh(coronaGeometry, counterMaterial);
@@ -528,16 +528,19 @@ export class SolarEclipse {
         if (this.coronaDisk?.material?.uniforms) {
             this.coronaDisk.material.uniforms[`layer${layerNum}Mode`].value = mode;
             this.coronaDisk.material.uniforms[`layer${layerNum}Strength`].value = strength;
-            this.coronaDisk.material.uniforms[`layer${layerNum}Enabled`].value = enabled ? 1.0 : 0.0;
+            this.coronaDisk.material.uniforms[`layer${layerNum}Enabled`].value = enabled
+                ? 1.0
+                : 0.0;
         }
 
         if (this.counterCoronaDisk?.material?.uniforms) {
             this.counterCoronaDisk.material.uniforms[`layer${layerNum}Mode`].value = mode;
             this.counterCoronaDisk.material.uniforms[`layer${layerNum}Strength`].value = strength;
-            this.counterCoronaDisk.material.uniforms[`layer${layerNum}Enabled`].value = enabled ? 1.0 : 0.0;
+            this.counterCoronaDisk.material.uniforms[`layer${layerNum}Enabled`].value = enabled
+                ? 1.0
+                : 0.0;
         }
     }
-
 
     /**
      * Set eclipse type (annular, total, or off)
@@ -553,7 +556,7 @@ export class SolarEclipse {
         const wasEnabled = this.enabled;
         this.previousEclipseType = this.eclipseType; // Store previous type before changing
         this.eclipseType = eclipseType;
-        this.enabled = (eclipseType !== ECLIPSE_TYPES.OFF);
+        this.enabled = eclipseType !== ECLIPSE_TYPES.OFF;
         this.manualControl = false; // Reset manual control when eclipse type changes
 
         // Get shadow coverage values for interpolation
@@ -643,7 +646,7 @@ export class SolarEclipse {
 
         // Update time for corona animation
         // Accelerate time 3x for normal sun (more visible undulation), normal speed for eclipses
-        const timeMultiplier = (this.eclipseType === ECLIPSE_TYPES.OFF) ? 3.0 : 1.0;
+        const timeMultiplier = this.eclipseType === ECLIPSE_TYPES.OFF ? 3.0 : 1.0;
         this.time += deltaTime * timeMultiplier;
 
         // Update transition animation (skip if in manual control mode)
@@ -660,9 +663,10 @@ export class SolarEclipse {
         // Update shadow disk if eclipse is active or transitioning out
         if (this.enabled || (this.transitionDirection === 'out' && this.isTransitioning)) {
             // Use previous eclipse type during exit animation (since eclipseType is now OFF)
-            const activeEclipseType = (this.transitionDirection === 'out' && this.isTransitioning)
-                ? this.previousEclipseType
-                : this.eclipseType;
+            const activeEclipseType =
+                this.transitionDirection === 'out' && this.isTransitioning
+                    ? this.previousEclipseType
+                    : this.eclipseType;
             const config = getEclipseConfig(activeEclipseType);
             const scaledSunRadius = this.sunRadius * worldScale;
 
@@ -675,10 +679,16 @@ export class SolarEclipse {
             if (this.customShadowCoverage !== undefined) {
                 // Manual slider override
                 shadowCoverage = this.customShadowCoverage;
-            } else if (this.transitionDirection === 'switch' && this.isTransitioning &&
-                       this.startShadowCoverage !== undefined && this.targetShadowCoverage !== undefined) {
+            } else if (
+                this.transitionDirection === 'switch' &&
+                this.isTransitioning &&
+                this.startShadowCoverage !== undefined &&
+                this.targetShadowCoverage !== undefined
+            ) {
                 // Only interpolate size when switching between annular/total
-                shadowCoverage = this.startShadowCoverage + (this.targetShadowCoverage - this.startShadowCoverage) * easedProgress;
+                shadowCoverage =
+                    this.startShadowCoverage +
+                    (this.targetShadowCoverage - this.startShadowCoverage) * easedProgress;
             } else {
                 // Use target config coverage (constant size during in/out transitions)
                 ({ shadowCoverage } = config);
@@ -699,10 +709,10 @@ export class SolarEclipse {
             } else if (this.isTransitioning) {
                 if (this.transitionDirection === 'in') {
                     // Arc in from -2.0 to 0.0
-                    this.currentShadowPosX = -2.0 + (easedProgress * 2.0); // -2.0 → 0.0
+                    this.currentShadowPosX = -2.0 + easedProgress * 2.0; // -2.0 → 0.0
                 } else if (this.transitionDirection === 'out') {
                     // Arc out from 0.0 to 1.0
-                    this.currentShadowPosX = 0.0 + (easedProgress * 1.0); // 0.0 → 1.0
+                    this.currentShadowPosX = 0.0 + easedProgress * 1.0; // 0.0 → 1.0
                 } else if (this.transitionDirection === 'switch') {
                     // Shadow stays centered during annular<->total switch, only size changes
                     this.currentShadowPosX = 0.0;
@@ -748,7 +758,6 @@ export class SolarEclipse {
             // Make shadow face camera (billboard effect)
             this.shadowDisk.lookAt(cameraPosition);
 
-
             // Update corona disks - ALWAYS VISIBLE (intensity varies by eclipse state)
             // Coronas are parented to sun mesh, so position/scale is inherited
             // Only set position if NOT parented (fallback for older code paths)
@@ -764,15 +773,15 @@ export class SolarEclipse {
             // proximity = 0 at edges (shadow far away), 1 at totality (shadow centered)
             const distanceFromCenter = Math.abs(this.currentShadowPosX || 0);
             const maxDistance = 2.0;
-            const proximity = Math.max(0, 1 - (distanceFromCenter / maxDistance));
+            const proximity = Math.max(0, 1 - distanceFromCenter / maxDistance);
 
             // Calculate total eclipse blend factor
             // During 'switch' transition, animate between 0 (annular) and 1 (total)
             let totalEclipseBlend = 0.0;
             if (this.transitionDirection === 'switch' && this.isTransitioning) {
                 // Switching between annular/total: animate the blend
-                const wasTotal = (this.previousEclipseType === ECLIPSE_TYPES.TOTAL);
-                const isTotal = (this.eclipseType === ECLIPSE_TYPES.TOTAL);
+                const wasTotal = this.previousEclipseType === ECLIPSE_TYPES.TOTAL;
+                const isTotal = this.eclipseType === ECLIPSE_TYPES.TOTAL;
                 if (isTotal && !wasTotal) {
                     // Annular → Total: blend from 0 to 1
                     totalEclipseBlend = easedProgress;
@@ -788,11 +797,11 @@ export class SolarEclipse {
             // For total eclipse: elongate rays via shader (not geometry scaling)
             // Pass elongation factor to shader (1.0 = circular, 25.0 = 2400% longer rays at poles)
             // Use quartic easing (^4) to keep rays normal length until very close to totality
-            const baseRayElongation = 1.0 + (24.0 * Math.pow(proximity, 4)); // 1.0 → 25.0
+            const baseRayElongation = 1.0 + 24.0 * Math.pow(proximity, 4); // 1.0 → 25.0
             const rayElongation = 1.0 + (baseRayElongation - 1.0) * totalEclipseBlend;
 
             // Uber hero rays: 3 dramatic streamers that extend MUCH further at totality
-            const baseUberHeroElongation = 1.0 + (199.0 * Math.pow(proximity, 5)); // 1.0 → 200.0
+            const baseUberHeroElongation = 1.0 + 199.0 * Math.pow(proximity, 5); // 1.0 → 200.0
             const uberHeroElongation = 1.0 + (baseUberHeroElongation - 1.0) * totalEclipseBlend;
 
             this.coronaDisk.material.uniforms.rayElongation.value = rayElongation;
@@ -802,9 +811,12 @@ export class SolarEclipse {
 
             // Ease shader effects (chromosphere, asymmetry, F-corona) as we approach totality
             // Ramp from 0 to 1.0 between 0.50 and 0.99 proximity with easeInOut curve
-            const effectsMin = 0.50;  // Start easing shader effects at 50% proximity
-            const effectsMax = 0.99;  // Full shader effects at 99% proximity
-            const effectsLinear = Math.max(0, Math.min(1, (proximity - effectsMin) / (effectsMax - effectsMin)));
+            const effectsMin = 0.5; // Start easing shader effects at 50% proximity
+            const effectsMax = 0.99; // Full shader effects at 99% proximity
+            const effectsLinear = Math.max(
+                0,
+                Math.min(1, (proximity - effectsMin) / (effectsMax - effectsMin))
+            );
             // Smoothstep easeInOut: 3t² - 2t³
             const effectsProgress = effectsLinear * effectsLinear * (3 - 2 * effectsLinear);
             // Apply total eclipse blend to shader effects
@@ -815,9 +827,13 @@ export class SolarEclipse {
             // Layer 3: Linear Burn eases in with the other effects
             // Linear Burn: strength 1.0 = no effect, strength 0.0 = max darkening
             // So we ramp from 1.0 (no effect) DOWN to 0.053 (full effect) at totality
-            const linearBurnEnabled = (totalEclipseBlend > 0 && proximity >= effectsMin);
+            const linearBurnEnabled = totalEclipseBlend > 0 && proximity >= effectsMin;
             const linearBurnStrength = 1.0 - (1.0 - 0.053) * effectsProgress * totalEclipseBlend; // 1.0 → 0.053
-            this.setCoronaBlendLayer(3, { mode: 1, strength: linearBurnStrength, enabled: linearBurnEnabled });
+            this.setCoronaBlendLayer(3, {
+                mode: 1,
+                strength: linearBurnStrength,
+                enabled: linearBurnEnabled,
+            });
 
             // Billboard both coronas to camera (must happen BEFORE rotation)
             this.coronaDisk.lookAt(cameraPosition);
@@ -833,12 +849,14 @@ export class SolarEclipse {
                 // ANNULAR ECLIPSE: Slow down rotation at totality (75% reduction)
                 const baseSpeed = 0.075;
                 const minSpeed = baseSpeed * 0.25; // 25% of normal = 75% reduction
-                rotationSpeed = (deltaTime / 1000) * (baseSpeed - (baseSpeed - minSpeed) * proximity);
+                rotationSpeed =
+                    (deltaTime / 1000) * (baseSpeed - (baseSpeed - minSpeed) * proximity);
             } else if (activeEclipseType === ECLIPSE_TYPES.TOTAL) {
                 // TOTAL ECLIPSE: Nearly freeze rotation at totality (95% reduction)
                 const baseSpeed = 0.075;
                 const minSpeed = baseSpeed * 0.05; // 5% of normal = 95% reduction
-                rotationSpeed = (deltaTime / 1000) * (baseSpeed - (baseSpeed - minSpeed) * proximity);
+                rotationSpeed =
+                    (deltaTime / 1000) * (baseSpeed - (baseSpeed - minSpeed) * proximity);
             }
 
             // Apply rotation to both coronas
@@ -850,7 +868,7 @@ export class SolarEclipse {
 
             if (activeEclipseType === ECLIPSE_TYPES.OFF) {
                 // NORMAL SUN: Bright corona (solar atmosphere always visible)
-                coronaIntensity = 3.6;  // Increased for stronger bloom
+                coronaIntensity = 3.6; // Increased for stronger bloom
             } else if (activeEclipseType === ECLIPSE_TYPES.ANNULAR) {
                 // ANNULAR ECLIPSE: Dim corona based on proximity to shadow
                 const maxIntensity = 3.6; // Normal sun brightness
@@ -875,7 +893,8 @@ export class SolarEclipse {
 
             // Apply intensity to both coronas (with morph fade multiplier)
             this.coronaDisk.material.uniforms.intensity.value = coronaIntensity * coronaMorphFade;
-            this.counterCoronaDisk.material.uniforms.intensity.value = coronaIntensity * coronaMorphFade;
+            this.counterCoronaDisk.material.uniforms.intensity.value =
+                coronaIntensity * coronaMorphFade;
 
             // Update shader time uniform for both
             this.coronaDisk.material.uniforms.time.value = this.time;
@@ -943,10 +962,10 @@ export class SolarEclipse {
                 // Shadow at 0.0 = 100% coverage (totality)
                 const distanceFromCenter = Math.abs(this.currentShadowPosX);
                 const maxDistance = 2.0;
-                coverage = Math.max(0, Math.min(1, 1 - (distanceFromCenter / maxDistance)));
+                coverage = Math.max(0, Math.min(1, 1 - distanceFromCenter / maxDistance));
 
                 // Beads visible when coverage is between 90% and 100% (INCLUDING totality)
-                if (coverage >= 0.90 && coverage <= 1.0) {
+                if (coverage >= 0.9 && coverage <= 1.0) {
                     beadsVisible = true;
                 }
             } else if (this.transitionDirection === 'in' && this.isTransitioning) {
@@ -955,8 +974,9 @@ export class SolarEclipse {
                 if (this.transitionProgress >= beadsStartProgress) {
                     beadsVisible = true;
                     // Map 0.8-1.0 transition progress to 0.9-1.0 coverage
-                    const normalizedProgress = (this.transitionProgress - beadsStartProgress) / (1.0 - beadsStartProgress);
-                    coverage = 0.9 + (normalizedProgress * 0.1);
+                    const normalizedProgress =
+                        (this.transitionProgress - beadsStartProgress) / (1.0 - beadsStartProgress);
+                    coverage = 0.9 + normalizedProgress * 0.1;
                 }
             } else if (this.transitionDirection === 'out' && this.isTransitioning) {
                 // Beads appear in first 20% of exit transition (when shadow is leaving sun's rim)
@@ -965,7 +985,7 @@ export class SolarEclipse {
                     beadsVisible = true;
                     // Map 0.0-0.2 transition progress to 1.0-0.9 coverage
                     const normalizedProgress = this.transitionProgress / beadsEndProgress;
-                    coverage = 1.0 - (normalizedProgress * 0.1);
+                    coverage = 1.0 - normalizedProgress * 0.1;
                 }
             } else if (!this.isTransitioning) {
                 // At totality: coverage = 1.0, beads VISIBLE (most dramatic moment)

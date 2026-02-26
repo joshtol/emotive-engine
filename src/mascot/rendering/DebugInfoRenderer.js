@@ -85,7 +85,7 @@ export class DebugInfoRenderer {
         const lines = [
             `FPS: ${fps}`,
             `Frame: ${frameTime}ms`,
-            `Particles: ${particleStats.activeParticles}`
+            `Particles: ${particleStats.activeParticles}`,
         ];
 
         const { x, maxWidth } = this.calculateFPSBoxPosition(ctx, lines);
@@ -107,7 +107,7 @@ export class DebugInfoRenderer {
         let maxWidth = 0;
 
         lines.forEach(line => {
-            const {width} = ctx.measureText(line);
+            const { width } = ctx.measureText(line);
             if (width > maxWidth) maxWidth = width;
         });
 
@@ -155,11 +155,11 @@ export class DebugInfoRenderer {
      */
     getFPSBorderColor(fps) {
         if (fps >= 55) {
-            return '#00ff00';  // Green for good FPS
+            return '#00ff00'; // Green for good FPS
         } else if (fps >= 30) {
-            return '#ffff00';  // Yellow for okay FPS
+            return '#ffff00'; // Yellow for okay FPS
         } else {
-            return '#ff0000';  // Red for poor FPS
+            return '#ff0000'; // Red for poor FPS
         }
     }
 
@@ -174,7 +174,7 @@ export class DebugInfoRenderer {
     drawTextLines(ctx, lines, x, y, lineHeight) {
         ctx.fillStyle = '#ffffff';
         lines.forEach((line, i) => {
-            const lineY = y + (i * lineHeight);
+            const lineY = y + i * lineHeight;
             ctx.fillText(line, x, lineY);
         });
     }
@@ -194,7 +194,7 @@ export class DebugInfoRenderer {
             `Particles: ${particleStats.activeParticles}/${particleStats.maxParticles}`,
             `Gesture: ${this._state.currentModularGesture ? this._state.currentModularGesture.type : 'none'}`,
             `Speaking: ${this._state.speaking ? 'yes' : 'no'}`,
-            `Audio Level: ${(this._state.audioLevel * 100).toFixed(1)}%`
+            `Audio Level: ${(this._state.audioLevel * 100).toFixed(1)}%`,
         ];
 
         // Draw debug info with background for readability

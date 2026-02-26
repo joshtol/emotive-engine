@@ -43,9 +43,11 @@ const ELECTRICBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 2.2,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 1, scale: 2.0, models: ['plasma-ring'],
+            count: 1,
+            scale: 2.0,
+            models: ['plasma-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.45,
@@ -59,34 +61,36 @@ const ELECTRICBLAST_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.5,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: { type: 3, strength: 0.3, scale: 0.25, speed: 3.0, blend: 'multiply' },
                 // Per-gesture atmospheric particles: intense ionized air blast
-                atmospherics: [{
-                    preset: 'ozone',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.8,
-                    sizeScale: 2.0,
-                    progressCurve: 'pulse',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'ozone',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.8,
+                        sizeScale: 2.0,
+                        progressCurve: 'pulse',
+                    },
+                ],
                 flash: {
                     events: [
                         { at: 0.0, intensity: 4.0 },
-                        { at: 0.15, intensity: 1.5 }
+                        { at: 0.15, intensity: 1.5 },
                     ],
-                    decay: 0.03
+                    decay: 0.03,
                 },
                 blending: 'additive',
                 renderOrder: 8,
                 modelOverrides: {
                     'plasma-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -100,9 +104,11 @@ const ELECTRICBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 1.5,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 1, scale: 1.0, models: ['spark-spike'],
+            count: 1,
+            scale: 1.0,
+            models: ['spark-spike'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.5,
@@ -115,18 +121,23 @@ const ELECTRICBLAST_CONFIG = {
                     blend: 'multiply',
                     travel: 'vertical',
                     travelSpeed: 1.2,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
-                drift: { speed: 1.4, distance: 0.8, direction: { x: 0, y: 1.0, z: 0 }, easing: 'easeOutQuad' },
+                drift: {
+                    speed: 1.4,
+                    distance: 0.8,
+                    direction: { x: 0, y: 1.0, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 blending: 'additive',
                 renderOrder: 12,
                 modelOverrides: {
                     'spark-spike': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
@@ -136,9 +147,11 @@ const ELECTRICBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.25,
                 endScale: 1.3,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 1, scale: 0.9, models: ['spark-spike'],
+            count: 1,
+            scale: 0.9,
+            models: ['spark-spike'],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.5,
@@ -151,18 +164,23 @@ const ELECTRICBLAST_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 0.8,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
-                drift: { speed: 1.3, distance: 0.75, direction: { x: -0.8, y: 0.7, z: 0 }, easing: 'easeOutQuad' },
+                drift: {
+                    speed: 1.3,
+                    distance: 0.75,
+                    direction: { x: -0.8, y: 0.7, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 blending: 'additive',
                 renderOrder: 12,
                 modelOverrides: {
                     'spark-spike': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
@@ -172,9 +190,11 @@ const ELECTRICBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.25,
                 endScale: 1.3,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 1, scale: 0.9, models: ['spark-spike'],
+            count: 1,
+            scale: 0.9,
+            models: ['spark-spike'],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.5,
@@ -187,18 +207,23 @@ const ELECTRICBLAST_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 0.8,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
-                drift: { speed: 1.3, distance: 0.75, direction: { x: 0.8, y: 0.7, z: 0 }, easing: 'easeOutQuad' },
+                drift: {
+                    speed: 1.3,
+                    distance: 0.75,
+                    direction: { x: 0.8, y: 0.7, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 blending: 'additive',
                 renderOrder: 12,
                 modelOverrides: {
                     'spark-spike': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -215,9 +240,11 @@ const ELECTRICBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 0.9,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 3, scale: 0.6, models: ['arc-ring-small'],
+            count: 3,
+            scale: 0.6,
+            models: ['arc-ring-small'],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.4,
@@ -232,7 +259,7 @@ const ELECTRICBLAST_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.15,
@@ -241,11 +268,11 @@ const ELECTRICBLAST_CONFIG = {
                 modelOverrides: {
                     'arc-ring-small': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     jitterFrequency: 60,
@@ -257,7 +284,7 @@ const ELECTRICBLAST_CONFIG = {
     glowFlickerRate: 15,
     scaleVibration: 0.04,
     scaleFrequency: 10,
-    scaleGrowth: 0.02
+    scaleGrowth: 0.02,
 };
 
 export default buildElectricEffectGesture(ELECTRICBLAST_CONFIG);

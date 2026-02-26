@@ -54,16 +54,16 @@ const WATERSOAK_CONFIG = {
             start: 'center',
             end: 'center',
             easing: 'linear',
-            startScale: 1.8,            // Start moderately large (not too big)
-            endScale: 0.3,              // Contract to small
+            startScale: 1.8, // Start moderately large (not too big)
+            endScale: 0.3, // Contract to small
             startDiameter: 2.0,
             endDiameter: 0.4,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: {
             type: 'stack',
             count: 1,
-            spacing: 0
+            spacing: 0,
         },
         count: 1,
         scale: 1.2,
@@ -75,52 +75,52 @@ const WATERSOAK_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.06,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.1,
                     peak: 0.35,
                     end: 0.5,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             // Two-layer cutout: CELLULAR + VORONOI for chunky irregular edge
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 0, scale: 1.3, weight: 1.0 },    // CELLULAR - larger bubbles
-                secondary: { pattern: 3, scale: 0.6, weight: 0.7 },  // VORONOI - chunky edge bites
+                primary: { pattern: 0, scale: 1.3, weight: 1.0 }, // CELLULAR - larger bubbles
+                secondary: { pattern: 3, scale: 0.6, weight: 0.7 }, // VORONOI - chunky edge bites
                 blend: 'multiply',
                 travel: 'radial',
                 travelSpeed: 1.5,
-                strengthCurve: 'fadeIn',         // Builds up as it contracts
+                strengthCurve: 'fadeIn', // Builds up as it contracts
                 trailDissolve: {
                     enabled: true,
-                    offset: -0.3,                // Same as drench
-                    softness: 1.4
-                }
+                    offset: -0.3, // Same as drench
+                    softness: 1.4,
+                },
             },
             // Grain: film grain for spray texture
             grain: {
-                type: 3,              // FILM
+                type: 3, // FILM
                 strength: 0.2,
                 scale: 0.25,
                 speed: 2.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             pulse: {
                 amplitude: 0.05,
                 frequency: 2,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             blending: 'additive',
             renderOrder: 10,
@@ -130,23 +130,25 @@ const WATERSOAK_CONFIG = {
                         type: 1,
                         arcWidth: 0.95,
                         arcSpeed: 0.4,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'camera'
-                }
+                    orientationOverride: 'camera',
+                },
             },
             // Brief spray burst on initial soak impact — inherits axis-travel motion
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.5,
-                sizeScale: 0.8,
-                burstCount: 12,
-                progressCurve: 'burst',
-                velocityInheritance: 0.3,
-            }]
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.5,
+                    sizeScale: 0.8,
+                    burstCount: 12,
+                    progressCurve: 'burst',
+                    velocityInheritance: 0.3,
+                },
+            ],
+        },
     },
 
     // Wobble
@@ -161,7 +163,7 @@ const WATERSOAK_CONFIG = {
     glowColor: [0.2, 0.5, 0.9],
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.3,
-    glowPulseRate: 2
+    glowPulseRate: 2,
 };
 
 /**

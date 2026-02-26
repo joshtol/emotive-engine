@@ -5,4 +5,8 @@
  */
 
 export { createCoreContext, createMockCoreContext } from './CoreContext.js';
-export { createSharedState, createSharedStateFromMascot, createMockSharedState } from './SharedState.js';
+export {
+    createSharedState,
+    createSharedStateFromMascot,
+    createMockSharedState,
+} from './SharedState.js';

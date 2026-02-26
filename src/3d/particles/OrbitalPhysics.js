@@ -46,8 +46,10 @@ export class OrbitalPhysics {
         // Physics parameters (configurable per emotion)
         this.drag = options.drag !== undefined ? options.drag : 0.85;
         this.inertia = options.inertia !== undefined ? options.inertia : 0.9;
-        this.centrifugalStrength = options.centrifugalStrength !== undefined ? options.centrifugalStrength : 1.0;
-        this.momentumDamping = options.momentumDamping !== undefined ? options.momentumDamping : 0.97;
+        this.centrifugalStrength =
+            options.centrifugalStrength !== undefined ? options.centrifugalStrength : 1.0;
+        this.momentumDamping =
+            options.momentumDamping !== undefined ? options.momentumDamping : 0.97;
 
         // Temp vectors for calculations (reuse to avoid GC)
         this.tempVec3_1 = new THREE.Vector3();
@@ -71,7 +73,8 @@ export class OrbitalPhysics {
     updateConfig(config = {}) {
         if (config.drag !== undefined) this.drag = config.drag;
         if (config.inertia !== undefined) this.inertia = config.inertia;
-        if (config.centrifugalStrength !== undefined) this.centrifugalStrength = config.centrifugalStrength;
+        if (config.centrifugalStrength !== undefined)
+            this.centrifugalStrength = config.centrifugalStrength;
         if (config.momentumDamping !== undefined) this.momentumDamping = config.momentumDamping;
     }
 
@@ -96,11 +99,7 @@ export class OrbitalPhysics {
         const deltaZ = currentRotation.z - this.lastRotation.z;
 
         // Angular velocity (radians per second) - reuse temp vector
-        const rawAngularVelocity = this.tempVec3_3.set(
-            deltaX / dt,
-            deltaY / dt,
-            deltaZ / dt
-        );
+        const rawAngularVelocity = this.tempVec3_3.set(deltaX / dt, deltaY / dt, deltaZ / dt);
 
         // Only apply orbital physics for significant rotation (gestures, not ambient spin)
         // Threshold: 0.5 rad/s (~28.6 degrees/sec) - ambient rotation is ~0.01 rad/s
@@ -138,8 +137,8 @@ export class OrbitalPhysics {
         if (!particle.orbitalPhysics) {
             particle.orbitalPhysics = {
                 angularVelocity: new THREE.Vector3(),
-                localPosition: null,  // Store position in mascot's local space
-                initialized: false
+                localPosition: null, // Store position in mascot's local space
+                initialized: false,
             };
         }
 
@@ -150,7 +149,9 @@ export class OrbitalPhysics {
             physicsState.initialized = true;
             physicsState.angularVelocity.copy(this.currentAngularVelocity);
             // Store initial position in local space (relative to mascot)
-            physicsState.localPosition = new THREE.Vector3().copy(particlePosition).sub(corePosition);
+            physicsState.localPosition = new THREE.Vector3()
+                .copy(particlePosition)
+                .sub(corePosition);
             return particlePosition;
         }
 
@@ -248,38 +249,50 @@ export class OrbitalPhysics {
     static getDefaultConfig(emotion) {
         const configs = {
             // Calm emotions: smooth following
-            'calm': { drag: 0.9, inertia: 0.8, centrifugalStrength: 0.3, momentumDamping: 0.98 },
-            'resting': { drag: 0.95, inertia: 0.7, centrifugalStrength: 0.2, momentumDamping: 0.99 },
-            'neutral': { drag: 0.88, inertia: 0.85, centrifugalStrength: 0.5, momentumDamping: 0.97 },
+            calm: { drag: 0.9, inertia: 0.8, centrifugalStrength: 0.3, momentumDamping: 0.98 },
+            resting: { drag: 0.95, inertia: 0.7, centrifugalStrength: 0.2, momentumDamping: 0.99 },
+            neutral: { drag: 0.88, inertia: 0.85, centrifugalStrength: 0.5, momentumDamping: 0.97 },
 
             // Excited emotions: loose, chaotic particles
-            'excited': { drag: 0.6, inertia: 1.2, centrifugalStrength: 1.8, momentumDamping: 0.92 },
-            'joy': { drag: 0.7, inertia: 1.1, centrifugalStrength: 1.5, momentumDamping: 0.94 },
-            'surprise': { drag: 0.65, inertia: 1.15, centrifugalStrength: 1.6, momentumDamping: 0.93 },
+            excited: { drag: 0.6, inertia: 1.2, centrifugalStrength: 1.8, momentumDamping: 0.92 },
+            joy: { drag: 0.7, inertia: 1.1, centrifugalStrength: 1.5, momentumDamping: 0.94 },
+            surprise: {
+                drag: 0.65,
+                inertia: 1.15,
+                centrifugalStrength: 1.6,
+                momentumDamping: 0.93,
+            },
 
             // Intense emotions: strong forces
-            'anger': { drag: 0.5, inertia: 1.3, centrifugalStrength: 2.0, momentumDamping: 0.90 },
-            'euphoria': { drag: 0.75, inertia: 1.0, centrifugalStrength: 1.2, momentumDamping: 0.95 },
+            anger: { drag: 0.5, inertia: 1.3, centrifugalStrength: 2.0, momentumDamping: 0.9 },
+            euphoria: { drag: 0.75, inertia: 1.0, centrifugalStrength: 1.2, momentumDamping: 0.95 },
 
             // Controlled emotions: moderate following
-            'focused': { drag: 0.85, inertia: 0.9, centrifugalStrength: 0.6, momentumDamping: 0.96 },
-            'love': { drag: 0.8, inertia: 0.95, centrifugalStrength: 0.8, momentumDamping: 0.96 },
+            focused: { drag: 0.85, inertia: 0.9, centrifugalStrength: 0.6, momentumDamping: 0.96 },
+            love: { drag: 0.8, inertia: 0.95, centrifugalStrength: 0.8, momentumDamping: 0.96 },
 
             // Fearful emotions: erratic
-            'fear': { drag: 0.55, inertia: 1.25, centrifugalStrength: 1.7, momentumDamping: 0.91 },
-            'suspicion': { drag: 0.7, inertia: 1.05, centrifugalStrength: 1.0, momentumDamping: 0.94 },
+            fear: { drag: 0.55, inertia: 1.25, centrifugalStrength: 1.7, momentumDamping: 0.91 },
+            suspicion: {
+                drag: 0.7,
+                inertia: 1.05,
+                centrifugalStrength: 1.0,
+                momentumDamping: 0.94,
+            },
 
             // Other emotions
-            'sadness': { drag: 0.92, inertia: 0.75, centrifugalStrength: 0.4, momentumDamping: 0.98 },
-            'disgust': { drag: 0.6, inertia: 1.2, centrifugalStrength: 1.4, momentumDamping: 0.93 },
-            'glitch': { drag: 0.4, inertia: 1.5, centrifugalStrength: 2.2, momentumDamping: 0.88 }
+            sadness: { drag: 0.92, inertia: 0.75, centrifugalStrength: 0.4, momentumDamping: 0.98 },
+            disgust: { drag: 0.6, inertia: 1.2, centrifugalStrength: 1.4, momentumDamping: 0.93 },
+            glitch: { drag: 0.4, inertia: 1.5, centrifugalStrength: 2.2, momentumDamping: 0.88 },
         };
 
-        return configs[emotion] || {
-            drag: 0.85,
-            inertia: 0.9,
-            centrifugalStrength: 1.0,
-            momentumDamping: 0.97
-        };
+        return (
+            configs[emotion] || {
+                drag: 0.85,
+                inertia: 0.9,
+                centrifugalStrength: 1.0,
+                momentumDamping: 0.97,
+            }
+        );
     }
 }

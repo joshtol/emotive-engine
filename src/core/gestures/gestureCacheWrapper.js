@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Gesture Cache Wrapper
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Wrapper to use gesture cache without circular dependencies
  * @author Emotive Engine Team
  * @module gestures/gestureCacheWrapper
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides cached gesture access without creating circular dependencies.             
- * ║ This wrapper can be safely imported by gesture consumers.                         
+ * ║ Provides cached gesture access without creating circular dependencies.
+ * ║ This wrapper can be safely imported by gesture consumers.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -33,7 +33,7 @@ export function getGesture(name) {
             return cachedGesture;
         }
     }
-    
+
     // Fallback to original logic
     return getGestureOriginal(name);
 }
@@ -50,7 +50,7 @@ export function getGestureProperties(name) {
             return properties;
         }
     }
-    
+
     // Fallback to original gesture and extract properties
     const gesture = getGestureOriginal(name);
     if (gesture) {
@@ -59,10 +59,10 @@ export function getGestureProperties(name) {
             emoji: gesture.emoji,
             description: gesture.description,
             config: gesture.config,
-            rhythm: gesture.rhythm
+            rhythm: gesture.rhythm,
         };
     }
-    
+
     return null;
 }
 
@@ -79,7 +79,7 @@ export function isBlendingGesture(name) {
             return properties.type === 'blending';
         }
     }
-    
+
     const gesture = getGestureOriginal(name);
     return gesture ? gesture.type === 'blending' : false;
 }
@@ -97,7 +97,7 @@ export function isOverrideGesture(name) {
             return properties.type === 'override';
         }
     }
-    
+
     const gesture = getGestureOriginal(name);
     return gesture ? gesture.type === 'override' : false;
 }
@@ -115,7 +115,7 @@ export function getGestureCombination(gesture1, gesture2) {
             return combination;
         }
     }
-    
+
     return null;
 }
 
@@ -127,10 +127,10 @@ export function getGestureCacheStats() {
     if (gestureCache && gestureCache.isInitialized) {
         return gestureCache.getStats();
     }
-    
+
     return {
         isInitialized: false,
         hitRate: '0%',
-        cacheSize: 0
+        cacheSize: 0,
     };
 }

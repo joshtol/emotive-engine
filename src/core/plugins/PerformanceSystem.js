@@ -58,7 +58,7 @@ export class PerformanceSystem {
     definePerformance(name, definition) {
         this.performances.set(name, {
             ...definition,
-            name
+            name,
         });
 
         if (this.eventManager) {
@@ -110,7 +110,7 @@ export class PerformanceSystem {
             semanticAction,
             intensity,
             options,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         };
 
         // Record analytics
@@ -129,7 +129,7 @@ export class PerformanceSystem {
                 // Complex sequence
                 await this.sequenceExecutor.execute(performance.sequence, {
                     intensity,
-                    ...options
+                    ...options,
                 });
             } else {
                 // Simple performance (emotion + gesture)
@@ -146,7 +146,7 @@ export class PerformanceSystem {
             if (this.eventManager) {
                 this.eventManager.emit('performanceError', {
                     ...executionContext,
-                    error
+                    error,
                 });
             }
         }
@@ -172,9 +172,10 @@ export class PerformanceSystem {
 
         // Set emotion
         if (emotion && typeof mascot.setEmotion === 'function') {
-            const duration = options.emotionDuration !== undefined
-                ? options.emotionDuration
-                : performance.emotionDuration || 500;
+            const duration =
+                options.emotionDuration !== undefined
+                    ? options.emotionDuration
+                    : performance.emotionDuration || 500;
 
             mascot.setEmotion(emotion, duration);
         }
@@ -206,7 +207,7 @@ export class PerformanceSystem {
 
         // Apply context adjustments
         if (this.enableContextAdjustment && options.context) {
-            const {context} = options;
+            const { context } = options;
 
             // Frustration increases intensity
             if (context.frustration !== undefined) {
@@ -243,7 +244,7 @@ export class PerformanceSystem {
             action: executionContext.semanticAction,
             intensity: executionContext.intensity,
             context: executionContext.options.context || {},
-            timestamp: executionContext.timestamp
+            timestamp: executionContext.timestamp,
         });
 
         // Limit history size
@@ -285,7 +286,7 @@ export class PerformanceSystem {
             total,
             byAction,
             avgIntensity,
-            history: this.performanceHistory.slice(-20) // Last 20
+            history: this.performanceHistory.slice(-20), // Last 20
         };
     }
 
@@ -344,7 +345,7 @@ export class PerformanceSystem {
             gesture: performance.gesture,
             hasSequence: !!performance.sequence,
             baseIntensity: performance.baseIntensity || this.defaultIntensity,
-            description: performance.description || ''
+            description: performance.description || '',
         };
     }
 }

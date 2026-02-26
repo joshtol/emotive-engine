@@ -21,20 +21,20 @@ export class ErrorTracker {
             startTime: Date.now(),
             userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
             url: typeof window !== 'undefined' ? window.location.href : 'unknown',
-            version: '2.4.0'
+            version: '2.4.0',
         };
 
         this.callbacks = {
             onError: options.onError || null,
             onReport: options.onReport || null,
-            onCritical: options.onCritical || null
+            onCritical: options.onCritical || null,
         };
 
         this.severityLevels = {
             LOW: 'low',
             MEDIUM: 'medium',
             HIGH: 'high',
-            CRITICAL: 'critical'
+            CRITICAL: 'critical',
         };
 
         this.errorCategories = {
@@ -45,7 +45,7 @@ export class ErrorTracker {
             PLUGIN: 'plugin',
             USER_INPUT: 'user_input',
             PERFORMANCE: 'performance',
-            UNKNOWN: 'unknown'
+            UNKNOWN: 'unknown',
         };
 
         if (this.enabled) {
@@ -68,7 +68,7 @@ export class ErrorTracker {
                 source,
                 lineno,
                 colno,
-                uncaught: true
+                uncaught: true,
             });
 
             if (this.originalOnError) {
@@ -83,7 +83,7 @@ export class ErrorTracker {
             this.captureError(new Error(event.reason), {
                 type: 'unhandledRejection',
                 promise: event.promise,
-                uncaught: true
+                uncaught: true,
             });
 
             if (this.originalOnUnhandledRejection) {
@@ -159,9 +159,9 @@ export class ErrorTracker {
                 ...context,
                 url: typeof window !== 'undefined' ? window.location.href : 'unknown',
                 userAgent: this.metadata.userAgent,
-                sessionId: this.metadata.sessionId
+                sessionId: this.metadata.sessionId,
             },
-            metadata: this.collectMetadata()
+            metadata: this.collectMetadata(),
         };
     }
 
@@ -178,7 +178,7 @@ export class ErrorTracker {
                     function: match[1],
                     file: match[2],
                     line: parseInt(match[3], 10),
-                    column: parseInt(match[4], 10)
+                    column: parseInt(match[4], 10),
                 });
             }
         }
@@ -190,7 +190,11 @@ export class ErrorTracker {
         const message = error.message.toLowerCase();
         const stack = error.stack || '';
 
-        if (message.includes('canvas') || message.includes('render') || stack.includes('Renderer')) {
+        if (
+            message.includes('canvas') ||
+            message.includes('render') ||
+            stack.includes('Renderer')
+        ) {
             return this.errorCategories.RENDERING;
         }
 
@@ -227,7 +231,10 @@ export class ErrorTracker {
             return this.severityLevels.CRITICAL;
         }
 
-        if (category === this.errorCategories.RENDERING || category === this.errorCategories.ANIMATION) {
+        if (
+            category === this.errorCategories.RENDERING ||
+            category === this.errorCategories.ANIMATION
+        ) {
             return this.severityLevels.HIGH;
         }
 
@@ -255,7 +262,11 @@ export class ErrorTracker {
 
     detectPatterns(errorInfo) {
         const key = `${errorInfo.category}:${errorInfo.severity}`;
-        const pattern = this.errorPatterns.get(key) || { count: 0, firstSeen: Date.now(), lastSeen: null };
+        const pattern = this.errorPatterns.get(key) || {
+            count: 0,
+            firstSeen: Date.now(),
+            lastSeen: null,
+        };
 
         pattern.count++;
         pattern.lastSeen = Date.now();
@@ -263,9 +274,7 @@ export class ErrorTracker {
         this.errorPatterns.set(key, pattern);
 
         // Detect error storms (many errors in short time)
-        const recentErrors = this.errors.filter(e =>
-            Date.now() - e.timestamp < 5000
-        );
+        const recentErrors = this.errors.filter(e => Date.now() - e.timestamp < 5000);
 
         if (recentErrors.length > 10) {
             this.handleErrorStorm(recentErrors);
@@ -306,20 +315,20 @@ export class ErrorTracker {
         if (typeof window !== 'undefined') {
             metadata.viewport = {
                 width: window.innerWidth,
-                height: window.innerHeight
+                height: window.innerHeight,
             };
 
             metadata.screen = {
                 width: window.screen.width,
                 height: window.screen.height,
-                pixelRatio: window.devicePixelRatio
+                pixelRatio: window.devicePixelRatio,
             };
 
             if (performance.memory) {
                 metadata.memory = {
                     used: Math.round(performance.memory.usedJSHeapSize / 1048576),
                     total: Math.round(performance.memory.totalJSHeapSize / 1048576),
-                    limit: Math.round(performance.memory.jsHeapSizeLimit / 1048576)
+                    limit: Math.round(performance.memory.jsHeapSizeLimit / 1048576),
                 };
             }
         }
@@ -355,7 +364,7 @@ export class ErrorTracker {
             errors,
             patterns: Array.from(this.errorPatterns.entries()),
             counts: Array.from(this.errorCounts.entries()),
-            metadata: this.metadata
+            metadata: this.metadata,
         };
 
         if (this.callbacks.onReport) {
@@ -389,7 +398,7 @@ export class ErrorTracker {
             byCategory: {},
             bySeverity: {},
             patterns: this.errorPatterns.size,
-            topErrors: []
+            topErrors: [],
         };
 
         // Count by category
@@ -452,8 +461,8 @@ export const errorTracker = new ErrorTracker({
     reportingInterval: 60000,
     suppressedErrors: [
         'ResizeObserver loop limit exceeded',
-        'Non-Error promise rejection captured'
-    ]
+        'Non-Error promise rejection captured',
+    ],
 });
 
 // Export default

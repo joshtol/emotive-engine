@@ -38,25 +38,29 @@ export class RecordingStateManager {
      * @returns {Object} Chain target for method chaining
      */
     startRecording() {
-        return this.errorBoundary.wrap(() => {
-            if (this._state.recording) {
-                // Already recording
+        return this.errorBoundary.wrap(
+            () => {
+                if (this._state.recording) {
+                    // Already recording
+                    return this._chainTarget;
+                }
+
+                this._state.recording = true;
+
+                // Update renderer if using Emotive style
+                if (this.renderer && this.renderer.startRecording) {
+                    this.renderer.startRecording();
+                }
+
+                // Emit recording started event
+                this._emit('recordingStarted');
+
+                // Recording started
                 return this._chainTarget;
-            }
-
-            this._state.recording = true;
-
-            // Update renderer if using Emotive style
-            if (this.renderer && this.renderer.startRecording) {
-                this.renderer.startRecording();
-            }
-
-            // Emit recording started event
-            this._emit('recordingStarted');
-
-            // Recording started
-            return this._chainTarget;
-        }, 'recording-start', this._chainTarget)();
+            },
+            'recording-start',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -64,24 +68,28 @@ export class RecordingStateManager {
      * @returns {Object} Chain target for method chaining
      */
     stopRecording() {
-        return this.errorBoundary.wrap(() => {
-            if (!this._state.recording) {
-                // Not currently recording
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this._state.recording) {
+                    // Not currently recording
+                    return this._chainTarget;
+                }
+
+                this._state.recording = false;
+
+                // Update renderer if using Emotive style
+                if (this.renderer && this.renderer.stopRecording) {
+                    this.renderer.stopRecording();
+                }
+
+                // Emit recording stopped event
+                this._emit('recordingStopped');
+
+                // Recording stopped
                 return this._chainTarget;
-            }
-
-            this._state.recording = false;
-
-            // Update renderer if using Emotive style
-            if (this.renderer && this.renderer.stopRecording) {
-                this.renderer.stopRecording();
-            }
-
-            // Emit recording stopped event
-            this._emit('recordingStopped');
-
-            // Recording stopped
-            return this._chainTarget;
-        }, 'recording-stop', this._chainTarget)();
+            },
+            'recording-stop',
+            this._chainTarget
+        )();
     }
 }

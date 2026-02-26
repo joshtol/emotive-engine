@@ -85,7 +85,7 @@ export class BaileysBeads {
                 transparent: true,
                 depthWrite: false,
                 opacity: 0,
-                color: this._tempColor.setRGB(1.0, 0.3, 0.3) // Red-tinted (reuse temp color)
+                color: this._tempColor.setRGB(1.0, 0.3, 0.3), // Red-tinted (reuse temp color)
             });
             const redSprite = new THREE.Sprite(redMaterial);
             redSprite.scale.set(0.08, 0.08, 1);
@@ -98,7 +98,7 @@ export class BaileysBeads {
                 transparent: true,
                 depthWrite: false,
                 opacity: 0,
-                color: this._tempColor.setRGB(0.8, 1.0, 0.8) // Slight green tint (reuse temp color)
+                color: this._tempColor.setRGB(0.8, 1.0, 0.8), // Slight green tint (reuse temp color)
             });
             const greenSprite = new THREE.Sprite(greenMaterial);
             greenSprite.scale.set(0.08, 0.08, 1);
@@ -111,7 +111,7 @@ export class BaileysBeads {
                 transparent: true,
                 depthWrite: false,
                 opacity: 0,
-                color: this._tempColor.setRGB(0.3, 0.5, 1.0) // Blue-tinted (reuse temp color)
+                color: this._tempColor.setRGB(0.3, 0.5, 1.0), // Blue-tinted (reuse temp color)
             });
             const blueSprite = new THREE.Sprite(blueMaterial);
             blueSprite.scale.set(0.08, 0.08, 1);
@@ -128,7 +128,7 @@ export class BaileysBeads {
                 currentOpacity: 0,
                 redSprite,
                 greenSprite,
-                blueSprite
+                blueSprite,
             };
 
             this.beads.push(beadGroup);
@@ -155,13 +155,13 @@ export class BaileysBeads {
         // RULE OF THIRDS: 3 hero beads positioned 120° apart
         const baseHeroAngle = seededRandom() * Math.PI * 2; // Random rotation
         for (let h = 0; h < this.heroBeadCount; h++) {
-            const heroAngle = baseHeroAngle + (h * Math.PI * 2 / 3); // 120° spacing
+            const heroAngle = baseHeroAngle + (h * Math.PI * 2) / 3; // 120° spacing
 
             valleys.push({
                 angle: heroAngle,
                 depth: 0.8 + seededRandom() * 0.2, // Hero beads: deeper valleys (0.8-1.0)
                 baseIntensity: 0.8 + seededRandom() * 0.2, // Hero beads: brighter (0.8-1.0)
-                isHero: true
+                isHero: true,
             });
         }
 
@@ -169,7 +169,7 @@ export class BaileysBeads {
         for (let i = 0; i < this.supportBeadCount; i++) {
             // Assign to nearest hero bead (thirds grouping)
             const heroTarget = Math.floor(i / (this.supportBeadCount / 3));
-            const heroAngle = baseHeroAngle + (heroTarget * Math.PI * 2 / 3);
+            const heroAngle = baseHeroAngle + (heroTarget * Math.PI * 2) / 3;
 
             // Cluster around hero with varied offset
             const clusterOffset = (seededRandom() - 0.5) * 1.2; // ±0.6 radians (~±34°)
@@ -178,7 +178,7 @@ export class BaileysBeads {
                 angle: heroAngle + clusterOffset,
                 depth: 0.3 + seededRandom() * 0.5, // Supporting beads: shallower (0.3-0.8)
                 baseIntensity: 0.4 + seededRandom() * 0.4, // Supporting beads: dimmer (0.4-0.8)
-                isHero: false
+                isHero: false,
             });
         }
 
@@ -209,7 +209,7 @@ export class BaileysBeads {
         this._upVector.crossVectors(this._right, this._directionToCamera).normalize();
 
         for (const bead of this.beads) {
-            const {angle, redSprite, greenSprite, blueSprite, sizeMultiplier} = bead.userData;
+            const { angle, redSprite, greenSprite, blueSprite, sizeMultiplier } = bead.userData;
 
             // Position beads on a circle in screen space (perpendicular to camera view)
             // Calculate position on rim using right and up vectors (billboard-style)
@@ -266,9 +266,9 @@ export class BaileysBeads {
         } else {
             // Bailey's Beads are visible in the range 0.90 to 1.0 coverage
             // They fade in as coverage approaches 0.95 and fade out at exactly 1.0
-            const beadStart = 0.90; // Start showing beads
-            const beadFull = 0.97;  // Full intensity
-            const beadEnd = 1.00;   // Completely hidden at totality
+            const beadStart = 0.9; // Start showing beads
+            const beadFull = 0.97; // Full intensity
+            const beadEnd = 1.0; // Completely hidden at totality
             for (const bead of this.beads) {
                 let targetOpacity = 0;
 
@@ -282,7 +282,9 @@ export class BaileysBeads {
                     // Each bead becomes visible/invisible based on its angular position
                     // Simulate the moon's edge sweeping across the sun
                     const phaseAngle = normalizedCoverage * Math.PI * 2;
-                    const angleToPhase = Math.abs(((bead.userData.angle - phaseAngle + Math.PI) % (Math.PI * 2)) - Math.PI);
+                    const angleToPhase = Math.abs(
+                        ((bead.userData.angle - phaseAngle + Math.PI) % (Math.PI * 2)) - Math.PI
+                    );
 
                     // Beads near the current phase are visible
                     const angularProximity = Math.max(0, 1 - angleToPhase / 1.0);
@@ -293,7 +295,11 @@ export class BaileysBeads {
                         intensityMultiplier = (coverage - beadStart) / (beadFull - beadStart);
                     }
 
-                    targetOpacity = angularProximity * bead.userData.baseIntensity * intensityMultiplier * bead.userData.depth;
+                    targetOpacity =
+                        angularProximity *
+                        bead.userData.baseIntensity *
+                        intensityMultiplier *
+                        bead.userData.depth;
 
                     // Multiply by brightness multiplier to make beads much more visible
                     // Increased from 5.0 → 15.0 → 30.0 → 50.0 → 100.0 → 200.0 for maximum brilliance
@@ -308,7 +314,7 @@ export class BaileysBeads {
         // Use consistent fade speed for smooth animation
         const fadeSpeed = 3.0;
         for (const bead of this.beads) {
-            const {redSprite, greenSprite, blueSprite} = bead.userData;
+            const { redSprite, greenSprite, blueSprite } = bead.userData;
             const diff = bead.userData.targetOpacity - bead.userData.currentOpacity;
             bead.userData.currentOpacity += diff * fadeSpeed * (deltaTime / 1000); // Convert ms to seconds
 
@@ -337,7 +343,7 @@ export class BaileysBeads {
      */
     dispose() {
         for (const bead of this.beads) {
-            const {redSprite, greenSprite, blueSprite} = bead.userData;
+            const { redSprite, greenSprite, blueSprite } = bead.userData;
 
             // Dispose red sprite
             if (redSprite.material.map) {

@@ -30,14 +30,14 @@ export default {
     config: {
         duration: 500,
         musicalDuration: { musical: true, beats: 1 },
-        distance: 0.25,       // Lunge distance
+        distance: 0.25, // Lunge distance
         direction: 'forward', // 'forward', 'left', 'right'
-        recover: true,        // Return to start position
+        recover: true, // Return to start position
         strength: 1.0,
         particleMotion: {
             type: 'lunge',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     '3d': {
@@ -63,14 +63,14 @@ export default {
             let lungeAmount;
             if (progress < 0.3) {
                 // Quick thrust forward
-                lungeAmount = (progress / 0.3);
+                lungeAmount = progress / 0.3;
                 lungeAmount = 1 - Math.pow(1 - lungeAmount, 3); // Ease out
             } else if (progress < 0.6) {
                 // Hold
                 lungeAmount = 1.0;
             } else if (recover) {
                 // Recover
-                lungeAmount = 1 - ((progress - 0.6) / 0.4);
+                lungeAmount = 1 - (progress - 0.6) / 0.4;
                 lungeAmount = Math.pow(lungeAmount, 2); // Ease in
             } else {
                 lungeAmount = 1.0;
@@ -97,8 +97,8 @@ export default {
                 rotation: [tiltX, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

@@ -58,19 +58,19 @@ const WATERFLOW_CONFIG = {
                 axis: 'y',
                 start: 'center',
                 end: 'center',
-                startOffset: 0.25,          // Upper position
+                startOffset: 0.25, // Upper position
                 endOffset: 0.25,
                 easing: 'linear',
                 startScale: 0.7,
                 endScale: 1.1,
                 startDiameter: 1.0,
                 endDiameter: 1.3,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'ring',
                 count: 3,
-                phaseOffset: 0.2
+                phaseOffset: 0.2,
             },
             count: 3,
             scale: 1.0,
@@ -86,23 +86,23 @@ const WATERFLOW_CONFIG = {
                 drift: {
                     speed: 0.45,
                     distance: 2.2,
-                    direction: { x: 1.0, y: 0.05, z: 0 },  // Slight upward arc
-                    easing: 'easeInOut'
+                    direction: { x: 1.0, y: 0.05, z: 0 }, // Slight upward arc
+                    easing: 'easeInOut',
                 },
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 4, scale: 1.3, weight: 1.0 },    // WAVES
+                    primary: { pattern: 4, scale: 1.3, weight: 1.0 }, // WAVES
                     secondary: { pattern: 1, scale: 0.6, weight: 0.35 }, // STREAKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.2,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: { type: 3, strength: 0.2, scale: 0.25, speed: 1.5, blend: 'multiply' },
                 rotate: [
                     { axis: 'z', rotations: 0.25, phase: 0 },
                     { axis: 'z', rotations: -0.2, phase: 120 },
-                    { axis: 'z', rotations: 0.3, phase: 240 }
+                    { axis: 'z', rotations: 0.3, phase: 240 },
                 ],
                 pulse: { amplitude: 0.07, frequency: 2, easing: 'easeInOut' },
                 blending: 'additive',
@@ -110,11 +110,11 @@ const WATERFLOW_CONFIG = {
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.75, arcSpeed: 0.8, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
+                        orientationOverride: 'camera',
+                    },
                 },
                 // No atmospherics — gentle flow, no violent water motion
-            }
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Lower current - wave-curls (slightly behind)
@@ -125,19 +125,19 @@ const WATERFLOW_CONFIG = {
                 axis: 'y',
                 start: 'center',
                 end: 'center',
-                startOffset: -0.2,          // Lower position
+                startOffset: -0.2, // Lower position
                 endOffset: -0.2,
                 easing: 'linear',
                 startScale: 0.6,
                 endScale: 1.0,
                 startDiameter: 0.9,
                 endDiameter: 1.2,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'ring',
                 count: 2,
-                phaseOffset: 0.25
+                phaseOffset: 0.25,
             },
             count: 2,
             scale: 0.9,
@@ -153,8 +153,8 @@ const WATERFLOW_CONFIG = {
                 drift: {
                     speed: 0.4,
                     distance: 2.0,
-                    direction: { x: 1.0, y: -0.03, z: 0 },  // Slight downward drift
-                    easing: 'easeInOut'
+                    direction: { x: 1.0, y: -0.03, z: 0 }, // Slight downward drift
+                    easing: 'easeInOut',
                 },
                 cutout: {
                     strength: 0.45,
@@ -163,12 +163,12 @@ const WATERFLOW_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.0,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: { type: 3, strength: 0.2, scale: 0.25, speed: 1.5, blend: 'multiply' },
                 rotate: [
                     { axis: 'z', rotations: -0.3, phase: 45 },
-                    { axis: 'z', rotations: 0.25, phase: 225 }
+                    { axis: 'z', rotations: 0.25, phase: 225 },
                 ],
                 pulse: { amplitude: 0.06, frequency: 2.5, easing: 'easeInOut' },
                 blending: 'additive',
@@ -176,11 +176,11 @@ const WATERFLOW_CONFIG = {
                 modelOverrides: {
                     'wave-curl': {
                         shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 1.2, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Wobble - smooth flowing motion
@@ -195,7 +195,7 @@ const WATERFLOW_CONFIG = {
     glowColor: [0.3, 0.55, 0.9],
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.4,
-    glowPulseRate: 2
+    glowPulseRate: 2,
 };
 
 /**

@@ -54,48 +54,52 @@ const LIGHTSURGE_CONFIG = {
                 axis: 'y',
                 start: 'bottom',
                 end: 'above',
-                easing: 'easeOut',          // Fast start, slowing at peak
+                easing: 'easeOut', // Fast start, slowing at peak
                 startScale: 1.4,
-                endScale: 0.9,              // Narrowing at top
-                startDiameter: 2.0,         // Wide eruption base
-                endDiameter: 1.0,           // Tight plume top
-                orientation: 'flat'
+                endScale: 0.9, // Narrowing at top
+                startDiameter: 2.0, // Wide eruption base
+                endDiameter: 1.0, // Tight plume top
+                orientation: 'flat',
             },
             formation: {
                 type: 'stack',
                 count: 3,
                 spacing: 0.1,
-                phaseOffset: 0.03
+                phaseOffset: 0.03,
             },
-            count: 3, scale: 1.2, models: ['sun-ring'],
+            count: 3,
+            scale: 1.2,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.55,
-                stagger: 0.04,              // Fast sequential eruption
+                stagger: 0.04, // Fast sequential eruption
                 enter: { type: 'scale', duration: 0.06, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.06, geometryStability: true },
                 pulse: { amplitude: 0.1, frequency: 5, easing: 'easeInOut' },
                 emissive: { min: 1.2, max: 2.5, frequency: 6, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'firefly',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.4,
-                    sizeScale: 1.0,
-                    progressCurve: 'rampUp',
-                    velocityInheritance: 0.5,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'firefly',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.4,
+                        sizeScale: 1.0,
+                        progressCurve: 'rampUp',
+                        velocityInheritance: 0.5,
+                    },
+                ],
                 rotate: { axis: 'z', rotations: 0.5, phase: 0 },
                 blending: 'additive',
                 renderOrder: 15,
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 2.0, arcCount: 1 },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -107,37 +111,44 @@ const LIGHTSURGE_CONFIG = {
                 count: 3,
                 radius: 0.1,
                 endRadius: 0.6,
-                angleSpread: 120,           // Narrow upward cone
-                startAngle: 60,             // Mostly upward (60°-180°)
+                angleSpread: 120, // Narrow upward cone
+                startAngle: 60, // Mostly upward (60°-180°)
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 0.7,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 3, scale: 0.7, models: ['sparkle-star'],
+            count: 3,
+            scale: 0.7,
+            models: ['sparkle-star'],
             animation: {
-                appearAt: 0.15,             // After geyser column starts
+                appearAt: 0.15, // After geyser column starts
                 disappearAt: 0.5,
                 stagger: 0.03,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.3, max: 2.5, frequency: 8, pattern: 'sine' },
-                drift: { speed: 0.8, distance: 0.4, direction: { x: 0, y: 1.0, z: 0 }, easing: 'easeOut' },
+                drift: {
+                    speed: 0.8,
+                    distance: 0.4,
+                    direction: { x: 0, y: 1.0, z: 0 },
+                    easing: 'easeOut',
+                },
                 scaleVariance: 0.25,
                 blending: 'additive',
                 renderOrder: 17,
-            }
-        }
+            },
+        },
     ],
 
     decayRate: 0.15,
-    glowColor: [1.0, 0.95, 0.70],
+    glowColor: [1.0, 0.95, 0.7],
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.6,
     glowFlickerRate: 5,
     scaleVibration: 0.015,
     scaleFrequency: 4,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTSURGE_CONFIG);

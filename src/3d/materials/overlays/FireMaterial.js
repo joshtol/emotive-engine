@@ -46,10 +46,7 @@ function lerp3(low, mid, high, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createFireMaterial(options = {}) {
-    const {
-        temperature = 0.5,
-        opacity = 0.6
-    } = options;
+    const { temperature = 0.5, opacity = 0.6 } = options;
 
     const pulseSpeed = lerp(1.0, 3.0, temperature);
 
@@ -59,10 +56,10 @@ export function createFireMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -80,7 +77,7 @@ export function createFireMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uTemperature;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -215,7 +212,7 @@ export function createFireMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.temperature = temperature;
@@ -244,7 +241,7 @@ export function getFirePhysics(temperature = 0.5) {
         lifetime: lerp3(2.0, 1.5, 0.8, temperature),
         fadeOut: true,
         riseSpeed: lerp3(0.5, 1.0, 2.0, temperature),
-        flicker: true
+        flicker: true,
     };
 }
 
@@ -269,14 +266,14 @@ export function getFireCrackStyle(temperature = 0.5) {
         g = 0.9 + lt * 0.1;
         b = 0.3 + lt * 0.7;
     }
-    const hex = ((Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255));
+    const hex = (Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255);
 
     return {
         color: hex,
         emissive: lerp3(1.0, 2.0, 4.0, temperature),
         animated: true,
         pattern: 'organic',
-        flickerSpeed: lerp3(1.0, 2.0, 4.0, temperature)
+        flickerSpeed: lerp3(1.0, 2.0, 4.0, temperature),
     };
 }
 
@@ -284,5 +281,5 @@ export default {
     createFireMaterial,
     updateFireMaterial,
     getFirePhysics,
-    getFireCrackStyle
+    getFireCrackStyle,
 };

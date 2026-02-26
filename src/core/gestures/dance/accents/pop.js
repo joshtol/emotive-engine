@@ -14,7 +14,7 @@ export default {
     config: {
         duration: 200,
         musicalDuration: { musical: true, beats: 0.5 },
-        strength: 1.0
+        strength: 1.0,
     },
 
     rhythm: {
@@ -24,7 +24,7 @@ export default {
         durationSync: { mode: 'beats', beats: 0.5 },
         interruptible: true,
         priority: 5,
-        blendable: true
+        blendable: true,
     },
 
     apply: (_particle, _progress, _params) => false,
@@ -43,7 +43,7 @@ export default {
                 envelope = 1 - Math.pow(1 - envelope, 3); // Ease out for punch
             } else {
                 // Quick decay
-                envelope = 1 - ((progress - 0.15) / 0.85);
+                envelope = 1 - (progress - 0.15) / 0.85;
                 envelope = Math.pow(envelope, 2); // Ease in for snap back
             }
 
@@ -55,8 +55,8 @@ export default {
                 scaleBoost: 1.0 + envelope * 0.08 * strength,
                 glowBoost: envelope * 0.3 * strength,
                 // Slight upward pop
-                positionBoost: [0, envelope * 0.02 * strength, 0]
+                positionBoost: [0, envelope * 0.02 * strength, 0],
             };
-        }
-    }
+        },
+    },
 };

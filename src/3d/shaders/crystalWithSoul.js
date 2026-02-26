@@ -41,12 +41,9 @@ import { sssGLSL } from './utils/subsurfaceScattering.js';
 import {
     deformationUniformsGLSL,
     deformationVertexGLSL,
-    deformationFragmentGLSL
+    deformationFragmentGLSL,
 } from './utils/deformation.js';
-import {
-    crackUniformsGLSL,
-    crackFragmentGLSL
-} from './utils/objectSpaceCracks.js';
+import { crackUniformsGLSL, crackFragmentGLSL } from './utils/objectSpaceCracks.js';
 
 /**
  * Vertex shader for frosted crystal
@@ -906,7 +903,7 @@ void main() {
 export function getCrystalShaders() {
     return {
         vertexShader: crystalVertexShader,
-        fragmentShader: crystalFragmentShader
+        fragmentShader: crystalFragmentShader,
     };
 }
 
@@ -921,51 +918,51 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     opacity: 1.0,
 
     // Crystal appearance (tuned for crystal.obj)
-    frostiness: 0.55,           // Frosted translucency (slightly less opaque)
-    fresnelPower: 2.8,          // Edge brightness falloff (slightly sharper)
-    fresnelIntensity: 0.25,     // Edge brightness strength (subtle rim, less bloom blowout)
-    innerGlowStrength: 0.55,    // How much soul shows through (boosted)
-    surfaceRoughness: 0.12,     // Surface texture variation (subtler)
+    frostiness: 0.55, // Frosted translucency (slightly less opaque)
+    fresnelPower: 2.8, // Edge brightness falloff (slightly sharper)
+    fresnelIntensity: 0.25, // Edge brightness strength (subtle rim, less bloom blowout)
+    innerGlowStrength: 0.55, // How much soul shows through (boosted)
+    surfaceRoughness: 0.12, // Surface texture variation (subtler)
 
     // Enhanced lighting
-    shadowDarkness: 0.60,       // How dark shadows can get (0-1) - strong shadows
-    specularIntensity: 0.5,     // Edge highlight brightness (reduced to prevent bloom blowout)
-    specularPower: 28.0,        // Specular falloff sharpness
-    transmissionContrast: 1.0,  // Thin/thick brightness ratio
-    minBrightness: 0.005,       // Minimum brightness floor (near-black for gemstones)
+    shadowDarkness: 0.6, // How dark shadows can get (0-1) - strong shadows
+    specularIntensity: 0.5, // Edge highlight brightness (reduced to prevent bloom blowout)
+    specularPower: 28.0, // Specular falloff sharpness
+    transmissionContrast: 1.0, // Thin/thick brightness ratio
+    minBrightness: 0.005, // Minimum brightness floor (near-black for gemstones)
 
     // Noise scales
-    surfaceNoiseScale: 1.50,    // Scale of surface frost pattern
-    noiseFrequency: 1.33,       // Frequency of hash noise pattern
+    surfaceNoiseScale: 1.5, // Scale of surface frost pattern
+    noiseFrequency: 1.33, // Frequency of hash noise pattern
 
     // Internal caustics
-    causticIntensity: 0.8,      // Brightness of internal caustic hot spots
-    causticScale: 2.0,          // Scale of caustic pattern
-    causticSpeed: 0.12,         // Animation speed of caustics
+    causticIntensity: 0.8, // Brightness of internal caustic hot spots
+    causticScale: 2.0, // Scale of caustic pattern
+    causticSpeed: 0.12, // Animation speed of caustics
 
     // Texture
-    textureStrength: 0.55,      // How much texture affects appearance
+    textureStrength: 0.55, // How much texture affects appearance
 
     // Soul refraction - optical lensing of inner soul through crystal
-    refractionIndex: 1.5,       // Index of refraction (1.5 glass, 2.4 diamond)
-    refractionStrength: 0.15,   // Distortion magnitude — kept low to avoid facet-normal jitter
-    resolution: [1920, 1080],   // Screen resolution (updated at runtime)
+    refractionIndex: 1.5, // Index of refraction (1.5 glass, 2.4 diamond)
+    refractionStrength: 0.15, // Distortion magnitude — kept low to avoid facet-normal jitter
+    resolution: [1920, 1080], // Screen resolution (updated at runtime)
     soulTextureSize: [1920, 1080], // Soul render target size (updated at runtime)
-    soulScreenCenter: [0.5, 0.5],  // Soul center in screen UV (updated at runtime)
+    soulScreenCenter: [0.5, 0.5], // Soul center in screen UV (updated at runtime)
 
     // Physically-based subsurface scattering (crystal preset as default)
-    sssStrength: 0.65,                      // Overall SSS intensity (boosted)
-    sssAbsorption: [2.4, 2.5, 2.8],         // Absorption coefficients RGB (crystal - cool blue tint)
-    sssScatterDistance: [0.35, 0.4, 0.45],  // Mean free path / scatter radius RGB (increased)
-    sssThicknessBias: 0.18,                 // Base thickness value
-    sssThicknessScale: 0.60,                // Thickness multiplier
-    sssCurvatureScale: 1.80,                // Curvature influence on SSS
-    sssAmbient: 0.30,                       // Ambient SSS contribution (boosted for visibility)
-    sssLightDir: [0.5, 1.0, 0.8],           // Primary light direction
-    sssLightColor: [1.0, 0.98, 0.95],       // Light color (warm white)
+    sssStrength: 0.65, // Overall SSS intensity (boosted)
+    sssAbsorption: [2.4, 2.5, 2.8], // Absorption coefficients RGB (crystal - cool blue tint)
+    sssScatterDistance: [0.35, 0.4, 0.45], // Mean free path / scatter radius RGB (increased)
+    sssThicknessBias: 0.18, // Base thickness value
+    sssThicknessScale: 0.6, // Thickness multiplier
+    sssCurvatureScale: 1.8, // Curvature influence on SSS
+    sssAmbient: 0.3, // Ambient SSS contribution (boosted for visibility)
+    sssLightDir: [0.5, 1.0, 0.8], // Primary light direction
+    sssLightColor: [1.0, 0.98, 0.95], // Light color (warm white)
 
     // Emotion color bleed - how much soul color tints gem material
-    emotionColorBleed: 0.0,                 // 0 = gem color only, 1 = full emotion tint
+    emotionColorBleed: 0.0, // 0 = gem color only, 1 = full emotion tint
 
     // Component-specific blend layers (all disabled by default)
     // Shell layers - affect frosted crystal shell
@@ -998,5 +995,5 @@ export const CRYSTAL_DEFAULT_UNIFORMS = {
     sssLayer1Enabled: 0,
     sssLayer2Mode: 0,
     sssLayer2Strength: 0.0,
-    sssLayer2Enabled: 0
+    sssLayer2Enabled: 0,
 };

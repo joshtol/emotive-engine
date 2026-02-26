@@ -27,36 +27,36 @@ export class EpisodicEffectController {
                 startTime: 0,
                 duration: 0,
                 intensity: 0,
-                nextTrigger: 3000 + Math.random() * 2000 // 3-5 seconds
+                nextTrigger: 3000 + Math.random() * 2000, // 3-5 seconds
             },
             confident: {
                 active: false,
                 startTime: 0,
                 duration: 0,
                 intensity: 0,
-                nextTrigger: 4000 + Math.random() * 2000 // 4-6 seconds
+                nextTrigger: 4000 + Math.random() * 2000, // 4-6 seconds
             },
             tired: {
                 active: false,
                 startTime: 0,
                 duration: 0,
                 intensity: 0,
-                nextTrigger: 5000 + Math.random() * 2000 // 5-7 seconds
+                nextTrigger: 5000 + Math.random() * 2000, // 5-7 seconds
             },
             intense: {
                 active: false,
                 startTime: 0,
                 duration: 0,
                 intensity: 0,
-                nextTrigger: 3000 + Math.random() * 3000 // 3-6 seconds
+                nextTrigger: 3000 + Math.random() * 3000, // 3-6 seconds
             },
             subdued: {
                 active: false,
                 startTime: 0,
                 duration: 0,
                 intensity: 0,
-                nextTrigger: 4000 + Math.random() * 3000 // 4-7 seconds
-            }
+                nextTrigger: 4000 + Math.random() * 3000, // 4-7 seconds
+            },
         };
     }
 
@@ -93,32 +93,32 @@ export class EpisodicEffectController {
             episode.startTime = now;
 
             // Set episode parameters based on undertone type
-            switch(currentUndertone) {
-            case 'nervous':
-                episode.duration = 500 + Math.random() * 500; // 0.5-1 second
-                episode.intensity = 2 + Math.random(); // 2-3px flutter
-                episode.nextTrigger = now + 3000 + Math.random() * 2000; // 3-5 seconds
-                break;
-            case 'confident':
-                episode.duration = 1000 + Math.random() * 1000; // 1-2 seconds
-                episode.intensity = 0.15; // 15% size expansion
-                episode.nextTrigger = now + 4000 + Math.random() * 2000; // 4-6 seconds
-                break;
-            case 'tired':
-                episode.duration = 1000 + Math.random() * 2000; // 1-3 seconds
-                episode.intensity = 0.2; // 20% size reduction
-                episode.nextTrigger = now + 5000 + Math.random() * 2000; // 5-7 seconds
-                break;
-            case 'intense':
-                episode.duration = 500 + Math.random() * 500; // 0.5-1 second
-                episode.intensity = 0.5; // 50% glow boost, 5% size shrink
-                episode.nextTrigger = now + 3000 + Math.random() * 3000; // 3-6 seconds
-                break;
-            case 'subdued':
-                episode.duration = 2000 + Math.random() * 1000; // 2-3 seconds
-                episode.intensity = 0.3; // 30% glow dim, 10% size shrink
-                episode.nextTrigger = now + 4000 + Math.random() * 3000; // 4-7 seconds
-                break;
+            switch (currentUndertone) {
+                case 'nervous':
+                    episode.duration = 500 + Math.random() * 500; // 0.5-1 second
+                    episode.intensity = 2 + Math.random(); // 2-3px flutter
+                    episode.nextTrigger = now + 3000 + Math.random() * 2000; // 3-5 seconds
+                    break;
+                case 'confident':
+                    episode.duration = 1000 + Math.random() * 1000; // 1-2 seconds
+                    episode.intensity = 0.15; // 15% size expansion
+                    episode.nextTrigger = now + 4000 + Math.random() * 2000; // 4-6 seconds
+                    break;
+                case 'tired':
+                    episode.duration = 1000 + Math.random() * 2000; // 1-3 seconds
+                    episode.intensity = 0.2; // 20% size reduction
+                    episode.nextTrigger = now + 5000 + Math.random() * 2000; // 5-7 seconds
+                    break;
+                case 'intense':
+                    episode.duration = 500 + Math.random() * 500; // 0.5-1 second
+                    episode.intensity = 0.5; // 50% glow boost, 5% size shrink
+                    episode.nextTrigger = now + 3000 + Math.random() * 3000; // 3-6 seconds
+                    break;
+                case 'subdued':
+                    episode.duration = 2000 + Math.random() * 1000; // 2-3 seconds
+                    episode.intensity = 0.3; // 30% glow dim, 10% size shrink
+                    episode.nextTrigger = now + 4000 + Math.random() * 3000; // 4-7 seconds
+                    break;
             }
         }
 
@@ -130,49 +130,49 @@ export class EpisodicEffectController {
                 const progress = elapsed / episode.duration;
 
                 // Apply different effects based on undertone
-                switch(currentUndertone) {
-                case 'nervous': {
-                    // Quick shiver that settles
-                    const damping = 1 - progress;
-                    const frequency = 15;
-                    const flutter = Math.sin(progress * Math.PI * frequency) * damping;
-                    jitterX = flutter * episode.intensity;
-                    jitterY = flutter * episode.intensity * 0.7;
-                    break;
-                }
+                switch (currentUndertone) {
+                    case 'nervous': {
+                        // Quick shiver that settles
+                        const damping = 1 - progress;
+                        const frequency = 15;
+                        const flutter = Math.sin(progress * Math.PI * frequency) * damping;
+                        jitterX = flutter * episode.intensity;
+                        jitterY = flutter * episode.intensity * 0.7;
+                        break;
+                    }
 
-                case 'confident': {
-                    // Smooth chest puff that settles
-                    const puffCurve = Math.sin(progress * Math.PI); // Smooth rise and fall
-                    coreRadius *= (1 + episode.intensity * puffCurve);
-                    glowRadius *= (1 + episode.intensity * 0.5 * puffCurve);
-                    break;
-                }
+                    case 'confident': {
+                        // Smooth chest puff that settles
+                        const puffCurve = Math.sin(progress * Math.PI); // Smooth rise and fall
+                        coreRadius *= 1 + episode.intensity * puffCurve;
+                        glowRadius *= 1 + episode.intensity * 0.5 * puffCurve;
+                        break;
+                    }
 
-                case 'tired': {
-                    // Drowsy sag with slow recovery
-                    const sagCurve = Math.sin(progress * Math.PI * 0.5); // Slow droop
-                    coreRadius *= (1 - episode.intensity * sagCurve);
-                    // Also affect vertical position slightly
-                    jitterY += sagCurve * 5; // Slight downward sag
-                    break;
-                }
+                    case 'tired': {
+                        // Drowsy sag with slow recovery
+                        const sagCurve = Math.sin(progress * Math.PI * 0.5); // Slow droop
+                        coreRadius *= 1 - episode.intensity * sagCurve;
+                        // Also affect vertical position slightly
+                        jitterY += sagCurve * 5; // Slight downward sag
+                        break;
+                    }
 
-                case 'intense': {
-                    // Sharp contraction with glow surge
-                    const focusCurve = 1 - Math.cos(progress * Math.PI); // Quick in-out
-                    coreRadius *= (1 - 0.05 * focusCurve); // 5% shrink
-                    glowRadius *= (1 + episode.intensity * focusCurve); // 50% glow boost
-                    break;
-                }
+                    case 'intense': {
+                        // Sharp contraction with glow surge
+                        const focusCurve = 1 - Math.cos(progress * Math.PI); // Quick in-out
+                        coreRadius *= 1 - 0.05 * focusCurve; // 5% shrink
+                        glowRadius *= 1 + episode.intensity * focusCurve; // 50% glow boost
+                        break;
+                    }
 
-                case 'subdued': {
-                    // Gentle inward pull
-                    const withdrawCurve = Math.sin(progress * Math.PI * 0.5); // Slow pull
-                    coreRadius *= (1 - 0.1 * withdrawCurve); // 10% shrink
-                    glowRadius *= (1 - episode.intensity * withdrawCurve); // 30% glow dim
-                    break;
-                }
+                    case 'subdued': {
+                        // Gentle inward pull
+                        const withdrawCurve = Math.sin(progress * Math.PI * 0.5); // Slow pull
+                        coreRadius *= 1 - 0.1 * withdrawCurve; // 10% shrink
+                        glowRadius *= 1 - episode.intensity * withdrawCurve; // 30% glow dim
+                        break;
+                    }
                 }
             } else {
                 // Episode finished

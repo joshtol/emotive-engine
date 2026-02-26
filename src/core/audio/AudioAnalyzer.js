@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Audio Analysis System
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Real-time audio analysis for vocal visualization
@@ -18,12 +18,12 @@ export class AudioAnalyzer {
         this.audioContext = null;
         this.analyser = null;
         this.source = null;
-        this.elementSource = null;  // Track audio element source separately
+        this.elementSource = null; // Track audio element source separately
         this.dataArray = null;
         this.isAnalyzing = false;
         this.connectedElement = null;
-        this.gainNode = null;  // Store gain node for cleanup
-        this.animationFrameId = null;  // Track RAF for cleanup
+        this.gainNode = null; // Store gain node for cleanup
+        this.animationFrameId = null; // Track RAF for cleanup
 
         // Frequency band configuration
         this.frequencyBands = 32;
@@ -39,7 +39,7 @@ export class AudioAnalyzer {
         this.lastBeatTime = 0;
         this.beatCallbacks = [];
     }
-    
+
     /**
      * Initialize audio context and analyzer (only after user interaction)
      */
@@ -49,13 +49,16 @@ export class AudioAnalyzer {
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
-            
+
             // Resume context if it's suspended (common after user interaction)
             if (this.audioContext.state === 'suspended') {
-                return this.audioContext.resume().then(() => {
-                    this.createAnalyser();
-                    return true;
-                }).catch(() => false);
+                return this.audioContext
+                    .resume()
+                    .then(() => {
+                        this.createAnalyser();
+                        return true;
+                    })
+                    .catch(() => false);
             } else {
                 this.createAnalyser();
                 return true;
@@ -65,23 +68,23 @@ export class AudioAnalyzer {
             return false;
         }
     }
-    
+
     /**
      * Create analyser node and related components
      */
     createAnalyser() {
         if (!this.audioContext) return;
-        
+
         if (!this.analyser) {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048; // Good balance of frequency/time resolution
             this.analyser.smoothingTimeConstant = 0.5; // Moderate smoothing
-            
+
             const bufferLength = this.analyser.frequencyBinCount;
             this.dataArray = new Uint8Array(bufferLength);
         }
     }
-    
+
     /**
      * Connect audio element for analysis
      * @param {HTMLAudioElement} audioElement - Audio element to analyze
@@ -98,7 +101,7 @@ export class AudioAnalyzer {
                 this.elementSource.connect(this.analyser);
                 this.elementSource.connect(this.audioContext.destination); // Pass through audio
             }
-            this.source = this.elementSource;  // Set current source
+            this.source = this.elementSource; // Set current source
             this.connectedElement = audioElement;
             this.isAnalyzing = true;
 
@@ -107,7 +110,7 @@ export class AudioAnalyzer {
         } catch (error) {
             // If already connected, just restart analysis
             if (error.message && error.message.includes('already been used')) {
-                this.source = this.elementSource;  // Use existing source
+                this.source = this.elementSource; // Use existing source
                 this.connectedElement = audioElement;
                 this.isAnalyzing = true;
                 this.analyze();
@@ -116,8 +119,7 @@ export class AudioAnalyzer {
             }
         }
     }
-    
-    
+
     /**
      * Main analysis loop
      */
@@ -171,48 +173,49 @@ export class AudioAnalyzer {
             amplitude: this.currentAmplitude,
             vocalAmplitude,
             frequencies: this.currentFrequencies,
-            rawData: this.dataArray
+            rawData: this.dataArray,
         };
     }
-    
+
     /**
      * Extract frequency bands for shape deformation
      */
     extractFrequencyBands() {
         const bandsPerBin = Math.floor(this.dataArray.length / this.frequencyBands);
-        
+
         for (let i = 0; i < this.frequencyBands; i++) {
             let sum = 0;
             const startBin = i * bandsPerBin;
             const endBin = Math.min(startBin + bandsPerBin, this.dataArray.length);
-            
+
             for (let j = startBin; j < endBin; j++) {
                 sum += this.dataArray[j] / 255; // Normalize
             }
-            
+
             // Apply smoothing
             const newValue = sum / bandsPerBin;
-            this.currentFrequencies[i] = this.currentFrequencies[i] * this.smoothingFactor + 
-                                         newValue * (1 - this.smoothingFactor);
+            this.currentFrequencies[i] =
+                this.currentFrequencies[i] * this.smoothingFactor +
+                newValue * (1 - this.smoothingFactor);
         }
     }
-    
+
     /**
      * Simple beat detection
      */
     detectBeat(amplitude) {
         const now = performance.now();
-        
+
         // Simple threshold-based beat detection
         // Allow faster beats - 273ms = 220 BPM, but go down to 60ms for very fast tapping
         if (amplitude > this.beatThreshold && now - this.lastBeatTime > 60) {
             this.lastBeatTime = now;
-            
+
             // Trigger beat callbacks
             this.beatCallbacks.forEach(callback => callback(amplitude));
         }
     }
-    
+
     /**
      * Get current vocal instability (0-1)
      */
@@ -220,18 +223,18 @@ export class AudioAnalyzer {
         // Calculate instability based on frequency variance
         let variance = 0;
         const mean = this.currentFrequencies.reduce((a, b) => a + b, 0) / this.frequencyBands;
-        
+
         for (let i = 0; i < this.frequencyBands; i++) {
             variance += Math.pow(this.currentFrequencies[i] - mean, 2);
         }
-        
+
         variance = Math.sqrt(variance / this.frequencyBands);
-        
+
         // Combine with amplitude for overall instability
         const instability = Math.min(1, variance * 2 + this.currentAmplitude * 0.5);
         return instability;
     }
-    
+
     /**
      * Get analysis data formatted for ShapeMorpher
      */
@@ -239,17 +242,17 @@ export class AudioAnalyzer {
         return {
             instability: this.getVocalInstability(),
             frequencies: [...this.currentFrequencies],
-            amplitude: this.currentAmplitude
+            amplitude: this.currentAmplitude,
         };
     }
-    
+
     /**
      * Add beat detection callback
      */
     onBeat(callback) {
         this.beatCallbacks.push(callback);
     }
-    
+
     /**
      * Stop analysis
      */
@@ -281,7 +284,7 @@ export class AudioAnalyzer {
             this.source = this.elementSource;
         }
     }
-    
+
     /**
      * Resume audio context (needed after user interaction)
      */
@@ -290,7 +293,7 @@ export class AudioAnalyzer {
             await this.audioContext.resume();
         }
     }
-    
+
     /**
      * Cleanup
      */

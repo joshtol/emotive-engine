@@ -25,15 +25,15 @@ export default {
 
     // No shadow effects
     shadow: {
-        type: 'none'
+        type: 'none',
     },
 
     // Musical rhythm preferences
     rhythm: {
         syncMode: 'beat',
-        pulseWithBeat: true,      // Heart beats
+        pulseWithBeat: true, // Heart beats
         beatStrength: 1.2,
-        doubleTimeOnExcitement: true
+        doubleTimeOnExcitement: true,
     },
 
     // Emotion associations
@@ -41,7 +41,7 @@ export default {
 
     // Heart-specific configuration
     config: {
-        pointDown: true       // Traditional heart orientation
+        pointDown: true, // Traditional heart orientation
     },
 
     /**
@@ -57,18 +57,22 @@ export default {
 
             // Heart parametric equations
             const x = 16 * Math.pow(Math.sin(t), 3);
-            const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) -
-                      2 * Math.cos(3 * t) - Math.cos(4 * t));
+            const y = -(
+                13 * Math.cos(t) -
+                5 * Math.cos(2 * t) -
+                2 * Math.cos(3 * t) -
+                Math.cos(4 * t)
+            );
 
             // Normalize and scale
             points.push({
-                x: 0.5 + x / 32,  // Scale to fit 0-1 range
-                y: 0.5 + y / 32
+                x: 0.5 + x / 32, // Scale to fit 0-1 range
+                y: 0.5 + y / 32,
             });
         }
 
         return points;
     },
     // No custom render needed
-    render: null
+    render: null,
 };

@@ -55,7 +55,7 @@ export function createOofGesture(direction) {
         front: '👊',
         back: '😫',
         up: '🥊',
-        down: '💥'
+        down: '💥',
     };
 
     const descriptions = {
@@ -64,7 +64,7 @@ export function createOofGesture(direction) {
         front: 'Gut punch',
         back: 'Kidney shot',
         up: 'Uppercut',
-        down: 'Hammer fist'
+        down: 'Hammer fist',
     };
 
     return {
@@ -82,8 +82,8 @@ export function createOofGesture(direction) {
             particleMotion: {
                 type: 'oof',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -93,8 +93,8 @@ export function createOofGesture(direction) {
             timingSync: 'onBeat',
             accentResponse: {
                 enabled: true,
-                multiplier: 1.5
-            }
+                multiplier: 1.5,
+            },
         },
 
         '3d': {
@@ -120,18 +120,21 @@ export function createOofGesture(direction) {
                 // Dent curve: instant on, fade out
                 let dentStrength;
                 if (progress < 0.1) {
-                    dentStrength = progress / 0.1;  // Quick ramp up
+                    dentStrength = progress / 0.1; // Quick ramp up
                 } else if (progress < 0.4) {
-                    dentStrength = 1.0;  // Hold
+                    dentStrength = 1.0; // Hold
                 } else {
-                    dentStrength = 1 - (progress - 0.4) / 0.6;  // Fade out
+                    dentStrength = 1 - (progress - 0.4) / 0.6; // Fade out
                 }
 
                 const moveDist = 0.2 * strength;
                 const tiltAngle = 0.35 * strength;
 
-                let posX = 0, posY = 0, posZ = 0;
-                let rotX = 0, rotZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
+                let rotX = 0,
+                    rotZ = 0;
                 const rotY = 0;
 
                 // Impact point as VIEW SPACE offset from mesh center
@@ -142,53 +145,53 @@ export function createOofGesture(direction) {
                 //
                 // Crystal dimensions in view space after typical transforms:
                 // approximately 0.4-0.5 radius in X/Z, 0.8 in Y
-                const CRYSTAL_RADIUS = 0.4;  // Approximate radius in X/Z
-                const CRYSTAL_HEIGHT = 0.8;  // Half-height in Y
-                let impactPoint = [0, 0, CRYSTAL_RADIUS];  // Default: front (toward camera)
+                const CRYSTAL_RADIUS = 0.4; // Approximate radius in X/Z
+                const CRYSTAL_HEIGHT = 0.8; // Half-height in Y
+                let impactPoint = [0, 0, CRYSTAL_RADIUS]; // Default: front (toward camera)
 
                 switch (dir) {
-                case 'left':
-                    // Punch from camera's left - dent on left, recoil to the right
-                    posX = -recoil * moveDist;
-                    rotZ = recoil * tiltAngle;
-                    impactPoint = [CRYSTAL_RADIUS, 0, 0];  // Positive X in camera-relative = left side
-                    break;
+                    case 'left':
+                        // Punch from camera's left - dent on left, recoil to the right
+                        posX = -recoil * moveDist;
+                        rotZ = recoil * tiltAngle;
+                        impactPoint = [CRYSTAL_RADIUS, 0, 0]; // Positive X in camera-relative = left side
+                        break;
 
-                case 'right':
-                    // Punch from camera's right - dent on right, recoil to the left
-                    posX = recoil * moveDist;
-                    rotZ = -recoil * tiltAngle;
-                    impactPoint = [-CRYSTAL_RADIUS, 0, 0]; // Negative X in camera-relative = right side
-                    break;
+                    case 'right':
+                        // Punch from camera's right - dent on right, recoil to the left
+                        posX = recoil * moveDist;
+                        rotZ = -recoil * tiltAngle;
+                        impactPoint = [-CRYSTAL_RADIUS, 0, 0]; // Negative X in camera-relative = right side
+                        break;
 
-                case 'front':
-                    // Punch from camera toward mesh - impact on front (positive Z = toward camera)
-                    posZ = -recoil * moveDist;
-                    posY = -recoil * 0.03;
-                    rotX = recoil * tiltAngle * 0.7;
-                    impactPoint = [0, 0, CRYSTAL_RADIUS];
-                    break;
+                    case 'front':
+                        // Punch from camera toward mesh - impact on front (positive Z = toward camera)
+                        posZ = -recoil * moveDist;
+                        posY = -recoil * 0.03;
+                        rotX = recoil * tiltAngle * 0.7;
+                        impactPoint = [0, 0, CRYSTAL_RADIUS];
+                        break;
 
-                case 'back':
-                    // Punch from behind - impact on back (negative Z = away from camera)
-                    posZ = recoil * moveDist;
-                    rotX = -recoil * tiltAngle * 0.6;
-                    impactPoint = [0, 0, -CRYSTAL_RADIUS];
-                    break;
+                    case 'back':
+                        // Punch from behind - impact on back (negative Z = away from camera)
+                        posZ = recoil * moveDist;
+                        rotX = -recoil * tiltAngle * 0.6;
+                        impactPoint = [0, 0, -CRYSTAL_RADIUS];
+                        break;
 
-                case 'up':
-                    // Uppercut - impact on top (positive Y)
-                    posY = recoil * moveDist;
-                    rotX = -recoil * tiltAngle * 0.4;
-                    impactPoint = [0, CRYSTAL_HEIGHT, 0];
-                    break;
+                    case 'up':
+                        // Uppercut - impact on top (positive Y)
+                        posY = recoil * moveDist;
+                        rotX = -recoil * tiltAngle * 0.4;
+                        impactPoint = [0, CRYSTAL_HEIGHT, 0];
+                        break;
 
-                case 'down':
-                    // Hammer fist - impact on bottom (negative Y)
-                    posY = -recoil * moveDist;
-                    rotX = recoil * tiltAngle * 0.3;
-                    impactPoint = [0, -CRYSTAL_HEIGHT, 0];
-                    break;
+                    case 'down':
+                        // Hammer fist - impact on bottom (negative Y)
+                        posY = -recoil * moveDist;
+                        rotX = recoil * tiltAngle * 0.3;
+                        impactPoint = [0, -CRYSTAL_HEIGHT, 0];
+                        break;
                 }
 
                 // Glow flash on impact
@@ -212,13 +215,13 @@ export function createOofGesture(direction) {
                     // Core3DManager transforms this to mesh-local space for tidal locking
                     deformation: {
                         enabled: true,
-                        strength: dentStrength * strength * 2.0,  // Strong dent
-                        impactPoint,  // Camera-relative, transformed by Core3DManager
-                        falloffRadius: 0.5  // Radius of dent effect
-                    }
+                        strength: dentStrength * strength * 2.0, // Strong dent
+                        impactPoint, // Camera-relative, transformed by Core3DManager
+                        falloffRadius: 0.5, // Radius of dent effect
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 

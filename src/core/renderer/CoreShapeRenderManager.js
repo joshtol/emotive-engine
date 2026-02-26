@@ -59,7 +59,10 @@ export class CoreShapeRenderManager {
     renderSunEffects(coreX, coreY, coreRadius, currentShadow) {
         // Render sun effects BEFORE core (so they appear behind)
         let renderingSunEffects = false;
-        if (currentShadow && (currentShadow.type === 'sun' || currentShadow.type === 'solar-hybrid')) {
+        if (
+            currentShadow &&
+            (currentShadow.type === 'sun' || currentShadow.type === 'solar-hybrid')
+        ) {
             this.renderer.renderSunEffects(coreX, coreY, coreRadius, currentShadow);
             renderingSunEffects = true;
         }
@@ -82,7 +85,7 @@ export class CoreShapeRenderManager {
             scaleX: 1,
             scaleY: 1,
             rotation: totalRotation,
-            shapePoints
+            shapePoints,
         });
     }
 
@@ -109,37 +112,71 @@ export class CoreShapeRenderManager {
      */
     renderShadowEffects(coreX, coreY, coreRadius, currentShadow, shapePoints, renderingSunEffects) {
         // Check if we're dealing with solar transitions
-        const currentShape = this.renderer.shapeMorpher ? this.renderer.shapeMorpher.currentShape : null;
-        const targetShape = this.renderer.shapeMorpher ? this.renderer.shapeMorpher.targetShape : null;
-        const isTransitioningToSolar = this.renderer.shapeMorpher && targetShape === 'solar' && this.renderer.shapeMorpher.isTransitioning;
-        const isTransitioningFromSolar = this.renderer.shapeMorpher && currentShape === 'solar' && this.renderer.shapeMorpher.isTransitioning;
+        const currentShape = this.renderer.shapeMorpher
+            ? this.renderer.shapeMorpher.currentShape
+            : null;
+        const targetShape = this.renderer.shapeMorpher
+            ? this.renderer.shapeMorpher.targetShape
+            : null;
+        const isTransitioningToSolar =
+            this.renderer.shapeMorpher &&
+            targetShape === 'solar' &&
+            this.renderer.shapeMorpher.isTransitioning;
+        const isTransitioningFromSolar =
+            this.renderer.shapeMorpher &&
+            currentShape === 'solar' &&
+            this.renderer.shapeMorpher.isTransitioning;
         const isAtSolar = currentShadow && currentShadow.type === 'solar-hybrid';
 
         // Check specific transition directions
-        const isSolarToMoon = this.renderer.shapeMorpher && this.renderer.shapeMorpher.isTransitioning &&
-            currentShape === 'solar' && targetShape === 'moon';
-        const isMoonToSolar = this.renderer.shapeMorpher && this.renderer.shapeMorpher.isTransitioning &&
-            currentShape === 'moon' && targetShape === 'solar';
+        const isSolarToMoon =
+            this.renderer.shapeMorpher &&
+            this.renderer.shapeMorpher.isTransitioning &&
+            currentShape === 'solar' &&
+            targetShape === 'moon';
+        const isMoonToSolar =
+            this.renderer.shapeMorpher &&
+            this.renderer.shapeMorpher.isTransitioning &&
+            currentShape === 'moon' &&
+            targetShape === 'solar';
 
         // Render moon/lunar shadows AFTER core AND sparkles (as top overlay)
         // Always render moon shadow EXCEPT when transitioning FROM moon TO solar
-        if (currentShadow && (currentShadow.type === 'crescent' || currentShadow.type === 'lunar') &&
-            !isMoonToSolar) {
+        if (
+            currentShadow &&
+            (currentShadow.type === 'crescent' || currentShadow.type === 'lunar') &&
+            !isMoonToSolar
+        ) {
             // Shadow is rendered in the already-rotated coordinate space
-            this.renderer.renderMoonShadow(coreX, coreY, coreRadius, currentShadow, shapePoints, false, 0);
+            this.renderer.renderMoonShadow(
+                coreX,
+                coreY,
+                coreRadius,
+                currentShadow,
+                shapePoints,
+                false,
+                0
+            );
         }
 
         // For solar-hybrid, render lunar overlay on top of sun
         // Skip when transitioning FROM solar TO moon (let moon's shadow handle it)
-        if (((isAtSolar && currentShadow.lunarOverlay) || isTransitioningToSolar || isTransitioningFromSolar) &&
-            !isSolarToMoon) {
+        if (
+            ((isAtSolar && currentShadow.lunarOverlay) ||
+                isTransitioningToSolar ||
+                isTransitioningFromSolar) &&
+            !isSolarToMoon
+        ) {
             // Use the lunar overlay from solar definition
-            const lunarShadow = (isAtSolar && currentShadow.lunarOverlay) ? currentShadow.lunarOverlay : {
-                type: 'lunar',
-                coverage: 1.0,
-                color: 'rgba(0, 0, 0, 1.0)',
-                progression: 'center'
-            };
+            const lunarShadow =
+                isAtSolar && currentShadow.lunarOverlay
+                    ? currentShadow.lunarOverlay
+                    : {
+                          type: 'lunar',
+                          coverage: 1.0,
+                          color: 'rgba(0, 0, 0, 1.0)',
+                          progression: 'center',
+                      };
 
             // Calculate shadow offset for Bailey's Beads
             let shadowOffsetX = 0;
@@ -163,7 +200,14 @@ export class CoreShapeRenderManager {
             }
 
             // Render the shadow
-            this.renderer.renderMoonShadow(coreX, coreY, coreRadius, lunarShadow, shapePoints, true);
+            this.renderer.renderMoonShadow(
+                coreX,
+                coreY,
+                coreRadius,
+                lunarShadow,
+                shapePoints,
+                true
+            );
 
             // Render Bailey's Beads during transitions
             // Show beads when transitioning TO solar (which will have rays) or FROM solar (which had rays)
@@ -171,13 +215,25 @@ export class CoreShapeRenderManager {
             const willHaveSunEffects = isTransitioningToSolar || renderingSunEffects;
 
             if ((isTransitioningToSolar || isTransitioningFromSolar) && willHaveSunEffects) {
-                this.renderer.renderBaileysBeads(coreX, coreY, coreRadius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, true);
+                this.renderer.renderBaileysBeads(
+                    coreX,
+                    coreY,
+                    coreRadius,
+                    shadowOffsetX,
+                    shadowOffsetY,
+                    morphProgress,
+                    isTransitioningToSolar,
+                    true
+                );
 
                 // Trigger chromatic aberration when shadow is near center
-                const shadowNearCenter = Math.abs(shadowOffsetX) < 30 && Math.abs(shadowOffsetY) < 30;
+                const shadowNearCenter =
+                    Math.abs(shadowOffsetX) < 30 && Math.abs(shadowOffsetY) < 30;
                 if (shadowNearCenter && this.renderer.specialEffects) {
                     // Stronger aberration as shadow gets closer to center
-                    const distance = Math.sqrt(shadowOffsetX * shadowOffsetX + shadowOffsetY * shadowOffsetY);
+                    const distance = Math.sqrt(
+                        shadowOffsetX * shadowOffsetX + shadowOffsetY * shadowOffsetY
+                    );
                     const intensity = Math.max(0.1, 0.5 * (1 - distance / 30));
                     this.renderer.specialEffects.triggerChromaticAberration(intensity);
                 }
@@ -224,7 +280,14 @@ export class CoreShapeRenderManager {
         this.renderSparkles(deltaTime);
 
         // Render shadow effects
-        this.renderShadowEffects(coreX, coreY, coreRadius, currentShadow, shapePoints, renderingSunEffects);
+        this.renderShadowEffects(
+            coreX,
+            coreY,
+            coreRadius,
+            currentShadow,
+            shapePoints,
+            renderingSunEffects
+        );
 
         // Cleanup
         this.cleanup(totalRotation);

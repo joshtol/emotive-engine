@@ -32,21 +32,21 @@ export default {
     config: {
         duration: 1500,
         musicalDuration: { musical: true, beats: 4 },
-        swingAngle: 0.4,      // Max swing angle (radians)
-        swings: 2,            // Number of full swings
-        damping: 0.3,         // How much swing reduces over time
+        swingAngle: 0.4, // Max swing angle (radians)
+        swings: 2, // Number of full swings
+        damping: 0.3, // How much swing reduces over time
         strength: 1.0,
         particleMotion: {
             type: 'pendulum',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'beats', beats: 4 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -81,8 +81,8 @@ export default {
                 rotation: [0, 0, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

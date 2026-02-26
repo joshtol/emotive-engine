@@ -33,14 +33,14 @@ export default {
     config: {
         duration: 1600,
         musicalDuration: { musical: true, bars: 1 },
-        squashAmount: 0.2,     // How flat to get (0.2 = 20% of original height)
-        stretchAmount: 2.0,    // How wide to stretch (2x width)
-        holdRatio: 0.5,        // How long to hold the squash (50% of duration)
+        squashAmount: 0.2, // How flat to get (0.2 = 20% of original height)
+        stretchAmount: 2.0, // How wide to stretch (2x width)
+        holdRatio: 0.5, // How long to hold the squash (50% of duration)
         strength: 1.0,
         particleMotion: {
             type: 'pancake',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -51,8 +51,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     '3d': {
@@ -88,9 +88,10 @@ export default {
                 // Phase 3: RECOVER - slow peeling up
                 const recoverT = (progress - recoverStart) / (1 - recoverStart);
                 // Slow ease out - like peeling off the ground
-                const peelEase = recoverT < 0.3
-                    ? recoverT / 0.3 * 0.3 // Slow start
-                    : 0.3 + (recoverT - 0.3) / 0.7 * 0.7; // Then accelerate
+                const peelEase =
+                    recoverT < 0.3
+                        ? (recoverT / 0.3) * 0.3 // Slow start
+                        : 0.3 + ((recoverT - 0.3) / 0.7) * 0.7; // Then accelerate
                 squash = 1 - peelEase;
 
                 // Overshoot bounce at end
@@ -102,7 +103,7 @@ export default {
             }
 
             // Non-uniform scale: extreme squash Y, extreme stretch X/Z
-            const scaleY = 1 - squash * (1 - squashAmount) * strength;  // e.g., 1 -> 0.2
+            const scaleY = 1 - squash * (1 - squashAmount) * strength; // e.g., 1 -> 0.2
             const scaleXZ = 1 + squash * (stretchAmount - 1) * strength; // e.g., 1 -> 2.0
 
             // Drop down when squashed (move to ground level)
@@ -137,8 +138,8 @@ export default {
                 // Return non-uniform scale as array [x, y, z]
                 scale: [scaleXZ, scaleY, scaleXZ],
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

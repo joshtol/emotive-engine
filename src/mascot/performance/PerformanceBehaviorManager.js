@@ -46,10 +46,14 @@ export class PerformanceBehaviorManager {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.errorBoundary) throw new Error('PerformanceBehaviorManager: errorBoundary required');
-        if (!deps.frustrationContextManager) throw new Error('PerformanceBehaviorManager: frustrationContextManager required');
-        if (!deps.emotionalStateQueryManager) throw new Error('PerformanceBehaviorManager: emotionalStateQueryManager required');
-        if (!deps.diagnosticsManager) throw new Error('PerformanceBehaviorManager: diagnosticsManager required');
+        if (!deps.errorBoundary)
+            throw new Error('PerformanceBehaviorManager: errorBoundary required');
+        if (!deps.frustrationContextManager)
+            throw new Error('PerformanceBehaviorManager: frustrationContextManager required');
+        if (!deps.emotionalStateQueryManager)
+            throw new Error('PerformanceBehaviorManager: emotionalStateQueryManager required');
+        if (!deps.diagnosticsManager)
+            throw new Error('PerformanceBehaviorManager: diagnosticsManager required');
 
         this.errorBoundary = deps.errorBoundary;
         this.performanceSystem = deps.performanceSystem || null;
@@ -83,25 +87,29 @@ export class PerformanceBehaviorManager {
      * });
      */
     perform(semanticAction, options = {}) {
-        return this.errorBoundary.wrap(async () => {
-            if (!this.performanceSystem) {
-                console.warn('[EmotiveMascot] PerformanceSystem not initialized');
+        return this.errorBoundary.wrap(
+            async () => {
+                if (!this.performanceSystem) {
+                    console.warn('[EmotiveMascot] PerformanceSystem not initialized');
+                    return this._chainTarget;
+                }
+
+                // Update context if provided
+                if (options.context) {
+                    this.frustrationContextManager.updateContext(options.context);
+                }
+
+                // Execute the performance
+                await this.performanceSystem.perform(semanticAction, {
+                    ...options,
+                    mascot: this._chainTarget,
+                });
+
                 return this._chainTarget;
-            }
-
-            // Update context if provided
-            if (options.context) {
-                this.frustrationContextManager.updateContext(options.context);
-            }
-
-            // Execute the performance
-            await this.performanceSystem.perform(semanticAction, {
-                ...options,
-                mascot: this._chainTarget
-            });
-
-            return this._chainTarget;
-        }, 'semantic-performance', this._chainTarget)();
+            },
+            'semantic-performance',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -120,15 +128,19 @@ export class PerformanceBehaviorManager {
      * });
      */
     registerPerformance(name, definition) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.performanceSystem) {
-                console.warn('[EmotiveMascot] PerformanceSystem not initialized');
-                return this._chainTarget;
-            }
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.performanceSystem) {
+                    console.warn('[EmotiveMascot] PerformanceSystem not initialized');
+                    return this._chainTarget;
+                }
 
-            this.performanceSystem.registerPerformance(name, definition);
-            return this._chainTarget;
-        }, 'performance-register', this._chainTarget)();
+                this.performanceSystem.registerPerformance(name, definition);
+                return this._chainTarget;
+            },
+            'performance-register',
+            this._chainTarget
+        )();
     }
 
     /**

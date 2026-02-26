@@ -129,7 +129,7 @@ export class IntentParser {
             transition: 'smooth',
             repetition: 'once',
             unrecognized: [],
-            raw: intent
+            raw: intent,
         };
 
         // Handle empty/invalid input
@@ -200,26 +200,26 @@ export class IntentParser {
         const { category, target } = resolution;
 
         switch (category) {
-        case 'emotion':
-            if (!result.emotion) {
-                result.emotion = target;
-            }
-            break;
-        case 'undertone':
-            if (result.undertone === 'clear') {
-                result.undertone = target;
-            }
-            break;
-        case 'gesture':
-            if (!result.gestures.includes(target)) {
-                result.gestures.push(target);
-            }
-            break;
-        case 'shape':
-            if (!result.shape) {
-                result.shape = target;
-            }
-            break;
+            case 'emotion':
+                if (!result.emotion) {
+                    result.emotion = target;
+                }
+                break;
+            case 'undertone':
+                if (result.undertone === 'clear') {
+                    result.undertone = target;
+                }
+                break;
+            case 'gesture':
+                if (!result.gestures.includes(target)) {
+                    result.gestures.push(target);
+                }
+                break;
+            case 'shape':
+                if (!result.shape) {
+                    result.shape = target;
+                }
+                break;
         }
     }
 
@@ -285,18 +285,18 @@ export class IntentParser {
             const { type, level } = modifier;
 
             switch (type) {
-            case 'intensity':
-                result.intensity = intensityValues[level]?.default || result.intensity;
-                break;
-            case 'duration':
-                result.duration = durationValues[level]?.default || result.duration;
-                break;
-            case 'transition':
-                result.transition = level;
-                break;
-            case 'repetition':
-                result.repetition = level;
-                break;
+                case 'intensity':
+                    result.intensity = intensityValues[level]?.default || result.intensity;
+                    break;
+                case 'duration':
+                    result.duration = durationValues[level]?.default || result.duration;
+                    break;
+                case 'transition':
+                    result.transition = level;
+                    break;
+                case 'repetition':
+                    result.repetition = level;
+                    break;
             }
             return true;
         }
@@ -328,7 +328,7 @@ export class IntentParser {
 
         return {
             valid: errors.length === 0,
-            errors
+            errors,
         };
     }
 

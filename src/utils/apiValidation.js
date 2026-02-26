@@ -35,36 +35,44 @@ export class APIValidator {
                 return Validator.validateNumber(value, {
                     min: 0,
                     max: 10000,
-                    paramName: 'duration'
+                    paramName: 'duration',
                 });
             },
-            
+
             intensity: value => {
                 if (value === undefined) return ErrorResponse.success(1.0);
                 return Validator.validateNumber(value, {
                     min: 0,
                     max: 2.0,
-                    paramName: 'intensity'
+                    paramName: 'intensity',
                 });
             },
-            
+
             easing: value => {
                 if (value === undefined) return ErrorResponse.success('ease-in-out');
                 const validEasings = ['linear', 'ease-in', 'ease-out', 'ease-in-out', 'bounce'];
                 return Validator.validateString(value, {
-                    paramName: 'easing'
-                }).success && validEasings.includes(value) 
+                    paramName: 'easing',
+                }).success && validEasings.includes(value)
                     ? ErrorResponse.success(value)
-                    : ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, `Invalid easing: ${value}`, { validEasings });
+                    : ErrorResponse.failure(
+                          ErrorTypes.INVALID_PARAMETER,
+                          `Invalid easing: ${value}`,
+                          { validEasings }
+                      );
             },
-            
+
             undertone: value => {
                 if (value === undefined) return ErrorResponse.success(null);
                 const validUndertones = ['subtle', 'moderate', 'strong'];
                 return validUndertones.includes(value)
                     ? ErrorResponse.success(value)
-                    : ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, `Invalid undertone: ${value}`, { validUndertones });
-            }
+                    : ErrorResponse.failure(
+                          ErrorTypes.INVALID_PARAMETER,
+                          `Invalid undertone: ${value}`,
+                          { validUndertones }
+                      );
+            },
         };
 
         const optionsResult = Validator.validateObject(options, optionsSchema, 'options');
@@ -110,37 +118,37 @@ export class APIValidator {
                 return Validator.validateNumber(value, {
                     min: 100,
                     max: 5000,
-                    paramName: 'duration'
+                    paramName: 'duration',
                 });
             },
-            
+
             intensity: value => {
                 if (value === undefined) return ErrorResponse.success(1.0);
                 return Validator.validateNumber(value, {
                     min: 0.1,
                     max: 3.0,
-                    paramName: 'intensity'
+                    paramName: 'intensity',
                 });
             },
-            
+
             repeat: value => {
                 if (value === undefined) return ErrorResponse.success(1);
                 return Validator.validateNumber(value, {
                     min: 1,
                     max: 10,
                     integer: true,
-                    paramName: 'repeat'
+                    paramName: 'repeat',
                 });
             },
-            
+
             delay: value => {
                 if (value === undefined) return ErrorResponse.success(0);
                 return Validator.validateNumber(value, {
                     min: 0,
                     max: 2000,
-                    paramName: 'delay'
+                    paramName: 'delay',
                 });
-            }
+            },
         };
 
         const optionsResult = Validator.validateObject(options, optionsSchema, 'options');
@@ -186,7 +194,7 @@ export class APIValidator {
                     );
                 }
                 return result;
-            }
+            },
         });
 
         if (gesturesResult.success) {
@@ -202,22 +210,26 @@ export class APIValidator {
                 const validTimings = ['sequential', 'parallel', 'staggered'];
                 return validTimings.includes(value)
                     ? ErrorResponse.success(value)
-                    : ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, `Invalid timing: ${value}`, { validTimings });
+                    : ErrorResponse.failure(
+                          ErrorTypes.INVALID_PARAMETER,
+                          `Invalid timing: ${value}`,
+                          { validTimings }
+                      );
             },
-            
+
             interval: value => {
                 if (value === undefined) return ErrorResponse.success(200);
                 return Validator.validateNumber(value, {
                     min: 0,
                     max: 2000,
-                    paramName: 'interval'
+                    paramName: 'interval',
                 });
             },
-            
+
             loop: value => {
                 if (value === undefined) return ErrorResponse.success(false);
                 return Validator.validateBoolean(value, false, 'loop');
-            }
+            },
         };
 
         const optionsResult = Validator.validateObject(options, optionsSchema, 'options');
@@ -250,21 +262,29 @@ export class APIValidator {
 
         // Validate event name
         const validEvents = [
-            'emotionChanged', 'gestureStarted', 'gestureCompleted', 'chainCompleted',
-            'performanceDegraded', 'contextLost', 'contextRestored', 'error'
+            'emotionChanged',
+            'gestureStarted',
+            'gestureCompleted',
+            'chainCompleted',
+            'performanceDegraded',
+            'contextLost',
+            'contextRestored',
+            'error',
         ];
 
         const eventResult = Validator.validateString(event, {
             minLength: 1,
             maxLength: 50,
-            paramName: 'event'
+            paramName: 'event',
         });
 
         if (eventResult.success) {
             if (validEvents.includes(eventResult.data)) {
                 validatedParams.event = eventResult.data;
             } else {
-                errors.push(`Unknown event: ${eventResult.data}. Valid events: ${validEvents.join(', ')}`);
+                errors.push(
+                    `Unknown event: ${eventResult.data}. Valid events: ${validEvents.join(', ')}`
+                );
             }
         } else {
             errors.push(`event: ${eventResult.error.message}`);
@@ -304,7 +324,7 @@ export class APIValidator {
             const widthResult = Validator.validateNumber(config.width, {
                 min: 100,
                 max: 4000,
-                paramName: 'width'
+                paramName: 'width',
             });
             if (widthResult.success) {
                 validatedConfig.width = widthResult.data;
@@ -317,7 +337,7 @@ export class APIValidator {
             const heightResult = Validator.validateNumber(config.height, {
                 min: 100,
                 max: 4000,
-                paramName: 'height'
+                paramName: 'height',
             });
             if (heightResult.success) {
                 validatedConfig.height = heightResult.data;
@@ -336,7 +356,11 @@ export class APIValidator {
         }
 
         if (config.enableParticles !== undefined) {
-            const particlesResult = Validator.validateBoolean(config.enableParticles, true, 'enableParticles');
+            const particlesResult = Validator.validateBoolean(
+                config.enableParticles,
+                true,
+                'enableParticles'
+            );
             if (particlesResult.success) {
                 validatedConfig.enableParticles = particlesResult.data;
             } else {
@@ -349,7 +373,7 @@ export class APIValidator {
                 min: 0,
                 max: 200,
                 integer: true,
-                paramName: 'maxParticles'
+                paramName: 'maxParticles',
             });
             if (maxParticlesResult.success) {
                 validatedConfig.maxParticles = maxParticlesResult.data;
@@ -382,7 +406,18 @@ export class APIValidator {
 
         // Copy any other properties
         for (const [key, value] of Object.entries(config)) {
-            if (!(key in validatedConfig) && !['canvas', 'width', 'height', 'enableAudio', 'enableParticles', 'maxParticles', 'debug'].includes(key)) {
+            if (
+                !(key in validatedConfig) &&
+                ![
+                    'canvas',
+                    'width',
+                    'height',
+                    'enableAudio',
+                    'enableParticles',
+                    'maxParticles',
+                    'debug',
+                ].includes(key)
+            ) {
                 validatedConfig[key] = value;
             }
         }
@@ -406,7 +441,7 @@ export class APIValidator {
 
         return ErrorResponse.success({
             config: validatedConfig,
-            warnings
+            warnings,
         });
     }
 
@@ -424,7 +459,7 @@ export class APIValidator {
         for (let i = 0; i < schema.length; i++) {
             const param = params[i];
             const validator = schema[i];
-            
+
             try {
                 const result = validator(param);
                 if (result.success) {
@@ -441,11 +476,11 @@ export class APIValidator {
             return ErrorResponse.failure(
                 ErrorTypes.VALIDATION_ERROR,
                 `${methodName} validation failed: ${errors.join(', ')}`,
-                { 
+                {
                     method: methodName,
                     errors,
                     received: params,
-                    expectedParams: schema.length
+                    expectedParams: schema.length,
                 }
             );
         }
@@ -480,32 +515,43 @@ export class APIValidator {
 
         // Context-specific validation
         switch (context) {
-        case 'emotion': {
-            const emotionResult = Validator.validateEmotion(sanitized);
-            return emotionResult.success 
-                ? ErrorResponse.success(emotionResult.data)
-                : ErrorResponse.failure(ErrorTypes.INVALID_EMOTION, 'Invalid emotion after sanitization', { original: input, sanitized });
-        }
-
-        case 'gesture': {
-            const gestureResult = Validator.validateGesture(sanitized);
-            return gestureResult.success
-                ? ErrorResponse.success(gestureResult.data)
-                : ErrorResponse.failure(ErrorTypes.INVALID_GESTURE, 'Invalid gesture after sanitization', { original: input, sanitized });
-        }
-
-        case 'event':
-            if (sanitized.length > 50) {
-                return ErrorResponse.failure(ErrorTypes.INVALID_PARAMETER, 'Event name too long after sanitization');
+            case 'emotion': {
+                const emotionResult = Validator.validateEmotion(sanitized);
+                return emotionResult.success
+                    ? ErrorResponse.success(emotionResult.data)
+                    : ErrorResponse.failure(
+                          ErrorTypes.INVALID_EMOTION,
+                          'Invalid emotion after sanitization',
+                          { original: input, sanitized }
+                      );
             }
-            return ErrorResponse.success(sanitized);
 
-        default:
-            // General sanitization - limit length and remove dangerous content
-            if (sanitized.length > 1000) {
-                sanitized = sanitized.substring(0, 1000);
+            case 'gesture': {
+                const gestureResult = Validator.validateGesture(sanitized);
+                return gestureResult.success
+                    ? ErrorResponse.success(gestureResult.data)
+                    : ErrorResponse.failure(
+                          ErrorTypes.INVALID_GESTURE,
+                          'Invalid gesture after sanitization',
+                          { original: input, sanitized }
+                      );
             }
-            return ErrorResponse.success(sanitized);
+
+            case 'event':
+                if (sanitized.length > 50) {
+                    return ErrorResponse.failure(
+                        ErrorTypes.INVALID_PARAMETER,
+                        'Event name too long after sanitization'
+                    );
+                }
+                return ErrorResponse.success(sanitized);
+
+            default:
+                // General sanitization - limit length and remove dangerous content
+                if (sanitized.length > 1000) {
+                    sanitized = sanitized.substring(0, 1000);
+                }
+                return ErrorResponse.success(sanitized);
         }
     }
 
@@ -523,7 +569,7 @@ export class APIValidator {
             repeat: { min: 1, max: 20, default: 1, integer: true },
             particleCount: { min: 0, max: 200, default: 50, integer: true },
             volume: { min: 0, max: 1.0, default: 0.5 },
-            fps: { min: 15, max: 120, default: 60, integer: true }
+            fps: { min: 15, max: 120, default: 60, integer: true },
         };
 
         const range = ranges[context];
@@ -540,7 +586,7 @@ export class APIValidator {
             max: range.max,
             integer: range.integer,
             defaultValue: range.default,
-            paramName: context
+            paramName: context,
         });
     }
 
@@ -557,7 +603,7 @@ export class APIValidator {
 
         for (const [paramName, value] of Object.entries(params)) {
             const validator = validationRules[paramName];
-            
+
             if (!validator) {
                 warnings.push(`No validation rule for parameter: ${paramName}`);
                 results[paramName] = value; // Pass through unvalidated
@@ -584,18 +630,18 @@ export class APIValidator {
             return ErrorResponse.failure(
                 ErrorTypes.VALIDATION_ERROR,
                 `Batch validation failed: ${errors.join(', ')}`,
-                { 
+                {
                     errors,
                     warnings,
                     validatedParams: results,
-                    originalParams: params
+                    originalParams: params,
                 }
             );
         }
 
         return ErrorResponse.success({
             validatedParams: results,
-            warnings
+            warnings,
         });
     }
 }

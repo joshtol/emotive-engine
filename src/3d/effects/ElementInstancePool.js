@@ -21,9 +21,9 @@
 import * as THREE from 'three';
 
 // Constants
-const POOL_SIZE = 64;           // Max instances per element type (16 elements × 4 slots each)
-const TRAIL_COPIES = 1;         // Trail copies per main element (reduced from 3)
-const SLOTS_PER_ELEMENT = 1 + TRAIL_COPIES;  // 2 slots total (was 4)
+const POOL_SIZE = 64; // Max instances per element type (16 elements × 4 slots each)
+const TRAIL_COPIES = 1; // Trail copies per main element (reduced from 3)
+const SLOTS_PER_ELEMENT = 1 + TRAIL_COPIES; // 2 slots total (was 4)
 
 /**
  * Manages a pool of instanced elements for GPU-efficient rendering.
@@ -40,24 +40,20 @@ export class ElementInstancePool {
         this.maxInstances = maxElements * SLOTS_PER_ELEMENT;
 
         // Create the instanced mesh
-        this.mesh = new THREE.InstancedMesh(
-            mergedGeometry,
-            material,
-            this.maxInstances
-        );
-        this.mesh.frustumCulled = false;  // Elements may animate outside frustum
-        this.mesh.count = 0;  // Start with no visible instances
+        this.mesh = new THREE.InstancedMesh(mergedGeometry, material, this.maxInstances);
+        this.mesh.frustumCulled = false; // Elements may animate outside frustum
+        this.mesh.count = 0; // Start with no visible instances
 
         // Instance attribute buffers
         this._createInstanceAttributes();
 
         // Slot management
-        this.freeSlots = [];      // Available slot indices
-        this.activeElements = new Map();  // elementId -> { mainSlot, trailSlots[], spawnTime, exitTime }
+        this.freeSlots = []; // Available slot indices
+        this.activeElements = new Map(); // elementId -> { mainSlot, trailSlots[], spawnTime, exitTime }
 
         // Initialize free slots (in reverse so we pop from the front)
         for (let i = this.maxInstances - SLOTS_PER_ELEMENT; i >= 0; i -= SLOTS_PER_ELEMENT) {
-            this.freeSlots.push(i);  // Push the main slot index (trails are consecutive)
+            this.freeSlots.push(i); // Push the main slot index (trails are consecutive)
         }
 
         // Scratch objects for matrix updates
@@ -65,8 +61,8 @@ export class ElementInstancePool {
         this._position = new THREE.Vector3();
         this._quaternion = new THREE.Quaternion();
         this._scale = new THREE.Vector3(1, 1, 1);
-        this._identityQuaternion = new THREE.Quaternion();  // Reusable identity
-        this._unitScale = new THREE.Vector3(1, 1, 1);       // Reusable unit scale
+        this._identityQuaternion = new THREE.Quaternion(); // Reusable identity
+        this._unitScale = new THREE.Vector3(1, 1, 1); // Reusable unit scale
 
         // Global time reference (set externally)
         this.globalTime = 0;
@@ -139,7 +135,15 @@ export class ElementInstancePool {
      * @param {number|null} [relayIndex=null] - Relay ring index (0=top, 1=right, 2=left). Encodes as (100 + index*10 + phase)
      * @returns {boolean} True if spawn succeeded, false if pool is full
      */
-    spawn(elementId, position, rotation, scale, modelIndex = 0, arcPhase = null, relayIndex = null) {
+    spawn(
+        elementId,
+        position,
+        rotation,
+        scale,
+        modelIndex = 0,
+        arcPhase = null,
+        relayIndex = null
+    ) {
         // Check for available slots
         if (this.freeSlots.length === 0) {
             console.warn('[ElementInstancePool] Pool full, cannot spawn');
@@ -159,7 +163,7 @@ export class ElementInstancePool {
             spawnTime,
             exitTime: 0,
             position: position.clone(),
-            modelIndex
+            modelIndex,
         });
 
         // Set up main instance
@@ -168,11 +172,11 @@ export class ElementInstancePool {
             spawnTime,
             exitTime: 0,
             modelIndex,
-            opacity: 0.0,  // Start invisible - AnimationState controls smooth fade
+            opacity: 0.0, // Start invisible - AnimationState controls smooth fade
             trailParent: -1,
             trailIndex: -1,
             arcPhase,
-            relayIndex
+            relayIndex,
         });
 
         // Set up trail instances (slightly behind in time/position)
@@ -183,11 +187,11 @@ export class ElementInstancePool {
                 spawnTime,
                 exitTime: 0,
                 modelIndex,
-                opacity: 0.0,  // Start invisible - AnimationState controls fade
+                opacity: 0.0, // Start invisible - AnimationState controls fade
                 trailParent: mainSlot,
                 trailIndex: i,
                 arcPhase,
-                relayIndex
+                relayIndex,
             });
         }
 
@@ -327,7 +331,7 @@ export class ElementInstancePool {
 
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = element.trailSlots[i];
-            const trailMultiplier = hasMotion ? (1 - (i + 1) * 0.15) : 0;
+            const trailMultiplier = hasMotion ? 1 - (i + 1) * 0.15 : 0;
 
             if (typeof scale === 'number') {
                 this._scale.setScalar(scale * trailMultiplier);
@@ -372,7 +376,7 @@ export class ElementInstancePool {
         // Update trail slots with progressively lower opacity
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = element.trailSlots[i];
-            this.opacityArray[trailSlot] = opacity * (1 - (i + 1) * 0.25);  // 75%, 50%, 25%
+            this.opacityArray[trailSlot] = opacity * (1 - (i + 1) * 0.25); // 75%, 50%, 25%
         }
 
         this.opacityAttr.needsUpdate = true;
@@ -509,7 +513,7 @@ export class ElementInstancePool {
             activeInstances: this.mesh.count,
             maxInstances: this.maxInstances,
             availableSlots: this.freeSlots.length,
-            utilizationPercent: ((this.activeElements.size / this.maxElements) * 100).toFixed(1)
+            utilizationPercent: ((this.activeElements.size / this.maxElements) * 100).toFixed(1),
         };
     }
 

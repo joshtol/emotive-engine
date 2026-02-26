@@ -54,19 +54,19 @@ const ICEBARRAGE_CONFIG = {
     spawnMode: {
         type: 'orbit',
         orbit: {
-            height: 'center',              // Start at mascot center
-            endHeight: 'above',            // Launch upward
-            radius: 1.2,                   // Close orbit at start
-            endRadius: 2.8,               // Expand outward as they launch
-            speed: 3,                      // 3 full revolutions
-            easing: 'easeIn',             // Slow orbit → fast launch
+            height: 'center', // Start at mascot center
+            endHeight: 'above', // Launch upward
+            radius: 1.2, // Close orbit at start
+            endRadius: 2.8, // Expand outward as they launch
+            speed: 3, // 3 full revolutions
+            easing: 'easeIn', // Slow orbit → fast launch
             startScale: 1.0,
-            endScale: 0.6,                // Shrink as they fly away
-            orientation: 'vertical'
+            endScale: 0.6, // Shrink as they fly away
+            orientation: 'vertical',
         },
         formation: {
             type: 'ring',
-            count: 5
+            count: 5,
         },
         count: 5,
         scale: 1.4,
@@ -78,60 +78,62 @@ const ICEBARRAGE_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.08,
-                easing: 'easeOutBack'
+                easing: 'easeOutBack',
             },
             exit: {
                 type: 'burst-fade',
                 duration: 0.15,
                 easing: 'easeIn',
-                burstScale: 1.3            // Pop outward on exit
+                burstScale: 1.3, // Pop outward on exit
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 frost: {
                     start: 0.6,
                     peak: 0.85,
                     end: 0.4,
-                    curve: 'fadeOut'        // Frost fades as crystals launch
-                }
+                    curve: 'fadeOut', // Frost fades as crystals launch
+                },
             },
             pulse: {
                 amplitude: 0.12,
                 frequency: 6,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.0,
                 max: 2.2,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Per-gesture atmospheric particles: cold mist from orbiting crystals
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.7,
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.7,
+                },
+            ],
             // Per-crystal tumbling — each spins on different axes for chaotic, dynamic motion
             rotate: [
                 { axis: 'x', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -3, phase: 40 },
                 { axis: 'z', rotations: 2.5, phase: 100 },
                 { axis: 'x', rotations: -2, phase: 180 },
-                { axis: 'y', rotations: 3, phase: 250 }
+                { axis: 'y', rotations: 3, phase: 250 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'normal',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     // Glow - intense ice blue for attack
@@ -145,7 +147,7 @@ const ICEBARRAGE_CONFIG = {
     scaleGrowth: 0.02,
     // Tremor - aggressive energy
     tremor: 0.006,
-    tremorFrequency: 5
+    tremorFrequency: 5,
 };
 
 /**

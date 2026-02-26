@@ -33,7 +33,11 @@ export { EventManager, eventManager } from './core/events/EventManager.js';
 export { StateStore, engineState } from './core/state/StateStore.js';
 
 // Performance
-export { AnimationLoopManager, animationLoopManager, AnimationPriority } from './core/AnimationLoopManager.js';
+export {
+    AnimationLoopManager,
+    animationLoopManager,
+    AnimationPriority,
+} from './core/AnimationLoopManager.js';
 
 // ============================================================================
 // AUDIO SYSTEMS (Primary Focus)
@@ -64,7 +68,7 @@ export {
     listEmotions,
     getEmotionGestures,
     getEmotionRhythmModifiers,
-    getBlendedRhythmModifiers
+    getBlendedRhythmModifiers,
 } from './core/emotions/index.js';
 
 export {
@@ -74,7 +78,7 @@ export {
     applyGesture,
     listGestures,
     GESTURE_REGISTRY,
-    GESTURE_TYPES
+    GESTURE_TYPES,
 } from './core/gestures/index.js';
 
 // ============================================================================
@@ -120,14 +124,14 @@ export const BUILD_TYPE = 'audio';
 // ============================================================================
 
 export const FEATURES = {
-    rhythmSync: true,           // Enabled
-    grooveTemplates: true,      // Enabled
-    gestureBlending: true,      // Enabled
-    audioReactive: true,        // Enabled
-    particleSystem: true,       // Enabled
-    accessibility: false,       // Disabled for size
-    mobileOptimization: false,  // Disabled for size
-    performanceMonitoring: true // Enabled for audio perf
+    rhythmSync: true, // Enabled
+    grooveTemplates: true, // Enabled
+    gestureBlending: true, // Enabled
+    audioReactive: true, // Enabled
+    particleSystem: true, // Enabled
+    accessibility: false, // Disabled for size
+    mobileOptimization: false, // Disabled for size
+    performanceMonitoring: true, // Enabled for audio perf
 };
 
 // ============================================================================

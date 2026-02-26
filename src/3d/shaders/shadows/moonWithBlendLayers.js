@@ -331,6 +331,6 @@ void main() {
 export function getMoonWithBlendLayersShaders() {
     return {
         vertexShader: moonWithBlendLayersVertexShader,
-        fragmentShader: moonWithBlendLayersFragmentShader
+        fragmentShader: moonWithBlendLayersFragmentShader,
     };
 }

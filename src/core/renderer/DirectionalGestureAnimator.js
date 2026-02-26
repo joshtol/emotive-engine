@@ -27,7 +27,8 @@ export class DirectionalGestureAnimator {
             anim.pointDirection = Math.random() < 0.5 ? -1 : 1;
         }
 
-        const direction = anim.params?.direction !== undefined ? anim.params.direction : anim.pointDirection;
+        const direction =
+            anim.params?.direction !== undefined ? anim.params.direction : anim.pointDirection;
         const distance = (anim.params?.distance || 40) * this.scaleFactor;
 
         // Three-phase animation:
@@ -39,7 +40,7 @@ export class DirectionalGestureAnimator {
 
         if (progress < 0.4) {
             // Phase 1: Move to point (ease out)
-            motionProgress = 1 - Math.pow(1 - (progress / 0.4), 3);
+            motionProgress = 1 - Math.pow(1 - progress / 0.4, 3);
             scaleProgress = motionProgress;
         } else if (progress < 0.6) {
             // Phase 2: Hold at point
@@ -47,7 +48,7 @@ export class DirectionalGestureAnimator {
             scaleProgress = 1.0;
         } else {
             // Phase 3: Return to center (ease in)
-            motionProgress = Math.pow(1 - ((progress - 0.6) / 0.4), 3);
+            motionProgress = Math.pow(1 - (progress - 0.6) / 0.4, 3);
             scaleProgress = motionProgress;
         }
 
@@ -65,7 +66,7 @@ export class DirectionalGestureAnimator {
             offsetX,
             offsetY,
             scale,
-            rotation
+            rotation,
         };
     }
 
@@ -89,7 +90,7 @@ export class DirectionalGestureAnimator {
 
         return {
             offsetX,
-            rotation
+            rotation,
         };
     }
 
@@ -101,7 +102,8 @@ export class DirectionalGestureAnimator {
      */
     applyReach(anim, progress) {
         // Reach gesture - stretch upward or outward
-        const direction = anim.params?.direction !== undefined ? anim.params.direction : -Math.PI/2; // Default upward
+        const direction =
+            anim.params?.direction !== undefined ? anim.params.direction : -Math.PI / 2; // Default upward
         const distance = (anim.params?.distance || 40) * this.scaleFactor;
 
         // Two-phase motion: reach out, then return
@@ -129,7 +131,7 @@ export class DirectionalGestureAnimator {
         return {
             offsetX,
             offsetY,
-            scale
+            scale,
         };
     }
 }

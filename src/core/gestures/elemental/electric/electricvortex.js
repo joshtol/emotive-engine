@@ -47,14 +47,14 @@ const ELECTRICVORTEX_CONFIG = {
             endScale: 1.5,
             startDiameter: 0.6,
             endDiameter: 1.6,
-            orientation: 'flat'
+            orientation: 'flat',
         },
         formation: {
             type: 'spiral',
             count: 2,
             spacing: 0,
             arcOffset: 180,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 2,
         scale: 2.0,
@@ -69,7 +69,7 @@ const ELECTRICVORTEX_CONFIG = {
             flicker: {
                 intensity: 0.35,
                 rate: 14,
-                pattern: 'random'
+                pattern: 'random',
             },
             pulse: { amplitude: 0.12, frequency: 6, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 2.0, frequency: 5, pattern: 'sine' },
@@ -84,28 +84,30 @@ const ELECTRICVORTEX_CONFIG = {
                 trailDissolve: {
                     enabled: true,
                     offset: -0.4,
-                    softness: 1.2
-                }
+                    softness: 1.2,
+                },
             },
             grain: { type: 3, strength: 0.2, scale: 0.3, speed: 2.5, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from vortex
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.2,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.6,
-                centrifugal: { speed: 1.2, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.2,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.6,
+                    centrifugal: { speed: 1.2, tangentialBias: 0.3 },
+                },
+            ],
             flash: {
                 events: [
-                    { at: 0.20, intensity: 2.0 },
+                    { at: 0.2, intensity: 2.0 },
                     { at: 0.45, intensity: 3.0 },
-                    { at: 0.60, intensity: 1.5 }
+                    { at: 0.6, intensity: 1.5 },
                 ],
-                decay: 0.02
+                decay: 0.02,
             },
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -117,20 +119,20 @@ const ELECTRICVORTEX_CONFIG = {
                         type: 1,
                         arcWidth: 0.5,
                         arcSpeed: 5.0,
-                        arcCount: 1
+                        arcCount: 1,
                     },
                     scaling: {
                         mode: 'non-uniform',
                         axes: {
                             x: { expand: true, rate: 1.1 },
                             y: { expand: false, rate: 0.3 },
-                            z: { expand: true, rate: 1.1 }
-                        }
+                            z: { expand: true, rate: 1.1 },
+                        },
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     jitterFrequency: 0,
@@ -144,7 +146,7 @@ const ELECTRICVORTEX_CONFIG = {
     scaleFrequency: 4,
     scaleGrowth: 0.03,
     scalePulse: true,
-    rotationDrift: 0.02
+    rotationDrift: 0.02,
 };
 
 export default buildElectricEffectGesture(ELECTRICVORTEX_CONFIG);

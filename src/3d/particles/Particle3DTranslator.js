@@ -91,7 +91,6 @@ export class Particle3DTranslator {
         this.currentGestureData = gestureData;
     }
 
-
     /**
      * Initialize behavior-specific translation functions
      * Each behavior gets custom logic for 3D positioning
@@ -102,7 +101,7 @@ export class Particle3DTranslator {
             ambient: this._translateAmbient.bind(this),
             orbiting: this._translateOrbiting.bind(this),
             rising: this._translateRising.bind(this),
-            falling: this._translateFalling.bind(this),  // Rain-like tears falling - spawns behind crystal
+            falling: this._translateFalling.bind(this), // Rain-like tears falling - spawns behind crystal
             popcorn: this._translatePopcorn.bind(this),
             burst: this._translateBurst.bind(this),
             aggressive: this._translateAggressive.bind(this),
@@ -120,7 +119,7 @@ export class Particle3DTranslator {
             directed: this._translateDirected.bind(this),
             fizzy: this._translateFizzy.bind(this),
             zen: this._translateZen.bind(this),
-            gravitationalAccretion: this._translateGravitationalAccretion.bind(this)
+            gravitationalAccretion: this._translateGravitationalAccretion.bind(this),
         };
     }
 
@@ -139,12 +138,17 @@ export class Particle3DTranslator {
         }
 
         // Get behavior-specific translation (normal emotional state position)
-        const translator = this.behaviorTranslators[particle.behavior] || this._translateDefault.bind(this);
+        const translator =
+            this.behaviorTranslators[particle.behavior] || this._translateDefault.bind(this);
         const basePosition = translator(particle, corePosition, canvasSize);
 
         // Apply gesture-specific transformations
         if (this.currentGestureData && this.currentGestureData.gestureName === 'spin') {
-            return this._applySpinRotation(basePosition, corePosition, this.currentGestureData.progress);
+            return this._applySpinRotation(
+                basePosition,
+                corePosition,
+                this.currentGestureData.progress
+            );
         }
 
         // For other gestures (like scan), the 2D particle system handles the positioning
@@ -243,11 +247,12 @@ export class Particle3DTranslator {
         // z = -1 (far) → radius 0.5x
         // z = 0 (mid) → radius 1.0x
         // z = +1 (near) → radius 1.75x
-        const radiusMultiplier = 1.0 + (canvasZ * this.depthScale);
+        const radiusMultiplier = 1.0 + canvasZ * this.depthScale;
 
         // Calculate world position
         const worldX = normalizedX * this.worldScale * radiusMultiplier + corePosition.x;
-        const worldY = normalizedY * this.worldScale * this.verticalScale * radiusMultiplier + corePosition.y;
+        const worldY =
+            normalizedY * this.worldScale * this.verticalScale * radiusMultiplier + corePosition.y;
         const worldZ = canvasZ * this.worldScale * 0.5 + corePosition.z; // Z contributes to actual depth
 
         return this.tempVec3.set(worldX, worldY, worldZ);
@@ -280,7 +285,11 @@ export class Particle3DTranslator {
 
         // Use particle's properties as deterministic seeds with better hash
         // Combine multiple properties for unique seeds per particle
-        const baseSeed = particle.x * 127.1 + particle.y * 311.7 + (particle.vx || 0) * 74.7 + (particle.vy || 0) * 159.3;
+        const baseSeed =
+            particle.x * 127.1 +
+            particle.y * 311.7 +
+            (particle.vx || 0) * 74.7 +
+            (particle.vy || 0) * 159.3;
 
         // Generate two uniform random values using hash function
         const u1 = this._hash(baseSeed);
@@ -350,8 +359,11 @@ export class Particle3DTranslator {
      */
     _translateDefault(particle, corePosition, canvasSize) {
         return this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
     }
@@ -406,8 +418,8 @@ export class Particle3DTranslator {
             const seed2 = particle.x * 0.7 + particle.y;
 
             behaviorData.orbitPlane = {
-                inclination: ((Math.sin(seed1 * 0.1) + 1) * 0.5) * Math.PI,
-                rotation: ((Math.sin(seed2 * 0.1) + 1) * 0.5) * Math.PI * 2
+                inclination: (Math.sin(seed1 * 0.1) + 1) * 0.5 * Math.PI,
+                rotation: (Math.sin(seed2 * 0.1) + 1) * 0.5 * Math.PI * 2,
             };
         }
 
@@ -417,7 +429,7 @@ export class Particle3DTranslator {
         const radius = (behaviorData.radius || 100) * 0.01 * this.baseRadius * 0.25;
 
         // Depth affects orbital radius
-        const radiusMultiplier = 1.0 + (particle.z * this.depthScale);
+        const radiusMultiplier = 1.0 + particle.z * this.depthScale;
         const finalRadius = radius * radiusMultiplier;
 
         // Calculate position in XZ plane first
@@ -447,8 +459,11 @@ export class Particle3DTranslator {
      */
     _translateRising(particle, corePosition, canvasSize) {
         const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
 
@@ -583,7 +598,7 @@ export class Particle3DTranslator {
         const dir = this._getUniformDirection3D(particle);
 
         // Expand outward over lifetime (from core surface to 2x radius)
-        const expansion = (1 - particle.life); // 0 to 1 as particle ages
+        const expansion = 1 - particle.life; // 0 to 1 as particle ages
         const radius = this.coreRadius3D * (1.0 + expansion * 1.0);
 
         // Position along 3D direction
@@ -672,18 +687,19 @@ export class Particle3DTranslator {
      */
     _translateConnecting(particle, corePosition, canvasSize) {
         const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
 
         // Pull toward core based on life
         const pullStrength = (1 - particle.life) * 0.3;
-        const direction = this.tempVec3_2.set(
-            corePosition.x - pos.x,
-            corePosition.y - pos.y,
-            corePosition.z - pos.z
-        ).normalize();
+        const direction = this.tempVec3_2
+            .set(corePosition.x - pos.x, corePosition.y - pos.y, corePosition.z - pos.z)
+            .normalize();
 
         pos.add(direction.multiplyScalar(pullStrength));
 
@@ -750,7 +766,7 @@ export class Particle3DTranslator {
         const behaviorData = particle.behaviorData || {};
 
         // Helical motion parameters (scaled to core size)
-        const angle = (behaviorData.spiralAngle || 0);
+        const angle = behaviorData.spiralAngle || 0;
         const radius = (behaviorData.spiralRadius || 50) * 0.01 * this.coreRadius3D;
         const height = particle.age * this.coreRadius3D * 0.5;
 
@@ -767,8 +783,11 @@ export class Particle3DTranslator {
      */
     _translateErratic(particle, corePosition, canvasSize) {
         const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
 
@@ -808,7 +827,7 @@ export class Particle3DTranslator {
         const perp = {
             x: dir.y * up.z - dir.z * up.y,
             y: dir.z * up.x - dir.x * up.z,
-            z: dir.x * up.y - dir.y * up.x
+            z: dir.x * up.y - dir.y * up.x,
         };
 
         // Normalize perpendicular vector
@@ -836,8 +855,11 @@ export class Particle3DTranslator {
      */
     _translateGlitchy(particle, corePosition, canvasSize) {
         const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
 
@@ -857,8 +879,11 @@ export class Particle3DTranslator {
      */
     _translateSpaz(particle, corePosition, canvasSize) {
         const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
 
@@ -891,8 +916,11 @@ export class Particle3DTranslator {
             );
 
             const currentPos = this._canvasToWorld(
-                particle.x, particle.y, particle.z,
-                canvasSize.width / 2, canvasSize.height / 2,
+                particle.x,
+                particle.y,
+                particle.z,
+                canvasSize.width / 2,
+                canvasSize.height / 2,
                 corePosition
             );
 
@@ -931,8 +959,11 @@ export class Particle3DTranslator {
      */
     _translateFizzy(particle, corePosition, canvasSize) {
         const pos = this._canvasToWorld(
-            particle.x, particle.y, particle.z,
-            canvasSize.width / 2, canvasSize.height / 2,
+            particle.x,
+            particle.y,
+            particle.z,
+            canvasSize.width / 2,
+            canvasSize.height / 2,
             corePosition
         );
 
@@ -964,7 +995,7 @@ export class Particle3DTranslator {
         const perp = {
             x: dir.y * up.z - dir.z * up.y,
             y: dir.z * up.x - dir.x * up.z,
-            z: dir.x * up.y - dir.y * up.x
+            z: dir.x * up.y - dir.y * up.x,
         };
 
         // Normalize perpendicular vector
@@ -1021,7 +1052,8 @@ export class Particle3DTranslator {
             behaviorData.diskInclination = (Math.random() - 0.5) * 0.1; // ±5.7 degrees
 
             // Keplerian velocity: v ∝ 1/sqrt(r)
-            behaviorData.angularVelocity = 0.5 / Math.sqrt(behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS);
+            behaviorData.angularVelocity =
+                0.5 / Math.sqrt(behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS);
 
             // Tidal stretching factor (increases as radius decreases)
             behaviorData.tidalStretch = { x: 1.0, y: 1.0, z: 1.0 };
@@ -1032,7 +1064,8 @@ export class Particle3DTranslator {
         behaviorData.orbitRadius -= decayRate * this.baseRadius;
 
         // Update angular velocity as radius changes (Kepler's 3rd law)
-        behaviorData.angularVelocity = 0.5 / Math.sqrt(behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS);
+        behaviorData.angularVelocity =
+            0.5 / Math.sqrt(behaviorData.orbitRadius / SCHWARZSCHILD_RADIUS);
 
         // Advance orbital angle
         behaviorData.orbitAngle += behaviorData.angularVelocity * (this.deltaTime || 16) * 0.001;
@@ -1083,7 +1116,10 @@ export class Particle3DTranslator {
 
         // Small vertical wobble (thin disk, not perfectly flat)
         const diskThickness = SCHWARZSCHILD_RADIUS * 0.1;
-        const y = Math.sin(behaviorData.orbitAngle * 3 + particle.x) * diskThickness * Math.sin(behaviorData.diskInclination);
+        const y =
+            Math.sin(behaviorData.orbitAngle * 3 + particle.x) *
+            diskThickness *
+            Math.sin(behaviorData.diskInclination);
 
         // Apply tidal stretching to position (visual spaghettification effect)
         const stretchedX = x * behaviorData.tidalStretch.x;

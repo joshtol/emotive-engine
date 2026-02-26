@@ -52,33 +52,35 @@ const ELECTRICCRACKLE_CONFIG = {
                 blend: 'multiply',
                 travel: 'angular',
                 travelSpeed: 1.5,
-                strengthCurve: 'fadeOut'
+                strengthCurve: 'fadeOut',
             },
             grain: { type: 3, strength: 0.15, scale: 0.4, speed: 2.0, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from crackle
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.1,
-                sizeScale: 0.6,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.1,
+                    sizeScale: 0.6,
+                    progressCurve: 'sustain',
+                },
+            ],
             flash: {
                 events: [
-                    { at: 0.20, intensity: 2.0 },
+                    { at: 0.2, intensity: 2.0 },
                     { at: 0.35, intensity: 1.5 },
-                    { at: 0.50, intensity: 2.5 },
+                    { at: 0.5, intensity: 2.5 },
                     { at: 0.65, intensity: 1.0 },
-                    { at: 0.75, intensity: 1.8 }
+                    { at: 0.75, intensity: 1.8 },
                 ],
-                decay: 0.015
+                decay: 0.015,
             },
             scaleVariance: 0.3,
             lifetimeVariance: 0.15,
             blending: 'additive',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     jitterFrequency: 0,
@@ -91,7 +93,7 @@ const ELECTRICCRACKLE_CONFIG = {
     scaleVibration: 0.02,
     scaleFrequency: 2,
     scalePulse: true,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildElectricEffectGesture(ELECTRICCRACKLE_CONFIG);

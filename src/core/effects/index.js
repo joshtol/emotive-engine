@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Visual Effects Registry
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central registry for visual effects like zen vortex, recording glow, etc.
@@ -54,12 +54,12 @@ export function applyEffect(effectName, ctx, params) {
     if (!effect) {
         return false;
     }
-    
+
     if (effect.apply) {
         effect.apply(ctx, params);
         return true;
     }
-    
+
     return false;
 }
 
@@ -99,5 +99,5 @@ export default {
     getEffect,
     applyEffect,
     isEffectActive,
-    getAllEffects
+    getAllEffects,
 };

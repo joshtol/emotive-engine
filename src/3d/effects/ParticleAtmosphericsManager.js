@@ -53,7 +53,7 @@ class ParticleEmitter {
         this.spawning = true; // Set to false on stopGesture to drain
         this._dirty = false;
         this._progress = 0;
-        this._energy = null;  // null = not set (use curveMultiplier fallback)
+        this._energy = null; // null = not set (use curveMultiplier fallback)
 
         // Source element positions (filtered by targetModels each frame)
         this._sourcePositions = new Float32Array(MAX_SOURCE_POSITIONS * 3);
@@ -66,13 +66,13 @@ class ParticleEmitter {
 
         // GPU geometry + attribute buffers
         const max = config.maxParticles;
-        this._spawnPosBuffer    = new Float32Array(max * 3);
-        this._spawnVelBuffer    = new Float32Array(max * 3);
-        this._spawnTimeBuffer   = new Float32Array(max);
-        this._lifetimeBuffer    = new Float32Array(max);
-        this._sizeBuffer        = new Float32Array(max);
-        this._rotationBuffer    = new Float32Array(max);
-        this._seedBuffer        = new Float32Array(max);
+        this._spawnPosBuffer = new Float32Array(max * 3);
+        this._spawnVelBuffer = new Float32Array(max * 3);
+        this._spawnTimeBuffer = new Float32Array(max);
+        this._lifetimeBuffer = new Float32Array(max);
+        this._sizeBuffer = new Float32Array(max);
+        this._rotationBuffer = new Float32Array(max);
+        this._seedBuffer = new Float32Array(max);
 
         this.geometry = this._createGeometry(max);
         this.mesh = new THREE.Mesh(this.geometry, config.material);
@@ -88,12 +88,7 @@ class ParticleEmitter {
         const geo = new THREE.InstancedBufferGeometry();
 
         // Base quad: 4 vertices, 6 indices (two triangles)
-        const vertices = new Float32Array([
-            -0.5, -0.5, 0,
-            0.5, -0.5, 0,
-            0.5,  0.5, 0,
-            -0.5,  0.5, 0,
-        ]);
+        const vertices = new Float32Array([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0]);
         const indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
         geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         geo.setIndex(new THREE.BufferAttribute(indices, 1));
@@ -102,13 +97,13 @@ class ParticleEmitter {
         // DynamicDrawUsage: these buffers change every few frames as particles
         // spawn/die — StaticDrawUsage causes expensive driver-side buffer reallocation
         const attrDefs = [
-            ['aSpawnPos',      this._spawnPosBuffer,  3],
-            ['aSpawnVelocity', this._spawnVelBuffer,   3],
-            ['aSpawnTime',     this._spawnTimeBuffer,  1],
-            ['aLifetime',      this._lifetimeBuffer,   1],
-            ['aSize',          this._sizeBuffer,       1],
-            ['aRotation',      this._rotationBuffer,   1],
-            ['aSeed',          this._seedBuffer,       1],
+            ['aSpawnPos', this._spawnPosBuffer, 3],
+            ['aSpawnVelocity', this._spawnVelBuffer, 3],
+            ['aSpawnTime', this._spawnTimeBuffer, 1],
+            ['aLifetime', this._lifetimeBuffer, 1],
+            ['aSize', this._sizeBuffer, 1],
+            ['aRotation', this._rotationBuffer, 1],
+            ['aSeed', this._seedBuffer, 1],
         ];
         for (const [name, buffer, size] of attrDefs) {
             const attr = new THREE.InstancedBufferAttribute(buffer, size);
@@ -160,9 +155,12 @@ class ParticleEmitter {
 
         for (let i = 0; i < minCount; i++) {
             const idx = i * 3;
-            this._sourceVelocities[idx]     = (this._sourcePositions[idx]     - this._prevSourcePositions[idx])     * invDt;
-            this._sourceVelocities[idx + 1] = (this._sourcePositions[idx + 1] - this._prevSourcePositions[idx + 1]) * invDt;
-            this._sourceVelocities[idx + 2] = (this._sourcePositions[idx + 2] - this._prevSourcePositions[idx + 2]) * invDt;
+            this._sourceVelocities[idx] =
+                (this._sourcePositions[idx] - this._prevSourcePositions[idx]) * invDt;
+            this._sourceVelocities[idx + 1] =
+                (this._sourcePositions[idx + 1] - this._prevSourcePositions[idx + 1]) * invDt;
+            this._sourceVelocities[idx + 2] =
+                (this._sourcePositions[idx + 2] - this._prevSourcePositions[idx + 2]) * invDt;
         }
 
         // New sources (count > prevCount) get zero velocity
@@ -191,7 +189,7 @@ class ParticleEmitter {
         for (let i = 0; i < this.activeCount; i++) {
             if (globalTime - this._spawnTimeBuffer[i] >= this._lifetimeBuffer[i]) {
                 this._kill(i);
-                i--;  // Re-check the swapped particle
+                i--; // Re-check the swapped particle
             }
         }
 
@@ -293,11 +291,14 @@ class ParticleEmitter {
         const sy = this._sourcePositions[srcIdx * 3 + 1];
         const sz = this._sourcePositions[srcIdx * 3 + 2];
 
-        const baseSpeed = cfg.initialSpeedMin + Math.random() * (cfg.initialSpeedMax - cfg.initialSpeedMin);
+        const baseSpeed =
+            cfg.initialSpeedMin + Math.random() * (cfg.initialSpeedMax - cfg.initialSpeedMin);
         const speed = baseSpeed * energyScale;
         const radius = cfg.spawnRadius || 0;
-        let offsetX = 0, offsetZ = 0;
-        let radialVx = 0, radialVz = 0;
+        let offsetX = 0,
+            offsetZ = 0;
+        let radialVx = 0,
+            radialVz = 0;
 
         if (radius > 0) {
             // Distribute on a random disk around the source (sqrt for uniform area)
@@ -317,7 +318,7 @@ class ParticleEmitter {
         }
 
         // Spawn position: source + radial offset + small jitter + configured Y offset
-        this._spawnPosBuffer[idx * 3]     = sx + offsetX + (Math.random() - 0.5) * 0.05;
+        this._spawnPosBuffer[idx * 3] = sx + offsetX + (Math.random() - 0.5) * 0.05;
         this._spawnPosBuffer[idx * 3 + 1] = sy + (cfg.spawnOffsetY ?? 0);
         this._spawnPosBuffer[idx * 3 + 2] = sz + offsetZ + (Math.random() - 0.5) * 0.05;
 
@@ -331,7 +332,7 @@ class ParticleEmitter {
         // Source velocity computed from frame-to-frame position delta in _updateSourceVelocities().
         const inheritance = cfg.velocityInheritance || 0;
         if (inheritance > 0 && this._hasVelocityData) {
-            vx += this._sourceVelocities[srcIdx * 3]     * inheritance;
+            vx += this._sourceVelocities[srcIdx * 3] * inheritance;
             vy += this._sourceVelocities[srcIdx * 3 + 1] * inheritance;
             vz += this._sourceVelocities[srcIdx * 3 + 2] * inheritance;
         }
@@ -340,7 +341,7 @@ class ParticleEmitter {
         // For rings rotating around their center, the element origin is stationary
         // but particles should fling outward as if thrown from the spinning surface.
         // The offset from source center (from spawnRadius) gives the radial direction.
-        const {centrifugal} = cfg;
+        const { centrifugal } = cfg;
         if (centrifugal && (offsetX !== 0 || offsetZ !== 0)) {
             const dist = Math.sqrt(offsetX * offsetX + offsetZ * offsetZ);
             if (dist > 0.01) {
@@ -359,19 +360,21 @@ class ParticleEmitter {
             }
         }
 
-        this._spawnVelBuffer[idx * 3]     = vx;
+        this._spawnVelBuffer[idx * 3] = vx;
         this._spawnVelBuffer[idx * 3 + 1] = vy;
         this._spawnVelBuffer[idx * 3 + 2] = vz;
 
         // Timing
         this._spawnTimeBuffer[idx] = globalTime;
-        this._lifetimeBuffer[idx]  = cfg.lifetimeMin + Math.random() * (cfg.lifetimeMax - cfg.lifetimeMin);
+        this._lifetimeBuffer[idx] =
+            cfg.lifetimeMin + Math.random() * (cfg.lifetimeMax - cfg.lifetimeMin);
 
         // Visual randomization — size also scales with energy (subtler: 0.7 floor)
         const sizeScale = 0.7 + 0.3 * energy;
-        this._sizeBuffer[idx]     = (cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin)) * sizeScale;
+        this._sizeBuffer[idx] =
+            (cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin)) * sizeScale;
         this._rotationBuffer[idx] = Math.random() * Math.PI * 2;
-        this._seedBuffer[idx]     = Math.random();
+        this._seedBuffer[idx] = Math.random();
 
         this.activeCount++;
         this._dirty = true;
@@ -384,19 +387,19 @@ class ParticleEmitter {
     _kill(index) {
         const last = this.activeCount - 1;
         if (index !== last) {
-            this._spawnPosBuffer[index * 3]     = this._spawnPosBuffer[last * 3];
+            this._spawnPosBuffer[index * 3] = this._spawnPosBuffer[last * 3];
             this._spawnPosBuffer[index * 3 + 1] = this._spawnPosBuffer[last * 3 + 1];
             this._spawnPosBuffer[index * 3 + 2] = this._spawnPosBuffer[last * 3 + 2];
 
-            this._spawnVelBuffer[index * 3]     = this._spawnVelBuffer[last * 3];
+            this._spawnVelBuffer[index * 3] = this._spawnVelBuffer[last * 3];
             this._spawnVelBuffer[index * 3 + 1] = this._spawnVelBuffer[last * 3 + 1];
             this._spawnVelBuffer[index * 3 + 2] = this._spawnVelBuffer[last * 3 + 2];
 
             this._spawnTimeBuffer[index] = this._spawnTimeBuffer[last];
-            this._lifetimeBuffer[index]  = this._lifetimeBuffer[last];
-            this._sizeBuffer[index]      = this._sizeBuffer[last];
-            this._rotationBuffer[index]  = this._rotationBuffer[last];
-            this._seedBuffer[index]      = this._seedBuffer[last];
+            this._lifetimeBuffer[index] = this._lifetimeBuffer[last];
+            this._sizeBuffer[index] = this._sizeBuffer[last];
+            this._rotationBuffer[index] = this._rotationBuffer[last];
+            this._seedBuffer[index] = this._seedBuffer[last];
         }
 
         this.activeCount--;
@@ -524,7 +527,7 @@ export class ParticleAtmosphericsManager {
         if (!emitters) return;
 
         for (const emitter of emitters) {
-            const {targetModels} = emitter.config;
+            const { targetModels } = emitter.config;
             let count = 0;
 
             for (const [, data] of activeElements) {
@@ -540,7 +543,7 @@ export class ParticleAtmosphericsManager {
                 if (container) {
                     container.localToWorld(_tempVec3);
                 }
-                this._filteredPositions[count * 3]     = _tempVec3.x;
+                this._filteredPositions[count * 3] = _tempVec3.x;
                 this._filteredPositions[count * 3 + 1] = _tempVec3.y;
                 this._filteredPositions[count * 3 + 2] = _tempVec3.z;
                 count++;
@@ -550,7 +553,7 @@ export class ParticleAtmosphericsManager {
 
             // Feed gravity center (mascot world origin) to emitters with gravity pull
             if (emitter.config.gravity && container) {
-                const {uniforms} = emitter.mesh.material;
+                const { uniforms } = emitter.mesh.material;
                 if (uniforms.uGravityCenter) {
                     _tempVec3.set(0, 0, 0);
                     container.localToWorld(_tempVec3);

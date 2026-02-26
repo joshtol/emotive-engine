@@ -33,15 +33,15 @@ export default {
     config: {
         duration: 2000,
         musicalDuration: { musical: true, bars: 1 },
-        direction: 'inward',  // 'inward' or 'outward'
-        rotationSpeed: 2.0,   // Rotations during gesture
-        pullStrength: 1.0,    // How strongly pulled to/from center
-        liftAmount: 0.5,      // Vertical lift during vortex
+        direction: 'inward', // 'inward' or 'outward'
+        rotationSpeed: 2.0, // Rotations during gesture
+        pullStrength: 1.0, // How strongly pulled to/from center
+        liftAmount: 0.5, // Vertical lift during vortex
         strength: 1.0,
         particleMotion: {
             type: 'vortex',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -52,8 +52,8 @@ export default {
 
         rotationSync: {
             onBeat: 1.5,
-            offBeat: 0.8
-        }
+            offBeat: 0.8,
+        },
     },
 
     initialize(particle, motion, centerX, centerY) {
@@ -67,7 +67,7 @@ export default {
             originalY: particle.y,
             startAngle: Math.atan2(dy, dx),
             startDistance: Math.sqrt(dx * dx + dy * dy),
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -105,7 +105,7 @@ export default {
 
         // Fade based on direction
         if (isInward && progress > 0.7) {
-            particle.opacity = 1 - ((progress - 0.7) / 0.3);
+            particle.opacity = 1 - (progress - 0.7) / 0.3;
         }
     },
 
@@ -159,8 +159,8 @@ export default {
                 rotation: [tiltX * fadeEnvelope, yRotation, tiltZ * fadeEnvelope],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

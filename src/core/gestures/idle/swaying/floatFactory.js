@@ -35,7 +35,14 @@ export function createFloatGesture(direction) {
 
     return {
         name: `float${capitalize(direction)}`,
-        emoji: direction === 'up' ? '🎈' : direction === 'down' ? '🍂' : direction === 'left' ? '🌬️' : '💨',
+        emoji:
+            direction === 'up'
+                ? '🎈'
+                : direction === 'down'
+                  ? '🍂'
+                  : direction === 'left'
+                    ? '🌬️'
+                    : '💨',
         type: 'blending',
         description: `Gentle floating ${direction}`,
 
@@ -44,7 +51,7 @@ export function createFloatGesture(direction) {
             amplitude: 80,
             wobbleAmount: 20,
             strength: 1.0,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -54,23 +61,23 @@ export function createFloatGesture(direction) {
             amplitudeSync: {
                 onBeat: 1.5,
                 offBeat: 0.8,
-                curve: 'bounce'
+                curve: 'bounce',
             },
 
             wobbleSync: {
                 subdivision: 'eighth',
-                intensity: 0.7
+                intensity: 0.7,
             },
 
             durationSync: {
                 mode: 'bars',
-                bars: 2
+                bars: 2,
             },
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.3
-            }
+                multiplier: 1.3,
+            },
         },
 
         apply(particle, progress, motion, dt, _centerX, _centerY) {
@@ -80,7 +87,7 @@ export function createFloatGesture(direction) {
             if (!particle.gestureData.float) {
                 particle.gestureData.float = {
                     originalSize: particle.size,
-                    originalOpacity: particle.opacity || 1
+                    originalOpacity: particle.opacity || 1,
                 };
             }
 
@@ -90,9 +97,9 @@ export function createFloatGesture(direction) {
             const strength = config.strength || 1.0;
 
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
-                wobbleAmount *= (motion.rhythmModulation.wobbleMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
+                wobbleAmount *= motion.rhythmModulation.wobbleMultiplier || 1;
             }
 
             // Wobble perpendicular to direction of travel
@@ -140,9 +147,9 @@ export function createFloatGesture(direction) {
                 const strength = config.strength || 1.0;
 
                 if (motion.rhythmModulation) {
-                    amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                    amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
-                    wobbleAmount *= (motion.rhythmModulation.wobbleMultiplier || 1);
+                    amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                    amplitude *= motion.rhythmModulation.accentMultiplier || 1;
+                    wobbleAmount *= motion.rhythmModulation.wobbleMultiplier || 1;
                 }
 
                 const PIXEL_TO_3D = 0.005;
@@ -167,7 +174,8 @@ export function createFloatGesture(direction) {
                 const scale = 1.0 + floatCurve * 0.1;
 
                 // Position based on direction
-                let posX = 0, posY = 0;
+                let posX = 0,
+                    posY = 0;
                 const posZ = 0;
 
                 if (isVertical) {
@@ -182,9 +190,9 @@ export function createFloatGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, posZ],
                     rotation: [tiltX, spinRotation, tiltZ],
-                    scale
+                    scale,
                 };
-            }
-        }
+            },
+        },
     };
 }

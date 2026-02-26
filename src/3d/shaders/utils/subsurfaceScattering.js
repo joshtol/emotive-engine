@@ -345,87 +345,87 @@ export const SSS_PRESETS = {
     // Reference: Clear quartz with deep black shadows and brilliant facet highlights
     quartz: {
         sssStrength: 0.8,
-        sssAbsorption: [2.8, 2.9, 3.0],        // Slight cool tint, mostly neutral
-        sssScatterDistance: [0.2, 0.2, 0.25],  // Tight scatter for sharp internal look
-        sssThicknessBias: 0.60,                // Dark core
-        sssThicknessScale: 1.8,                // Strong thick/thin contrast
-        sssCurvatureScale: 3.0,                // Sharp edge definition
-        sssAmbient: 0.12,                      // Very low ambient for deep shadows
+        sssAbsorption: [2.8, 2.9, 3.0], // Slight cool tint, mostly neutral
+        sssScatterDistance: [0.2, 0.2, 0.25], // Tight scatter for sharp internal look
+        sssThicknessBias: 0.6, // Dark core
+        sssThicknessScale: 1.8, // Strong thick/thin contrast
+        sssCurvatureScale: 3.0, // Sharp edge definition
+        sssAmbient: 0.12, // Very low ambient for deep shadows
         // Crystal appearance - maximum clarity
-        frostiness: 0.15,                      // Very clear, almost no frost
-        innerGlowStrength: 0.20,               // Minimal soul
-        fresnelIntensity: 1.5,                 // Bright edge sparkle
-        causticIntensity: 1.2                  // Boosted caustics for internal structure
+        frostiness: 0.15, // Very clear, almost no frost
+        innerGlowStrength: 0.2, // Minimal soul
+        fresnelIntensity: 1.5, // Bright edge sparkle
+        causticIntensity: 1.2, // Boosted caustics for internal structure
     },
 
     // Emerald - deep vivid green with near-black core
     // Reference: Cut emerald with dark center and bright green edges
     emerald: {
         sssStrength: 2.0,
-        sssAbsorption: [0.05, 4.0, 0.1],       // Pure vivid green, near-zero red/blue
-        sssScatterDistance: [0.1, 0.5, 0.1],   // Tight scatter, green dominant
-        sssThicknessBias: 0.65,                // Dark core
-        sssThicknessScale: 1.8,                // Strong thick/thin contrast
-        sssCurvatureScale: 3.0,                // Sharp edge definition
-        sssAmbient: 0.10,                      // Very low ambient for deep shadows
+        sssAbsorption: [0.05, 4.0, 0.1], // Pure vivid green, near-zero red/blue
+        sssScatterDistance: [0.1, 0.5, 0.1], // Tight scatter, green dominant
+        sssThicknessBias: 0.65, // Dark core
+        sssThicknessScale: 1.8, // Strong thick/thin contrast
+        sssCurvatureScale: 3.0, // Sharp edge definition
+        sssAmbient: 0.1, // Very low ambient for deep shadows
         // Crystal appearance - sharp gemstone look
-        frostiness: 0.20,                      // Very clear
-        innerGlowStrength: 0.15,               // Minimal soul for gem clarity
-        fresnelIntensity: 1.2,                 // Bright edges
-        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
+        frostiness: 0.2, // Very clear
+        innerGlowStrength: 0.15, // Minimal soul for gem clarity
+        fresnelIntensity: 1.2, // Bright edges
+        emotionColorBleed: 0.35, // Allow soul emotion color to tint the gem
     },
 
     // Ruby - deep red gemstone with wine/burgundy depth
     // Reference: Pigeon blood ruby - deep wine core, cherry red thin areas
     ruby: {
-        sssStrength: 1.8,                      // Boosted for richer saturation
-        sssAbsorption: [4.0, 0.03, 0.08],      // Higher red, near-zero green/blue for purer red
+        sssStrength: 1.8, // Boosted for richer saturation
+        sssAbsorption: [4.0, 0.03, 0.08], // Higher red, near-zero green/blue for purer red
         sssScatterDistance: [0.4, 0.04, 0.08], // More red scatter, minimal other colors
-        sssThicknessBias: 0.65,                // Darker core like other gemstones
-        sssThicknessScale: 1.9,                // More contrast thick/thin
-        sssCurvatureScale: 2.5,                // Sharper edge definition
-        sssAmbient: 0.08,                      // Lower ambient for deeper shadows
+        sssThicknessBias: 0.65, // Darker core like other gemstones
+        sssThicknessScale: 1.9, // More contrast thick/thin
+        sssCurvatureScale: 2.5, // Sharper edge definition
+        sssAmbient: 0.08, // Lower ambient for deeper shadows
         // Crystal appearance - rich gem brilliance
-        frostiness: 0.12,                      // Very clear for glossy look
-        innerGlowStrength: 0.12,               // Subtle internal glow
-        fresnelIntensity: 1.2,                 // Brighter edges like other gems
-        causticIntensity: 1.15,                // Enhanced caustics for ruby
-        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
+        frostiness: 0.12, // Very clear for glossy look
+        innerGlowStrength: 0.12, // Subtle internal glow
+        fresnelIntensity: 1.2, // Brighter edges like other gems
+        causticIntensity: 1.15, // Enhanced caustics for ruby
+        emotionColorBleed: 0.35, // Allow soul emotion color to tint the gem
     },
 
     // Sapphire - deep vivid blue gemstone with near-black shadows
     // Reference: Ceylon blue sapphire with dark center and bright blue edges
     sapphire: {
         sssStrength: 2.2,
-        sssAbsorption: [0.15, 0.4, 4.0],       // Deep blue: very high blue, low red/green
-        sssScatterDistance: [0.1, 0.15, 0.5],  // Blue scatter dominant
-        sssThicknessBias: 0.65,                // Dark core
-        sssThicknessScale: 1.8,                // Strong thick/thin contrast
-        sssCurvatureScale: 3.0,                // Sharp edge definition
-        sssAmbient: 0.10,                      // Very low ambient for deep shadows
+        sssAbsorption: [0.15, 0.4, 4.0], // Deep blue: very high blue, low red/green
+        sssScatterDistance: [0.1, 0.15, 0.5], // Blue scatter dominant
+        sssThicknessBias: 0.65, // Dark core
+        sssThicknessScale: 1.8, // Strong thick/thin contrast
+        sssCurvatureScale: 3.0, // Sharp edge definition
+        sssAmbient: 0.1, // Very low ambient for deep shadows
         // Crystal appearance - sharp gemstone look
-        frostiness: 0.18,                      // Very clear
-        innerGlowStrength: 0.15,               // Minimal soul
-        fresnelIntensity: 1.3,                 // Bright edges
-        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
+        frostiness: 0.18, // Very clear
+        innerGlowStrength: 0.15, // Minimal soul
+        fresnelIntensity: 1.3, // Bright edges
+        emotionColorBleed: 0.35, // Allow soul emotion color to tint the gem
     },
 
     // Amethyst - deep violet gemstone with near-black shadows
     // Reference: Rich purple with deep black shadows and bright pink/white facet highlights
     amethyst: {
         sssStrength: 2.5,
-        sssAbsorption: [3.0, 0.05, 4.5],       // Deep violet: high red+blue, very low green
-        sssScatterDistance: [0.4, 0.05, 0.5],  // Red and blue scatter, no green
-        sssThicknessBias: 0.70,                // Very dark core
-        sssThicknessScale: 2.0,                // Maximum thick/thin contrast
-        sssCurvatureScale: 3.0,                // Sharp edge definition
-        sssAmbient: 0.08,                      // Very low ambient for deep shadows
+        sssAbsorption: [3.0, 0.05, 4.5], // Deep violet: high red+blue, very low green
+        sssScatterDistance: [0.4, 0.05, 0.5], // Red and blue scatter, no green
+        sssThicknessBias: 0.7, // Very dark core
+        sssThicknessScale: 2.0, // Maximum thick/thin contrast
+        sssCurvatureScale: 3.0, // Sharp edge definition
+        sssAmbient: 0.08, // Very low ambient for deep shadows
         // Crystal appearance - dark gemstone with bright highlights
-        frostiness: 0.18,                      // Very clear, minimal frost
-        innerGlowStrength: 0.12,               // Minimal soul
-        fresnelIntensity: 1.4,                 // Bright edges for facet sparkle
-        emotionColorBleed: 0.35                // Allow soul emotion color to tint the gem
-    }
+        frostiness: 0.18, // Very clear, minimal frost
+        innerGlowStrength: 0.12, // Minimal soul
+        fresnelIntensity: 1.4, // Bright edges for facet sparkle
+        emotionColorBleed: 0.35, // Allow soul emotion color to tint the gem
+    },
 };
 
 /**

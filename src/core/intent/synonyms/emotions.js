@@ -13,22 +13,47 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     neutral: [
         // Direct
-        'neutral', 'default', 'normal', 'baseline', 'standard',
+        'neutral',
+        'default',
+        'normal',
+        'baseline',
+        'standard',
 
         // Absence descriptors
-        'nothing special', 'nothing particular', 'no strong feeling',
-        'not much', 'meh', 'whatever', 'indifferent',
+        'nothing special',
+        'nothing particular',
+        'no strong feeling',
+        'not much',
+        'meh',
+        'whatever',
+        'indifferent',
 
         // Equilibrium
-        'balanced', 'even', 'steady', 'stable', 'centered',
-        'level', 'middle ground', 'in between',
+        'balanced',
+        'even',
+        'steady',
+        'stable',
+        'centered',
+        'level',
+        'middle ground',
+        'in between',
 
         // Waiting states
-        'ready', 'waiting', 'standing by', 'at attention',
-        'present', 'here', 'available', 'attentive',
+        'ready',
+        'waiting',
+        'standing by',
+        'at attention',
+        'present',
+        'here',
+        'available',
+        'attentive',
 
         // Reset
-        'reset', 'clear', 'blank', 'empty', 'clean slate'
+        'reset',
+        'clear',
+        'blank',
+        'empty',
+        'clean slate',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -36,39 +61,81 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     joy: [
         // Core
-        'happy', 'joy', 'joyful', 'joyous',
+        'happy',
+        'joy',
+        'joyful',
+        'joyous',
 
         // Mild happiness
-        'pleased', 'glad', 'content', 'satisfied', 'gratified',
-        'comfortable', 'good',
+        'pleased',
+        'glad',
+        'content',
+        'satisfied',
+        'gratified',
+        'comfortable',
+        'good',
 
         // Medium happiness
-        'cheerful', 'cheery', 'merry', 'jovial', 'jolly',
-        'upbeat', 'sunny', 'bright', 'lighthearted', 'buoyant',
+        'cheerful',
+        'cheery',
+        'merry',
+        'jovial',
+        'jolly',
+        'upbeat',
+        'sunny',
+        'bright',
+        'lighthearted',
+        'buoyant',
 
         // Strong happiness
-        'delighted', 'thrilled', 'overjoyed', 'elated',
-        'jubilant', 'exultant', 'gleeful',
+        'delighted',
+        'thrilled',
+        'overjoyed',
+        'elated',
+        'jubilant',
+        'exultant',
+        'gleeful',
 
         // Warm happiness
-        'glowing', 'beaming', 'radiant',
+        'glowing',
+        'beaming',
+        'radiant',
 
         // Slang - American
-        'pumped', 'stoked', 'psyched', 'amped', 'hyped',
+        'pumped',
+        'stoked',
+        'psyched',
+        'amped',
+        'hyped',
 
         // Slang - Internet/Gen-Z
-        'vibing', 'living', 'slaying', 'winning',
-        'lit', 'fire', 'sick', 'dope',
+        'vibing',
+        'living',
+        'slaying',
+        'winning',
+        'lit',
+        'fire',
+        'sick',
+        'dope',
 
         // British
-        'chuffed', 'pleased as punch', 'over the moon', 'made up',
-        'tickled', 'tickled pink',
+        'chuffed',
+        'pleased as punch',
+        'over the moon',
+        'made up',
+        'tickled',
+        'tickled pink',
 
         // Formal
-        'felicitous', 'beatific', 'blissful',
+        'felicitous',
+        'beatific',
+        'blissful',
 
         // Action-oriented
-        'smiling', 'grinning', 'laughing', 'giggling'
+        'smiling',
+        'grinning',
+        'laughing',
+        'giggling',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -76,33 +143,67 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     calm: [
         // Core
-        'calm', 'peaceful', 'serene', 'tranquil',
+        'calm',
+        'peaceful',
+        'serene',
+        'tranquil',
 
         // Relaxation
-        'relaxed', 'at ease', 'comfortable', 'loose',
-        'unwound', 'decompressed', 'chilled',
+        'relaxed',
+        'at ease',
+        'comfortable',
+        'loose',
+        'unwound',
+        'decompressed',
+        'chilled',
 
         // Stillness
-        'still', 'quiet', 'hushed', 'silent', 'soft',
-        'gentle', 'mild', 'placid', 'smooth',
+        'still',
+        'quiet',
+        'hushed',
+        'silent',
+        'soft',
+        'gentle',
+        'mild',
+        'placid',
+        'smooth',
 
         // Mental calm
-        'composed', 'collected', 'centered', 'grounded',
-        'untroubled', 'unworried', 'unbothered', 'unfazed',
+        'composed',
+        'collected',
+        'centered',
+        'grounded',
+        'untroubled',
+        'unworried',
+        'unbothered',
+        'unfazed',
 
         // Meditative
-        'meditative', 'zen', 'mindful',
-        'contemplative', 'reflective', 'introspective',
+        'meditative',
+        'zen',
+        'mindful',
+        'contemplative',
+        'reflective',
+        'introspective',
 
         // Physical relaxation
-        'soothed', 'eased', 'mellowed', 'softened',
+        'soothed',
+        'eased',
+        'mellowed',
+        'softened',
 
         // Slang
-        'chill', 'coasting', 'floating', 'drifting',
-        'laid back', 'easy going', 'low key',
+        'chill',
+        'coasting',
+        'floating',
+        'drifting',
+        'laid back',
+        'easy going',
+        'low key',
 
         // British
-        'sorted', 'easy peasy'
+        'sorted',
+        'easy peasy',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -110,35 +211,72 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     excited: [
         // Core
-        'excited', 'exciting', 'excitable',
+        'excited',
+        'exciting',
+        'excitable',
 
         // Enthusiasm
-        'enthusiastic', 'eager', 'keen', 'avid',
-        'passionate', 'fervent', 'ardent', 'zealous',
+        'enthusiastic',
+        'eager',
+        'keen',
+        'avid',
+        'passionate',
+        'fervent',
+        'ardent',
+        'zealous',
 
         // Energy
-        'energetic', 'energized', 'animated', 'lively',
-        'spirited', 'vivacious', 'vibrant', 'dynamic',
-        'bouncy', 'peppy', 'perky', 'sprightly',
+        'energetic',
+        'energized',
+        'animated',
+        'lively',
+        'spirited',
+        'vivacious',
+        'vibrant',
+        'dynamic',
+        'bouncy',
+        'peppy',
+        'perky',
+        'sprightly',
 
         // Anticipation
-        'anticipating', 'expectant', 'looking forward',
-        'itching', 'raring', 'chomping at the bit',
+        'anticipating',
+        'expectant',
+        'looking forward',
+        'itching',
+        'raring',
+        'chomping at the bit',
 
         // Intensity
-        'fired up', 'charged', 'electric', 'electrified',
-        'buzzing', 'tingling', 'crackling', 'sparking',
+        'fired up',
+        'charged',
+        'electric',
+        'electrified',
+        'buzzing',
+        'tingling',
+        'crackling',
+        'sparking',
 
         // Slang
-        'jazzed', 'juiced', 'geeked', 'hype',
-        'turnt', 'going off',
+        'jazzed',
+        'juiced',
+        'geeked',
+        'hype',
+        'turnt',
+        'going off',
 
         // British
-        'well excited', 'buzzing',
+        'well excited',
+        'buzzing',
 
         // Physical
-        'restless', 'fidgety', 'antsy', 'jumpy',
-        'twitchy', 'keyed up', 'wound up'
+        'restless',
+        'fidgety',
+        'antsy',
+        'jumpy',
+        'twitchy',
+        'keyed up',
+        'wound up',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -146,39 +284,84 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     sadness: [
         // Core
-        'sad', 'sadness', 'saddened', 'unhappy',
+        'sad',
+        'sadness',
+        'saddened',
+        'unhappy',
 
         // Mild sadness
-        'down', 'low', 'blue', 'glum', 'bummed',
-        'disappointed', 'let down', 'discouraged',
-        'disheartened', 'dispirited', 'deflated',
+        'down',
+        'low',
+        'blue',
+        'glum',
+        'bummed',
+        'disappointed',
+        'let down',
+        'discouraged',
+        'disheartened',
+        'dispirited',
+        'deflated',
 
         // Medium sadness
-        'melancholy', 'melancholic', 'somber', 'gloomy',
-        'mournful', 'sorrowful', 'doleful', 'woeful',
-        'heavy-hearted', 'downcast', 'crestfallen',
+        'melancholy',
+        'melancholic',
+        'somber',
+        'gloomy',
+        'mournful',
+        'sorrowful',
+        'doleful',
+        'woeful',
+        'heavy-hearted',
+        'downcast',
+        'crestfallen',
 
         // Strong sadness
-        'heartbroken', 'devastated', 'crushed', 'shattered',
-        'despairing', 'despondent', 'desolate', 'inconsolable',
-        'grief', 'grieving', 'mourning', 'bereft',
+        'heartbroken',
+        'devastated',
+        'crushed',
+        'shattered',
+        'despairing',
+        'despondent',
+        'desolate',
+        'inconsolable',
+        'grief',
+        'grieving',
+        'mourning',
+        'bereft',
 
         // Emptiness
-        'empty', 'hollow', 'numb', 'void',
+        'empty',
+        'hollow',
+        'numb',
+        'void',
 
         // Longing
-        'wistful', 'longing', 'yearning', 'pining', 'nostalgic',
+        'wistful',
+        'longing',
+        'yearning',
+        'pining',
+        'nostalgic',
 
         // Slang
-        'bummed out', 'down in the dumps',
-        'in a funk', 'in the dumps', 'feeling low',
+        'bummed out',
+        'down in the dumps',
+        'in a funk',
+        'in the dumps',
+        'feeling low',
 
         // British
-        'gutted', 'choked',
+        'gutted',
+        'choked',
 
         // Physical
-        'crying', 'tearful', 'weeping', 'sobbing',
-        'sighing', 'drooping', 'wilting', 'slumping'
+        'crying',
+        'tearful',
+        'weeping',
+        'sobbing',
+        'sighing',
+        'drooping',
+        'wilting',
+        'slumping',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -186,40 +369,84 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     anger: [
         // Core
-        'angry', 'anger', 'angered', 'mad',
+        'angry',
+        'anger',
+        'angered',
+        'mad',
 
         // Mild anger
-        'annoyed', 'irritated', 'bothered', 'irked',
-        'peeved', 'miffed', 'vexed', 'displeased',
-        'put out', 'ticked off', 'ticked',
+        'annoyed',
+        'irritated',
+        'bothered',
+        'irked',
+        'peeved',
+        'miffed',
+        'vexed',
+        'displeased',
+        'put out',
+        'ticked off',
+        'ticked',
 
         // Medium anger
-        'frustrated', 'aggravated', 'exasperated',
-        'fed up', 'sick of', 'had enough',
-        'cross', 'upset', 'worked up',
+        'frustrated',
+        'aggravated',
+        'exasperated',
+        'fed up',
+        'sick of',
+        'had enough',
+        'cross',
+        'upset',
+        'worked up',
 
         // Strong anger
-        'furious', 'enraged', 'livid', 'irate',
-        'incensed', 'infuriated', 'outraged', 'seething',
-        'fuming', 'boiling', 'burning', 'smoldering',
+        'furious',
+        'enraged',
+        'livid',
+        'irate',
+        'incensed',
+        'infuriated',
+        'outraged',
+        'seething',
+        'fuming',
+        'boiling',
+        'burning',
+        'smoldering',
 
         // Extreme anger
-        'raging', 'ballistic', 'apoplectic', 'berserk',
-        'seeing red', 'losing it',
+        'raging',
+        'ballistic',
+        'apoplectic',
+        'berserk',
+        'seeing red',
+        'losing it',
 
         // Slang
-        'pissed', 'pissed off', 'salty', 'pressed',
-        'triggered', 'tilted', 'heated', 'steaming',
+        'pissed',
+        'pissed off',
+        'salty',
+        'pressed',
+        'triggered',
+        'tilted',
+        'heated',
+        'steaming',
 
         // British
-        'narked', 'cheesed off', 'brassed off',
-        'shirty', 'stroppy', 'mardy',
+        'narked',
+        'cheesed off',
+        'brassed off',
+        'shirty',
+        'stroppy',
+        'mardy',
 
         // Australian
-        'ropeable', 'filthy', 'spewing',
+        'ropeable',
+        'filthy',
+        'spewing',
 
         // Physical
-        'clenching', 'tensing', 'grinding'
+        'clenching',
+        'tensing',
+        'grinding',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -227,39 +454,74 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     fear: [
         // Core
-        'afraid', 'scared', 'fear', 'fearful',
+        'afraid',
+        'scared',
+        'fear',
+        'fearful',
 
         // Mild fear
-        'uneasy', 'unsettled', 'apprehensive', 'wary',
-        'concerned', 'worried',
+        'uneasy',
+        'unsettled',
+        'apprehensive',
+        'wary',
+        'concerned',
+        'worried',
 
         // Physical anxiety
-        'jittery', 'shaky', 'trembling', 'quivering',
-        'tense', 'tight', 'clenched', 'knotted',
+        'jittery',
+        'shaky',
+        'trembling',
+        'quivering',
+        'tense',
+        'tight',
+        'clenched',
+        'knotted',
 
         // Medium fear
-        'frightened', 'alarmed', 'startled', 'spooked',
-        'freaked', 'freaked out', 'creeped out',
-        'on edge', 'rattled', 'unnerved',
+        'frightened',
+        'alarmed',
+        'startled',
+        'spooked',
+        'freaked',
+        'freaked out',
+        'creeped out',
+        'on edge',
+        'rattled',
+        'unnerved',
 
         // Strong fear
-        'terrified', 'petrified', 'horrified', 'panicked',
-        'panic', 'panicking', 'terror', 'dread',
+        'terrified',
+        'petrified',
+        'horrified',
+        'panicked',
+        'panic',
+        'panicking',
+        'terror',
+        'dread',
 
         // Paranoia
-        'paranoid', 'distrustful',
+        'paranoid',
+        'distrustful',
         'looking over shoulder',
 
         // Slang
-        'sketched', 'sketched out', 'wigged out',
+        'sketched',
+        'sketched out',
+        'wigged out',
         'shook',
 
         // British
-        'bricking it', 'having kittens', 'in a flap',
+        'bricking it',
+        'having kittens',
+        'in a flap',
 
         // Physical
-        'frozen', 'paralyzed', 'deer in headlights',
-        'heart racing', 'heart pounding', 'sweating'
+        'frozen',
+        'paralyzed',
+        'deer in headlights',
+        'heart racing',
+        'heart pounding',
+        'sweating',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -267,42 +529,78 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     surprise: [
         // Core
-        'surprised', 'surprise', 'surprising',
+        'surprised',
+        'surprise',
+        'surprising',
 
         // Mild surprise
-        'oh', 'huh', 'hmm', 'interesting',
-        'unexpected', 'caught off guard',
+        'oh',
+        'huh',
+        'hmm',
+        'interesting',
+        'unexpected',
+        'caught off guard',
 
         // Medium surprise
-        'astonished', 'amazed', 'astounded',
-        'startled', 'taken aback', 'struck',
+        'astonished',
+        'amazed',
+        'astounded',
+        'startled',
+        'taken aback',
+        'struck',
 
         // Strong surprise
-        'shocked', 'stunned', 'staggered', 'floored',
-        'dumbfounded', 'flabbergasted', 'gobsmacked',
-        'blown away', 'mind blown', 'speechless',
+        'shocked',
+        'stunned',
+        'staggered',
+        'floored',
+        'dumbfounded',
+        'flabbergasted',
+        'gobsmacked',
+        'blown away',
+        'mind blown',
+        'speechless',
 
         // Positive surprise
-        'wow', 'whoa', 'omg', 'no way',
-        'incredible', 'unbelievable', 'amazing',
+        'wow',
+        'whoa',
+        'omg',
+        'no way',
+        'incredible',
+        'unbelievable',
+        'amazing',
 
         // Negative surprise
-        'alarmed', 'dismayed', 'appalled',
+        'alarmed',
+        'dismayed',
+        'appalled',
 
         // Confusion element
-        'bewildered', 'baffled', 'perplexed', 'puzzled',
-        'confused', 'disoriented', 'thrown',
+        'bewildered',
+        'baffled',
+        'perplexed',
+        'puzzled',
+        'confused',
+        'disoriented',
+        'thrown',
 
         // Slang
-        'shooketh', 'gagged', 'dead',
+        'shooketh',
+        'gagged',
+        'dead',
         'wait what',
 
         // British
-        'blimey', 'crikey', 'bloody hell',
+        'blimey',
+        'crikey',
+        'bloody hell',
 
         // Physical
-        'jaw dropped', 'eyes wide', 'double take',
-        'gasp', 'gasping'
+        'jaw dropped',
+        'eyes wide',
+        'double take',
+        'gasp',
+        'gasping',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -310,34 +608,67 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     disgust: [
         // Core
-        'disgusted', 'disgust', 'disgusting',
+        'disgusted',
+        'disgust',
+        'disgusting',
 
         // Mild disgust
-        'distaste', 'dislike', 'aversion',
-        'put off', 'turned off', 'off-putting',
+        'distaste',
+        'dislike',
+        'aversion',
+        'put off',
+        'turned off',
+        'off-putting',
 
         // Medium disgust
-        'repulsed', 'revolted', 'repelled',
-        'grossed out', 'creeped out', 'icked out',
+        'repulsed',
+        'revolted',
+        'repelled',
+        'grossed out',
+        'creeped out',
+        'icked out',
 
         // Strong disgust
-        'sickened', 'nauseated', 'nauseous',
-        'appalled', 'horrified', 'scandalized',
+        'sickened',
+        'nauseated',
+        'nauseous',
+        'appalled',
+        'horrified',
+        'scandalized',
 
         // Moral disgust
-        'offended', 'outraged', 'indignant',
-        'contempt', 'contemptuous', 'disdain', 'scorn',
+        'offended',
+        'outraged',
+        'indignant',
+        'contempt',
+        'contemptuous',
+        'disdain',
+        'scorn',
 
         // Physical
-        'gagging', 'retching', 'cringing', 'wincing',
-        'recoiling', 'shrinking back',
+        'gagging',
+        'retching',
+        'cringing',
+        'wincing',
+        'recoiling',
+        'shrinking back',
 
         // Slang
-        'gross', 'ew', 'eww', 'yuck', 'yucky',
-        'ick', 'nasty', 'foul', 'vile',
+        'gross',
+        'ew',
+        'eww',
+        'yuck',
+        'yucky',
+        'ick',
+        'nasty',
+        'foul',
+        'vile',
 
         // British
-        'rank', 'minging', 'manky', 'grotty'
+        'rank',
+        'minging',
+        'manky',
+        'grotty',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -345,39 +676,79 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     love: [
         // Core
-        'love', 'loving', 'loved',
+        'love',
+        'loving',
+        'loved',
 
         // Affection
-        'affection', 'affectionate', 'fond', 'fondness',
-        'tender', 'tenderness', 'gentle',
+        'affection',
+        'affectionate',
+        'fond',
+        'fondness',
+        'tender',
+        'tenderness',
+        'gentle',
 
         // Care
-        'caring', 'care', 'nurturing', 'supportive',
-        'protective', 'devoted', 'dedicated',
+        'caring',
+        'care',
+        'nurturing',
+        'supportive',
+        'protective',
+        'devoted',
+        'dedicated',
 
         // Warmth
-        'warm', 'warmth', 'warm-hearted', 'kind',
-        'kind-hearted', 'compassionate', 'sympathetic',
+        'warm',
+        'warmth',
+        'warm-hearted',
+        'kind',
+        'kind-hearted',
+        'compassionate',
+        'sympathetic',
 
         // Adoration
-        'adoring', 'adore', 'cherish', 'cherishing',
-        'treasure', 'treasuring', 'doting',
+        'adoring',
+        'adore',
+        'cherish',
+        'cherishing',
+        'treasure',
+        'treasuring',
+        'doting',
 
         // Romantic
-        'romantic', 'amorous', 'passionate',
-        'smitten', 'infatuated', 'enamored', 'besotted',
-        'head over heels', 'falling for',
+        'romantic',
+        'amorous',
+        'passionate',
+        'smitten',
+        'infatuated',
+        'enamored',
+        'besotted',
+        'head over heels',
+        'falling for',
 
         // Connection
-        'connected', 'bonded', 'attached', 'close',
-        'intimate', 'deep', 'profound',
+        'connected',
+        'bonded',
+        'attached',
+        'close',
+        'intimate',
+        'deep',
+        'profound',
 
         // Slang
-        'heart eyes', 'crushing', 'swooning', 'melting',
+        'heart eyes',
+        'crushing',
+        'swooning',
+        'melting',
 
         // Physical
-        'hugging', 'embracing', 'holding', 'cuddling',
-        'snuggling', 'nuzzling'
+        'hugging',
+        'embracing',
+        'holding',
+        'cuddling',
+        'snuggling',
+        'nuzzling',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -385,32 +756,60 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     euphoria: [
         // Core
-        'euphoric', 'euphoria', 'bliss', 'blissful',
+        'euphoric',
+        'euphoria',
+        'bliss',
+        'blissful',
 
         // Transcendence
-        'transcendent', 'otherworldly', 'sublime',
-        'heavenly', 'divine', 'ethereal', 'celestial',
+        'transcendent',
+        'otherworldly',
+        'sublime',
+        'heavenly',
+        'divine',
+        'ethereal',
+        'celestial',
 
         // Ecstasy
-        'ecstatic', 'ecstasy', 'rapture', 'rapturous',
-        'exultant', 'exalted', 'elevated',
+        'ecstatic',
+        'ecstasy',
+        'rapture',
+        'rapturous',
+        'exultant',
+        'exalted',
+        'elevated',
 
         // Peak experience
-        'peak', 'pinnacle', 'height', 'climax',
-        'breakthrough', 'revelation', 'epiphany',
+        'peak',
+        'pinnacle',
+        'height',
+        'climax',
+        'breakthrough',
+        'revelation',
+        'epiphany',
 
         // Overwhelming positivity
-        'overwhelming joy', 'pure joy', 'absolute joy',
-        'complete happiness', 'total bliss',
+        'overwhelming joy',
+        'pure joy',
+        'absolute joy',
+        'complete happiness',
+        'total bliss',
 
         // Physical
-        'floating', 'soaring', 'flying', 'weightless',
-        'radiating', 'shining',
+        'floating',
+        'soaring',
+        'flying',
+        'weightless',
+        'radiating',
+        'shining',
 
         // Slang
-        'on cloud nine', 'in heaven',
-        'on top of the world', 'walking on air',
-        'living my best life', 'ascended'
+        'on cloud nine',
+        'in heaven',
+        'on top of the world',
+        'walking on air',
+        'living my best life',
+        'ascended',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -418,36 +817,70 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     focused: [
         // Core
-        'focused', 'focus', 'focusing',
+        'focused',
+        'focus',
+        'focusing',
 
         // Concentration
-        'concentrating', 'concentration', 'concentrated',
-        'attentive', 'attention', 'attending',
+        'concentrating',
+        'concentration',
+        'concentrated',
+        'attentive',
+        'attention',
+        'attending',
 
         // Mental state
-        'thinking', 'thought', 'thoughtful',
-        'pondering', 'considering', 'contemplating',
-        'reflecting', 'musing', 'mulling',
+        'thinking',
+        'thought',
+        'thoughtful',
+        'pondering',
+        'considering',
+        'contemplating',
+        'reflecting',
+        'musing',
+        'mulling',
 
         // Engagement
-        'engaged', 'absorbed', 'immersed', 'engrossed',
-        'rapt', 'riveted', 'captivated', 'enthralled',
+        'engaged',
+        'absorbed',
+        'immersed',
+        'engrossed',
+        'rapt',
+        'riveted',
+        'captivated',
+        'enthralled',
 
         // Intensity
-        'intent', 'determined', 'resolute',
-        'single-minded', 'laser focused', 'zeroed in',
+        'intent',
+        'determined',
+        'resolute',
+        'single-minded',
+        'laser focused',
+        'zeroed in',
 
         // Work state
-        'working', 'processing', 'analyzing', 'examining',
-        'studying', 'learning', 'figuring out',
+        'working',
+        'processing',
+        'analyzing',
+        'examining',
+        'studying',
+        'learning',
+        'figuring out',
 
         // Slang
-        'locked in', 'dialed in', 'in the zone',
-        'flow state', 'deep work', 'grinding',
+        'locked in',
+        'dialed in',
+        'in the zone',
+        'flow state',
+        'deep work',
+        'grinding',
 
         // Physical
-        'staring', 'gazing', 'peering', 'squinting',
-        'furrowed brow'
+        'staring',
+        'gazing',
+        'peering',
+        'squinting',
+        'furrowed brow',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -455,33 +888,63 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     suspicion: [
         // Core
-        'suspicious', 'suspicion', 'suspect',
+        'suspicious',
+        'suspicion',
+        'suspect',
 
         // Doubt
-        'doubtful', 'doubt', 'doubting',
-        'skeptical', 'skepticism', 'questioning',
-        'uncertain', 'unsure', 'unconvinced',
+        'doubtful',
+        'doubt',
+        'doubting',
+        'skeptical',
+        'skepticism',
+        'questioning',
+        'uncertain',
+        'unsure',
+        'unconvinced',
 
         // Wariness
-        'wary', 'cautious', 'guarded', 'careful',
-        'leery', 'circumspect', 'vigilant',
+        'wary',
+        'cautious',
+        'guarded',
+        'careful',
+        'leery',
+        'circumspect',
+        'vigilant',
 
         // Distrust
-        'distrustful', 'mistrust', 'mistrustful',
-        'disbelieving', 'incredulous', 'unbelieving',
+        'distrustful',
+        'mistrust',
+        'mistrustful',
+        'disbelieving',
+        'incredulous',
+        'unbelieving',
 
         // Evaluation
-        'scrutinizing', 'examining', 'assessing',
-        'evaluating', 'judging', 'sizing up',
+        'scrutinizing',
+        'examining',
+        'assessing',
+        'evaluating',
+        'judging',
+        'sizing up',
 
         // Slang
-        'sus', 'sussy', 'suss', 'side eye',
-        'giving side eye', 'side-eyeing', 'eyeing',
+        'sus',
+        'sussy',
+        'suss',
+        'side eye',
+        'giving side eye',
+        'side-eyeing',
+        'eyeing',
         'not buying it',
 
         // Physical
-        'narrowed eyes', 'squinting', 'raised eyebrow',
-        'cocked head', 'tilted head', 'looking askance'
+        'narrowed eyes',
+        'squinting',
+        'raised eyebrow',
+        'cocked head',
+        'tilted head',
+        'looking askance',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -489,34 +952,67 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     resting: [
         // Core
-        'resting', 'rest', 'restful',
+        'resting',
+        'rest',
+        'restful',
 
         // Tiredness
-        'tired', 'weary', 'fatigued', 'exhausted',
-        'drained', 'spent', 'depleted', 'worn out',
+        'tired',
+        'weary',
+        'fatigued',
+        'exhausted',
+        'drained',
+        'spent',
+        'depleted',
+        'worn out',
 
         // Sleepiness
-        'sleepy', 'drowsy', 'dozy', 'groggy',
-        'yawning', 'nodding off', 'drifting off',
+        'sleepy',
+        'drowsy',
+        'dozy',
+        'groggy',
+        'yawning',
+        'nodding off',
+        'drifting off',
 
         // Low energy
-        'sluggish', 'lethargic', 'listless', 'languid',
-        'lazy', 'idle', 'inactive',
+        'sluggish',
+        'lethargic',
+        'listless',
+        'languid',
+        'lazy',
+        'idle',
+        'inactive',
 
         // Recovery
-        'recovering', 'recuperating', 'recharging',
-        'winding down', 'powering down', 'shutting down',
+        'recovering',
+        'recuperating',
+        'recharging',
+        'winding down',
+        'powering down',
+        'shutting down',
 
         // Sleep states
-        'sleeping', 'asleep', 'slumbering', 'dozing',
-        'napping', 'snoozing',
+        'sleeping',
+        'asleep',
+        'slumbering',
+        'dozing',
+        'napping',
+        'snoozing',
 
         // Slang
-        'zonked', 'wiped', 'beat', 'dead tired',
-        'running on empty', 'out of gas', 'crashed',
+        'zonked',
+        'wiped',
+        'beat',
+        'dead tired',
+        'running on empty',
+        'out of gas',
+        'crashed',
 
         // British
-        'knackered', 'shattered', 'cream crackered'
+        'knackered',
+        'shattered',
+        'cream crackered',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -524,29 +1020,53 @@ export const emotions = {
     // ═══════════════════════════════════════════════════════════════════
     glitch: [
         // Core
-        'glitch', 'glitchy', 'glitching',
+        'glitch',
+        'glitchy',
+        'glitching',
 
         // Malfunction
-        'malfunction', 'malfunctioning', 'broken',
-        'bugged', 'buggy', 'error', 'erroring',
+        'malfunction',
+        'malfunctioning',
+        'broken',
+        'bugged',
+        'buggy',
+        'error',
+        'erroring',
 
         // Corruption
-        'corrupted', 'corruption', 'scrambled',
-        'garbled', 'distorted', 'warped',
+        'corrupted',
+        'corruption',
+        'scrambled',
+        'garbled',
+        'distorted',
+        'warped',
 
         // Digital
-        'static', 'noise', 'interference',
-        'pixelated', 'artifacting', 'tearing',
+        'static',
+        'noise',
+        'interference',
+        'pixelated',
+        'artifacting',
+        'tearing',
 
         // Chaos
-        'haywire', 'fritzing', 'shorting out',
-        'going crazy', 'spazzing',
+        'haywire',
+        'fritzing',
+        'shorting out',
+        'going crazy',
+        'spazzing',
 
         // Unstable
-        'unstable', 'erratic', 'unpredictable',
-        'flickering', 'stuttering', 'lagging',
+        'unstable',
+        'erratic',
+        'unpredictable',
+        'flickering',
+        'stuttering',
+        'lagging',
 
         // Confused
-        'does not compute', 'syntax error', 'crash'
-    ]
+        'does not compute',
+        'syntax error',
+        'crash',
+    ],
 };

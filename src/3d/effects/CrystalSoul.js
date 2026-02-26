@@ -10,9 +10,11 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { blendModesGLSL } from '../shaders/utils/blendModes.js';
 import {
-    SOUL_BEHAVIOR_UNIFORMS_GLSL, SOUL_BEHAVIOR_FUNC_GLSL,
-    createSoulBehaviorUniforms, setSoulBehavior,
-    resolveBehaviorMode
+    SOUL_BEHAVIOR_UNIFORMS_GLSL,
+    SOUL_BEHAVIOR_FUNC_GLSL,
+    createSoulBehaviorUniforms,
+    setSoulBehavior,
+    resolveBehaviorMode,
 } from '../shaders/utils/soulBehaviors.js';
 
 // Cache for loaded inclusion geometry
@@ -209,19 +211,19 @@ export class CrystalSoul {
         this.radius = options.radius || 0.15;
         this.detail = options.detail || 1;
         this.geometryType = options.geometryType || 'crystal';
-        this.renderer = options.renderer || null;  // ThreeRenderer for scene locking
+        this.renderer = options.renderer || null; // ThreeRenderer for scene locking
         this.assetBasePath = options.assetBasePath || '/assets';
 
         this.mesh = null;
         this.material = null;
         this.parentMesh = null;
-        this.baseScale = 1.0;  // Full size by default (size=1.0)
+        this.baseScale = 1.0; // Full size by default (size=1.0)
         this._pendingParent = null;
-        this._disposed = false;  // Track disposal state for async safety
+        this._disposed = false; // Track disposal state for async safety
 
         // Behavior mix state — AB pair is the current settled state
         this._mixState = { modeA: 0, modeB: 0, blend: 0.0 };
-        this._crossfade = null;  // { targetA, targetB, targetBlend, progress, duration }
+        this._crossfade = null; // { targetA, targetB, targetBlend, progress, duration }
 
         this._createMesh();
     }
@@ -271,7 +273,7 @@ export class CrystalSoul {
                         const size = new THREE.Vector3();
                         geometry.boundingBox.getSize(size);
                         const maxDim = Math.max(size.x, size.y, size.z);
-                        const scale = 0.3 / maxDim;  // Target ~0.3 unit radius
+                        const scale = 0.3 / maxDim; // Target ~0.3 unit radius
                         geometry.scale(scale, scale, scale);
 
                         geometry.computeVertexNormals();
@@ -304,36 +306,36 @@ export class CrystalSoul {
             uniforms: {
                 time: { value: 0 },
                 emotionColor: { value: new THREE.Color(1, 1, 1) },
-                energyIntensity: { value: 1.0 },  // Fixed value - no per-frame update needed
+                energyIntensity: { value: 1.0 }, // Fixed value - no per-frame update needed
                 driftEnabled: { value: 1.0 },
                 driftSpeed: { value: 0.5 },
                 crossWaveEnabled: { value: 1.0 },
                 crossWaveSpeed: { value: 0.4 },
-                ghostMode: { value: 0.36 },    // 0.36 = partial ghost, 0.0 = solid, 1.0 = full ghost
-                baseOpacity: { value: 1.0 },   // Base opacity when not in ghost mode
+                ghostMode: { value: 0.36 }, // 0.36 = partial ghost, 0.0 = solid, 1.0 = full ghost
+                baseOpacity: { value: 1.0 }, // Base opacity when not in ghost mode
                 // 3-phase offsets (radians) - default to 120° apart
                 phaseOffset1: { value: 0.0 },
-                phaseOffset2: { value: 2.094 },  // 2π/3 = 120°
-                phaseOffset3: { value: 4.189 },  // 4π/3 = 240°
+                phaseOffset2: { value: 2.094 }, // 2π/3 = 120°
+                phaseOffset3: { value: 4.189 }, // 4π/3 = 240°
                 // Color drift uniforms
-                colorDriftSpeed: { value: 0.15 },    // Slow organic drift
-                colorDriftAmount: { value: 0.45 },   // More visible warm/cool variation
+                colorDriftSpeed: { value: 0.15 }, // Slow organic drift
+                colorDriftAmount: { value: 0.45 }, // More visible warm/cool variation
                 // Soul behavior uniforms
                 ...createSoulBehaviorUniforms(),
                 // Blend layer uniforms - Quartz preset defaults
-                blendLayer1Mode: { value: 2 },       // Color Burn
+                blendLayer1Mode: { value: 2 }, // Color Burn
                 blendLayer1Strength: { value: 2.3 },
                 blendLayer1Enabled: { value: 1 },
-                blendLayer2Mode: { value: 0 },       // Multiply
+                blendLayer2Mode: { value: 0 }, // Multiply
                 blendLayer2Strength: { value: 1.0 },
-                blendLayer2Enabled: { value: 1 }
+                blendLayer2Enabled: { value: 1 },
             },
             vertexShader: soulVertexShader,
             fragmentShader: soulFragmentShader,
             transparent: true,
             depthWrite: true,
             depthTest: true,
-            side: THREE.FrontSide
+            side: THREE.FrontSide,
         });
 
         // Use cached inclusion geometry if available (preloaded by Core3DManager),
@@ -431,7 +433,7 @@ export class CrystalSoul {
         // Sync position with parent mesh each frame
         this._syncPosition();
 
-        const {uniforms} = this.material;
+        const { uniforms } = this.material;
 
         // Update time for animation
         if (uniforms.time) {
@@ -441,7 +443,11 @@ export class CrystalSoul {
         // Update emotion color only if changed (avoid unnecessary GPU uniform sync)
         if (uniforms.emotionColor && glowColor) {
             const current = uniforms.emotionColor.value;
-            if (current.r !== glowColor[0] || current.g !== glowColor[1] || current.b !== glowColor[2]) {
+            if (
+                current.r !== glowColor[0] ||
+                current.g !== glowColor[1] ||
+                current.b !== glowColor[2]
+            ) {
                 current.setRGB(glowColor[0], glowColor[1], glowColor[2]);
             }
         }
@@ -465,9 +471,7 @@ export class CrystalSoul {
             } else {
                 // Ease-in-out cubic
                 const p = cf.progress;
-                const eased = p < 0.5
-                    ? 4.0 * p * p * p
-                    : 1.0 - Math.pow(-2.0 * p + 2.0, 3) / 2.0;
+                const eased = p < 0.5 ? 4.0 * p * p * p : 1.0 - Math.pow(-2.0 * p + 2.0, 3) / 2.0;
                 if (uniforms.uBehaviorCrossfade) uniforms.uBehaviorCrossfade.value = eased;
             }
         }
@@ -502,7 +506,7 @@ export class CrystalSoul {
     setEffects(params = {}) {
         if (!this.material || !this.material.uniforms) return;
 
-        const {uniforms} = this.material;
+        const { uniforms } = this.material;
 
         if (params.driftEnabled !== undefined && uniforms.driftEnabled) {
             uniforms.driftEnabled.value = params.driftEnabled ? 1.0 : 0.0;
@@ -566,9 +570,12 @@ export class CrystalSoul {
         const targetBlend = Math.max(0, Math.min(1, blend));
 
         // No change from current settled state?
-        if (!this._crossfade
-            && intA === this._mixState.modeA && intB === this._mixState.modeB
-            && targetBlend === this._mixState.blend) {
+        if (
+            !this._crossfade &&
+            intA === this._mixState.modeA &&
+            intB === this._mixState.modeB &&
+            targetBlend === this._mixState.blend
+        ) {
             return;
         }
 
@@ -610,7 +617,7 @@ export class CrystalSoul {
             targetB: intB,
             targetBlend,
             progress: 0,
-            duration: transitionMs
+            duration: transitionMs,
         };
     }
 

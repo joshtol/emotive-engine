@@ -39,7 +39,7 @@ const NATUREHELIX_CONFIG = {
             endScale: 1.1,
             startDiameter: 1.6,
             endDiameter: 1.8,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
@@ -47,7 +47,7 @@ const NATUREHELIX_CONFIG = {
             strands: 2,
             spacing: 0.2,
             arcOffset: 120,
-            phaseOffset: 0.05
+            phaseOffset: 0.05,
         },
         count: 6,
         scale: 2.0,
@@ -59,35 +59,35 @@ const NATUREHELIX_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 growth: {
                     start: 0.5,
                     peak: 0.85,
                     end: 0.6,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 4,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.9,
                 max: 2.0,
                 frequency: 6,
-                pattern: 'smooth'
+                pattern: 'smooth',
             },
             cutout: {
                 strength: 0.7,
@@ -101,26 +101,28 @@ const NATUREHELIX_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.1,
-                    tip: 0.25
-                }
+                    tip: 0.25,
+                },
             },
             grain: {
                 type: 3,
                 strength: 0.15,
                 scale: 0.2,
                 speed: 1.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'falling-leaves',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.4,
-                sizeScale: 0.9,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'falling-leaves',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 0.9,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+                },
+            ],
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,
             lifetimeVariance: 0.1,
@@ -132,12 +134,12 @@ const NATUREHELIX_CONFIG = {
                         type: 1,
                         arcWidth: 0.7,
                         arcSpeed: 1.2,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     glowColor: [0.25, 0.7, 0.2],
@@ -148,7 +150,7 @@ const NATUREHELIX_CONFIG = {
     scaleFrequency: 5,
     scaleGrowth: 0.02,
     tremor: 0.003,
-    tremorFrequency: 4
+    tremorFrequency: 4,
 };
 
 export default buildNatureEffectGesture(NATUREHELIX_CONFIG);

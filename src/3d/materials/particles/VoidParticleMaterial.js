@@ -29,7 +29,7 @@ import * as THREE from 'three';
 // SHARED VERTEX SHADER (same as smoke/mist/spray — GPU-deterministic billboard)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -109,7 +109,7 @@ void main() {
 // VOID FRAGMENT SHADER — inky black with organic edges
 // =================================================================================================
 
-const VOID_FRAGMENT_GLSL = /* glsl */`
+const VOID_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform float uTime;
 
@@ -240,15 +240,15 @@ export function createVoidParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'VoidParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.85 },
-            uBuoyancy:           { value: config.buoyancy ?? -0.04 },
-            uDrag:               { value: config.drag ?? 0.3 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.85 },
+            uBuoyancy: { value: config.buoyancy ?? -0.04 },
+            uDrag: { value: config.drag ?? 0.3 },
             uTurbulenceStrength: { value: config.turbulence ?? 0.02 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 2.5 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 0.1 },
-            uGravityStrength:    { value: config.gravityStrength ?? 0.0 },
-            uGravityCenter:      { value: new THREE.Vector3(0, 0, 0) },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 2.5 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 0.1 },
+            uGravityStrength: { value: config.gravityStrength ?? 0.0 },
+            uGravityCenter: { value: new THREE.Vector3(0, 0, 0) },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: VOID_FRAGMENT_GLSL,

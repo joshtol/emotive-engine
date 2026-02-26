@@ -33,15 +33,15 @@ export default {
     config: {
         duration: 1500,
         musicalDuration: { musical: true, bars: 1 },
-        waveCount: 3,         // Number of ripple waves
-        waveSpeed: 1.0,       // How fast waves expand
-        amplitude: 15,        // Wave height
-        damping: 0.7,         // How quickly waves fade
+        waveCount: 3, // Number of ripple waves
+        waveSpeed: 1.0, // How fast waves expand
+        amplitude: 15, // Wave height
+        damping: 0.7, // How quickly waves fade
         strength: 1.0,
         particleMotion: {
             type: 'ripple',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -52,8 +52,8 @@ export default {
 
         amplitudeSync: {
             onBeat: 1.5,
-            offBeat: 0.8
-        }
+            offBeat: 0.8,
+        },
     },
 
     apply(particle, progress, motion, dt, centerX, centerY) {
@@ -126,9 +126,11 @@ export default {
             const baseScale = 1.0;
             const scaleAmplitude = 0.12; // Max 12% stretch/compress
 
-            const scaleX = baseScale - scaleWave * scaleAmplitude + horizWave * scaleAmplitude * 0.3;
+            const scaleX =
+                baseScale - scaleWave * scaleAmplitude + horizWave * scaleAmplitude * 0.3;
             const scaleY = baseScale + scaleWave * scaleAmplitude;
-            const scaleZ = baseScale - scaleWave * scaleAmplitude - horizWave * scaleAmplitude * 0.3;
+            const scaleZ =
+                baseScale - scaleWave * scaleAmplitude - horizWave * scaleAmplitude * 0.3;
 
             // Y position compensates for scale changes (keep bottom grounded)
             // When Y-scale increases, move up; when decreases, move down
@@ -148,10 +150,10 @@ export default {
             return {
                 position: [xWobble, yOffset, 0],
                 rotation: [rotX, 0, rotZ],
-                scale: [scaleX, scaleY, scaleZ],  // Non-uniform scale for ripple effect
+                scale: [scaleX, scaleY, scaleZ], // Non-uniform scale for ripple effect
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

@@ -54,108 +54,110 @@ const FIREDANCE_CONFIG = {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',            // Start at mascot's feet
+            start: 'bottom', // Start at mascot's feet
             end: 'top',
             easing: 'easeInOut',
             startScale: 1.4,
             endScale: 1.8,
             startDiameter: 1.3,
             endDiameter: 2.0,
-            orientation: 'vertical'  // Standing rings for dance effect
+            orientation: 'vertical', // Standing rings for dance effect
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.0,
         models: ['flame-ring'],
         animation: {
             appearAt: 0.02,
-            disappearAt: 0.5,           // Start fading at halfway point
+            disappearAt: 0.5, // Start fading at halfway point
             stagger: 0.02,
             enter: {
                 type: 'fade',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
-                duration: 0.5,          // Fade over second half of gesture (gone by 100%)
-                easing: 'easeIn'        // Gradual then fast at end
+                duration: 0.5, // Fade over second half of gesture (gone by 100%)
+                easing: 'easeIn', // Gradual then fast at end
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 temperature: {
                     start: 0.5,
                     peak: 0.75,
                     end: 0.55,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             flicker: {
                 intensity: 0.35,
                 rate: 14,
-                pattern: 'random'
+                pattern: 'random',
             },
             pulse: {
                 amplitude: 0.1,
                 frequency: 5,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.0,
                 max: 2.2,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Two-layer: SPIRAL + DISSOLVE for swirling erosion dance
             cutout: {
                 strength: 0.75,
-                primary: { pattern: 6, scale: 2.0, weight: 1.0 },    // SPIRAL - swirling arms
-                secondary: { pattern: 7, scale: 1.5, weight: 0.6 },  // DISSOLVE - edge erosion
-                blend: 'add',             // Smooth combined effect
-                travel: 'spiral',         // Matches the dance theme
+                primary: { pattern: 6, scale: 2.0, weight: 1.0 }, // SPIRAL - swirling arms
+                secondary: { pattern: 7, scale: 1.5, weight: 0.6 }, // DISSOLVE - edge erosion
+                blend: 'add', // Smooth combined effect
+                travel: 'spiral', // Matches the dance theme
                 travelSpeed: 2.5,
-                strengthCurve: 'bell',    // Dance peaks in middle
+                strengthCurve: 'bell', // Dance peaks in middle
                 bellPeakAt: 0.5,
                 // Geometric mask: cutouts at ring edges
                 geometricMask: {
                     type: 'distance',
                     core: 0.12,
-                    tip: 0.28
-                }
+                    tip: 0.28,
+                },
             },
             // Grain: subtle film grain for dance texture
             grain: {
-                type: 3,              // FILM - cinematic
+                type: 3, // FILM - cinematic
                 strength: 0.06,
                 scale: 0.15,
                 speed: 1.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: smoke trails from dancing rings
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4,
-                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                    centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+                },
+            ],
             // Dance partners: two mirror each other, one does a flourish
             rotate: [
-                { axis: 'y', rotations: 2, phase: 0 },     // Lead: 2 rotations
-                { axis: 'y', rotations: -2, phase: 60 },   // Partner: counter-rotation!
-                { axis: 'y', rotations: 3, phase: 120 }    // Flourish: faster accent
+                { axis: 'y', rotations: 2, phase: 0 }, // Lead: 2 rotations
+                { axis: 'y', rotations: -2, phase: 60 }, // Partner: counter-rotation!
+                { axis: 'y', rotations: 3, phase: 120 }, // Flourish: faster accent
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -167,12 +169,12 @@ const FIREDANCE_CONFIG = {
                         type: 1,
                         arcWidth: 0.6,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     // Mesh effects
@@ -187,7 +189,7 @@ const FIREDANCE_CONFIG = {
     scaleFrequency: 4,
     scaleGrowth: 0.025,
     rotationEffect: true,
-    rotationSpeed: 0.4
+    rotationSpeed: 0.4,
 };
 
 /**

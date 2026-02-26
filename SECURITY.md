@@ -212,7 +212,7 @@ Emotive Engine is compatible with strict CSP. Recommended policy:
     content="default-src 'self';
                script-src 'self' 'unsafe-eval';
                worker-src 'self' blob:;
-               connect-src 'self' https://sentry.io;"
+               connect-src 'self';"
 />
 ```
 
@@ -251,8 +251,9 @@ our implementation.
 
 ### Third-Party Dependencies
 
-Emotive Engine has zero runtime dependencies. The only peer dependency is
-`three` (for the 3D module). All dev dependencies are:
+Emotive Engine has zero runtime dependencies — nothing is bundled from
+`node_modules`. The optional 3D module requires `three` as a peer dependency
+(installed separately by the consumer). All dev dependencies are:
 
 - Regularly audited for vulnerabilities
 - Pinned to specific versions

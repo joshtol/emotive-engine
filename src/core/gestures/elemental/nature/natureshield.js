@@ -47,7 +47,7 @@ const SHARED_RING_ANIMATION = {
         blend: 'add',
         travel: 'angular',
         travelSpeed: 0.5,
-        strengthCurve: 'constant'
+        strengthCurve: 'constant',
     },
     grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
     blending: 'normal',
@@ -73,7 +73,7 @@ const NATURESHIELD_CONFIG = {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'flat',
-                bob: { amplitude: 0.008, frequency: 0.3 }
+                bob: { amplitude: 0.008, frequency: 0.3 },
             },
             count: 1,
             scale: 4.5,
@@ -86,10 +86,10 @@ const NATURESHIELD_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ── Ring 2: Vertical (0°) — flips on Y axis (vertical tumble) CCW
@@ -99,7 +99,7 @@ const NATURESHIELD_CONFIG = {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'vertical',
-                bob: { amplitude: 0.008, frequency: 0.35 }
+                bob: { amplitude: 0.008, frequency: 0.35 },
             },
             count: 1,
             scale: 4.5,
@@ -112,10 +112,10 @@ const NATURESHIELD_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // ── Ring 3: Vertical (60°) — flips on X axis CW ─────────────────
@@ -125,7 +125,7 @@ const NATURESHIELD_CONFIG = {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'vertical',
-                bob: { amplitude: 0.008, frequency: 0.4 }
+                bob: { amplitude: 0.008, frequency: 0.4 },
             },
             count: 1,
             scale: 4.5,
@@ -138,10 +138,10 @@ const NATURESHIELD_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // ── Ring 4: Vertical (120°) — flips on Y axis CCW ───────────────
@@ -151,7 +151,7 @@ const NATURESHIELD_CONFIG = {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'vertical',
-                bob: { amplitude: 0.008, frequency: 0.45 }
+                bob: { amplitude: 0.008, frequency: 0.45 },
             },
             count: 1,
             scale: 4.5,
@@ -164,10 +164,10 @@ const NATURESHIELD_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // ── Ring 5: Tilted 45° — flips on X axis CW ─────────────────────
@@ -177,7 +177,7 @@ const NATURESHIELD_CONFIG = {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'radial',
-                bob: { amplitude: 0.008, frequency: 0.38 }
+                bob: { amplitude: 0.008, frequency: 0.38 },
             },
             count: 1,
             scale: 4.5,
@@ -190,10 +190,10 @@ const NATURESHIELD_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 },
-                        orientationOverride: 'radial'
-                    }
-                }
-            }
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
         },
 
         // ── Ring 6: Tilted -45° — flips on Y axis CCW ───────────────────
@@ -203,7 +203,7 @@ const NATURESHIELD_CONFIG = {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'radial',
-                bob: { amplitude: 0.008, frequency: 0.42 }
+                bob: { amplitude: 0.008, frequency: 0.42 },
             },
             count: 1,
             scale: 4.5,
@@ -212,23 +212,25 @@ const NATURESHIELD_CONFIG = {
                 ...SHARED_RING_ANIMATION,
                 appearAt: 0.15,
                 rotate: { axis: 'y', rotations: -0.75, phase: -45 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.2,
-                    sizeScale: 0.7,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.2,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 renderOrder: 16,
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 },
-                        orientationOverride: 'radial'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.15, 0.55, 0.15],
@@ -239,7 +241,7 @@ const NATURESHIELD_CONFIG = {
     scaleFrequency: 2,
     tremor: 0.002,
     tremorFrequency: 2,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildNatureEffectGesture(NATURESHIELD_CONFIG);

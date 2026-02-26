@@ -71,7 +71,7 @@ export class GestureDataExtractor {
             progress,
             config: primaryAnimation.config || {},
             gestureName,
-            animation: primaryAnimation
+            animation: primaryAnimation,
         };
     }
 
@@ -94,10 +94,7 @@ export class GestureDataExtractor {
      */
     _extractGestureName(animation) {
         // Check multiple possible locations for gesture name
-        return animation.gestureName ||
-               animation.name ||
-               animation.config?.gestureName ||
-               null;
+        return animation.gestureName || animation.name || animation.config?.gestureName || null;
     }
 
     /**
@@ -114,7 +111,7 @@ export class GestureDataExtractor {
             amplitude: config.amplitude || 1.0,
             strength: config.strength || 1.0,
             wobbleAmount: config.wobbleAmount || 0,
-            duration: animation.duration
+            duration: animation.duration,
         };
     }
 
@@ -173,7 +170,7 @@ export class GestureDataExtractor {
                 progress,
                 config: animation.config || {},
                 gestureName,
-                animation
+                animation,
             });
         }
 

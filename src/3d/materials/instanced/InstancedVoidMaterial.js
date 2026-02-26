@@ -39,7 +39,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -61,7 +61,7 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -72,10 +72,10 @@ const VOID_DEFAULTS = {
     depth: 0.5,
     intensity: 1.5,
     opacity: 1.0,
-    tendrilSpeed: 0.3,   // Breathing/animation speed (time dilation feel)
-    edgeGlow: 0.7,       // Photon ring brightness
+    tendrilSpeed: 0.3, // Breathing/animation speed (time dilation feel)
+    edgeGlow: 0.7, // Photon ring brightness
     fadeInDuration: 0.2,
-    fadeOutDuration: 0.4
+    fadeOutDuration: 0.4,
 };
 
 function lerp(a, b, t) {
@@ -94,7 +94,7 @@ function deriveVoidParameters(depth, overrides = {}) {
     return {
         intensity: overrides.intensity ?? lerp(1.0, 2.5, depth),
         tendrilSpeed: overrides.tendrilSpeed ?? lerp(0.2, 0.5, depth),
-        edgeGlow: overrides.edgeGlow ?? lerp(0.5, 1.0, depth)
+        edgeGlow: overrides.edgeGlow ?? lerp(0.5, 1.0, depth),
     };
 }
 
@@ -102,7 +102,7 @@ function deriveVoidParameters(depth, overrides = {}) {
 // NOISE GLSL (required by cutout system — snoise must exist)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 float noiseHash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
     p *= 17.0;
@@ -131,7 +131,7 @@ float snoise(vec3 p) {
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -294,7 +294,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uDepth;
 uniform float uIntensity;
@@ -584,12 +584,14 @@ export function createInstancedVoidMaterial(options = {}) {
         tendrilSpeed = null,
         edgeGlow = null,
         fadeInDuration = VOID_DEFAULTS.fadeInDuration,
-        fadeOutDuration = VOID_DEFAULTS.fadeOutDuration
+        fadeOutDuration = VOID_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive depth-dependent parameters
     const derived = deriveVoidParameters(depth, {
-        intensity, tendrilSpeed, edgeGlow
+        intensity,
+        tendrilSpeed,
+        edgeGlow,
     });
 
     const material = new THREE.ShaderMaterial({
@@ -614,14 +616,14 @@ export function createInstancedVoidMaterial(options = {}) {
             // Screen-space gravitational lensing
             uBackgroundTexture: { value: null },
             uResolution: { value: new THREE.Vector2(1, 1) },
-            uHasBackground: { value: 0 }
+            uHasBackground: { value: 0 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
-        transparent: true,       // Needed for arc discard path
+        transparent: true, // Needed for arc discard path
         blending: THREE.NormalBlending,
         depthWrite: true,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.depth = depth;
@@ -723,7 +725,22 @@ export function resetRelay(material) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
+export {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    resetCutout,
+    setGrain,
+    resetGrain,
+    resetAnimation,
+};
 
 export default {
     createInstancedVoidMaterial,
@@ -743,5 +760,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

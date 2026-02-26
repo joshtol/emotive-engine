@@ -41,7 +41,7 @@ const EARTHMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.0,
@@ -56,15 +56,22 @@ const EARTHMEDITATION_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
-                atmospherics: [{ preset: 'earth-dust', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        intensity: 0.15,
+                        sizeScale: 0.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 modelOverrides: {
                     'earth-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B — lower-right — relay 1, CCW
@@ -77,7 +84,7 @@ const EARTHMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.0,
@@ -96,10 +103,10 @@ const EARTHMEDITATION_CONFIG = {
                     'earth-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C — upper-center — relay 0, CW
@@ -112,7 +119,7 @@ const EARTHMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.0,
@@ -131,10 +138,10 @@ const EARTHMEDITATION_CONFIG = {
                     'earth-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══ TRIANGLE B (pointing down, inverted) ═══
@@ -149,7 +156,7 @@ const EARTHMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.0,
@@ -168,10 +175,10 @@ const EARTHMEDITATION_CONFIG = {
                     'earth-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B' — upper-left — relay 1, CW
@@ -184,7 +191,7 @@ const EARTHMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.0,
@@ -203,10 +210,10 @@ const EARTHMEDITATION_CONFIG = {
                     'earth-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C' — lower-center — relay 0, CCW
@@ -219,7 +226,7 @@ const EARTHMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.0,
@@ -238,14 +245,14 @@ const EARTHMEDITATION_CONFIG = {
                     'earth-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
-    glowColor: [0.80, 0.55, 0.25],
+    glowColor: [0.8, 0.55, 0.25],
     glowIntensityMin: 0.3,
     glowIntensityMax: 0.6,
     glowFlickerRate: 2,
@@ -256,7 +263,7 @@ const EARTHMEDITATION_CONFIG = {
     tremorFrequency: 0,
     shakeAmount: 0,
     shakeFrequency: 0,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildEarthEffectGesture(EARTHMEDITATION_CONFIG);

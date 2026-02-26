@@ -62,7 +62,13 @@ class ParticleRenderer {
      * @param {Object} gestureTransform - Optional gesture effects
      * @returns {Array} Visible particles that were rendered
      */
-    renderLayer(ctx, particles, emotionColor = '#ffffff', isForeground = false, gestureTransform = null) {
+    renderLayer(
+        ctx,
+        particles,
+        emotionColor = '#ffffff',
+        isForeground = false,
+        gestureTransform = null
+    ) {
         const visibleParticles = [];
 
         // First pass: cull off-screen, dead, and wrong-layer particles
@@ -78,8 +84,12 @@ class ParticleRenderer {
             }
 
             // Skip off-screen particles (culling)
-            if (particle.x < -margin || particle.x > canvasWidth + margin ||
-                particle.y < -margin || particle.y > canvasHeight + margin) {
+            if (
+                particle.x < -margin ||
+                particle.x > canvasWidth + margin ||
+                particle.y < -margin ||
+                particle.y > canvasHeight + margin
+            ) {
                 continue;
             }
 
@@ -138,7 +148,9 @@ class ParticleRenderer {
                 if (!isFinite(particle.x) || !isFinite(particle.y)) continue;
 
                 // Use depth-adjusted size if particle has the method
-                const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
+                const depthSize = particle.getDepthAdjustedSize
+                    ? particle.getDepthAdjustedSize()
+                    : particle.size;
                 let safeSize = Math.max(0.1, depthSize);
 
                 // Calculate firefly glow (used by multiple effects)
@@ -146,8 +158,10 @@ class ParticleRenderer {
 
                 // Apply firefly effect if sparkle gesture is active
                 if (gestureTransform && gestureTransform.fireflyEffect) {
-                    const particlePhase = (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) % (Math.PI * 2);
-                    const time = gestureTransform.fireflyTime || (Date.now() * 0.001);
+                    const particlePhase =
+                        (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) %
+                        (Math.PI * 2);
+                    const time = gestureTransform.fireflyTime || Date.now() * 0.001;
                     const intensity = gestureTransform.particleGlow || 2.0;
 
                     fireflyGlow = 0.3 + Math.max(0, Math.sin(time * 3 + particlePhase)) * intensity;
@@ -156,7 +170,7 @@ class ParticleRenderer {
                 // Apply flicker effect if flicker gesture is active (now does particle shimmer)
                 if (gestureTransform && gestureTransform.flickerEffect) {
                     const particlePhase = (particle.x * 0.02 + particle.y * 0.02) % (Math.PI * 2);
-                    const time = gestureTransform.flickerTime || (Date.now() * 0.001);
+                    const time = gestureTransform.flickerTime || Date.now() * 0.001;
                     const intensity = gestureTransform.particleGlow || 2.0;
 
                     fireflyGlow = 0.5 + Math.sin(time * 12 + particlePhase) * intensity * 0.5;
@@ -164,12 +178,12 @@ class ParticleRenderer {
 
                 // Apply shimmer effect if shimmer gesture is active (subtle glow)
                 if (gestureTransform && gestureTransform.shimmerEffect) {
-                    const dx = particle.x - (ctx.canvas.width / 2);
-                    const dy = particle.y - (ctx.canvas.height / 2);
+                    const dx = particle.x - ctx.canvas.width / 2;
+                    const dy = particle.y - ctx.canvas.height / 2;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     const normalizedDistance = distance / 200;
 
-                    const time = gestureTransform.shimmerTime || (Date.now() * 0.001);
+                    const time = gestureTransform.shimmerTime || Date.now() * 0.001;
                     const wave = gestureTransform.shimmerWave || 0;
                     const intensity = gestureTransform.particleGlow || 1.2;
 
@@ -182,26 +196,31 @@ class ParticleRenderer {
                     const progress = gestureTransform.glowProgress || 0;
                     const intensity = gestureTransform.particleGlow || 2.0;
 
-                    const dx = particle.x - (ctx.canvas.width / 2);
-                    const dy = particle.y - (ctx.canvas.height / 2);
+                    const dx = particle.x - ctx.canvas.width / 2;
+                    const dy = particle.y - ctx.canvas.height / 2;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     const normalizedDistance = distance / 300;
 
                     const radiateDelay = Math.min(normalizedDistance * 0.3, 0.5);
-                    const localProgress = Math.max(0, (progress - radiateDelay) / (1 - radiateDelay));
+                    const localProgress = Math.max(
+                        0,
+                        (progress - radiateDelay) / (1 - radiateDelay)
+                    );
                     const localEnvelope = Math.sin(localProgress * Math.PI);
 
                     // Store original glow properties
                     if (!particle._originalGlow) {
                         particle._originalGlow = {
                             hasGlow: particle.hasGlow,
-                            glowSizeMultiplier: particle.glowSizeMultiplier || 0
+                            glowSizeMultiplier: particle.glowSizeMultiplier || 0,
                         };
                     }
 
                     // Enable glow temporarily
                     particle.hasGlow = true;
-                    particle.glowSizeMultiplier = Math.max(3.0, particle._originalGlow.glowSizeMultiplier) + localEnvelope * intensity * 3;
+                    particle.glowSizeMultiplier =
+                        Math.max(3.0, particle._originalGlow.glowSizeMultiplier) +
+                        localEnvelope * intensity * 3;
 
                     // Boost particle size
                     const glowSizeBoost = 1 + localEnvelope * 0.3;
@@ -217,7 +236,10 @@ class ParticleRenderer {
 
                 // Draw glow layers if needed
                 if (particle.hasGlow || fireflyGlow > 1.0) {
-                    const glowRadius = Math.max(0.1, safeSize * (particle.glowSizeMultiplier || 1.5) * fireflyGlow);
+                    const glowRadius = Math.max(
+                        0.1,
+                        safeSize * (particle.glowSizeMultiplier || 1.5) * fireflyGlow
+                    );
 
                     const originalCompositeOp = ctx.globalCompositeOperation;
                     ctx.globalCompositeOperation = 'screen';
@@ -238,7 +260,11 @@ class ParticleRenderer {
                 }
 
                 // Draw core
-                ctx.globalAlpha = particle.opacity * (particle.baseOpacity || 0.5) * 0.6 * Math.min(2.0, fireflyGlow);
+                ctx.globalAlpha =
+                    particle.opacity *
+                    (particle.baseOpacity || 0.5) *
+                    0.6 *
+                    Math.min(2.0, fireflyGlow);
                 ctx.beginPath();
                 ctx.arc(particle.x, particle.y, safeSize, 0, Math.PI * 2);
                 ctx.fill();

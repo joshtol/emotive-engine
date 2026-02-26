@@ -56,23 +56,23 @@ export class DegradationEventHandler {
      */
     handleEvent(event, data) {
         switch (event) {
-        case 'degradationApplied':
-            // Silently handle performance degradation
-            this.applySettings(data.settings);
-            this._emitEvent('performanceDegradation', data);
-            break;
+            case 'degradationApplied':
+                // Silently handle performance degradation
+                this.applySettings(data.settings);
+                this._emitEvent('performanceDegradation', data);
+                break;
 
-        case 'recoveryApplied':
-            // Silently handle performance recovery
-            this.applySettings(data.settings);
-            this._emitEvent('performanceRecovery', data);
-            break;
+            case 'recoveryApplied':
+                // Silently handle performance recovery
+                this.applySettings(data.settings);
+                this._emitEvent('performanceRecovery', data);
+                break;
 
-        case 'levelChanged':
-            // Silently handle degradation level change
-            this.applySettings(data.settings);
-            this._emitEvent('degradationLevelChanged', data);
-            break;
+            case 'levelChanged':
+                // Silently handle degradation level change
+                this.applySettings(data.settings);
+                this._emitEvent('degradationLevelChanged', data);
+                break;
         }
     }
 

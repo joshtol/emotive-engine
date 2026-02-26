@@ -31,14 +31,14 @@ export default {
     config: {
         duration: 800,
         musicalDuration: { musical: true, beats: 2 },
-        maxScale: 1.4,        // Maximum inflation size
-        holdTime: 0.3,        // Time to hold at max
-        deflate: true,        // Return to normal size
+        maxScale: 1.4, // Maximum inflation size
+        holdTime: 0.3, // Time to hold at max
+        deflate: true, // Return to normal size
         strength: 1.0,
         particleMotion: {
             type: 'inflate',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -49,8 +49,8 @@ export default {
 
         strengthSync: {
             onBeat: 1.3,
-            offBeat: 0.8
-        }
+            offBeat: 0.8,
+        },
     },
 
     '3d': {
@@ -75,7 +75,7 @@ export default {
                 inflateAmount = 1.0;
             } else {
                 // Deflating
-                inflateAmount = 1 - ((progress - deflateStart) / inflatePhase);
+                inflateAmount = 1 - (progress - deflateStart) / inflatePhase;
                 inflateAmount = Math.pow(inflateAmount, 2); // Ease in
             }
 
@@ -97,8 +97,8 @@ export default {
                 rotation: [0, 0, wobble * 2],
                 scale: scaleAmount,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

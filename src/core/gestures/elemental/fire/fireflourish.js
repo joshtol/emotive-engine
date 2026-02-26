@@ -43,12 +43,12 @@ const FIREFLOURISH_CONFIG = {
     emoji: '⚔️',
     type: 'blending',
     description: 'Spinning sword flourish with fire trail',
-    duration: 1200,             // Fast triplet flourish
+    duration: 1200, // Fast triplet flourish
     beats: 4,
     intensity: 1.3,
     mascotGlow: 0.3,
     category: 'radiating',
-    temperature: 0.65,          // Hot orange-white
+    temperature: 0.65, // Hot orange-white
 
     // 3D Element spawning - THREE LAYERS for dramatic sword flourish
     spawnMode: [
@@ -60,13 +60,13 @@ const FIREFLOURISH_CONFIG = {
             axisTravel: {
                 axis: 'y',
                 start: 'center',
-                end: 'center',              // Stay at center (no travel)
+                end: 'center', // Stay at center (no travel)
                 easing: 'linear',
                 startScale: 0.7,
                 endScale: 1.2,
                 startDiameter: 1.8,
                 endDiameter: 2.8,
-                orientation: 'camera'       // Billboard: always face camera
+                orientation: 'camera', // Billboard: always face camera
             },
             formation: {
                 type: 'spiral',
@@ -74,7 +74,7 @@ const FIREFLOURISH_CONFIG = {
                 spacing: 0,
                 arcOffset: 72,
                 phaseOffset: 0.05,
-                zOffset: 0.02
+                zOffset: 0.02,
             },
             count: 5,
             scale: 0.9,
@@ -86,36 +86,36 @@ const FIREFLOURISH_CONFIG = {
                 enter: {
                     type: 'fade',
                     duration: 0.03,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'burst-fade',
                     duration: 0.85,
                     easing: 'easeIn',
-                    burstScale: 1.15
+                    burstScale: 1.15,
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.65,
                         peak: 0.95,
                         end: 0.3,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 flicker: {
                     intensity: 0.2,
                     rate: 10,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 pulse: {
                     amplitude: 0.15,
                     frequency: 5,
                     easing: 'easeInOut',
-                    perElement: true
+                    perElement: true,
                 },
                 emissive: {
                     min: 2.0,
@@ -123,40 +123,42 @@ const FIREFLOURISH_CONFIG = {
                     frequency: 6,
                     pattern: 'sine',
                     decayOnExit: true,
-                    perElementScale: [1.0, 0.95, 0.88, 0.8, 0.72]
+                    perElementScale: [1.0, 0.95, 0.88, 0.8, 0.72],
                 },
                 // Grain: adds gritty texture to flames
                 // NOTE: Uses MULTIPLY (not overlay) because overlay has no effect on bright fire
                 grain: {
-                    type: 0,              // PERLIN - smooth flowing noise
-                    strength: 0.35,       // Visible but not overwhelming
-                    scale: 0.3,           // Coarser texture
-                    speed: 2.0,           // Fast animation
-                    blend: 'multiply'     // Actually visible on bright colors
+                    type: 0, // PERLIN - smooth flowing noise
+                    strength: 0.35, // Visible but not overwhelming
+                    scale: 0.3, // Coarser texture
+                    speed: 2.0, // Fast animation
+                    blend: 'multiply', // Actually visible on bright colors
                 },
                 // Per-gesture atmospheric particles: smoke from spinning flourish
-                atmospherics: [{
-                    preset: 'smoke',
-                    targets: ['flame-ring'],
-                    anchor: 'above',
-                    intensity: 0.3,
-                    sizeScale: 0.7,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.4,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'smoke',
+                        targets: ['flame-ring'],
+                        anchor: 'above',
+                        intensity: 0.3,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.4,
+                    },
+                ],
                 // SPIRAL cutout with spiral travel - interesting flicker
                 cutout: {
                     strength: 0.85,
-                    pattern: 6,           // SPIRAL
+                    pattern: 6, // SPIRAL
                     scale: 2.5,
                     travel: 'spiral',
-                    travelSpeed: 2.0
+                    travelSpeed: 2.0,
                 },
                 drift: {
                     speed: 0.3,
                     distance: 0.18,
                     pattern: 'radial',
-                    accelerate: true
+                    accelerate: true,
                 },
                 opacityGradient: [1.0, 0.9, 0.8, 0.7, 0.6],
                 rotate: [
@@ -164,20 +166,20 @@ const FIREFLOURISH_CONFIG = {
                     { axis: 'z', rotations: -2.0, phase: 72 },
                     { axis: 'z', rotations: 1.8, phase: 144 },
                     { axis: 'z', rotations: -2.3, phase: 216 },
-                    { axis: 'z', rotations: 2.0, phase: 288 }
+                    { axis: 'z', rotations: 2.0, phase: 288 },
                 ],
                 tilt: {
                     axis: 'y',
                     oscillate: true,
                     range: 0.4,
-                    speed: 3.5
+                    speed: 3.5,
                 },
                 wobble: {
                     axis: 'x',
                     oscillate: true,
                     range: 0.15,
                     speed: 2.0,
-                    phase: 90
+                    phase: 90,
                 },
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.15,
@@ -189,12 +191,12 @@ const FIREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.5,
                             arcSpeed: 1.0,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -205,11 +207,11 @@ const FIREFLOURISH_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: -0.8, y: 0.5, z: 0.3 },   // Start top-left
+                offset: { x: -0.8, y: 0.5, z: 0.3 }, // Start top-left
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 1.4,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.0,
@@ -220,59 +222,59 @@ const FIREFLOURISH_CONFIG = {
                 enter: {
                     type: 'fade',
                     duration: 0.08,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.35,
-                    easing: 'easeOutQuad'
+                    easing: 'easeOutQuad',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.8,
                         peak: 0.95,
                         end: 0.4,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 flicker: {
                     intensity: 0.3,
                     rate: 15,
-                    pattern: 'random'
+                    pattern: 'random',
                 },
                 emissive: {
                     min: 2.5,
                     max: 4.5,
                     frequency: 8,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 // Diagonal sweep: top-left to bottom-right
                 drift: {
                     speed: 0.8,
                     distance: 0.4,
-                    direction: { x: 1.2, y: -0.8, z: -0.2 },  // Diagonal down-right
-                    easing: 'easeInOutCubic'
+                    direction: { x: 1.2, y: -0.8, z: -0.2 }, // Diagonal down-right
+                    easing: 'easeInOutCubic',
                 },
                 rotate: [
-                    { axis: 'z', rotations: 0.5, phase: -45 }  // Tilt along slash direction
+                    { axis: 'z', rotations: 0.5, phase: -45 }, // Tilt along slash direction
                 ],
                 blending: 'additive',
-                renderOrder: 14
-            }
+                renderOrder: 14,
+            },
         },
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0.8, y: 0.5, z: 0.3 },    // Start top-right
+                offset: { x: 0.8, y: 0.5, z: 0.3 }, // Start top-right
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 1.4,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.0,
@@ -283,49 +285,49 @@ const FIREFLOURISH_CONFIG = {
                 enter: {
                     type: 'fade',
                     duration: 0.08,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.35,
-                    easing: 'easeOutQuad'
+                    easing: 'easeOutQuad',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.8,
                         peak: 0.95,
                         end: 0.4,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 flicker: {
                     intensity: 0.3,
                     rate: 15,
-                    pattern: 'random'
+                    pattern: 'random',
                 },
                 emissive: {
                     min: 2.5,
                     max: 4.5,
                     frequency: 8,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 // Diagonal sweep: top-right to bottom-left
                 drift: {
                     speed: 0.8,
                     distance: 0.4,
-                    direction: { x: -1.2, y: -0.8, z: -0.2 },  // Diagonal down-left
-                    easing: 'easeInOutCubic'
+                    direction: { x: -1.2, y: -0.8, z: -0.2 }, // Diagonal down-left
+                    easing: 'easeInOutCubic',
                 },
                 rotate: [
-                    { axis: 'z', rotations: 0.5, phase: 45 }   // Tilt along slash direction
+                    { axis: 'z', rotations: 0.5, phase: 45 }, // Tilt along slash direction
                 ],
                 blending: 'additive',
-                renderOrder: 14
-            }
+                renderOrder: 14,
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -337,53 +339,53 @@ const FIREFLOURISH_CONFIG = {
             anchor: {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0.2 },
-                orientation: 'camera',                 // Face camera (tidally locked)
+                orientation: 'camera', // Face camera (tidally locked)
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 0.9,
             models: ['flame-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.70,
+                appearAt: 0.3,
+                disappearAt: 0.7,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.28,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.7,
                         peak: 0.9,
                         end: 0.35,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 flicker: {
                     intensity: 0.25,
                     rate: 12,
-                    pattern: 'smooth'
+                    pattern: 'smooth',
                 },
                 emissive: {
                     min: 2.0,
                     max: 4.0,
                     frequency: 6,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 // Tilted 45° clockwise (Z rotation on top of camera-facing)
                 rotate: [
-                    { axis: 'z', rotations: 0.001, phase: 45 }   // Near-static 45° tilt
+                    { axis: 'z', rotations: 0.001, phase: 45 }, // Near-static 45° tilt
                 ],
                 blending: 'additive',
                 renderOrder: 10,
@@ -391,67 +393,67 @@ const FIREFLOURISH_CONFIG = {
                     'flame-ring': {
                         shaderAnimation: {
                             type: 1,
-                            arcWidth: 0.35,           // Narrow slash arc
-                            arcSpeed: 1.5,            // Fast sweep
-                            arcCount: 1               // Single blade
+                            arcWidth: 0.35, // Narrow slash arc
+                            arcSpeed: 1.5, // Fast sweep
+                            arcCount: 1, // Single blade
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
                 offset: { x: 0, y: 0, z: 0.2 },
-                orientation: 'camera',                 // Face camera (tidally locked)
+                orientation: 'camera', // Face camera (tidally locked)
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 0.9,
             models: ['flame-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.70,
+                appearAt: 0.3,
+                disappearAt: 0.7,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.28,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     temperature: {
                         start: 0.7,
                         peak: 0.9,
                         end: 0.35,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 flicker: {
                     intensity: 0.25,
                     rate: 12,
-                    pattern: 'smooth'
+                    pattern: 'smooth',
                 },
                 emissive: {
                     min: 2.0,
                     max: 4.0,
                     frequency: 6,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 // Tilted 45° counter-clockwise (Z rotation on top of camera-facing)
                 rotate: [
-                    { axis: 'z', rotations: 0.001, phase: -45 }  // Near-static -45° tilt
+                    { axis: 'z', rotations: 0.001, phase: -45 }, // Near-static -45° tilt
                 ],
                 blending: 'additive',
                 renderOrder: 10,
@@ -461,27 +463,27 @@ const FIREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Mesh effects - bright intense fire
     flickerFrequency: 15,
     flickerAmplitude: 0.01,
     flickerDecay: 0.15,
-    glowColor: [1.0, 0.55, 0.15],   // Hot orange
+    glowColor: [1.0, 0.55, 0.15], // Hot orange
     glowIntensityMin: 1.0,
     glowIntensityMax: 2.0,
     glowFlickerRate: 12,
     scaleVibration: 0.012,
     scaleFrequency: 8,
     scaleGrowth: 0.015,
-    rotationEffect: false
+    rotationEffect: false,
 };
 
 /**

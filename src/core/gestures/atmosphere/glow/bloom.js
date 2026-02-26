@@ -32,14 +32,14 @@ export default {
     config: {
         duration: 1500,
         musicalDuration: { musical: true, bars: 1 },
-        petalCount: 6,        // Conceptual petal layers
-        openingSpeed: 1.0,    // How fast petals open
-        rotationAmount: 0.3,  // How much petals rotate while opening
+        petalCount: 6, // Conceptual petal layers
+        openingSpeed: 1.0, // How fast petals open
+        rotationAmount: 0.3, // How much petals rotate while opening
         strength: 1.0,
         particleMotion: {
             type: 'bloom',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -50,8 +50,8 @@ export default {
 
         amplitudeSync: {
             onBeat: 1.3,
-            offBeat: 0.8
-        }
+            offBeat: 0.8,
+        },
     },
 
     initialize(particle, motion, centerX, centerY) {
@@ -66,7 +66,7 @@ export default {
             originalOpacity: particle.opacity ?? 1,
             startAngle: Math.atan2(dy, dx),
             startDistance: Math.sqrt(dx * dx + dy * dy),
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -133,15 +133,15 @@ export default {
             const glowBoost = openProgress * 0.3;
 
             // Slight settle at end
-            const settleEnvelope = progress > 0.85 ? 1 - (progress - 0.85) / 0.15 * 0.3 : 1.0;
+            const settleEnvelope = progress > 0.85 ? 1 - ((progress - 0.85) / 0.15) * 0.3 : 1.0;
 
             return {
                 position: [0, yOffset * settleEnvelope, 0],
                 rotation: [0, rotY * settleEnvelope, rotZ * settleEnvelope],
                 scale: scale * (0.7 + settleEnvelope * 0.3),
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

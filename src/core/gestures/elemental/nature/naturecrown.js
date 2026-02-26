@@ -56,8 +56,8 @@ const NATURECROWN_CONFIG = {
             orientation: 'flat',
             bob: {
                 amplitude: 0.008,
-                frequency: 0.2
-            }
+                frequency: 0.2,
+            },
         },
         count: 1,
         scale: 2.2,
@@ -72,14 +72,16 @@ const NATURECROWN_CONFIG = {
             pulse: { amplitude: 0.03, frequency: 1.5, easing: 'easeInOut' },
             emissive: { min: 0.6, max: 1.0, frequency: 1, pattern: 'sine' },
             rotate: { axis: 'z', rotations: 0.3, phase: 0 },
-            atmospherics: [{
-                preset: 'falling-leaves',
-                targets: ['nature-crown'],
-                anchor: 'around',
-                intensity: 0.15,
-                sizeScale: 0.6,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'falling-leaves',
+                    targets: ['nature-crown'],
+                    anchor: 'around',
+                    intensity: 0.15,
+                    sizeScale: 0.6,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'normal',
@@ -90,12 +92,12 @@ const NATURECROWN_CONFIG = {
                         type: 1,
                         arcWidth: 0.8,
                         arcSpeed: 0.4,
-                        arcCount: 2
+                        arcCount: 2,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     // Glow - warm green, constant
@@ -111,7 +113,7 @@ const NATURECROWN_CONFIG = {
     tremor: 0,
     tremorFrequency: 0,
     tremorDecay: 0,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 /**

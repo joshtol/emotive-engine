@@ -22,7 +22,7 @@ import { capitalize } from '../../_shared/directions.js';
  */
 const SPIN_DIRECTIONS = {
     left: 'counter-clockwise',
-    right: 'clockwise'
+    right: 'clockwise',
 };
 
 /**
@@ -51,7 +51,7 @@ export function createSpinGesture(direction) {
             accelerate: true,
             maintainDistance: true,
             scaleAmount: 0.1,
-            strength: 0.7
+            strength: 0.7,
         },
 
         rhythm: {
@@ -64,14 +64,14 @@ export function createSpinGesture(direction) {
 
             durationSync: {
                 mode: 'beats',
-                beats: 4
+                beats: 4,
             },
 
             rotationSync: {
                 mode: 'bars',
                 rotationsPerBar: 1,
-                accelerateOnBeat: true
-            }
+                accelerateOnBeat: true,
+            },
         },
 
         initialize(particle, motion, centerX, centerY) {
@@ -90,7 +90,7 @@ export function createSpinGesture(direction) {
                 originalVx: particle.vx,
                 originalVy: particle.vy,
                 direction: spinDirection,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -124,15 +124,15 @@ export function createSpinGesture(direction) {
             }
 
             const rotationAmount = rotations * Math.PI * 2 * strength;
-            const currentAngle = data.startAngle + (rotationAmount * speedProgress * directionMult);
+            const currentAngle = data.startAngle + rotationAmount * speedProgress * directionMult;
 
             let currentRadius = data.startRadius;
             if (config.spiralOut) {
-                currentRadius *= (1 + progress * 0.5);
+                currentRadius *= 1 + progress * 0.5;
             }
             if (radiusMultiplier !== 1) {
                 const radiusCurve = Math.sin(progress * Math.PI);
-                currentRadius *= (1 + (radiusMultiplier - 1) * radiusCurve);
+                currentRadius *= 1 + (radiusMultiplier - 1) * radiusCurve;
             }
 
             const targetX = centerX + Math.cos(currentAngle) * currentRadius;
@@ -177,9 +177,9 @@ export function createSpinGesture(direction) {
                 let speedProgress = progress;
                 if (config.accelerate !== false) {
                     if (progress < 0.5) {
-                        speedProgress = (progress * progress * 4) * 0.5;
+                        speedProgress = progress * progress * 4 * 0.5;
                     } else {
-                        speedProgress = 0.5 + ((progress - 0.5) * (2 - (progress - 0.5))) * 0.5;
+                        speedProgress = 0.5 + (progress - 0.5) * (2 - (progress - 0.5)) * 0.5;
                     }
                 }
 
@@ -191,15 +191,15 @@ export function createSpinGesture(direction) {
 
                 const scaleAmount = config.scaleAmount || 0.1;
                 const scaleCurve = Math.sin(progress * Math.PI);
-                const scale = 1.0 + (scaleAmount * scaleCurve * strength);
+                const scale = 1.0 + scaleAmount * scaleCurve * strength;
 
                 // Mascot stays in place - only rotates on Y axis
                 return {
                     position: [0, 0, 0],
                     rotation: [0, yRotation, 0],
-                    scale
+                    scale,
                 };
-            }
-        }
+            },
+        },
     };
 }

@@ -41,67 +41,67 @@ export default {
 
     // Default configuration
     config: {
-        duration: 1500,      // Animation duration (longer than pulse for sustained glow)
-        amplitude: 0,        // NO expansion distance (removed from pulse)
-        frequency: 1,        // Number of glow pulses
-        holdPeak: 0.3,       // Peak glow hold time (longer for sustained effect)
-        easing: 'sine',      // Animation curve type
-        scaleAmount: 0.1,    // Very subtle orb scale variation (reduced from pulse)
-        glowAmount: 0.8,     // Strong orb glow intensity change (increased from pulse)
-        strength: 0,         // NO particle motion strength (removed from pulse)
-        direction: 'none',   // No movement direction
+        duration: 1500, // Animation duration (longer than pulse for sustained glow)
+        amplitude: 0, // NO expansion distance (removed from pulse)
+        frequency: 1, // Number of glow pulses
+        holdPeak: 0.3, // Peak glow hold time (longer for sustained effect)
+        easing: 'sine', // Animation curve type
+        scaleAmount: 0.1, // Very subtle orb scale variation (reduced from pulse)
+        glowAmount: 0.8, // Strong orb glow intensity change (increased from pulse)
+        strength: 0, // NO particle motion strength (removed from pulse)
+        direction: 'none', // No movement direction
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'glow',
-            strength: 0,     // No particle movement
+            strength: 0, // No particle movement
             direction: 'none',
-            frequency: 1
-        }
+            frequency: 1,
+        },
     },
 
     // Rhythm configuration - glow pulses with musical phrases
     rhythm: {
         enabled: true,
-        syncMode: 'phrase',  // Glow on musical phrases
+        syncMode: 'phrase', // Glow on musical phrases
 
         // Glow strength syncs to dynamics
         amplitudeSync: {
-            onBeat: 2.0,      // Strong glow on beat
-            offBeat: 1.2,     // Sustained glow off beat
-            curve: 'smooth'   // Smooth transitions
+            onBeat: 2.0, // Strong glow on beat
+            offBeat: 1.2, // Sustained glow off beat
+            curve: 'smooth', // Smooth transitions
         },
 
         // Frequency locks to phrase length
         frequencySync: {
             mode: 'phrase',
-            subdivision: 'bar'
+            subdivision: 'bar',
         },
 
         // Duration in musical time
         durationSync: {
             mode: 'bars',
-            bars: 2           // Glow over 2 bars
+            bars: 2, // Glow over 2 bars
         },
 
         // Stronger glow on accents
         accentResponse: {
             enabled: true,
-            multiplier: 2.5   // Bright glow on accent
+            multiplier: 2.5, // Bright glow on accent
         },
 
         // Pattern-specific glow styles
         patternOverrides: {
-            'ambient': {
+            ambient: {
                 // Ethereal sustained glow
                 amplitudeSync: { onBeat: 2.5, offBeat: 1.8 },
-                durationSync: { bars: 4 }
+                durationSync: { bars: 4 },
             },
-            'electronic': {
+            electronic: {
                 // Pulsing neon glow
                 amplitudeSync: { onBeat: 3.0, offBeat: 0.5, curve: 'sharp' },
-                frequencySync: { subdivision: 'quarter' }
-            }
-        }
+                frequencySync: { subdivision: 'quarter' },
+            },
+        },
     },
 
     /**
@@ -120,7 +120,7 @@ export default {
         particle.gestureData.glow = {
             startOpacity: particle.opacity,
             startGlow: particle.glowSizeMultiplier || 0,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -139,7 +139,6 @@ export default {
             this.initialize(particle, motion, centerX, centerY);
         }
 
-
         const config = { ...this.config, ...motion };
 
         // Apply easing
@@ -147,13 +146,13 @@ export default {
 
         // Calculate glow pulse with peak hold
         let glowValue;
-        let {frequency} = config;
-        let {glowAmount} = config;
+        let { frequency } = config;
+        let { glowAmount } = config;
 
         // Apply rhythm modulation if present
         if (motion.rhythmModulation) {
-            glowAmount *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-            glowAmount *= (motion.rhythmModulation.accentMultiplier || 1);
+            glowAmount *= motion.rhythmModulation.amplitudeMultiplier || 1;
+            glowAmount *= motion.rhythmModulation.accentMultiplier || 1;
             if (motion.rhythmModulation.frequencyMultiplier) {
                 frequency *= motion.rhythmModulation.frequencyMultiplier;
             }
@@ -161,7 +160,11 @@ export default {
 
         const rawPulse = (easeProgress * frequency * 2) % 2;
 
-        if (config.holdPeak > 0 && rawPulse > (1 - config.holdPeak) && rawPulse < (1 + config.holdPeak)) {
+        if (
+            config.holdPeak > 0 &&
+            rawPulse > 1 - config.holdPeak &&
+            rawPulse < 1 + config.holdPeak
+        ) {
             // Hold at peak glow
             glowValue = 1;
         } else {
@@ -175,8 +178,8 @@ export default {
         // Apply glow fade effect at the end
         let glowMultiplier = 1;
         if (progress > 0.9) {
-            const fadeFactor = 1 - ((progress - 0.9) * 10);
-            glowMultiplier = (0.5 + fadeFactor * 0.5);
+            const fadeFactor = 1 - (progress - 0.9) * 10;
+            glowMultiplier = 0.5 + fadeFactor * 0.5;
         }
 
         // Modify particle glow properties (if your system supports it)
@@ -226,13 +229,13 @@ export default {
 
             // Apply rhythm modulation if present
             if (motion.rhythmModulation) {
-                glowAmount *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                glowAmount *= (motion.rhythmModulation.accentMultiplier || 1);
+                glowAmount *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                glowAmount *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Glow adds brightness (doesn't go negative)
             // Maps 0→1→0 to 0%→+80%→0% intensity increase
-            const glowIntensity = 1.0 + (glowValue * glowAmount);
+            const glowIntensity = 1.0 + glowValue * glowAmount;
 
             // Very subtle scale
             const scaleAmount = config.scaleAmount || 0.1;
@@ -247,8 +250,8 @@ export default {
                 rotation: [0, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

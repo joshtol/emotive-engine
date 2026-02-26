@@ -34,8 +34,8 @@ export default {
         strength: 1.0,
         particleMotion: {
             type: 'fury',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -46,8 +46,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     '3d': {
@@ -61,7 +61,8 @@ export default {
             // Phase 3 (0.5-1.0): Cool down
 
             let posX = 0;
-            const posY = 0, posZ = 0;
+            const posY = 0,
+                posZ = 0;
             let rotX = 0;
             const rotY = 0;
             let rotZ = 0;
@@ -85,7 +86,6 @@ export default {
                 // Bright flash
                 glowIntensity = 1.0 + flareEase * 1.2;
                 glowBoost = flareEase * 0.7;
-
             } else if (progress < 0.5) {
                 // Phase 2: Peak fury
                 const peakT = (progress - 0.2) / 0.3;
@@ -105,7 +105,6 @@ export default {
                 // Sustain glow
                 glowIntensity = 2.2 - peakT * 0.3;
                 glowBoost = 0.7 - peakT * 0.2;
-
             } else {
                 // Phase 3: Cool down
                 const coolT = (progress - 0.5) / 0.5;
@@ -131,8 +130,8 @@ export default {
                 rotation: [rotX, rotY, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

@@ -33,8 +33,21 @@ import calm from './base/calm.js';
  */
 export function getBaseEmotions() {
     return [
-        neutral, joy, sadness, anger, fear, surprise, disgust,
-        love, suspicion, excited, resting, euphoria, focused, glitch, calm
+        neutral,
+        joy,
+        sadness,
+        anger,
+        fear,
+        surprise,
+        disgust,
+        love,
+        suspicion,
+        excited,
+        resting,
+        euphoria,
+        focused,
+        glitch,
+        calm,
     ];
 }
 
@@ -45,8 +58,21 @@ export function getBaseEmotions() {
  */
 export function getBaseEmotion(name) {
     const emotions = {
-        neutral, joy, sadness, anger, fear, surprise, disgust,
-        love, suspicion, excited, resting, euphoria, focused, glitch, calm
+        neutral,
+        joy,
+        sadness,
+        anger,
+        fear,
+        surprise,
+        disgust,
+        love,
+        suspicion,
+        excited,
+        resting,
+        euphoria,
+        focused,
+        glitch,
+        calm,
     };
     return emotions[name] || null;
 }

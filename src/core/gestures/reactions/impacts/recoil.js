@@ -30,14 +30,14 @@ export default {
     config: {
         duration: 600,
         musicalDuration: { musical: true, beats: 1.5 },
-        distance: 0.2,        // Recoil distance
-        intensity: 1.0,       // Reaction intensity
-        recover: true,        // Return to position
+        distance: 0.2, // Recoil distance
+        intensity: 1.0, // Reaction intensity
+        recover: true, // Return to position
         strength: 1.0,
         particleMotion: {
             type: 'recoil',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.6
-        }
+            multiplier: 1.6,
+        },
     },
 
     '3d': {
@@ -64,14 +64,14 @@ export default {
             let recoilAmount;
             if (progress < 0.15) {
                 // Instant snap back
-                recoilAmount = (progress / 0.15);
+                recoilAmount = progress / 0.15;
                 recoilAmount = 1 - Math.pow(1 - recoilAmount, 4); // Very fast ease out
             } else if (progress < 0.4) {
                 // Hold in shock
                 recoilAmount = 1.0;
             } else if (recover) {
                 // Slow recovery
-                recoilAmount = 1 - ((progress - 0.4) / 0.6);
+                recoilAmount = 1 - (progress - 0.4) / 0.6;
                 recoilAmount = Math.pow(recoilAmount, 0.5); // Slow ease
             } else {
                 recoilAmount = 1.0;
@@ -98,8 +98,8 @@ export default {
                 rotation: [tiltX, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

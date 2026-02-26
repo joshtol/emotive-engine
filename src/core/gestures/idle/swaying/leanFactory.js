@@ -25,7 +25,9 @@ import { DIRECTIONS, capitalize } from '../../_shared/directions.js';
 export function createLeanGesture(direction) {
     // Lean only supports left/right (horizontal body tilts)
     if (direction !== 'left' && direction !== 'right') {
-        throw new Error(`Invalid lean direction: ${direction}. Only 'left' and 'right' are supported.`);
+        throw new Error(
+            `Invalid lean direction: ${direction}. Only 'left' and 'right' are supported.`
+        );
     }
     const dir = DIRECTIONS[direction];
 
@@ -36,11 +38,11 @@ export function createLeanGesture(direction) {
         description: `Lean ${direction} with smooth return`,
 
         config: {
-            duration: 800,      // ~2 beats at 150 BPM
-            amplitude: 10,      // Lean distance in pixels
-            frequency: 1,       // Single lean cycle
+            duration: 800, // ~2 beats at 150 BPM
+            amplitude: 10, // Lean distance in pixels
+            frequency: 1, // Single lean cycle
             strength: 0.7,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -53,19 +55,19 @@ export function createLeanGesture(direction) {
 
             durationSync: {
                 mode: 'beats',
-                beats: 2
+                beats: 2,
             },
 
             amplitudeSync: {
                 onBeat: 1.3,
                 offBeat: 0.8,
-                curve: 'ease'
+                curve: 'ease',
             },
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.4
-            }
+                multiplier: 1.4,
+            },
         },
 
         initialize(particle, _motion) {
@@ -75,7 +77,7 @@ export function createLeanGesture(direction) {
             particle.gestureData.lean = {
                 startX: particle.x,
                 startY: particle.y,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -91,8 +93,8 @@ export function createLeanGesture(direction) {
             let amplitude = config.amplitude * strength * particle.scaleFactor;
 
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Lean curve - goes to side and returns
@@ -104,9 +106,9 @@ export function createLeanGesture(direction) {
 
             // Smooth ending
             if (progress > 0.9) {
-                const endFactor = 1 - ((progress - 0.9) * 10);
-                particle.vx *= (0.95 + endFactor * 0.05);
-                particle.vy *= (0.95 + endFactor * 0.05);
+                const endFactor = 1 - (progress - 0.9) * 10;
+                particle.vx *= 0.95 + endFactor * 0.05;
+                particle.vy *= 0.95 + endFactor * 0.05;
             }
         },
 
@@ -117,9 +119,7 @@ export function createLeanGesture(direction) {
         },
 
         easeInOutCubic(t) {
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         },
 
         '3d': {
@@ -133,9 +133,10 @@ export function createLeanGesture(direction) {
                 const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
                 // Easing
-                const easeProgress = progress < 0.5
-                    ? 4 * progress * progress * progress
-                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                const easeProgress =
+                    progress < 0.5
+                        ? 4 * progress * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
                 // Lean curve
                 const leanCurve = Math.sin(easeProgress * Math.PI * frequency);
@@ -151,9 +152,9 @@ export function createLeanGesture(direction) {
                 return {
                     cameraRelativePosition: [xPosition, 0, 0],
                     cameraRelativeRotation: [0, 0, rollRotation],
-                    scale: 1.0
+                    scale: 1.0,
                 };
-            }
-        }
+            },
+        },
     };
 }

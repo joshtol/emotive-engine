@@ -39,14 +39,14 @@ const NATUREDANCE_CONFIG = {
             endScale: 1.6,
             startDiameter: 1.3,
             endDiameter: 2.0,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.0,
@@ -58,16 +58,16 @@ const NATUREDANCE_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             cutout: {
                 strength: 0.65,
@@ -81,49 +81,51 @@ const NATUREDANCE_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.12,
-                    tip: 0.28
-                }
+                    tip: 0.28,
+                },
             },
             grain: {
                 type: 3,
                 strength: 0.2,
                 scale: 0.25,
                 speed: 2.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'falling-leaves',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.4,
-                sizeScale: 0.9,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4,
-                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'falling-leaves',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 0.9,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                    centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+                },
+            ],
             parameterAnimation: {
                 growth: {
                     start: 0.5,
                     peak: 0.75,
                     end: 0.55,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.1,
                 frequency: 5,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.8,
                 max: 1.6,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -2, phase: 60 },
-                { axis: 'y', rotations: 3, phase: 120 }
+                { axis: 'y', rotations: 3, phase: 120 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -135,12 +137,12 @@ const NATUREDANCE_CONFIG = {
                         type: 1,
                         arcWidth: 0.7,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     glowColor: [0.4, 0.85, 0.35],
@@ -151,7 +153,7 @@ const NATUREDANCE_CONFIG = {
     scaleFrequency: 4,
     scaleGrow: 0.025,
     tremor: 0.005,
-    tremorFrequency: 3
+    tremorFrequency: 3,
 };
 
 export default buildNatureEffectGesture(NATUREDANCE_CONFIG);

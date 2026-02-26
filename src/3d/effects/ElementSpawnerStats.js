@@ -40,10 +40,22 @@ export const elementSpawnerStats = {
             trails: this.trailsCreated - this.trailsDisposed,
         };
         console.table({
-            'Meshes': { created: this.meshesCreated, disposed: this.meshesDisposed, LEAK: leaks.meshes },
-            'Materials': { created: this.materialsCloned, disposed: this.materialsDisposed, LEAK: leaks.materials },
-            'Trails': { created: this.trailsCreated, disposed: this.trailsDisposed, LEAK: leaks.trails },
-            'AnimStates': { created: this.animationStatesCreated, disposed: '-', LEAK: '-' },
+            Meshes: {
+                created: this.meshesCreated,
+                disposed: this.meshesDisposed,
+                LEAK: leaks.meshes,
+            },
+            Materials: {
+                created: this.materialsCloned,
+                disposed: this.materialsDisposed,
+                LEAK: leaks.materials,
+            },
+            Trails: {
+                created: this.trailsCreated,
+                disposed: this.trailsDisposed,
+                LEAK: leaks.trails,
+            },
+            AnimStates: { created: this.animationStatesCreated, disposed: '-', LEAK: '-' },
             'Spawn/Despawn': { spawn: this.spawnCalls, despawn: this.despawnCalls, LEAK: '-' },
         });
         if (leaks.meshes > 0 || leaks.materials > 0 || leaks.trails > 0) {
@@ -56,7 +68,7 @@ export const elementSpawnerStats = {
         this.materialsCloned = this.materialsDisposed = 0;
         this.trailsCreated = this.trailsDisposed = 0;
         this.animationStatesCreated = this.spawnCalls = this.despawnCalls = 0;
-    }
+    },
 };
 
 // Expose stats globally
@@ -85,21 +97,21 @@ if (typeof window !== 'undefined') {
             cloned: elementSpawnerStats.materialsCloned,
             disposed: elementSpawnerStats.materialsDisposed,
             ACTIVE: elementSpawnerStats.activeMaterials,
-            LIMIT: MAX_ACTIVE_MATERIALS
+            LIMIT: MAX_ACTIVE_MATERIALS,
         });
         console.log('Meshes:', {
             created: elementSpawnerStats.meshesCreated,
             disposed: elementSpawnerStats.meshesDisposed,
-            ACTIVE: elementSpawnerStats.meshesCreated - elementSpawnerStats.meshesDisposed
+            ACTIVE: elementSpawnerStats.meshesCreated - elementSpawnerStats.meshesDisposed,
         });
         console.log('Trails:', {
             created: elementSpawnerStats.trailsCreated,
             disposed: elementSpawnerStats.trailsDisposed,
-            ACTIVE: elementSpawnerStats.trailsCreated - elementSpawnerStats.trailsDisposed
+            ACTIVE: elementSpawnerStats.trailsCreated - elementSpawnerStats.trailsDisposed,
         });
         console.log('Spawn/Despawn calls:', {
             spawn: elementSpawnerStats.spawnCalls,
-            despawn: elementSpawnerStats.despawnCalls
+            despawn: elementSpawnerStats.despawnCalls,
         });
 
         // WebGL info if renderer provided
@@ -107,14 +119,14 @@ if (typeof window !== 'undefined') {
             const { info } = renderer;
             console.log('WebGL Memory:', {
                 geometries: info.memory.geometries,
-                textures: info.memory.textures
+                textures: info.memory.textures,
             });
             console.log('WebGL Programs:', info.programs?.length || 'N/A');
             console.log('WebGL Render:', {
                 calls: info.render.calls,
                 triangles: info.render.triangles,
                 points: info.render.points,
-                lines: info.render.lines
+                lines: info.render.lines,
             });
         }
 

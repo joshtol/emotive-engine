@@ -47,12 +47,12 @@ export class ThreeRenderer {
             canvas,
             alpha: true, // Transparent background
             premultipliedAlpha: true, // With CustomBlending on bloom, avoids double-darkening on CSS composite
-            antialias: false,  // DIAGNOSTIC: Disabled to test if MSAA causes dark edges
+            antialias: false, // DIAGNOSTIC: Disabled to test if MSAA causes dark edges
             powerPreference: 'high-performance',
             preserveDrawingBuffer: false,
             precision: 'highp', // High precision float for smoother gradients
             logarithmicDepthBuffer: false,
-            stencil: false
+            stencil: false,
         });
 
         // Force higher color depth if available
@@ -60,7 +60,7 @@ export class ThreeRenderer {
         // ACES Filmic tone mapping compresses HDR highlights gracefully
         // Prevents blown-out whites and preserves color saturation in bright areas
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.0;  // Neutral exposure, let ACES curve do the work
+        this.renderer.toneMappingExposure = 1.0; // Neutral exposure, let ACES curve do the work
 
         // Set clear color with full alpha transparency for CSS backgrounds
         this.renderer.setClearColor(0x000000, 0);
@@ -90,8 +90,16 @@ export class ThreeRenderer {
         this._contextLost = false;
         this._boundHandleContextLost = this.handleContextLost.bind(this);
         this._boundHandleContextRestored = this.handleContextRestored.bind(this);
-        this.renderer.domElement.addEventListener('webglcontextlost', this._boundHandleContextLost, false);
-        this.renderer.domElement.addEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+        this.renderer.domElement.addEventListener(
+            'webglcontextlost',
+            this._boundHandleContextLost,
+            false
+        );
+        this.renderer.domElement.addEventListener(
+            'webglcontextrestored',
+            this._boundHandleContextRestored,
+            false
+        );
 
         // Page visibility change handling (detect tab switches that may invalidate GPU resources)
         this._wasHidden = false;
@@ -193,8 +201,10 @@ export class ThreeRenderer {
 
         // Set distance limits (min/max zoom for both mouse wheel and pinch)
         // Use custom min/max if provided, otherwise default to 50%-200% of initial distance
-        const minZoom = this.options.minZoom !== undefined ? this.options.minZoom : this.cameraDistance * 0.5;
-        const maxZoom = this.options.maxZoom !== undefined ? this.options.maxZoom : this.cameraDistance * 2.0;
+        const minZoom =
+            this.options.minZoom !== undefined ? this.options.minZoom : this.cameraDistance * 0.5;
+        const maxZoom =
+            this.options.maxZoom !== undefined ? this.options.maxZoom : this.cameraDistance * 2.0;
         this.controls.minDistance = minZoom;
         this.controls.maxDistance = maxZoom;
 
@@ -203,7 +213,8 @@ export class ThreeRenderer {
 
         // Enable auto-rotate for gentle spinning (can be toggled)
         this.controls.autoRotate = this.options.autoRotate === true; // default false
-        this.controls.autoRotateSpeed = this.options.autoRotateSpeed !== undefined ? this.options.autoRotateSpeed : 0.5; // slow, subtle rotation
+        this.controls.autoRotateSpeed =
+            this.options.autoRotateSpeed !== undefined ? this.options.autoRotateSpeed : 0.5; // slow, subtle rotation
 
         // Limit vertical rotation to prevent upside-down views
         this.controls.minPolarAngle = Math.PI * 0.2; // 36 degrees from top
@@ -239,11 +250,19 @@ export class ThreeRenderer {
         };
 
         // Listen for pointer events at capture phase for earliest possible handling
-        this.renderer.domElement.addEventListener('pointermove', immediateUpdate, { passive: true });
-        this.renderer.domElement.addEventListener('pointerdown', immediateUpdate, { passive: true });
+        this.renderer.domElement.addEventListener('pointermove', immediateUpdate, {
+            passive: true,
+        });
+        this.renderer.domElement.addEventListener('pointerdown', immediateUpdate, {
+            passive: true,
+        });
 
         // Initialize camera preset manager for smooth view transitions
-        this.cameraPresetManager = new CameraPresetManager(this.camera, this.controls, this.cameraDistance);
+        this.cameraPresetManager = new CameraPresetManager(
+            this.camera,
+            this.controls,
+            this.cameraDistance
+        );
     }
 
     /**
@@ -359,7 +378,9 @@ export class ThreeRenderer {
                         detectedBase = `/${pathParts[1]}`;
                     }
 
-                    hdrPath = detectedBase ? `${detectedBase}/hdri/${hdrFileName}` : `/hdri/${hdrFileName}`;
+                    hdrPath = detectedBase
+                        ? `${detectedBase}/hdri/${hdrFileName}`
+                        : `/hdri/${hdrFileName}`;
                 }
 
                 let texture = null;
@@ -455,17 +476,15 @@ export class ThreeRenderer {
         depthTexture.format = THREE.DepthStencilFormat;
         depthTexture.type = THREE.UnsignedInt248Type;
 
-        const renderTarget = new THREE.WebGLRenderTarget(
-            drawingBufferSize.x,
-            drawingBufferSize.y, {
-                format: THREE.RGBAFormat,
-                type: THREE.HalfFloatType,  // HDR: Allow values > 1.0 for proper bloom
-                minFilter: THREE.NearestFilter,  // DIAGNOSTIC: Prevent bilinear blending with transparent black at edges
-                magFilter: THREE.NearestFilter,
-                stencilBuffer: false,
-                depthBuffer: true,
-                depthTexture
-            });
+        const renderTarget = new THREE.WebGLRenderTarget(drawingBufferSize.x, drawingBufferSize.y, {
+            format: THREE.RGBAFormat,
+            type: THREE.HalfFloatType, // HDR: Allow values > 1.0 for proper bloom
+            minFilter: THREE.NearestFilter, // DIAGNOSTIC: Prevent bilinear blending with transparent black at edges
+            magFilter: THREE.NearestFilter,
+            stencilBuffer: false,
+            depthBuffer: true,
+            depthTexture,
+        });
         this.composer = new EffectComposer(this.renderer, renderTarget);
 
         // CRITICAL: Clear ALL composer render targets to prevent garbage data flash
@@ -484,13 +503,17 @@ export class ThreeRenderer {
         // Clear to transparent black - the standard for compositing
         // Dark halo fix is in UnrealBloomPassAlpha: bloom adds RGB only, preserves alpha
         renderPass.clearColor = new THREE.Color(0, 0, 0);
-        renderPass.clearAlpha = 0;  // Transparent background
+        renderPass.clearAlpha = 0; // Transparent background
         this.composer.addPass(renderPass);
 
         // Ambient Occlusion pass — reads depth from RenderPass, composites AO onto scene
         // Placed after RenderPass so it has scene depth, before distortion/bloom
-        this.aoPass = new AmbientOcclusionPass(this.camera, drawingBufferSize.x, drawingBufferSize.y);
-        this.aoPass.enabled = false;  // Off by default — enabled per-element by Core3DManager
+        this.aoPass = new AmbientOcclusionPass(
+            this.camera,
+            drawingBufferSize.x,
+            drawingBufferSize.y
+        );
+        this.aoPass.enabled = false; // Off by default — enabled per-element by Core3DManager
         this.composer.addPass(this.aoPass);
 
         // Motion blur pass — velocity-based per-object blur for instanced elements
@@ -513,9 +536,9 @@ export class ThreeRenderer {
         );
         this.bloomPass = new UnrealBloomPassAlpha(
             bloomResolution,
-            1.5,  // strength - strong glow for HDR elements (threshold filters what glows)
-            0.4,  // radius - moderate spread for soft halo
-            0.9   // threshold - very high so only HDR peaks (>0.9) trigger bloom
+            1.5, // strength - strong glow for HDR elements (threshold filters what glows)
+            0.4, // radius - moderate spread for soft halo
+            0.9 // threshold - very high so only HDR peaks (>0.9) trigger bloom
         );
         this.bloomPass.name = 'bloomPass';
         this.bloomPass.enabled = true;
@@ -534,14 +557,16 @@ export class ThreeRenderer {
         // This prevents dark halos from blur sampling black transparent pixels
         this.particleRenderTarget = new THREE.WebGLRenderTarget(
             drawingBufferSize.x,
-            drawingBufferSize.y, {
+            drawingBufferSize.y,
+            {
                 format: THREE.RGBAFormat,
                 type: THREE.HalfFloatType,
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 stencilBuffer: false,
-                depthBuffer: true
-            });
+                depthBuffer: true,
+            }
+        );
 
         // Clear particle render target
         this.renderer.setRenderTarget(this.particleRenderTarget);
@@ -553,7 +578,7 @@ export class ThreeRenderer {
             bloomResolution,
             0.5, // reduced strength for subtler particle glow
             0.4, // tighter radius
-            0.3  // higher threshold for less glow
+            0.3 // higher threshold for less glow
         );
         this.particleBloomPass.name = 'particleBloomPass';
         this.particleBloomPass.enabled = true;
@@ -571,14 +596,16 @@ export class ThreeRenderer {
         // with refraction distortion to create proper lensing effect
         this.soulRenderTarget = new THREE.WebGLRenderTarget(
             drawingBufferSize.x,
-            drawingBufferSize.y, {
+            drawingBufferSize.y,
+            {
                 format: THREE.RGBAFormat,
                 type: THREE.HalfFloatType,
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 stencilBuffer: false,
-                depthBuffer: true
-            });
+                depthBuffer: true,
+            }
+        );
 
         // Clear soul render target
         this.renderer.setRenderTarget(this.soulRenderTarget);
@@ -590,14 +617,16 @@ export class ThreeRenderer {
         // samples it with normal-distorted UVs for screen-space refraction
         this.iceRefractionTarget = new THREE.WebGLRenderTarget(
             drawingBufferSize.x,
-            drawingBufferSize.y, {
+            drawingBufferSize.y,
+            {
                 format: THREE.RGBAFormat,
                 type: THREE.HalfFloatType,
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 stencilBuffer: false,
-                depthBuffer: true
-            });
+                depthBuffer: true,
+            }
+        );
 
         this.renderer.setRenderTarget(this.iceRefractionTarget);
         this.renderer.clear();
@@ -610,17 +639,13 @@ export class ThreeRenderer {
         // Half-res — distortion offsets are low frequency (smooth/blurry by nature)
         const halfWidth = Math.floor(drawingBufferSize.x * 0.5);
         const halfHeight = Math.floor(drawingBufferSize.y * 0.5);
-        this.distortionTarget = new THREE.WebGLRenderTarget(
-            halfWidth,
-            halfHeight,
-            {
-                format: THREE.RGBAFormat,
-                type: THREE.HalfFloatType,  // Signed offsets need float
-                minFilter: THREE.LinearFilter,
-                magFilter: THREE.LinearFilter,
-                depthBuffer: false           // No depth needed for 2D offset map
-            }
-        );
+        this.distortionTarget = new THREE.WebGLRenderTarget(halfWidth, halfHeight, {
+            format: THREE.RGBAFormat,
+            type: THREE.HalfFloatType, // Signed offsets need float
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            depthBuffer: false, // No depth needed for 2D offset map
+        });
 
         this.renderer.setRenderTarget(this.distortionTarget);
         this.renderer.clear();
@@ -631,7 +656,7 @@ export class ThreeRenderer {
         // renderToScreen=true for correct two-phase compositing (scene copy + bloom add).
         // Distortion warps the raw scene, then bloom processes the warped result.
         this.distortionPass = new ShaderPass(DistortionShader);
-        this.distortionPass.enabled = false;  // Off by default — enabled when sources active
+        this.distortionPass.enabled = false; // Off by default — enabled when sources active
         // Insert before bloom (at saved index) so bloom remains the last enabled pass
         this.composer.passes.splice(this._distortionPassIndex, 0, this.distortionPass);
 
@@ -645,8 +670,8 @@ export class ThreeRenderer {
         // Composite shader to blend particle bloom onto main scene
         this.particleCompositeShader = {
             uniforms: {
-                'tDiffuse': { value: null },
-                'tParticles': { value: null }
+                tDiffuse: { value: null },
+                tParticles: { value: null },
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -671,7 +696,7 @@ export class ThreeRenderer {
 
                     gl_FragColor = vec4(blended, alpha);
                 }
-            `
+            `,
         };
 
         // === GLOW LAYER ===
@@ -723,7 +748,6 @@ export class ThreeRenderer {
      * Rebuilds geometries, materials, textures, and post-processing
      */
     recreateResources() {
-
         // Recreate environment map
         this.createEnvironmentMap();
 
@@ -746,7 +770,6 @@ export class ThreeRenderer {
 
         // Note: For custom materials (crystal, moon, sun), the Core3DManager
         // handles recreation via the onContextRestored callback
-
     }
 
     /**
@@ -766,7 +789,7 @@ export class ThreeRenderer {
                 type: THREE.HalfFloatType,
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
-                depthBuffer: false
+                depthBuffer: false,
             }
         );
         this.renderer.setRenderTarget(this.distortionTarget);
@@ -828,7 +851,9 @@ export class ThreeRenderer {
                     const { material } = this.coreMesh;
                     if (material.map && !material.map.image) {
                         // Texture image was garbage collected - trigger reload
-                        console.warn('⚠️ Texture invalidated on visibility change - triggering reload');
+                        console.warn(
+                            '⚠️ Texture invalidated on visibility change - triggering reload'
+                        );
                         if (this.onContextRestored) {
                             this.onContextRestored();
                         }
@@ -896,9 +921,10 @@ export class ThreeRenderer {
             }
 
             // Use current material mode
-            material = this.materialMode === 'glass'
-                ? (this.glassMaterial || this.createGlassMaterial())
-                : this.glowMaterial;
+            material =
+                this.materialMode === 'glass'
+                    ? this.glassMaterial || this.createGlassMaterial()
+                    : this.glowMaterial;
         }
 
         // Create mesh
@@ -958,7 +984,11 @@ export class ThreeRenderer {
         // If custom material provided, swap material too
         if (customMaterial) {
             // Dispose old material (but NOT if it's glow/glass material - we reuse those)
-            if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
+            if (
+                this.coreMesh.material &&
+                this.coreMesh.material !== this.glowMaterial &&
+                this.coreMesh.material !== this.glassMaterial
+            ) {
                 this.disposeMaterial(this.coreMesh.material);
             }
             // Assign new custom material
@@ -971,13 +1001,18 @@ export class ThreeRenderer {
             }
         } else {
             // Swapping back to standard material - restore glow or glass
-            const standardMaterial = this.materialMode === 'glass'
-                ? (this.glassMaterial || this.createGlassMaterial())
-                : this.glowMaterial;
+            const standardMaterial =
+                this.materialMode === 'glass'
+                    ? this.glassMaterial || this.createGlassMaterial()
+                    : this.glowMaterial;
 
             if (this.coreMesh.material !== standardMaterial) {
                 // Dispose custom material
-                if (this.coreMesh.material && this.coreMesh.material !== this.glowMaterial && this.coreMesh.material !== this.glassMaterial) {
+                if (
+                    this.coreMesh.material &&
+                    this.coreMesh.material !== this.glowMaterial &&
+                    this.coreMesh.material !== this.glassMaterial
+                ) {
                     this.disposeMaterial(this.coreMesh.material);
                 }
                 this.coreMesh.material = standardMaterial;
@@ -1001,7 +1036,7 @@ export class ThreeRenderer {
                 glowIntensity: { value: 1.0 },
                 coreColor: { value: new THREE.Color(1, 1, 1) },
                 fresnelPower: { value: 3.0 },
-                uOpacity: { value: 1.0 }  // Mesh opacity for fade effects (smokebomb/vanish)
+                uOpacity: { value: 1.0 }, // Mesh opacity for fade effects (smokebomb/vanish)
             },
             vertexShader: `
                 varying vec3 vNormal;
@@ -1045,7 +1080,7 @@ export class ThreeRenderer {
                 }
             `,
             transparent: true,
-            side: THREE.FrontSide
+            side: THREE.FrontSide,
         });
     }
 
@@ -1056,27 +1091,27 @@ export class ThreeRenderer {
     createGlassMaterial() {
         // Store default emissive multiplier (can be adjusted via UI)
         // Using white emissive for uniform bloom, so this needs to be low
-        this.glassEmissiveMultiplier = 0.60;
+        this.glassEmissiveMultiplier = 0.6;
 
         const material = new THREE.MeshPhysicalMaterial({
-            transmission: 1.0,           // Full interior transparency (refraction)
-            thickness: 2.7,              // Strong refraction intensity (user-tuned)
-            roughness: 0.37,             // Slightly frosted surface (user-tuned)
-            metalness: 0.0,              // Non-metallic
-            ior: 1.5,                    // Index of refraction (glass)
-            reflectivity: 0.5,           // Subtle surface reflections
-            envMapIntensity: 1.2,        // Environment reflection strength (boosted)
-            side: THREE.DoubleSide,      // Render both faces for proper refraction
+            transmission: 1.0, // Full interior transparency (refraction)
+            thickness: 2.7, // Strong refraction intensity (user-tuned)
+            roughness: 0.37, // Slightly frosted surface (user-tuned)
+            metalness: 0.0, // Non-metallic
+            ior: 1.5, // Index of refraction (glass)
+            reflectivity: 0.5, // Subtle surface reflections
+            envMapIntensity: 1.2, // Environment reflection strength (boosted)
+            side: THREE.DoubleSide, // Render both faces for proper refraction
             transparent: true,
             opacity: 1.0,
-            color: 0xffffff,             // Base color (can be tinted)
-            emissive: 0xffffff,          // Internal glow color (white, will be tinted by emotion)
-            emissiveIntensity: 0.6,      // Internal glow brightness (raised for visibility)
-            clearcoat: 0.8,              // Strong glossy coating for sparkle
-            clearcoatRoughness: 0.05,    // Very smooth for sharp highlights
-            iridescence: 0.4,            // Color shifting based on viewing angle
-            iridescenceIOR: 1.3,         // IOR for iridescence effect
-            iridescenceThicknessRange: [100, 400]  // Thickness range for color variation
+            color: 0xffffff, // Base color (can be tinted)
+            emissive: 0xffffff, // Internal glow color (white, will be tinted by emotion)
+            emissiveIntensity: 0.6, // Internal glow brightness (raised for visibility)
+            clearcoat: 0.8, // Strong glossy coating for sparkle
+            clearcoatRoughness: 0.05, // Very smooth for sharp highlights
+            iridescence: 0.4, // Color shifting based on viewing angle
+            iridescenceIOR: 1.3, // IOR for iridescence effect
+            iridescenceThicknessRange: [100, 400], // Thickness range for color variation
         });
 
         // Apply environment map if available
@@ -1111,30 +1146,38 @@ export class ThreeRenderer {
         let coreGeometry;
 
         // Check geometry type by constructor or parameters
-        if (outerGeometry.type === 'TorusGeometry' || outerGeometry.parameters?.tube !== undefined) {
+        if (
+            outerGeometry.type === 'TorusGeometry' ||
+            outerGeometry.parameters?.tube !== undefined
+        ) {
             // TORUS: Create thinner torus that follows the donut hole
             const params = outerGeometry.parameters;
             const radius = params.radius || 1.0;
             const tubeRadius = (params.tube || 0.4) * 0.25; // Much thinner tube for lightsaber effect
             const radialSegments = params.radialSegments || 16;
             const tubularSegments = params.tubularSegments || 100;
-            coreGeometry = new THREE.TorusGeometry(radius, tubeRadius, radialSegments, tubularSegments);
-        }
-        else if (outerGeometry.type === 'SphereGeometry') {
+            coreGeometry = new THREE.TorusGeometry(
+                radius,
+                tubeRadius,
+                radialSegments,
+                tubularSegments
+            );
+        } else if (outerGeometry.type === 'SphereGeometry') {
             // SPHERE: Smaller sphere
             const params = outerGeometry.parameters;
             const radius = (params.radius || 1.0) * 0.2;
             coreGeometry = new THREE.SphereGeometry(radius, 32, 32);
-        }
-        else if (outerGeometry.type === 'BoxGeometry') {
+        } else if (outerGeometry.type === 'BoxGeometry') {
             // BOX/CUBE: Smaller box
             const params = outerGeometry.parameters;
             const width = (params.width || 1.0) * 0.2;
             const height = (params.height || 1.0) * 0.2;
             const depth = (params.depth || 1.0) * 0.2;
             coreGeometry = new THREE.BoxGeometry(width, height, depth);
-        }
-        else if (outerGeometry.type === 'IcosahedronGeometry' || outerGeometry.type === 'OctahedronGeometry') {
+        } else if (
+            outerGeometry.type === 'IcosahedronGeometry' ||
+            outerGeometry.type === 'OctahedronGeometry'
+        ) {
             // CRYSTAL SHAPES: Smaller version (20% scale works perfectly)
             const params = outerGeometry.parameters;
             const radius = (params.radius || 1.0) * 0.2;
@@ -1144,8 +1187,7 @@ export class ThreeRenderer {
             } else {
                 coreGeometry = new THREE.OctahedronGeometry(radius, detail);
             }
-        }
-        else {
+        } else {
             // DEFAULT: Use small icosahedron for unknown geometries
             coreGeometry = new THREE.IcosahedronGeometry(0.2, 2);
         }
@@ -1161,10 +1203,10 @@ export class ThreeRenderer {
 
         const coreMaterial = new THREE.MeshStandardMaterial({
             emissive: 0xffffff,
-            emissiveIntensity: isCrystalShape ? 3.5 : 2.0,  // Higher bloom for crystals
+            emissiveIntensity: isCrystalShape ? 3.5 : 2.0, // Higher bloom for crystals
             color: 0xffffff,
             transparent: false,
-            opacity: 1.0
+            opacity: 1.0,
         });
 
         // Store reference for color updates in render()
@@ -1216,7 +1258,6 @@ export class ThreeRenderer {
             this.innerCore = null;
             this.innerCoreMaterial = null;
         }
-
     }
 
     /**
@@ -1262,7 +1303,8 @@ export class ThreeRenderer {
         // Smooth transition for key light (primary accent light)
         if (this.keyLight) {
             this.keyLight.color.lerp(this._tempColor, transitionSpeed);
-            this.keyLight.intensity += (0.8 * targetIntensity - this.keyLight.intensity) * transitionSpeed;
+            this.keyLight.intensity +=
+                (0.8 * targetIntensity - this.keyLight.intensity) * transitionSpeed;
         }
 
         // Subtle tint for fill light (secondary light)
@@ -1270,13 +1312,15 @@ export class ThreeRenderer {
             // Reuse temp color 2 for fill target (blend emotion color with white)
             this._tempColor2.copy(this._tempColor).lerp(this._white, 0.7);
             this.fillLight.color.lerp(this._tempColor2, transitionSpeed * 0.5);
-            this.fillLight.intensity += (0.3 * targetIntensity - this.fillLight.intensity) * transitionSpeed;
+            this.fillLight.intensity +=
+                (0.3 * targetIntensity - this.fillLight.intensity) * transitionSpeed;
         }
 
         // Adjust ambient light intensity
         if (this.ambientLight) {
             const ambientTarget = 0.4 * targetIntensity;
-            this.ambientLight.intensity += (ambientTarget - this.ambientLight.intensity) * transitionSpeed;
+            this.ambientLight.intensity +=
+                (ambientTarget - this.ambientLight.intensity) * transitionSpeed;
         }
     }
 
@@ -1306,7 +1350,7 @@ export class ThreeRenderer {
      * @returns {number} Relative luminance (0-1)
      */
     calculateColorLuminance(r, g, b) {
-        const linearize = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        const linearize = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
         return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
     }
 
@@ -1317,19 +1361,23 @@ export class ThreeRenderer {
 
             // Sun geometry needs controlled bloom for photosphere glow
             if (geometryType === 'sun') {
-                targetStrength = 1.5;   // Moderate glow
-                targetRadius = 0.4;     // Lower radius prevents pixelation from low-res mips
-                targetThreshold = 0.3;  // Lower threshold for sun glow effect
-            } else if (geometryType === 'crystal' || geometryType === 'rough' || geometryType === 'heart') {
+                targetStrength = 1.5; // Moderate glow
+                targetRadius = 0.4; // Lower radius prevents pixelation from low-res mips
+                targetThreshold = 0.3; // Lower threshold for sun glow effect
+            } else if (
+                geometryType === 'crystal' ||
+                geometryType === 'rough' ||
+                geometryType === 'heart'
+            ) {
                 // Crystal/rough/heart need bloom for light emission effect
-                targetStrength = 1.5;   // Moderate bloom - 2.5 was way too intense
-                targetRadius = 0.5;     // Moderate spread
+                targetStrength = 1.5; // Moderate bloom - 2.5 was way too intense
+                targetRadius = 0.5; // Moderate spread
                 targetThreshold = 0.65; // Above individual caps (0.5) so only combined peaks bloom — prevents fwidth wobble
             } else if (this.materialMode === 'glass') {
                 // Glass mode needs much lower bloom strength to avoid haziness
                 // Since we're using white emissive at fixed intensity for uniformity
-                targetStrength = 0.3;  // Low strength for subtle glass glow
-                targetRadius = 0.2;     // Tight radius to reduce haze
+                targetStrength = 0.3; // Low strength for subtle glass glow
+                targetRadius = 0.2; // Tight radius to reduce haze
                 targetThreshold = 0.85; // Fixed threshold
             } else {
                 // Glow mode uses variable bloom
@@ -1339,7 +1387,8 @@ export class ThreeRenderer {
             }
 
             this.bloomPass.strength += (targetStrength - this.bloomPass.strength) * transitionSpeed;
-            this.bloomPass.threshold += (targetThreshold - this.bloomPass.threshold) * transitionSpeed;
+            this.bloomPass.threshold +=
+                (targetThreshold - this.bloomPass.threshold) * transitionSpeed;
             this.bloomPass.radius = targetRadius;
         }
     }
@@ -1357,10 +1406,10 @@ export class ThreeRenderer {
         const presets = {
             front: { x: 0, y: 0, z: d },
             side: { x: d, y: 0, z: 0 },
-            top: { x: 0, y: d, z: 0 },  // True top-down view (directly above)
+            top: { x: 0, y: d, z: 0 }, // True top-down view (directly above)
             angle: { x: d * 0.67, y: d * 0.5, z: d * 0.67 },
             back: { x: 0, y: 0, z: -d },
-            bottom: { x: 0, y: -d, z: 0 }  // Bottom view (directly below)
+            bottom: { x: 0, y: -d, z: 0 }, // Bottom view (directly below)
         };
 
         const targetPos = presets[preset];
@@ -1506,18 +1555,18 @@ export class ThreeRenderer {
             position = [0, 0, 0],
             rotation = [0, 0, 0],
             scale = 1.0,
-            nonUniformScale = null,  // [x, y, z] for squash/stretch effects, null for uniform scale
+            nonUniformScale = null, // [x, y, z] for squash/stretch effects, null for uniform scale
             glowColor = [1, 1, 1],
             glowIntensity = 1.0,
             // glowColorHex - available for luminance normalization (currently unused)
-            hasActiveGesture = false,  // Whether a gesture is currently active
-            calibrationRotation = [0, 0, 0],  // Manual rotation offset applied on top of animations
-            cameraRoll = 0,  // Camera-space roll rotation applied after all other rotations
-            solarEclipse = null,  // Solar eclipse manager for synchronized updates
-            deltaTime = 0,  // Delta time for eclipse animation
-            morphProgress = null,  // Morph progress for corona fade-in (null = no morph, 0-1 = morphing)
-            hasSoul = false,  // Whether this geometry has a soul layer (skip soul pass if false)
-            hasParticles = true  // Whether particles are enabled (skip particle pass if false)
+            hasActiveGesture = false, // Whether a gesture is currently active
+            calibrationRotation = [0, 0, 0], // Manual rotation offset applied on top of animations
+            cameraRoll = 0, // Camera-space roll rotation applied after all other rotations
+            solarEclipse = null, // Solar eclipse manager for synchronized updates
+            deltaTime = 0, // Delta time for eclipse animation
+            morphProgress = null, // Morph progress for corona fade-in (null = no morph, 0-1 = morphing)
+            hasSoul = false, // Whether this geometry has a soul layer (skip soul pass if false)
+            hasParticles = true, // Whether particles are enabled (skip particle pass if false)
         } = params;
 
         // Update camera controls FIRST before any rendering
@@ -1556,7 +1605,9 @@ export class ThreeRenderer {
             // Apply camera-space roll (rotates around camera's forward vector)
             if (cameraRoll !== 0) {
                 // Get camera direction (from camera to mesh) - REUSE vector
-                this._cameraDir.subVectors(this.coreMesh.position, this.camera.position).normalize();
+                this._cameraDir
+                    .subVectors(this.coreMesh.position, this.camera.position)
+                    .normalize();
 
                 // Create quaternion for rotation around camera direction - REUSE quaternion
                 this._rollQuat.setFromAxisAngle(this._cameraDir, cameraRoll);
@@ -1591,9 +1642,10 @@ export class ThreeRenderer {
                     this._tempColor.setRGB(...glowColor);
                     // Only lerp if color difference is significant (avoids unnecessary work when idle)
                     const currentColor = this.coreMesh.material.uniforms.glowColor.value;
-                    const colorDiff = Math.abs(this._tempColor.r - currentColor.r) +
-                                     Math.abs(this._tempColor.g - currentColor.g) +
-                                     Math.abs(this._tempColor.b - currentColor.b);
+                    const colorDiff =
+                        Math.abs(this._tempColor.r - currentColor.r) +
+                        Math.abs(this._tempColor.g - currentColor.g) +
+                        Math.abs(this._tempColor.b - currentColor.b);
                     if (colorDiff > 0.001) {
                         currentColor.lerp(this._tempColor, 0.15);
                     }
@@ -1623,7 +1675,8 @@ export class ThreeRenderer {
                     if (intensityDiff > 0.001) {
                         // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
                         const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
-                        this.coreMesh.material.uniforms.glowIntensity.value += (targetIntensity - currentIntensity) * lerpSpeed;
+                        this.coreMesh.material.uniforms.glowIntensity.value +=
+                            (targetIntensity - currentIntensity) * lerpSpeed;
                     }
                 }
 
@@ -1638,11 +1691,17 @@ export class ThreeRenderer {
 
                         if (d.impactPoint && this.coreMesh.material.uniforms.impactPoint) {
                             this.coreMesh.material.uniforms.impactPoint.value.set(
-                                d.impactPoint[0], d.impactPoint[1], d.impactPoint[2]
+                                d.impactPoint[0],
+                                d.impactPoint[1],
+                                d.impactPoint[2]
                             );
                         }
-                        if (d.falloffRadius !== undefined && this.coreMesh.material.uniforms.deformationFalloff) {
-                            this.coreMesh.material.uniforms.deformationFalloff.value = d.falloffRadius;
+                        if (
+                            d.falloffRadius !== undefined &&
+                            this.coreMesh.material.uniforms.deformationFalloff
+                        ) {
+                            this.coreMesh.material.uniforms.deformationFalloff.value =
+                                d.falloffRadius;
                         }
                     } else {
                         // No deformation - reset
@@ -1666,7 +1725,8 @@ export class ThreeRenderer {
                 const currentEmissiveIntensity = this.coreMesh.material.emissiveIntensity;
                 // Use faster lerp (0.5) for gestures, slower (0.15) for smooth emotion transitions
                 const lerpSpeed = hasActiveGesture ? 0.5 : 0.15;
-                this.coreMesh.material.emissiveIntensity += (compensatedIntensity - currentEmissiveIntensity) * lerpSpeed;
+                this.coreMesh.material.emissiveIntensity +=
+                    (compensatedIntensity - currentEmissiveIntensity) * lerpSpeed;
 
                 // Keep base color white for clean glass
                 this.coreMesh.material.color.lerp(this._white, 0.15);
@@ -1719,7 +1779,8 @@ export class ThreeRenderer {
 
                 // Pass soul texture and its size to crystal shader for refraction sampling
                 if (this.coreMesh?.material?.uniforms?.soulTexture) {
-                    this.coreMesh.material.uniforms.soulTexture.value = this.soulRenderTarget.texture;
+                    this.coreMesh.material.uniforms.soulTexture.value =
+                        this.soulRenderTarget.texture;
                     // Pass the actual render target size for correct UV mapping
                     if (this.coreMesh.material.uniforms.soulTextureSize) {
                         this.coreMesh.material.uniforms.soulTextureSize.value.set(
@@ -1735,7 +1796,10 @@ export class ThreeRenderer {
                         // Convert from NDC (-1 to 1) to UV (0 to 1)
                         const soulScreenU = (this._soulPosTemp.x + 1.0) * 0.5;
                         const soulScreenV = (this._soulPosTemp.y + 1.0) * 0.5;
-                        this.coreMesh.material.uniforms.soulScreenCenter.value.set(soulScreenU, soulScreenV);
+                        this.coreMesh.material.uniforms.soulScreenCenter.value.set(
+                            soulScreenU,
+                            soulScreenV
+                        );
                     }
                 }
 
@@ -1746,7 +1810,11 @@ export class ThreeRenderer {
             // Refraction shaders sample this texture with distorted UVs to bend
             // the background through their volume (screen-space refraction).
             // They output at full opacity — the refraction is baked into the color.
-            if (this.iceRefractionTarget && this._refractionMeshes && this._refractionMeshes.size > 0) {
+            if (
+                this.iceRefractionTarget &&
+                this._refractionMeshes &&
+                this._refractionMeshes.size > 0
+            ) {
                 // Hide refraction meshes
                 for (const mesh of this._refractionMeshes) {
                     mesh.visible = false;
@@ -1776,7 +1844,8 @@ export class ThreeRenderer {
                 for (const mesh of this._refractionMeshes) {
                     mesh.visible = true;
                     if (mesh.material?.uniforms?.uBackgroundTexture) {
-                        mesh.material.uniforms.uBackgroundTexture.value = this.iceRefractionTarget.texture;
+                        mesh.material.uniforms.uBackgroundTexture.value =
+                            this.iceRefractionTarget.texture;
                         mesh.material.uniforms.uResolution.value.set(
                             this.iceRefractionTarget.width,
                             this.iceRefractionTarget.height
@@ -1829,10 +1898,12 @@ export class ThreeRenderer {
                 // This ensures particles behind the crystal are properly occluded
                 // Use overrideMaterial to render only to depth buffer (no color output)
                 this.camera.layers.set(0);
-                const depthMaterial = this._depthOnlyMaterial || (this._depthOnlyMaterial = new THREE.MeshBasicMaterial({
-                    colorWrite: false,  // Don't write to color buffer
-                    depthWrite: true    // Only write to depth buffer
-                }));
+                const depthMaterial =
+                    this._depthOnlyMaterial ||
+                    (this._depthOnlyMaterial = new THREE.MeshBasicMaterial({
+                        colorWrite: false, // Don't write to color buffer
+                        depthWrite: true, // Only write to depth buffer
+                    }));
                 this.scene.overrideMaterial = depthMaterial;
                 this.renderer.render(this.scene, this.camera);
                 this.scene.overrideMaterial = null;
@@ -1964,7 +2035,7 @@ export class ThreeRenderer {
                     centerUV: trigger.centerUV,
                     direction: trigger.direction,
                     propagation: trigger.propagation,
-                    amount: trigger.amount
+                    amount: trigger.amount,
                 });
             }
             // Update glow if provided
@@ -2069,7 +2140,10 @@ export class ThreeRenderer {
 
             // Update resolution uniform for crystal shader refraction
             if (this.coreMesh?.material?.uniforms?.resolution) {
-                this.coreMesh.material.uniforms.resolution.value.set(drawingBufferSize.x, drawingBufferSize.y);
+                this.coreMesh.material.uniforms.resolution.value.set(
+                    drawingBufferSize.x,
+                    drawingBufferSize.y
+                );
             }
         }
     }
@@ -2084,9 +2158,19 @@ export class ThreeRenderer {
 
         // Dispose all texture properties (map, normalMap, envMap, etc.)
         const textureProperties = [
-            'map', 'lightMap', 'bumpMap', 'normalMap', 'specularMap',
-            'envMap', 'alphaMap', 'aoMap', 'displacementMap', 'emissiveMap',
-            'gradientMap', 'metalnessMap', 'roughnessMap'
+            'map',
+            'lightMap',
+            'bumpMap',
+            'normalMap',
+            'specularMap',
+            'envMap',
+            'alphaMap',
+            'aoMap',
+            'displacementMap',
+            'emissiveMap',
+            'gradientMap',
+            'metalnessMap',
+            'roughnessMap',
         ];
 
         textureProperties.forEach(prop => {
@@ -2109,7 +2193,11 @@ export class ThreeRenderer {
                         uniform.value = null;
                     }
                     // Clear Vector objects to break references
-                    else if (uniform.value.isVector2 || uniform.value.isVector3 || uniform.value.isVector4) {
+                    else if (
+                        uniform.value.isVector2 ||
+                        uniform.value.isVector3 ||
+                        uniform.value.isVector4
+                    ) {
                         uniform.value = null;
                     }
                 }
@@ -2124,14 +2212,21 @@ export class ThreeRenderer {
      * Cleanup resources
      */
     destroy() {
-
         // Set destroyed flag first to prevent any pending render calls
         this._destroyed = true;
 
         // Remove WebGL context event listeners
         if (this.renderer?.domElement) {
-            this.renderer.domElement.removeEventListener('webglcontextlost', this._boundHandleContextLost, false);
-            this.renderer.domElement.removeEventListener('webglcontextrestored', this._boundHandleContextRestored, false);
+            this.renderer.domElement.removeEventListener(
+                'webglcontextlost',
+                this._boundHandleContextLost,
+                false
+            );
+            this.renderer.domElement.removeEventListener(
+                'webglcontextrestored',
+                this._boundHandleContextRestored,
+                false
+            );
         }
 
         // Remove visibility change and focus listeners

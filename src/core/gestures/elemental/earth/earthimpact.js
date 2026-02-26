@@ -48,12 +48,18 @@ const EARTHIMPACT_CONFIG = {
             easing: 'easeOut',
             startScale: 0.6,
             endScale: 1.2,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: { type: 'ring', count: 5 },
         count: 5,
         scale: 1.0,
-        models: ['rock-chunk-small', 'rock-cluster', 'rock-chunk-small', 'rock-cluster', 'rock-chunk-small'],
+        models: [
+            'rock-chunk-small',
+            'rock-cluster',
+            'rock-chunk-small',
+            'rock-cluster',
+            'rock-chunk-small',
+        ],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.6,
@@ -68,32 +74,35 @@ const EARTHIMPACT_CONFIG = {
                 { axis: 'z', rotations: -1.5, phase: 72 },
                 { axis: 'y', rotations: 2.5, phase: 144 },
                 { axis: 'x', rotations: -2, phase: 216 },
-                { axis: 'z', rotations: 1.5, phase: 288 }
+                { axis: 'z', rotations: 1.5, phase: 288 },
             ],
-            atmospherics: [{
-                preset: 'earth-gravel',
-                targets: ['rock-chunk-medium', 'boulder'],
-                anchor: 'below',
-                intensity: 0.4,
-                sizeScale: 0.7,
-                progressCurve: 'burst',
-            }, {
-                preset: 'earth-dust',
-                targets: ['boulder'],
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'burst',
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-gravel',
+                    targets: ['rock-chunk-medium', 'boulder'],
+                    anchor: 'below',
+                    intensity: 0.4,
+                    sizeScale: 0.7,
+                    progressCurve: 'burst',
+                },
+                {
+                    preset: 'earth-dust',
+                    targets: ['boulder'],
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'burst',
+                },
+            ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.08,
             blending: 'normal',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     decayRate: 0.15,
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 0.7,
     glowIntensityMax: 1.2,
     glowFlickerRate: 3,
@@ -101,7 +110,7 @@ const EARTHIMPACT_CONFIG = {
     shakeFrequency: 15,
     tremor: 0.008,
     tremorFrequency: 5,
-    endFlash: true
+    endFlash: true,
 };
 
 export default buildEarthEffectGesture(EARTHIMPACT_CONFIG);

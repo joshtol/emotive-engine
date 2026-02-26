@@ -46,17 +46,21 @@ export class SleepWakeManager {
      * @returns {Promise<Object>} Chain target for method chaining
      */
     sleep() {
-        return this.errorBoundary.wrap(async () => {
-            if (this._state.sleeping) {
-                // Already sleeping
+        return this.errorBoundary.wrap(
+            async () => {
+                if (this._state.sleeping) {
+                    // Already sleeping
+                    return this._chainTarget;
+                }
+
+                await this.performSleepSequence();
+                this.enterSleepState();
+
                 return this._chainTarget;
-            }
-
-            await this.performSleepSequence();
-            this.enterSleepState();
-
-            return this._chainTarget;
-        }, 'sleep', this._chainTarget)();
+            },
+            'sleep',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -99,17 +103,21 @@ export class SleepWakeManager {
      * @returns {Promise<Object>} Chain target for method chaining
      */
     wake() {
-        return this.errorBoundary.wrap(async () => {
-            if (!this._state.sleeping) {
-                // Not currently sleeping
+        return this.errorBoundary.wrap(
+            async () => {
+                if (!this._state.sleeping) {
+                    // Not currently sleeping
+                    return this._chainTarget;
+                }
+
+                this.exitSleepState();
+                await this.performWakeSequence();
+
                 return this._chainTarget;
-            }
-
-            this.exitSleepState();
-            await this.performWakeSequence();
-
-            return this._chainTarget;
-        }, 'wake', this._chainTarget)();
+            },
+            'wake',
+            this._chainTarget
+        )();
     }
 
     /**

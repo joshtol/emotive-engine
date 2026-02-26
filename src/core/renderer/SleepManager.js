@@ -66,7 +66,7 @@ export class SleepManager {
         // Animation loop callback IDs
         this.loopCallbackIds = {
             eyeClose: null,
-            eyeOpen: null
+            eyeOpen: null,
         };
 
         // Wake jitter timeout
@@ -147,8 +147,8 @@ export class SleepManager {
                 this.renderer.state.eyeOpenness = 0.1;
 
                 // Animate dimming and scaling
-                this.renderer.state.sleepDimness = 1.0 - (dimEased * 0.4); // Dim to 0.6
-                this.renderer.state.sleepScale = 1.0 - (dimEased * 0.1); // Scale to 0.9
+                this.renderer.state.sleepDimness = 1.0 - dimEased * 0.4; // Dim to 0.6
+                this.renderer.state.sleepScale = 1.0 - dimEased * 0.1; // Scale to 0.9
 
                 // Continue animation on next frame
             } else {
@@ -235,11 +235,11 @@ export class SleepManager {
             if (elapsed < brightenDuration) {
                 // Phase 1: Brighten the orb
                 const progress = elapsed / brightenDuration;
-                const eased = Math.sin(progress * Math.PI / 2); // Smooth acceleration
+                const eased = Math.sin((progress * Math.PI) / 2); // Smooth acceleration
 
                 // Animate brightening and scaling back
-                this.renderer.state.sleepDimness = 0.6 + (eased * 0.4); // Brighten from 0.6 to 1.0
-                this.renderer.state.sleepScale = 0.9 + (eased * 0.1); // Scale from 0.9 to 1.0
+                this.renderer.state.sleepDimness = 0.6 + eased * 0.4; // Brighten from 0.6 to 1.0
+                this.renderer.state.sleepScale = 0.9 + eased * 0.1; // Scale from 0.9 to 1.0
 
                 // Keep eyes closed during brightening
                 this.renderer.state.eyeOpenness = 0.1;
@@ -248,7 +248,7 @@ export class SleepManager {
             } else if (elapsed < brightenDuration + eyeOpenDuration) {
                 // Phase 2: Open eyes
                 const eyeProgress = (elapsed - brightenDuration) / eyeOpenDuration;
-                const eyeEased = Math.sin(eyeProgress * Math.PI / 2); // Smooth acceleration
+                const eyeEased = Math.sin((eyeProgress * Math.PI) / 2); // Smooth acceleration
 
                 // Keep full brightness
                 this.renderer.state.sleepDimness = 1.0;

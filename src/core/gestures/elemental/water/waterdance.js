@@ -55,90 +55,90 @@ const WATERDANCE_CONFIG = {
         type: 'axis-travel',
         axisTravel: {
             axis: 'y',
-            start: 'bottom',            // Start at mascot's feet
+            start: 'bottom', // Start at mascot's feet
             end: 'top',
             easing: 'easeInOut',
             startScale: 1.4,
             endScale: 1.8,
             startDiameter: 1.3,
             endDiameter: 2.0,
-            orientation: 'vertical'     // Standing rings for dance effect
+            orientation: 'vertical', // Standing rings for dance effect
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.0,
         models: ['splash-ring'],
         animation: {
             appearAt: 0.02,
-            disappearAt: 0.75,          // Start fading at 75%
+            disappearAt: 0.75, // Start fading at 75%
             stagger: 0.02,
             enter: {
                 type: 'fade',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
-                duration: 0.5,          // Fade over second half
-                easing: 'easeIn'
+                duration: 0.5, // Fade over second half
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             // Cutout: CELLULAR + STREAKS for organic water texture (like watercrown)
             // Angular travel with slow sweep for flowing effect
             // fadeIn with short duration so cutout reaches full before rings fade out at 50%
             cutout: {
                 strength: 0.7,
-                primary: { pattern: 0, scale: 0.8, weight: 1.0 },   // CELLULAR - organic holes
+                primary: { pattern: 0, scale: 0.8, weight: 1.0 }, // CELLULAR - organic holes
                 secondary: { pattern: 1, scale: 0.6, weight: 0.5 }, // STREAKS - subtle flow
                 blend: 'multiply',
                 travel: 'angular',
-                travelSpeed: 0.3,        // Slow sweep like watercrown
+                travelSpeed: 0.3, // Slow sweep like watercrown
                 strengthCurve: 'fadeIn',
-                fadeInDuration: 0.167,   // Reach full strength at 1/6 of gesture (very quick ramp)
+                fadeInDuration: 0.167, // Reach full strength at 1/6 of gesture (very quick ramp)
                 // Trail dissolve: bottoms of rings fade as they rise
                 // Negative offset = floor below instance, softness must be large (threshold compresses gradient)
                 // Binary threshold (0.5) compresses gradient - need softness ~2x wider than desired visual effect
                 trailDissolve: {
                     enabled: true,
-                    offset: -0.8,        // Floor 0.8 units below instance center (well below ring geometry)
-                    softness: 2.0        // Very wide gradient to compensate for threshold compression
-                }
+                    offset: -0.8, // Floor 0.8 units below instance center (well below ring geometry)
+                    softness: 2.0, // Very wide gradient to compensate for threshold compression
+                },
             },
             // Grain: film grain for spray texture
             grain: {
-                type: 3,              // FILM
+                type: 3, // FILM
                 strength: 0.2,
                 scale: 0.25,
                 speed: 2.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.2,
                     peak: 0.45,
                     end: 0.25,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.1,
                 frequency: 5,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             // Dance partners: two mirror each other, one does a flourish
             rotate: [
-                { axis: 'y', rotations: 2, phase: 0 },      // Lead: 2 rotations
-                { axis: 'y', rotations: -2, phase: 60 },    // Partner: counter-rotation!
-                { axis: 'y', rotations: 3, phase: 120 }     // Flourish: faster accent
+                { axis: 'y', rotations: 2, phase: 0 }, // Lead: 2 rotations
+                { axis: 'y', rotations: -2, phase: 60 }, // Partner: counter-rotation!
+                { axis: 'y', rotations: 3, phase: 120 }, // Flourish: faster accent
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -150,23 +150,25 @@ const WATERDANCE_CONFIG = {
                         type: 1,
                         arcWidth: 0.6,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
+                    orientationOverride: 'vertical',
+                },
             },
             // Sustained spray flung off swirling dance
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4,
-                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
-            }],
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                    centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+                },
+            ],
+        },
     },
 
     // Wobble - rhythmic for dance
@@ -183,7 +185,7 @@ const WATERDANCE_CONFIG = {
     glowIntensityMax: 2.5,
     glowPulseRate: 6,
     // Dance-specific
-    rotationFlow: 0.02
+    rotationFlow: 0.02,
 };
 
 /**

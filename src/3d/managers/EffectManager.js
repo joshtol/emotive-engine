@@ -139,7 +139,7 @@ export class EffectManager {
             detail: 1,
             geometryType,
             renderer: this.renderer,
-            assetBasePath: this.assetBasePath
+            assetBasePath: this.assetBasePath,
         });
 
         this.crystalSoul.attachTo(coreMesh, this.renderer?.scene);
@@ -155,7 +155,7 @@ export class EffectManager {
             mesh: this.crystalSoul.mesh,
             material: this.crystalSoul.material,
             baseScale: this.crystalSoul.baseScale,
-            shellBaseScale
+            shellBaseScale,
         };
     }
 
@@ -181,7 +181,7 @@ export class EffectManager {
             detail: 1,
             geometryType,
             renderer: this.renderer,
-            assetBasePath: this.assetBasePath
+            assetBasePath: this.assetBasePath,
         });
 
         this.crystalSoul.attachTo(coreMesh, this.renderer?.scene);
@@ -196,7 +196,7 @@ export class EffectManager {
             mesh: this.crystalSoul.mesh,
             material: this.crystalSoul.material,
             baseScale: this.crystalSoul.baseScale,
-            shellBaseScale
+            shellBaseScale,
         };
     }
 
@@ -205,8 +205,8 @@ export class EffectManager {
      * @private
      */
     _getCrystalScaleConfig(geometryType) {
-        let shellBaseScale = 2.0;  // Default crystal shell size
-        let soulScale = 1.0;       // Default: full size
+        let shellBaseScale = 2.0; // Default crystal shell size
+        let soulScale = 1.0; // Default: full size
 
         if (geometryType === 'heart') {
             shellBaseScale = 2.4;
@@ -216,7 +216,7 @@ export class EffectManager {
             soulScale = 1.0;
         } else if (geometryType === 'star') {
             shellBaseScale = 2.0;
-            soulScale = 1.4;  // Larger soul for star to fill the shape
+            soulScale = 1.4; // Larger soul for star to fill the shape
         } else if (geometryType === 'crystal') {
             shellBaseScale = 2.0;
             soulScale = 1.0;

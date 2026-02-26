@@ -32,7 +32,7 @@ import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js'
 // VELOCITY RENDER MATERIAL — Projects world-space velocity to screen-space UV
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VELOCITY_VERTEX_SHADER = /* glsl */`
+const VELOCITY_VERTEX_SHADER = /* glsl */ `
 attribute vec4 aVelocity;
 varying vec2 vScreenVelocity;
 
@@ -73,7 +73,7 @@ void main() {
 }
 `;
 
-const VELOCITY_FRAGMENT_SHADER = /* glsl */`
+const VELOCITY_FRAGMENT_SHADER = /* glsl */ `
 varying vec2 vScreenVelocity;
 
 void main() {
@@ -88,7 +88,7 @@ void main() {
 // BLUR + COMPOSITE SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const BLUR_VERTEX_SHADER = /* glsl */`
+const BLUR_VERTEX_SHADER = /* glsl */ `
 varying vec2 vUv;
 
 void main() {
@@ -108,7 +108,7 @@ void main() {
  * background are never read, never modified. A blurred element racing in
  * front of the mascot appears blurry while the mascot stays crystal sharp.
  */
-const BLUR_FRAGMENT_SHADER = /* glsl */`
+const BLUR_FRAGMENT_SHADER = /* glsl */ `
 uniform sampler2D tColor;
 uniform sampler2D tVelocity;
 uniform sampler2D tDepth;
@@ -220,7 +220,7 @@ export class VelocityMotionBlurPass extends Pass {
         // Velocity material — instanced, uses aVelocity attribute
         this.velocityMaterial = new THREE.ShaderMaterial({
             vertexShader: VELOCITY_VERTEX_SHADER,
-            fragmentShader: VELOCITY_FRAGMENT_SHADER
+            fragmentShader: VELOCITY_FRAGMENT_SHADER,
         });
 
         // Blur material
@@ -232,10 +232,10 @@ export class VelocityMotionBlurPass extends Pass {
                 uIntensity: { value: intensity },
                 cameraNear: { value: camera.near },
                 cameraFar: { value: camera.far },
-                uDepthThreshold: { value: depthThreshold }
+                uDepthThreshold: { value: depthThreshold },
             },
             vertexShader: BLUR_VERTEX_SHADER,
-            fragmentShader: BLUR_FRAGMENT_SHADER
+            fragmentShader: BLUR_FRAGMENT_SHADER,
         });
 
         this.fsQuad = new FullScreenQuad(this.blurMaterial);
@@ -284,13 +284,17 @@ export class VelocityMotionBlurPass extends Pass {
         const height = this._targetHeight || readBuffer.height;
 
         // Create/resize velocity target if needed
-        if (!this.velocityTarget || this.velocityTarget.width !== width || this.velocityTarget.height !== height) {
+        if (
+            !this.velocityTarget ||
+            this.velocityTarget.width !== width ||
+            this.velocityTarget.height !== height
+        ) {
             if (this.velocityTarget) this.velocityTarget.dispose();
             this.velocityTarget = new THREE.WebGLRenderTarget(width, height, {
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 format: THREE.RGBAFormat,
-                type: THREE.FloatType
+                type: THREE.FloatType,
             });
         }
 

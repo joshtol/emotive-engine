@@ -55,8 +55,8 @@ const ELECTRICOVERLOAD_CONFIG = {
                 lifetime: [80, 150, 300, 600],
                 flashIn: [15, 40],
                 fadeOut: [40, 150],
-                respawnDelay: [0, 30, 0, 0]
-            }
+                respawnDelay: [0, 30, 0, 0],
+            },
         },
         animation: {
             appearAt: 0.02,
@@ -73,32 +73,34 @@ const ELECTRICOVERLOAD_CONFIG = {
                 blend: 'multiply',
                 travel: 'radial',
                 travelSpeed: 1.8,
-                strengthCurve: 'fadeIn'
+                strengthCurve: 'fadeIn',
             },
             grain: { type: 3, strength: 0.3, scale: 0.25, speed: 2.5, blend: 'multiply' },
             // Per-gesture atmospheric particles: intense ionized air
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.6,
-                sizeScale: 1.2,
-                progressCurve: 'pulse',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.6,
+                    sizeScale: 1.2,
+                    progressCurve: 'pulse',
+                },
+            ],
             flash: {
                 events: [
-                    { at: 0.30, intensity: 1.5 },
+                    { at: 0.3, intensity: 1.5 },
                     { at: 0.55, intensity: 2.5 },
-                    { at: 0.75, intensity: 3.5 }
+                    { at: 0.75, intensity: 3.5 },
                 ],
-                decay: 0.02
+                decay: 0.02,
             },
             scaleVariance: 0.35,
             lifetimeVariance: 0.4,
             blending: 'additive',
             renderOrder: 15,
-            intensityScaling: { scale: 1.4, flickerIntensity: 1.6, emissiveMax: 2.0 }
-        }
+            intensityScaling: { scale: 1.4, flickerIntensity: 1.6, emissiveMax: 2.0 },
+        },
     },
 
     // Jitter - extreme shaking
@@ -115,7 +117,7 @@ const ELECTRICOVERLOAD_CONFIG = {
     scaleFrequency: 50,
     // Buildup phase
     buildupPhase: 0.3,
-    buildupGlowRamp: true
+    buildupGlowRamp: true,
 };
 
 export default buildElectricEffectGesture(ELECTRICOVERLOAD_CONFIG);

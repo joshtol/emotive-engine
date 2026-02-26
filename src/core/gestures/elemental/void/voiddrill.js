@@ -50,14 +50,14 @@ const VOIDDRILL_CONFIG = {
             endScale: 0.8,
             startDiameter: 1.8,
             endDiameter: 1.4,
-            orientation: 'flat'
+            orientation: 'flat',
         },
         formation: {
             type: 'spiral',
             count: 6,
             spacing: 0.1,
             arcOffset: 60,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 6,
         scale: 0.8,
@@ -69,41 +69,43 @@ const VOIDDRILL_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.05,
-                easing: 'linear'
+                easing: 'linear',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.05,
-                geometryStability: true
+                geometryStability: true,
             },
             pulse: {
                 amplitude: 0.08,
                 frequency: 10,
-                easing: 'linear'
+                easing: 'linear',
             },
             emissive: {
                 min: 0.4,
                 max: 1.0,
                 frequency: 12,
-                pattern: 'random'
+                pattern: 'random',
             },
             // No cutout — binary discard doesn't work with cutout patterns
             // No grain — rotation provides visual motion
-            atmospherics: [{
-                preset: 'darkness',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.5,
-                sizeScale: 1.3,
-                speedScale: 0.5,
-                progressCurve: 'rampUp',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'darkness',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.5,
+                    sizeScale: 1.3,
+                    speedScale: 0.5,
+                    progressCurve: 'rampUp',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 1.0, tangentialBias: 0.3 },
+                },
+            ],
             rotate: { axis: 'y', rotations: 4, phase: 0 },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
@@ -112,15 +114,15 @@ const VOIDDRILL_CONFIG = {
             modelOverrides: {
                 'void-wrap': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.4,      // Narrow — aggressive drill
-                        arcSpeed: 4.0,      // Fast — drilling speed
-                        arcCount: 1
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.4, // Narrow — aggressive drill
+                        arcSpeed: 4.0, // Fast — drilling speed
+                        arcCount: 1,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     jitterAmount: 0,
@@ -134,7 +136,7 @@ const VOIDDRILL_CONFIG = {
     scaleVibration: 0.02,
     scaleFrequency: 4,
     scalePulse: true,
-    rotationDrift: 0.02
+    rotationDrift: 0.02,
 };
 
 export default buildVoidEffectGesture(VOIDDRILL_CONFIG);

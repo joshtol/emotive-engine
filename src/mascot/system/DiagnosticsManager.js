@@ -57,7 +57,8 @@ export class DiagnosticsManager {
     constructor(deps) {
         // Required dependency validation
         if (!deps.errorBoundary) throw new Error('DiagnosticsManager: errorBoundary required');
-        if (!deps.animationController) throw new Error('DiagnosticsManager: animationController required');
+        if (!deps.animationController)
+            throw new Error('DiagnosticsManager: animationController required');
         if (!deps.stateMachine) throw new Error('DiagnosticsManager: stateMachine required');
         if (!deps.config) throw new Error('DiagnosticsManager: config required');
         if (!deps.state) throw new Error('DiagnosticsManager: state required');
@@ -88,7 +89,7 @@ export class DiagnosticsManager {
             features: browserCompatibility.featureDetection.getFeatures(),
             capabilities: browserCompatibility.capabilities,
             appliedPolyfills: browserCompatibility.appliedPolyfills,
-            optimizations: browserCompatibility.browserOptimizations.getOptimizations()
+            optimizations: browserCompatibility.browserOptimizations.getOptimizations(),
         };
     }
 
@@ -106,7 +107,7 @@ export class DiagnosticsManager {
             availableFeatures: this.degradationManager.getAvailableFeatures(),
             recommendedSettings: this.degradationManager.getRecommendedSettings(),
             performanceStats: this.degradationManager.getPerformanceStats(),
-            allLevels: this.degradationManager.getAllLevels()
+            allLevels: this.degradationManager.getAllLevels(),
         };
     }
 
@@ -135,7 +136,7 @@ export class DiagnosticsManager {
                 isRunning: this._state.isRunning,
                 speaking: this._state.speaking,
                 debugMode: this._state.debugMode,
-                config: this.config
+                config: this.config,
             },
 
             // System states
@@ -152,13 +153,13 @@ export class DiagnosticsManager {
             runtimeCapabilities: runtimeCapabilities.generateReport(),
 
             // Debugger data
-            debuggerReport: emotiveDebugger.getDebugReport()
+            debuggerReport: emotiveDebugger.getDebugReport(),
         };
 
         if (this._state.debugMode) {
             emotiveDebugger.log('DEBUG', 'Generated debug report', {
                 reportSize: JSON.stringify(report).length,
-                sections: Object.keys(report)
+                sections: Object.keys(report),
             });
         }
 
@@ -175,33 +176,33 @@ export class DiagnosticsManager {
                 exportTime: Date.now(),
                 version: '1.0.0', // Should be dynamically set
                 userAgent: navigator.userAgent,
-                url: window.location?.href
+                url: window.location?.href,
             },
 
             mascotState: {
                 config: this.config,
                 currentState: this._getCurrentState(),
                 isRunning: this._state.isRunning,
-                speaking: this._state.speaking
+                speaking: this._state.speaking,
             },
 
             performance: {
                 metrics: this.getPerformanceMetrics(),
                 degradationStatus: this.getDegradationStatus(),
-                frameTimings: emotiveDebugger.frameTimings
+                frameTimings: emotiveDebugger.frameTimings,
             },
 
             compatibility: {
                 browser: this.getBrowserCompatibility(),
-                runtimeCapabilities: runtimeCapabilities.generateReport()
+                runtimeCapabilities: runtimeCapabilities.generateReport(),
             },
 
-            debuggerData: emotiveDebugger.exportDebugData()
+            debuggerData: emotiveDebugger.exportDebugData(),
         };
 
         if (this._state.debugMode) {
             emotiveDebugger.log('INFO', 'Exported debug data', {
-                dataSize: JSON.stringify(data).length
+                dataSize: JSON.stringify(data).length,
             });
         }
 
@@ -221,7 +222,7 @@ export class DiagnosticsManager {
             currentEmotion: state.emotion,
             currentUndertone: state.undertone,
             isTransitioning: state.isTransitioning,
-            errorStats: this.errorBoundary.getErrorStats()
+            errorStats: this.errorBoundary.getErrorStats(),
         };
     }
 
@@ -230,11 +231,15 @@ export class DiagnosticsManager {
      * @returns {Object|null} Performance analytics data
      */
     getPerformanceAnalytics() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.performanceSystem) {
-                return null;
-            }
-            return this.performanceSystem.getAnalytics();
-        }, 'performance-analytics', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.performanceSystem) {
+                    return null;
+                }
+                return this.performanceSystem.getAnalytics();
+            },
+            'performance-analytics',
+            this._chainTarget
+        )();
     }
 }

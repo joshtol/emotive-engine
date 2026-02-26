@@ -37,23 +37,23 @@
 export default {
     name: 'rain',
     emoji: '🌧️',
-    type: 'override',  // Complete override - particles fall as rain
+    type: 'override', // Complete override - particles fall as rain
     description: 'Particles fall down from their current positions',
 
     // Default configuration
     config: {
-        duration: 3000,  // Legacy fallback
+        duration: 3000, // Legacy fallback
         musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
-        fallSpeed: 8.0,       // How fast drops fall (pixels per frame)
-        fallDistance: 400,    // How far particles fall total
-        wobbleAmount: 1.5,    // Wind wobble intensity
+        fallSpeed: 8.0, // How fast drops fall (pixels per frame)
+        fallDistance: 400, // How far particles fall total
+        wobbleAmount: 1.5, // Wind wobble intensity
         strength: 1.0,
         // Particle motion configuration
         particleMotion: {
             type: 'rain',
             strength: 1.0,
-            fallSpeed: 8.0
-        }
+            fallSpeed: 8.0,
+        },
     },
 
     // Rhythm configuration
@@ -64,11 +64,11 @@ export default {
 
         // Rain intensity varies with dynamics
         intensitySync: {
-            quiet: 0.5,        // Light drizzle
-            loud: 1.5,         // Heavy downpour
+            quiet: 0.5, // Light drizzle
+            loud: 1.5, // Heavy downpour
             crescendo: 'increase',
-            diminuendo: 'decrease'
-        }
+            diminuendo: 'decrease',
+        },
     },
 
     /**
@@ -92,7 +92,7 @@ export default {
             // Wind wobble
             wobblePhase: Math.random() * Math.PI * 2,
             wobbleSpeed: 0.3 + Math.random() * 0.4,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -101,7 +101,7 @@ export default {
      */
     apply(particle, progress, motion, dt) {
         // dt may be undefined in 3D renderer - default to 1
-        const safeDt = (typeof dt === 'number') ? dt : 1;
+        const safeDt = typeof dt === 'number' ? dt : 1;
 
         // Initialize on first frame - capture current position
         if (!particle.gestureData?.rain?.initialized) {
@@ -124,7 +124,6 @@ export default {
         // DIRECTLY set particle position - fall from original position
         particle.x = data.originalX + wobble;
         particle.y = data.originalY + totalFall;
-
 
         // Set velocity to match falling direction (for trail effects)
         particle.vx = wobble * 0.3;
@@ -174,8 +173,8 @@ export default {
             return {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
-                scale: 1.0
+                scale: 1.0,
             };
-        }
-    }
+        },
+    },
 };

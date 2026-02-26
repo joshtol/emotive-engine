@@ -29,7 +29,7 @@ import { buildNatureEffectGesture } from './natureEffectFactory.js';
 // Shared animation settings for all layers
 const SHARED_ANIMATION = {
     blending: 'normal',
-    renderOrder: 15
+    renderOrder: 15,
 };
 
 const NATURECLEANSE_CONFIG = {
@@ -42,7 +42,7 @@ const NATURECLEANSE_CONFIG = {
     intensity: 1.4,
     category: 'afflicted',
     growth: 0.85,
-    mascotGlow: 1.2,          // opt-in: mascot overlay emits green during this gesture
+    mascotGlow: 1.2, // opt-in: mascot overlay emits green during this gesture
 
     // Three-layer sandwich: vine-ring center + u-vine above + u-vine below
     spawnMode: [
@@ -54,10 +54,10 @@ const NATURECLEANSE_CONFIG = {
                 end: 'top',
                 easing: 'easeInOut',
                 holdAt: 0.85,
-                orientation: 'flat',      // vine-ring is natively XY — 90° X to lie flat
+                orientation: 'flat', // vine-ring is natively XY — 90° X to lie flat
                 diameterUnit: 'mascot',
-                uniformDiameter: true,    // scale all axes equally (preserve proportions)
-                startDiameter: 1.3,       // 30% wider than mascot
+                uniformDiameter: true, // scale all axes equally (preserve proportions)
+                startDiameter: 1.3, // 30% wider than mascot
             },
             count: 1,
             scale: 1.0,
@@ -69,26 +69,28 @@ const NATURECLEANSE_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.15,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 // axis 'z' because flat's 90° X maps local Z → world -Y (record spin)
                 rotate: { axis: 'z', rotations: 1.0 },
                 // Dense falling leaves from the scanner ring
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.7,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.3,
-                }]
-            }
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.7,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.3,
+                    },
+                ],
+            },
         },
         // ── Layer 2: U-vine above the ring — 3 rotations ──
         {
@@ -100,10 +102,10 @@ const NATURECLEANSE_CONFIG = {
                 endOffset: 0.25,
                 easing: 'easeInOut',
                 holdAt: 0.85,
-                orientation: 'vertical',  // u-vine is natively XZ — identity keeps it flat
+                orientation: 'vertical', // u-vine is natively XZ — identity keeps it flat
                 verticalEdgeAlign: false, // skip ring edge-alignment offset (not a ring)
                 diameterUnit: 'mascot',
-                uniformDiameter: true,    // scale all axes equally (preserve proportions)
+                uniformDiameter: true, // scale all axes equally (preserve proportions)
                 startDiameter: 1.1,
             },
             count: 1,
@@ -116,15 +118,15 @@ const NATURECLEANSE_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.15,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
-                rotate: { axis: 'y', rotations: 3.0 }
-            }
+                rotate: { axis: 'y', rotations: 3.0 },
+            },
         },
         // ── Layer 3: U-vine below the ring — 2 rotations, 180° phase ──
         {
@@ -136,10 +138,10 @@ const NATURECLEANSE_CONFIG = {
                 endOffset: -0.25,
                 easing: 'easeInOut',
                 holdAt: 0.85,
-                orientation: 'vertical',  // u-vine is natively XZ — identity keeps it flat
+                orientation: 'vertical', // u-vine is natively XZ — identity keeps it flat
                 verticalEdgeAlign: false, // skip ring edge-alignment offset (not a ring)
                 diameterUnit: 'mascot',
-                uniformDiameter: true,    // scale all axes equally (preserve proportions)
+                uniformDiameter: true, // scale all axes equally (preserve proportions)
                 startDiameter: 1.1,
             },
             count: 1,
@@ -152,16 +154,16 @@ const NATURECLEANSE_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.15,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
-                rotate: { axis: 'y', rotations: 2.0, phase: 180 }
-            }
-        }
+                rotate: { axis: 'y', rotations: 2.0, phase: 180 },
+            },
+        },
     ],
 
     // Enhanced glow for cleansing effect
@@ -185,8 +187,8 @@ const NATURECLEANSE_CONFIG = {
                 { at: 0.78, value: 1.0 },
                 { at: 0.88, value: 0.5 },
                 { at: 0.92, value: 0.95 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         tremor: {
             keyframes: [
@@ -194,8 +196,8 @@ const NATURECLEANSE_CONFIG = {
                 { at: 0.75, value: 0.002 },
                 { at: 0.85, value: 0.008 },
                 { at: 0.95, value: 0.012 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         scaleVibration: {
             keyframes: [
@@ -203,10 +205,10 @@ const NATURECLEANSE_CONFIG = {
                 { at: 0.75, value: 0.008 },
                 { at: 0.85, value: 0.025 },
                 { at: 0.95, value: 0.04 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
-    }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
+    },
 };
 
 export default buildNatureEffectGesture(NATURECLEANSE_CONFIG);

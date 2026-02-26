@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Running Man Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Running Man gesture - hip-hop shuffle dance move
@@ -17,31 +17,31 @@ export default {
     emoji: '🏃',
     type: 'effect',
     description: 'Hip-hop running man shuffle',
-    
+
     // Default configuration
     config: {
-        duration: 2000,        // Legacy fallback
+        duration: 2000, // Legacy fallback
         musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
-        slideDistance: 30,     // Horizontal slide distance
-        stepHeight: 15,        // Vertical step height
-        speed: 1.2,            // Animation speed multiplier
-        strength: 0.8,         // Overall effect intensity
+        slideDistance: 30, // Horizontal slide distance
+        stepHeight: 15, // Vertical step height
+        speed: 1.2, // Animation speed multiplier
+        strength: 0.8, // Overall effect intensity
         // Particle motion configuration
         particleMotion: {
             type: 'runningman',
-            strength: 0.7
-        }
+            strength: 0.7,
+        },
     },
-    
+
     // Rhythm configuration - synchronized to beat
     rhythm: {
         enabled: true,
-        syncToBeat: true,      // Snap to beat grid
+        syncToBeat: true, // Snap to beat grid
         durationSync: { mode: 'bars', bars: 1 }, // 1 bar duration
-        beatMultiplier: 1,     // Steps per beat
-        accentBeats: [1, 3]    // Emphasized steps
+        beatMultiplier: 1, // Steps per beat
+        accentBeats: [1, 3], // Emphasized steps
     },
-    
+
     /**
      * Apply running man motion - handled by GestureAnimator
      * This is a placeholder for the gesture system
@@ -50,7 +50,7 @@ export default {
         // Motion is handled by GestureAnimator.applyRunningMan()
         return false;
     },
-    
+
     /**
      * Blend with existing motion
      */
@@ -75,7 +75,7 @@ export default {
             // 2D uses: slide = sin(progress * PI * 4) * 20, step = -|sin(progress * PI * 8)| * 10
             // Scale down for 3D normalized coordinates
 
-            const slide = Math.sin(progress * Math.PI * 4) * 0.10 * strength;
+            const slide = Math.sin(progress * Math.PI * 4) * 0.1 * strength;
             const step = Math.abs(Math.sin(progress * Math.PI * 8)) * 0.05 * strength;
 
             // Very subtle Z rotation - just a hint of tilt (~2 degrees = 0.035 radians)
@@ -89,12 +89,12 @@ export default {
             const glowBoost = Math.max(0, Math.abs(Math.sin(progress * Math.PI * 8))) * 0.35;
 
             return {
-                position: [slide, step, 0],  // Screen-space: X = slide, Y = step up
-                rotation: [0, 0, rotationZ],  // Z rotation = screen tilt
+                position: [slide, step, 0], // Screen-space: X = slide, Y = step up
+                rotation: [0, 0, rotationZ], // Z rotation = screen tilt
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

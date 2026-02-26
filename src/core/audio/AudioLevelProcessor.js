@@ -15,30 +15,30 @@ export class AudioLevelProcessor {
             smoothingTimeConstant: config.smoothingTimeConstant || 0.8,
             fftSize: config.fftSize || 256,
             levelUpdateThrottle: config.levelUpdateThrottle || 100, // ms
-            ...config
+            ...config,
         };
-        
+
         // Audio context and analysis
         this.audioContext = null;
         this.analyser = null;
         this.dataArray = null;
-        
+
         // Audio level state
         this.currentLevel = 0;
         this.levelHistory = [];
         this.isActive = false;
-        
+
         // Spike detection state
         this.lastVolumeSpike = 0;
-        
+
         // Event throttling
         this.lastLevelEmit = 0;
-        
+
         // Event callbacks
         this.callbacks = {
             levelUpdate: null,
             volumeSpike: null,
-            error: null
+            error: null,
         };
     }
 
@@ -52,38 +52,37 @@ export class AudioLevelProcessor {
             if (!audioContext) {
                 throw new Error('AudioContext is required for audio level processing');
             }
-            
+
             // Validate AudioContext
             if (typeof audioContext.createAnalyser !== 'function') {
                 throw new Error('Invalid AudioContext provided');
             }
-            
+
             // Store audio context
             this.audioContext = audioContext;
-            
+
             // Create audio analyser for level monitoring
             this.analyser = audioContext.createAnalyser();
             this.analyser.fftSize = this.config.fftSize;
             this.analyser.smoothingTimeConstant = this.config.smoothingTimeConstant;
-            
+
             // Create data array for frequency analysis
             this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-            
+
             // Initialize state
             this.currentLevel = 0;
             this.levelHistory = [];
             this.lastVolumeSpike = 0;
             this.isActive = true;
-            
+
             // Resume audio context if suspended
             if (audioContext.state === 'suspended') {
                 audioContext.resume().catch(error => {
                     this.emitError('Failed to resume AudioContext', error);
                 });
             }
-            
+
             return true;
-            
         } catch (error) {
             this.emitError('Failed to initialize AudioLevelProcessor', error);
             return false;
@@ -101,13 +100,11 @@ export class AudioLevelProcessor {
             this.levelHistory = [];
             this.lastVolumeSpike = 0;
             this.lastLevelEmit = 0;
-            
+
             // Clear references
             this.audioContext = null;
             this.analyser = null;
             this.dataArray = null;
-            
-            
         } catch (error) {
             this.emitError('Error during AudioLevelProcessor cleanup', error);
         }
@@ -121,26 +118,25 @@ export class AudioLevelProcessor {
         if (!this.isActive || !this.analyser || !this.dataArray) {
             return;
         }
-        
+
         try {
             // Get frequency data from analyser
             this.analyser.getByteFrequencyData(this.dataArray);
-            
+
             // Calculate RMS (Root Mean Square) for accurate level detection
             const rms = this.calculateRMS();
-            
+
             // Update current level with normalization and amplification
             this.currentLevel = Math.min(1, rms * 2); // Amplify for better sensitivity
-            
+
             // Update audio level history for spike detection
             this.updateLevelHistory();
-            
+
             // Check for volume spikes and trigger events
             this.detectVolumeSpikes();
-            
+
             // Emit throttled level update events
             this.emitLevelUpdate();
-            
         } catch (error) {
             this.emitError('Error updating audio level', error);
             this.currentLevel = 0;
@@ -155,15 +151,15 @@ export class AudioLevelProcessor {
         if (!this.dataArray || this.dataArray.length === 0) {
             return 0;
         }
-        
+
         let sumSquares = 0;
-        
+
         // Calculate sum of squares for all frequency bins
         for (let i = 0; i < this.dataArray.length; i++) {
             const normalized = this.dataArray[i] / 255; // Normalize to 0-1
             sumSquares += normalized * normalized;
         }
-        
+
         // Return RMS value
         return Math.sqrt(sumSquares / this.dataArray.length);
     }
@@ -174,7 +170,7 @@ export class AudioLevelProcessor {
     updateLevelHistory() {
         // Add current level to history
         this.levelHistory.push(this.currentLevel);
-        
+
         // Maintain history size limit
         if (this.levelHistory.length > this.config.historySize) {
             this.levelHistory.shift();
@@ -189,26 +185,28 @@ export class AudioLevelProcessor {
         if (this.levelHistory.length < 5) {
             return;
         }
-        
+
         const currentTime = performance.now();
-        
+
         // Prevent too frequent spike detection
         if (currentTime - this.lastVolumeSpike < this.config.spikeMinInterval) {
             return;
         }
-        
+
         // Calculate average of previous levels (excluding current)
         const previousLevels = this.levelHistory.slice(0, -1);
-        const averagePrevious = previousLevels.reduce((sum, level) => sum + level, 0) / previousLevels.length;
-        
+        const averagePrevious =
+            previousLevels.reduce((sum, level) => sum + level, 0) / previousLevels.length;
+
         // Check for volume spike conditions
-        const isSpike = this.currentLevel >= averagePrevious * this.config.spikeThreshold &&
-                       averagePrevious >= this.config.minimumSpikeLevel &&
-                       this.currentLevel >= this.config.minimumSpikeLevel * 2;
-        
+        const isSpike =
+            this.currentLevel >= averagePrevious * this.config.spikeThreshold &&
+            averagePrevious >= this.config.minimumSpikeLevel &&
+            this.currentLevel >= this.config.minimumSpikeLevel * 2;
+
         if (isSpike) {
             this.lastVolumeSpike = currentTime;
-            
+
             // Emit volume spike event with detailed information
             this.emitVolumeSpike({
                 level: this.currentLevel,
@@ -216,9 +214,8 @@ export class AudioLevelProcessor {
                 spikeRatio: this.currentLevel / averagePrevious,
                 timestamp: currentTime,
                 threshold: this.config.spikeThreshold,
-                minimumLevel: this.config.minimumSpikeLevel
+                minimumLevel: this.config.minimumSpikeLevel,
             });
-            
         }
     }
 
@@ -261,7 +258,7 @@ export class AudioLevelProcessor {
         if (!this.dataArray) {
             return null;
         }
-        
+
         // Return copy of current frequency data
         return new Uint8Array(this.dataArray);
     }
@@ -317,7 +314,7 @@ export class AudioLevelProcessor {
         this.callbacks = {
             levelUpdate: null,
             volumeSpike: null,
-            error: null
+            error: null,
         };
     }
 
@@ -327,19 +324,18 @@ export class AudioLevelProcessor {
      */
     updateConfig(newConfig) {
         this.config = { ...this.config, ...newConfig };
-        
+
         // Update analyser settings if active
         if (this.analyser) {
             if (newConfig.fftSize) {
                 this.analyser.fftSize = this.config.fftSize;
                 this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
             }
-            
+
             if (newConfig.smoothingTimeConstant !== undefined) {
                 this.analyser.smoothingTimeConstant = this.config.smoothingTimeConstant;
             }
         }
-        
     }
 
     /**
@@ -361,9 +357,13 @@ export class AudioLevelProcessor {
             historySize: this.levelHistory.length,
             maxHistorySize: this.config.historySize,
             lastSpikeTime: this.lastVolumeSpike,
-            timeSinceLastSpike: this.lastVolumeSpike > 0 ? performance.now() - this.lastVolumeSpike : 0,
-            averageLevel: this.levelHistory.length > 0 ? 
-                this.levelHistory.reduce((sum, level) => sum + level, 0) / this.levelHistory.length : 0
+            timeSinceLastSpike:
+                this.lastVolumeSpike > 0 ? performance.now() - this.lastVolumeSpike : 0,
+            averageLevel:
+                this.levelHistory.length > 0
+                    ? this.levelHistory.reduce((sum, level) => sum + level, 0) /
+                      this.levelHistory.length
+                    : 0,
         };
     }
 
@@ -372,21 +372,21 @@ export class AudioLevelProcessor {
      */
     emitLevelUpdate() {
         const currentTime = performance.now();
-        
+
         // Throttle level update events
         if (currentTime - this.lastLevelEmit < this.config.levelUpdateThrottle) {
             return;
         }
-        
+
         this.lastLevelEmit = currentTime;
-        
+
         if (this.callbacks.levelUpdate) {
             try {
                 this.callbacks.levelUpdate({
                     level: this.currentLevel,
                     rawData: this.getFrequencyData(),
                     timestamp: currentTime,
-                    history: this.getLevelHistory()
+                    history: this.getLevelHistory(),
                 });
             } catch {
                 // Ignore callback errors
@@ -414,13 +414,12 @@ export class AudioLevelProcessor {
      * @param {Error} error - Original error object
      */
     emitError(message, error) {
-        
         if (this.callbacks.error) {
             try {
                 this.callbacks.error({
                     message,
                     error,
-                    timestamp: performance.now()
+                    timestamp: performance.now(),
                 });
             } catch {
                 // Ignore callback errors

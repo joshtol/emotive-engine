@@ -36,14 +36,14 @@ import { MascotSpatialRef } from './MascotSpatialRef.js';
 import {
     getModelOrientation,
     getModelSizeFraction,
-    calculateElementScale
+    calculateElementScale,
 } from './ElementSizing.js';
 
 // Shared positioning logic (surface sampling, orientation, embed depth)
 import {
     sampleSurfacePoints,
     calculateOrientation,
-    calculateSurfacePosition
+    calculateSurfacePosition,
 } from './ElementPositioning.js';
 
 // Animation state machine for per-element lifecycle
@@ -55,21 +55,21 @@ import { getEasing } from './animation/Easing.js';
 import {
     parseAxisTravelConfig,
     expandFormation,
-    calculateAxisTravelPosition
+    calculateAxisTravelPosition,
 } from './spawn-modes/AxisTravelMode.js';
 
 // Anchor utilities from spawn-modes
 import {
     parseAnchorConfig,
     calculateAnchorPosition,
-    getAnchorOrientation
+    getAnchorOrientation,
 } from './spawn-modes/AnchorMode.js';
 
 // Orbit utilities from spawn-modes
 import {
     parseOrbitConfig,
     expandOrbitFormation,
-    calculateOrbitPosition
+    calculateOrbitPosition,
 } from './spawn-modes/OrbitMode.js';
 
 // Surface utilities from spawn-modes
@@ -79,14 +79,14 @@ import { parseSurfaceConfig } from './spawn-modes/SurfaceMode.js';
 import {
     parseRadialBurstConfig,
     calculateRadialBurstInitialState,
-    calculateRadialBurstUpdateState
+    calculateRadialBurstUpdateState,
 } from './spawn-modes/index.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const MAX_ELEMENTS_PER_TYPE = 48;  // Max logical elements per type (×4 for trails = 192 instances)
+const MAX_ELEMENTS_PER_TYPE = 48; // Max logical elements per type (×4 for trails = 192 instances)
 
 // Default scale multiplier for surface mode elements (matches original ElementSpawner)
 const DEFAULT_SCALE_MULTIPLIER = 1.5;
@@ -98,12 +98,12 @@ const DEFAULT_SCALE_MULTIPLIER = 1.5;
 const _temp = {
     position: new THREE.Vector3(),
     quaternion: new THREE.Quaternion(),
-    quaternion2: new THREE.Quaternion(),  // For rotation offsets
+    quaternion2: new THREE.Quaternion(), // For rotation offsets
     scale: new THREE.Vector3(1, 1, 1),
-    euler: new THREE.Euler(),             // For rotation offset application
+    euler: new THREE.Euler(), // For rotation offset application
     direction: new THREE.Vector3(),
-    axis: new THREE.Vector3(),            // For axis-angle rotation
-    up: new THREE.Vector3(0, 1, 0)
+    axis: new THREE.Vector3(), // For axis-angle rotation
+    up: new THREE.Vector3(0, 1, 0),
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -128,7 +128,7 @@ export class ElementInstancedSpawner {
             coreMesh = null,
             camera = null,
             assetsBasePath = '',
-            renderer = null
+            renderer = null,
         } = options;
 
         if (!scene) {
@@ -153,20 +153,20 @@ export class ElementInstancedSpawner {
         }
 
         // Pools per element type
-        this.pools = new Map();  // elementType -> ElementInstancePool
+        this.pools = new Map(); // elementType -> ElementInstancePool
 
         // Model geometry cache
-        this.geometryCache = new Map();  // modelPath -> BufferGeometry
+        this.geometryCache = new Map(); // modelPath -> BufferGeometry
         this.loader = new GLTFLoader();
 
         // Merged geometries per element type
-        this.mergedGeometries = new Map();  // elementType -> { geometry, modelMap }
+        this.mergedGeometries = new Map(); // elementType -> { geometry, modelMap }
 
         // Materials per element type (one per type, shared across all instances)
-        this.materials = new Map();  // elementType -> ShaderMaterial
+        this.materials = new Map(); // elementType -> ShaderMaterial
 
         // Active element tracking
-        this.activeElements = new Map();  // elementId -> { type, poolId, spawnTime, ... }
+        this.activeElements = new Map(); // elementId -> { type, poolId, spawnTime, ... }
 
         // Global time
         this.time = 0;
@@ -175,20 +175,20 @@ export class ElementInstancedSpawner {
         this._nextId = 0;
 
         // Initialization state
-        this._initialized = new Set();  // Element types that have been initialized
-        this._initializing = new Map();  // Element types currently initializing -> Promise
+        this._initialized = new Set(); // Element types that have been initialized
+        this._initializing = new Map(); // Element types currently initializing -> Promise
 
         // Pool cleanup tracking (dispose pools after inactivity)
-        this._poolLastUsed = new Map();  // elementType -> timestamp
+        this._poolLastUsed = new Map(); // elementType -> timestamp
 
         // Cached model geometry diameters for mascot-relative diameter calculations
-        this._modelGeometryDiameters = new Map();  // modelName -> diameter in model space
-        this._poolCleanupInterval = 30000;  // 30 seconds of inactivity before disposal
+        this._modelGeometryDiameters = new Map(); // modelName -> diameter in model space
+        this._poolCleanupInterval = 30000; // 30 seconds of inactivity before disposal
         this._lastCleanupCheck = 0;
 
         // Per-type parameterAnimation configs for atmospheric energy evaluation
         // Stored at gesture start, evaluated each frame to drive particle energy
-        this._parameterAnimations = new Map();  // elementType -> parsed parameterAnimation object
+        this._parameterAnimations = new Map(); // elementType -> parsed parameterAnimation object
     }
 
     /**
@@ -337,8 +337,11 @@ export class ElementInstancedSpawner {
         }
 
         // Register distortion config if element type has one (and not already registered)
-        if (this._distortionManager && config.distortion &&
-            !this._distortionManager.hasElement(elementType)) {
+        if (
+            this._distortionManager &&
+            config.distortion &&
+            !this._distortionManager.hasElement(elementType)
+        ) {
             const dist = config.distortion;
             this._distortionManager.registerElement(elementType, {
                 geometry: dist.geometry(),
@@ -351,7 +354,6 @@ export class ElementInstancedSpawner {
 
         // Particle atmospherics are now per-gesture (started in _applyShaderAnimationOverrides)
         // No registration needed here — emitters are created on-demand from gesture configs
-
 
         return pool;
     }
@@ -384,10 +386,10 @@ export class ElementInstancedSpawner {
         // Procedural geometry: light-ray is an elongated diamond (billboard ray of light)
         if (modelPath.includes('light-ray.glb')) {
             const shape = new THREE.Shape();
-            shape.moveTo(0, 0.6);     // Top point (elongated)
-            shape.lineTo(0.12, 0);    // Right
-            shape.lineTo(0, -0.6);    // Bottom point
-            shape.lineTo(-0.12, 0);   // Left
+            shape.moveTo(0, 0.6); // Top point (elongated)
+            shape.lineTo(0.12, 0); // Right
+            shape.lineTo(0, -0.6); // Bottom point
+            shape.lineTo(-0.12, 0); // Left
             shape.closePath();
             const geometry = new THREE.ShapeGeometry(shape);
             this.geometryCache.set(modelPath, geometry);
@@ -452,7 +454,7 @@ export class ElementInstancedSpawner {
             models = null,
             camera = null,
             animation = null,
-            gestureDuration = 1000
+            gestureDuration = 1000,
         } = options;
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -460,7 +462,6 @@ export class ElementInstancedSpawner {
         // Each layer can have its own type, timing (appearAt/disappearAt), models, etc.
         // ═══════════════════════════════════════════════════════════════════════════════════════
         if (Array.isArray(mode)) {
-
             // Ensure pool is initialized first
             const pool = await this.initializePool(elementType);
             if (!pool) {
@@ -546,7 +547,7 @@ export class ElementInstancedSpawner {
                     layerIndex,
                     camera,
                     gestureDuration,
-                    intensity
+                    intensity,
                 });
                 allIds.push(...layerIds);
             }
@@ -555,9 +556,7 @@ export class ElementInstancedSpawner {
         }
 
         // Parse animation config if provided
-        const animConfig = animation
-            ? new AnimationConfig(animation, gestureDuration)
-            : null;
+        const animConfig = animation ? new AnimationConfig(animation, gestureDuration) : null;
 
         // Ensure pool is initialized
         const pool = await this.initializePool(elementType);
@@ -629,7 +628,7 @@ export class ElementInstancedSpawner {
         }
 
         // Determine spawn mode type
-        const modeType = typeof mode === 'object' ? (mode.type || 'surface') : mode;
+        const modeType = typeof mode === 'object' ? mode.type || 'surface' : mode;
 
         // ═══════════════════════════════════════════════════════════════════════════════════════
         // AXIS-TRAVEL MODE
@@ -670,7 +669,9 @@ export class ElementInstancedSpawner {
         // ═══════════════════════════════════════════════════════════════════════════════════════
         // UNKNOWN MODE - Fall back to basic orbit positioning
         // ═══════════════════════════════════════════════════════════════════════════════════════
-        console.warn(`[ElementInstancedSpawner] Unknown spawn mode: ${modeType}, falling back to orbit`);
+        console.warn(
+            `[ElementInstancedSpawner] Unknown spawn mode: ${modeType}, falling back to orbit`
+        );
         return this._spawnOrbitFallback(elementType, count, models, animConfig, camera);
     }
 
@@ -705,7 +706,12 @@ export class ElementInstancedSpawner {
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
                 if (animState) {
-                    pool.updateInstanceTransform(elementId, position, rotation, scale * animState.scale);
+                    pool.updateInstanceTransform(
+                        elementId,
+                        position,
+                        rotation,
+                        scale * animState.scale
+                    );
                 }
 
                 this.activeElements.set(elementId, {
@@ -718,7 +724,7 @@ export class ElementInstancedSpawner {
                     rotation: rotation.clone(),
                     baseScale: scale,
                     scale,
-                    animState
+                    animState,
                 });
                 spawnedIds.push(elementId);
             }
@@ -737,45 +743,41 @@ export class ElementInstancedSpawner {
         const radius = this.mascotRadius * 1.5;
 
         switch (pattern) {
-        case 'orbit': {
-            // Circular orbit around mascot
-            const angle = (index / total) * Math.PI * 2;
-            const height = (Math.random() - 0.5) * this.mascotRadius;
-            pos.set(
-                Math.cos(angle) * radius,
-                height,
-                Math.sin(angle) * radius
-            );
-            break;
-        }
+            case 'orbit': {
+                // Circular orbit around mascot
+                const angle = (index / total) * Math.PI * 2;
+                const height = (Math.random() - 0.5) * this.mascotRadius;
+                pos.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+                break;
+            }
 
-        case 'crown': {
-            // Ring around top
-            const angle = (index / total) * Math.PI * 2;
-            pos.set(
-                Math.cos(angle) * radius * 0.6,
-                this.mascotRadius * 0.8,
-                Math.sin(angle) * radius * 0.6
-            );
-            break;
-        }
+            case 'crown': {
+                // Ring around top
+                const angle = (index / total) * Math.PI * 2;
+                pos.set(
+                    Math.cos(angle) * radius * 0.6,
+                    this.mascotRadius * 0.8,
+                    Math.sin(angle) * radius * 0.6
+                );
+                break;
+            }
 
-        case 'scattered':
-        case 'scatter': {
-            // Random scatter around mascot
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(2 * Math.random() - 1);
-            pos.set(
-                Math.sin(phi) * Math.cos(theta) * radius,
-                Math.sin(phi) * Math.sin(theta) * radius,
-                Math.cos(phi) * radius
-            );
-            break;
-        }
+            case 'scattered':
+            case 'scatter': {
+                // Random scatter around mascot
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                pos.set(
+                    Math.sin(phi) * Math.cos(theta) * radius,
+                    Math.sin(phi) * Math.sin(theta) * radius,
+                    Math.cos(phi) * radius
+                );
+                break;
+            }
 
-        default:
-            // Default to orbit
-            return this._generateSpawnPosition('orbit', index, total);
+            default:
+                // Default to orbit
+                return this._generateSpawnPosition('orbit', index, total);
         }
 
         // NOTE: Don't add coreMesh.position here - container is synced to it in update()
@@ -892,7 +894,12 @@ export class ElementInstancedSpawner {
      * @private
      */
     _calculateAxisTravelPosition(axisConfig, formationData, gestureProgress) {
-        const result = calculateAxisTravelPosition(axisConfig, formationData, gestureProgress, this.mascotRadius);
+        const result = calculateAxisTravelPosition(
+            axisConfig,
+            formationData,
+            gestureProgress,
+            this.mascotRadius
+        );
 
         // Build position vector from axis result
         // positionOffset is now {x, y, z} for mandala/positioned formations
@@ -900,15 +907,15 @@ export class ElementInstancedSpawner {
         const position = _temp.position.set(0, 0, 0);
 
         switch (result.axis) {
-        case 'y':
-            position.y = result.axisPos;
-            break;
-        case 'x':
-            position.x = result.axisPos;
-            break;
-        case 'z':
-            position.z = result.axisPos;
-            break;
+            case 'y':
+                position.y = result.axisPos;
+                break;
+            case 'x':
+                position.x = result.axisPos;
+                break;
+            case 'z':
+                position.z = result.axisPos;
+                break;
         }
 
         // Apply XYZ position offset from formation
@@ -923,7 +930,7 @@ export class ElementInstancedSpawner {
             scale: result.scale,
             diameter: result.diameter,
             rotationOffset: result.rotationOffset,
-            scaleMultiplier: result.scaleMultiplier
+            scaleMultiplier: result.scaleMultiplier,
         };
     }
 
@@ -944,7 +951,9 @@ export class ElementInstancedSpawner {
         const config = ElementTypeRegistry.get(elementType);
 
         if (!pool || !merged) {
-            console.warn(`[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`);
+            console.warn(
+                `[ElementInstancedSpawner] Pool or merged geometry not ready for ${elementType}`
+            );
             return null;
         }
 
@@ -961,7 +970,9 @@ export class ElementInstancedSpawner {
     _resolveModelIndex(merged, modelName) {
         const modelIndex = merged.modelMap.get(modelName);
         if (modelIndex === undefined) {
-            console.warn(`[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`);
+            console.warn(
+                `[ElementInstancedSpawner] Model ${modelName} not found in merged geometry`
+            );
         }
         return modelIndex;
     }
@@ -997,7 +1008,13 @@ export class ElementInstancedSpawner {
      * @param {Object} [animation] - Full animation config (may contain gestureGlow)
      * @private
      */
-    _applyShaderAnimationOverrides(elementType, modelNames, modelOverrides, elementConfig, animation = null) {
+    _applyShaderAnimationOverrides(
+        elementType,
+        modelNames,
+        modelOverrides,
+        elementConfig,
+        animation = null
+    ) {
         const material = this.materials.get(elementType);
         if (!material) return;
 
@@ -1007,7 +1024,7 @@ export class ElementInstancedSpawner {
                 const overrides = modelOverrides[modelName];
                 if (overrides?.shaderAnimation) {
                     elementConfig.setShaderAnimation(material, overrides.shaderAnimation);
-                    break;  // Apply once per spawn (all elements use same settings)
+                    break; // Apply once per spawn (all elements use same settings)
                 }
             }
         }
@@ -1058,7 +1075,9 @@ export class ElementInstancedSpawner {
         // Store parameterAnimation for atmospheric energy evaluation per frame
         // The first named parameter (temperature, turbulence, charge) drives particle energy
         if (animation?.parameterAnimation) {
-            const animConfig = new AnimationConfig({ parameterAnimation: animation.parameterAnimation });
+            const animConfig = new AnimationConfig({
+                parameterAnimation: animation.parameterAnimation,
+            });
             this._parameterAnimations.set(elementType, animConfig.parameterAnimation);
         }
 
@@ -1098,28 +1117,64 @@ export class ElementInstancedSpawner {
         // Tag spawned elements with layer index for debugging
         const layerTag = `layer${layerIndex}`;
 
-
         // Dispatch to appropriate spawn method based on layer type
         // NOTE: We don't call despawn() here - already done once by spawn() for all layers
         switch (layerType) {
-        case 'axis-travel':
-            return this._spawnAxisTravel(elementType, layerConfig, layerModels, animConfig, camera, layerTag);
+            case 'axis-travel':
+                return this._spawnAxisTravel(
+                    elementType,
+                    layerConfig,
+                    layerModels,
+                    animConfig,
+                    camera,
+                    layerTag
+                );
 
-        case 'anchor':
-            return this._spawnAnchor(elementType, layerConfig, layerModels, animConfig, camera, layerTag);
+            case 'anchor':
+                return this._spawnAnchor(
+                    elementType,
+                    layerConfig,
+                    layerModels,
+                    animConfig,
+                    camera,
+                    layerTag
+                );
 
-        case 'radial-burst':
-            return this._spawnRadialBurst(elementType, layerConfig, layerModels, animConfig, layerTag);
+            case 'radial-burst':
+                return this._spawnRadialBurst(
+                    elementType,
+                    layerConfig,
+                    layerModels,
+                    animConfig,
+                    layerTag
+                );
 
-        case 'orbit':
-            return this._spawnOrbit(elementType, layerConfig, layerModels, animConfig, camera, layerTag);
+            case 'orbit':
+                return this._spawnOrbit(
+                    elementType,
+                    layerConfig,
+                    layerModels,
+                    animConfig,
+                    camera,
+                    layerTag
+                );
 
-        case 'surface':
-            return this._spawnSurface(elementType, layerConfig, layerConfig.count || 5, layerModels, animConfig, camera, layerTag);
+            case 'surface':
+                return this._spawnSurface(
+                    elementType,
+                    layerConfig,
+                    layerConfig.count || 5,
+                    layerModels,
+                    animConfig,
+                    camera,
+                    layerTag
+                );
 
-        default:
-            console.warn(`[ElementInstancedSpawner] Unknown layer type: ${layerType}, skipping`);
-            return [];
+            default:
+                console.warn(
+                    `[ElementInstancedSpawner] Unknown layer type: ${layerType}, skipping`
+                );
+                return [];
         }
     }
 
@@ -1137,7 +1192,9 @@ export class ElementInstancedSpawner {
     _spawnAxisTravel(elementType, spawnMode, models, animConfig, _camera, _layerTag = null) {
         const ctx = this._getSpawnContext(elementType);
         if (!ctx) {
-            console.warn(`[ElementInstancedSpawner] _spawnAxisTravel: no context for ${elementType}`);
+            console.warn(
+                `[ElementInstancedSpawner] _spawnAxisTravel: no context for ${elementType}`
+            );
             return [];
         }
 
@@ -1154,13 +1211,19 @@ export class ElementInstancedSpawner {
         const modelOverrides = animation.modelOverrides || {};
 
         // Apply shader animation settings and gesture glow if configured
-        this._applyShaderAnimationOverrides(elementType, axisConfig.models, modelOverrides, elementConfig, animation);
-
+        this._applyShaderAnimationOverrides(
+            elementType,
+            axisConfig.models,
+            modelOverrides,
+            elementConfig,
+            animation
+        );
 
         const spawnedIds = [];
-        const availableModels = axisConfig.models.length > 0
-            ? axisConfig.models
-            : (models || Array.from(merged.modelMap.keys()));
+        const availableModels =
+            axisConfig.models.length > 0
+                ? axisConfig.models
+                : models || Array.from(merged.modelMap.keys());
 
         for (let i = 0; i < formationElements.length; i++) {
             const formationData = formationElements[i];
@@ -1172,10 +1235,11 @@ export class ElementInstancedSpawner {
 
             // Calculate initial position at gesture progress 0
             const initialResult = this._calculateAxisTravelPosition(axisConfig, formationData, 0);
-            const {position} = initialResult;
+            const { position } = initialResult;
 
             // Calculate scale using shared Golden Ratio sizing system
-            const scaleMultiplier = axisConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const scaleMultiplier =
+                axisConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
 
             // Apply initial scale and diameter
@@ -1184,9 +1248,10 @@ export class ElementInstancedSpawner {
             const initialScale = baseScale * initialResult.scale * formationScaleMultiplier;
 
             // Mascot-relative diameter: compute factor so diameter 1.0 = mascot width
-            const diameterFactor = axisConfig.diameterUnit === 'mascot'
-                ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
-                : 1.0;
+            const diameterFactor =
+                axisConfig.diameterUnit === 'mascot'
+                    ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
+                    : 1.0;
 
             // Scale by diameter — non-uniform (XY face only) or uniform (all axes)
             const effectiveDiameter = initialResult.diameter * diameterFactor;
@@ -1216,41 +1281,47 @@ export class ElementInstancedSpawner {
             // rings flat in WORLD space, we need to apply the INVERSE of the mascot's rotation.
             // This cancels out the container rotation so rings stay truly horizontal.
             let rotation;
-            let worldSpaceOrientation = false;  // Track if we need to cancel container rotation
+            let worldSpaceOrientation = false; // Track if we need to cancel container rotation
 
             switch (orientationMode) {
-            case 'flat':
-                // Flat: ring lies horizontal (XZ plane), Y-axis up in WORLD space
-                // Model faces camera by default, rotate +90° around X to lay it flat
-                rotation = _temp.quaternion.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 2);
-                worldSpaceOrientation = true;  // Flat should be world-relative
-                break;
+                case 'flat':
+                    // Flat: ring lies horizontal (XZ plane), Y-axis up in WORLD space
+                    // Model faces camera by default, rotate +90° around X to lay it flat
+                    rotation = _temp.quaternion.setFromAxisAngle(
+                        _temp.axis.set(1, 0, 0),
+                        Math.PI / 2
+                    );
+                    worldSpaceOrientation = true; // Flat should be world-relative
+                    break;
 
-            case 'vertical':
-                // Vertical: ring stands upright, arcOffset creates gyroscope spread
-                // Model faces camera, identity keeps it upright
-                // arcOffset rotates each ring around Y (0°, 120°, 240°) for gyroscope effect
-                rotation = _temp.quaternion.identity();
-                worldSpaceOrientation = true;  // Vertical should be world-relative
-                break;
+                case 'vertical':
+                    // Vertical: ring stands upright, arcOffset creates gyroscope spread
+                    // Model faces camera, identity keeps it upright
+                    // arcOffset rotates each ring around Y (0°, 120°, 240°) for gyroscope effect
+                    rotation = _temp.quaternion.identity();
+                    worldSpaceOrientation = true; // Vertical should be world-relative
+                    break;
 
-            case 'radial':
-                // Radial: tilted outward like a funnel (45° from horizontal)
-                // Start from flat (+90° X) then tilt back 45°
-                rotation = _temp.quaternion.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 4);
-                worldSpaceOrientation = true;  // Radial should be world-relative
-                break;
+                case 'radial':
+                    // Radial: tilted outward like a funnel (45° from horizontal)
+                    // Start from flat (+90° X) then tilt back 45°
+                    rotation = _temp.quaternion.setFromAxisAngle(
+                        _temp.axis.set(1, 0, 0),
+                        Math.PI / 4
+                    );
+                    worldSpaceOrientation = true; // Radial should be world-relative
+                    break;
 
-            case 'camera':
-                // Camera-facing: ring always faces the camera (billboard)
-                // Start with identity, update loop will set to camera quaternion
-                rotation = _temp.quaternion.identity();
-                worldSpaceOrientation = true;  // Need world-space for camera quaternion to work
-                break;
+                case 'camera':
+                    // Camera-facing: ring always faces the camera (billboard)
+                    // Start with identity, update loop will set to camera quaternion
+                    rotation = _temp.quaternion.identity();
+                    worldSpaceOrientation = true; // Need world-space for camera quaternion to work
+                    break;
 
-            default:
-                // Use model's default or generate based on position
-                rotation = this._generateSpawnRotation('orbit', position);
+                default:
+                    // Use model's default or generate based on position
+                    rotation = this._generateSpawnRotation('orbit', position);
             }
 
             // Apply formation arcOffset rotation (e.g., 0°, 120°, 240° for 3-ring spiral)
@@ -1284,7 +1355,12 @@ export class ElementInstancedSpawner {
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
                 if (animState) {
-                    pool.updateInstanceTransform(elementId, position, rotation, initialScale * animState.scale);
+                    pool.updateInstanceTransform(
+                        elementId,
+                        position,
+                        rotation,
+                        initialScale * animState.scale
+                    );
                 }
 
                 this.activeElements.set(elementId, {
@@ -1309,8 +1385,8 @@ export class ElementInstancedSpawner {
                         formationData,
                         initialResult,
                         diameterFactor,
-                        uniformDiameter: axisConfig.uniformDiameter || false
-                    }
+                        uniformDiameter: axisConfig.uniformDiameter || false,
+                    },
                 });
                 spawnedIds.push(elementId);
             }
@@ -1340,20 +1416,28 @@ export class ElementInstancedSpawner {
         const { pool, merged, config: elementConfig } = ctx;
 
         // Parse anchor configuration using shared utility
-        const anchorConfig = parseAnchorConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
+        const anchorConfig = parseAnchorConfig(spawnMode, name =>
+            this.spatialRef.resolveLandmark(name)
+        );
 
         // Check for arc animation configuration
         const animation = spawnMode.animation || {};
         const modelOverrides = animation.modelOverrides || {};
 
         // Apply shader animation settings and gesture glow if configured
-        this._applyShaderAnimationOverrides(elementType, anchorConfig.models, modelOverrides, elementConfig, animation);
-
+        this._applyShaderAnimationOverrides(
+            elementType,
+            anchorConfig.models,
+            modelOverrides,
+            elementConfig,
+            animation
+        );
 
         const spawnedIds = [];
-        const availableModels = anchorConfig.models.length > 0
-            ? anchorConfig.models
-            : (models || Array.from(merged.modelMap.keys()));
+        const availableModels =
+            anchorConfig.models.length > 0
+                ? anchorConfig.models
+                : models || Array.from(merged.modelMap.keys());
 
         for (let i = 0; i < anchorConfig.count; i++) {
             // Select model
@@ -1372,13 +1456,20 @@ export class ElementInstancedSpawner {
             const position = _temp.position.set(anchorPos.x, anchorPos.y, anchorPos.z).clone();
 
             // Calculate scale (sizeVariance override: 0 = identical sizes for relay rings)
-            const scaleMultiplier = anchorConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
-            const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier, spawnMode.sizeVariance);
+            const scaleMultiplier =
+                anchorConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const baseScale = calculateElementScale(
+                modelName,
+                this.mascotRadius,
+                scaleMultiplier,
+                spawnMode.sizeVariance
+            );
 
             // Mascot-relative diameter: compute factor so diameter 1.0 = mascot width
-            const diameterFactor = anchorConfig.diameterUnit === 'mascot'
-                ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
-                : 0;
+            const diameterFactor =
+                anchorConfig.diameterUnit === 'mascot'
+                    ? this._computeMascotDiameterFactor(modelName, elementType, scaleMultiplier)
+                    : 0;
 
             if (diameterFactor) {
                 // Non-uniform scale: XY = ring face diameter, Z = thickness
@@ -1393,7 +1484,8 @@ export class ElementInstancedSpawner {
             }
 
             // Apply orientation - check per-model override first, then anchor config
-            const anchorOrientMode = modelOverrides[modelName]?.orientationOverride || anchorConfig.orientation;
+            const anchorOrientMode =
+                modelOverrides[modelName]?.orientationOverride || anchorConfig.orientation;
             let rotation;
             if (anchorOrientMode === 'camera' && this.camera) {
                 // Billboard: copy camera quaternion so element faces toward camera
@@ -1415,12 +1507,25 @@ export class ElementInstancedSpawner {
             const instanceRelayIndex = modelOverrides[modelName]?.relayIndex ?? null;
 
             // Spawn in pool (arcPhase + relayIndex encode into aRandomSeed for relay vine masking)
-            const success = pool.spawn(elementId, position, rotation, _temp.scale, modelIndex, instanceArcPhase, instanceRelayIndex);
+            const success = pool.spawn(
+                elementId,
+                position,
+                rotation,
+                _temp.scale,
+                modelIndex,
+                instanceArcPhase,
+                instanceRelayIndex
+            );
 
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
                 if (animState) {
-                    pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
+                    pool.updateInstanceTransform(
+                        elementId,
+                        position,
+                        rotation,
+                        baseScale * animState.scale
+                    );
                 }
 
                 this.activeElements.set(elementId, {
@@ -1454,7 +1559,7 @@ export class ElementInstancedSpawner {
                         endScale: anchorConfig.endScale,
                         // Store exit duration for localProgress calculation (explosion effects)
                         exitDuration: animConfig?.exit?.duration ?? 0,
-                    }
+                    },
                 });
                 spawnedIds.push(elementId);
             }
@@ -1480,7 +1585,9 @@ export class ElementInstancedSpawner {
         const { pool, merged, config: elementConfig } = ctx;
 
         // Parse config using RadialBurstMode utility
-        const burstConfig = parseRadialBurstConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
+        const burstConfig = parseRadialBurstConfig(spawnMode, name =>
+            this.spatialRef.resolveLandmark(name)
+        );
 
         // Parse orientation from radialBurst config (per-model override resolved in loop)
         const baseOrientationMode = spawnMode.radialBurst?.orientation || 'vertical';
@@ -1490,13 +1597,19 @@ export class ElementInstancedSpawner {
         const modelOverrides = animation.modelOverrides || {};
 
         // Apply shader animation settings and gesture glow if configured
-        this._applyShaderAnimationOverrides(elementType, burstConfig.models, modelOverrides, elementConfig, animation);
-
+        this._applyShaderAnimationOverrides(
+            elementType,
+            burstConfig.models,
+            modelOverrides,
+            elementConfig,
+            animation
+        );
 
         const spawnedIds = [];
-        const availableModels = burstConfig.models.length > 0
-            ? burstConfig.models
-            : (models || Array.from(merged.modelMap.keys()));
+        const availableModels =
+            burstConfig.models.length > 0
+                ? burstConfig.models
+                : models || Array.from(merged.modelMap.keys());
 
         for (let i = 0; i < burstConfig.count; i++) {
             const modelName = availableModels[i % availableModels.length];
@@ -1504,35 +1617,47 @@ export class ElementInstancedSpawner {
             if (modelIndex === undefined) continue;
 
             // Get initial state from RadialBurstMode utility
-            const initialState = calculateRadialBurstInitialState(burstConfig, i, this.mascotRadius);
+            const initialState = calculateRadialBurstInitialState(
+                burstConfig,
+                i,
+                this.mascotRadius
+            );
 
-            const position = _temp.position.set(
-                initialState.position.x,
-                initialState.position.y,
-                initialState.position.z
-            ).clone();
+            const position = _temp.position
+                .set(initialState.position.x, initialState.position.y, initialState.position.z)
+                .clone();
 
             // Apply orientation - per-model override > burst config
-            const orientationMode = modelOverrides[modelName]?.orientationOverride || baseOrientationMode;
+            const orientationMode =
+                modelOverrides[modelName]?.orientationOverride || baseOrientationMode;
             let rotation;
             if (orientationMode === 'camera' && this.camera) {
                 // Billboard: copy camera quaternion so element faces toward camera
                 rotation = this.camera.quaternion.clone();
             } else {
-                rotation = _temp.quaternion.set(
-                    initialState.rotation.x,
-                    initialState.rotation.y,
-                    initialState.rotation.z,
-                    initialState.rotation.w
-                ).clone();
+                rotation = _temp.quaternion
+                    .set(
+                        initialState.rotation.x,
+                        initialState.rotation.y,
+                        initialState.rotation.z,
+                        initialState.rotation.w
+                    )
+                    .clone();
             }
 
-            const scaleMultiplier = burstConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const scaleMultiplier =
+                burstConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
             const initialScale = baseScale * initialState.scaleMultiplier;
 
             const elementId = `${elementType}_${this._nextId++}`;
-            const success = pool.spawn(elementId, position, rotation, _temp.scale.setScalar(initialScale), modelIndex);
+            const success = pool.spawn(
+                elementId,
+                position,
+                rotation,
+                _temp.scale.setScalar(initialScale),
+                modelIndex
+            );
 
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
@@ -1554,7 +1679,7 @@ export class ElementInstancedSpawner {
                     worldSpaceOrientation: true,
                     baseWorldRotation: rotation.clone(),
                     // Mode-specific data from RadialBurstMode
-                    ...initialState.modeData
+                    ...initialState.modeData,
                 });
                 spawnedIds.push(elementId);
             }
@@ -1584,7 +1709,9 @@ export class ElementInstancedSpawner {
         const { pool, merged, config: elementConfig } = ctx;
 
         // Parse orbit configuration using utility from OrbitMode.js
-        const orbitConfig = parseOrbitConfig(spawnMode, name => this.spatialRef.resolveLandmark(name));
+        const orbitConfig = parseOrbitConfig(spawnMode, name =>
+            this.spatialRef.resolveLandmark(name)
+        );
 
         // Expand formation into per-element data
         const formationElements = expandOrbitFormation(orbitConfig);
@@ -1594,13 +1721,19 @@ export class ElementInstancedSpawner {
         const modelOverrides = animation.modelOverrides || {};
 
         // Apply shader animation settings and gesture glow if configured
-        this._applyShaderAnimationOverrides(elementType, orbitConfig.models, modelOverrides, elementConfig, animation);
-
+        this._applyShaderAnimationOverrides(
+            elementType,
+            orbitConfig.models,
+            modelOverrides,
+            elementConfig,
+            animation
+        );
 
         const spawnedIds = [];
-        const availableModels = orbitConfig.models.length > 0
-            ? orbitConfig.models
-            : (models || Array.from(merged.modelMap.keys()));
+        const availableModels =
+            orbitConfig.models.length > 0
+                ? orbitConfig.models
+                : models || Array.from(merged.modelMap.keys());
 
         for (let i = 0; i < formationElements.length; i++) {
             const formationData = formationElements[i];
@@ -1611,11 +1744,17 @@ export class ElementInstancedSpawner {
             if (modelIndex === undefined) continue;
 
             // Calculate position
-            const posResult = calculateOrbitPosition(orbitConfig, formationData, 0, this.mascotRadius);
+            const posResult = calculateOrbitPosition(
+                orbitConfig,
+                formationData,
+                0,
+                this.mascotRadius
+            );
             const position = _temp.position.set(posResult.x, posResult.y, posResult.z).clone();
 
             // Calculate scale
-            const scaleMultiplier = orbitConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const scaleMultiplier =
+                orbitConfig.scale || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
             _temp.scale.setScalar(baseScale);
 
@@ -1630,26 +1769,32 @@ export class ElementInstancedSpawner {
             const worldSpaceOrientation = true;
 
             switch (orientationMode) {
-            case 'flat':
-            case 'horizontal':
-                // Flat: ring lies horizontal (XZ plane)
-                rotation = _temp.quaternion.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 2);
-                break;
+                case 'flat':
+                case 'horizontal':
+                    // Flat: ring lies horizontal (XZ plane)
+                    rotation = _temp.quaternion.setFromAxisAngle(
+                        _temp.axis.set(1, 0, 0),
+                        Math.PI / 2
+                    );
+                    break;
 
-            case 'vertical':
-                // Vertical: ring stands upright, facing outward from center
-                // Rotate to face outward based on orbit angle
-                _temp.euler.set(0, posResult.angle + Math.PI / 2, 0);
-                rotation = _temp.quaternion.setFromEuler(_temp.euler);
-                break;
+                case 'vertical':
+                    // Vertical: ring stands upright, facing outward from center
+                    // Rotate to face outward based on orbit angle
+                    _temp.euler.set(0, posResult.angle + Math.PI / 2, 0);
+                    rotation = _temp.quaternion.setFromEuler(_temp.euler);
+                    break;
 
-            case 'radial':
-                // Tilted outward
-                rotation = _temp.quaternion.setFromAxisAngle(_temp.axis.set(1, 0, 0), Math.PI / 4);
-                break;
+                case 'radial':
+                    // Tilted outward
+                    rotation = _temp.quaternion.setFromAxisAngle(
+                        _temp.axis.set(1, 0, 0),
+                        Math.PI / 4
+                    );
+                    break;
 
-            default:
-                rotation = _temp.quaternion.identity();
+                default:
+                    rotation = _temp.quaternion.identity();
             }
 
             const baseWorldRotation = rotation.clone();
@@ -1663,7 +1808,12 @@ export class ElementInstancedSpawner {
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
                 if (animState) {
-                    pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
+                    pool.updateInstanceTransform(
+                        elementId,
+                        position,
+                        rotation,
+                        baseScale * animState.scale
+                    );
                 }
 
                 this.activeElements.set(elementId, {
@@ -1683,8 +1833,8 @@ export class ElementInstancedSpawner {
                     orbit: {
                         config: orbitConfig,
                         formationData,
-                        angle: posResult.angle
-                    }
+                        angle: posResult.angle,
+                    },
                 });
                 spawnedIds.push(elementId);
             }
@@ -1722,11 +1872,19 @@ export class ElementInstancedSpawner {
         const modelOverrides = animation.modelOverrides || {};
 
         // Apply shader animation settings and gesture glow if configured
-        this._applyShaderAnimationOverrides(elementType, surfaceConfig.models, modelOverrides, elementConfig, animation);
+        this._applyShaderAnimationOverrides(
+            elementType,
+            surfaceConfig.models,
+            modelOverrides,
+            elementConfig,
+            animation
+        );
 
         // Check for coreMesh geometry
         if (!this.coreMesh?.geometry) {
-            console.warn('[ElementInstancedSpawner] Surface mode requested but no coreMesh geometry available');
+            console.warn(
+                '[ElementInstancedSpawner] Surface mode requested but no coreMesh geometry available'
+            );
             return [];
         }
 
@@ -1737,7 +1895,7 @@ export class ElementInstancedSpawner {
             this.mascotRadius,
             surfaceConfig,
             camera || this.camera,
-            null  // Don't scale - container syncs to coreMesh transform
+            null // Don't scale - container syncs to coreMesh transform
         );
 
         if (surfacePoints.length === 0) {
@@ -1745,11 +1903,11 @@ export class ElementInstancedSpawner {
             return [];
         }
 
-
         const spawnedIds = [];
-        const availableModels = surfaceConfig.models.length > 0
-            ? surfaceConfig.models
-            : (models || Array.from(merged.modelMap.keys()));
+        const availableModels =
+            surfaceConfig.models.length > 0
+                ? surfaceConfig.models
+                : models || Array.from(merged.modelMap.keys());
         const actualCount = Math.min(
             surfaceConfig.countOverride || count,
             pool.availableSlots,
@@ -1765,7 +1923,10 @@ export class ElementInstancedSpawner {
             if (modelIndex === undefined) continue;
 
             // Calculate scale
-            const scaleMultiplier = surfaceConfig.scaleMultiplier || elementConfig?.scaleMultiplier || DEFAULT_SCALE_MULTIPLIER;
+            const scaleMultiplier =
+                surfaceConfig.scaleMultiplier ||
+                elementConfig?.scaleMultiplier ||
+                DEFAULT_SCALE_MULTIPLIER;
             const baseScale = calculateElementScale(modelName, this.mascotRadius, scaleMultiplier);
             _temp.scale.setScalar(baseScale);
 
@@ -1777,7 +1938,7 @@ export class ElementInstancedSpawner {
                 baseScale,
                 embedDepth
             );
-            const {position} = surfaceResult;
+            const { position } = surfaceResult;
 
             // Calculate orientation based on model type and surface normal
             const cameraFacing = surfaceConfig.cameraFacing ?? 0.3;
@@ -1787,7 +1948,7 @@ export class ElementInstancedSpawner {
                 cameraFacing,
                 camera || this.camera,
                 position,
-                null  // velocity
+                null // velocity
             ).clone();
 
             // Generate element ID
@@ -1799,7 +1960,12 @@ export class ElementInstancedSpawner {
             if (success) {
                 const animState = this._initAnimState(pool, elementId, animConfig, i);
                 if (animState) {
-                    pool.updateInstanceTransform(elementId, position, rotation, baseScale * animState.scale);
+                    pool.updateInstanceTransform(
+                        elementId,
+                        position,
+                        rotation,
+                        baseScale * animState.scale
+                    );
                 }
 
                 this.activeElements.set(elementId, {
@@ -1817,8 +1983,8 @@ export class ElementInstancedSpawner {
                     surface: {
                         config: surfaceConfig,
                         normal: sample.normal.clone(),
-                        embedDepth
-                    }
+                        embedDepth,
+                    },
                 });
                 spawnedIds.push(elementId);
             }
@@ -1866,9 +2032,7 @@ export class ElementInstancedSpawner {
      * @param {boolean} [animated=true] - Whether to animate the despawn
      */
     despawn(elementType = null, animated = true) {
-        const typesToClear = elementType
-            ? [elementType]
-            : Array.from(this.pools.keys());
+        const typesToClear = elementType ? [elementType] : Array.from(this.pools.keys());
 
         for (const type of typesToClear) {
             const pool = this.pools.get(type);
@@ -1932,7 +2096,11 @@ export class ElementInstancedSpawner {
             // Pass empty activeElements so all emitters get sourceCount=0
             if (this._particleAtmospherics) {
                 for (const [type] of this.pools) {
-                    this._particleAtmospherics.syncSources(type, this.activeElements, this.container);
+                    this._particleAtmospherics.syncSources(
+                        type,
+                        this.activeElements,
+                        this.container
+                    );
                 }
             }
             // Disable motion blur when no elements are active
@@ -1968,7 +2136,7 @@ export class ElementInstancedSpawner {
             if (!hasWorldSpaceElements) {
                 this.container.quaternion.copy(this.coreMesh.quaternion);
             } else {
-                this.container.quaternion.identity();  // No rotation for world-space elements
+                this.container.quaternion.identity(); // No rotation for world-space elements
             }
             this.container.scale.copy(this.coreMesh.scale);
         }
@@ -2013,7 +2181,7 @@ export class ElementInstancedSpawner {
             }
 
             // Check for axis-travel mode
-            const {axisTravel} = data;
+            const { axisTravel } = data;
             let finalPosition;
             let finalScale;
 
@@ -2041,7 +2209,8 @@ export class ElementInstancedSpawner {
                 // Exit animations that want scale changes use animState.scale directly.
                 // fadeProgress is only used for enter animation (growing in).
                 const formationScaleMultiplier = result.scaleMultiplier ?? 1.0;
-                const enterFade = animState.state === AnimationStates.ENTERING ? animState.fadeProgress : 1.0;
+                const enterFade =
+                    animState.state === AnimationStates.ENTERING ? animState.fadeProgress : 1.0;
                 const animScale = baseScale * result.scale * formationScaleMultiplier * enterFade;
                 const effectiveDiameter = result.diameter * (axisTravel.diameterFactor || 1.0);
                 if (axisTravel.uniformDiameter) {
@@ -2065,7 +2234,9 @@ export class ElementInstancedSpawner {
                 // Camera-relative positioning: rotate XZ offset to track camera orbit
                 // so "left" stays camera-left regardless of camera angle
                 if (data.cameraOrientation && this.camera) {
-                    const camRight = _temp.direction.set(1, 0, 0).applyQuaternion(this.camera.quaternion);
+                    const camRight = _temp.direction
+                        .set(1, 0, 0)
+                        .applyQuaternion(this.camera.quaternion);
                     camRight.y = 0;
                     camRight.normalize();
                     const camFwd = _temp.axis.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
@@ -2087,16 +2258,22 @@ export class ElementInstancedSpawner {
                 const exitDuration = data.anchor.exitDuration ?? 0;
                 const fullLifetimeEnd = disappearAt + exitDuration;
                 const visibleDuration = fullLifetimeEnd - appearAt;
-                const localProgress = (gestureProgress !== null && visibleDuration > 0)
-                    ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
-                    : 0;
+                const localProgress =
+                    gestureProgress !== null && visibleDuration > 0
+                        ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
+                        : 0;
 
                 // Interpolate scale from startScale to endScale over lifetime
                 // Use shared easing library for consistent behavior across all modes
-                const { startScale: anchorStartScale, endScale: anchorEndScale, config: anchorCfg } = data.anchor;
+                const {
+                    startScale: anchorStartScale,
+                    endScale: anchorEndScale,
+                    config: anchorCfg,
+                } = data.anchor;
                 const scaleEasingFn = getEasing(anchorCfg?.scaleEasing || 'easeOutExpo');
                 const easedProgress = scaleEasingFn(localProgress);
-                const scaleInterp = anchorStartScale + (anchorEndScale - anchorStartScale) * easedProgress;
+                const scaleInterp =
+                    anchorStartScale + (anchorEndScale - anchorStartScale) * easedProgress;
 
                 // Apply animated scale with interpolation
                 // For elements with explicit scale animation (startScale != endScale), don't multiply
@@ -2127,16 +2304,21 @@ export class ElementInstancedSpawner {
                 const appearAt = animState.elementConfig?.appearAt ?? 0;
                 const disappearAt = animState.elementConfig?.disappearAt ?? 1;
                 const visibleDuration = disappearAt - appearAt;
-                const localProgress = visibleDuration > 0
-                    ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
-                    : gestureProgress;
+                const localProgress =
+                    visibleDuration > 0
+                        ? Math.max(0, Math.min(1, (gestureProgress - appearAt) / visibleDuration))
+                        : gestureProgress;
 
                 const updateState = calculateRadialBurstUpdateState(
                     { radialBurst: data.radialBurst },
                     localProgress,
                     this.mascotRadius
                 );
-                _temp.position.set(updateState.position.x, updateState.position.y, updateState.position.z);
+                _temp.position.set(
+                    updateState.position.x,
+                    updateState.position.y,
+                    updateState.position.z
+                );
                 finalPosition = _temp.position;
 
                 // Apply animated scale with burst scale multiplier
@@ -2154,9 +2336,13 @@ export class ElementInstancedSpawner {
                 const appearAt = animState.elementConfig?.appearAt ?? 0;
                 const disappearAt = animState.elementConfig?.disappearAt ?? 1;
                 const visibleDuration = disappearAt - appearAt;
-                const localProgress = visibleDuration > 0
-                    ? Math.max(0, Math.min(1, (effectiveOrbitProgress - appearAt) / visibleDuration))
-                    : effectiveOrbitProgress;
+                const localProgress =
+                    visibleDuration > 0
+                        ? Math.max(
+                              0,
+                              Math.min(1, (effectiveOrbitProgress - appearAt) / visibleDuration)
+                          )
+                        : effectiveOrbitProgress;
 
                 // Get easing function for orbit travel
                 const orbitEasingFn = getEasing(orbitCfg.easing || 'linear');
@@ -2192,8 +2378,8 @@ export class ElementInstancedSpawner {
                 // Apply animated scale (pulse effect)
                 // For procedural elements (fire, water, etc.), skip pulse - shader handles it
                 finalScale = isProceduralElement
-                    ? baseScale * animState.fadeProgress  // Just enter/exit scale, no pulse
-                    : baseScale * animState.scale;        // Full scale with pulse
+                    ? baseScale * animState.fadeProgress // Just enter/exit scale, no pulse
+                    : baseScale * animState.scale; // Full scale with pulse
             }
 
             data.position.copy(finalPosition);
@@ -2228,7 +2414,10 @@ export class ElementInstancedSpawner {
                 // Direction toward camera = camera's local +Z in world space
                 if (data.cameraOffset) {
                     _temp.direction.set(0, 0, 1).applyQuaternion(this.camera.quaternion);
-                    finalPosition.addScaledVector(_temp.direction, data.cameraOffset * this.mascotRadius);
+                    finalPosition.addScaledVector(
+                        _temp.direction,
+                        data.cameraOffset * this.mascotRadius
+                    );
                 }
             } else if (data.worldSpaceOrientation && data.baseWorldRotation) {
                 // For world-space orientations, use the base world rotation directly
@@ -2252,14 +2441,14 @@ export class ElementInstancedSpawner {
                     elementId,
                     finalPosition,
                     _temp.quaternion,
-                    _temp.scale  // Vector3 with non-uniform scale
+                    _temp.scale // Vector3 with non-uniform scale
                 );
             } else {
                 pool.updateInstanceTransform(
                     elementId,
                     finalPosition,
                     _temp.quaternion,
-                    finalScale   // Uniform scalar
+                    finalScale // Uniform scalar
                 );
             }
 
@@ -2267,8 +2456,8 @@ export class ElementInstancedSpawner {
             // For procedural elements, use smooth fadeProgress (no flicker - shader does that)
             // For non-procedural, use full opacity with flicker
             const instanceOpacity = isProceduralElement
-                ? animState.fadeProgress  // Smooth 0→1→0, shader handles flicker
-                : animState.opacity;      // Includes flicker/pulse effects
+                ? animState.fadeProgress // Smooth 0→1→0, shader handles flicker
+                : animState.opacity; // Includes flicker/pulse effects
 
             pool.updateInstanceOpacity(elementId, instanceOpacity);
         }
@@ -2373,7 +2562,7 @@ export class ElementInstancedSpawner {
     getStats() {
         const stats = {
             activeElements: this.activeElements.size,
-            poolStats: {}
+            poolStats: {},
         };
 
         for (const [type, pool] of this.pools) {

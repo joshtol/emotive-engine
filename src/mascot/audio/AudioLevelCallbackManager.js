@@ -56,7 +56,7 @@ export class AudioLevelCallbackManager {
             this._emit('audioLevelUpdate', {
                 level: data.level,
                 rawData: Array.from(data.rawData),
-                timestamp: data.timestamp
+                timestamp: data.timestamp,
             });
         });
     }
@@ -72,7 +72,7 @@ export class AudioLevelCallbackManager {
             // Emit volume spike event
             this._emit('volumeSpike', {
                 ...spikeData,
-                gestureTriggered
+                gestureTriggered,
             });
 
             if (gestureTriggered) {

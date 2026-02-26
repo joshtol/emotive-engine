@@ -29,7 +29,7 @@ const SHARED_ANCHOR = {
     cameraOffset: 1.0,
     relativeOffset: true,
     startScale: 1.0,
-    endScale: 1.0
+    endScale: 1.0,
 };
 
 const SHARED_ANIMATION = {
@@ -39,7 +39,7 @@ const SHARED_ANIMATION = {
     emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
     blending: 'normal',
     renderOrder: 10,
-    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }  // 3-step spiral wave, all rings always visible
+    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }, // 3-step spiral wave, all rings always visible
 };
 
 /**
@@ -49,20 +49,28 @@ const SHARED_ANIMATION = {
  *   Staggering these across hexagons creates a spiral brightness wave through the mandala.
  * @param {number} delay - appearAt delay (0 = immediate, 0.08 = 8% into gesture) for blooming entrance
  */
-function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0, atmospherics = null) {
+function createHexLayer(
+    radius,
+    ringScale,
+    baseRotations,
+    arcPhaseOffset,
+    relayIndices,
+    delay = 0,
+    atmospherics = null
+) {
     const S = 0.866; // sin(60°)
     const round = v => Math.round(v * 100) / 100;
 
     //                     position                    relay           arcBase  CW/CCW
     const rings = [
         // Triangle 1 (upright)
-        { x: 0,        y: radius,      relay: relayIndices[0], arc: 4.71, dir: -1 }, // top
-        { x: S*radius, y: -0.5*radius, relay: relayIndices[1], arc: 3.14, dir:  1 }, // lower-right
-        { x:-S*radius, y: -0.5*radius, relay: relayIndices[2], arc: 0.0,  dir: -1 }, // lower-left
+        { x: 0, y: radius, relay: relayIndices[0], arc: 4.71, dir: -1 }, // top
+        { x: S * radius, y: -0.5 * radius, relay: relayIndices[1], arc: 3.14, dir: 1 }, // lower-right
+        { x: -S * radius, y: -0.5 * radius, relay: relayIndices[2], arc: 0.0, dir: -1 }, // lower-left
         // Triangle 2 (inverted)
-        { x: 0,        y: -radius,     relay: relayIndices[0], arc: 4.71, dir:  1 }, // bottom
-        { x:-S*radius, y:  0.5*radius, relay: relayIndices[1], arc: 3.14, dir: -1 }, // upper-left
-        { x: S*radius, y:  0.5*radius, relay: relayIndices[2], arc: 0.0,  dir:  1 }, // upper-right
+        { x: 0, y: -radius, relay: relayIndices[0], arc: 4.71, dir: 1 }, // bottom
+        { x: -S * radius, y: 0.5 * radius, relay: relayIndices[1], arc: 3.14, dir: -1 }, // upper-left
+        { x: S * radius, y: 0.5 * radius, relay: relayIndices[2], arc: 0.0, dir: 1 }, // upper-right
     ];
 
     return rings.map((r, i) => ({
@@ -81,10 +89,10 @@ function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayI
                 'flame-ring': {
                     arcPhase: (r.arc + arcPhaseOffset) % 6.28,
                     relayIndex: r.relay,
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     }));
 }
 
@@ -92,7 +100,8 @@ const FIREMEDITATION_CONFIG = {
     name: 'firemeditation',
     emoji: '🔥',
     type: 'blending',
-    description: 'Triple flame hexagon mandala — three concentric relay hexagons with differential rotation',
+    description:
+        'Triple flame hexagon mandala — three concentric relay hexagons with differential rotation',
     duration: 3000,
     beats: 6,
     intensity: 1.5,
@@ -104,15 +113,17 @@ const FIREMEDITATION_CONFIG = {
         // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══
         // Spiral wave: staggered relay indices create rotating diagonal brightness band
         //           radius  scale  rotations  arcPhase  relayIndices
-        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0, [{ preset: 'smoke', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }]),    // inner — appears first
-        ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08),  // middle — blooms outward
-        ...createHexLayer(0.78, 1.55,  1,   4.19, [2, 0, 1], 0.16),  // outer — last to arrive
+        ...createHexLayer(0.28, 0.7, 2, 0.0, [0, 1, 2], 0.0, [
+            { preset: 'smoke', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' },
+        ]), // inner — appears first
+        ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08), // middle — blooms outward
+        ...createHexLayer(0.78, 1.55, 1, 4.19, [2, 0, 1], 0.16), // outer — last to arrive
 
         // ═══ COUNTER SET (opposite rotation, +180° arc offset) ═══
         // Same timing as forward — mirrored pairs bloom together
-        ...createHexLayer(0.28, 0.70, -2,    3.14, [0, 1, 2], 0.0),
-        ...createHexLayer(0.52, 1.15,  1.5,  5.23, [1, 2, 0], 0.08),
-        ...createHexLayer(0.78, 1.55, -1,    1.05, [2, 0, 1], 0.16),
+        ...createHexLayer(0.28, 0.7, -2, 3.14, [0, 1, 2], 0.0),
+        ...createHexLayer(0.52, 1.15, 1.5, 5.23, [1, 2, 0], 0.08),
+        ...createHexLayer(0.78, 1.55, -1, 1.05, [2, 0, 1], 0.16),
     ],
 
     glowColor: [1.0, 0.7, 0.3],
@@ -126,7 +137,7 @@ const FIREMEDITATION_CONFIG = {
     tremorFrequency: 3,
     shakeAmount: 0.003,
     shakeFrequency: 4,
-    decayRate: 0.1
+    decayRate: 0.1,
 };
 
 export default buildFireEffectGesture(FIREMEDITATION_CONFIG);

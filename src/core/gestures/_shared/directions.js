@@ -18,10 +18,10 @@
  * Used for step, slide, lean, float, point gestures
  */
 export const DIRECTIONS = {
-    left:  { x: -1, y:  0 },
-    right: { x:  1, y:  0 },
-    up:    { x:  0, y:  1 },
-    down:  { x:  0, y: -1 }
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 },
+    up: { x: 0, y: 1 },
+    down: { x: 0, y: -1 },
 };
 
 /**
@@ -29,10 +29,10 @@ export const DIRECTIONS = {
  * Available for future use if diagonal gestures are needed
  */
 export const DIAGONALS = {
-    upLeft:    { x: -0.7071, y:  0.7071 },
-    upRight:   { x:  0.7071, y:  0.7071 },
-    downLeft:  { x: -0.7071, y: -0.7071 },
-    downRight: { x:  0.7071, y: -0.7071 }
+    upLeft: { x: -0.7071, y: 0.7071 },
+    upRight: { x: 0.7071, y: 0.7071 },
+    downLeft: { x: -0.7071, y: -0.7071 },
+    downRight: { x: 0.7071, y: -0.7071 },
 };
 
 /**
@@ -40,7 +40,7 @@ export const DIAGONALS = {
  */
 export const ALL_DIRECTIONS = {
     ...DIRECTIONS,
-    ...DIAGONALS
+    ...DIAGONALS,
 };
 
 /**

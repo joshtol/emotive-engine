@@ -38,7 +38,7 @@ const EARTHBURDEN_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.3,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.6,
@@ -50,17 +50,19 @@ const EARTHBURDEN_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 0.3, max: 0.6, frequency: 0.8, pattern: 'sine' },
                 rotate: { axis: 'z', rotations: 0.001, phase: 0 },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['stone-slab'],
-                    anchor: 'above',
-                    intensity: 0.15,
-                    sizeScale: 0.6,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['stone-slab'],
+                        anchor: 'above',
+                        intensity: 0.15,
+                        sizeScale: 0.6,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
-                renderOrder: 10
-            }
+                renderOrder: 10,
+            },
         },
 
         // ── Slab 2: Second slab stacks on top (rotated, smaller) ────────
@@ -68,33 +70,35 @@ const EARTHBURDEN_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'top',
-                offset: { x: 0, y: 0.20, z: 0 },
+                offset: { x: 0, y: 0.2, z: 0 },
                 orientation: 'flat',
                 startScale: 0.2,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.1,
             models: ['stone-slab'],
             animation: {
                 appearAt: 0.15,
-                disappearAt: 0.80,
+                disappearAt: 0.8,
                 enter: { type: 'scale', duration: 0.2, easing: 'easeOutBounce' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 0.3, max: 0.6, frequency: 0.8, pattern: 'sine' },
                 rotate: { axis: 'z', rotations: 0.001, phase: 45 },
-                atmospherics: [{
-                    preset: 'earth-gravel',
-                    targets: ['stone-slab'],
-                    anchor: 'below',
-                    intensity: 0.2,
-                    sizeScale: 0.5,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-gravel',
+                        targets: ['stone-slab'],
+                        anchor: 'below',
+                        intensity: 0.2,
+                        sizeScale: 0.5,
+                        progressCurve: 'burst',
+                    },
+                ],
                 blending: 'normal',
-                renderOrder: 11
-            }
+                renderOrder: 11,
+            },
         },
 
         // ── Slab 3: Third slab — final crushing weight (rotated, big) ───
@@ -106,47 +110,50 @@ const EARTHBURDEN_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.2,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.4,
             models: ['stone-slab'],
             animation: {
-                appearAt: 0.30,
+                appearAt: 0.3,
                 disappearAt: 0.75,
                 enter: { type: 'scale', duration: 0.2, easing: 'easeOutBounce' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 0.4, max: 0.7, frequency: 1.0, pattern: 'sine' },
                 rotate: { axis: 'z', rotations: 0.001, phase: -30 },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['stone-slab'],
-                    anchor: 'above',
-                    intensity: 0.3,
-                    sizeScale: 0.8,
-                    progressCurve: 'burst',
-                }, {
-                    preset: 'earth-gravel',
-                    targets: ['stone-slab'],
-                    anchor: 'below',
-                    intensity: 0.25,
-                    sizeScale: 0.6,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['stone-slab'],
+                        anchor: 'above',
+                        intensity: 0.3,
+                        sizeScale: 0.8,
+                        progressCurve: 'burst',
+                    },
+                    {
+                        preset: 'earth-gravel',
+                        targets: ['stone-slab'],
+                        anchor: 'below',
+                        intensity: 0.25,
+                        sizeScale: 0.6,
+                        progressCurve: 'burst',
+                    },
+                ],
                 blending: 'normal',
-                renderOrder: 12
-            }
-        }
+                renderOrder: 12,
+            },
+        },
     ],
 
     sinkAmount: 0.03,
     sinkAcceleration: 0.5,
     decayRate: 0.2,
-    glowColor: [0.70, 0.50, 0.25],
+    glowColor: [0.7, 0.5, 0.25],
     glowIntensityMin: 0.3,
     glowIntensityMax: 0.5,
     tremor: 0.006,
-    tremorFrequency: 2
+    tremorFrequency: 2,
 };
 
 export default buildEarthEffectGesture(EARTHBURDEN_CONFIG);

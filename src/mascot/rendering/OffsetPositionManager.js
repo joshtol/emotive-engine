@@ -18,7 +18,8 @@ export class OffsetPositionManager {
     constructor(deps) {
         // Required dependency validation
         if (!deps.errorBoundary) throw new Error('OffsetPositionManager: errorBoundary required');
-        if (!deps.positionController) throw new Error('OffsetPositionManager: positionController required');
+        if (!deps.positionController)
+            throw new Error('OffsetPositionManager: positionController required');
 
         this.errorBoundary = deps.errorBoundary;
         this.positionController = deps.positionController;
@@ -33,10 +34,14 @@ export class OffsetPositionManager {
      * @returns {Object} Chain target for method chaining
      */
     setOffset(x, y, z = 0) {
-        return this.errorBoundary.wrap(() => {
-            this.positionController.setOffset(x, y, z);
-            return this._chainTarget;
-        }, 'offset-setting', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                this.positionController.setOffset(x, y, z);
+                return this._chainTarget;
+            },
+            'offset-setting',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -44,9 +49,13 @@ export class OffsetPositionManager {
      * @returns {Object} Current offset {x, y, z}
      */
     getOffset() {
-        return this.errorBoundary.wrap(() => {
-            return this.positionController.getOffset();
-        }, 'offset-getting', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.positionController.getOffset();
+            },
+            'offset-getting',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -59,9 +68,13 @@ export class OffsetPositionManager {
      * @returns {Object} Chain target for method chaining
      */
     animateOffset(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        return this.errorBoundary.wrap(() => {
-            this.positionController.animateOffset(x, y, z, duration, easing);
-            return this._chainTarget;
-        }, 'offset-animation', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                this.positionController.animateOffset(x, y, z, duration, easing);
+                return this._chainTarget;
+            },
+            'offset-animation',
+            this._chainTarget
+        )();
     }
 }

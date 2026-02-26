@@ -23,7 +23,8 @@ export class TransformMerger {
             // Merge transforms by adding positions/rotations and multiplying scales
             gestureTransform.x = (gestureTransform.x || 0) + (ambientTransform.x || 0);
             gestureTransform.y = (gestureTransform.y || 0) + (ambientTransform.y || 0);
-            gestureTransform.rotation = (gestureTransform.rotation || 0) + (ambientTransform.rotation || 0);
+            gestureTransform.rotation =
+                (gestureTransform.rotation || 0) + (ambientTransform.rotation || 0);
             gestureTransform.scale = (gestureTransform.scale || 1) * (ambientTransform.scale || 1);
             return gestureTransform;
         } else {

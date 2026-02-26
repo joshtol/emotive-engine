@@ -62,9 +62,9 @@ export function calculatePulseEased(config, time, phaseOffset = 0) {
     if (easing) {
         // Shape the wave using easing
         if (cyclePosition < 0.5) {
-            wave = easing(cyclePosition * 2) * 2 - 1;  // -1 to 1
+            wave = easing(cyclePosition * 2) * 2 - 1; // -1 to 1
         } else {
-            wave = 1 - easing((cyclePosition - 0.5) * 2) * 2;  // 1 to -1
+            wave = 1 - easing((cyclePosition - 0.5) * 2) * 2; // 1 to -1
         }
     } else {
         wave = Math.sin(cyclePosition * Math.PI * 2);
@@ -110,38 +110,39 @@ export function calculateFlicker(config, time, prevValue = 1) {
     const { intensity = 0.2, rate = 10, pattern = 'random', seed = null } = config;
 
     switch (pattern) {
-    case 'sine': {
-        const phase = time * rate * Math.PI * 2;
-        return 1 + Math.sin(phase) * intensity;
-    }
+        case 'sine': {
+            const phase = time * rate * Math.PI * 2;
+            return 1 + Math.sin(phase) * intensity;
+        }
 
-    case 'square': {
-        const phase = (time * rate) % 1;
-        return phase < 0.5 ? (1 + intensity) : (1 - intensity);
-    }
+        case 'square': {
+            const phase = (time * rate) % 1;
+            return phase < 0.5 ? 1 + intensity : 1 - intensity;
+        }
 
-    case 'noise': {
-        // Perlin-like noise approximation
-        const t = time * rate;
-        const n1 = Math.sin(t * 1.0) * 0.5;
-        const n2 = Math.sin(t * 2.3) * 0.25;
-        const n3 = Math.sin(t * 5.7) * 0.125;
-        const noise = (n1 + n2 + n3) / 0.875; // Normalize to -1..1
-        return 1 + noise * intensity;
-    }
+        case 'noise': {
+            // Perlin-like noise approximation
+            const t = time * rate;
+            const n1 = Math.sin(t * 1.0) * 0.5;
+            const n2 = Math.sin(t * 2.3) * 0.25;
+            const n3 = Math.sin(t * 5.7) * 0.125;
+            const noise = (n1 + n2 + n3) / 0.875; // Normalize to -1..1
+            return 1 + noise * intensity;
+        }
 
-    case 'random':
-    default: {
-        // Use seeded random if provided, otherwise true random
-        const random = seed !== null
-            ? createSeededRandom(seed + Math.floor(time * rate))()
-            : Math.random();
+        case 'random':
+        default: {
+            // Use seeded random if provided, otherwise true random
+            const random =
+                seed !== null
+                    ? createSeededRandom(seed + Math.floor(time * rate))()
+                    : Math.random();
 
-        // Smooth transition between random values
-        const targetValue = 1 + (random * 2 - 1) * intensity;
-        const smoothing = Math.min(rate * 0.016, 1); // ~60fps smoothing
-        return prevValue + (targetValue - prevValue) * smoothing;
-    }
+            // Smooth transition between random values
+            const targetValue = 1 + (random * 2 - 1) * intensity;
+            const smoothing = Math.min(rate * 0.016, 1); // ~60fps smoothing
+            return prevValue + (targetValue - prevValue) * smoothing;
+        }
     }
 }
 
@@ -158,7 +159,7 @@ export function calculateLayeredFlicker(config, time, layers = {}) {
         baseRate = config.rate || 10,
         baseIntensity = config.intensity || 0.2,
         layers: numLayers = 3,
-        layerScale = 0.5  // Each layer is half the intensity of previous
+        layerScale = 0.5, // Each layer is half the intensity of previous
     } = layers;
 
     let result = 1;
@@ -166,7 +167,7 @@ export function calculateLayeredFlicker(config, time, layers = {}) {
         const layerConfig = {
             intensity: baseIntensity * Math.pow(layerScale, i),
             rate: baseRate * Math.pow(2, i),
-            pattern: 'sine'
+            pattern: 'sine',
         };
         result *= calculateFlicker(layerConfig, time);
     }
@@ -202,14 +203,14 @@ export function calculateDrift(config, currentOffset, deltaTime) {
         distance = 0.1,
         gestureDuration = 1000,
         bounce = false,
-        noise = 0
+        noise = 0,
     } = config;
 
     // Clone current offset
     const offset = {
         x: currentOffset.x || 0,
         y: currentOffset.y || 0,
-        z: currentOffset.z || 0
+        z: currentOffset.z || 0,
     };
 
     // Calculate per-frame increment from total distance and gesture duration
@@ -222,51 +223,51 @@ export function calculateDrift(config, currentOffset, deltaTime) {
 
     // Apply direction-based movement
     switch (direction) {
-    case 'outward': {
-        // Move away from origin in all 3 axes
-        offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
-        offset.y += (offset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
-        offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
-        break;
-    }
+        case 'outward': {
+            // Move away from origin in all 3 axes
+            offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
+            offset.y += (offset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
+            offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+            break;
+        }
 
-    case 'outward-flat': {
-        // Move away from origin in XZ plane only (horizontal radiation)
-        // Perfect for radiating heat waves, expanding ripples
-        offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
-        offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
-        // No Y movement - stays at same height
-        break;
-    }
+        case 'outward-flat': {
+            // Move away from origin in XZ plane only (horizontal radiation)
+            // Perfect for radiating heat waves, expanding ripples
+            offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
+            offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+            // No Y movement - stays at same height
+            break;
+        }
 
-    case 'inward': {
-        // Move toward origin
-        offset.x -= (offset.x || 0.001) > 0 ? increment : -increment;
-        offset.y -= (offset.y || 0.001) > 0 ? increment : -increment;
-        offset.z -= (offset.z || 0.001) > 0 ? increment : -increment;
-        break;
-    }
+        case 'inward': {
+            // Move toward origin
+            offset.x -= (offset.x || 0.001) > 0 ? increment : -increment;
+            offset.y -= (offset.y || 0.001) > 0 ? increment : -increment;
+            offset.z -= (offset.z || 0.001) > 0 ? increment : -increment;
+            break;
+        }
 
-    case 'up':
-        offset.y += increment + noiseY;
-        break;
+        case 'up':
+            offset.y += increment + noiseY;
+            break;
 
-    case 'down':
-        offset.y -= increment + noiseY;
-        break;
+        case 'down':
+            offset.y -= increment + noiseY;
+            break;
 
-    case 'tangent':
-        // Flow along surface (horizontal drift)
-        offset.x += increment + noiseX;
-        offset.z += noiseZ;
-        break;
+        case 'tangent':
+            // Flow along surface (horizontal drift)
+            offset.x += increment + noiseX;
+            offset.z += noiseZ;
+            break;
 
-    case 'random': {
-        offset.x += (Math.random() - 0.5) * increment * 2;
-        offset.y += (Math.random() - 0.5) * increment * 2;
-        offset.z += (Math.random() - 0.5) * increment * 2;
-        break;
-    }
+        case 'random': {
+            offset.x += (Math.random() - 0.5) * increment * 2;
+            offset.y += (Math.random() - 0.5) * increment * 2;
+            offset.z += (Math.random() - 0.5) * increment * 2;
+            break;
+        }
     }
 
     // Clamp to distance limit (the configured total distance is the max)
@@ -309,26 +310,25 @@ export function calculateDrift(config, currentOffset, deltaTime) {
  * @returns {Object} New rotation offset { x, y, z }
  */
 export function calculateRotation(config, currentRotation, time, deltaTime) {
-    const {
-        axis = [0, 1, 0],
-        speed = 0.1,
-        oscillate = false,
-        range = Math.PI / 4
-    } = config;
+    const { axis = [0, 1, 0], speed = 0.1, oscillate = false, range = Math.PI / 4 } = config;
 
     // Normalize axis
     let axisVec = axis;
     if (typeof axis === 'string') {
-        axisVec = axis === 'x' ? [1, 0, 0] :
-            axis === 'y' ? [0, 1, 0] :
-                axis === 'z' ? [0, 0, 1] :
-                    [Math.random(), Math.random(), Math.random()];
+        axisVec =
+            axis === 'x'
+                ? [1, 0, 0]
+                : axis === 'y'
+                  ? [0, 1, 0]
+                  : axis === 'z'
+                    ? [0, 0, 1]
+                    : [Math.random(), Math.random(), Math.random()];
     }
 
     const rotation = {
         x: currentRotation.x || 0,
         y: currentRotation.y || 0,
-        z: currentRotation.z || 0
+        z: currentRotation.z || 0,
     };
 
     if (oscillate) {
@@ -370,43 +370,37 @@ export function calculateRotation(config, currentRotation, time, deltaTime) {
  * material.emissiveIntensity = emissive;
  */
 export function calculateEmissive(config, time) {
-    const {
-        min = 0.5,
-        max = 1.5,
-        frequency = 1,
-        pattern = 'sine',
-        dutyCycle = 0.5
-    } = config;
+    const { min = 0.5, max = 1.5, frequency = 1, pattern = 'sine', dutyCycle = 0.5 } = config;
 
     const range = max - min;
     let t; // 0-1 wave position
 
     switch (pattern) {
-    case 'sine': {
-        const phase = time * frequency * Math.PI * 2;
-        t = (Math.sin(phase) + 1) / 2;
-        break;
-    }
+        case 'sine': {
+            const phase = time * frequency * Math.PI * 2;
+            t = (Math.sin(phase) + 1) / 2;
+            break;
+        }
 
-    case 'sawtooth': {
-        t = (time * frequency) % 1;
-        break;
-    }
+        case 'sawtooth': {
+            t = (time * frequency) % 1;
+            break;
+        }
 
-    case 'triangle': {
-        const phase = (time * frequency) % 1;
-        t = phase < 0.5 ? phase * 2 : 2 - phase * 2;
-        break;
-    }
+        case 'triangle': {
+            const phase = (time * frequency) % 1;
+            t = phase < 0.5 ? phase * 2 : 2 - phase * 2;
+            break;
+        }
 
-    case 'pulse': {
-        const phase = (time * frequency) % 1;
-        t = phase < dutyCycle ? 1 : 0;
-        break;
-    }
+        case 'pulse': {
+            const phase = (time * frequency) % 1;
+            t = phase < dutyCycle ? 1 : 0;
+            break;
+        }
 
-    default:
-        t = 0.5;
+        default:
+            t = 0.5;
     }
 
     return min + t * range;
@@ -449,7 +443,7 @@ export function calculateHoldAnimations(holdConfig, state, time, deltaTime) {
         opacityMod: 1,
         emissive: 1,
         driftOffset: state.driftOffset || { x: 0, y: 0, z: 0 },
-        rotationOffset: state.rotationOffset || { x: 0, y: 0, z: 0 }
+        rotationOffset: state.rotationOffset || { x: 0, y: 0, z: 0 },
     };
 
     if (!holdConfig) return result;
@@ -545,7 +539,9 @@ export function calculateNonUniformScale(behavior, time, progress, velocity = nu
 
             // Velocity-linked scaling (for droplet elongation during fall)
             if (scaling.velocityLink === axis && velocity) {
-                const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+                const speed = Math.sqrt(
+                    velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z
+                );
                 scale += speed * 0.5;
             }
 
@@ -565,14 +561,16 @@ export function calculateNonUniformScale(behavior, time, progress, velocity = nu
 
     // Velocity-stretch mode - elongate in direction of movement (for water droplets)
     if (scaling.mode === 'velocity-stretch' && velocity) {
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+        const speed = Math.sqrt(
+            velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z
+        );
         const stretchFactor = scaling.stretchFactor || 2.0;
-        const minSpeed = scaling.minSpeed || 0.05;  // Very low threshold - stretch almost always
+        const minSpeed = scaling.minSpeed || 0.05; // Very low threshold - stretch almost always
         const maxStretch = scaling.maxStretch || 3.0;
 
         if (speed > minSpeed) {
             // Calculate stretch amount based on speed (more responsive)
-            const speedRange = 1.0;  // Speed at which max stretch is reached
+            const speedRange = 1.0; // Speed at which max stretch is reached
             const normalizedSpeed = Math.min((speed - minSpeed) / speedRange, 1.0);
             const stretch = 1 + normalizedSpeed * (stretchFactor - 1);
             const clampedStretch = Math.min(stretch, maxStretch);
@@ -584,13 +582,13 @@ export function calculateNonUniformScale(behavior, time, progress, velocity = nu
             const velLen = speed > 0.001 ? speed : 1;
             return {
                 x: perpSquash,
-                y: clampedStretch,  // Stretch along Y (will be rotated to velocity dir)
+                y: clampedStretch, // Stretch along Y (will be rotated to velocity dir)
                 z: perpSquash,
                 velocityAxis: {
                     x: velocity.x / velLen,
                     y: velocity.y / velLen,
-                    z: velocity.z / velLen
-                }
+                    z: velocity.z / velLen,
+                },
             };
         }
     }
@@ -617,7 +615,13 @@ export function calculateNonUniformScale(behavior, time, progress, velocity = nu
  * const offset = calculatePhysicsDrift(driftConfig, time, deltaTime, normal);
  * mesh.position.add(new THREE.Vector3(offset.x, offset.y, offset.z));
  */
-export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNormal = null, currentOffset = null) {
+export function calculatePhysicsDrift(
+    driftConfig,
+    time,
+    deltaTime,
+    surfaceNormal = null,
+    currentOffset = null
+) {
     if (!driftConfig) {
         return { x: 0, y: 0, z: 0 };
     }
@@ -632,176 +636,179 @@ export function calculatePhysicsDrift(driftConfig, time, deltaTime, surfaceNorma
     const cappedTime = Math.min(time, maxDriftTime);
 
     switch (driftConfig.direction) {
-    case 'gravity': {
-        // Surface adherence phase - droplets cling before falling
-        const adherenceTime = driftConfig.adherence || 0;
-        if (adherenceTime > 0 && cappedTime < adherenceTime) {
-            // Clinging to surface - minimal drift with slight outward
-            const clingProgress = cappedTime / adherenceTime;
-            const clingStrength = 1 - clingProgress;
-            if (surfaceNormal) {
-                offset.x = surfaceNormal.x * 0.01 * clingStrength;
-                offset.z = surfaceNormal.z * 0.01 * clingStrength;
+        case 'gravity': {
+            // Surface adherence phase - droplets cling before falling
+            const adherenceTime = driftConfig.adherence || 0;
+            if (adherenceTime > 0 && cappedTime < adherenceTime) {
+                // Clinging to surface - minimal drift with slight outward
+                const clingProgress = cappedTime / adherenceTime;
+                const clingStrength = 1 - clingProgress;
+                if (surfaceNormal) {
+                    offset.x = surfaceNormal.x * 0.01 * clingStrength;
+                    offset.z = surfaceNormal.z * 0.01 * clingStrength;
+                }
+            } else {
+                // Falling phase with acceleration
+                const fallTime = cappedTime - adherenceTime;
+                const accel = driftConfig.acceleration || 0.01;
+                const fallSpeed = speed + fallTime * accel;
+                offset.y = -fallSpeed * fallTime;
             }
-        } else {
-            // Falling phase with acceleration
-            const fallTime = cappedTime - adherenceTime;
-            const accel = driftConfig.acceleration || 0.01;
-            const fallSpeed = speed + fallTime * accel;
-            offset.y = -fallSpeed * fallTime;
-        }
-        break;
-    }
-
-    case 'parabolic': {
-        // Realistic projectile motion - initial horizontal velocity + gravity
-        // Creates natural arcing trajectories for splashing water
-
-        // Generate consistent random angle per element using currentOffset as seed
-        // This ensures each droplet has its own trajectory
-        const seed = currentOffset ?
-            Math.abs(currentOffset.x * 1000 + currentOffset.z * 100) :
-            Math.random() * 1000;
-        const randomAngle = (seed % 628) / 100;  // 0 to 2*PI, deterministic per element
-        const randomSpread = 0.5 + (seed % 100) / 200;  // 0.5 to 1.0 spread variation
-
-        // Use surface normal if available, otherwise use random outward direction
-        let baseVelX, baseVelZ;
-        if (surfaceNormal && (Math.abs(surfaceNormal.x) > 0.01 || Math.abs(surfaceNormal.z) > 0.01)) {
-            baseVelX = surfaceNormal.x;
-            baseVelZ = surfaceNormal.z;
-        } else {
-            // Random outward direction when no surface normal
-            baseVelX = Math.cos(randomAngle);
-            baseVelZ = Math.sin(randomAngle);
+            break;
         }
 
-        const horizontalSpeed = speed * 8 * randomSpread;
-        const initialVelX = driftConfig.initialVelocity?.x ?? baseVelX * horizontalSpeed;
-        const initialVelY = driftConfig.initialVelocity?.y ?? speed * 6;
-        const initialVelZ = driftConfig.initialVelocity?.z ?? baseVelZ * horizontalSpeed;
-        const gravity = driftConfig.gravity || 0.15;
+        case 'parabolic': {
+            // Realistic projectile motion - initial horizontal velocity + gravity
+            // Creates natural arcing trajectories for splashing water
 
-        // x(t) = v0x * t
-        // y(t) = v0y * t - 0.5 * g * t^2
-        // z(t) = v0z * t
-        offset.x = initialVelX * cappedTime;
-        offset.y = initialVelY * cappedTime - 0.5 * gravity * cappedTime * cappedTime;
-        offset.z = initialVelZ * cappedTime;
+            // Generate consistent random angle per element using currentOffset as seed
+            // This ensures each droplet has its own trajectory
+            const seed = currentOffset
+                ? Math.abs(currentOffset.x * 1000 + currentOffset.z * 100)
+                : Math.random() * 1000;
+            const randomAngle = (seed % 628) / 100; // 0 to 2*PI, deterministic per element
+            const randomSpread = 0.5 + (seed % 100) / 200; // 0.5 to 1.0 spread variation
 
-        // Add slight noise for natural variation (use uncapped time for smooth variation)
-        if (noise > 0) {
-            const noiseScale = noise * 0.05;
-            offset.x += Math.sin(time * 3.1 + seed * 0.1) * noiseScale;
-            offset.z += Math.cos(time * 2.7 + seed * 0.1) * noiseScale;
-        }
-        break;
-    }
+            // Use surface normal if available, otherwise use random outward direction
+            let baseVelX, baseVelZ;
+            if (
+                surfaceNormal &&
+                (Math.abs(surfaceNormal.x) > 0.01 || Math.abs(surfaceNormal.z) > 0.01)
+            ) {
+                baseVelX = surfaceNormal.x;
+                baseVelZ = surfaceNormal.z;
+            } else {
+                // Random outward direction when no surface normal
+                baseVelX = Math.cos(randomAngle);
+                baseVelZ = Math.sin(randomAngle);
+            }
 
-    case 'rising': {
-        // Buoyant rise with optional acceleration
-        let riseSpeed = speed;
-        if (driftConfig.buoyancy) {
-            riseSpeed += cappedTime * 0.01;  // Accelerates upward (capped)
-        }
-        offset.y = riseSpeed * cappedTime;
+            const horizontalSpeed = speed * 8 * randomSpread;
+            const initialVelX = driftConfig.initialVelocity?.x ?? baseVelX * horizontalSpeed;
+            const initialVelY = driftConfig.initialVelocity?.y ?? speed * 6;
+            const initialVelZ = driftConfig.initialVelocity?.z ?? baseVelZ * horizontalSpeed;
+            const gravity = driftConfig.gravity || 0.15;
 
-        // Wobbly horizontal drift (use uncapped time for continuous wobble)
-        if (noise > 0) {
-            offset.x = Math.sin(time * 2.3) * noise * 0.1;
-            offset.z = Math.cos(time * 1.7) * noise * 0.1;
-        }
-        break;
-    }
+            // x(t) = v0x * t
+            // y(t) = v0y * t - 0.5 * g * t^2
+            // z(t) = v0z * t
+            offset.x = initialVelX * cappedTime;
+            offset.y = initialVelY * cappedTime - 0.5 * gravity * cappedTime * cappedTime;
+            offset.z = initialVelZ * cappedTime;
 
-    case 'outward-flat': {
-        // Expand in XZ plane only (for rings, cracks, patches)
-        const expandDist = speed * cappedTime;
-        if (surfaceNormal) {
-            // Project outward in surface plane
-            offset.x = surfaceNormal.x * expandDist;
-            offset.z = surfaceNormal.z * expandDist;
-        } else {
-            // Default radial expansion
-            const angle = currentOffset ?
-                Math.atan2(currentOffset.z, currentOffset.x) :
-                Math.random() * Math.PI * 2;
-            offset.x = Math.cos(angle) * expandDist;
-            offset.z = Math.sin(angle) * expandDist;
+            // Add slight noise for natural variation (use uncapped time for smooth variation)
+            if (noise > 0) {
+                const noiseScale = noise * 0.05;
+                offset.x += Math.sin(time * 3.1 + seed * 0.1) * noiseScale;
+                offset.z += Math.cos(time * 2.7 + seed * 0.1) * noiseScale;
+            }
+            break;
         }
-        // No Y drift
-        break;
-    }
 
-    case 'outward': {
-        // Radial expansion in all directions
-        const expandDist = speed * cappedTime;
-        if (surfaceNormal) {
-            offset.x = surfaceNormal.x * expandDist;
-            offset.y = surfaceNormal.y * expandDist;
-            offset.z = surfaceNormal.z * expandDist;
-        }
-        if (noise > 0) {
-            offset.x += (Math.random() - 0.5) * noise * expandDist;
-            offset.y += (Math.random() - 0.5) * noise * expandDist;
-            offset.z += (Math.random() - 0.5) * noise * expandDist;
-        }
-        break;
-    }
+        case 'rising': {
+            // Buoyant rise with optional acceleration
+            let riseSpeed = speed;
+            if (driftConfig.buoyancy) {
+                riseSpeed += cappedTime * 0.01; // Accelerates upward (capped)
+            }
+            offset.y = riseSpeed * cappedTime;
 
-    case 'inward': {
-        // Contract toward center (for void effects)
-        const contractDist = speed * cappedTime;
-        if (surfaceNormal) {
-            // Move opposite to surface normal (toward mascot center)
-            offset.x = -surfaceNormal.x * contractDist;
-            offset.y = -surfaceNormal.y * contractDist;
-            offset.z = -surfaceNormal.z * contractDist;
+            // Wobbly horizontal drift (use uncapped time for continuous wobble)
+            if (noise > 0) {
+                offset.x = Math.sin(time * 2.3) * noise * 0.1;
+                offset.z = Math.cos(time * 1.7) * noise * 0.1;
+            }
+            break;
         }
-        if (noise > 0) {
-            offset.x += (Math.random() - 0.5) * noise * contractDist;
-            offset.y += (Math.random() - 0.5) * noise * contractDist;
-            offset.z += (Math.random() - 0.5) * noise * contractDist;
-        }
-        break;
-    }
 
-    case 'down': {
-        // Simple downward movement (gravity alias without adherence)
-        offset.y = -speed * cappedTime;
-        if (noise > 0) {
-            // Use uncapped time for continuous wobble
-            offset.x = Math.sin(time * 2.1) * noise * 0.1;
-            offset.z = Math.cos(time * 1.9) * noise * 0.1;
+        case 'outward-flat': {
+            // Expand in XZ plane only (for rings, cracks, patches)
+            const expandDist = speed * cappedTime;
+            if (surfaceNormal) {
+                // Project outward in surface plane
+                offset.x = surfaceNormal.x * expandDist;
+                offset.z = surfaceNormal.z * expandDist;
+            } else {
+                // Default radial expansion
+                const angle = currentOffset
+                    ? Math.atan2(currentOffset.z, currentOffset.x)
+                    : Math.random() * Math.PI * 2;
+                offset.x = Math.cos(angle) * expandDist;
+                offset.z = Math.sin(angle) * expandDist;
+            }
+            // No Y drift
+            break;
         }
-        break;
-    }
 
-    case 'tangent': {
-        // Flow along surface (for waves, vines)
-        const tangentDist = speed * cappedTime;
-        // Surface adherence keeps it close
-        if (driftConfig.adherence && surfaceNormal) {
-            offset.x = -surfaceNormal.z * tangentDist;  // Perpendicular to normal
-            offset.z = surfaceNormal.x * tangentDist;
+        case 'outward': {
+            // Radial expansion in all directions
+            const expandDist = speed * cappedTime;
+            if (surfaceNormal) {
+                offset.x = surfaceNormal.x * expandDist;
+                offset.y = surfaceNormal.y * expandDist;
+                offset.z = surfaceNormal.z * expandDist;
+            }
+            if (noise > 0) {
+                offset.x += (Math.random() - 0.5) * noise * expandDist;
+                offset.y += (Math.random() - 0.5) * noise * expandDist;
+                offset.z += (Math.random() - 0.5) * noise * expandDist;
+            }
+            break;
         }
-        if (noise > 0) {
-            // Use uncapped time for continuous wobble
-            offset.x += Math.sin(time * 1.5) * noise * 0.05;
-            offset.z += Math.cos(time * 1.8) * noise * 0.05;
-        }
-        break;
-    }
 
-    case 'random': {
-        // Chaotic movement (sparks, particles)
-        if (noise > 0) {
-            offset.x = (Math.random() - 0.5) * speed * deltaTime * 10;
-            offset.y = (Math.random() - 0.5) * speed * deltaTime * 10;
-            offset.z = (Math.random() - 0.5) * speed * deltaTime * 10;
+        case 'inward': {
+            // Contract toward center (for void effects)
+            const contractDist = speed * cappedTime;
+            if (surfaceNormal) {
+                // Move opposite to surface normal (toward mascot center)
+                offset.x = -surfaceNormal.x * contractDist;
+                offset.y = -surfaceNormal.y * contractDist;
+                offset.z = -surfaceNormal.z * contractDist;
+            }
+            if (noise > 0) {
+                offset.x += (Math.random() - 0.5) * noise * contractDist;
+                offset.y += (Math.random() - 0.5) * noise * contractDist;
+                offset.z += (Math.random() - 0.5) * noise * contractDist;
+            }
+            break;
         }
-        break;
-    }
+
+        case 'down': {
+            // Simple downward movement (gravity alias without adherence)
+            offset.y = -speed * cappedTime;
+            if (noise > 0) {
+                // Use uncapped time for continuous wobble
+                offset.x = Math.sin(time * 2.1) * noise * 0.1;
+                offset.z = Math.cos(time * 1.9) * noise * 0.1;
+            }
+            break;
+        }
+
+        case 'tangent': {
+            // Flow along surface (for waves, vines)
+            const tangentDist = speed * cappedTime;
+            // Surface adherence keeps it close
+            if (driftConfig.adherence && surfaceNormal) {
+                offset.x = -surfaceNormal.z * tangentDist; // Perpendicular to normal
+                offset.z = surfaceNormal.x * tangentDist;
+            }
+            if (noise > 0) {
+                // Use uncapped time for continuous wobble
+                offset.x += Math.sin(time * 1.5) * noise * 0.05;
+                offset.z += Math.cos(time * 1.8) * noise * 0.05;
+            }
+            break;
+        }
+
+        case 'random': {
+            // Chaotic movement (sparks, particles)
+            if (noise > 0) {
+                offset.x = (Math.random() - 0.5) * speed * deltaTime * 10;
+                offset.y = (Math.random() - 0.5) * speed * deltaTime * 10;
+                offset.z = (Math.random() - 0.5) * speed * deltaTime * 10;
+            }
+            break;
+        }
     }
 
     return offset;
@@ -826,27 +833,28 @@ export function calculateOpacityLink(opacityLink, scale, time, seed = 0) {
     }
 
     switch (opacityLink) {
-    case 'inverse-scale': {
-        // Fade as scale increases (for expanding rings, bursts)
-        const avgScale = (scale.x + scale.y + scale.z) / 3;
-        // Map scale 1-1.7 to opacity 1-0 (fade faster to avoid pulse oscillations
-        // bringing opacity back up when rings are at full size)
-        return Math.max(0, Math.min(1, (1.7 - avgScale) / 0.7));
-    }
+        case 'inverse-scale': {
+            // Fade as scale increases (for expanding rings, bursts)
+            const avgScale = (scale.x + scale.y + scale.z) / 3;
+            // Map scale 1-1.7 to opacity 1-0 (fade faster to avoid pulse oscillations
+            // bringing opacity back up when rings are at full size)
+            return Math.max(0, Math.min(1, (1.7 - avgScale) / 0.7));
+        }
 
-    case 'flicker': {
-        // Random flicker (for embers, sparks, electricity)
-        const flickerFreq = 8;
-        const flickerAmp = 0.3;
-        const seededNoise = Math.sin(time * flickerFreq + seed * 17.3) *
-                            Math.sin(time * flickerFreq * 1.7 + seed * 31.1);
-        return Math.max(0.2, 1 - Math.abs(seededNoise) * flickerAmp);
-    }
+        case 'flicker': {
+            // Random flicker (for embers, sparks, electricity)
+            const flickerFreq = 8;
+            const flickerAmp = 0.3;
+            const seededNoise =
+                Math.sin(time * flickerFreq + seed * 17.3) *
+                Math.sin(time * flickerFreq * 1.7 + seed * 31.1);
+            return Math.max(0.2, 1 - Math.abs(seededNoise) * flickerAmp);
+        }
 
-    case 'dissipate': {
-        // Gradual fade over time (for smoke rising)
-        return Math.max(0, 1 - time * 0.3);
-    }
+        case 'dissipate': {
+            // Gradual fade over time (for smoke rising)
+            return Math.max(0, 1 - time * 0.3);
+        }
     }
 
     return 1;
@@ -865,5 +873,5 @@ export default {
     // Phase 11 additions
     calculateNonUniformScale,
     calculatePhysicsDrift,
-    calculateOpacityLink
+    calculateOpacityLink,
 };

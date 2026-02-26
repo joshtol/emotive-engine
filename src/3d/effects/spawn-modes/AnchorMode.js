@@ -39,15 +39,19 @@ export function parseAnchorConfig(config, resolveLandmark) {
             z: anchor.offset?.z || 0,
         },
         orientation: normalizeOrientation(anchor.orientation) || 'flat',
-        bob: anchor.bob ? {
-            amplitude: anchor.bob.amplitude || 0.02,
-            frequency: anchor.bob.frequency || 0.5,
-        } : null,
-        wander: anchor.wander ? {
-            radius: anchor.wander.radius || 0.1,
-            speedX: anchor.wander.speedX || 0.3,
-            speedZ: anchor.wander.speedZ || 0.2,
-        } : null,
+        bob: anchor.bob
+            ? {
+                  amplitude: anchor.bob.amplitude || 0.02,
+                  frequency: anchor.bob.frequency || 0.5,
+              }
+            : null,
+        wander: anchor.wander
+            ? {
+                  radius: anchor.wander.radius || 0.1,
+                  speedX: anchor.wander.speedX || 0.3,
+                  speedZ: anchor.wander.speedZ || 0.2,
+              }
+            : null,
 
         // Camera offset: push element toward camera by N × mascotRadius
         // Use for billboard elements that would otherwise clip into mascot geometry
@@ -70,7 +74,7 @@ export function parseAnchorConfig(config, resolveLandmark) {
         // If both are equal or only scale is set, no interpolation occurs
         startScale: anchor.startScale ?? 1.0,
         endScale: anchor.endScale ?? 1.0,
-        scaleEasing: anchor.scaleEasing || 'easeOutExpo',  // Default to explosive ease
+        scaleEasing: anchor.scaleEasing || 'easeOutExpo', // Default to explosive ease
     };
 }
 
@@ -82,13 +86,14 @@ export function parseAnchorConfig(config, resolveLandmark) {
  */
 export function calculateAnchorPosition(anchorConfig, time = 0) {
     const baseY = anchorConfig.landmarkY + anchorConfig.offset.y;
-    let {x} = anchorConfig.offset;
+    let { x } = anchorConfig.offset;
     let y = baseY;
-    let {z} = anchorConfig.offset;
+    let { z } = anchorConfig.offset;
 
     // Apply bob animation if configured (vertical oscillation)
     if (anchorConfig.bob) {
-        const bobOffset = Math.sin(time * anchorConfig.bob.frequency * Math.PI * 2) * anchorConfig.bob.amplitude;
+        const bobOffset =
+            Math.sin(time * anchorConfig.bob.frequency * Math.PI * 2) * anchorConfig.bob.amplitude;
         y = baseY + bobOffset;
     }
 
@@ -104,7 +109,7 @@ export function calculateAnchorPosition(anchorConfig, time = 0) {
         x,
         y,
         z,
-        baseY,  // Store for update loop
+        baseY, // Store for update loop
     };
 }
 
@@ -115,20 +120,20 @@ export function calculateAnchorPosition(anchorConfig, time = 0) {
  */
 export function getAnchorOrientation(orientation) {
     switch (orientation) {
-    case 'flat':
-        // Horizontal ring (like a halo/crown) - rotate +90° around X
-        return { x: Math.PI / 2, y: 0, z: 0 };
-    case 'vertical':
-        // Standing upright
-        return { x: 0, y: 0, z: 0 };
-    case 'radial':
-        // Tilted outward ~45°
-        return { x: Math.PI / 4, y: 0, z: 0 };
-    case 'camera':
-        // Start upright, will be updated per-frame to face camera
-        return { x: 0, y: 0, z: 0 };
-    default:
-        return { x: 0, y: 0, z: 0 };
+        case 'flat':
+            // Horizontal ring (like a halo/crown) - rotate +90° around X
+            return { x: Math.PI / 2, y: 0, z: 0 };
+        case 'vertical':
+            // Standing upright
+            return { x: 0, y: 0, z: 0 };
+        case 'radial':
+            // Tilted outward ~45°
+            return { x: Math.PI / 4, y: 0, z: 0 };
+        case 'camera':
+            // Start upright, will be updated per-frame to face camera
+            return { x: 0, y: 0, z: 0 };
+        default:
+            return { x: 0, y: 0, z: 0 };
     }
 }
 
@@ -162,9 +167,9 @@ export class AnchorMode extends BaseSpawnMode {
      */
     positionElement(mesh, config, _index) {
         // Calculate final position
-        const {x} = config.offset;
+        const { x } = config.offset;
         const y = config.landmarkY + config.offset.y;
-        const {z} = config.offset;
+        const { z } = config.offset;
 
         mesh.position.set(x, y, z);
 
@@ -180,7 +185,8 @@ export class AnchorMode extends BaseSpawnMode {
 
         // Mark spawn mode type
         mesh.userData.spawnModeType = 'anchor';
-        mesh.userData.requiresSpawnModeUpdate = config.bob !== null || config.orientation === 'camera';
+        mesh.userData.requiresSpawnModeUpdate =
+            config.bob !== null || config.orientation === 'camera';
     }
 
     /**
@@ -201,13 +207,14 @@ export class AnchorMode extends BaseSpawnMode {
      * @param {number} gestureProgress - Current gesture progress (0-1)
      */
     updateElement(mesh, _deltaTime, _gestureProgress) {
-        const {anchor} = mesh.userData;
+        const { anchor } = mesh.userData;
         if (!anchor) return;
 
         // Apply bob animation
         if (anchor.bob) {
             const time = this.spawner?.time || 0;
-            const bobOffset = Math.sin(time * anchor.bob.frequency * Math.PI * 2) * anchor.bob.amplitude;
+            const bobOffset =
+                Math.sin(time * anchor.bob.frequency * Math.PI * 2) * anchor.bob.amplitude;
             mesh.position.y = anchor.baseY + bobOffset;
         }
 

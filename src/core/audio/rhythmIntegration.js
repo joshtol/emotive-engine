@@ -2,27 +2,27 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Rhythm Integration Module
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * @fileoverview Integration layer between rhythm engine and existing subsystems
  * @author Emotive Engine Team
  * @module core/rhythmIntegration
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║ CONCEPT                                                                           
+ * ║ CONCEPT
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ This module connects the rhythm engine to existing subsystems without modifying   
- * ║ their core behavior. It reads rhythm configurations from individual files and     
- * ║ applies timing modulations based on musical events.                              
+ * ║ This module connects the rhythm engine to existing subsystems without modifying
+ * ║ their core behavior. It reads rhythm configurations from individual files and
+ * ║ applies timing modulations based on musical events.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * INTEGRATION POINTS:
  * • Particle System - Emission timing, behavior modulation
  * • Gesture System - Animation sync, duration adjustment
  * • Emotion System - Intensity mapping, transition timing
  * • Renderer - Glow pulsing, visual effects sync
- * 
+ *
  * ┌──────────────────────────────────────────────────────────────────────────────────┐
  * │  MODULAR RHYTHM FLOW                                                             │
  * │                                                                                   │
@@ -45,20 +45,19 @@ class RhythmIntegration {
         this.activeModulations = new Map();
         this._inputEvaluator = null;
     }
-    
+
     /**
      * Initialize rhythm integration
      */
     initialize() {
         this.adapter = rhythmEngine.getAdapter();
         this.enabled = true;
-        
+
         // Subscribe to rhythm events
         this.adapter.onBeat(this.handleBeat.bind(this));
         this.adapter.onBar(this.handleBar.bind(this));
-        
     }
-    
+
     /**
      * Update BPM from detected audio
      * @param {number} newBPM - Detected BPM from audio analysis
@@ -72,7 +71,6 @@ class RhythmIntegration {
 
             // Auto-start rhythm engine if not running
             if (!rhythmEngine.isRunning) {
-
                 // Auto-start the rhythm engine for gesture sync
                 this.start(newBPM, 'straight');
 
@@ -84,42 +82,40 @@ class RhythmIntegration {
 
                 return;
             }
-            
+
             // If running, always update BPM regardless of whether it changed
             // This ensures new tracks get their correct BPM
             rhythmEngine.setBPM(newBPM);
-            
+
             // BPM is now shown visually through the beat histogram bars
         }
     }
-    
+
     /**
      * Register a subsystem's rhythm configuration
      * Called when loading gestures, emotions, behaviors, etc.
      */
     registerConfig(type, name, config) {
         if (!config.rhythm || !config.rhythm.enabled) return;
-        
+
         const key = `${type}:${name}`;
         this.subsystemConfigs.set(key, {
             type,
             name,
             rhythmConfig: config.rhythm,
-            originalConfig: config
+            originalConfig: config,
         });
-        
     }
-    
+
     /**
      * Apply rhythm modulation to a gesture
      */
     applyGestureRhythm(gesture, _particle, _progress, _dt) {
         if (!this.enabled || !gesture.rhythm?.enabled) return {};
-        
 
         const rhythmConfig = gesture.rhythm;
         const modulation = {};
-        
+
         // Apply amplitude sync
         if (rhythmConfig.amplitudeSync) {
             const sync = rhythmConfig.amplitudeSync;
@@ -130,7 +126,7 @@ class RhythmIntegration {
             );
             modulation.amplitudeMultiplier = beatSync;
         }
-        
+
         // Apply wobble sync
         if (rhythmConfig.wobbleSync) {
             const sync = rhythmConfig.wobbleSync;
@@ -140,7 +136,7 @@ class RhythmIntegration {
                 modulation.wobbleMultiplier = 1;
             }
         }
-        
+
         // Apply accent response
         if (rhythmConfig.accentResponse?.enabled) {
             const accentedValue = this.adapter.getAccentedValue(
@@ -149,30 +145,30 @@ class RhythmIntegration {
             );
             modulation.accentMultiplier = accentedValue;
         }
-        
+
         // Apply pattern overrides
         const currentPattern = this.adapter.getPattern();
         if (currentPattern && rhythmConfig.patternOverrides?.[currentPattern]) {
             Object.assign(modulation, rhythmConfig.patternOverrides[currentPattern]);
         }
-        
+
         return modulation;
     }
-    
+
     /**
      * Apply rhythm modulation to particle emission
      */
     applyParticleRhythm(emotionState, _particleSystem) {
         if (!this.enabled || !emotionState.rhythm?.enabled) return {};
-        
+
         const timeInfo = this.adapter.getTimeInfo();
         const rhythmConfig = emotionState.rhythm;
         const modulation = {};
-        
+
         // Particle emission sync
         if (rhythmConfig.particleEmission) {
             const emission = rhythmConfig.particleEmission;
-            
+
             if (emission.syncMode === 'beat' && this.adapter.isOnBeat(0.1)) {
                 // Emit burst on beat
                 modulation.emitBurst = emission.burstSize || 3;
@@ -181,7 +177,7 @@ class RhythmIntegration {
                 modulation.emissionRate = emission.offBeatRate;
             }
         }
-        
+
         // Glow sync
         if (rhythmConfig.glowSync) {
             const glow = rhythmConfig.glowSync;
@@ -192,7 +188,7 @@ class RhythmIntegration {
             );
             modulation.glowIntensity = glowIntensity;
         }
-        
+
         // Breathing sync
         if (rhythmConfig.breathSync?.mode === 'bars') {
             const breath = rhythmConfig.breathSync;
@@ -200,83 +196,86 @@ class RhythmIntegration {
             const breathProgress = barsElapsed / breath.barsPerBreath;
             modulation.breathPhase = breathProgress * Math.PI * 2;
         }
-        
+
         return modulation;
     }
-    
+
     /**
      * Apply rhythm to particle behavior
      */
     applyBehaviorRhythm(behavior, _particle, _dt) {
         if (!this.enabled || !behavior.rhythm?.enabled) return {};
-        
+
         const timeInfo = this.adapter.getTimeInfo();
         const rhythmConfig = behavior.rhythm;
         const modulation = {};
-        
+
         // Glitch timing for glitchy behavior
         if (rhythmConfig.glitchTiming) {
             const glitch = rhythmConfig.glitchTiming;
             const isOnSubdivision = this.adapter.isOnSubdivision(glitch.subdivision, 0.05);
-            
+
             if (isOnSubdivision && Math.random() < glitch.probability) {
-                const intensity = this.adapter.isOnBeat() 
-                    ? glitch.intensityOnBeat 
+                const intensity = this.adapter.isOnBeat()
+                    ? glitch.intensityOnBeat
                     : glitch.intensityOffBeat;
                 modulation.triggerGlitch = true;
                 modulation.glitchIntensity = intensity;
             }
         }
-        
+
         // Orbital rhythm
         if (rhythmConfig.orbitRhythm) {
             const orbit = rhythmConfig.orbitRhythm;
-            
+
             if (orbit.baseSpeed === 'tempo') {
                 modulation.speedMultiplier = this.adapter.getBPM() / 120; // Normalize to 120 BPM
             }
-            
+
             if (orbit.beatAcceleration && this.adapter.isOnBeat(0.1)) {
                 modulation.speedBoost = orbit.beatAcceleration;
             }
-            
+
             if (orbit.barReset && timeInfo.beatInBar === 0) {
                 modulation.resetOrbit = true;
             }
         }
-        
+
         // Stutter sync
         if (rhythmConfig.stutterSync) {
             const stutter = rhythmConfig.stutterSync;
             const pattern = this.adapter.getPattern();
-            
+
             if (pattern && stutter.patterns?.[pattern]) {
                 const patternConfig = stutter.patterns[pattern];
-                
+
                 if (patternConfig.freezeOnDrop && timeInfo.beatInBar === 2) {
                     modulation.freeze = true;
                     modulation.freezeDuration = patternConfig.dropDuration;
-                } else if (patternConfig.randomFreeze && Math.random() < patternConfig.randomFreeze) {
+                } else if (
+                    patternConfig.randomFreeze &&
+                    Math.random() < patternConfig.randomFreeze
+                ) {
                     modulation.freeze = true;
                     modulation.freezeDuration = patternConfig.duration;
                 }
             }
         }
-        
+
         return modulation;
     }
-    
+
     /**
      * Handle beat event
      */
     handleBeat(beatInfo) {
         // Store beat info for subsystems to access
         this.lastBeatInfo = beatInfo;
-        
+
         // Could trigger specific effects here if needed
         // But mainly subsystems will query rhythm state during their update
     }
-    
+
     /**
      * Handle bar event
      */
@@ -284,31 +283,31 @@ class RhythmIntegration {
         // Store bar info for subsystems to access
         this.lastBarInfo = barInfo;
     }
-    
+
     /**
      * Get duration adjusted for musical time
      */
     getMusicalDuration(rhythmConfig, originalDuration) {
         if (!this.enabled || !rhythmConfig?.durationSync) return originalDuration;
-        
+
         const sync = rhythmConfig.durationSync;
-        
+
         if (sync.mode === 'bars') {
             return this.adapter.beatsToMs(sync.bars * 4); // Assuming 4/4 time
         } else if (sync.mode === 'beats') {
             return this.adapter.beatsToMs(sync.beats);
         }
-        
+
         return originalDuration;
     }
-    
+
     /**
      * Check if rhythm is enabled globally
      */
     isEnabled() {
         return this.enabled && this.adapter.isPlaying();
     }
-    
+
     /**
      * Start rhythm playback
      */
@@ -318,7 +317,7 @@ class RhythmIntegration {
         rhythmEngine.start();
         this.enabled = true;
     }
-    
+
     /**
      * Stop rhythm playback
      */
@@ -329,14 +328,14 @@ class RhythmIntegration {
         this.bpmLocked = false;
         this.lockedBPM = null;
     }
-    
+
     /**
      * Set rhythm pattern
      */
     setPattern(pattern) {
         rhythmEngine.setPattern(pattern);
     }
-    
+
     /**
      * Set BPM
      */
@@ -348,7 +347,7 @@ class RhythmIntegration {
             // BPM locking logging removed for production
         }
     }
-    
+
     /**
      * Resample BPM - unlocks detection for one update
      */
@@ -357,19 +356,19 @@ class RhythmIntegration {
         this.bpmLocked = false;
         this.lockedBPM = null;
     }
-    
+
     /**
      * Set time signature from detected pattern
      */
     setTimeSignature(signature) {
         this.timeSignature = signature;
-        
+
         // Update UI if available
         const timeSigDisplay = document.getElementById('time-sig-display');
         if (timeSigDisplay) {
             timeSigDisplay.textContent = signature;
         }
-        
+
         // Could update rhythm patterns based on time signature here
         // For example, switch to waltz pattern for 3/4
         if (signature === '3/4' && rhythmEngine.getPattern() !== 'waltz') {
@@ -377,7 +376,7 @@ class RhythmIntegration {
             // rhythmEngine.setPattern('waltz');
         }
     }
-    
+
     /**
      * Get (or lazily create) the rhythm input evaluator.
      * @param {Object} [config] - Optional config overrides
@@ -401,7 +400,7 @@ class RhythmIntegration {
         let bpm = this.adapter.getBPM();
         if (stateMachine && typeof stateMachine.getCurrentRhythmModifiers === 'function') {
             const mods = stateMachine.getCurrentRhythmModifiers();
-            if (mods.tempoShift) bpm *= (1 + mods.tempoShift);
+            if (mods.tempoShift) bpm *= 1 + mods.tempoShift;
         }
         return Math.round(bpm * 100) / 100;
     }

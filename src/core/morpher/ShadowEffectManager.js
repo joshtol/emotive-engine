@@ -63,14 +63,18 @@ export class ShadowEffectManager {
 
         // Default to circle if currentShape is somehow null/undefined
         const shapeName = state.currentShape || 'circle';
-        const currentDef = shapeCache && shapeCache.isInitialized ?
-            shapeCache.getShape(shapeName) : SHAPE_DEFINITIONS[shapeName];
-        const targetDef = state.targetShape ? (shapeCache && shapeCache.isInitialized ?
-            shapeCache.getShape(state.targetShape) : SHAPE_DEFINITIONS[state.targetShape]) : null;
+        const currentDef =
+            shapeCache && shapeCache.isInitialized
+                ? shapeCache.getShape(shapeName)
+                : SHAPE_DEFINITIONS[shapeName];
+        const targetDef = state.targetShape
+            ? shapeCache && shapeCache.isInitialized
+                ? shapeCache.getShape(state.targetShape)
+                : SHAPE_DEFINITIONS[state.targetShape]
+            : null;
 
         const currentShadow = currentDef?.shadow || { type: 'none' };
         const targetShadow = targetDef?.shadow || null;
-
 
         // If not transitioning, return current shadow
         if (!state.isTransitioning || !targetShadow) {
@@ -80,9 +84,12 @@ export class ShadowEffectManager {
         // Handle eclipse progressions and other special transitions
         const easedProgress = state.morphProgress;
 
-
         // FROM MOON - ALWAYS slide shadow away first (other shapes)
-        if (state.transitionConfig && state.transitionConfig.type === 'from_moon' && state.transitionConfig.slideOutCrescent) {
+        if (
+            state.transitionConfig &&
+            state.transitionConfig.type === 'from_moon' &&
+            state.transitionConfig.slideOutCrescent
+        ) {
             return this._calculateMoonSlideOut(easedProgress, state.transitionConfig);
         }
 
@@ -119,15 +126,16 @@ export class ShadowEffectManager {
 
         // Standard transition
         if (currentShadow.type !== 'none' || targetShadow.type !== 'none') {
-            const coverage = (currentShadow.coverage || 0) +
-                           ((targetShadow.coverage || 0) - (currentShadow.coverage || 0)) * easedProgress;
+            const coverage =
+                (currentShadow.coverage || 0) +
+                ((targetShadow.coverage || 0) - (currentShadow.coverage || 0)) * easedProgress;
 
             return {
                 type: targetShadow.type !== 'none' ? targetShadow.type : currentShadow.type,
                 coverage,
                 angle: targetShadow.angle || currentShadow.angle || 0,
                 softness: targetShadow.softness || currentShadow.softness || 0.2,
-                progress: easedProgress
+                progress: easedProgress,
             };
         }
 
@@ -144,11 +152,11 @@ export class ShadowEffectManager {
         // PHASE 1: Shadow slides away
         if (easedProgress < slideRatio) {
             const slideProgress = easedProgress / slideRatio; // 0 to 1 during slide
-            const angle = -30 * Math.PI / 180; // Moon shadow angle (bottom-left)
+            const angle = (-30 * Math.PI) / 180; // Moon shadow angle (bottom-left)
 
             // Shadow continues sliding in its direction (away to bottom-left)
-            const startOffset = 0.7;  // Where moon shadow normally sits
-            const endOffset = 2.5;    // Far off screen
+            const startOffset = 0.7; // Where moon shadow normally sits
+            const endOffset = 2.5; // Far off screen
             const currentOffset = startOffset + (endOffset - startOffset) * slideProgress;
 
             const offsetX = Math.cos(angle) * currentOffset;
@@ -163,7 +171,7 @@ export class ShadowEffectManager {
                 angle: -30,
                 offset: currentOffset,
                 shadowX: offsetX,
-                shadowY: offsetY
+                shadowY: offsetY,
             };
         }
 
@@ -176,7 +184,7 @@ export class ShadowEffectManager {
      * @private
      */
     _calculateMoonToLunar(easedProgress, transitionConfig) {
-        const angle = transitionConfig.startAngle * Math.PI / 180;
+        const angle = (transitionConfig.startAngle * Math.PI) / 180;
         const offsetProgress = 1 - easedProgress; // Goes from 1 to 0 (crescent position to center)
         const offsetX = Math.cos(angle) * 0.7 * offsetProgress;
         const offsetY = Math.sin(angle) * 0.7 * offsetProgress;
@@ -193,12 +201,12 @@ export class ShadowEffectManager {
                 angle: transitionConfig.startAngle,
                 offset: 0.7 * offsetProgress,
                 shadowX: offsetX,
-                shadowY: offsetY
+                shadowY: offsetY,
             };
         } else {
             // Smooth blend to lunar shadow
             const blendPhase = (easedProgress - 0.6) / 0.4; // 0 to 1 for last 40%
-            const smoothBlend = Math.sin(blendPhase * Math.PI / 2); // Smooth S-curve
+            const smoothBlend = Math.sin((blendPhase * Math.PI) / 2); // Smooth S-curve
 
             return {
                 type: 'lunar',
@@ -207,7 +215,7 @@ export class ShadowEffectManager {
                 shadowX: offsetX * (1 - smoothBlend), // Smooth center
                 shadowY: offsetY * (1 - smoothBlend),
                 diffusion: smoothBlend,
-                shadowProgress: easedProgress
+                shadowProgress: easedProgress,
             };
         }
     }
@@ -224,8 +232,8 @@ export class ShadowEffectManager {
 
         // Last 70%: Shadow smoothly enters and transforms
         const shadowProgress = (easedProgress - 0.3) / 0.7; // 0 to 1 for shadow animation
-        const smoothProgress = Math.sin(shadowProgress * Math.PI / 2); // Smooth ease-in
-        const angle = transitionConfig.startAngle * Math.PI / 180;
+        const smoothProgress = Math.sin((shadowProgress * Math.PI) / 2); // Smooth ease-in
+        const angle = (transitionConfig.startAngle * Math.PI) / 180;
         const offsetProgress = 1 - smoothProgress; // Goes from 1 to 0
         const offsetX = Math.cos(angle) * 0.7 * offsetProgress;
         const offsetY = Math.sin(angle) * 0.7 * offsetProgress;
@@ -240,12 +248,12 @@ export class ShadowEffectManager {
                 angle: transitionConfig.startAngle,
                 offset: 0.7 * offsetProgress,
                 shadowX: offsetX,
-                shadowY: offsetY
+                shadowY: offsetY,
             };
         } else {
             // Smooth blend to lunar
             const blendProgress = (shadowProgress - 0.7) / 0.3; // Last 30% for blend
-            const smoothBlend = Math.sin(blendProgress * Math.PI / 2); // Smooth curve
+            const smoothBlend = Math.sin((blendProgress * Math.PI) / 2); // Smooth curve
 
             return {
                 type: 'lunar',
@@ -254,7 +262,7 @@ export class ShadowEffectManager {
                 shadowX: offsetX * (1 - smoothBlend),
                 shadowY: offsetY * (1 - smoothBlend),
                 diffusion: smoothBlend,
-                shadowProgress
+                shadowProgress,
             };
         }
     }
@@ -264,10 +272,10 @@ export class ShadowEffectManager {
      * @private
      */
     _calculateLunarToMoon(easedProgress, transitionConfig) {
-        const angle = transitionConfig.exitAngle * Math.PI / 180;
+        const angle = (transitionConfig.exitAngle * Math.PI) / 180;
 
         // Smooth movement curve
-        const movementCurve = Math.sin(easedProgress * Math.PI / 2); // Smooth ease-out
+        const movementCurve = Math.sin((easedProgress * Math.PI) / 2); // Smooth ease-out
         const offsetX = Math.cos(angle) * 0.7 * movementCurve;
         const offsetY = Math.sin(angle) * 0.7 * movementCurve;
 
@@ -279,16 +287,16 @@ export class ShadowEffectManager {
 
             return {
                 type: 'lunar',
-                coverage: 0.95 - (0.1 * smoothTransform),
+                coverage: 0.95 - 0.1 * smoothTransform,
                 color: `rgba(80, 20, 0, ${0.9 - 0.3 * smoothTransform})`,
                 shadowX: offsetX * 0.7, // Start moving earlier
                 shadowY: offsetY * 0.7,
-                diffusion: 1 - smoothTransform
+                diffusion: 1 - smoothTransform,
             };
         } else {
             // Smooth transition to crescent
             const crescentPhase = (easedProgress - 0.6) / 0.4;
-            const fadeIn = Math.sin(crescentPhase * Math.PI / 2);
+            const fadeIn = Math.sin((crescentPhase * Math.PI) / 2);
 
             return {
                 type: 'crescent',
@@ -296,7 +304,7 @@ export class ShadowEffectManager {
                 angle: transitionConfig.exitAngle,
                 offset: 0.7,
                 shadowX: offsetX,
-                shadowY: offsetY
+                shadowY: offsetY,
             };
         }
     }
@@ -310,7 +318,7 @@ export class ShadowEffectManager {
         if (easedProgress < 0.7) {
             const shadowProgress = easedProgress / 0.7; // 0 to 1 for shadow exit
 
-            const angle = transitionConfig.exitAngle * Math.PI / 180;
+            const angle = (transitionConfig.exitAngle * Math.PI) / 180;
 
             // Gradual transformation and movement
             if (shadowProgress < 0.4) {
@@ -321,11 +329,11 @@ export class ShadowEffectManager {
 
                 return {
                     type: 'lunar',
-                    coverage: 0.95 - (0.1 * transformPhase),
+                    coverage: 0.95 - 0.1 * transformPhase,
                     color: `rgba(80, 20, 0, ${0.9 - 0.2 * transformPhase})`,
                     shadowX: Math.cos(angle) * 0.7 * moveStart,
                     shadowY: Math.sin(angle) * 0.7 * moveStart,
-                    diffusion
+                    diffusion,
                 };
             } else {
                 // Smooth exit as crescent
@@ -341,7 +349,7 @@ export class ShadowEffectManager {
                     angle: transitionConfig.exitAngle,
                     offset: 0.7 * smoothMove,
                     shadowX: offsetX,
-                    shadowY: offsetY
+                    shadowY: offsetY,
                 };
             }
         }
@@ -355,12 +363,12 @@ export class ShadowEffectManager {
      * @private
      */
     _calculateEclipseEnter(easedProgress, targetShadow) {
-        const shadowX = 1.5 - (easedProgress * 1.5); // From right
+        const shadowX = 1.5 - easedProgress * 1.5; // From right
 
         return {
             ...targetShadow,
             shadowX,
-            shadowProgress: easedProgress
+            shadowProgress: easedProgress,
         };
     }
 
@@ -375,7 +383,7 @@ export class ShadowEffectManager {
             ...currentShadow,
             coverage: currentShadow.coverage * (1 - easedProgress),
             shadowX,
-            shadowProgress: 1 - easedProgress
+            shadowProgress: 1 - easedProgress,
         };
     }
 
@@ -397,7 +405,7 @@ export class ShadowEffectManager {
             flaresOpacity: Math.pow(fadeMultiplier, 1.5), // Flares fade faster
             texture: currentShadow.texture,
             textureOpacity: Math.pow(fadeMultiplier, 2), // Texture fades fastest
-            turbulence: (currentShadow.turbulence || 0.3) * fadeMultiplier
+            turbulence: (currentShadow.turbulence || 0.3) * fadeMultiplier,
         };
     }
 
@@ -419,7 +427,7 @@ export class ShadowEffectManager {
             flaresOpacity: bloomProgress > 0.3 ? Math.pow((bloomProgress - 0.3) / 0.7, 0.7) : 0, // Flares appear later
             texture: targetShadow.texture,
             textureOpacity: bloomProgress > 0.5 ? Math.pow((bloomProgress - 0.5) / 0.5, 2) : 0, // Texture appears last
-            turbulence: (targetShadow.turbulence || 0.3) * bloomProgress
+            turbulence: (targetShadow.turbulence || 0.3) * bloomProgress,
         };
     }
 }

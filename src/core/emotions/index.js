@@ -11,9 +11,9 @@
  * @module emotions
  * @complexity ⭐⭐ Intermediate
  * @audience Modify this to register new emotions or change emotion loading logic
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
  * ║ Central registry for modular emotion system with plugin adapter integration.
  * ║ • Core emotions are loaded synchronously at startup
@@ -47,22 +47,36 @@ const emotionRegistry = new Map();
 
 // Emotion aliases for compatibility
 const emotionAliases = {
-    'happy': 'joy',
-    'peaceful': 'calm',
-    'curious': 'surprise',
-    'frustrated': 'anger',
-    'sad': 'sadness',
-    'excitement': 'excited'
+    happy: 'joy',
+    peaceful: 'calm',
+    curious: 'surprise',
+    frustrated: 'anger',
+    sad: 'sadness',
+    excitement: 'excited',
 };
 
 // Register all emotions SYNCHRONOUSLY
-[neutral, joy, sadness, anger, fear, surprise, disgust,
-    love, suspicion, excited, resting, euphoria, focused, glitch, calm].forEach(emotion => {
+[
+    neutral,
+    joy,
+    sadness,
+    anger,
+    fear,
+    surprise,
+    disgust,
+    love,
+    suspicion,
+    excited,
+    resting,
+    euphoria,
+    focused,
+    glitch,
+    calm,
+].forEach(emotion => {
     if (emotion && emotion.name) {
         emotionRegistry.set(emotion.name, emotion);
     }
 });
-
 
 /**
  * Register an emotion module
@@ -114,35 +128,35 @@ export function getEmotionVisualParams(emotionName) {
     if (!emotion.visual) {
         return {};
     }
-    
+
     // Create a copy of visual properties, excluding functions
-    const {visual} = emotion;
+    const { visual } = emotion;
     const params = {};
-    
+
     // Copy non-function properties
     for (const key in visual) {
         if (typeof visual[key] !== 'function') {
             params[key] = visual[key];
         }
     }
-    
+
     // Evaluate dynamic functions if they exist and override static values
     if (typeof visual.getGlowIntensity === 'function') {
         params.glowIntensity = visual.getGlowIntensity();
     }
-    
+
     if (typeof visual.getParticleSpeed === 'function') {
         params.particleSpeed = visual.getParticleSpeed();
     }
-    
+
     if (typeof visual.getParticleRate === 'function') {
         params.particleRate = visual.getParticleRate();
     }
-    
+
     if (typeof visual.getGlowColor === 'function') {
         params.glowColor = visual.getGlowColor();
     }
-    
+
     return params;
 }
 
@@ -188,7 +202,9 @@ export function getAllEmotions() {
  */
 export function hasEmotion(emotionName) {
     const resolvedName = emotionAliases[emotionName] || emotionName;
-    return emotionRegistry.has(resolvedName) || pluginAdapter.getPluginEmotion(resolvedName) !== null;
+    return (
+        emotionRegistry.has(resolvedName) || pluginAdapter.getPluginEmotion(resolvedName) !== null
+    );
 }
 
 /**
@@ -209,24 +225,24 @@ export function addEmotionAlias(alias, emotionName) {
 export function getTransitionParams(fromEmotion, toEmotion) {
     const from = getEmotion(fromEmotion);
     const to = getEmotion(toEmotion);
-    
+
     if (!from || !to) {
         return {
             duration: 1000,
-            easing: 'ease-in-out'
+            easing: 'ease-in-out',
         };
     }
-    
+
     // Check if 'to' emotion has specific transition hints
     if (to.transitions && to.transitions[fromEmotion]) {
         return to.transitions[fromEmotion];
     }
-    
+
     // Use default transition
     return {
         duration: 1000,
         easing: 'ease-in-out',
-        gesture: to.transitions?.defaultGesture || null
+        gesture: to.transitions?.defaultGesture || null,
     };
 }
 
@@ -247,7 +263,14 @@ export function getEmotionGestures(emotionName) {
  */
 export function getEmotionRhythmModifiers(emotionName) {
     const emotion = getEmotion(emotionName);
-    return emotion?.rhythmModifiers ?? { windowMultiplier: 1.0, visualNoise: 0, inputDelay: 0, tempoShift: 0 };
+    return (
+        emotion?.rhythmModifiers ?? {
+            windowMultiplier: 1.0,
+            visualNoise: 0,
+            inputDelay: 0,
+            tempoShift: 0,
+        }
+    );
 }
 
 /**
@@ -320,5 +343,5 @@ export default {
     addEmotionAlias,
     getTransitionParams,
     getEmotionGestures,
-    pluginAdapter
+    pluginAdapter,
 };

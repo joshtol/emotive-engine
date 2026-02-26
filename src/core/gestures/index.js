@@ -249,7 +249,13 @@ import rock from './reactions/oscillations/rock.js';
 import pendulum from './reactions/oscillations/pendulum.js';
 // reactions/cracks/
 import {
-    crackFront, crackBack, crackLeft, crackRight, crackUp, crackDown, crackHeal
+    crackFront,
+    crackBack,
+    crackLeft,
+    crackRight,
+    crackUp,
+    crackDown,
+    crackHeal,
 } from './reactions/cracks/crackFactory.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -327,7 +333,7 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
     description: `${name} animation`,
     config: {
         duration: 1000, // Legacy fallback only
-        musicalDuration: { musical: true, beats: 2 } // Default: 2 beats
+        musicalDuration: { musical: true, beats: 2 }, // Default: 2 beats
     },
     rhythm: {
         enabled: true,
@@ -338,7 +344,7 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
         priority: 3,
         blendable: true,
         crossfadePoint: 'anyBeat',
-        maxQueue: 3
+        maxQueue: 3,
     },
     apply: (_particle, _progress, _params) => {
         // No-op - handled by GestureAnimator
@@ -347,7 +353,7 @@ const createPlaceholderGesture = (name, emoji = '✨') => ({
     blend: (_particle, _progress, _params) => {
         // No-op - handled by GestureAnimator
         return false;
-    }
+    },
 });
 
 // Sparkle gesture - bright twinkling bursts of light
@@ -358,7 +364,7 @@ const sparkle = {
     description: 'Bright twinkling sparkle bursts',
     config: {
         duration: 800,
-        musicalDuration: { musical: true, beats: 2 }
+        musicalDuration: { musical: true, beats: 2 },
     },
     rhythm: {
         enabled: true,
@@ -367,7 +373,7 @@ const sparkle = {
         durationSync: { mode: 'beats', beats: 2 },
         interruptible: true,
         priority: 5,
-        blendable: true
+        blendable: true,
     },
     apply: (_particle, _progress, _params) => false,
     blend: (_particle, _progress, _params) => false,
@@ -404,28 +410,28 @@ const sparkle = {
                 rotation: [0, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };
 
 // Shimmer gesture - makes particles shimmer with wave effect
 const shimmer = {
     name: 'shimmer',
     emoji: '🌟',
-    type: 'particle',  // Particle type to affect particle behavior
+    type: 'particle', // Particle type to affect particle behavior
     description: 'Shimmer effect with sparkling particles',
     config: {
-        duration: 2000,  // Legacy fallback
+        duration: 2000, // Legacy fallback
         musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
-        particleMotion: 'radiant'  // Use radiant behavior for shimmering effect
+        particleMotion: 'radiant', // Use radiant behavior for shimmering effect
     },
     rhythm: {
         enabled: true,
         syncType: 'beat',
         durationSync: { mode: 'bars', bars: 1 }, // Musical: 1 bar
-        intensity: 0.8
+        intensity: 0.8,
     },
     override: (particle, progress, _params) => {
         // Shimmer makes particles sparkle with wave effect
@@ -460,10 +466,10 @@ const shimmer = {
                 rotation: [0, 0, 0],
                 scale: 1.0 + shimmerValue * 0.05 * strength,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };
 const groove = createPlaceholderGesture('groove', '🎵');
 
@@ -502,38 +508,117 @@ function _regLazy(name, loader, group) {
         get() {
             const gesture = loader();
             Object.defineProperty(GESTURE_REGISTRY, name, {
-                configurable: true, enumerable: true, writable: true,
-                value: gesture
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                value: gesture,
             });
             return gesture;
-        }
+        },
     });
     group.push(name);
 }
 
 // ── MOTION gestures (all imported — no factory calls) ────────────────────────────────
 [
-    bounce, pulse, shake, nod, vibrate, twitch, sway, float, jitter,
-    sparkle, shimmer, wiggle, groove, point, lean, reach, headBob,
-    pop, swell, swagger, dip, flare,
-    stepLeft, stepRight, stepUp, stepDown, slideLeft, slideRight,
-    leanLeft, leanRight, kickLeft, kickRight,
-    floatUp, floatDown, floatLeft, floatRight,
-    pointUp, pointDown, pointLeft, pointRight,
-    breathe, expand, contract,
-    rock, pendulum, wobble, teeter,
-    hula, orbit, orbitLeft, orbitRight, orbitUp, orbitDown,
-    twist, runningman, charleston
+    bounce,
+    pulse,
+    shake,
+    nod,
+    vibrate,
+    twitch,
+    sway,
+    float,
+    jitter,
+    sparkle,
+    shimmer,
+    wiggle,
+    groove,
+    point,
+    lean,
+    reach,
+    headBob,
+    pop,
+    swell,
+    swagger,
+    dip,
+    flare,
+    stepLeft,
+    stepRight,
+    stepUp,
+    stepDown,
+    slideLeft,
+    slideRight,
+    leanLeft,
+    leanRight,
+    kickLeft,
+    kickRight,
+    floatUp,
+    floatDown,
+    floatLeft,
+    floatRight,
+    pointUp,
+    pointDown,
+    pointLeft,
+    pointRight,
+    breathe,
+    expand,
+    contract,
+    rock,
+    pendulum,
+    wobble,
+    teeter,
+    hula,
+    orbit,
+    orbitLeft,
+    orbitRight,
+    orbitUp,
+    orbitDown,
+    twist,
+    runningman,
+    charleston,
 ].forEach(g => _regEager(g, _motionNames));
 
 // ── TRANSFORM gestures — imported ────────────────────────────────────────────────────
 [
-    spin, spinLeft, spinRight, jump, jumpDown, jumpLeft, jumpRight,
-    morph, stretch, tilt, tiltUp, tiltDown, tiltLeft, tiltRight,
-    shatter, flip, backflip, crouch, lunge, recoil, bow,
-    inflate, deflate, squash, knockout, knockdown,
-    crackFront, crackBack, crackLeft, crackRight, crackUp, crackDown, crackHeal,
-    rage, fury, battlecry, charge, pancake
+    spin,
+    spinLeft,
+    spinRight,
+    jump,
+    jumpDown,
+    jumpLeft,
+    jumpRight,
+    morph,
+    stretch,
+    tilt,
+    tiltUp,
+    tiltDown,
+    tiltLeft,
+    tiltRight,
+    shatter,
+    flip,
+    backflip,
+    crouch,
+    lunge,
+    recoil,
+    bow,
+    inflate,
+    deflate,
+    squash,
+    knockout,
+    knockdown,
+    crackFront,
+    crackBack,
+    crackLeft,
+    crackRight,
+    crackUp,
+    crackDown,
+    crackHeal,
+    rage,
+    fury,
+    battlecry,
+    charge,
+    pancake,
 ].forEach(g => _regEager(g, _transformNames));
 
 // ── TRANSFORM gestures — factory-generated (LAZY) ────────────────────────────────────
@@ -587,14 +672,43 @@ _regLazy('rushDown', () => createRushGesture('down'), _transformNames);
 
 // ── EFFECT gestures — imported ───────────────────────────────────────────────────────
 [
-    wave, drift, driftUp, driftDown, driftLeft, driftRight,
-    flicker, burst, directional, settle, fade, hold, flash, glow, peek, rain,
-    shiver, heartbeat, confetti, fizz,
-    cascadeUp, cascadeDown, cascadeLeft, cascadeRight,
-    burstUp, burstDown, burstLeft, burstRight,
-    ripple, elasticBounce,
-    swarmUp, swarmDown, swarmLeft, swarmRight,
-    bloom, snap, vortex
+    wave,
+    drift,
+    driftUp,
+    driftDown,
+    driftLeft,
+    driftRight,
+    flicker,
+    burst,
+    directional,
+    settle,
+    fade,
+    hold,
+    flash,
+    glow,
+    peek,
+    rain,
+    shiver,
+    heartbeat,
+    confetti,
+    fizz,
+    cascadeUp,
+    cascadeDown,
+    cascadeLeft,
+    cascadeRight,
+    burstUp,
+    burstDown,
+    burstLeft,
+    burstRight,
+    ripple,
+    elasticBounce,
+    swarmUp,
+    swarmDown,
+    swarmLeft,
+    swarmRight,
+    bloom,
+    snap,
+    vortex,
 ].forEach(g => _regEager(g, _effectNames));
 
 // ── EFFECT gestures — factory-generated (LAZY) ──────────────────────────────────────
@@ -613,7 +727,7 @@ _regLazy('magneticRepel', () => createMagneticGesture('repel'), _effectNames);
 export const GESTURE_TYPES = {
     blending: _motionNames,
     override: _transformNames,
-    effect: _effectNames
+    effect: _effectNames,
 };
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -624,75 +738,201 @@ export const GESTURE_TYPES = {
 export const GESTURE_CATEGORIES = {
     idle: [
         // idle/breathing/
-        'breathe', 'expand', 'contract', 'pulse',
+        'breathe',
+        'expand',
+        'contract',
+        'pulse',
         // idle/swaying/
-        'sway', 'float', 'floatUp', 'floatDown', 'floatLeft', 'floatRight',
-        'bob', 'lean', 'leanLeft', 'leanRight',
+        'sway',
+        'float',
+        'floatUp',
+        'floatDown',
+        'floatLeft',
+        'floatRight',
+        'bob',
+        'lean',
+        'leanLeft',
+        'leanRight',
         // idle/fidgeting/
-        'jitter', 'twitch', 'vibrate', 'shake', 'wiggle'
+        'jitter',
+        'twitch',
+        'vibrate',
+        'shake',
+        'wiggle',
     ],
     dance: [
         // dance/steps/
-        'stepLeft', 'stepRight', 'stepUp', 'stepDown', 'slideLeft', 'slideRight',
+        'stepLeft',
+        'stepRight',
+        'stepUp',
+        'stepDown',
+        'slideLeft',
+        'slideRight',
         // dance/moves/
-        'runningman', 'charleston', 'hula', 'twist',
+        'runningman',
+        'charleston',
+        'hula',
+        'twist',
         // dance/accents/
-        'pop', 'flare', 'swell', 'swagger', 'dip', 'bounce',
+        'pop',
+        'flare',
+        'swell',
+        'swagger',
+        'dip',
+        'bounce',
         // dance/orbits/
-        'orbit', 'orbitLeft', 'orbitRight', 'orbitUp', 'orbitDown',
+        'orbit',
+        'orbitLeft',
+        'orbitRight',
+        'orbitUp',
+        'orbitDown',
         // extras
-        'sparkle', 'shimmer', 'groove'
+        'sparkle',
+        'shimmer',
+        'groove',
     ],
     actions: [
         // actions/locomotion/
-        'jump', 'jumpDown', 'jumpLeft', 'jumpRight',
-        'rushForward', 'rushBack', 'rushLeft', 'rushRight', 'rushUp', 'rushDown',
-        'lunge', 'lungeForward', 'lungeBack', 'lungeLeft', 'lungeRight', 'lungeUp', 'lungeDown',
+        'jump',
+        'jumpDown',
+        'jumpLeft',
+        'jumpRight',
+        'rushForward',
+        'rushBack',
+        'rushLeft',
+        'rushRight',
+        'rushUp',
+        'rushDown',
+        'lunge',
+        'lungeForward',
+        'lungeBack',
+        'lungeLeft',
+        'lungeRight',
+        'lungeUp',
+        'lungeDown',
         // actions/acrobatics/
-        'spin', 'spinLeft', 'spinRight', 'flip', 'backflip',
+        'spin',
+        'spinLeft',
+        'spinRight',
+        'flip',
+        'backflip',
         // actions/gesturing/
-        'point', 'pointUp', 'pointDown', 'pointLeft', 'pointRight',
-        'kickLeft', 'kickRight', 'bow', 'nod', 'reach', 'headBob',
+        'point',
+        'pointUp',
+        'pointDown',
+        'pointLeft',
+        'pointRight',
+        'kickLeft',
+        'kickRight',
+        'bow',
+        'nod',
+        'reach',
+        'headBob',
         // actions/poses/
-        'crouch', 'tilt', 'tiltUp', 'tiltDown', 'tiltLeft', 'tiltRight'
+        'crouch',
+        'tilt',
+        'tiltUp',
+        'tiltDown',
+        'tiltLeft',
+        'tiltRight',
     ],
     reactions: [
         // reactions/impacts/
-        'oofLeft', 'oofRight', 'oofFront', 'oofBack', 'oofUp', 'oofDown',
-        'recoil', 'recoilBack', 'recoilForward', 'recoilLeft', 'recoilRight', 'recoilUp', 'recoilDown',
-        'knockdown', 'knockout', 'inflate', 'deflate', 'squash', 'stretch', 'pancake',
+        'oofLeft',
+        'oofRight',
+        'oofFront',
+        'oofBack',
+        'oofUp',
+        'oofDown',
+        'recoil',
+        'recoilBack',
+        'recoilForward',
+        'recoilLeft',
+        'recoilRight',
+        'recoilUp',
+        'recoilDown',
+        'knockdown',
+        'knockout',
+        'inflate',
+        'deflate',
+        'squash',
+        'stretch',
+        'pancake',
         // reactions/cracks/
-        'crackFront', 'crackBack', 'crackLeft', 'crackRight', 'crackUp', 'crackDown', 'crackHeal',
+        'crackFront',
+        'crackBack',
+        'crackLeft',
+        'crackRight',
+        'crackUp',
+        'crackDown',
+        'crackHeal',
         // reactions/emotions/
-        'rage', 'fury', 'battlecry', 'charge',
+        'rage',
+        'fury',
+        'battlecry',
+        'charge',
         // reactions/oscillations/
-        'wobble', 'teeter', 'rock', 'pendulum'
+        'wobble',
+        'teeter',
+        'rock',
+        'pendulum',
     ],
     destruction: [
         // destruction/shatter/
-        'shatter', 'shatterMesh', 'shatterExplosive', 'shatterCrumble', 'shatterReform',
-        'shatterPunchLeft', 'shatterPunchRight', 'shatterPunchFront',
-        'shatterSuspend', 'shatterImplode', 'shatterGravity', 'shatterOrbit',
+        'shatter',
+        'shatterMesh',
+        'shatterExplosive',
+        'shatterCrumble',
+        'shatterReform',
+        'shatterPunchLeft',
+        'shatterPunchRight',
+        'shatterPunchFront',
+        'shatterSuspend',
+        'shatterImplode',
+        'shatterGravity',
+        'shatterOrbit',
         // destruction/dissolve/
-        'dissolveUp', 'dissolveDown', 'dissolveLeft', 'dissolveRight', 'dissolveAway', 'dissolveToward',
+        'dissolveUp',
+        'dissolveDown',
+        'dissolveLeft',
+        'dissolveRight',
+        'dissolveAway',
+        'dissolveToward',
         // destruction/elemental/ - Water (impact)
-        'splash', 'drench', 'soak',
+        'splash',
+        'drench',
+        'soak',
         // destruction/elemental/ - Water (ambient)
-        'flow', 'tide',
+        'flow',
+        'tide',
         // destruction/elemental/ - Water (transform)
-        'liquefy', 'poolWater', 'vortexWater',
+        'liquefy',
+        'poolWater',
+        'vortexWater',
         // destruction/elemental/ - Water (axis-travel effects)
-        'watercrown', 'waterdance', 'waterdrill', 'waterhelix',
-        'watermeditation', 'waterpillar', 'waterflourish',
-        'waterbarrage', 'waterimpact',
+        'watercrown',
+        'waterdance',
+        'waterdrill',
+        'waterhelix',
+        'watermeditation',
+        'waterpillar',
+        'waterflourish',
+        'waterbarrage',
+        'waterimpact',
         // destruction/elemental/ - Water (crush)
-        'watercrush', 'watertwirl', 'watershield',
+        'watercrush',
+        'watertwirl',
+        'watershield',
         // destruction/elemental/ - Smoke
-        'smokebomb', 'vanish', 'materialize',
+        'smokebomb',
+        'vanish',
+        'materialize',
         // destruction/elemental/ - Fire
         'phoenix',
         // destruction/elemental/ - Fire (burning - victim of fire)
-        'burn', 'scorch', 'combust',
+        'burn',
+        'scorch',
+        'combust',
         // destruction/elemental/ - Fire (vortex - spiraling fire tornado)
         'flameVortex',
         // destruction/elemental/ - Fire (firedance - vertical dancing rings)
@@ -716,67 +956,198 @@ export const GESTURE_CATEGORIES = {
         // destruction/elemental/ - Fire (fireblast - explosive fire burst)
         'fireblast',
         // destruction/elemental/ - Fire (radiating - source of fire)
-        'radiate', 'blaze', 'firetwirl', 'fireshield',
+        'radiate',
+        'blaze',
+        'firetwirl',
+        'fireshield',
         // destruction/elemental/ - Smoke (emanating - source of smoke)
-        'puff', 'billow', 'fume',
+        'puff',
+        'billow',
+        'fume',
         // destruction/elemental/ - Smoke (afflicted - victim of smoke)
-        'shroud', 'hazeSmoke', 'chokeSmoke',
+        'shroud',
+        'hazeSmoke',
+        'chokeSmoke',
         // destruction/elemental/ - Ice
-        'iceFreeze', 'shatterIce',
+        'iceFreeze',
+        'shatterIce',
         // destruction/elemental/ - Electric (electrocution)
-        'shock', 'overload', 'glitch',
+        'shock',
+        'overload',
+        'glitch',
         // destruction/elemental/ - Electric (powered)
-        'crackle', 'chargeUp', 'electricAuraEffect', 'staticDischarge',
+        'crackle',
+        'chargeUp',
+        'electricAuraEffect',
+        'staticDischarge',
         // destruction/elemental/ - Electric (ring/spectacle gestures)
-        'electriccrown', 'electricdance', 'electrichelix', 'electricpillar',
-        'electricdrill', 'electricflourish', 'electricvortex', 'electricbarrage',
-        'electricimpact', 'electricblast', 'electricsurge', 'electriczap', 'electricmeditation', 'electrictwirl', 'electricshield', 'zap',
+        'electriccrown',
+        'electricdance',
+        'electrichelix',
+        'electricpillar',
+        'electricdrill',
+        'electricflourish',
+        'electricvortex',
+        'electricbarrage',
+        'electricimpact',
+        'electricblast',
+        'electricsurge',
+        'electriczap',
+        'electricmeditation',
+        'electrictwirl',
+        'electricshield',
+        'zap',
         // destruction/elemental/ - Void (absorption, corruption, annihilation)
-        'drain', 'hollow', 'corrupt', 'consume', 'singularity',
+        'drain',
+        'hollow',
+        'corrupt',
+        'consume',
+        'singularity',
         // destruction/elemental/ - Void (ring/spectacle gestures)
-        'voidcrown', 'voiddance', 'voidhelix', 'voidpillar',
-        'voiddrill', 'voidflourish', 'voidvortex', 'voidbarrage', 'voidimpact', 'voidmeditation', 'voidtwirl', 'voidshield',
+        'voidcrown',
+        'voiddance',
+        'voidhelix',
+        'voidpillar',
+        'voiddrill',
+        'voidflourish',
+        'voidvortex',
+        'voidbarrage',
+        'voidimpact',
+        'voidmeditation',
+        'voidtwirl',
+        'voidshield',
         // destruction/elemental/ - Ice Effect (matching fire/water pattern)
-        'iceCrown', 'iceDance', 'icePillar', 'iceHelix', 'iceMeditation',
-        'iceVortex', 'iceSplash', 'iceEncase', 'iceDrill', 'iceFlourish',
-        'iceBarrage', 'iceImpact',
-        'icemist', 'iceshiver', 'icetwirl', 'iceshield',
+        'iceCrown',
+        'iceDance',
+        'icePillar',
+        'iceHelix',
+        'iceMeditation',
+        'iceVortex',
+        'iceSplash',
+        'iceEncase',
+        'iceDrill',
+        'iceFlourish',
+        'iceBarrage',
+        'iceImpact',
+        'icemist',
+        'iceshiver',
+        'icetwirl',
+        'iceshield',
         // destruction/elemental/ - Light Effect (afflicted, emanating, transform)
-        'lightBlind', 'lightPurify', 'lightCleanse', 'lightRadiate', 'lightGlow', 'lightBeacon',
-        'lightAscend', 'lightIlluminate', 'lightDissolve', 'lightMeditation',
+        'lightBlind',
+        'lightPurify',
+        'lightCleanse',
+        'lightRadiate',
+        'lightGlow',
+        'lightBeacon',
+        'lightAscend',
+        'lightIlluminate',
+        'lightDissolve',
+        'lightMeditation',
         // destruction/elemental/ - Light (ring/spectacle gestures)
-        'lightcrown', 'lightdance', 'lighthelix', 'lightpillar',
-        'lightdrill', 'lightflourish', 'lightvortex', 'lightbarrage',
-        'lightimpact', 'lightblast', 'lightsurge', 'lightmeditation', 'lighttwirl', 'lightshield',
+        'lightcrown',
+        'lightdance',
+        'lighthelix',
+        'lightpillar',
+        'lightdrill',
+        'lightflourish',
+        'lightvortex',
+        'lightbarrage',
+        'lightimpact',
+        'lightblast',
+        'lightsurge',
+        'lightmeditation',
+        'lighttwirl',
+        'lightshield',
         // destruction/elemental/ - Poison Effect (afflicted, emanating, transform)
-        'poisonInfect', 'poisonSicken', 'poisonOoze', 'poisonSeep', 'poisonToxic',
-        'poisonCorrode', 'poisonMelt', 'poisonDecay', 'poisonDissolve',
+        'poisonInfect',
+        'poisonSicken',
+        'poisonOoze',
+        'poisonSeep',
+        'poisonToxic',
+        'poisonCorrode',
+        'poisonMelt',
+        'poisonDecay',
+        'poisonDissolve',
         // destruction/elemental/ - Earth Effect (afflicted, emanating, transform)
-        'earthPetrify', 'earthBurden', 'earthRumble', 'earthQuake', 'earthMeditation',
-        'earthEncase', 'earthCrumble', 'earthShatter', 'earthErode',
+        'earthPetrify',
+        'earthBurden',
+        'earthRumble',
+        'earthQuake',
+        'earthMeditation',
+        'earthEncase',
+        'earthCrumble',
+        'earthShatter',
+        'earthErode',
         // destruction/elemental/ - Earth (ring/spectacle gestures)
-        'earthcrown', 'earthdance', 'earthhelix', 'earthpillar',
-        'earthdrill', 'earthflourish', 'earthvortex', 'earthbarrage',
-        'earthimpact', 'earthblast', 'earthsurge', 'earthmeditation', 'earthtwirl', 'earthshield',
+        'earthcrown',
+        'earthdance',
+        'earthhelix',
+        'earthpillar',
+        'earthdrill',
+        'earthflourish',
+        'earthvortex',
+        'earthbarrage',
+        'earthimpact',
+        'earthblast',
+        'earthsurge',
+        'earthmeditation',
+        'earthtwirl',
+        'earthshield',
         // destruction/reform/
-        'morph'
+        'morph',
     ],
     atmosphere: [
         // atmosphere/weather/
-        'rain', 'drift', 'driftUp', 'driftDown', 'driftLeft', 'driftRight',
-        'vortex', 'cascadeUp', 'cascadeDown', 'cascadeLeft', 'cascadeRight',
+        'rain',
+        'drift',
+        'driftUp',
+        'driftDown',
+        'driftLeft',
+        'driftRight',
+        'vortex',
+        'cascadeUp',
+        'cascadeDown',
+        'cascadeLeft',
+        'cascadeRight',
         // atmosphere/particles/
-        'confetti', 'fizz',
-        'swarmUp', 'swarmDown', 'swarmLeft', 'swarmRight',
-        'burst', 'burstUp', 'burstDown', 'burstLeft', 'burstRight',
-        'ripple', 'wave',
+        'confetti',
+        'fizz',
+        'swarmUp',
+        'swarmDown',
+        'swarmLeft',
+        'swarmRight',
+        'burst',
+        'burstUp',
+        'burstDown',
+        'burstLeft',
+        'burstRight',
+        'ripple',
+        'wave',
         // atmosphere/glow/
-        'flash', 'glow', 'bloom', 'flicker', 'shiver', 'heartbeat', 'snap', 'elasticBounce',
+        'flash',
+        'glow',
+        'bloom',
+        'flicker',
+        'shiver',
+        'heartbeat',
+        'snap',
+        'elasticBounce',
         // atmosphere/control/
-        'hold', 'fade', 'settle', 'peek', 'directional',
-        'magneticForward', 'magneticBack', 'magneticLeft', 'magneticRight',
-        'magneticUp', 'magneticDown', 'magneticAttract', 'magneticRepel'
-    ]
+        'hold',
+        'fade',
+        'settle',
+        'peek',
+        'directional',
+        'magneticForward',
+        'magneticBack',
+        'magneticLeft',
+        'magneticRight',
+        'magneticUp',
+        'magneticDown',
+        'magneticAttract',
+        'magneticRepel',
+    ],
 };
 
 // Build reverse lookup: gesture name → category
@@ -885,7 +1256,7 @@ export function listGestures() {
             description: gesture.description || 'No description',
             source: 'core',
             // Include usesShatter flag for filtering shatter-based gestures
-            usesShatter: gesture.usesShatter || false
+            usesShatter: gesture.usesShatter || false,
         });
     });
 
@@ -899,7 +1270,7 @@ export function listGestures() {
             type: gesture.type,
             category: gesture.category || 'effect',
             description: gesture.description || 'Plugin gesture',
-            source: 'plugin'
+            source: 'plugin',
         });
     });
 
@@ -919,11 +1290,13 @@ export function warmUpGestures({ onBatch, onComplete } = {}) {
     const names = Object.keys(GESTURE_REGISTRY);
 
     if (onBatch) {
-        onBatch(names.map(name => ({
-            name,
-            category: GESTURE_TO_CATEGORY[name] || 'atmosphere',
-            source: 'core'
-        })));
+        onBatch(
+            names.map(name => ({
+                name,
+                category: GESTURE_TO_CATEGORY[name] || 'atmosphere',
+                source: 'core',
+            }))
+        );
     }
 
     // Plugin gestures (typically few)
@@ -933,14 +1306,18 @@ export function warmUpGestures({ onBatch, onComplete } = {}) {
         pluginNames.forEach(pn => {
             const g = pluginAdapter.getPluginGesture(pn);
             pluginBatch.push({
-                name: g.name, emoji: g.emoji || '🔌', type: g.type,
+                name: g.name,
+                emoji: g.emoji || '🔌',
+                type: g.type,
                 category: g.category || 'effect',
                 description: g.description || 'Plugin gesture',
-                source: 'plugin'
+                source: 'plugin',
             });
         });
         if (pluginBatch.length && onBatch) onBatch(pluginBatch);
-    } catch { /* no plugins */ }
+    } catch {
+        /* no plugins */
+    }
 
     if (onComplete) onComplete();
 
@@ -984,5 +1361,5 @@ export default {
     isOverrideGesture,
     applyGesture,
     listGestures,
-    pluginAdapter
+    pluginAdapter,
 };

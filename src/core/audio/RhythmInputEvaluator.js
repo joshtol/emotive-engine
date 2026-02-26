@@ -15,14 +15,14 @@ export class RhythmInputEvaluator {
         this._adapter = rhythmAdapter;
         this._windows = {
             perfect: config.windows?.perfect ?? 30,
-            great:   config.windows?.great   ?? 60,
-            good:    config.windows?.good    ?? 100,
+            great: config.windows?.great ?? 60,
+            good: config.windows?.good ?? 100,
         };
         this._grades = {
             perfect: { multiplier: 2.0, label: 'Perfect' },
-            great:   { multiplier: 1.5, label: 'Great' },
-            good:    { multiplier: 1.0, label: 'Good' },
-            miss:    { multiplier: 0.0, label: 'Miss' },
+            great: { multiplier: 1.5, label: 'Great' },
+            good: { multiplier: 1.0, label: 'Good' },
+            miss: { multiplier: 0.0, label: 'Miss' },
         };
         this._windowModifiers = { multiplier: 1.0 };
         this._emotionSource = config.emotionSource ?? null;
@@ -31,8 +31,8 @@ export class RhythmInputEvaluator {
         this._onEvaluate = [];
 
         // Emotion feedback loop (UP-RESONANCE-2 Feature 2)
-        this._emotionFeedback = null;  // { perfect: {emotion, delta}, great: ..., good: ..., miss: ... }
-        this._emotionTarget = null;    // (emotion, delta) => void
+        this._emotionFeedback = null; // { perfect: {emotion, delta}, great: ..., good: ..., miss: ... }
+        this._emotionTarget = null; // (emotion, delta) => void
 
         // Difficulty manager reference (UP-RESONANCE-2 Feature 5)
         this._difficultyManager = null;
@@ -45,7 +45,7 @@ export class RhythmInputEvaluator {
      */
     evaluate(tapTimestamp = performance.now()) {
         const timeInfo = this._adapter.getTimeInfo();
-        const {beatDuration} = timeInfo;
+        const { beatDuration } = timeInfo;
 
         // Convert absolute page time → rhythm-relative time
         const rhythmStartAbsolute = performance.now() - timeInfo.elapsed;
@@ -54,8 +54,10 @@ export class RhythmInputEvaluator {
         // Find nearest beat
         const currentBeatStart = tapRelative - (tapRelative % beatDuration);
         const nextBeatStart = currentBeatStart + beatDuration;
-        const nearestBeat = (tapRelative - currentBeatStart) < (nextBeatStart - tapRelative)
-            ? currentBeatStart : nextBeatStart;
+        const nearestBeat =
+            tapRelative - currentBeatStart < nextBeatStart - tapRelative
+                ? currentBeatStart
+                : nextBeatStart;
 
         const offset = tapRelative - nearestBeat;
         return this._gradeOffset(offset, tapTimestamp, nearestBeat + rhythmStartAbsolute);
@@ -96,7 +98,15 @@ export class RhythmInputEvaluator {
                 used.add(bestIdx);
                 results.push(this.evaluateAgainst(tap, targetTimes[bestIdx]));
             } else {
-                results.push({ grade: 'miss', offset: 0, absOffset: 0, multiplier: 0, label: 'Miss', timestamp: tap, targetTime: null });
+                results.push({
+                    grade: 'miss',
+                    offset: 0,
+                    absOffset: 0,
+                    multiplier: 0,
+                    label: 'Miss',
+                    timestamp: tap,
+                    targetTime: null,
+                });
             }
         }
         return results;
@@ -113,8 +123,11 @@ export class RhythmInputEvaluator {
 
         const absOffset = Math.abs(offset);
         const emotionMod = this._emotionSource?.() ?? { windowMultiplier: 1.0 };
-        const diffMult = this._difficultyManager ? this._difficultyManager.getWindowMultiplier() : 1.0;
-        const mod = this._windowModifiers.multiplier * (emotionMod.windowMultiplier || 1.0) * diffMult;
+        const diffMult = this._difficultyManager
+            ? this._difficultyManager.getWindowMultiplier()
+            : 1.0;
+        const mod =
+            this._windowModifiers.multiplier * (emotionMod.windowMultiplier || 1.0) * diffMult;
 
         let grade;
         if (absOffset <= this._windows.perfect * mod) grade = 'perfect';
@@ -174,18 +187,27 @@ export class RhythmInputEvaluator {
      * @returns {Object} { perfect, great, good, miss, averageOffset, total }
      */
     getAccuracy() {
-        if (!this._history.length) return { perfect: 0, great: 0, good: 0, miss: 0, averageOffset: 0, total: 0 };
+        if (!this._history.length)
+            return { perfect: 0, great: 0, good: 0, miss: 0, averageOffset: 0, total: 0 };
         const counts = { perfect: 0, great: 0, good: 0, miss: 0 };
         let totalOffset = 0;
         for (const r of this._history) {
             counts[r.grade]++;
             totalOffset += r.offset;
         }
-        return { ...counts, averageOffset: totalOffset / this._history.length, total: this._history.length };
+        return {
+            ...counts,
+            averageOffset: totalOffset / this._history.length,
+            total: this._history.length,
+        };
     }
 
-    getHistory() { return [...this._history]; }
-    clearHistory() { this._history.length = 0; }
+    getHistory() {
+        return [...this._history];
+    }
+    clearHistory() {
+        this._history.length = 0;
+    }
 
     /**
      * Register evaluation callback.
@@ -194,7 +216,9 @@ export class RhythmInputEvaluator {
      */
     onEvaluate(callback) {
         this._onEvaluate.push(callback);
-        return () => { this._onEvaluate = this._onEvaluate.filter(cb => cb !== callback); };
+        return () => {
+            this._onEvaluate = this._onEvaluate.filter(cb => cb !== callback);
+        };
     }
 
     /**
@@ -225,8 +249,12 @@ export class RhythmInputEvaluator {
         this._difficultyManager = manager || null;
     }
 
-    setWindows(windows) { Object.assign(this._windows, windows); }
-    setGrades(grades) { Object.assign(this._grades, grades); }
+    setWindows(windows) {
+        Object.assign(this._windows, windows);
+    }
+    setGrades(grades) {
+        Object.assign(this._grades, grades);
+    }
 
     destroy() {
         this._history.length = 0;

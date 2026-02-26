@@ -25,7 +25,7 @@ import * as THREE from 'three';
 // SHARED VERTEX SHADER (same as smoke/mist — GPU-deterministic billboard)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -88,7 +88,7 @@ void main() {
 // SPRAY FRAGMENT SHADER — field of scattered bright specks per billboard
 // =================================================================================================
 
-const SPRAY_FRAGMENT_GLSL = /* glsl */`
+const SPRAY_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform vec3 uColor;
 
@@ -157,14 +157,14 @@ export function createSprayParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'SprayParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.10 },
-            uColor:              { value: new THREE.Color(...(config.color ?? [0.4, 0.7, 1.0])) },
-            uBuoyancy:           { value: config.buoyancy ?? -0.01 },
-            uDrag:               { value: config.drag ?? 1.2 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.1 },
+            uColor: { value: new THREE.Color(...(config.color ?? [0.4, 0.7, 1.0])) },
+            uBuoyancy: { value: config.buoyancy ?? -0.01 },
+            uDrag: { value: config.drag ?? 1.2 },
             uTurbulenceStrength: { value: config.turbulence ?? 0.12 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 1.3 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 0.6 },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 1.3 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 0.6 },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: SPRAY_FRAGMENT_GLSL,

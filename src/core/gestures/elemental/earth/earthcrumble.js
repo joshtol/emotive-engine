@@ -50,43 +50,45 @@ const EARTHCRUMBLE_CONFIG = {
                 enter: {
                     type: 'grow',
                     duration: 0.12,
-                    easing: 'easeOutQuad'
+                    easing: 'easeOutQuad',
                 },
                 exit: {
                     type: 'burst-fade',
                     duration: 0.1,
                     easing: 'easeIn',
-                    burstScale: 1.3
+                    burstScale: 1.3,
                 },
                 procedural: {
                     scaleSmoothing: 0.08,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     petrification: {
                         start: 0.7,
                         peak: 0.9,
                         end: 0.5,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 pulse: {
                     amplitude: 0.06,
                     frequency: 6,
-                    easing: 'easeInOut'
+                    easing: 'easeInOut',
                 },
                 emissive: { min: 0.5, max: 1.2, frequency: 4, pattern: 'sine' },
                 cutout: {
-                    edgeMask: 0.25
+                    edgeMask: 0.25,
                 },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.8,
-                    progressCurve: 'buildup',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.3,
+                        sizeScale: 0.8,
+                        progressCurve: 'buildup',
+                    },
+                ],
                 scaleVariance: 0.25,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
@@ -98,12 +100,12 @@ const EARTHCRUMBLE_CONFIG = {
                             axes: {
                                 x: { expand: false, rate: 0.8 },
                                 y: { expand: true, rate: 2.0 },
-                                z: { expand: false, rate: 0.8 }
-                            }
-                        }
-                    }
-                }
-            }
+                                z: { expand: false, rate: 0.8 },
+                            },
+                        },
+                    },
+                },
+            },
         },
 
         // ── Phase 2: Explosion — debris flying outward ─────────────────────
@@ -115,7 +117,7 @@ const EARTHCRUMBLE_CONFIG = {
                 endRadius: 2.5,
                 angleSpread: 360,
                 startAngle: 0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             startScale: 0.7,
             endScale: 0.2,
@@ -123,7 +125,18 @@ const EARTHCRUMBLE_CONFIG = {
             speedCurve: 'burst',
             count: 10,
             scale: 0.55,
-            models: ['rock-chunk-small', 'rock-chunk-medium', 'rock-chunk-small', 'boulder', 'rock-chunk-small', 'rock-chunk-medium', 'rock-chunk-small', 'rock-cluster', 'rock-chunk-small', 'rock-chunk-medium'],
+            models: [
+                'rock-chunk-small',
+                'rock-chunk-medium',
+                'rock-chunk-small',
+                'boulder',
+                'rock-chunk-small',
+                'rock-chunk-medium',
+                'rock-chunk-small',
+                'rock-cluster',
+                'rock-chunk-small',
+                'rock-chunk-medium',
+            ],
             animation: {
                 appearAt: 0.25,
                 disappearAt: 0.75,
@@ -141,29 +154,32 @@ const EARTHCRUMBLE_CONFIG = {
                     { axis: 'z', rotations: 1.5, phase: 216 },
                     { axis: 'x', rotations: -2.5, phase: 252 },
                     { axis: 'y', rotations: 2, phase: 288 },
-                    { axis: 'z', rotations: -2, phase: 324 }
+                    { axis: 'z', rotations: -2, phase: 324 },
                 ],
-                atmospherics: [{
-                    preset: 'earth-gravel',
-                    targets: null,
-                    anchor: 'below',
-                    intensity: 0.6,
-                    sizeScale: 1.0,
-                    progressCurve: 'burst',
-                    velocityInheritance: 0.5,
-                }, {
-                    preset: 'earth-dust',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.5,
-                    sizeScale: 1.5,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-gravel',
+                        targets: null,
+                        anchor: 'below',
+                        intensity: 0.6,
+                        sizeScale: 1.0,
+                        progressCurve: 'burst',
+                        velocityInheritance: 0.5,
+                    },
+                    {
+                        preset: 'earth-dust',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.5,
+                        sizeScale: 1.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 scaleVariance: 0.35,
                 lifetimeVariance: 0.15,
                 blending: 'normal',
-                renderOrder: 12
-            }
+                renderOrder: 12,
+            },
         },
 
         // ── Phase 3: Ground shockwave — expanding dust ring at feet ────────
@@ -175,7 +191,7 @@ const EARTHCRUMBLE_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.2,
                 endScale: 2.5,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.0,
@@ -197,21 +213,27 @@ const EARTHCRUMBLE_CONFIG = {
                     trailDissolve: {
                         offset: -0.3,
                         softness: 1.5,
-                        direction: 'outward'
-                    }
+                        direction: 'outward',
+                    },
                 },
                 grain: {
-                    type: 3, strength: 0.25, scale: 0.2, speed: 3.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.25,
+                    scale: 0.2,
+                    speed: 3.0,
+                    blend: 'multiply',
                 },
                 emissive: { min: 0.8, max: 1.5, frequency: 2, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['earth-ring'],
-                    anchor: 'above',
-                    intensity: 0.6,
-                    sizeScale: 2.0,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['earth-ring'],
+                        anchor: 'above',
+                        intensity: 0.6,
+                        sizeScale: 2.0,
+                        progressCurve: 'burst',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 4,
                 modelOverrides: {
@@ -220,12 +242,12 @@ const EARTHCRUMBLE_CONFIG = {
                             type: 1,
                             arcWidth: 1.0,
                             arcSpeed: 0,
-                            arcCount: 1
-                        }
-                    }
-                }
-            }
-        }
+                            arcCount: 1,
+                        },
+                    },
+                },
+            },
+        },
     ],
 
     shatterPoint: 0.28,
@@ -236,14 +258,14 @@ const EARTHCRUMBLE_CONFIG = {
     scaleShrink: 0.15,
     distortionStrength: 1.2,
     decayRate: 0.2,
-    glowColor: [0.80, 0.55, 0.25],
+    glowColor: [0.8, 0.55, 0.25],
     glowIntensityMin: 0.5,
     glowIntensityMax: 1.0,
     glowFlickerRate: 4,
     shakeAmount: 0.03,
     shakeFrequency: 15,
     tremor: 0.012,
-    tremorFrequency: 8
+    tremorFrequency: 8,
 };
 
 export default buildEarthEffectGesture(EARTHCRUMBLE_CONFIG);

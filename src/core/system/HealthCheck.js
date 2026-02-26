@@ -12,7 +12,7 @@ export class HealthCheck {
             fps: options.fpsThreshold || 30,
             errorRate: options.errorRateThreshold || 0.1, // 10%
             responseTime: options.responseTimeThreshold || 1000, // ms
-            ...options.thresholds
+            ...options.thresholds,
         };
 
         this.checks = new Map();
@@ -26,14 +26,14 @@ export class HealthCheck {
             stateStore: null,
             eventManager: null,
             performanceMonitor: null,
-            errorTracker: null
+            errorTracker: null,
         };
 
         this.callbacks = {
             onHealthy: options.onHealthy || null,
             onWarning: options.onWarning || null,
             onCritical: options.onCritical || null,
-            onStatusChange: options.onStatusChange || null
+            onStatusChange: options.onStatusChange || null,
         };
 
         this.registerDefaultChecks();
@@ -64,14 +64,14 @@ export class HealthCheck {
             weight: options.weight || 1,
             timeout: options.timeout || 5000,
             lastResult: null,
-            lastRun: null
+            lastRun: null,
         });
     }
 
     checkMemory() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (performance.memory) {
@@ -83,7 +83,7 @@ export class HealthCheck {
                 used: Math.round(used),
                 total: Math.round(total),
                 limit: Math.round(limit),
-                percentage: Math.round((used / limit) * 100)
+                percentage: Math.round((used / limit) * 100),
             };
 
             if (used > this.thresholds.memory) {
@@ -104,7 +104,7 @@ export class HealthCheck {
     checkPerformance() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (this.dependencies.performanceMonitor) {
@@ -113,7 +113,7 @@ export class HealthCheck {
                 fps: stats.fps.current,
                 frameTime: stats.frameTime.current,
                 health: stats.health,
-                score: stats.performance
+                score: stats.performance,
             };
 
             if (stats.fps.current < this.thresholds.fps) {
@@ -133,20 +133,20 @@ export class HealthCheck {
     checkErrors() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (this.dependencies.errorTracker) {
             const stats = this.dependencies.errorTracker.getStats();
             const recentErrors = this.dependencies.errorTracker.getErrors({
-                since: Date.now() - 60000 // Last minute
+                since: Date.now() - 60000, // Last minute
             });
 
             result.details = {
                 total: stats.total,
                 recent: recentErrors.length,
                 critical: stats.bySeverity.critical || 0,
-                patterns: stats.patterns
+                patterns: stats.patterns,
             };
 
             const errorRate = recentErrors.length / 60; // Errors per second
@@ -166,7 +166,7 @@ export class HealthCheck {
     checkDOM() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (typeof document !== 'undefined') {
@@ -177,7 +177,7 @@ export class HealthCheck {
             result.details = {
                 nodes: nodeCount,
                 canvases: canvasCount,
-                listeners: listenerCount
+                listeners: listenerCount,
             };
 
             if (nodeCount > 10000) {
@@ -197,7 +197,7 @@ export class HealthCheck {
     checkAnimation() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (this.dependencies.animationLoop) {
@@ -206,7 +206,7 @@ export class HealthCheck {
                 callbacks: stats.callbackCount,
                 fps: stats.fps,
                 running: stats.isRunning,
-                dropped: stats.droppedFrames
+                dropped: stats.droppedFrames,
             };
 
             if (!stats.isRunning) {
@@ -226,7 +226,7 @@ export class HealthCheck {
     checkState() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (this.dependencies.stateStore) {
@@ -235,10 +235,11 @@ export class HealthCheck {
 
             result.details = {
                 size: stateSize,
-                keys: Object.keys(state).length
+                keys: Object.keys(state).length,
             };
 
-            if (stateSize > 1000000) { // 1MB
+            if (stateSize > 1000000) {
+                // 1MB
                 result.status = 'warning';
                 result.message = `Large state size: ${(stateSize / 1024).toFixed(2)}KB`;
             }
@@ -250,7 +251,7 @@ export class HealthCheck {
     checkEvents() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (this.dependencies.eventManager) {
@@ -260,7 +261,7 @@ export class HealthCheck {
             result.details = {
                 active: listeners.length,
                 potentialLeaks: leaks.potentialLeaks.length,
-                byGroup: leaks.byGroup
+                byGroup: leaks.byGroup,
             };
 
             if (leaks.potentialLeaks.length > 10) {
@@ -280,7 +281,7 @@ export class HealthCheck {
     async checkStorage() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
@@ -293,7 +294,7 @@ export class HealthCheck {
                 result.details = {
                     used: Math.round(used / (1024 * 1024)), // MB
                     quota: Math.round(quota / (1024 * 1024)), // MB
-                    percentage: Math.round(percentage)
+                    percentage: Math.round(percentage),
                 };
 
                 if (percentage > 90) {
@@ -315,16 +316,16 @@ export class HealthCheck {
     async checkNetwork() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         if (typeof navigator !== 'undefined' && navigator.connection) {
-            const {connection} = navigator;
+            const { connection } = navigator;
             result.details = {
                 effectiveType: connection.effectiveType,
                 downlink: connection.downlink,
                 rtt: connection.rtt,
-                saveData: connection.saveData
+                saveData: connection.saveData,
             };
 
             if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
@@ -343,7 +344,7 @@ export class HealthCheck {
             const start = performance.now();
             const response = await fetch('/health', {
                 method: 'HEAD',
-                cache: 'no-cache'
+                cache: 'no-cache',
             });
             const responseTime = performance.now() - start;
 
@@ -368,7 +369,7 @@ export class HealthCheck {
     checkBrowser() {
         const result = {
             status: 'healthy',
-            details: {}
+            details: {},
         };
 
         result.details = {
@@ -378,7 +379,7 @@ export class HealthCheck {
             cookiesEnabled: navigator.cookieEnabled,
             doNotTrack: navigator.doNotTrack,
             hardwareConcurrency: navigator.hardwareConcurrency,
-            maxTouchPoints: navigator.maxTouchPoints
+            maxTouchPoints: navigator.maxTouchPoints,
         };
 
         // Check for required features
@@ -387,7 +388,7 @@ export class HealthCheck {
             webAudio: typeof AudioContext !== 'undefined',
             localStorage: typeof localStorage !== 'undefined',
             serviceWorker: 'serviceWorker' in navigator,
-            webWorker: typeof Worker !== 'undefined'
+            webWorker: typeof Worker !== 'undefined',
         };
 
         result.details.features = requiredFeatures;
@@ -409,7 +410,10 @@ export class HealthCheck {
         const allElements = document.querySelectorAll('*');
 
         for (const element of allElements) {
-            const listeners = (typeof getEventListeners !== 'undefined' && getEventListeners) ? getEventListeners(element) : {};
+            const listeners =
+                typeof getEventListeners !== 'undefined' && getEventListeners
+                    ? getEventListeners(element)
+                    : {};
             for (const event in listeners) {
                 count += listeners[event].length;
             }
@@ -437,7 +441,7 @@ export class HealthCheck {
             return {
                 status: 'error',
                 message: error.message,
-                error: error.stack
+                error: error.stack,
             };
         }
     }
@@ -471,7 +475,7 @@ export class HealthCheck {
             score: health.score,
             duration: Math.round(duration),
             checks: results,
-            summary: health.summary
+            summary: health.summary,
         };
 
         this.lastCheck = report;
@@ -493,27 +497,27 @@ export class HealthCheck {
 
             let score = 0;
             switch (result.status) {
-            case 'healthy':
-                score = 100;
-                break;
-            case 'warning':
-                score = 70;
-                issues.push({ name, level: 'warning', message: result.message });
-                break;
-            case 'critical':
-                score = 30;
-                issues.push({ name, level: 'critical', message: result.message });
-                if (check && check.critical) {
-                    criticalFailed = true;
-                }
-                break;
-            case 'error':
-                score = 0;
-                issues.push({ name, level: 'error', message: result.message });
-                break;
-            case 'unknown':
-                score = 50;
-                break;
+                case 'healthy':
+                    score = 100;
+                    break;
+                case 'warning':
+                    score = 70;
+                    issues.push({ name, level: 'warning', message: result.message });
+                    break;
+                case 'critical':
+                    score = 30;
+                    issues.push({ name, level: 'critical', message: result.message });
+                    if (check && check.critical) {
+                        criticalFailed = true;
+                    }
+                    break;
+                case 'error':
+                    score = 0;
+                    issues.push({ name, level: 'error', message: result.message });
+                    break;
+                case 'unknown':
+                    score = 50;
+                    break;
             }
 
             totalScore += score * weight;
@@ -541,8 +545,8 @@ export class HealthCheck {
                 healthy: Object.values(results).filter(r => r.status === 'healthy').length,
                 warning: Object.values(results).filter(r => r.status === 'warning').length,
                 critical: Object.values(results).filter(r => r.status === 'critical').length,
-                issues
-            }
+                issues,
+            },
         };
     }
 
@@ -556,22 +560,22 @@ export class HealthCheck {
             }
 
             switch (newStatus) {
-            case 'healthy':
-                if (this.callbacks.onHealthy) {
-                    this.callbacks.onHealthy();
-                }
-                break;
-            case 'warning':
-            case 'degraded':
-                if (this.callbacks.onWarning) {
-                    this.callbacks.onWarning(this.lastCheck);
-                }
-                break;
-            case 'critical':
-                if (this.callbacks.onCritical) {
-                    this.callbacks.onCritical(this.lastCheck);
-                }
-                break;
+                case 'healthy':
+                    if (this.callbacks.onHealthy) {
+                        this.callbacks.onHealthy();
+                    }
+                    break;
+                case 'warning':
+                case 'degraded':
+                    if (this.callbacks.onWarning) {
+                        this.callbacks.onWarning(this.lastCheck);
+                    }
+                    break;
+                case 'critical':
+                    if (this.callbacks.onCritical) {
+                        this.callbacks.onCritical(this.lastCheck);
+                    }
+                    break;
             }
         }
     }
@@ -628,8 +632,8 @@ export class HealthCheck {
             configuration: {
                 interval: this.interval,
                 thresholds: this.thresholds,
-                checks: Array.from(this.checks.keys())
-            }
+                checks: Array.from(this.checks.keys()),
+            },
         };
     }
 
@@ -645,24 +649,28 @@ export class HealthCheck {
     async handleHealthRequest(_req, _res) {
         const report = await this.performHealthCheck();
 
-        const statusCode = report.status === 'healthy' ? 200 :
-            report.status === 'warning' ? 200 :
-                report.status === 'degraded' ? 503 :
-                    503;
+        const statusCode =
+            report.status === 'healthy'
+                ? 200
+                : report.status === 'warning'
+                  ? 200
+                  : report.status === 'degraded'
+                    ? 503
+                    : 503;
 
         return {
             statusCode,
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
             },
             body: JSON.stringify({
                 status: report.status,
                 score: report.score,
                 timestamp: report.timestamp,
                 checks: report.checks,
-                version: '2.4.0'
-            })
+                version: '2.4.0',
+            }),
         };
     }
 }
@@ -671,7 +679,7 @@ export class HealthCheck {
 // Users can enable via: healthCheck.enabled = true; healthCheck.start();
 export const healthCheck = new HealthCheck({
     enabled: false,
-    interval: 30000
+    interval: 30000,
 });
 
 export default HealthCheck;

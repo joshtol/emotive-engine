@@ -102,7 +102,7 @@ export class CanvasLayerManager {
         return {
             container: this.container,
             webglCanvas: this.webglCanvas,
-            canvas2D: this.canvas2D
+            canvas2D: this.canvas2D,
         };
     }
 
@@ -132,7 +132,7 @@ export class CanvasLayerManager {
     getDimensions() {
         return {
             width: this.canvas2D?.width || 0,
-            height: this.canvas2D?.height || 0
+            height: this.canvas2D?.height || 0,
         };
     }
 

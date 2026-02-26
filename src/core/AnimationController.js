@@ -16,64 +16,64 @@
 import { FRAME_TIMING, VISIBILITY } from './config/defaults.js';
 
 /**
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The HEARTBEAT of the Emotive Engine. Manages the main animation loop,             
- * ║ coordinates all subsystems, monitors performance, and ensures smooth              
- * ║ frame rates through adaptive quality control.                                     
+ * ║ The HEARTBEAT of the Emotive Engine. Manages the main animation loop,
+ * ║ coordinates all subsystems, monitors performance, and ensures smooth
+ * ║ frame rates through adaptive quality control.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎬 CORE RESPONSIBILITIES                                                          
+ * │ 🎬 CORE RESPONSIBILITIES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Main requestAnimationFrame loop management                                      
- * │ • Frame timing and deltaTime calculation                                          
- * │ • Performance monitoring and FPS tracking                                         
- * │ • Adaptive quality degradation when performance drops                             
- * │ • Subsystem update coordination (render, particles, state)                        
- * │ • Visibility and pause state handling                                             
+ * │ • Main requestAnimationFrame loop management
+ * │ • Frame timing and deltaTime calculation
+ * │ • Performance monitoring and FPS tracking
+ * │ • Adaptive quality degradation when performance drops
+ * │ • Subsystem update coordination (render, particles, state)
+ * │ • Visibility and pause state handling
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ ⚡ PERFORMANCE FEATURES                                                           
+ * │ ⚡ PERFORMANCE FEATURES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Dynamic FPS targeting (15, 30, 45, 60 FPS)                                      
- * │ • Frame skipping for consistent timing                                            
- * │ • Automatic quality reduction when FPS drops                                      
- * │ • Recovery system when performance improves                                       
- * │ • Memory leak detection and prevention                                            
+ * │ • Dynamic FPS targeting (15, 30, 45, 60 FPS)
+ * │ • Frame skipping for consistent timing
+ * │ • Automatic quality reduction when FPS drops
+ * │ • Recovery system when performance improves
+ * │ • Memory leak detection and prevention
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🔧 CONFIGURATION OPTIONS                                                          
+ * │ 🔧 CONFIGURATION OPTIONS
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • targetFPS         : Desired frame rate (default: 60)                            
- * │ • enableDegradation : Allow quality reduction (default: true)                     
- * │ • performanceMode   : 'adaptive' | 'fixed' | 'maximum'                           
- * │ • monitoringInterval: Performance check frequency (default: 1000ms)               
+ * │ • targetFPS         : Desired frame rate (default: 60)
+ * │ • enableDegradation : Allow quality reduction (default: true)
+ * │ • performanceMode   : 'adaptive' | 'fixed' | 'maximum'
+ * │ • monitoringInterval: Performance check frequency (default: 1000ms)
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ ❌ CRITICAL - DO NOT MODIFY                                                       
+ * │ ❌ CRITICAL - DO NOT MODIFY
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ ✗ Frame timing logic       → Breaks animation smoothness                         
- * │ ✗ Update order            → Causes render/state desync                           
- * │ ✗ Performance thresholds   → May cause excessive degradation                     
- * │ ✗ Memory cleanup          → Creates memory leaks                                 
- * │ ✗ RAF loop management     → Breaks entire animation system                       
+ * │ ✗ Frame timing logic       → Breaks animation smoothness
+ * │ ✗ Update order            → Causes render/state desync
+ * │ ✗ Performance thresholds   → May cause excessive degradation
+ * │ ✗ Memory cleanup          → Creates memory leaks
+ * │ ✗ RAF loop management     → Breaks entire animation system
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                          SUBSYSTEM UPDATE ORDER                                   
+ * ║                          SUBSYSTEM UPDATE ORDER
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ 1. Performance monitoring (FPS calculation)                                       
- * ║ 2. State machine update (emotions, transitions)                                   
- * ║ 3. Gesture processing (animation progress)                                        
- * ║ 4. Particle system update (movement, spawning)                                    
- * ║ 5. Renderer update (draw orb and particles)                                       
- * ║ 6. Cleanup and memory management                                                  
+ * ║ 1. Performance monitoring (FPS calculation)
+ * ║ 2. State machine update (emotions, transitions)
+ * ║ 3. Gesture processing (animation progress)
+ * ║ 4. Particle system update (movement, spawning)
+ * ║ 5. Renderer update (draw orb and particles)
+ * ║ 6. Cleanup and memory management
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -81,7 +81,10 @@ import { FRAME_TIMING, VISIBILITY } from './config/defaults.js';
 
 // import PerformanceMonitor from './system/PerformanceMonitor.js'; // Unused - available for future performance monitoring
 import SimpleFPSCounter from './system/SimpleFPSCounter.js';
-import { animationLoopManager as defaultLoopManager, AnimationPriority } from './AnimationLoopManager.js';
+import {
+    animationLoopManager as defaultLoopManager,
+    AnimationPriority,
+} from './AnimationLoopManager.js';
 
 class AnimationController {
     constructor(errorBoundary, config = {}) {
@@ -100,7 +103,7 @@ class AnimationController {
         this.lastFrameTime = 0;
         this.deltaTime = 0;
         this.isPaused = false;
-        
+
         // Set up visibility change and window focus handling
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
         this.handleWindowBlur = this.handleWindowBlur.bind(this);
@@ -111,7 +114,7 @@ class AnimationController {
             window.addEventListener('blur', this.handleWindowBlur);
             window.addEventListener('focus', this.handleWindowFocus);
         }
-        
+
         // PerformanceMonitor DISABLED - no FPS interference
         this.performanceMonitor = null;
         /* 
@@ -120,19 +123,18 @@ class AnimationController {
             this.emit(event, data);
         });
         */
-        
+
         // Simple FPS counter for accurate display
         this.fpsCounter = new SimpleFPSCounter();
-        
+
         // Subsystem references (injected via setSubsystems)
         this.subsystems = {};
-        
+
         // Event callback for external integration
         this.eventCallback = null;
-        
+
         // Reference to parent EmotiveMascot for audio level updates
         this.parentMascot = null;
-        
     }
 
     /**
@@ -145,9 +147,9 @@ class AnimationController {
             particleSystem: subsystems.particleSystem,
             renderer: subsystems.renderer,
             soundSystem: subsystems.soundSystem,
-            canvasManager: subsystems.canvasManager
+            canvasManager: subsystems.canvasManager,
         };
-        
+
         // Validate required subsystems
         const required = ['stateMachine', 'particleSystem', 'renderer'];
         for (const system of required) {
@@ -155,12 +157,11 @@ class AnimationController {
                 throw new Error(`Required subsystem '${system}' not provided`);
             }
         }
-        
+
         // PerformanceMonitor disabled
         if (this.performanceMonitor) {
             this.performanceMonitor.setSubsystems(this.subsystems);
         }
-        
     }
 
     /**
@@ -206,11 +207,11 @@ class AnimationController {
             if (!this.subsystems.stateMachine) {
                 throw new Error('Cannot start animation without subsystems configured');
             }
-            
+
             // Initialize animation state
             this.isRunning = true;
             this.lastFrameTime = performance.now();
-            
+
             // Resume audio context if available
             if (this.subsystems.soundSystem && this.subsystems.soundSystem.isAvailable()) {
                 this.subsystems.soundSystem.resumeContext();
@@ -225,7 +226,7 @@ class AnimationController {
 
             // Emit start event
             this.emit('animationStarted', { targetFPS: this.targetFPS });
-            
+
             return true;
         }, 'animation-start')();
     }
@@ -239,7 +240,7 @@ class AnimationController {
             if (!this.isRunning) {
                 return false;
             }
-            
+
             // Stop animation loop
             this.isRunning = false;
 
@@ -255,26 +256,24 @@ class AnimationController {
                 this.animationFrameId = null;
             }
 
-
-            
             // Stop all active gestures
             if (this.subsystems.renderer && this.subsystems.renderer.stopAllGestures) {
                 this.subsystems.renderer.stopAllGestures();
             }
-            
+
             // Stop ambient audio
             if (this.subsystems.soundSystem && this.subsystems.soundSystem.isAvailable()) {
                 this.subsystems.soundSystem.stopAmbientTone();
             }
-            
+
             // Clear particles
             if (this.subsystems.particleSystem) {
                 this.subsystems.particleSystem.clear();
             }
-            
+
             // Emit stop event
             this.emit('animationStopped');
-            
+
             return true;
         }, 'animation-stop')();
     }
@@ -348,7 +347,10 @@ class AnimationController {
 
                 // TAB FOCUS FIX: Let ParticleSystem handle visibility resume logic
                 if (this.subsystems?.particleSystem) {
-                    this.subsystems.particleSystem.onVisibilityResume(gap, this.pausedParticleCount);
+                    this.subsystems.particleSystem.onVisibilityResume(
+                        gap,
+                        this.pausedParticleCount
+                    );
                 }
 
                 // TAB FOCUS FIX: Don't reset canvas context aggressively
@@ -385,7 +387,7 @@ class AnimationController {
             }
         }
     }
-    
+
     /**
      * Main animation loop - SIMPLIFIED for performance
      * Removed AnimationLoopManager overhead
@@ -395,8 +397,8 @@ class AnimationController {
 
         // Simple deltaTime calculation
         const currentTime = timestamp || performance.now();
-        this.deltaTime = deltaTime || (currentTime - this.lastFrameTime);
-        
+        this.deltaTime = deltaTime || currentTime - this.lastFrameTime;
+
         // TAB FOCUS FIX: More aggressive deltaTime cap for smooth recovery
         // After tab focus, browsers can give inconsistent timing
         if (this.deltaTime > FRAME_TIMING.DELTA_TIME_CAP) {
@@ -404,13 +406,16 @@ class AnimationController {
         }
 
         // TAB FOCUS FIX: Detect and handle tab focus recovery
-        if (this.deltaTime > FRAME_TIMING.TARGET_FRAME_TIME && this.deltaTime < FRAME_TIMING.DELTA_TIME_CAP) {
+        if (
+            this.deltaTime > FRAME_TIMING.TARGET_FRAME_TIME &&
+            this.deltaTime < FRAME_TIMING.DELTA_TIME_CAP
+        ) {
             // Likely tab focus recovery - use target frame time
             this.deltaTime = FRAME_TIMING.TARGET_FRAME_TIME;
         }
-        
+
         this.lastFrameTime = currentTime;
-        
+
         // Simple update and render - no overhead
         this.update(this.deltaTime);
         this.render();
@@ -430,26 +435,33 @@ class AnimationController {
         if (this.parentMascot?.stateCoordinator?._modifierManager) {
             this.parentMascot.stateCoordinator._modifierManager.update(deltaTime);
         }
-        
+
         // Gesture updates now handled by renderer
-        
+
         // Update parent mascot for audio level monitoring
         if (this.parentMascot && typeof this.parentMascot.update === 'function') {
             this.parentMascot.update(deltaTime);
         }
-        
+
         // Only handle particles here if NOT in classic rendering mode
         // Classic mode handles its own particles in EmotiveMascot.render()
         const isClassicMode = this.parentMascot?.config?.renderingStyle === 'classic';
 
         if (!isClassicMode) {
             // Get current emotional properties and center for particle system (advanced mode only)
-            if (this.subsystems.particleSystem && this.subsystems.stateMachine && this.subsystems.canvasManager) {
+            if (
+                this.subsystems.particleSystem &&
+                this.subsystems.stateMachine &&
+                this.subsystems.canvasManager
+            ) {
                 const emotionalProps = this.subsystems.stateMachine.getCurrentEmotionalProperties();
 
                 // Use effective center from renderer (includes position offsets) instead of raw canvas center
                 let center;
-                if (this.subsystems.renderer && typeof this.subsystems.renderer.getEffectiveCenter === 'function') {
+                if (
+                    this.subsystems.renderer &&
+                    typeof this.subsystems.renderer.getEffectiveCenter === 'function'
+                ) {
                     center = this.subsystems.renderer.getEffectiveCenter();
                 } else {
                     // Fallback to canvas center if renderer doesn't have getEffectiveCenter
@@ -479,15 +491,21 @@ class AnimationController {
                 );
 
                 // Update particles with gesture motion if available
-                this.subsystems.particleSystem.update(deltaTime, center.x, center.y, gestureMotion, gestureProgress);
+                this.subsystems.particleSystem.update(
+                    deltaTime,
+                    center.x,
+                    center.y,
+                    gestureMotion,
+                    gestureProgress
+                );
             }
         }
-        
+
         // PerformanceMonitor disabled
         if (this.performanceMonitor) {
             this.performanceMonitor.updateMetrics({
                 particleCount: this.subsystems.particleSystem?.getActiveParticleCount?.() || 0,
-                audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0
+                audioLatency: this.subsystems.soundSystem?.getLatency?.() || 0,
             });
         }
     }
@@ -505,8 +523,6 @@ class AnimationController {
         }
     }
 
-
-
     /**
      * Gets current performance metrics (delegated to PerformanceMonitor)
      * @returns {Object} Performance data
@@ -520,7 +536,7 @@ class AnimationController {
             frameTime: fpsMetrics.frameTime || 16.67,
             averageFrameTime: fpsMetrics.averageFrameTime || 16.67,
             isRunning: this.isRunning,
-            deltaTime: this.deltaTime
+            deltaTime: this.deltaTime,
         };
     }
 
@@ -530,7 +546,6 @@ class AnimationController {
      */
     setTargetFPS(_fps) {
         // DISABLED - no FPS changes allowed
-
     }
 
     /**
@@ -554,24 +569,23 @@ class AnimationController {
      */
     destroy() {
         this.stop();
-        
+
         // Remove visibility change and focus listeners
         if (typeof document !== 'undefined') {
             document.removeEventListener('visibilitychange', this.handleVisibilityChange);
             window.removeEventListener('blur', this.handleWindowBlur);
             window.removeEventListener('focus', this.handleWindowFocus);
         }
-        
+
         // Destroy performance monitor
         if (this.performanceMonitor) {
             this.performanceMonitor.destroy();
             this.performanceMonitor = null;
         }
-        
+
         // Clear subsystem references
         this.subsystems = {};
         this.eventCallback = null;
-        
     }
 }
 

@@ -18,7 +18,8 @@ export class DebugProfilingManager {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.diagnosticsManager) throw new Error('DebugProfilingManager: diagnosticsManager required');
+        if (!deps.diagnosticsManager)
+            throw new Error('DebugProfilingManager: diagnosticsManager required');
 
         this.diagnosticsManager = deps.diagnosticsManager;
         this._state = deps.state || { debugMode: false };

@@ -43,55 +43,55 @@ export class GestureController {
 
         // Gesture mapping: maps gesture names to renderer method names
         this.rendererMethods = {
-            'bounce': 'startBounce',
-            'pulse': 'startPulse',
-            'shake': 'startShake',
-            'spin': 'startSpin',
-            'nod': 'startNod',
-            'tilt': 'startTilt',
-            'expand': 'startExpand',
-            'contract': 'startContract',
-            'flash': 'startFlash',
-            'drift': 'startDrift',
-            'stretch': 'startStretch',
-            'glow': 'startGlow',
-            'sparkle': 'startSparkle',
-            'shimmer': 'startShimmer',
-            'wiggle': 'startWiggle',
-            'groove': 'startGroove',
-            'point': 'startPoint',
-            'lean': 'startLean',
-            'reach': 'startReach',
-            'headBob': 'startHeadBob',
-            'orbit': 'startOrbit',
-            'flicker': 'startFlicker',
-            'vibrate': 'startVibrate',
-            'wave': 'startWave',
-            'breathe': 'startBreathe',
-            'morph': 'startMorph',
-            'slowBlink': 'startSlowBlink',
-            'look': 'startLook',
-            'settle': 'startSettle',
-            'orbital': 'startOrbital',  // Alias for backwards compatibility
-            'hula': 'startHula',
-            'sway': 'startSway',
-            'breathIn': 'startBreathIn',
-            'breathOut': 'startBreathOut',
-            'breathHold': 'startBreathHold',
-            'breathHoldEmpty': 'startBreathHoldEmpty',
-            'jump': 'startJump',
-            'rain': 'startRain',
-            'runningman': 'startRunningMan',
-            'charleston': 'startCharleston',
+            bounce: 'startBounce',
+            pulse: 'startPulse',
+            shake: 'startShake',
+            spin: 'startSpin',
+            nod: 'startNod',
+            tilt: 'startTilt',
+            expand: 'startExpand',
+            contract: 'startContract',
+            flash: 'startFlash',
+            drift: 'startDrift',
+            stretch: 'startStretch',
+            glow: 'startGlow',
+            sparkle: 'startSparkle',
+            shimmer: 'startShimmer',
+            wiggle: 'startWiggle',
+            groove: 'startGroove',
+            point: 'startPoint',
+            lean: 'startLean',
+            reach: 'startReach',
+            headBob: 'startHeadBob',
+            orbit: 'startOrbit',
+            flicker: 'startFlicker',
+            vibrate: 'startVibrate',
+            wave: 'startWave',
+            breathe: 'startBreathe',
+            morph: 'startMorph',
+            slowBlink: 'startSlowBlink',
+            look: 'startLook',
+            settle: 'startSettle',
+            orbital: 'startOrbital', // Alias for backwards compatibility
+            hula: 'startHula',
+            sway: 'startSway',
+            breathIn: 'startBreathIn',
+            breathOut: 'startBreathOut',
+            breathHold: 'startBreathHold',
+            breathHoldEmpty: 'startBreathHoldEmpty',
+            jump: 'startJump',
+            rain: 'startRain',
+            runningman: 'startRunningMan',
+            charleston: 'startCharleston',
             // Ambient dance gestures
-            'grooveSway': 'startGrooveSway',
-            'grooveBob': 'startGrooveBob',
-            'grooveFlow': 'startGrooveFlow',
-            'groovePulse': 'startGroovePulse',
-            'grooveStep': 'startGrooveStep',
+            grooveSway: 'startGrooveSway',
+            grooveBob: 'startGrooveBob',
+            grooveFlow: 'startGrooveFlow',
+            groovePulse: 'startGroovePulse',
+            grooveStep: 'startGrooveStep',
             // Additional gestures for executeGestureDirectly
-            'float': 'startFloat',
-            'twist': 'startTwist'
+            float: 'startFloat',
+            twist: 'startTwist',
         };
     }
 
@@ -101,11 +101,13 @@ export class GestureController {
     init() {
         // Try to load GestureCompatibility if not already loaded
         if (!this.gestureCompatibility) {
-            import('../../core/GestureCompatibility.js').then(module => {
-                this.gestureCompatibility = module.default;
-            }).catch(err => {
-                console.warn('GestureCompatibility not available:', err);
-            });
+            import('../../core/GestureCompatibility.js')
+                .then(module => {
+                    this.gestureCompatibility = module.default;
+                })
+                .catch(err => {
+                    console.warn('GestureCompatibility not available:', err);
+                });
         }
     }
 
@@ -116,102 +118,122 @@ export class GestureController {
      * @returns {EmotiveMascot} The mascot instance for chaining
      */
     express(gesture, options = {}) {
-        return this.errorBoundary.wrap(() => {
-            // Check for no gesture first
-            if (!gesture) {
-                return this._chainTarget;
-            }
-
-            // Performance marker: Gesture start
-            const gestureStartTime = performance.now();
-            const gestureName = Array.isArray(gesture) ? 'chord' :
-                (typeof gesture === 'object' && gesture.type === 'chord') ? 'chord' :
-                    gesture;
-
-            if (this.performanceMonitor) {
-                this.performanceMonitor.markGestureStart(gestureName);
-            }
-
-            // Handle chord (multiple simultaneous gestures)
-            if (Array.isArray(gesture)) {
-                return this.expressChord(gesture, options);
-            }
-
-            // Handle chord object
-            if (typeof gesture === 'object' && gesture.type === 'chord') {
-                return this.expressChord(gesture.gestures, options);
-            }
-
-            // Express called with single gesture
-            // In rhythm game mode, gestures will be triggered directly by gameplay
-            // No queuing needed - immediate response to player actions
-
-            // Check if this gesture has a direct renderer method
-            const methodName = this.rendererMethods[gesture];
-            if (methodName && this.renderer && this.renderer[methodName]) {
-                // Call the renderer method directly
-                this.renderer[methodName](options);
-
-                // Play gesture sound effect if available and enabled
-                if (this.config.soundEnabled && this.soundSystem && this.soundSystem.isAvailable()) {
-                    this.soundSystem.playGestureSound(gesture);
+        return this.errorBoundary.wrap(
+            () => {
+                // Check for no gesture first
+                if (!gesture) {
+                    return this._chainTarget;
                 }
 
-                // Performance marker: Gesture end
+                // Performance marker: Gesture start
+                const gestureStartTime = performance.now();
+                const gestureName = Array.isArray(gesture)
+                    ? 'chord'
+                    : typeof gesture === 'object' && gesture.type === 'chord'
+                      ? 'chord'
+                      : gesture;
+
                 if (this.performanceMonitor) {
-                    const gestureEndTime = performance.now();
-                    this.performanceMonitor.markGestureEnd(gestureName);
-                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
+                    this.performanceMonitor.markGestureStart(gestureName);
                 }
 
-                return this._chainTarget;
-            }
-
-            // Try to execute gesture through the particle system
-            // This handles modular gestures from the gesture registry
-            // Check if gesture exists in the gesture registry
-            const gestureConfig = getGesture(gesture);
-
-            if (gestureConfig) {
-                // Register gesture's rhythm configuration
-                rhythmIntegration.registerConfig('gesture', gesture, gestureConfig);
-
-                // Store the current gesture info for the particle system to use
-                this._state.currentModularGesture = {
-                    type: gesture,
-                    config: gestureConfig,
-                    startTime: performance.now(),
-                    duration: gestureConfig.defaultParams?.duration || 1000,
-                    progress: 0
-                };
-
-                // Executed gesture through particle system
-
-                // Play gesture sound effect if available and enabled
-                if (this.config.soundEnabled && this.soundSystem && this.soundSystem.isAvailable()) {
-                    this.soundSystem.playGestureSound(gesture);
+                // Handle chord (multiple simultaneous gestures)
+                if (Array.isArray(gesture)) {
+                    return this.expressChord(gesture, options);
                 }
 
-                // Performance marker: Gesture end
+                // Handle chord object
+                if (typeof gesture === 'object' && gesture.type === 'chord') {
+                    return this.expressChord(gesture.gestures, options);
+                }
+
+                // Express called with single gesture
+                // In rhythm game mode, gestures will be triggered directly by gameplay
+                // No queuing needed - immediate response to player actions
+
+                // Check if this gesture has a direct renderer method
+                const methodName = this.rendererMethods[gesture];
+                if (methodName && this.renderer && this.renderer[methodName]) {
+                    // Call the renderer method directly
+                    this.renderer[methodName](options);
+
+                    // Play gesture sound effect if available and enabled
+                    if (
+                        this.config.soundEnabled &&
+                        this.soundSystem &&
+                        this.soundSystem.isAvailable()
+                    ) {
+                        this.soundSystem.playGestureSound(gesture);
+                    }
+
+                    // Performance marker: Gesture end
+                    if (this.performanceMonitor) {
+                        const gestureEndTime = performance.now();
+                        this.performanceMonitor.markGestureEnd(gestureName);
+                        this.performanceMonitor.recordGestureTime(
+                            gestureName,
+                            gestureEndTime - gestureStartTime
+                        );
+                    }
+
+                    return this._chainTarget;
+                }
+
+                // Try to execute gesture through the particle system
+                // This handles modular gestures from the gesture registry
+                // Check if gesture exists in the gesture registry
+                const gestureConfig = getGesture(gesture);
+
+                if (gestureConfig) {
+                    // Register gesture's rhythm configuration
+                    rhythmIntegration.registerConfig('gesture', gesture, gestureConfig);
+
+                    // Store the current gesture info for the particle system to use
+                    this._state.currentModularGesture = {
+                        type: gesture,
+                        config: gestureConfig,
+                        startTime: performance.now(),
+                        duration: gestureConfig.defaultParams?.duration || 1000,
+                        progress: 0,
+                    };
+
+                    // Executed gesture through particle system
+
+                    // Play gesture sound effect if available and enabled
+                    if (
+                        this.config.soundEnabled &&
+                        this.soundSystem &&
+                        this.soundSystem.isAvailable()
+                    ) {
+                        this.soundSystem.playGestureSound(gesture);
+                    }
+
+                    // Performance marker: Gesture end
+                    if (this.performanceMonitor) {
+                        const gestureEndTime = performance.now();
+                        this.performanceMonitor.markGestureEnd(gestureName);
+                        this.performanceMonitor.recordGestureTime(
+                            gestureName,
+                            gestureEndTime - gestureStartTime
+                        );
+                    }
+
+                    return this._chainTarget;
+                }
+
+                // Unknown gesture - throttled warning
+                this._throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
+
+                // Performance marker: Gesture end (failed)
                 if (this.performanceMonitor) {
-                    const gestureEndTime = performance.now();
                     this.performanceMonitor.markGestureEnd(gestureName);
-                    this.performanceMonitor.recordGestureTime(gestureName, gestureEndTime - gestureStartTime);
                 }
 
                 return this._chainTarget;
-            }
-
-            // Unknown gesture - throttled warning
-            this._throttledWarn(`Unknown gesture: ${gesture}`, `gesture_${gesture}`);
-
-            // Performance marker: Gesture end (failed)
-            if (this.performanceMonitor) {
-                this.performanceMonitor.markGestureEnd(gestureName);
-            }
-
-            return this._chainTarget;
-        }, 'gesture-express', this._chainTarget)();
+            },
+            'gesture-express',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -221,43 +243,49 @@ export class GestureController {
      * @returns {EmotiveMascot} The mascot instance for chaining
      */
     expressChord(gestures, options = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (!gestures || !Array.isArray(gestures) || gestures.length === 0) {
-                return this._chainTarget;
-            }
+        return this.errorBoundary.wrap(
+            () => {
+                if (!gestures || !Array.isArray(gestures) || gestures.length === 0) {
+                    return this._chainTarget;
+                }
 
-            // Import gesture compatibility if not loaded
-            if (!this.gestureCompatibility) {
-                // Try to load it dynamically
-                import('../../core/GestureCompatibility.js').then(module => {
-                    this.gestureCompatibility = module.default;
-                }).catch(err => {
-                    console.warn('GestureCompatibility not available:', err);
+                // Import gesture compatibility if not loaded
+                if (!this.gestureCompatibility) {
+                    // Try to load it dynamically
+                    import('../../core/GestureCompatibility.js')
+                        .then(module => {
+                            this.gestureCompatibility = module.default;
+                        })
+                        .catch(err => {
+                            console.warn('GestureCompatibility not available:', err);
+                        });
+                }
+
+                // Use compatibility system if available
+                const compatibleGestures = this.gestureCompatibility
+                    ? this.gestureCompatibility.getCompatibleGestures(gestures)
+                    : gestures;
+
+                // Execute all compatible gestures simultaneously
+                compatibleGestures.forEach(gestureName => {
+                    const normalizedGesture =
+                        typeof gestureName === 'string' ? gestureName : gestureName.gestureName;
+
+                    // Execute directly to ensure simultaneity
+                    this.executeGestureDirectly(normalizedGesture, options);
                 });
-            }
 
-            // Use compatibility system if available
-            const compatibleGestures = this.gestureCompatibility ?
-                this.gestureCompatibility.getCompatibleGestures(gestures) :
-                gestures;
+                // Check for enhancing combination
+                if (this.gestureCompatibility?.isEnhancingCombination?.(compatibleGestures)) {
+                    // Add extra visual flair
+                    this.renderer?.specialEffects?.addSparkle?.();
+                }
 
-            // Execute all compatible gestures simultaneously
-            compatibleGestures.forEach(gestureName => {
-                const normalizedGesture = typeof gestureName === 'string' ?
-                    gestureName : gestureName.gestureName;
-
-                // Execute directly to ensure simultaneity
-                this.executeGestureDirectly(normalizedGesture, options);
-            });
-
-            // Check for enhancing combination
-            if (this.gestureCompatibility?.isEnhancingCombination?.(compatibleGestures)) {
-                // Add extra visual flair
-                this.renderer?.specialEffects?.addSparkle?.();
-            }
-
-            return this._chainTarget;
-        }, 'gesture-chord', this._chainTarget)();
+                return this._chainTarget;
+            },
+            'gesture-chord',
+            this._chainTarget
+        )();
     }
 
     /**

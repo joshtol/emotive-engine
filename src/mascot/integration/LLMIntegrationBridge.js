@@ -48,11 +48,15 @@ export class LLMIntegrationBridge {
      * @returns {Promise<Object>} Chain target for method chaining
      */
     handleLLMResponse(response, options = {}) {
-        return this.errorBoundary.wrap(async () => {
-            const handler = this._getHandler(options);
-            await handler.handle(response, options);
-            return this._chainTarget;
-        }, 'handleLLMResponse', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            async () => {
+                const handler = this._getHandler(options);
+                await handler.handle(response, options);
+                return this._chainTarget;
+            },
+            'handleLLMResponse',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -62,11 +66,15 @@ export class LLMIntegrationBridge {
      * @returns {Object} Chain target for method chaining
      */
     configureLLMHandler(config) {
-        return this.errorBoundary.wrap(() => {
-            const handler = this._getHandler(config);
-            handler.configure(config);
-            return this._chainTarget;
-        }, 'configureLLMHandler', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                const handler = this._getHandler(config);
+                handler.configure(config);
+                return this._chainTarget;
+            },
+            'configureLLMHandler',
+            this._chainTarget
+        )();
     }
 
     /**

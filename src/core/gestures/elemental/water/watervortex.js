@@ -62,17 +62,17 @@ const WATER_VORTEX_CONFIG = {
             easing: 'easeInOut',
             startScale: 1.4,
             endScale: 1.7,
-            startDiameter: 0.6,     // Narrow at bottom for pronounced cone
-            endDiameter: 2.0,       // Wider at top for dramatic funnel
-            orientation: 'flat'     // Horizontal rings stacking upward
+            startDiameter: 0.6, // Narrow at bottom for pronounced cone
+            endDiameter: 2.0, // Wider at top for dramatic funnel
+            orientation: 'flat', // Horizontal rings stacking upward
         },
         // Formation: 3 rings at SAME position, offset by 120 degrees rotation
         formation: {
             type: 'spiral',
             count: 3,
-            spacing: 0,             // All rings at same vertical position (tornado)
-            arcOffset: 120,         // 120 degrees between each ring
-            phaseOffset: 0          // All travel together
+            spacing: 0, // All rings at same vertical position (tornado)
+            arcOffset: 120, // 120 degrees between each ring
+            phaseOffset: 0, // All travel together
         },
         count: 3,
         scale: 1.0,
@@ -84,18 +84,18 @@ const WATER_VORTEX_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.1,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'burst-fade',
                 duration: 0.15,
                 easing: 'easeIn',
-                burstScale: 1.1
+                burstScale: 1.1,
             },
             // Procedural shader config
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             // Turbulence: rises with the tornado
             parameterAnimation: {
@@ -103,14 +103,14 @@ const WATER_VORTEX_CONFIG = {
                     start: 0.4,
                     peak: 0.85,
                     end: 0.5,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             // No grain — multiply grain on transparent refraction = dark speckles
             pulse: {
                 amplitude: 0.12,
                 frequency: 6,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             // Arc animation handles visual rotation
             scaleVariance: 0.2,
@@ -119,41 +119,43 @@ const WATER_VORTEX_CONFIG = {
             renderOrder: 12,
             intensityScaling: {
                 scale: 1.4,
-                pulseAmplitude: 1.3
+                pulseAmplitude: 1.3,
             },
             // Model-specific behavior overrides
             modelOverrides: {
                 'splash-ring': {
                     // Arc visibility - shows portion of ring that sweeps around
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.5,      // ~50% of ring visible at a time
-                        arcSpeed: 6.0,      // 6 rotations over gesture duration
-                        arcCount: 1         // Single arc per ring
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.5, // ~50% of ring visible at a time
+                        arcSpeed: 6.0, // 6 rotations over gesture duration
+                        arcCount: 1, // Single arc per ring
                     },
                     scaling: {
                         mode: 'non-uniform',
                         axes: {
                             x: { expand: true, rate: 1.1 },
-                            y: { expand: false, rate: 0.3 },  // Flatten slightly
-                            z: { expand: true, rate: 1.1 }
-                        }
+                            y: { expand: false, rate: 0.3 }, // Flatten slightly
+                            z: { expand: true, rate: 1.1 },
+                        },
                     },
-                    orientationOverride: 'flat'  // Horizontal rings
-                }
+                    orientationOverride: 'flat', // Horizontal rings
+                },
             },
             // Sustained spray flung outward by spinning tornado
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.6,
-                centrifugal: { speed: 1.2, tangentialBias: 0.3 },
-            }],
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.6,
+                    centrifugal: { speed: 1.2, tangentialBias: 0.3 },
+                },
+            ],
+        },
     },
 
     // Wobble - swirling water
@@ -168,7 +170,7 @@ const WATER_VORTEX_CONFIG = {
     // Scale - slight expansion with tornado
     scaleWobble: 0.02,
     scaleFrequency: 4,
-    scaleGrowth: 0.03
+    scaleGrowth: 0.03,
 };
 
 /**

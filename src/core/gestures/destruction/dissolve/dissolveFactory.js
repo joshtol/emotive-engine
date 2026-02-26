@@ -35,52 +35,52 @@ const DISSOLVE_DIRECTIONS = {
         name: 'dissolveUp',
         emoji: '🌬️',
         description: 'Shards blow upward like rising dust',
-        windDirection: [0, 1, 0.1],      // Up with slight forward drift
+        windDirection: [0, 1, 0.1], // Up with slight forward drift
         windForce: 2.5,
-        turbulence: 0.6
+        turbulence: 0.6,
     },
     down: {
         name: 'dissolveDown',
         emoji: '💨',
         description: 'Shards blow downward like falling ash',
-        windDirection: [0, -1, 0.1],     // Down with slight forward drift
+        windDirection: [0, -1, 0.1], // Down with slight forward drift
         windForce: 1.8,
-        turbulence: 0.4
+        turbulence: 0.4,
     },
     left: {
         name: 'dissolveLeft',
         emoji: '⬅️',
         description: 'Shards blow left in the wind',
-        windDirection: [-1, 0.15, 0],    // World -X = screen left (for dual-mode dissolve)
-        impactDir: [1, 0.15, 0],         // Camera-relative (inverted X due to camRight calculation)
+        windDirection: [-1, 0.15, 0], // World -X = screen left (for dual-mode dissolve)
+        impactDir: [1, 0.15, 0], // Camera-relative (inverted X due to camRight calculation)
         windForce: 2.2,
-        turbulence: 0.5
+        turbulence: 0.5,
     },
     right: {
         name: 'dissolveRight',
         emoji: '➡️',
         description: 'Shards blow right in the wind',
-        windDirection: [1, 0.15, 0],     // World +X = screen right (for dual-mode dissolve)
-        impactDir: [-1, 0.15, 0],        // Camera-relative (inverted X due to camRight calculation)
+        windDirection: [1, 0.15, 0], // World +X = screen right (for dual-mode dissolve)
+        impactDir: [-1, 0.15, 0], // Camera-relative (inverted X due to camRight calculation)
         windForce: 2.2,
-        turbulence: 0.5
+        turbulence: 0.5,
     },
     away: {
         name: 'dissolveAway',
         emoji: '🌫️',
         description: 'Shards blow away from camera into distance',
-        windDirection: [0, 0.1, -1],     // Away (negative Z) with slight lift
+        windDirection: [0, 0.1, -1], // Away (negative Z) with slight lift
         windForce: 2.0,
-        turbulence: 0.4
+        turbulence: 0.4,
     },
     toward: {
         name: 'dissolveToward',
         emoji: '🌪️',
         description: 'Shards blow toward camera',
-        windDirection: [0, 0.1, 1],      // Toward (positive Z) with slight lift
+        windDirection: [0, 0.1, 1], // Toward (positive Z) with slight lift
         windForce: 2.5,
-        turbulence: 0.6
-    }
+        turbulence: 0.6,
+    },
 };
 
 /**
@@ -101,7 +101,7 @@ export function createDissolveGesture(direction = 'away') {
             duration: 3500,
             musicalDuration: { musical: true, beats: 6 },
             intensity: 0.7,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -111,8 +111,8 @@ export function createDissolveGesture(direction = 'away') {
             timingSync: 'onBeat',
             accentResponse: {
                 enabled: true,
-                multiplier: 1.2
-            }
+                multiplier: 1.2,
+            },
         },
 
         '3d': {
@@ -179,12 +179,12 @@ export function createDissolveGesture(direction = 'away') {
                             duration: 3000,
                             windDirection: config.windDirection,
                             windForce: config.windForce * intensity,
-                            turbulence: config.turbulence
-                        }
-                    }
+                            turbulence: config.turbulence,
+                        },
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 

@@ -39,15 +39,10 @@ export {
     getEmotion,
     getEmotionVisualParams,
     hasEmotion,
-    listEmotions
+    listEmotions,
 } from './core/emotions/index.js';
 
-export {
-    getGesture,
-    applyGesture,
-    listGestures,
-    GESTURE_TYPES
-} from './core/gestures/index.js';
+export { getGesture, applyGesture, listGestures, GESTURE_TYPES } from './core/gestures/index.js';
 
 // ============================================================================
 // UTILITIES (Lean - No Undertones)
@@ -78,16 +73,16 @@ export const BUILD_TYPE = 'lean';
 // ============================================================================
 
 export const FEATURES = {
-    rhythmSync: false,              // Removed for size
-    grooveTemplates: false,         // Removed for size
-    undertones: false,              // Removed for size
-    undertoneSaturation: false,     // Removed for size
-    gestureBlending: true,          // Core feature
-    audioReactive: false,           // No audio
-    particleSystem: true,           // Core feature
-    accessibility: false,           // Removed for size
-    mobileOptimization: true,       // Keep for responsive
-    performanceMonitoring: false    // Removed for size
+    rhythmSync: false, // Removed for size
+    grooveTemplates: false, // Removed for size
+    undertones: false, // Removed for size
+    undertoneSaturation: false, // Removed for size
+    gestureBlending: true, // Core feature
+    audioReactive: false, // No audio
+    particleSystem: true, // Core feature
+    accessibility: false, // Removed for size
+    mobileOptimization: true, // Keep for responsive
+    performanceMonitoring: false, // Removed for size
 };
 
 // ============================================================================

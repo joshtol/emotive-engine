@@ -56,8 +56,8 @@ const ELECTRICCHARGE_CONFIG = {
                 lifetime: [50, 100, 400, 700],
                 flashIn: [12, 60],
                 fadeOut: [30, 200],
-                respawnDelay: [0, 20, 100, 250]
-            }
+                respawnDelay: [0, 20, 100, 250],
+            },
         },
         animation: {
             appearAt: 0.05,
@@ -76,24 +76,26 @@ const ELECTRICCHARGE_CONFIG = {
                 blend: 'multiply',
                 travel: 'radial',
                 travelSpeed: 1.2,
-                strengthCurve: 'fadeIn'
+                strengthCurve: 'fadeIn',
             },
             grain: { type: 3, strength: 0.1, scale: 0.35, speed: 2.0, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from charge
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.1,
-                sizeScale: 0.6,
-                progressCurve: 'rampUp',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.1,
+                    sizeScale: 0.6,
+                    progressCurve: 'rampUp',
+                },
+            ],
             scaleVariance: 0.25,
             lifetimeVariance: 0.2,
             blending: 'additive',
             renderOrder: 12,
-            intensityScaling: { scale: 1.35, emissiveMax: 1.6, driftSpeed: 1.3 }
-        }
+            intensityScaling: { scale: 1.35, emissiveMax: 1.6, driftSpeed: 1.3 },
+        },
     },
 
     // Minimal jitter - slight tremble at peak
@@ -111,7 +113,7 @@ const ELECTRICCHARGE_CONFIG = {
     scalePulse: true,
     scaleGrowth: 0.08,
     rampUp: true,
-    riseAmount: 0.02
+    riseAmount: 0.02,
 };
 
 export default buildElectricEffectGesture(ELECTRICCHARGE_CONFIG);

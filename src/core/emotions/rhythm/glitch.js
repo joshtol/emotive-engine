@@ -22,29 +22,29 @@ export default {
             burstSize: 8,
             burstRange: [1, 15],
             offBeatRate: 0.3,
-            burstSync: true
+            burstSync: true,
         },
 
         breathSync: {
             mode: 'beats',
             beatsPerBreath: 7,
-            intensity: 0.6
+            intensity: 0.6,
         },
 
         glowSync: {
             intensityRange: [0.3, 2.0],
             syncTo: 'random',
             attack: 0.01,
-            decay: 0.8
+            decay: 0.8,
         },
 
         patternBehaviors: {
-            'breakbeat': {
-                particleEmission: { burstSize: 12, burstRange: [2, 18] }
+            breakbeat: {
+                particleEmission: { burstSize: 12, burstRange: [2, 18] },
             },
-            'glitch': {
-                particleEmission: { burstSize: 15, burstRange: [1, 20] }
-            }
-        }
-    }
+            glitch: {
+                particleEmission: { burstSize: 15, burstRange: [1, 20] },
+            },
+        },
+    },
 };

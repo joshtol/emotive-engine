@@ -62,17 +62,17 @@ const WATERLIQUEFY_CONFIG = {
                 end: 'bottom',
                 startOffset: 0.15,
                 endOffset: -0.3,
-                easing: 'easeInQuad',       // Gravity acceleration
+                easing: 'easeInQuad', // Gravity acceleration
                 startScale: 0.5,
-                endScale: 1.3,              // Grow as they fall
+                endScale: 1.3, // Grow as they fall
                 startDiameter: 0.7,
                 endDiameter: 1.1,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'ring',
                 count: 4,
-                phaseOffset: 0.15
+                phaseOffset: 0.15,
             },
             count: 4,
             scale: 1.1,
@@ -87,7 +87,7 @@ const WATERLIQUEFY_CONFIG = {
                 // DISSOLVE cutout with trail
                 cutout: {
                     strength: 0.55,
-                    primary: { pattern: 7, scale: 1.3, weight: 1.0 },    // DISSOLVE
+                    primary: { pattern: 7, scale: 1.3, weight: 1.0 }, // DISSOLVE
                     secondary: { pattern: 0, scale: 0.5, weight: 0.25 }, // CELLULAR
                     blend: 'multiply',
                     travel: 'vertical',
@@ -97,11 +97,11 @@ const WATERLIQUEFY_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.5,
-                        softness: 1.8
-                    }
+                        softness: 1.8,
+                    },
                 },
                 grain: { type: 3, strength: 0.25, scale: 0.2, speed: 2.0, blend: 'multiply' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // No rotation
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // No rotation
                 scaleVariance: 0.15,
                 lifetimeVariance: 0.1,
                 blending: 'additive',
@@ -109,11 +109,11 @@ const WATERLIQUEFY_CONFIG = {
                 modelOverrides: {
                     'droplet-large': {
                         shaderAnimation: { type: 3, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
+                        orientationOverride: 'camera',
+                    },
                 },
                 // No atmospherics — dissolving water, no violent splash
-            }
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Small accent drops (faster, more numerous)
@@ -126,17 +126,17 @@ const WATERLIQUEFY_CONFIG = {
                 end: 'bottom',
                 startOffset: 0.05,
                 endOffset: -0.15,
-                easing: 'easeInCubic',      // Faster gravity
+                easing: 'easeInCubic', // Faster gravity
                 startScale: 0.4,
                 endScale: 0.9,
                 startDiameter: 0.6,
                 endDiameter: 0.9,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'ring',
                 count: 6,
-                phaseOffset: 0.1
+                phaseOffset: 0.1,
             },
             count: 6,
             scale: 0.6,
@@ -159,8 +159,8 @@ const WATERLIQUEFY_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.4,
-                        softness: 1.2
-                    }
+                        softness: 1.2,
+                    },
                 },
                 grain: { type: 3, strength: 0.2, scale: 0.15, speed: 2.5, blend: 'multiply' },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
@@ -171,11 +171,11 @@ const WATERLIQUEFY_CONFIG = {
                 modelOverrides: {
                     'droplet-small': {
                         shaderAnimation: { type: 3, arcWidth: 0.98, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Wobble - minimal for falling motion
@@ -189,7 +189,7 @@ const WATERLIQUEFY_CONFIG = {
     glowColor: [0.25, 0.5, 0.9],
     glowIntensityMin: 0.9,
     glowIntensityMax: 1.6,
-    glowPulseRate: 3
+    glowPulseRate: 3,
 };
 
 /**

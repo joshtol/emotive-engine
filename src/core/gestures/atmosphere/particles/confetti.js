@@ -31,22 +31,22 @@ export default {
     config: {
         duration: 2500,
         musicalDuration: { musical: true, bars: 1.5 },
-        burstHeight: 0.3,     // Initial upward burst (0-1)
-        fallSpeed: 1.0,       // How fast confetti falls
-        tumbleSpeed: 2.0,     // Rotation speed
-        spread: 1.0,          // Horizontal spread
+        burstHeight: 0.3, // Initial upward burst (0-1)
+        fallSpeed: 1.0, // How fast confetti falls
+        tumbleSpeed: 2.0, // Rotation speed
+        spread: 1.0, // Horizontal spread
         strength: 1.0,
         particleMotion: {
             type: 'confetti',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'bars', bars: 1.5 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     initialize(particle, _motion) {
@@ -63,7 +63,7 @@ export default {
             tumbleSpeed: 0.5 + Math.random() * 1.5,
             // Random flutter amplitude
             flutterAmp: 0.3 + Math.random() * 0.7,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -96,7 +96,7 @@ export default {
 
         // Fade out at end
         if (progress > 0.7) {
-            particle.opacity = 1 - ((progress - 0.7) / 0.3);
+            particle.opacity = 1 - (progress - 0.7) / 0.3;
         }
     },
 
@@ -139,8 +139,8 @@ export default {
                 position: [xOffset * fadeEnvelope, yOffset * strength * fadeEnvelope, 0],
                 rotation: [rotX * fadeEnvelope, rotY * fadeEnvelope, rotZ * fadeEnvelope],
                 scale,
-                glowIntensity
+                glowIntensity,
             };
-        }
-    }
+        },
+    },
 };

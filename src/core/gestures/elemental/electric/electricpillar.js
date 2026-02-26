@@ -37,13 +37,13 @@ const SHARED_ANIMATION = {
     modelOverrides: {
         'lightning-ring': {
             shaderAnimation: { type: 1, arcWidth: 0.65, arcSpeed: 3.0, arcCount: 1 },
-            orientationOverride: 'flat'
+            orientationOverride: 'flat',
         },
         'plasma-ring': {
             shaderAnimation: { type: 1, arcWidth: 0.55, arcSpeed: 4.0, arcCount: 2 },
-            orientationOverride: 'flat'
-        }
-    }
+            orientationOverride: 'flat',
+        },
+    },
 };
 
 const ELECTRICPILLAR_CONFIG = {
@@ -62,27 +62,37 @@ const ELECTRICPILLAR_CONFIG = {
         {
             type: 'axis-travel',
             axisTravel: {
-                axis: 'y', start: 'bottom', end: 'center',
+                axis: 'y',
+                start: 'bottom',
+                end: 'center',
                 easing: 'easeOut',
-                startScale: 1.0, endScale: 1.3,
-                startDiameter: 1.5, endDiameter: 1.8,
-                orientation: 'flat'
+                startScale: 1.0,
+                endScale: 1.3,
+                startDiameter: 1.5,
+                endDiameter: 1.8,
+                orientation: 'flat',
             },
             formation: { type: 'stack', count: 2, spacing: 0.3 },
-            count: 2, scale: 1.5, models: ['lightning-ring'],
+            count: 2,
+            scale: 1.5,
+            models: ['lightning-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                appearAt: 0.0, disappearAt: 0.85, stagger: 0.04,
+                appearAt: 0.0,
+                disappearAt: 0.85,
+                stagger: 0.04,
                 // Per-gesture atmospheric particles: ionized air from pillar
-                atmospherics: [{
-                    preset: 'ozone',
-                    targets: ['lightning-ring'],
-                    anchor: 'above',
-                    intensity: 0.1,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.5,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'ozone',
+                        targets: ['lightning-ring'],
+                        anchor: 'above',
+                        intensity: 0.1,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.5,
+                    },
+                ],
                 cutout: {
                     strength: 0.5,
                     primary: { pattern: 1, scale: 1.0, weight: 0.65 },
@@ -90,25 +100,33 @@ const ELECTRICPILLAR_CONFIG = {
                     blend: 'add',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'bell'
-                }
-            }
+                    strengthCurve: 'bell',
+                },
+            },
         },
         // Layer 2: Middle — CRACKS + STREAKS (branching discharge)
         {
             type: 'axis-travel',
             axisTravel: {
-                axis: 'y', start: 'center', end: 'above',
+                axis: 'y',
+                start: 'center',
+                end: 'above',
                 easing: 'easeOut',
-                startScale: 0.9, endScale: 1.2,
-                startDiameter: 1.3, endDiameter: 1.6,
-                orientation: 'flat'
+                startScale: 0.9,
+                endScale: 1.2,
+                startDiameter: 1.3,
+                endDiameter: 1.6,
+                orientation: 'flat',
             },
             formation: { type: 'stack', count: 2, spacing: 0.3 },
-            count: 2, scale: 1.4, models: ['plasma-ring'],
+            count: 2,
+            scale: 1.4,
+            models: ['plasma-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                appearAt: 0.08, disappearAt: 0.88, stagger: 0.04,
+                appearAt: 0.08,
+                disappearAt: 0.88,
+                stagger: 0.04,
                 cutout: {
                     strength: 0.55,
                     primary: { pattern: 8, scale: 1.2, weight: 0.7 },
@@ -116,25 +134,33 @@ const ELECTRICPILLAR_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.8,
-                    strengthCurve: 'bell'
-                }
-            }
+                    strengthCurve: 'bell',
+                },
+            },
         },
         // Layer 3: Top — VORONOI + DISSOLVE (dissipating discharge)
         {
             type: 'axis-travel',
             axisTravel: {
-                axis: 'y', start: 'above', end: 'far-above',
+                axis: 'y',
+                start: 'above',
+                end: 'far-above',
                 easing: 'easeOut',
-                startScale: 0.8, endScale: 1.1,
-                startDiameter: 1.1, endDiameter: 1.4,
-                orientation: 'flat'
+                startScale: 0.8,
+                endScale: 1.1,
+                startDiameter: 1.1,
+                endDiameter: 1.4,
+                orientation: 'flat',
             },
             formation: { type: 'stack', count: 2, spacing: 0.3 },
-            count: 2, scale: 1.3, models: ['lightning-ring'],
+            count: 2,
+            scale: 1.3,
+            models: ['lightning-ring'],
             animation: {
                 ...SHARED_ANIMATION,
-                appearAt: 0.15, disappearAt: 0.9, stagger: 0.04,
+                appearAt: 0.15,
+                disappearAt: 0.9,
+                stagger: 0.04,
                 cutout: {
                     strength: 0.45,
                     primary: { pattern: 3, scale: 1.0, weight: 0.6 },
@@ -142,10 +168,10 @@ const ELECTRICPILLAR_CONFIG = {
                     blend: 'add',
                     travel: 'oscillate',
                     travelSpeed: 1.2,
-                    strengthCurve: 'fadeOut'
-                }
-            }
-        }
+                    strengthCurve: 'fadeOut',
+                },
+            },
+        },
     ],
 
     jitterFrequency: 0,
@@ -158,7 +184,7 @@ const ELECTRICPILLAR_CONFIG = {
     scaleVibration: 0.01,
     scaleFrequency: 3,
     scalePulse: true,
-    rotationDrift: 0.015
+    rotationDrift: 0.015,
 };
 
 export default buildElectricEffectGesture(ELECTRICPILLAR_CONFIG);

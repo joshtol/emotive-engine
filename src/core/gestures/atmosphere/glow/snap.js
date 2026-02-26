@@ -31,14 +31,14 @@ export default {
     config: {
         duration: 500,
         musicalDuration: { musical: true, beats: 1 },
-        snapDistance: 0.1,    // How far to snap (3D units)
-        overshoot: 1.3,       // Overshoot multiplier
-        bounces: 2,           // Number of settle bounces
+        snapDistance: 0.1, // How far to snap (3D units)
+        overshoot: 1.3, // Overshoot multiplier
+        bounces: 2, // Number of settle bounces
         strength: 1.0,
         particleMotion: {
             type: 'snap',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -49,8 +49,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     apply(particle, progress, motion, dt, centerX, centerY) {
@@ -126,15 +126,15 @@ export default {
 
             // Glow flash on snap
             const glowIntensity = 1.0 + Math.abs(snapValue - 1) * 0.5;
-            const glowBoost = progress < 0.3 ? (0.3 - progress) / 0.3 * 0.4 : 0;
+            const glowBoost = progress < 0.3 ? ((0.3 - progress) / 0.3) * 0.4 : 0;
 
             return {
                 position: [0, 0, zOffset],
                 rotation: [0, 0, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

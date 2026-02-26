@@ -29,7 +29,7 @@ const SHARED_ANCHOR = {
     cameraOffset: 1.0,
     relativeOffset: true,
     startScale: 1.0,
-    endScale: 1.0
+    endScale: 1.0,
 };
 
 const SHARED_ANIMATION = {
@@ -40,7 +40,7 @@ const SHARED_ANIMATION = {
     blending: 'normal',
     renderOrder: 10,
     atmospherics: [{ preset: 'shadow', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
-    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }
+    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 },
 };
 
 function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0) {
@@ -49,13 +49,13 @@ function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayI
 
     const rings = [
         // Triangle 1 (upright)
-        { x: 0,        y: radius,      relay: relayIndices[0], arc: 4.71, dir: -1 },
-        { x: S*radius, y: -0.5*radius, relay: relayIndices[1], arc: 3.14, dir:  1 },
-        { x:-S*radius, y: -0.5*radius, relay: relayIndices[2], arc: 0.0,  dir: -1 },
+        { x: 0, y: radius, relay: relayIndices[0], arc: 4.71, dir: -1 },
+        { x: S * radius, y: -0.5 * radius, relay: relayIndices[1], arc: 3.14, dir: 1 },
+        { x: -S * radius, y: -0.5 * radius, relay: relayIndices[2], arc: 0.0, dir: -1 },
         // Triangle 2 (inverted)
-        { x: 0,        y: -radius,     relay: relayIndices[0], arc: 4.71, dir:  1 },
-        { x:-S*radius, y:  0.5*radius, relay: relayIndices[1], arc: 3.14, dir: -1 },
-        { x: S*radius, y:  0.5*radius, relay: relayIndices[2], arc: 0.0,  dir:  1 },
+        { x: 0, y: -radius, relay: relayIndices[0], arc: 4.71, dir: 1 },
+        { x: -S * radius, y: 0.5 * radius, relay: relayIndices[1], arc: 3.14, dir: -1 },
+        { x: S * radius, y: 0.5 * radius, relay: relayIndices[2], arc: 0.0, dir: 1 },
     ];
 
     return rings.map(r => ({
@@ -73,10 +73,10 @@ function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayI
                 'void-ring': {
                     arcPhase: (r.arc + arcPhaseOffset) % 6.28,
                     relayIndex: r.relay,
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     }));
 }
 
@@ -84,7 +84,8 @@ const VOIDMEDITATION_CONFIG = {
     name: 'voidmeditation',
     emoji: '🧘',
     type: 'blending',
-    description: 'Triple void hexagon mandala — three concentric relay hexagons with differential rotation',
+    description:
+        'Triple void hexagon mandala — three concentric relay hexagons with differential rotation',
     duration: 3000,
     beats: 6,
     intensity: 1.5,
@@ -95,14 +96,14 @@ const VOIDMEDITATION_CONFIG = {
 
     spawnMode: [
         // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══
-        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0),
+        ...createHexLayer(0.28, 0.7, 2, 0.0, [0, 1, 2], 0.0),
         ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08),
-        ...createHexLayer(0.78, 1.55,  1,   4.19, [2, 0, 1], 0.16),
+        ...createHexLayer(0.78, 1.55, 1, 4.19, [2, 0, 1], 0.16),
 
         // ═══ COUNTER SET (opposite rotation, +180° arc offset) ═══
-        ...createHexLayer(0.28, 0.70, -2,    3.14, [0, 1, 2], 0.0),
-        ...createHexLayer(0.52, 1.15,  1.5,  5.23, [1, 2, 0], 0.08),
-        ...createHexLayer(0.78, 1.55, -1,    1.05, [2, 0, 1], 0.16),
+        ...createHexLayer(0.28, 0.7, -2, 3.14, [0, 1, 2], 0.0),
+        ...createHexLayer(0.52, 1.15, 1.5, 5.23, [1, 2, 0], 0.08),
+        ...createHexLayer(0.78, 1.55, -1, 1.05, [2, 0, 1], 0.16),
     ],
 
     glowColor: [0.3, 0.1, 0.5],
@@ -116,7 +117,7 @@ const VOIDMEDITATION_CONFIG = {
     tremorFrequency: 3,
     shakeAmount: 0.003,
     shakeFrequency: 4,
-    decayRate: 0.1
+    decayRate: 0.1,
 };
 
 export default buildVoidEffectGesture(VOIDMEDITATION_CONFIG);

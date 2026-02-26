@@ -19,10 +19,10 @@ import FacingBehavior from '../behaviors/FacingBehavior.js';
  * Default righting behavior configuration
  */
 const DEFAULT_RIGHTING_CONFIG = {
-    strength: 5.0,              // Strong righting without overdoing it
-    damping: 0.85,              // Critically damped for smooth return
+    strength: 5.0, // Strong righting without overdoing it
+    damping: 0.85, // Critically damped for smooth return
     centerOfMass: [0, -0.3, 0], // Bottom-heavy
-    axes: { pitch: true, roll: true, yaw: false }
+    axes: { pitch: true, roll: true, yaw: false },
 };
 
 export class BehaviorController {
@@ -217,7 +217,7 @@ export class BehaviorController {
             geometryType: targetGeometryType,
             emotionData,
             facingConfig,
-            geometryRotation
+            geometryRotation,
         });
     }
 
@@ -270,12 +270,15 @@ export class BehaviorController {
      */
     _initFacingBehavior(facingConfig) {
         if (!this.facingBehavior && facingConfig?.enabled) {
-            this.facingBehavior = new FacingBehavior({
-                strength: facingConfig.strength,
-                lockedFace: facingConfig.lockedFace,
-                lerpSpeed: facingConfig.lerpSpeed,
-                calibrationRotation: facingConfig.calibrationRotation
-            }, this.camera);
+            this.facingBehavior = new FacingBehavior(
+                {
+                    strength: facingConfig.strength,
+                    lockedFace: facingConfig.lockedFace,
+                    lerpSpeed: facingConfig.lerpSpeed,
+                    calibrationRotation: facingConfig.calibrationRotation,
+                },
+                this.camera
+            );
         }
     }
 

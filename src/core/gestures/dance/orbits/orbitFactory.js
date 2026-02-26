@@ -35,16 +35,23 @@ export function createOrbitGesture(direction) {
     const isVertical = direction === 'up' || direction === 'down';
     // For horizontal: left = CCW (positive angle), right = CW (negative angle)
     // For vertical: determines the spiral direction
-    const orbitDirection = (direction === 'left' || direction === 'up') ? 1 : -1;
+    const orbitDirection = direction === 'left' || direction === 'up' ? 1 : -1;
 
     return {
         name: `orbit${capitalize(direction)}`,
-        emoji: direction === 'left' ? '🔄' : direction === 'right' ? '🔃' : direction === 'up' ? '🌀' : '💫',
+        emoji:
+            direction === 'left'
+                ? '🔄'
+                : direction === 'right'
+                  ? '🔃'
+                  : direction === 'up'
+                    ? '🌀'
+                    : '💫',
         type: 'override',
         description: `Orbit ${direction === 'left' ? 'counter-clockwise' : direction === 'right' ? 'clockwise' : direction}`,
 
         config: {
-            duration: 1500,  // Legacy fallback
+            duration: 1500, // Legacy fallback
             musicalDuration: { musical: true, beats: 4 }, // 4 beats (1 bar)
             speed: 0.02,
             maintainRadius: true,
@@ -56,8 +63,8 @@ export function createOrbitGesture(direction) {
             particleMotion: {
                 type: 'orbit',
                 strength: 1.0,
-                rotations: 1
-            }
+                rotations: 1,
+            },
         },
 
         rhythm: {
@@ -69,20 +76,20 @@ export function createOrbitGesture(direction) {
                 tonic: 0.02,
                 fifth: 0.03,
                 octave: 0.04,
-                curve: 'smooth'
+                curve: 'smooth',
             },
 
             radiusSync: {
                 bass: 150,
                 mid: 100,
                 treble: 50,
-                scaling: 'logarithmic'
+                scaling: 'logarithmic',
             },
 
             dynamics: {
                 forte: { speed: 0.04, maintainRadius: false },
-                piano: { speed: 0.01, maintainRadius: true }
-            }
+                piano: { speed: 0.01, maintainRadius: true },
+            },
         },
 
         initialize(particle, motion, centerX, centerY) {
@@ -98,7 +105,8 @@ export function createOrbitGesture(direction) {
             const MIN_RADIUS = 80;
             const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 100);
 
-            const initialAngle = calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
+            const initialAngle =
+                calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
 
             particle.gestureData.orbit = {
                 radius,
@@ -110,7 +118,7 @@ export function createOrbitGesture(direction) {
                 originalZ: particle.z || 0,
                 zPhase: Math.random() * Math.PI * 2,
                 direction: orbitDirection,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -155,7 +163,8 @@ export function createOrbitGesture(direction) {
 
                 // Vertical oscillation for rising/sinking effect
                 if (isVertical && config.verticalOscillation) {
-                    const verticalOffset = dir.y * progress * config.verticalOscillation * radius * 0.5;
+                    const verticalOffset =
+                        dir.y * progress * config.verticalOscillation * radius * 0.5;
                     particle.y += verticalOffset;
                 }
             }
@@ -219,9 +228,9 @@ export function createOrbitGesture(direction) {
                 return {
                     cameraRelativePosition: [xOffset, yOffset, zOffset],
                     rotation: [0, yRotation, 0],
-                    scale
+                    scale,
                 };
-            }
-        }
+            },
+        },
     };
 }

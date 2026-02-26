@@ -57,18 +57,18 @@ const WATERDRENCH_CONFIG = {
         axisTravel: {
             axis: 'y',
             start: 'center',
-            end: 'center',              // Stay at center
+            end: 'center', // Stay at center
             easing: 'linear',
             startScale: 0.2,
-            endScale: 2.5,              // Dramatic expansion
+            endScale: 2.5, // Dramatic expansion
             startDiameter: 0.3,
             endDiameter: 2.5,
-            orientation: 'camera'       // Face camera
+            orientation: 'camera', // Face camera
         },
         formation: {
             type: 'stack',
             count: 1,
-            spacing: 0
+            spacing: 0,
         },
         count: 1,
         scale: 1.2,
@@ -80,52 +80,52 @@ const WATERDRENCH_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.25,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.06,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.5,
                     peak: 0.3,
                     end: 0.1,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             // Two-layer cutout: CELLULAR + VORONOI for chunky irregular edge
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 0, scale: 1.3, weight: 1.0 },    // CELLULAR - larger bubbles
-                secondary: { pattern: 3, scale: 0.6, weight: 0.7 },  // VORONOI - chunky edge bites
+                primary: { pattern: 0, scale: 1.3, weight: 1.0 }, // CELLULAR - larger bubbles
+                secondary: { pattern: 3, scale: 0.6, weight: 0.7 }, // VORONOI - chunky edge bites
                 blend: 'multiply',
-                travel: 'radial',            // Expand outward (original)
+                travel: 'radial', // Expand outward (original)
                 travelSpeed: 1.5,
-                strengthCurve: 'fadeOut',    // Fade as it expands
+                strengthCurve: 'fadeOut', // Fade as it expands
                 trailDissolve: {
                     enabled: true,
                     offset: -1.5,
-                    softness: 2.5            // Wide gradient — umbrella silhouette without hard clip
-                }
+                    softness: 2.5, // Wide gradient — umbrella silhouette without hard clip
+                },
             },
             // Grain: film grain for spray texture
             grain: {
-                type: 3,              // FILM
+                type: 3, // FILM
                 strength: 0.2,
                 scale: 0.25,
                 speed: 2.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             pulse: {
                 amplitude: 0.05,
                 frequency: 2,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             blending: 'additive',
             renderOrder: 10,
@@ -133,25 +133,27 @@ const WATERDRENCH_CONFIG = {
                 'splash-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.95,      // Nearly full ring
+                        arcWidth: 0.95, // Nearly full ring
                         arcSpeed: 0.4,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'camera'
-                }
+                    orientationOverride: 'camera',
+                },
             },
             // Burst spray on drenching impact — inherits downward axis-travel motion
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.8,
-                sizeScale: 1.0,
-                burstCount: 20,
-                progressCurve: 'burst',
-                velocityInheritance: 0.4,
-            }]
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.8,
+                    sizeScale: 1.0,
+                    burstCount: 20,
+                    progressCurve: 'burst',
+                    velocityInheritance: 0.4,
+                },
+            ],
+        },
     },
 
     // Wobble - impact
@@ -166,7 +168,7 @@ const WATERDRENCH_CONFIG = {
     glowColor: [0.2, 0.5, 0.9],
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.3,
-    glowPulseRate: 2
+    glowPulseRate: 2,
 };
 
 /**

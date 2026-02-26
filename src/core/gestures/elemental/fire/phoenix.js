@@ -49,7 +49,7 @@ const PHOENIX_CONFIG = {
     intensity: 1.7,
     mascotGlow: 1.0,
     category: 'radiating',
-    temperature: 0.85,              // Hot ascending flames
+    temperature: 0.85, // Hot ascending flames
 
     // 3D Element spawning - ascending spiral with mixed models
     spawnMode: {
@@ -58,73 +58,80 @@ const PHOENIX_CONFIG = {
             axis: 'y',
             start: 'below',
             end: 'above',
-            easing: 'easeOut',          // Fast rise, slow at top
-            startScale: 1.0,            // Visible at birth
-            endScale: 1.8,              // Large at peak
-            startDiameter: 1.8,         // Wide enough to be outside mascot
-            endDiameter: 2.8,           // Wide spread at top (funnel)
-            orientation: 'rising'       // All face upward
+            easing: 'easeOut', // Fast rise, slow at top
+            startScale: 1.0, // Visible at birth
+            endScale: 1.8, // Large at peak
+            startDiameter: 1.8, // Wide enough to be outside mascot
+            endDiameter: 2.8, // Wide spread at top (funnel)
+            orientation: 'rising', // All face upward
         },
         formation: {
             type: 'spiral',
             count: 7,
-            strands: 2,                 // Double helix
-            spacing: 0.2,               // More spacing
-            arcOffset: 51,              // ~51° between elements (360/7)
-            phaseOffset: 0.1
+            strands: 2, // Double helix
+            spacing: 0.2, // More spacing
+            arcOffset: 51, // ~51° between elements (360/7)
+            phaseOffset: 0.1,
         },
         count: 7,
-        scale: 1.1,                     // Larger base scale
+        scale: 1.1, // Larger base scale
         // Ordered mix: wisps at bottom, tongues middle, bursts at top
-        models: ['flame-wisp', 'ember-cluster', 'flame-tongue', 'flame-tongue',
-            'flame-tongue', 'fire-burst', 'fire-burst'],
+        models: [
+            'flame-wisp',
+            'ember-cluster',
+            'flame-tongue',
+            'flame-tongue',
+            'flame-tongue',
+            'fire-burst',
+            'fire-burst',
+        ],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.75,
-            stagger: 0.08,              // Wave rising effect
+            stagger: 0.08, // Wave rising effect
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.35,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.1,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 temperature: {
-                    start: 0.5,         // Cool at bottom
-                    peak: 0.95,         // Hot at middle (rebirth)
-                    end: 0.7,           // Warm at top
-                    curve: 'bell'
-                }
+                    start: 0.5, // Cool at bottom
+                    peak: 0.95, // Hot at middle (rebirth)
+                    end: 0.7, // Warm at top
+                    curve: 'bell',
+                },
             },
             flicker: {
                 intensity: 0.3,
                 rate: 12,
-                pattern: 'smooth'
+                pattern: 'smooth',
             },
             pulse: {
                 amplitude: 0.15,
                 frequency: 4,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.2,
                 max: 4.0,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Two-layer cutout: DISSOLVE + EMBERS for rebirth erosion
             cutout: {
                 strength: 0.65,
-                primary: { pattern: 7, scale: 1.5, weight: 1.0 },    // DISSOLVE - rebirth erosion
-                secondary: { pattern: 5, scale: 2.0, weight: 0.5 },  // EMBERS - phoenix flames
+                primary: { pattern: 7, scale: 1.5, weight: 1.0 }, // DISSOLVE - rebirth erosion
+                secondary: { pattern: 5, scale: 2.0, weight: 0.5 }, // EMBERS - phoenix flames
                 blend: 'add',
                 travel: 'angular',
                 travelSpeed: 2.0,
@@ -134,26 +141,28 @@ const PHOENIX_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.1,
-                    tip: 0.3
-                }
+                    tip: 0.3,
+                },
             },
             // Grain: perlin for smooth ascending energy
             grain: {
-                type: 0,              // PERLIN - smooth ascending energy
+                type: 0, // PERLIN - smooth ascending energy
                 strength: 0.1,
                 scale: 0.25,
                 speed: 1.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: smoke from rising phoenix
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             // All rotate together in spiral
             rotate: { axis: 'y', rotations: 1.5, phase: 0 },
             scaleVariance: 0.2,
@@ -163,29 +172,29 @@ const PHOENIX_CONFIG = {
             modelOverrides: {
                 'flame-wisp': {
                     scaleMultiplier: 1.2,
-                    orientationOverride: 'rising'
+                    orientationOverride: 'rising',
                 },
                 'ember-cluster': {
                     scaleMultiplier: 1.0,
-                    orientationOverride: 'rising'
+                    orientationOverride: 'rising',
                 },
                 'flame-tongue': {
                     scaleMultiplier: 1.4,
-                    orientationOverride: 'rising'
+                    orientationOverride: 'rising',
                 },
                 'fire-burst': {
                     scaleMultiplier: 1.3,
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     },
 
     // Phoenix glow - golden-orange ascending
     flickerFrequency: 10,
     flickerAmplitude: 0.015,
     flickerDecay: 0.12,
-    glowColor: [1.0, 0.6, 0.2],      // Golden-orange
+    glowColor: [1.0, 0.6, 0.2], // Golden-orange
     glowIntensityMin: 1.4,
     glowIntensityMax: 3.5,
     glowFlickerRate: 8,
@@ -193,7 +202,7 @@ const PHOENIX_CONFIG = {
     scaleFrequency: 3,
     scaleGrowth: 0.04,
     rotationEffect: true,
-    rotationSpeed: 0.35
+    rotationSpeed: 0.35,
 };
 
 /**

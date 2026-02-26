@@ -99,7 +99,7 @@ export class RotationManager {
         const totalDegrees = gestureRotation + ambientRotation + this.renderer.state.manualRotation;
 
         // Convert to radians for canvas rendering
-        return totalDegrees * Math.PI / 180;
+        return (totalDegrees * Math.PI) / 180;
     }
 
     /**

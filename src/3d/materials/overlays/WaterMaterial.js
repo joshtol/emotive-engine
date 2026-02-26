@@ -47,10 +47,7 @@ function lerp3(low, mid, high, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createWaterMaterial(options = {}) {
-    const {
-        viscosity = 0.3,
-        opacity = 0.7
-    } = options;
+    const { viscosity = 0.3, opacity = 0.7 } = options;
 
     const pulseSpeed = lerp(1.5, 0.6, viscosity);
 
@@ -60,10 +57,10 @@ export function createWaterMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -81,7 +78,7 @@ export function createWaterMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uViscosity;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -213,7 +210,7 @@ export function createWaterMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.viscosity = viscosity;
@@ -243,7 +240,7 @@ export function getWaterPhysics(viscosity = 0.3) {
         spreadOnImpact: lerp(0.3, 0.1, viscosity),
         surfaceTension: lerp3(0.9, 0.3, 0.6, viscosity),
         wobbleOnMove: true,
-        mergeOnContact: viscosity < 0.6
+        mergeOnContact: viscosity < 0.6,
     };
 }
 
@@ -264,7 +261,7 @@ export function getWaterCrackStyle(viscosity = 0.3) {
         color,
         emissive: lerp(0.3, 0.05, viscosity),
         animated: viscosity < 0.5,
-        pattern: viscosity > 0.7 ? 'crystalline' : 'organic'
+        pattern: viscosity > 0.7 ? 'crystalline' : 'organic',
     };
 }
 
@@ -272,5 +269,5 @@ export default {
     createWaterMaterial,
     updateWaterMaterial,
     getWaterPhysics,
-    getWaterCrackStyle
+    getWaterCrackStyle,
 };

@@ -2,19 +2,19 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting System
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Element-based positioning methods for mascot targeting
  * @author Emotive Engine Team
  * @module positioning/ElementTargeting
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides methods to position the mascot relative to DOM elements dynamically.     
- * ║ Handles common UI elements like buttons, forms, modals, and navigation.           
- * ║ Automatically updates position when elements move or resize.                      
+ * ║ Provides methods to position the mascot relative to DOM elements dynamically.
+ * ║ Handles common UI elements like buttons, forms, modals, and navigation.
+ * ║ Automatically updates position when elements move or resize.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -45,29 +45,29 @@ class ElementTargeting {
 
         let targetX, targetY;
         switch (position) {
-        case 'right':
-            targetX = rect.right + offset.x;
-            targetY = centerY + offset.y;
-            break;
-        case 'left':
-            targetX = rect.left - offset.x;
-            targetY = centerY + offset.y;
-            break;
-        case 'above':
-            targetX = centerX + offset.x;
-            targetY = rect.top - offset.y;
-            break;
-        case 'below':
-            targetX = centerX + offset.x;
-            targetY = rect.bottom + offset.y;
-            break;
-        case 'center':
-            targetX = centerX + offset.x;
-            targetY = centerY + offset.y;
-            break;
-        default:
-            targetX = rect.right + offset.x;
-            targetY = centerY + offset.y;
+            case 'right':
+                targetX = rect.right + offset.x;
+                targetY = centerY + offset.y;
+                break;
+            case 'left':
+                targetX = rect.left - offset.x;
+                targetY = centerY + offset.y;
+                break;
+            case 'above':
+                targetX = centerX + offset.x;
+                targetY = rect.top - offset.y;
+                break;
+            case 'below':
+                targetX = centerX + offset.x;
+                targetY = rect.bottom + offset.y;
+                break;
+            case 'center':
+                targetX = centerX + offset.x;
+                targetY = centerY + offset.y;
+                break;
+            default:
+                targetX = rect.right + offset.x;
+                targetY = centerY + offset.y;
         }
 
         // Convert to mascot coordinate system
@@ -75,7 +75,13 @@ class ElementTargeting {
         const mascotY = targetY - window.innerHeight / 2;
 
         if (options.animate !== false) {
-            this.positionController.animateOffset(mascotX, mascotY, 0, options.duration || 1000, options.easing || 'easeOutCubic');
+            this.positionController.animateOffset(
+                mascotX,
+                mascotY,
+                0,
+                options.duration || 1000,
+                options.easing || 'easeOutCubic'
+            );
         } else {
             this.positionController.setOffset(mascotX, mascotY, 0);
         }
@@ -107,7 +113,11 @@ class ElementTargeting {
      * @param {string} position - Position relative to modal
      * @param {Object} offset - Pixel offset
      */
-    moveToModal(selector = '[role="dialog"], .modal', position = 'center', offset = { x: 0, y: 0 }) {
+    moveToModal(
+        selector = '[role="dialog"], .modal',
+        position = 'center',
+        offset = { x: 0, y: 0 }
+    ) {
         this.moveToElement(selector, position, offset);
     }
 
@@ -180,7 +190,7 @@ class ElementTargeting {
         // Add event listeners
         window.addEventListener('scroll', updatePosition);
         window.addEventListener('resize', updatePosition);
-        
+
         // Initial positioning
         updatePosition();
 

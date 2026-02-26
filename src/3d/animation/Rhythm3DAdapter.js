@@ -70,43 +70,43 @@ const GROOVE_PRESETS = {
     groove1: {
         name: 'groove1',
         description: 'Subtle, elegant - gentle bounce and sway',
-        bounceAmount: 0.015,      // Vertical bounce amplitude
-        swayAmount: 0.012,        // Horizontal sway amplitude
-        pulseAmount: 0.02,        // Scale pulse amplitude
-        rotationAmount: 0.015,    // Rotation sway amplitude
-        bounceFreq: 1,            // Bounce cycles per beat
-        swayFreq: 0.5,            // Sway cycles per bar (half-bar period)
-        phaseOffset: 0,           // Phase offset in radians
-        easing: 'sine'            // Easing curve type
+        bounceAmount: 0.015, // Vertical bounce amplitude
+        swayAmount: 0.012, // Horizontal sway amplitude
+        pulseAmount: 0.02, // Scale pulse amplitude
+        rotationAmount: 0.015, // Rotation sway amplitude
+        bounceFreq: 1, // Bounce cycles per beat
+        swayFreq: 0.5, // Sway cycles per bar (half-bar period)
+        phaseOffset: 0, // Phase offset in radians
+        easing: 'sine', // Easing curve type
     },
 
     // Energetic, bouncy groove - lively and playful
     groove2: {
         name: 'groove2',
         description: 'Energetic, bouncy - pronounced vertical motion',
-        bounceAmount: 0.035,      // More pronounced bounce
-        swayAmount: 0.02,         // Moderate sway
-        pulseAmount: 0.045,       // Strong scale pulse
-        rotationAmount: 0.025,    // Moderate rotation
-        bounceFreq: 1,            // Standard beat-synced bounce
-        swayFreq: 1,              // Faster sway (full bar period)
+        bounceAmount: 0.035, // More pronounced bounce
+        swayAmount: 0.02, // Moderate sway
+        pulseAmount: 0.045, // Strong scale pulse
+        rotationAmount: 0.025, // Moderate rotation
+        bounceFreq: 1, // Standard beat-synced bounce
+        swayFreq: 1, // Faster sway (full bar period)
         phaseOffset: 0,
-        easing: 'bounce'          // Snappier easing
+        easing: 'bounce', // Snappier easing
     },
 
     // Smooth, flowing groove - languid and expressive
     groove3: {
         name: 'groove3',
         description: 'Smooth, flowing - emphasis on rotation and sway',
-        bounceAmount: 0.01,       // Subtle bounce
-        swayAmount: 0.03,         // Pronounced sway
-        pulseAmount: 0.015,       // Gentle pulse
-        rotationAmount: 0.04,     // Strong rotation emphasis
-        bounceFreq: 0.5,          // Slower bounce (half-beat)
-        swayFreq: 0.25,           // Very slow sway (quarter-bar)
+        bounceAmount: 0.01, // Subtle bounce
+        swayAmount: 0.03, // Pronounced sway
+        pulseAmount: 0.015, // Gentle pulse
+        rotationAmount: 0.04, // Strong rotation emphasis
+        bounceFreq: 0.5, // Slower bounce (half-beat)
+        swayFreq: 0.25, // Very slow sway (quarter-bar)
         phaseOffset: Math.PI / 4, // Phase offset for flowing feel
-        easing: 'sine'            // Smooth sine easing
-    }
+        easing: 'sine', // Smooth sine easing
+    },
 };
 
 // Default groove preset
@@ -135,12 +135,12 @@ export class Rhythm3DAdapter {
         this.grooveEnabled = true;
         this.currentGroove = DEFAULT_GROOVE;
         this.targetGroove = DEFAULT_GROOVE;
-        this.grooveTransition = 0;        // 0 = at current, 1 = at target
+        this.grooveTransition = 0; // 0 = at current, 1 = at target
         this.grooveTransitionSpeed = 2.0; // Transition speed (per second)
 
         // Groove confidence: scales animation amplitude based on BPM detection confidence
         // Ranges from 0.15 (tentative) to 1.0 (fully locked), provided by BPM detector
-        this.grooveConfidence = 1.0;      // Default to full when not using BPM detection
+        this.grooveConfidence = 1.0; // Default to full when not using BPM detection
 
         // BPM multiplier: scales the effective BPM used for animations
         // Default 1.0 = use detected BPM as-is
@@ -150,15 +150,15 @@ export class Rhythm3DAdapter {
 
         // Modulation output (computed each frame) - these are the SMOOTHED values
         this.modulation = {
-            scaleMultiplier: 1.0,      // Applied to gesture scale output
-            glowMultiplier: 1.0,       // Applied to gesture glow output
-            positionMultiplier: 1.0,   // Applied to gesture position output
-            rotationMultiplier: 1.0,   // Applied to gesture rotation output
-            accentBoost: 0.0,          // Extra boost on accented beats
-            grooveOffset: [0, 0, 0],   // Ambient groove position offset
-            grooveScale: 1.0,          // Ambient groove scale pulse
+            scaleMultiplier: 1.0, // Applied to gesture scale output
+            glowMultiplier: 1.0, // Applied to gesture glow output
+            positionMultiplier: 1.0, // Applied to gesture position output
+            rotationMultiplier: 1.0, // Applied to gesture rotation output
+            accentBoost: 0.0, // Extra boost on accented beats
+            grooveOffset: [0, 0, 0], // Ambient groove position offset
+            grooveScale: 1.0, // Ambient groove scale pulse
             grooveRotation: [0, 0, 0], // Ambient groove rotation sway
-            grooveGlow: 1.0            // Ambient groove glow pulse (beat-synced)
+            grooveGlow: 1.0, // Ambient groove glow pulse (beat-synced)
         };
 
         // Target values (raw computed values before smoothing)
@@ -171,18 +171,18 @@ export class Rhythm3DAdapter {
             grooveOffset: [0, 0, 0],
             grooveScale: 1.0,
             grooveRotation: [0, 0, 0],
-            grooveGlow: 1.0
+            grooveGlow: 1.0,
         };
 
         // Configuration
         this.config = {
             // Beat sync intensity
-            beatSyncStrength: 0.3,     // How much beat affects animations (0-1)
-            accentMultiplier: 1.5,     // Boost on accented beats
+            beatSyncStrength: 0.3, // How much beat affects animations (0-1)
+            accentMultiplier: 1.5, // Boost on accented beats
 
             // Smoothing settings
-            smoothingSpeed: 8.0,       // How fast values ease toward target (higher = faster)
-            grooveSmoothingSpeed: 12.0 // Groove smoothing (higher for tighter beat sync)
+            smoothingSpeed: 8.0, // How fast values ease toward target (higher = faster)
+            grooveSmoothingSpeed: 12.0, // Groove smoothing (higher for tighter beat sync)
         };
 
         // Maximum deltaTime to prevent smoothing overshoot during frame drops
@@ -232,20 +232,20 @@ export class Rhythm3DAdapter {
      */
     _applyEasing(value, easingType) {
         switch (easingType) {
-        case 'bounce':
-            // Sharper attack, slower decay - snappier, more rhythmic feel
-            // Uses power curve to create punch on peaks
-            return Math.sign(value) * Math.pow(Math.abs(value), 0.6);
+            case 'bounce':
+                // Sharper attack, slower decay - snappier, more rhythmic feel
+                // Uses power curve to create punch on peaks
+                return Math.sign(value) * Math.pow(Math.abs(value), 0.6);
 
-        case 'elastic':
-            // Playful overshoot with subtle wobble
-            // Good for excited/energetic moods
-            return value * (1 + 0.15 * Math.sin(Math.abs(value) * Math.PI * 2));
+            case 'elastic':
+                // Playful overshoot with subtle wobble
+                // Good for excited/energetic moods
+                return value * (1 + 0.15 * Math.sin(Math.abs(value) * Math.PI * 2));
 
-        case 'sine':
-        default:
-            // Smooth sine wave - current behavior, elegant and flowing
-            return value;
+            case 'sine':
+            default:
+                // Smooth sine wave - current behavior, elegant and flowing
+                return value;
         }
     }
 
@@ -275,7 +275,7 @@ export class Rhythm3DAdapter {
             rotationAmount: from.rotationAmount + (to.rotationAmount - from.rotationAmount) * t,
             bounceFreq: from.bounceFreq + (to.bounceFreq - from.bounceFreq) * t,
             swayFreq: from.swayFreq + (to.swayFreq - from.swayFreq) * t,
-            phaseOffset: from.phaseOffset + (to.phaseOffset - from.phaseOffset) * t
+            phaseOffset: from.phaseOffset + (to.phaseOffset - from.phaseOffset) * t,
         };
     }
 
@@ -291,7 +291,9 @@ export class Rhythm3DAdapter {
             this.accent = beatInfo.accent;
             this.isOnBeat = true;
             // Clear on-beat flag after short window
-            setTimeout(() => { this.isOnBeat = false; }, 100);
+            setTimeout(() => {
+                this.isOnBeat = false;
+            }, 100);
         });
     }
 
@@ -456,7 +458,10 @@ export class Rhythm3DAdapter {
 
         // Update groove transition (for morphing between presets)
         if (this.grooveTransition < 1) {
-            this.grooveTransition = Math.min(1, this.grooveTransition + this.grooveTransitionSpeed * dt);
+            this.grooveTransition = Math.min(
+                1,
+                this.grooveTransition + this.grooveTransitionSpeed * dt
+            );
             if (this.grooveTransition >= 1) {
                 // Transition complete - swap current to target
                 this.currentGroove = this.targetGroove;
@@ -521,9 +526,10 @@ export class Rhythm3DAdapter {
         const toPreset = this._getGroovePreset(this.targetGroove);
 
         // Interpolate preset values for smooth transitions
-        const preset = this.grooveTransition >= 1
-            ? toPreset
-            : this._interpolatePresets(fromPreset, toPreset, this.grooveTransition);
+        const preset =
+            this.grooveTransition >= 1
+                ? toPreset
+                : this._interpolatePresets(fromPreset, toPreset, this.grooveTransition);
 
         // Scale amplitudes by grooveConfidence
         // At 0.15 (tentative): animations are very subtle, searching feel
@@ -546,12 +552,14 @@ export class Rhythm3DAdapter {
 
         // Vertical bounce: synced to beat with configurable frequency
         // bpmMultiplier scales the frequency so 0.5 = half as many bounces per beat
-        const bouncePhase = (this.beatProgress * bounceFreq * this.bpmMultiplier * Math.PI * 2) + phaseOffset;
+        const bouncePhase =
+            this.beatProgress * bounceFreq * this.bpmMultiplier * Math.PI * 2 + phaseOffset;
         const rawBounce = Math.sin(bouncePhase);
         const easedBounce = this._applyEasing(rawBounce, easing);
 
         // Horizontal sway: synced to bar with configurable frequency
-        const swayPhase = (this.barProgress * swayFreq * this.bpmMultiplier * Math.PI * 2) + phaseOffset;
+        const swayPhase =
+            this.barProgress * swayFreq * this.bpmMultiplier * Math.PI * 2 + phaseOffset;
         const rawSway = Math.sin(swayPhase);
         const easedSway = this._applyEasing(rawSway, easing);
 
@@ -569,7 +577,8 @@ export class Rhythm3DAdapter {
 
         // Scale pulse: synced to beat with accent boost
         const rawPulse = Math.sin(bouncePhase);
-        const pulse = 1.0 + this._applyEasing(rawPulse, easing) * pulseAmount * (1 + accentBoost * 0.5);
+        const pulse =
+            1.0 + this._applyEasing(rawPulse, easing) * pulseAmount * (1 + accentBoost * 0.5);
 
         // Rotation sway: synced to bar for smooth rotation
         const rotationSway = easedSway * rotationAmount;
@@ -610,27 +619,32 @@ export class Rhythm3DAdapter {
         this.modulation.scaleMultiplier = this._lerp(
             this.modulation.scaleMultiplier,
             this._target.scaleMultiplier,
-            smoothingSpeed, dt
+            smoothingSpeed,
+            dt
         );
         this.modulation.glowMultiplier = this._lerp(
             this.modulation.glowMultiplier,
             this._target.glowMultiplier,
-            smoothingSpeed, dt
+            smoothingSpeed,
+            dt
         );
         this.modulation.positionMultiplier = this._lerp(
             this.modulation.positionMultiplier,
             this._target.positionMultiplier,
-            smoothingSpeed, dt
+            smoothingSpeed,
+            dt
         );
         this.modulation.rotationMultiplier = this._lerp(
             this.modulation.rotationMultiplier,
             this._target.rotationMultiplier,
-            smoothingSpeed, dt
+            smoothingSpeed,
+            dt
         );
         this.modulation.accentBoost = this._lerp(
             this.modulation.accentBoost,
             this._target.accentBoost,
-            smoothingSpeed * 0.5, dt  // Slower decay for accent
+            smoothingSpeed * 0.5,
+            dt // Slower decay for accent
         );
 
         // Smooth groove values
@@ -638,22 +652,26 @@ export class Rhythm3DAdapter {
         this.modulation.grooveOffset = this._lerpArray(
             this.modulation.grooveOffset,
             this._target.grooveOffset,
-            grooveSmoothingSpeed, dt
+            grooveSmoothingSpeed,
+            dt
         );
         this.modulation.grooveScale = this._lerp(
             this.modulation.grooveScale,
             this._target.grooveScale,
-            grooveSmoothingSpeed, dt
+            grooveSmoothingSpeed,
+            dt
         );
         this.modulation.grooveRotation = this._lerpArray(
             this.modulation.grooveRotation,
             this._target.grooveRotation,
-            grooveSmoothingSpeed, dt
+            grooveSmoothingSpeed,
+            dt
         );
         this.modulation.grooveGlow = this._lerp(
             this.modulation.grooveGlow,
             this._target.grooveGlow,
-            grooveSmoothingSpeed, dt
+            grooveSmoothingSpeed,
+            dt
         );
     }
 
@@ -676,14 +694,44 @@ export class Rhythm3DAdapter {
 
         // Smooth toward neutral (slower speed for graceful fade-out)
         const fadeSpeed = 4.0;
-        this.modulation.scaleMultiplier = this._lerp(this.modulation.scaleMultiplier, 1.0, fadeSpeed, dt);
-        this.modulation.glowMultiplier = this._lerp(this.modulation.glowMultiplier, 1.0, fadeSpeed, dt);
-        this.modulation.positionMultiplier = this._lerp(this.modulation.positionMultiplier, 1.0, fadeSpeed, dt);
-        this.modulation.rotationMultiplier = this._lerp(this.modulation.rotationMultiplier, 1.0, fadeSpeed, dt);
+        this.modulation.scaleMultiplier = this._lerp(
+            this.modulation.scaleMultiplier,
+            1.0,
+            fadeSpeed,
+            dt
+        );
+        this.modulation.glowMultiplier = this._lerp(
+            this.modulation.glowMultiplier,
+            1.0,
+            fadeSpeed,
+            dt
+        );
+        this.modulation.positionMultiplier = this._lerp(
+            this.modulation.positionMultiplier,
+            1.0,
+            fadeSpeed,
+            dt
+        );
+        this.modulation.rotationMultiplier = this._lerp(
+            this.modulation.rotationMultiplier,
+            1.0,
+            fadeSpeed,
+            dt
+        );
         this.modulation.accentBoost = this._lerp(this.modulation.accentBoost, 0.0, fadeSpeed, dt);
-        this.modulation.grooveOffset = this._lerpArray(this.modulation.grooveOffset, [0, 0, 0], fadeSpeed, dt);
+        this.modulation.grooveOffset = this._lerpArray(
+            this.modulation.grooveOffset,
+            [0, 0, 0],
+            fadeSpeed,
+            dt
+        );
         this.modulation.grooveScale = this._lerp(this.modulation.grooveScale, 1.0, fadeSpeed, dt);
-        this.modulation.grooveRotation = this._lerpArray(this.modulation.grooveRotation, [0, 0, 0], fadeSpeed, dt);
+        this.modulation.grooveRotation = this._lerpArray(
+            this.modulation.grooveRotation,
+            [0, 0, 0],
+            fadeSpeed,
+            dt
+        );
         this.modulation.grooveGlow = this._lerp(this.modulation.grooveGlow, 1.0, fadeSpeed, dt);
     }
 

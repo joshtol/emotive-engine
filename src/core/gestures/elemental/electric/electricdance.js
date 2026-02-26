@@ -43,14 +43,14 @@ const ELECTRICDANCE_CONFIG = {
             endScale: 1.8,
             startDiameter: 1.3,
             endDiameter: 2.0,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 2,
             spacing: 0,
             arcOffset: 180,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 2,
         scale: 2.0,
@@ -62,21 +62,21 @@ const ELECTRICDANCE_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.08,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             flicker: {
                 intensity: 0.35,
                 rate: 14,
-                pattern: 'random'
+                pattern: 'random',
             },
             pulse: { amplitude: 0.1, frequency: 5, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 2.2, frequency: 6, pattern: 'sine' },
@@ -92,30 +92,32 @@ const ELECTRICDANCE_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.12,
-                    tip: 0.28
-                }
+                    tip: 0.28,
+                },
             },
             grain: {
                 type: 3,
                 strength: 0.06,
                 scale: 0.15,
                 speed: 1.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: ionized air wisps
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.4,
-                centrifugal: { speed: 0.5, tangentialBias: 0.5 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.4,
+                    centrifugal: { speed: 0.5, tangentialBias: 0.5 },
+                },
+            ],
             rotate: [
                 { axis: 'y', rotations: 2, phase: 0 },
-                { axis: 'y', rotations: -2, phase: 90 }
+                { axis: 'y', rotations: -2, phase: 90 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -124,10 +126,10 @@ const ELECTRICDANCE_CONFIG = {
             modelOverrides: {
                 'lightning-ring': {
                     shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 1.5, arcCount: 1 },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     // Minimal jitter
@@ -143,7 +145,7 @@ const ELECTRICDANCE_CONFIG = {
     scaleFrequency: 4,
     scaleGrowth: 0.01,
     scalePulse: true,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildElectricEffectGesture(ELECTRICDANCE_CONFIG);

@@ -42,7 +42,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -57,15 +57,17 @@ const ELECTRICMEDITATION_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
-                atmospherics: [{ preset: 'ozone', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }],
+                atmospherics: [
+                    { preset: 'ozone', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' },
+                ],
                 modelOverrides: {
                     'lightning-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B — lower-right — relay 1, CCW
@@ -78,7 +80,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -97,10 +99,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C — upper-center — relay 0, CW
@@ -113,7 +115,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -132,10 +134,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══ Y-FLIPPED COPY (everything identical except offset.y negated) ═══
@@ -150,7 +152,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -169,10 +171,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B (flipped) — upper-left — relay 1, CW
@@ -185,7 +187,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -204,10 +206,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C (flipped) — lower-center — relay 0, CCW
@@ -220,7 +222,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -239,10 +241,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══ VERTICAL FLIP OF ENTIRE THING (Y negated, rotations reversed) ═══
@@ -257,7 +259,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -276,10 +278,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 1.05,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B (v-flip) — upper-right — relay 0, arc offset +π/3
@@ -292,7 +294,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -311,10 +313,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 4.19,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C (v-flip) — lower-center — relay 2, arc offset +π/3
@@ -327,7 +329,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -346,10 +348,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 2.62,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring A' (v-flip) — lower-right — relay 0, arc offset +π/3
@@ -362,7 +364,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -381,10 +383,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 1.05,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B' (v-flip) — lower-left — relay 1, arc offset +π/3
@@ -397,7 +399,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -416,10 +418,10 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 4.19,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C' (v-flip) — upper-center — relay 1, arc offset +π/3
@@ -432,7 +434,7 @@ const ELECTRICMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -451,11 +453,11 @@ const ELECTRICMEDITATION_CONFIG = {
                     'lightning-ring': {
                         arcPhase: 2.62,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.5, 0.7, 1.0],
@@ -469,7 +471,7 @@ const ELECTRICMEDITATION_CONFIG = {
     tremorFrequency: 0,
     shakeAmount: 0,
     shakeFrequency: 0,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildElectricEffectGesture(ELECTRICMEDITATION_CONFIG);

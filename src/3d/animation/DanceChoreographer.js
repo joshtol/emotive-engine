@@ -66,7 +66,7 @@ const _ACCENT_GESTURES = {
     // Movement accents - subtle position/rotation boosts
     movement: ['swagger', 'dip', 'bob'],
     // Build/release - for section changes
-    dynamics: ['swell', 'flare']
+    dynamics: ['swell', 'flare'],
 };
 
 /**
@@ -85,7 +85,7 @@ const _MOTION_GESTURES = {
     // Expressive - for special moments only
     expressive: ['spin', 'jump', 'twist', 'hula'],
     // Accent - subtle emphasis
-    accent: ['twitch', 'lean', 'tilt']
+    accent: ['twitch', 'lean', 'tilt'],
 };
 
 // Export for potential external use
@@ -105,25 +105,69 @@ const GESTURE_POOLS = {
     // Low energy: gentle accents + subtle absolutes (no combos)
     subtle: {
         single: ['pop', 'bob', 'swell', 'nod', 'sway', 'tilt', 'floatUp'],
-        combo: []  // No combos at low energy
+        combo: [], // No combos at low energy
     },
     // Medium energy: moderate variety (rare combos)
     moderate: {
-        single: ['pop', 'bob', 'dip', 'swagger', 'bounce', 'wiggle', 'headBob', 'lean',
-            'stepLeft', 'stepRight', 'slideLeft', 'slideRight',
-            'leanLeft', 'leanRight', 'kickLeft', 'kickRight'],
-        combo: [['pop', 'bob'], ['dip', 'swell'], ['stepLeft', 'stepRight'],
-            ['leanLeft', 'leanRight'], ['kickLeft', 'kickRight']]  // 10% chance
+        single: [
+            'pop',
+            'bob',
+            'dip',
+            'swagger',
+            'bounce',
+            'wiggle',
+            'headBob',
+            'lean',
+            'stepLeft',
+            'stepRight',
+            'slideLeft',
+            'slideRight',
+            'leanLeft',
+            'leanRight',
+            'kickLeft',
+            'kickRight',
+        ],
+        combo: [
+            ['pop', 'bob'],
+            ['dip', 'swell'],
+            ['stepLeft', 'stepRight'],
+            ['leanLeft', 'leanRight'],
+            ['kickLeft', 'kickRight'],
+        ], // 10% chance
     },
     // High energy: full variety (occasional combos)
     energetic: {
-        single: ['flare', 'swagger', 'dip', 'spin', 'spinLeft', 'spinRight', 'jump', 'twist', 'hula',
-            'stepLeft', 'stepRight', 'stepUp', 'stepDown', 'slideLeft', 'slideRight',
-            'leanLeft', 'leanRight', 'kickLeft', 'kickRight'],
-        combo: [['flare', 'bob'], ['pop', 'dip'], ['swagger', 'flare'],
-            ['stepLeft', 'stepRight'], ['slideLeft', 'slideRight'],
-            ['spinLeft', 'spinRight'], ['kickLeft', 'kickRight']]  // 15% chance
-    }
+        single: [
+            'flare',
+            'swagger',
+            'dip',
+            'spin',
+            'spinLeft',
+            'spinRight',
+            'jump',
+            'twist',
+            'hula',
+            'stepLeft',
+            'stepRight',
+            'stepUp',
+            'stepDown',
+            'slideLeft',
+            'slideRight',
+            'leanLeft',
+            'leanRight',
+            'kickLeft',
+            'kickRight',
+        ],
+        combo: [
+            ['flare', 'bob'],
+            ['pop', 'dip'],
+            ['swagger', 'flare'],
+            ['stepLeft', 'stepRight'],
+            ['slideLeft', 'slideRight'],
+            ['spinLeft', 'spinRight'],
+            ['kickLeft', 'kickRight'],
+        ], // 15% chance
+    },
 };
 
 /**
@@ -149,12 +193,12 @@ const MORPH_TARGETS = [
     { geometry: 'moon', variant: { type: 'phase', value: 'waxing-crescent' } },
     { geometry: 'moon', variant: { type: 'phase', value: 'new' } },
     { geometry: 'moon', variant: { type: 'eclipse', value: 'partial' } },
-    { geometry: 'moon', variant: { type: 'eclipse', value: 'total' } },  // Blood moon
+    { geometry: 'moon', variant: { type: 'eclipse', value: 'total' } }, // Blood moon
 
     // Sun variants
-    { geometry: 'sun', variant: null },  // Normal sun
+    { geometry: 'sun', variant: null }, // Normal sun
     { geometry: 'sun', variant: { type: 'eclipse', value: 'annular' } },
-    { geometry: 'sun', variant: { type: 'eclipse', value: 'total' } }
+    { geometry: 'sun', variant: { type: 'eclipse', value: 'total' } },
 ];
 
 /**
@@ -169,17 +213,27 @@ const DANCE_EMOTIONS = {
     // Low energy emotions - for breakdowns, outros
     low: ['resting', 'calm', 'sadness'],
     // Special/dramatic emotions - rare, for impact moments
-    dramatic: ['anger', 'fear', 'suspicion', 'glitch', 'disgust']
+    dramatic: ['anger', 'fear', 'suspicion', 'glitch', 'disgust'],
 };
 
 /**
  * Flat list of all dance-safe emotions
  */
 const ALL_DANCE_EMOTIONS = [
-    'joy', 'excited', 'euphoria', 'surprise',
-    'focused', 'love', 'calm', 'neutral',
-    'resting', 'sadness',
-    'anger', 'fear', 'suspicion', 'glitch'
+    'joy',
+    'excited',
+    'euphoria',
+    'surprise',
+    'focused',
+    'love',
+    'calm',
+    'neutral',
+    'resting',
+    'sadness',
+    'anger',
+    'fear',
+    'suspicion',
+    'glitch',
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -196,18 +250,18 @@ const ENERGY_THRESHOLDS = {
     // groove2 (energetic): High energy sections - chorus, drop
     energetic: { bass: 0.55, vocal: 0.35 },
     // groove3 (flowing): Medium energy with melodic content - bridge, build
-    flowing: { bass: 0.25, vocal: 0.50 }
+    flowing: { bass: 0.25, vocal: 0.5 },
 };
 
 /**
  * Safety limits for glow effects
  */
 const GLOW_SAFETY = {
-    maxHz: 2,              // No faster than 2Hz changes
-    maxBoost: 1.3,         // Cap brightness at 130%
-    cooldownMs: 800,       // 0.8 seconds between glow events (was 2s)
-    flashesPerPhrase: 2,   // Max 2 flashes per 4 bars (was 1 per 8)
-    minBarsBetweenFlash: 4 // Minimum bars between flash effects (was 8)
+    maxHz: 2, // No faster than 2Hz changes
+    maxBoost: 1.3, // Cap brightness at 130%
+    cooldownMs: 800, // 0.8 seconds between glow events (was 2s)
+    flashesPerPhrase: 2, // Max 2 flashes per 4 bars (was 1 per 8)
+    minBarsBetweenFlash: 4, // Minimum bars between flash effects (was 8)
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -223,7 +277,7 @@ export class DanceChoreographer {
 
         // State
         this.enabled = false;
-        this.intensity = 0.5;          // 0-1, affects gesture frequency & amplitude
+        this.intensity = 0.5; // 0-1, affects gesture frequency & amplitude
         this.currentGroove = 'groove1';
         this.lastGestureTime = 0;
         this.lastGlowTime = 0;
@@ -242,16 +296,16 @@ export class DanceChoreographer {
         this._lastGestureBar = -1;
 
         // Morph tracking
-        this._lastMorphBar = -16;  // Start with cooldown expired
-        this._currentTarget = { geometry: 'crystal', variant: null };  // Current morph target
-        this._baseTarget = { geometry: 'crystal', variant: null };     // "Home" target to return to
-        this._morphReturnTimeout = null;    // Timer for returning to base geometry
+        this._lastMorphBar = -16; // Start with cooldown expired
+        this._currentTarget = { geometry: 'crystal', variant: null }; // Current morph target
+        this._baseTarget = { geometry: 'crystal', variant: null }; // "Home" target to return to
+        this._morphReturnTimeout = null; // Timer for returning to base geometry
 
         // Emotion tracking
-        this._lastEmotionBar = -12;  // Start with cooldown expired
+        this._lastEmotionBar = -12; // Start with cooldown expired
         this._currentEmotion = 'neutral';
-        this._baseEmotion = 'neutral';  // "Home" emotion to return to
-        this._emotionReturnTimeout = null;  // Timer for returning to base emotion
+        this._baseEmotion = 'neutral'; // "Home" emotion to return to
+        this._emotionReturnTimeout = null; // Timer for returning to base emotion
 
         // Configuration
         this.config = {
@@ -259,32 +313,32 @@ export class DanceChoreographer {
             // At 100% intensity: 4 / (0.5 + 1.0) = 2.67 → rounds to 3 bars
             // At 50% intensity: 4 / (0.5 + 0.5) = 4 bars
             // At 0% intensity: 4 / (0.5 + 0) = 8 bars
-            gestureFrequencyBars: 4,       // Base: every 4 bars (intentional, not frantic)
-            minGestureIntervalMs: 800,     // Minimum time between gestures (longer)
+            gestureFrequencyBars: 4, // Base: every 4 bars (intentional, not frantic)
+            minGestureIntervalMs: 800, // Minimum time between gestures (longer)
 
             // Combo probability by energy level
             comboProbability: {
-                subtle: 0,      // No combos at low energy
-                moderate: 0.10, // 10% chance at medium energy
-                energetic: 0.15 // 15% chance at high energy
+                subtle: 0, // No combos at low energy
+                moderate: 0.1, // 10% chance at medium energy
+                energetic: 0.15, // 15% chance at high energy
             },
 
             // Morph settings (geometry changes on section changes)
             morphEnabled: true,
-            morphCooldownBars: 16,         // Minimum 16 bars between morphs (~8 seconds at 120bpm)
-            morphEnergyThreshold: 0.5,     // Only morph when energy changes significantly
-            morphReturnBars: 8,            // Bars before morphing back to base geometry (~4 sec at 120bpm)
+            morphCooldownBars: 16, // Minimum 16 bars between morphs (~8 seconds at 120bpm)
+            morphEnergyThreshold: 0.5, // Only morph when energy changes significantly
+            morphReturnBars: 8, // Bars before morphing back to base geometry (~4 sec at 120bpm)
 
             // Emotion settings (mood changes during dance)
             emotionEnabled: true,
-            emotionCooldownBars: 12,       // Minimum 12 bars between emotion changes (~6 seconds at 120bpm)
-            emotionReturnBars: 16,         // Bars before returning to base emotion (~8 sec at 120bpm)
-            emotionMatchEnergy: true,      // Match emotion energy level to audio energy
+            emotionCooldownBars: 12, // Minimum 12 bars between emotion changes (~6 seconds at 120bpm)
+            emotionReturnBars: 16, // Bars before returning to base emotion (~8 sec at 120bpm)
+            emotionMatchEnergy: true, // Match emotion energy level to audio energy
             dramaticEmotionProbability: 0.1, // 10% chance of dramatic emotion on high energy
 
             // Groove switching
-            grooveSwitchBars: 2,           // Transition duration
-            energySmoothing: 0.05,         // How fast energy averages update
+            grooveSwitchBars: 2, // Transition duration
+            energySmoothing: 0.05, // How fast energy averages update
 
             // Intensity scaling
             intensityAffectsFrequency: true,
@@ -296,7 +350,7 @@ export class DanceChoreographer {
             glowCooldownMs: GLOW_SAFETY.cooldownMs,
 
             // Auto-enable when BPM locks
-            autoEnableOnLock: true
+            autoEnableOnLock: true,
         };
     }
 
@@ -438,7 +492,7 @@ export class DanceChoreographer {
         return {
             bass: this.audioDeformer.bassEnergy || 0,
             vocal: this.audioDeformer.vocalPresence || 0,
-            flux: this.audioDeformer.transientStrength || 0
+            flux: this.audioDeformer.transientStrength || 0,
         };
     }
 
@@ -545,8 +599,10 @@ export class DanceChoreographer {
         }
 
         // Check for flowing (high vocals, moderate bass = melodic section)
-        if (vocal > ENERGY_THRESHOLDS.flowing.vocal * intensityScale &&
-            bass < ENERGY_THRESHOLDS.flowing.bass * 1.5) {
+        if (
+            vocal > ENERGY_THRESHOLDS.flowing.vocal * intensityScale &&
+            bass < ENERGY_THRESHOLDS.flowing.bass * 1.5
+        ) {
             return 'groove3';
         }
 
@@ -565,7 +621,7 @@ export class DanceChoreographer {
         // Use existing setGroove API with 2-bar quantized transition
         this.rhythmAdapter.setGroove(newGroove, {
             quantize: true,
-            bars: this.config.grooveSwitchBars
+            bars: this.config.grooveSwitchBars,
         });
 
         this.currentGroove = newGroove;
@@ -878,14 +934,15 @@ export class DanceChoreographer {
         };
 
         // Select a different target than current (excluding base so we have somewhere to return to)
-        const candidates = MORPH_TARGETS.filter(t =>
-            !targetsEqual(t, this._currentTarget) && !targetsEqual(t, this._baseTarget)
+        const candidates = MORPH_TARGETS.filter(
+            t => !targetsEqual(t, this._currentTarget) && !targetsEqual(t, this._baseTarget)
         );
 
         // If no options (only base left), pick any non-current
-        const finalCandidates = candidates.length > 0
-            ? candidates
-            : MORPH_TARGETS.filter(t => !targetsEqual(t, this._currentTarget));
+        const finalCandidates =
+            candidates.length > 0
+                ? candidates
+                : MORPH_TARGETS.filter(t => !targetsEqual(t, this._currentTarget));
 
         if (finalCandidates.length === 0) return;
 
@@ -987,7 +1044,9 @@ export class DanceChoreographer {
 
         // Safety check: only apply variant if we're on the correct geometry
         if (core3D.geometryType !== geometry) {
-            console.warn(`[DanceChoreographer] Skipping variant - expected ${geometry}, got ${core3D.geometryType}`);
+            console.warn(
+                `[DanceChoreographer] Skipping variant - expected ${geometry}, got ${core3D.geometryType}`
+            );
             return;
         }
 
@@ -1126,7 +1185,7 @@ export class DanceChoreographer {
         if (!shouldChangeEmotion && this.currentGroove === 'groove1' && combinedEnergy < 0.25) {
             // 10% chance per bar during quiet sections
             if (this._lastEmotionCheckBar !== this.barCount) {
-                if (Math.random() < 0.10) {
+                if (Math.random() < 0.1) {
                     shouldChangeEmotion = true;
                     emotionReason = 'energy_low';
                 }
@@ -1138,7 +1197,7 @@ export class DanceChoreographer {
         if (!shouldChangeEmotion && barsSinceLastEmotion >= 12) {
             // 20% chance per bar after cooldown
             if (this._lastEmotionCheckBar !== this.barCount) {
-                if (Math.random() < 0.20) {
+                if (Math.random() < 0.2) {
                     shouldChangeEmotion = true;
                     emotionReason = 'time_variety';
                 }
@@ -1280,7 +1339,7 @@ export class DanceChoreographer {
             barsSinceLastMorph: this.barCount - this._lastMorphBar,
             lastEmotionBar: this._lastEmotionBar,
             barsSinceLastEmotion: this.barCount - this._lastEmotionBar,
-            canGlow: this._canTriggerGlow()
+            canGlow: this._canTriggerGlow(),
         };
     }
 

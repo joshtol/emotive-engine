@@ -37,8 +37,8 @@ const EARTHCROWN_CONFIG = {
             orientation: 'flat',
             bob: {
                 amplitude: 0.008,
-                frequency: 0.2
-            }
+                frequency: 0.2,
+            },
         },
         count: 1,
         scale: 2.2,
@@ -55,16 +55,18 @@ const EARTHCROWN_CONFIG = {
             rotate: { axis: 'z', rotations: 0.3, phase: 0 },
             wetness: {
                 wetness: 0.65,
-                wetSpeed: 0.4
+                wetSpeed: 0.4,
             },
-            atmospherics: [{
-                preset: 'earth-dust',
-                targets: ['earth-crown'],
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-dust',
+                    targets: ['earth-crown'],
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'normal',
@@ -75,16 +77,16 @@ const EARTHCROWN_CONFIG = {
                         type: 1,
                         arcWidth: 0.8,
                         arcSpeed: 0.4,
-                        arcCount: 2
+                        arcCount: 2,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.8,
     glowFlickerRate: 1.5,
@@ -93,7 +95,7 @@ const EARTHCROWN_CONFIG = {
     scalePulse: true,
     rotationDrift: 0.008,
     tremor: 0.003,
-    tremorFrequency: 3
+    tremorFrequency: 3,
 };
 
 export default buildEarthEffectGesture(EARTHCROWN_CONFIG);

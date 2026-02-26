@@ -89,7 +89,7 @@ export class ParticleEmotionCalculator {
             min: visual.minParticles !== undefined ? visual.minParticles : 0,
             max: visual.maxParticles !== undefined ? visual.maxParticles : 10,
             colors: visual.particleColors || null,
-            emotion
+            emotion,
         };
     }
 
@@ -147,7 +147,7 @@ export class ParticleEmotionCalculator {
             // Mark as special for orchestrator
             return {
                 ...config,
-                specialBehavior: 'zen-mixing'
+                specialBehavior: 'zen-mixing',
             };
         }
 
@@ -175,7 +175,7 @@ export class ParticleEmotionCalculator {
             min: 0,
             max: 10,
             colors: null,
-            emotion: 'neutral'
+            emotion: 'neutral',
         };
     }
 

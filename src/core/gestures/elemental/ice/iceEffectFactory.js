@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -39,7 +39,7 @@ export function buildIceEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -48,8 +48,8 @@ export function buildIceEffectGesture(config) {
             amplitudeSync: {
                 onBeat: config.category === 'transform' ? 1.4 : 1.2,
                 offBeat: 1.0,
-                curve: 'smooth'
-            }
+                curve: 'smooth',
+            },
         },
 
         /**
@@ -59,7 +59,7 @@ export function buildIceEffectGesture(config) {
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const { category } = cfg;
 
                 // ═══════════════════════════════════════════════════════════════
@@ -74,7 +74,7 @@ export function buildIceEffectGesture(config) {
                     }
                     // Thaw decreases over time
                     if (cfg.frostDecay) {
-                        effectStrength *= (1 - progress * 0.6);
+                        effectStrength *= 1 - progress * 0.6;
                     }
                 }
 
@@ -88,7 +88,7 @@ export function buildIceEffectGesture(config) {
                 if (category === 'transform') {
                     if (cfg.shatterPoint && progress > cfg.shatterPoint) {
                         // Post-shatter rapid decay
-                        effectStrength = 1 - ((progress - cfg.shatterPoint) / (1 - cfg.shatterPoint));
+                        effectStrength = 1 - (progress - cfg.shatterPoint) / (1 - cfg.shatterPoint);
                     } else {
                         effectStrength = Math.min(1, progress / 0.3);
                     }
@@ -96,9 +96,9 @@ export function buildIceEffectGesture(config) {
 
                 // Decay in final phase
                 const decayRate = cfg.decayRate || 0.15;
-                if (progress > (1 - decayRate)) {
+                if (progress > 1 - decayRate) {
                     const decayProgress = (progress - (1 - decayRate)) / decayRate;
-                    effectStrength *= (1 - decayProgress);
+                    effectStrength *= 1 - decayProgress;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
@@ -106,31 +106,39 @@ export function buildIceEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 let frostLevel = cfg.frost || 0.5;
                 if (cfg.frostDecay) {
-                    frostLevel *= (1 - progress * 0.7);
+                    frostLevel *= 1 - progress * 0.7;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION - Tremor, shiver, explosion
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 // Tremor (freezing in place)
                 if (cfg.tremor > 0) {
                     let tremorStrength = cfg.tremor;
                     if (cfg.tremorDecay) {
-                        tremorStrength *= (1 - progress * cfg.tremorDecay);
+                        tremorStrength *= 1 - progress * cfg.tremorDecay;
                     }
                     const tremorTime = time * (cfg.tremorFrequency || 8);
                     posX += (noise1D(tremorTime) - 0.5) * tremorStrength * effectStrength;
-                    posY += (noise1D(tremorTime + 50) - 0.5) * tremorStrength * effectStrength * 0.5;
-                    posZ += (noise1D(tremorTime + 100) - 0.5) * tremorStrength * effectStrength * 0.3;
+                    posY +=
+                        (noise1D(tremorTime + 50) - 0.5) * tremorStrength * effectStrength * 0.5;
+                    posZ +=
+                        (noise1D(tremorTime + 100) - 0.5) * tremorStrength * effectStrength * 0.3;
                 }
 
                 // Shivering (chill)
                 if (cfg.shiverAmount > 0) {
                     const shiverTime = time * (cfg.shiverFrequency || 12);
                     posX += Math.sin(shiverTime * Math.PI * 2) * cfg.shiverAmount * effectStrength;
-                    posY += Math.cos(shiverTime * Math.PI * 3.1) * cfg.shiverAmount * 0.5 * effectStrength;
+                    posY +=
+                        Math.cos(shiverTime * Math.PI * 3.1) *
+                        cfg.shiverAmount *
+                        0.5 *
+                        effectStrength;
                 }
 
                 // Jitter (frostbite cracking)
@@ -138,13 +146,15 @@ export function buildIceEffectGesture(config) {
                     const jitterTime = time * (cfg.jitterFrequency || 15);
                     if (hash(Math.floor(jitterTime)) > 0.7) {
                         posX += (hash(jitterTime) - 0.5) * cfg.jitterAmount * effectStrength;
-                        posY += (hash(jitterTime + 10) - 0.5) * cfg.jitterAmount * 0.5 * effectStrength;
+                        posY +=
+                            (hash(jitterTime + 10) - 0.5) * cfg.jitterAmount * 0.5 * effectStrength;
                     }
                 }
 
                 // Droop (thaw melting)
                 if (cfg.droopAmount > 0) {
-                    const droopProgress = progress * (1 + (cfg.droopAcceleration || 0.3) * progress);
+                    const droopProgress =
+                        progress * (1 + (cfg.droopAcceleration || 0.3) * progress);
                     posY -= cfg.droopAmount * droopProgress * effectStrength;
                 }
 
@@ -168,8 +178,9 @@ export function buildIceEffectGesture(config) {
                     const breathe = Math.sin(scaleTime * Math.PI * 2) * 0.5 + 0.5;
                     scale = 1.0 + (breathe - 0.5) * (cfg.scaleVibration || 0.015) * effectStrength;
                 } else if (cfg.scaleVibration) {
-                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.6 +
-                                      Math.sin(scaleTime * Math.PI * 2.7) * 0.4;
+                    const scaleNoise =
+                        Math.sin(scaleTime * Math.PI * 2) * 0.6 +
+                        Math.sin(scaleTime * Math.PI * 2.7) * 0.4;
                     scale = 1.0 + scaleNoise * cfg.scaleVibration * effectStrength;
                 }
 
@@ -196,7 +207,9 @@ export function buildIceEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION - Crystalline, shatter chaos
                 // ═══════════════════════════════════════════════════════════════
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 // Slow rotation (crystallize)
                 if (cfg.rotationSpeed > 0) {
@@ -207,7 +220,11 @@ export function buildIceEffectGesture(config) {
                 if (cfg.rotationWobble > 0) {
                     const wobbleTime = time * (cfg.rotationWobbleSpeed || 1.5);
                     rotX = Math.sin(wobbleTime * Math.PI * 2) * cfg.rotationWobble * effectStrength;
-                    rotZ = Math.sin(wobbleTime * Math.PI * 1.7 + 0.5) * cfg.rotationWobble * 0.7 * effectStrength;
+                    rotZ =
+                        Math.sin(wobbleTime * Math.PI * 1.7 + 0.5) *
+                        cfg.rotationWobble *
+                        0.7 *
+                        effectStrength;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
@@ -218,17 +235,21 @@ export function buildIceEffectGesture(config) {
 
                 if (cfg.shatterPoint && progress > cfg.shatterPoint) {
                     // Shatter: bright flash
-                    flickerValue = 1.0 + (hash(flickerTime * 5) * 0.5);
+                    flickerValue = 1.0 + hash(flickerTime * 5) * 0.5;
                 } else {
                     flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.3 + 0.7;
                 }
 
-                const glowIntensity = (cfg.glowIntensityMin || 0.5) +
-                    ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) * flickerValue * effectStrength;
+                const glowIntensity =
+                    (cfg.glowIntensityMin || 0.5) +
+                    ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) *
+                        flickerValue *
+                        effectStrength;
 
                 // Ice glow boost - cold blue shimmer
-                const glowBoost = 0.15 * effectStrength * cfg.intensity * frostLevel
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    0.15 * effectStrength * cfg.intensity * frostLevel +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
@@ -248,17 +269,17 @@ export function buildIceEffectGesture(config) {
                         models: config.spawnMode?.models,
                         count: config.spawnMode?.count,
                         scale: config.spawnMode?.scale,
-                        embedDepth: config.spawnMode?.embedDepth
+                        embedDepth: config.spawnMode?.embedDepth,
                     },
                     position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],
                     scale,
                     glowIntensity,
                     glowBoost,
-                    glowColorOverride: cfg.glowColor
+                    glowColorOverride: cfg.glowColor,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

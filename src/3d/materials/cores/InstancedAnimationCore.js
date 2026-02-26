@@ -60,15 +60,15 @@
  * @enum {number}
  */
 export const ANIMATION_TYPES = {
-    NONE: 0,              // Default element behavior
-    ROTATING_ARC: 1,      // Sweeping arc visibility (vortex rings)
-    RIPPLE_PULSE: 2,      // Concentric expanding rings
-    DRIP_FALL: 3,         // Vertical stretch for falling
-    FLOW_STREAM: 4,       // Directional wave flow
-    SURFACE_SHIMMER: 5,   // Caustic/shimmer patterns
-    SPIRAL_TWIST: 6,      // Helical spiral distortion
-    PULSE_BEAT: 7,        // Rhythmic expand/contract
-    FRAGMENT_BURST: 8,    // Shatter outward
+    NONE: 0, // Default element behavior
+    ROTATING_ARC: 1, // Sweeping arc visibility (vortex rings)
+    RIPPLE_PULSE: 2, // Concentric expanding rings
+    DRIP_FALL: 3, // Vertical stretch for falling
+    FLOW_STREAM: 4, // Directional wave flow
+    SURFACE_SHIMMER: 5, // Caustic/shimmer patterns
+    SPIRAL_TWIST: 6, // Helical spiral distortion
+    PULSE_BEAT: 7, // Rhythmic expand/contract
+    FRAGMENT_BURST: 8, // Shatter outward
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -81,18 +81,18 @@ export const ANIMATION_TYPES = {
  * @enum {number}
  */
 export const CUTOUT_PATTERNS = {
-    NONE: -1,             // No pattern (use for secondary when only one pattern needed)
-    CELLULAR: 0,          // Organic cell-like holes (water, organic)
-    STREAKS: 1,           // Flow-aligned streak holes (water, wind)
-    RADIAL: 2,            // Radial burst pattern (explosions)
-    VORONOI: 3,           // Cracked/shattered pattern (earth, ice)
-    WAVES: 4,             // Wave interference pattern (water, energy)
-    EMBERS: 5,            // Burning ember holes (fire, heat)
-    SPIRAL: 6,            // Spiral arms pattern (meditation, vortex)
-    DISSOLVE: 7,          // Edge erosion inward (fade-outs)
-    CRACKS: 8,            // Branching fracture lines (shatter)
+    NONE: -1, // No pattern (use for secondary when only one pattern needed)
+    CELLULAR: 0, // Organic cell-like holes (water, organic)
+    STREAKS: 1, // Flow-aligned streak holes (water, wind)
+    RADIAL: 2, // Radial burst pattern (explosions)
+    VORONOI: 3, // Cracked/shattered pattern (earth, ice)
+    WAVES: 4, // Wave interference pattern (water, energy)
+    EMBERS: 5, // Burning ember holes (fire, heat)
+    SPIRAL: 6, // Spiral arms pattern (meditation, vortex)
+    DISSOLVE: 7, // Edge erosion inward (fade-outs)
+    CRACKS: 8, // Branching fracture lines (shatter)
     // Pattern 9 removed - use geometricMask: { type: 'distance' } instead
-    BURN: 10,             // Consumption line traveling up with noisy edge
+    BURN: 10, // Consumption line traveling up with noisy edge
     // Pattern 11 removed - use geometricMask: { type: 'distance' } with any pattern
 };
 
@@ -101,10 +101,10 @@ export const CUTOUT_PATTERNS = {
  * @enum {number}
  */
 export const CUTOUT_BLEND = {
-    MULTIPLY: 0,          // Hole where EITHER pattern has hole (more holes)
-    MIN: 1,               // Hole only where BOTH patterns have holes (fewer holes)
-    MAX: 2,               // Keep highest mask value (fewer holes)
-    ADD: 3,               // Add masks together then clamp (smooth blend)
+    MULTIPLY: 0, // Hole where EITHER pattern has hole (more holes)
+    MIN: 1, // Hole only where BOTH patterns have holes (fewer holes)
+    MAX: 2, // Keep highest mask value (fewer holes)
+    ADD: 3, // Add masks together then clamp (smooth blend)
 };
 
 /**
@@ -112,14 +112,14 @@ export const CUTOUT_BLEND = {
  * @enum {number}
  */
 export const CUTOUT_TRAVEL = {
-    NONE: 0,              // Static cutout (default)
-    ANGULAR: 1,           // Sweep around ring geometry (atan2-based)
-    RADIAL: 2,            // Expand/contract from center
-    SPIRAL: 3,            // Rotate + expand simultaneously (hypnotic)
-    OSCILLATE: 4,         // Ping-pong back and forth (breathing)
-    WAVE: 5,              // Sine wave propagation (ripple)
-    VERTICAL: 6,          // Progress travels bottom→top along vertical gradient
-    CONSUME: 7,           // Burns inward from tips, eating the flame
+    NONE: 0, // Static cutout (default)
+    ANGULAR: 1, // Sweep around ring geometry (atan2-based)
+    RADIAL: 2, // Expand/contract from center
+    SPIRAL: 3, // Rotate + expand simultaneously (hypnotic)
+    OSCILLATE: 4, // Ping-pong back and forth (breathing)
+    WAVE: 5, // Sine wave propagation (ripple)
+    VERTICAL: 6, // Progress travels bottom→top along vertical gradient
+    CONSUME: 7, // Burns inward from tips, eating the flame
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -131,12 +131,12 @@ export const CUTOUT_TRAVEL = {
  * @enum {number}
  */
 export const GRAIN_TYPES = {
-    NONE: -1,             // No grain (disabled)
-    PERLIN: 0,            // Smooth flowing noise (water shimmer)
-    SIMPLEX: 1,           // Similar to perlin, slightly different (fire embers)
-    WHITE: 2,             // Random pixel noise (film grain, electricity)
-    FILM: 3,              // Perlin + white hybrid (cinematic)
-    TIP_WEIGHTED: 4,      // Noise multiplied by vertical position (stronger at tips)
+    NONE: -1, // No grain (disabled)
+    PERLIN: 0, // Smooth flowing noise (water shimmer)
+    SIMPLEX: 1, // Similar to perlin, slightly different (fire embers)
+    WHITE: 2, // Random pixel noise (film grain, electricity)
+    FILM: 3, // Perlin + white hybrid (cinematic)
+    TIP_WEIGHTED: 4, // Noise multiplied by vertical position (stronger at tips)
 };
 
 /**
@@ -144,10 +144,10 @@ export const GRAIN_TYPES = {
  * @enum {number}
  */
 export const GRAIN_BLEND = {
-    MULTIPLY: 0,          // Darkens - creates grit/dirt effect
-    ADD: 1,               // Brightens - creates sparkle/shimmer
-    OVERLAY: 2,           // Increases contrast - dramatic texture
-    SCREEN: 3,            // Soft brightening - ethereal glow
+    MULTIPLY: 0, // Darkens - creates grit/dirt effect
+    ADD: 1, // Brightens - creates sparkle/shimmer
+    OVERLAY: 2, // Increases contrast - dramatic texture
+    SCREEN: 3, // Soft brightening - ethereal glow
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -157,7 +157,7 @@ export const GRAIN_BLEND = {
 /**
  * Animation uniform declarations for vertex shader
  */
-export const ANIMATION_UNIFORMS_VERTEX = /* glsl */`
+export const ANIMATION_UNIFORMS_VERTEX = /* glsl */ `
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ANIMATION SYSTEM UNIFORMS
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -189,7 +189,7 @@ uniform float uPulseAmplitude;        // Scale amount (0.3 = 30% expansion)
 /**
  * Animation uniform declarations for fragment shader
  */
-export const ANIMATION_UNIFORMS_FRAGMENT = /* glsl */`
+export const ANIMATION_UNIFORMS_FRAGMENT = /* glsl */ `
 uniform int uAnimationType;
 uniform float uGestureProgress;
 uniform float uGlowScale;            // Glow intensity multiplier (0=off, 1=normal, >1=bloom)
@@ -245,7 +245,7 @@ uniform float uCutoutEdgeMask;       // 0=disabled, 0.3=narrow silhouette, 0.6=w
 /**
  * Animation varyings passed from vertex to fragment shader
  */
-export const ANIMATION_VARYINGS = /* glsl */`
+export const ANIMATION_VARYINGS = /* glsl */ `
 varying float vAnimationMask;         // 0-1 visibility/intensity from animation
 varying vec3 vInstancePosition;       // Instance world position (for trail dissolve)
 varying vec3 vWorldPosition;          // Fragment world position (for trail dissolve)
@@ -267,7 +267,7 @@ varying vec3 vWorldPosition;          // Fragment world position (for trail diss
  * - vAnimationMask: Set based on animation type
  * - animatedPosition: Modified for position-based animations
  */
-export const ANIMATION_VERTEX_MAIN = /* glsl */`
+export const ANIMATION_VERTEX_MAIN = /* glsl */ `
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ANIMATION CALCULATIONS
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -416,7 +416,7 @@ if (uAnimationType == 1) {
  * - alpha: Modified based on animation
  * - May discard fragment for arc animations
  */
-export const ANIMATION_FRAGMENT_APPLY = /* glsl */`
+export const ANIMATION_FRAGMENT_APPLY = /* glsl */ `
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // APPLY ANIMATION MASK
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -459,7 +459,7 @@ if (uAnimationType == 1) {
  * Helper function GLSL for calculating individual cutout pattern masks.
  * Must be included before CUTOUT_GLSL in fragment shader.
  */
-export const CUTOUT_PATTERN_FUNC_GLSL = /* glsl */`
+export const CUTOUT_PATTERN_FUNC_GLSL = /* glsl */ `
 // Calculate cutout mask for a single pattern
 // vertGradient: normalized vertical position (0=bottom, 1=top) for tip-based effects
 float calcCutoutPattern(int pattern, vec3 pos, float scale, float time, float vertGradient) {
@@ -602,7 +602,7 @@ float calcCutoutPattern(int pattern, vec3 pos, float scale, float time, float ve
  * OUTPUT:
  * - May discard fragment if below cutout threshold
  */
-export const CUTOUT_GLSL = /* glsl */`
+export const CUTOUT_GLSL = /* glsl */ `
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // TWO-LAYER COMPOSABLE CUTOUT SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -920,7 +920,7 @@ if (uTrailDissolveEnabled == 1) {
  * OUTPUT:
  * - color: Modified by grain texture
  */
-export const GRAIN_GLSL = /* glsl */`
+export const GRAIN_GLSL = /* glsl */ `
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GRAIN SYSTEM - NOISE TEXTURE OVERLAY
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -1015,7 +1015,7 @@ if (uGrainType >= 0 && uGrainStrength > 0.01) {
 export const ANIMATION_DEFAULTS = {
     animationType: 0,
     gestureProgress: 0.0,
-    glowScale: 1.0,        // Default glow multiplier
+    glowScale: 1.0, // Default glow multiplier
     // Arc
     arcWidth: 0.5,
     arcSpeed: 1.0,
@@ -1033,41 +1033,41 @@ export const ANIMATION_DEFAULTS = {
     pulseFrequency: 2.0,
     pulseAmplitude: 0.3,
     // Cutout - two-layer composable system
-    cutoutStrength: 0.0,   // Off by default
-    cutoutPhase: 0.0,      // Animation phase offset
-    cutoutPattern1: -1,    // Primary pattern (-1=none/disabled)
-    cutoutScale1: 1.0,     // Primary scale
-    cutoutWeight1: 1.0,    // Primary weight
-    cutoutPattern2: -1,    // Secondary pattern (-1=none)
-    cutoutScale2: 1.0,     // Secondary scale
-    cutoutWeight2: 1.0,    // Secondary weight
-    cutoutBlend: 0,        // MULTIPLY blend mode
-    cutoutTravel: 0,       // NONE travel mode
-    cutoutTravelSpeed: 1.0,// One full rotation/expansion per gesture
-    cutoutTravelDir: 0,    // Forward direction
-    cutoutTravel2: -1,     // Secondary uses same as primary (-1)
-    cutoutTravelSpeed2: 1.0,// Secondary travel speed
-    cutoutStrengthCurve: 0,// Constant strength (no animation)
+    cutoutStrength: 0.0, // Off by default
+    cutoutPhase: 0.0, // Animation phase offset
+    cutoutPattern1: -1, // Primary pattern (-1=none/disabled)
+    cutoutScale1: 1.0, // Primary scale
+    cutoutWeight1: 1.0, // Primary weight
+    cutoutPattern2: -1, // Secondary pattern (-1=none)
+    cutoutScale2: 1.0, // Secondary scale
+    cutoutWeight2: 1.0, // Secondary weight
+    cutoutBlend: 0, // MULTIPLY blend mode
+    cutoutTravel: 0, // NONE travel mode
+    cutoutTravelSpeed: 1.0, // One full rotation/expansion per gesture
+    cutoutTravelDir: 0, // Forward direction
+    cutoutTravel2: -1, // Secondary uses same as primary (-1)
+    cutoutTravelSpeed2: 1.0, // Secondary travel speed
+    cutoutStrengthCurve: 0, // Constant strength (no animation)
     cutoutFadeInDuration: 1.0, // Full gesture duration for fadeIn (1.0 = 100%)
     cutoutFadeOutDuration: 1.0, // Full gesture duration for fadeOut (1.0 = 100%)
-    cutoutBellPeakAt: 0.5,  // Bell peak at middle (0.5 = 50%)
-    cutoutBellWidth: 0.0,   // Bell plateau width (0=sharp, 0.5=50% at full, 0.8=80% at full)
+    cutoutBellPeakAt: 0.5, // Bell peak at middle (0.5 = 50%)
+    cutoutBellWidth: 0.0, // Bell plateau width (0=sharp, 0.5=50% at full, 0.8=80% at full)
     // Trail dissolve - organic fade at bottom of each instance
-    trailDissolveEnabled: 0,     // Off by default
-    trailDissolveOffset: -0.3,   // Default offset below instance position
+    trailDissolveEnabled: 0, // Off by default
+    trailDissolveOffset: -0.3, // Default offset below instance position
     trailDissolveSoftness: 0.25, // Default softness for gradient
     // Grain - noise texture overlay
-    grainType: -1,               // Off by default (-1=none)
-    grainStrength: 0.0,          // Grain visibility (0-1)
-    grainScale: 0.5,             // Pattern scale (0.1=fine, 2.0=coarse)
-    grainSpeed: 1.0,             // Animation speed (0=static)
-    grainBlend: 0,               // MULTIPLY blend mode
+    grainType: -1, // Off by default (-1=none)
+    grainStrength: 0.0, // Grain visibility (0-1)
+    grainScale: 0.5, // Pattern scale (0.1=fine, 2.0=coarse)
+    grainSpeed: 1.0, // Animation speed (0=static)
+    grainBlend: 0, // MULTIPLY blend mode
     // Geometric mask - restricts cutout to specific regions
-    cutoutGeoMaskType: 0,        // 0=none, 1=distance (length(pos) for tips)
-    cutoutGeoMaskCore: 0.3,      // Default core radius (solid region)
-    cutoutGeoMaskTip: 0.4,       // Default tip radius (full effect region)
+    cutoutGeoMaskType: 0, // 0=none, 1=distance (length(pos) for tips)
+    cutoutGeoMaskCore: 0.3, // Default core radius (solid region)
+    cutoutGeoMaskTip: 0.4, // Default tip radius (full effect region)
     // Edge mask - restricts cutout to silhouette edges
-    cutoutEdgeMask: 0.0,         // 0=disabled, >0=NdotV threshold (0.3=narrow, 0.6=wide)
+    cutoutEdgeMask: 0.0, // 0=disabled, >0=NdotV threshold (0.3=narrow, 0.6=wide)
 };
 
 /**
@@ -1225,10 +1225,10 @@ export function setCutout(material, config) {
         travelSpeed = ANIMATION_DEFAULTS.cutoutTravelSpeed,
         travelDir = 'forward',
         strengthCurve = 'constant',
-        fadeInDuration = ANIMATION_DEFAULTS.cutoutFadeInDuration,  // Fraction of gesture for fadeIn to reach full
+        fadeInDuration = ANIMATION_DEFAULTS.cutoutFadeInDuration, // Fraction of gesture for fadeIn to reach full
         fadeOutDuration = ANIMATION_DEFAULTS.cutoutFadeOutDuration, // Fraction of gesture for fadeOut (last N%)
-        bellPeakAt = ANIMATION_DEFAULTS.cutoutBellPeakAt,  // Where bell curve peaks (0.5 = middle)
-        bellWidth = ANIMATION_DEFAULTS.cutoutBellWidth,   // Bell plateau width (0=sharp, 0.5=50% at full)
+        bellPeakAt = ANIMATION_DEFAULTS.cutoutBellPeakAt, // Where bell curve peaks (0.5 = middle)
+        bellWidth = ANIMATION_DEFAULTS.cutoutBellWidth, // Bell plateau width (0=sharp, 0.5=50% at full)
         // Trail dissolve - fades bottom of each instance using cutout patterns
         trailDissolve,
         // Geometric mask - restricts cutout to specific regions of geometry
@@ -1237,7 +1237,7 @@ export function setCutout(material, config) {
         edgeMask = 0,
         // Legacy single-pattern support
         pattern,
-        scale
+        scale,
     } = config || {};
 
     // Resolve blend mode
@@ -1245,7 +1245,16 @@ export function setCutout(material, config) {
     const blendValue = typeof blend === 'number' ? blend : (blendModes[blend] ?? 0);
 
     // Resolve travel mode
-    const travelModes = { none: 0, angular: 1, radial: 2, spiral: 3, oscillate: 4, wave: 5, vertical: 6, consume: 7 };
+    const travelModes = {
+        none: 0,
+        angular: 1,
+        radial: 2,
+        spiral: 3,
+        oscillate: 4,
+        wave: 5,
+        vertical: 6,
+        consume: 7,
+    };
     const travelValue = typeof travel === 'number' ? travel : (travelModes[travel] ?? 0);
 
     // Resolve travel direction
@@ -1253,8 +1262,18 @@ export function setCutout(material, config) {
     const travelDirValue = typeof travelDir === 'number' ? travelDir : (travelDirs[travelDir] ?? 0);
 
     // Resolve strength curve
-    const strengthCurves = { constant: 0, fadeIn: 1, fadeOut: 2, bell: 3, pulse: 4, topHeavy: 5, tips: 6, consume: 7 };
-    const strengthCurveValue = typeof strengthCurve === 'number' ? strengthCurve : (strengthCurves[strengthCurve] ?? 0);
+    const strengthCurves = {
+        constant: 0,
+        fadeIn: 1,
+        fadeOut: 2,
+        bell: 3,
+        pulse: 4,
+        topHeavy: 5,
+        tips: 6,
+        consume: 7,
+    };
+    const strengthCurveValue =
+        typeof strengthCurve === 'number' ? strengthCurve : (strengthCurves[strengthCurve] ?? 0);
 
     material.uniforms.uCutoutStrength.value = Math.max(0, Math.min(1, strength));
     material.uniforms.uCutoutPhase.value = phase;
@@ -1304,7 +1323,7 @@ export function setCutout(material, config) {
             material.uniforms.uCutoutGeoMaskTip.value = geometricMask.tip;
         }
     } else {
-        material.uniforms.uCutoutGeoMaskType.value = 0;  // None
+        material.uniforms.uCutoutGeoMaskType.value = 0; // None
     }
 
     // Edge mask - restricts cutout to silhouette edges (NdotV-based)
@@ -1326,11 +1345,14 @@ export function setCutout(material, config) {
 
             // Per-layer travel for secondary
             if (secondary.travel !== undefined) {
-                const travel2Value = typeof secondary.travel === 'number' ? secondary.travel : (travelModes[secondary.travel] ?? -1);
+                const travel2Value =
+                    typeof secondary.travel === 'number'
+                        ? secondary.travel
+                        : (travelModes[secondary.travel] ?? -1);
                 material.uniforms.uCutoutTravel2.value = travel2Value;
                 material.uniforms.uCutoutTravelSpeed2.value = secondary.travelSpeed ?? 1.0;
             } else {
-                material.uniforms.uCutoutTravel2.value = -1;  // Same as primary
+                material.uniforms.uCutoutTravel2.value = -1; // Same as primary
             }
         } else {
             material.uniforms.uCutoutPattern2.value = CUTOUT_PATTERNS.NONE;
@@ -1418,15 +1440,15 @@ export function setGrain(material, config = {}) {
         strength = 0.15,
         scale = 0.5,
         speed = 1.0,
-        blend = 'multiply'
+        blend = 'multiply',
     } = config;
 
     // Map blend mode strings to enum values
     const blendModes = {
-        'multiply': GRAIN_BLEND.MULTIPLY,
-        'add': GRAIN_BLEND.ADD,
-        'overlay': GRAIN_BLEND.OVERLAY,
-        'screen': GRAIN_BLEND.SCREEN
+        multiply: GRAIN_BLEND.MULTIPLY,
+        add: GRAIN_BLEND.ADD,
+        overlay: GRAIN_BLEND.OVERLAY,
+        screen: GRAIN_BLEND.SCREEN,
     };
 
     material.uniforms.uGrainType.value = type;
@@ -1492,11 +1514,15 @@ export function setShaderAnimation(material, config = {}) {
     if (params.arcPhase !== undefined) material.uniforms.uArcPhase.value = params.arcPhase;
     if (params.rippleSpeed !== undefined) material.uniforms.uRippleSpeed.value = params.rippleSpeed;
     if (params.rippleCount !== undefined) material.uniforms.uRippleCount.value = params.rippleCount;
-    if (params.flowDirection !== undefined) material.uniforms.uFlowDirection.value = params.flowDirection;
-    if (params.spiralTightness !== undefined) material.uniforms.uSpiralTightness.value = params.spiralTightness;
+    if (params.flowDirection !== undefined)
+        material.uniforms.uFlowDirection.value = params.flowDirection;
+    if (params.spiralTightness !== undefined)
+        material.uniforms.uSpiralTightness.value = params.spiralTightness;
     if (params.spiralSpeed !== undefined) material.uniforms.uSpiralSpeed.value = params.spiralSpeed;
-    if (params.pulseFrequency !== undefined) material.uniforms.uPulseFrequency.value = params.pulseFrequency;
-    if (params.pulseAmplitude !== undefined) material.uniforms.uPulseAmplitude.value = params.pulseAmplitude;
+    if (params.pulseFrequency !== undefined)
+        material.uniforms.uPulseFrequency.value = params.pulseFrequency;
+    if (params.pulseAmplitude !== undefined)
+        material.uniforms.uPulseAmplitude.value = params.pulseAmplitude;
 }
 
 /**
@@ -1517,9 +1543,9 @@ export function updateAnimationProgress(material, progress) {
 
         // Apply easing curve
         if (curve === 'easeIn') {
-            t = t * t;  // Quadratic ease-in (dramatic buildup)
+            t = t * t; // Quadratic ease-in (dramatic buildup)
         } else if (curve === 'easeOut') {
-            t = 1 - (1 - t) * (1 - t);  // Quadratic ease-out (fast start)
+            t = 1 - (1 - t) * (1 - t); // Quadratic ease-out (fast start)
         } else if (curve === 'easeInOut') {
             t = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
         }
@@ -1558,7 +1584,7 @@ export function setGestureGlow(material, config = {}) {
     const {
         baseGlow = ANIMATION_DEFAULTS.glowScale,
         peakGlow = ANIMATION_DEFAULTS.glowScale,
-        curve = 'linear'
+        curve = 'linear',
     } = config;
 
     material.userData.gestureGlow = { baseGlow, peakGlow, curve };
@@ -1634,5 +1660,5 @@ export default {
     setCutout,
     resetCutout,
     setGrain,
-    resetGrain
+    resetGrain,
 };

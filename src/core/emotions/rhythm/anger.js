@@ -20,57 +20,57 @@ export default {
         // Particle emission bursts aggressively on beat
         particleEmission: {
             syncMode: 'beat',
-            burstSize: 6,           // Violent explosive bursts
-            offBeatRate: 0.5,       // Reduced particles between beats
-            aggressiveSync: true    // Chaotic, forceful emission
+            burstSize: 6, // Violent explosive bursts
+            offBeatRate: 0.5, // Reduced particles between beats
+            aggressiveSync: true, // Chaotic, forceful emission
         },
 
         // Breathing syncs to rapid, agitated rhythm
         breathSync: {
             mode: 'beats',
-            beatsPerBreath: 2,      // Very fast, angry breathing
-            intensity: 1.5          // Deep, forceful breaths
+            beatsPerBreath: 2, // Very fast, angry breathing
+            intensity: 1.5, // Deep, forceful breaths
         },
 
         // Glow pulses intensely with rage
         glowSync: {
             intensityRange: [1.4, 2.2],
             syncTo: 'beat',
-            attack: 0.02,           // Instant flare
-            decay: 0.3              // Sharp drop-off
+            attack: 0.02, // Instant flare
+            decay: 0.3, // Sharp drop-off
         },
 
         // Pattern-specific anger expressions
         patternBehaviors: {
-            'metal': {
+            metal: {
                 // Heavy metal rage
                 particleEmission: {
                     burstSize: 10,
-                    dropMultiplier: 2.5
+                    dropMultiplier: 2.5,
                 },
-                glowSync: { intensityRange: [1.6, 2.4] }
+                glowSync: { intensityRange: [1.6, 2.4] },
             },
-            'dubstep': {
+            dubstep: {
                 // Explosive drops
                 particleEmission: {
                     burstSize: 12,
-                    dropMultiplier: 3.0
-                }
+                    dropMultiplier: 3.0,
+                },
             },
-            'drum_and_bass': {
+            drum_and_bass: {
                 // Rapid, chaotic energy
                 particleEmission: {
                     syncMode: 'rapid',
-                    burstRange: [4, 10]
-                }
+                    burstRange: [4, 10],
+                },
             },
-            'industrial': {
+            industrial: {
                 // Machine-like aggression
                 particleEmission: {
                     syncMode: 'mechanical',
-                    burstSize: 8
-                }
-            }
-        }
-    }
+                    burstSize: 8,
+                },
+            },
+        },
+    },
 };

@@ -47,8 +47,8 @@ export class GestureAnimator {
             glow: { active: false, progress: 0, params: {} },
             flicker: { active: false, progress: 0, params: {} },
             vibrate: { active: false, progress: 0, params: {} },
-            orbital: { active: false, progress: 0, params: {} },  // ADDED
-            hula: { active: false, progress: 0, params: {} },     // ADDED
+            orbital: { active: false, progress: 0, params: {} }, // ADDED
+            hula: { active: false, progress: 0, params: {} }, // ADDED
             wave: { active: false, progress: 0, params: {} },
             breathe: { active: false, progress: 0, params: {} },
             morph: { active: false, progress: 0, params: {} },
@@ -73,7 +73,7 @@ export class GestureAnimator {
             orbit: { active: false, progress: 0, params: {} },
             rain: { active: false, progress: 0, params: {} },
             runningman: { active: false, progress: 0, params: {} },
-            charleston: { active: false, progress: 0, params: {} }
+            charleston: { active: false, progress: 0, params: {} },
         };
     }
 
@@ -82,32 +82,40 @@ export class GestureAnimator {
      * @param {string} gestureName - Name of the gesture to start
      */
     startGesture(gestureName) {
-
         // Get the gesture configuration (uses cache if available)
         const gesture = getGesture(gestureName);
-        
+
         // Use cached properties for better performance
         // const cachedProperties = getGestureProperties(gestureName);
-        
+
         // Trigger chromatic aberration for impact gestures
-        const impactGestures = ['bounce', 'shake', 'pulse', 'flash', 'jump', 'slam', 'spin', 'flicker'];
+        const impactGestures = [
+            'bounce',
+            'shake',
+            'pulse',
+            'flash',
+            'jump',
+            'slam',
+            'spin',
+            'flicker',
+        ];
         if (impactGestures.includes(gestureName) && this.renderer.specialEffects) {
             // Vary intensity based on gesture - all high for testing
             const intensities = {
-                'flash': 1.0,
-                'jump': 1.0,
-                'shake': 0.9,
-                'bounce': 0.8,
-                'pulse': 0.7,
-                'slam': 1.0,
-                'spin': 0.8,
-                'flicker': 1.0
+                flash: 1.0,
+                jump: 1.0,
+                shake: 0.9,
+                bounce: 0.8,
+                pulse: 0.7,
+                slam: 1.0,
+                spin: 0.8,
+                flicker: 1.0,
             };
             const intensity = intensities[gestureName] || 0.8;
             this.renderer.specialEffects.triggerChromaticAberration(intensity);
             // Chromatic aberration logging removed for production
         }
-        
+
         // Get composed parameters based on current emotion and undertone
         // Use the renderer's gestureCompositor if available
         let params;
@@ -143,10 +151,10 @@ export class GestureAnimator {
                 jumpHeight: 100,
                 decay: true,
                 easing: 'sine',
-                effects: []
+                effects: [],
             };
         }
-        
+
         // Calculate duration from gesture config
         let duration = 1000; // Default fallback
         if (gesture && gesture.config) {
@@ -159,7 +167,7 @@ export class GestureAnimator {
                 duration = configDuration;
             }
         }
-        
+
         // Set up the animation
         const anim = this.gestureAnimations[gestureName];
         if (anim) {
@@ -168,7 +176,7 @@ export class GestureAnimator {
             anim.progress = 0;
             anim.params = params;
             anim.duration = duration; // Store calculated duration
-            
+
             // Reset random values for gestures that use them
             if (gestureName === 'shake') {
                 anim.randomAngle = undefined; // Will be regenerated
@@ -181,7 +189,6 @@ export class GestureAnimator {
             } else if (gestureName === 'vibrate') {
                 anim.vibrateAngles = undefined;
             }
-            
         }
     }
 
@@ -196,149 +203,149 @@ export class GestureAnimator {
             offsetY: 0,
             scale: 1,
             rotation: 0,
-            glow: 1
+            glow: 1,
         };
-        
+
         // Process each gesture animation
         for (const [gestureName, anim] of Object.entries(this.gestureAnimations)) {
             if (!anim.active) continue;
-            
+
             const elapsed = now - anim.startTime;
             // Use stored duration or fallback to params duration
             const duration = anim.duration || (anim.params ? anim.params.duration : 1000);
             anim.progress = Math.min(elapsed / duration, 1);
-            
+
             // Apply easing
             const easedProgress = this.applyEasing(anim.progress, anim.params.easing);
-            
+
             // Apply gesture-specific transformations
             let gestureTransform = {};
             switch (gestureName) {
-            case 'bounce':
-                gestureTransform = this.applyBounce(anim, easedProgress);
-                break;
-            case 'pulse':
-                gestureTransform = this.applyPulse(anim, easedProgress);
-                break;
-            case 'shake':
-                gestureTransform = this.applyShake(anim, easedProgress);
-                break;
-            case 'spin':
-                gestureTransform = this.applySpin(anim, easedProgress);
-                break;
-            case 'nod':
-                gestureTransform = this.applyNod(anim, easedProgress);
-                break;
-            case 'tilt':
-                gestureTransform = this.applyTilt(anim, easedProgress);
-                break;
-            case 'expand':
-                gestureTransform = this.applyExpand(anim, easedProgress);
-                break;
-            case 'contract':
-                gestureTransform = this.applyContract(anim, easedProgress);
-                break;
-            case 'flash':
-                gestureTransform = this.applyFlash(anim, easedProgress);
-                break;
-            case 'drift':
-                gestureTransform = this.applyDrift(anim, easedProgress);
-                break;
-            case 'stretch':
-                gestureTransform = this.applyStretch(anim, easedProgress);
-                break;
-            case 'glow':
-                gestureTransform = this.applyGlow(anim, easedProgress);
-                break;
-            case 'flicker':
-                gestureTransform = this.applyFlicker(anim, easedProgress);
-                break;
-            case 'vibrate':
-                gestureTransform = this.applyVibrate(anim, easedProgress);
-                break;
-            case 'orbital':
-                gestureTransform = this.applyOrbital(anim, easedProgress);
-                break;
-            case 'hula':
-                gestureTransform = this.applyHula(anim, easedProgress);
-                break;
-            case 'wave':
-                gestureTransform = this.applyWave(anim, easedProgress);
-                break;
-            case 'breathe':
-                gestureTransform = this.applyBreathe(anim, easedProgress);
-                break;
-            case 'morph':
-                gestureTransform = this.applyMorph(anim, easedProgress);
-                break;
-            case 'slowBlink':
-                gestureTransform = this.applySlowBlink(anim, easedProgress);
-                break;
-            case 'look':
-                gestureTransform = this.applyLook(anim, easedProgress);
-                break;
-            case 'settle':
-                gestureTransform = this.applySettle(anim, easedProgress);
-                break;
-            case 'breathIn':
-                gestureTransform = this.applyBreathIn(anim, easedProgress);
-                break;
-            case 'breathOut':
-                gestureTransform = this.applyBreathOut(anim, easedProgress);
-                break;
-            case 'breathHold':
-                gestureTransform = this.applyBreathHold(anim, easedProgress);
-                break;
-            case 'breathHoldEmpty':
-                gestureTransform = this.applyBreathHoldEmpty(anim, easedProgress);
-                break;
-            case 'jump':
-                gestureTransform = this.applyJump(anim, easedProgress);
-                break;
-            case 'sway':
-                gestureTransform = this.applySway(anim, easedProgress);
-                break;
-            case 'float':
-                gestureTransform = this.applyFloat(anim, easedProgress);
-                break;
-            case 'rain':
-                gestureTransform = this.applyRain(anim, easedProgress);
-                break;
-            case 'runningman':
-                gestureTransform = this.applyRunningMan(anim, easedProgress);
-                break;
-            case 'charleston':
-                gestureTransform = this.applyCharleston(anim, easedProgress);
-                break;
-            case 'sparkle':
-                gestureTransform = this.applySparkle(anim, easedProgress);
-                break;
-            case 'shimmer':
-                gestureTransform = this.applyShimmer(anim, easedProgress);
-                break;
-            case 'wiggle':
-                gestureTransform = this.applyWiggle(anim, easedProgress);
-                break;
-            case 'groove':
-                gestureTransform = this.applyGroove(anim, easedProgress);
-                break;
-            case 'point':
-                gestureTransform = this.applyPoint(anim, easedProgress);
-                break;
-            case 'lean':
-                gestureTransform = this.applyLean(anim, easedProgress);
-                break;
-            case 'reach':
-                gestureTransform = this.applyReach(anim, easedProgress);
-                break;
-            case 'headBob':
-                gestureTransform = this.applyHeadBob(anim, easedProgress);
-                break;
-            case 'orbit':
-                gestureTransform = this.applyOrbit(anim, easedProgress);
-                break;
+                case 'bounce':
+                    gestureTransform = this.applyBounce(anim, easedProgress);
+                    break;
+                case 'pulse':
+                    gestureTransform = this.applyPulse(anim, easedProgress);
+                    break;
+                case 'shake':
+                    gestureTransform = this.applyShake(anim, easedProgress);
+                    break;
+                case 'spin':
+                    gestureTransform = this.applySpin(anim, easedProgress);
+                    break;
+                case 'nod':
+                    gestureTransform = this.applyNod(anim, easedProgress);
+                    break;
+                case 'tilt':
+                    gestureTransform = this.applyTilt(anim, easedProgress);
+                    break;
+                case 'expand':
+                    gestureTransform = this.applyExpand(anim, easedProgress);
+                    break;
+                case 'contract':
+                    gestureTransform = this.applyContract(anim, easedProgress);
+                    break;
+                case 'flash':
+                    gestureTransform = this.applyFlash(anim, easedProgress);
+                    break;
+                case 'drift':
+                    gestureTransform = this.applyDrift(anim, easedProgress);
+                    break;
+                case 'stretch':
+                    gestureTransform = this.applyStretch(anim, easedProgress);
+                    break;
+                case 'glow':
+                    gestureTransform = this.applyGlow(anim, easedProgress);
+                    break;
+                case 'flicker':
+                    gestureTransform = this.applyFlicker(anim, easedProgress);
+                    break;
+                case 'vibrate':
+                    gestureTransform = this.applyVibrate(anim, easedProgress);
+                    break;
+                case 'orbital':
+                    gestureTransform = this.applyOrbital(anim, easedProgress);
+                    break;
+                case 'hula':
+                    gestureTransform = this.applyHula(anim, easedProgress);
+                    break;
+                case 'wave':
+                    gestureTransform = this.applyWave(anim, easedProgress);
+                    break;
+                case 'breathe':
+                    gestureTransform = this.applyBreathe(anim, easedProgress);
+                    break;
+                case 'morph':
+                    gestureTransform = this.applyMorph(anim, easedProgress);
+                    break;
+                case 'slowBlink':
+                    gestureTransform = this.applySlowBlink(anim, easedProgress);
+                    break;
+                case 'look':
+                    gestureTransform = this.applyLook(anim, easedProgress);
+                    break;
+                case 'settle':
+                    gestureTransform = this.applySettle(anim, easedProgress);
+                    break;
+                case 'breathIn':
+                    gestureTransform = this.applyBreathIn(anim, easedProgress);
+                    break;
+                case 'breathOut':
+                    gestureTransform = this.applyBreathOut(anim, easedProgress);
+                    break;
+                case 'breathHold':
+                    gestureTransform = this.applyBreathHold(anim, easedProgress);
+                    break;
+                case 'breathHoldEmpty':
+                    gestureTransform = this.applyBreathHoldEmpty(anim, easedProgress);
+                    break;
+                case 'jump':
+                    gestureTransform = this.applyJump(anim, easedProgress);
+                    break;
+                case 'sway':
+                    gestureTransform = this.applySway(anim, easedProgress);
+                    break;
+                case 'float':
+                    gestureTransform = this.applyFloat(anim, easedProgress);
+                    break;
+                case 'rain':
+                    gestureTransform = this.applyRain(anim, easedProgress);
+                    break;
+                case 'runningman':
+                    gestureTransform = this.applyRunningMan(anim, easedProgress);
+                    break;
+                case 'charleston':
+                    gestureTransform = this.applyCharleston(anim, easedProgress);
+                    break;
+                case 'sparkle':
+                    gestureTransform = this.applySparkle(anim, easedProgress);
+                    break;
+                case 'shimmer':
+                    gestureTransform = this.applyShimmer(anim, easedProgress);
+                    break;
+                case 'wiggle':
+                    gestureTransform = this.applyWiggle(anim, easedProgress);
+                    break;
+                case 'groove':
+                    gestureTransform = this.applyGroove(anim, easedProgress);
+                    break;
+                case 'point':
+                    gestureTransform = this.applyPoint(anim, easedProgress);
+                    break;
+                case 'lean':
+                    gestureTransform = this.applyLean(anim, easedProgress);
+                    break;
+                case 'reach':
+                    gestureTransform = this.applyReach(anim, easedProgress);
+                    break;
+                case 'headBob':
+                    gestureTransform = this.applyHeadBob(anim, easedProgress);
+                    break;
+                case 'orbit':
+                    gestureTransform = this.applyOrbit(anim, easedProgress);
+                    break;
             }
-            
+
             // Combine transforms
             transform.offsetX += gestureTransform.offsetX || 0;
             transform.offsetY += gestureTransform.offsetY || 0;
@@ -346,26 +353,26 @@ export class GestureAnimator {
             transform.rotation += gestureTransform.rotation || 0;
             // Use MAX for glow instead of multiplying to prevent accumulation
             transform.glow = Math.max(transform.glow, gestureTransform.glow || 1);
-            
+
             // Pass flash wave data if present
             if (gestureTransform.flashWave) {
                 transform.flashWave = gestureTransform.flashWave;
             }
-            
+
             // Pass firefly effect data if present (for sparkle gesture)
             if (gestureTransform.fireflyEffect) {
                 transform.fireflyEffect = gestureTransform.fireflyEffect;
                 transform.particleGlow = gestureTransform.particleGlow;
                 transform.fireflyTime = gestureTransform.fireflyTime;
             }
-            
+
             // Pass flicker effect data if present (for flicker gesture - now does particle shimmer)
             if (gestureTransform.flickerEffect) {
                 transform.flickerEffect = gestureTransform.flickerEffect;
                 transform.particleGlow = gestureTransform.particleGlow;
                 transform.flickerTime = gestureTransform.flickerTime;
             }
-            
+
             // Pass shimmer effect data if present (for shimmer gesture - subtle glow)
             if (gestureTransform.shimmerEffect) {
                 transform.shimmerEffect = gestureTransform.shimmerEffect;
@@ -373,7 +380,7 @@ export class GestureAnimator {
                 transform.shimmerTime = gestureTransform.shimmerTime;
                 transform.shimmerWave = gestureTransform.shimmerWave;
             }
-            
+
             // Pass glow effect data if present (for glow gesture)
             if (gestureTransform.glowEffect) {
                 transform.glowEffect = gestureTransform.glowEffect;
@@ -382,7 +389,7 @@ export class GestureAnimator {
                 transform.glowProgress = gestureTransform.glowProgress;
                 transform.glowEnvelope = gestureTransform.glowEnvelope;
             }
-            
+
             // Check if animation is complete
             if (anim.progress >= 1) {
                 anim.active = false;
@@ -420,7 +427,7 @@ export class GestureAnimator {
                 }
             }
         }
-        
+
         return transform;
     }
 
@@ -444,7 +451,7 @@ export class GestureAnimator {
             anim.startTime = 0;
             anim.progress = 0;
             anim.params = null;
-            
+
             // Clean up all glow effect data to prevent accumulation
             if (anim.glowEffect) {
                 anim.glowEffect = null;
@@ -478,7 +485,7 @@ export class GestureAnimator {
         });
         this.activeGestures.clear();
     }
-    
+
     /**
      * Get current active gesture information for particle system
      * Calculates progress in real-time to ensure accurate values during update phase
@@ -504,15 +511,15 @@ export class GestureAnimator {
 
                 // Use the gesture's config for particleMotion, or create one from gesture type
                 const particleMotion = gesture?.config?.particleMotion || {
-                    type: gestureName,  // This ensures the modular gesture system will find it
-                    strength: anim.params?.strength || 1.0
+                    type: gestureName, // This ensures the modular gesture system will find it
+                    strength: anim.params?.strength || 1.0,
                 };
 
                 const gestureInfo = {
                     name: gestureName,
                     particleMotion,
                     progress,
-                    params: anim.params
+                    params: anim.params,
                 };
 
                 return gestureInfo;
@@ -532,14 +539,16 @@ export class GestureAnimator {
 
                 // Use the gesture's config for particleMotion, or params if available
                 const particleMotion = gesture?.config?.particleMotion ||
-                                      anim.params?.particleMotion ||
-                                      { type: gestureName, strength: anim.params?.strength || 1.0 };
+                    anim.params?.particleMotion || {
+                        type: gestureName,
+                        strength: anim.params?.strength || 1.0,
+                    };
 
                 const gestureInfo = {
                     name: gestureName,
                     particleMotion,
                     progress,
-                    params: anim.params
+                    params: anim.params,
                 };
 
                 // Include breathPhase for breathe gesture
@@ -552,112 +561,112 @@ export class GestureAnimator {
         }
         return null;
     }
-    
+
     /**
      * Apply easing function to progress
      */
     applyEasing(progress, easing) {
         switch (easing) {
-        case 'linear':
-            return progress;
-        case 'quad':
-            return progress * progress;
-        case 'cubic':
-            return progress * progress * progress;
-        case 'sine':
-            return Math.sin(progress * Math.PI / 2);
-        case 'back':
-            return progress * progress * (2.7 * progress - 1.7);
-        default:
-            return progress;
+            case 'linear':
+                return progress;
+            case 'quad':
+                return progress * progress;
+            case 'cubic':
+                return progress * progress * progress;
+            case 'sine':
+                return Math.sin((progress * Math.PI) / 2);
+            case 'back':
+                return progress * progress * (2.7 * progress - 1.7);
+            default:
+                return progress;
         }
     }
-    
+
     // Individual gesture application methods
     applyBounce(anim, progress) {
         return this.physicalGestureAnimator.applyBounce(anim, progress);
     }
-    
+
     applyPulse(anim, progress) {
         return this.shapeTransformAnimator.applyPulse(anim, progress);
     }
-    
+
     applyShake(anim, progress) {
         return this.physicalGestureAnimator.applyShake(anim, progress);
     }
-    
+
     applySpin(anim, progress) {
         return this.movementGestureAnimator.applySpin(anim, progress);
     }
-    
+
     applyNod(anim, progress) {
         return this.expressionGestureAnimator.applyNod(anim, progress);
     }
-    
+
     applyTilt(anim, progress) {
         return this.expressionGestureAnimator.applyTilt(anim, progress);
     }
-    
+
     applyExpand(anim, progress) {
         return this.shapeTransformAnimator.applyExpand(anim, progress);
     }
-    
+
     applyContract(anim, progress) {
         return this.shapeTransformAnimator.applyContract(anim, progress);
     }
-    
+
     applyFlash(anim, progress) {
         return this.visualEffectAnimator.applyFlash(anim, progress);
     }
-    
+
     applyDrift(anim, progress) {
         return this.movementGestureAnimator.applyDrift(anim, progress);
     }
-    
+
     applyStretch(anim, progress) {
         return this.shapeTransformAnimator.applyStretch(anim, progress);
     }
-    
+
     applyGlow(anim, progress) {
         return this.visualEffectAnimator.applyGlow(anim, progress);
     }
-    
+
     applyFlashWave(anim, progress) {
         return this.complexAnimationAnimator.applyFlashWave(anim, progress);
     }
-    
+
     applyFlicker(anim, progress) {
         return this.visualEffectAnimator.applyFlicker(anim, progress);
     }
-    
+
     applyVibrate(anim, progress) {
         return this.physicalGestureAnimator.applyVibrate(anim, progress);
     }
-    
+
     applyWave(anim, progress) {
         return this.movementGestureAnimator.applyWave(anim, progress);
     }
-    
+
     applyBreathe(anim, progress) {
         return this.breathGestureAnimator.applyBreathe(anim, progress);
     }
-    
+
     applyMorph(anim, progress) {
         return this.shapeTransformAnimator.applyMorph(anim, progress);
     }
-    
+
     applySlowBlink(anim, progress) {
         return this.expressionGestureAnimator.applySlowBlink(anim, progress);
     }
-    
+
     applyLook(anim, progress) {
         return this.expressionGestureAnimator.applyLook(anim, progress);
     }
-    
+
     applySettle(anim, progress) {
         return this.expressionGestureAnimator.applySettle(anim, progress);
     }
-    
+
     applyBreathIn(anim, progress) {
         return this.breathGestureAnimator.applyBreathIn(anim, progress);
     }
@@ -673,120 +682,206 @@ export class GestureAnimator {
     applyBreathHoldEmpty(anim, _progress) {
         return this.breathGestureAnimator.applyBreathHoldEmpty(anim, _progress);
     }
-    
+
     applyJump(anim, progress) {
         return this.physicalGestureAnimator.applyJump(anim, progress);
     }
-    
+
     applySway(anim, progress) {
         return this.movementGestureAnimator.applySway(anim, progress);
     }
-    
+
     applyRain(anim, progress) {
         return this.complexAnimationAnimator.applyRain(anim, progress);
     }
-    
+
     applyFloat(anim, progress) {
         return this.movementGestureAnimator.applyFloat(anim, progress);
     }
-    
+
     applyOrbital(anim, progress) {
         return this.movementGestureAnimator.applyOrbital(anim, progress);
     }
-    
+
     applyHula(anim, progress) {
         return this.movementGestureAnimator.applyHula(anim, progress);
     }
-    
+
     applySparkle(anim, progress) {
         return this.visualEffectAnimator.applySparkle(anim, progress);
     }
-    
+
     applyShimmer(anim, progress) {
         return this.visualEffectAnimator.applyShimmer(anim, progress);
     }
-    
+
     applyWiggle(anim, progress) {
         return this.physicalGestureAnimator.applyWiggle(anim, progress);
     }
-    
+
     applyGroove(anim, progress) {
         return this.complexAnimationAnimator.applyGroove(anim, progress);
     }
-    
+
     applyPoint(anim, progress) {
         return this.directionalGestureAnimator.applyPoint(anim, progress);
     }
-    
+
     applyLean(anim, progress) {
         return this.directionalGestureAnimator.applyLean(anim, progress);
     }
-    
+
     applyReach(anim, progress) {
         return this.directionalGestureAnimator.applyReach(anim, progress);
     }
-    
+
     applyHeadBob(anim, progress) {
         return this.complexAnimationAnimator.applyHeadBob(anim, progress);
     }
-    
+
     applyOrbit(anim, progress) {
         return this.movementGestureAnimator.applyOrbit(anim, progress);
     }
 
     // Individual gesture methods - these will be moved from EmotiveRenderer
-    startBounce() { this.startGesture('bounce'); }
-    startPulse() { this.startGesture('pulse'); }
-    startShake() { this.startGesture('shake'); }
-    startSpin() { this.startGesture('spin'); }
-    startNod() { this.startGesture('nod'); }
-    startTilt() { this.startGesture('tilt'); }
-    startExpand() { this.startGesture('expand'); }
-    startContract() { this.startGesture('contract'); }
-    startFlash() { this.startGesture('flash'); }
-    startDrift() { this.startGesture('drift'); }
-    startStretch() { this.startGesture('stretch'); }
-    startGlow() { this.startGesture('glow'); }
-    startFlicker() { this.startGesture('flicker'); }
-    startVibrate() { this.startGesture('vibrate'); }
-    startOrbital() { this.startGesture('orbital'); }
-    startHula() { this.startGesture('hula'); }
-    startWave() { this.startGesture('wave'); }
-    startBreathe() { this.startGesture('breathe'); }
-    startMorph() { this.startGesture('morph'); }
-    startSlowBlink() { this.startGesture('slowBlink'); }
-    startLook() { this.startGesture('look'); }
-    startSettle() { this.startGesture('settle'); }
-    startBreathIn() { this.startGesture('breathIn'); }
-    startBreathOut() { this.startGesture('breathOut'); }
-    startBreathHold() { this.startGesture('breathHold'); }
-    startBreathHoldEmpty() { this.startGesture('breathHoldEmpty'); }
-    startJump() { this.startGesture('jump'); }
-    startSway() { this.startGesture('sway'); }
-    startFloat() { this.startGesture('float'); }
-    startRain() { this.startGesture('rain'); }
-    startRunningMan() { this.startGesture('runningman'); }
-    startCharleston() { this.startGesture('charleston'); }
-    startSparkle() { this.startGesture('sparkle'); }
-    startShimmer() { this.startGesture('shimmer'); }
-    startWiggle() { this.startGesture('wiggle'); }
-    startGroove() { this.startGesture('groove'); }
-    startPoint() { this.startGesture('point'); }
-    startLean() { this.startGesture('lean'); }
-    startReach() { this.startGesture('reach'); }
-    startHeadBob() { this.startGesture('headBob'); }
-    startOrbit() { this.startGesture('orbit'); }
-    
+    startBounce() {
+        this.startGesture('bounce');
+    }
+    startPulse() {
+        this.startGesture('pulse');
+    }
+    startShake() {
+        this.startGesture('shake');
+    }
+    startSpin() {
+        this.startGesture('spin');
+    }
+    startNod() {
+        this.startGesture('nod');
+    }
+    startTilt() {
+        this.startGesture('tilt');
+    }
+    startExpand() {
+        this.startGesture('expand');
+    }
+    startContract() {
+        this.startGesture('contract');
+    }
+    startFlash() {
+        this.startGesture('flash');
+    }
+    startDrift() {
+        this.startGesture('drift');
+    }
+    startStretch() {
+        this.startGesture('stretch');
+    }
+    startGlow() {
+        this.startGesture('glow');
+    }
+    startFlicker() {
+        this.startGesture('flicker');
+    }
+    startVibrate() {
+        this.startGesture('vibrate');
+    }
+    startOrbital() {
+        this.startGesture('orbital');
+    }
+    startHula() {
+        this.startGesture('hula');
+    }
+    startWave() {
+        this.startGesture('wave');
+    }
+    startBreathe() {
+        this.startGesture('breathe');
+    }
+    startMorph() {
+        this.startGesture('morph');
+    }
+    startSlowBlink() {
+        this.startGesture('slowBlink');
+    }
+    startLook() {
+        this.startGesture('look');
+    }
+    startSettle() {
+        this.startGesture('settle');
+    }
+    startBreathIn() {
+        this.startGesture('breathIn');
+    }
+    startBreathOut() {
+        this.startGesture('breathOut');
+    }
+    startBreathHold() {
+        this.startGesture('breathHold');
+    }
+    startBreathHoldEmpty() {
+        this.startGesture('breathHoldEmpty');
+    }
+    startJump() {
+        this.startGesture('jump');
+    }
+    startSway() {
+        this.startGesture('sway');
+    }
+    startFloat() {
+        this.startGesture('float');
+    }
+    startRain() {
+        this.startGesture('rain');
+    }
+    startRunningMan() {
+        this.startGesture('runningman');
+    }
+    startCharleston() {
+        this.startGesture('charleston');
+    }
+    startSparkle() {
+        this.startGesture('sparkle');
+    }
+    startShimmer() {
+        this.startGesture('shimmer');
+    }
+    startWiggle() {
+        this.startGesture('wiggle');
+    }
+    startGroove() {
+        this.startGesture('groove');
+    }
+    startPoint() {
+        this.startGesture('point');
+    }
+    startLean() {
+        this.startGesture('lean');
+    }
+    startReach() {
+        this.startGesture('reach');
+    }
+    startHeadBob() {
+        this.startGesture('headBob');
+    }
+    startOrbit() {
+        this.startGesture('orbit');
+    }
+
     applyRunningMan(anim, progress) {
         return this.complexAnimationAnimator.applyRunningMan(anim, progress);
     }
-    
+
     applyCharleston(anim, progress) {
         return this.complexAnimationAnimator.applyCharleston(anim, progress);
     }
-    
-    startRunningManGesture() { this.startGesture('runningman'); }
-    startCharlestonGesture() { this.startGesture('charleston'); }
+
+    startRunningManGesture() {
+        this.startGesture('runningman');
+    }
+    startCharlestonGesture() {
+        this.startGesture('charleston');
+    }
 
     /**
      * Pause current animation (called on tab switch)
@@ -851,28 +946,49 @@ export class GestureAnimator {
         this.stopAllGestures();
 
         // Destroy all modular animators
-        if (this.physicalGestureAnimator && typeof this.physicalGestureAnimator.destroy === 'function') {
+        if (
+            this.physicalGestureAnimator &&
+            typeof this.physicalGestureAnimator.destroy === 'function'
+        ) {
             this.physicalGestureAnimator.destroy();
         }
         if (this.visualEffectAnimator && typeof this.visualEffectAnimator.destroy === 'function') {
             this.visualEffectAnimator.destroy();
         }
-        if (this.breathGestureAnimator && typeof this.breathGestureAnimator.destroy === 'function') {
+        if (
+            this.breathGestureAnimator &&
+            typeof this.breathGestureAnimator.destroy === 'function'
+        ) {
             this.breathGestureAnimator.destroy();
         }
-        if (this.movementGestureAnimator && typeof this.movementGestureAnimator.destroy === 'function') {
+        if (
+            this.movementGestureAnimator &&
+            typeof this.movementGestureAnimator.destroy === 'function'
+        ) {
             this.movementGestureAnimator.destroy();
         }
-        if (this.shapeTransformAnimator && typeof this.shapeTransformAnimator.destroy === 'function') {
+        if (
+            this.shapeTransformAnimator &&
+            typeof this.shapeTransformAnimator.destroy === 'function'
+        ) {
             this.shapeTransformAnimator.destroy();
         }
-        if (this.expressionGestureAnimator && typeof this.expressionGestureAnimator.destroy === 'function') {
+        if (
+            this.expressionGestureAnimator &&
+            typeof this.expressionGestureAnimator.destroy === 'function'
+        ) {
             this.expressionGestureAnimator.destroy();
         }
-        if (this.directionalGestureAnimator && typeof this.directionalGestureAnimator.destroy === 'function') {
+        if (
+            this.directionalGestureAnimator &&
+            typeof this.directionalGestureAnimator.destroy === 'function'
+        ) {
             this.directionalGestureAnimator.destroy();
         }
-        if (this.complexAnimationAnimator && typeof this.complexAnimationAnimator.destroy === 'function') {
+        if (
+            this.complexAnimationAnimator &&
+            typeof this.complexAnimationAnimator.destroy === 'function'
+        ) {
             this.complexAnimationAnimator.destroy();
         }
 

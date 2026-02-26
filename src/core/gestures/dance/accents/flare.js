@@ -15,7 +15,7 @@ export default {
     config: {
         duration: 400,
         musicalDuration: { musical: true, beats: 1 },
-        strength: 1.0
+        strength: 1.0,
     },
 
     rhythm: {
@@ -25,7 +25,7 @@ export default {
         durationSync: { mode: 'beats', beats: 1 },
         interruptible: true,
         priority: 6,
-        blendable: true
+        blendable: true,
     },
 
     apply: (_particle, _progress, _params) => false,
@@ -72,8 +72,8 @@ export default {
                 scale: 1.0,
                 scaleBoost: 1.0 + scaleAmount * strength,
                 glowBoost: glowAmount * strength,
-                positionBoost: [0, rise, 0]
+                positionBoost: [0, rise, 0],
             };
-        }
-    }
+        },
+    },
 };

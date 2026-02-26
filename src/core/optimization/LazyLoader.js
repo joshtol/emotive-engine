@@ -19,7 +19,7 @@ export class LazyLoader {
             ['audio', () => import('../audio/AudioAnalyzer.js')],
 
             // Behaviors
-            ['idle-behavior', () => import('../behavior/IdleBehavior.js')]
+            ['idle-behavior', () => import('../behavior/IdleBehavior.js')],
         ]);
 
         this.preloadQueue = [];
@@ -29,7 +29,7 @@ export class LazyLoader {
         this.features = {
             dynamicImport: this.checkDynamicImport(),
             modulePreload: 'modulepreload' in document.createElement('link').relList,
-            prefetch: 'prefetch' in document.createElement('link').relList
+            prefetch: 'prefetch' in document.createElement('link').relList,
         };
     }
 
@@ -184,7 +184,7 @@ export class LazyLoader {
             particles: ['particles'],
             audio: ['audio'],
             behaviors: ['idle-behavior'],
-            plugins: ['plugins']
+            plugins: ['plugins'],
         };
 
         const modules = featureMap[featureName];
@@ -236,7 +236,7 @@ export class LazyLoader {
             loading: this.loading.size,
             queued: this.preloadQueue.length,
             features: this.features,
-            modules: this.getLoadedModules()
+            modules: this.getLoadedModules(),
         };
     }
 }

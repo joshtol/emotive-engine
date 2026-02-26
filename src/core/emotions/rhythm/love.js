@@ -21,29 +21,29 @@ export default {
             syncMode: 'beat',
             burstSize: 6,
             offBeatRate: 0.7,
-            orbitingSync: true
+            orbitingSync: true,
         },
 
         breathSync: {
             mode: 'beats',
             beatsPerBreath: 6,
-            intensity: 1.0
+            intensity: 1.0,
         },
 
         glowSync: {
             intensityRange: [1.0, 1.4],
             syncTo: 'beat',
             attack: 0.1,
-            decay: 0.6
+            decay: 0.6,
         },
 
         patternBehaviors: {
-            'waltz': {
-                particleEmission: { burstSize: 8 }
+            waltz: {
+                particleEmission: { burstSize: 8 },
             },
-            'swing': {
-                particleEmission: { burstSize: 7 }
-            }
-        }
-    }
+            swing: {
+                particleEmission: { burstSize: 7 },
+            },
+        },
+    },
 };

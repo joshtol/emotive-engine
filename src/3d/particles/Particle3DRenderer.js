@@ -132,8 +132,8 @@ export class Particle3DRenderer {
         this.colors = null;
         this.alphas = null;
         this.glowIntensities = null;
-        this.depths = null;        // NEW: Depth for depth-of-field
-        this.styles = null;        // NEW: Style for cell-shaded borders
+        this.depths = null; // NEW: Depth for depth-of-field
+        this.styles = null; // NEW: Style for cell-shaded borders
 
         // Current particle count
         this.particleCount = 0;
@@ -144,7 +144,7 @@ export class Particle3DRenderer {
             flicker: false,
             shimmer: false,
             glow: false,
-            time: 0
+            time: 0,
         };
 
         // Initialize the rendering system
@@ -160,7 +160,7 @@ export class Particle3DRenderer {
         this.geometry = new THREE.BufferGeometry();
 
         // Allocate typed arrays (pre-allocate for max particles)
-        const {maxParticles} = this;
+        const { maxParticles } = this;
 
         this.positions = new Float32Array(maxParticles * 3); // x, y, z
         this.sizes = new Float32Array(maxParticles); // size
@@ -175,7 +175,10 @@ export class Particle3DRenderer {
         this.geometry.setAttribute('size', new THREE.BufferAttribute(this.sizes, 1));
         this.geometry.setAttribute('customColor', new THREE.BufferAttribute(this.colors, 3));
         this.geometry.setAttribute('alpha', new THREE.BufferAttribute(this.alphas, 1));
-        this.geometry.setAttribute('glowIntensity', new THREE.BufferAttribute(this.glowIntensities, 1));
+        this.geometry.setAttribute(
+            'glowIntensity',
+            new THREE.BufferAttribute(this.glowIntensities, 1)
+        );
         this.geometry.setAttribute('depth', new THREE.BufferAttribute(this.depths, 1));
         this.geometry.setAttribute('style', new THREE.BufferAttribute(this.styles, 1));
 
@@ -201,7 +204,7 @@ export class Particle3DRenderer {
             uniforms: {
                 coreScale: { value: 1.0 }, // Core scale multiplier (baseScale * breath * morph * blink)
                 viewportHeight: { value: 600.0 }, // Viewport height for screen-size compensation
-                pixelRatio: { value: 1.0 } // Device pixel ratio for consistent sizing
+                pixelRatio: { value: 1.0 }, // Device pixel ratio for consistent sizing
             },
             vertexShader: particleVertexShader,
             fragmentShader: particleFragmentShader,
@@ -213,7 +216,7 @@ export class Particle3DRenderer {
             blendSrcAlpha: THREE.OneFactor,
             blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
             depthWrite: false, // Don't write to depth buffer
-            depthTest: true // Test depth for proper occlusion
+            depthTest: true, // Test depth for proper occlusion
         });
     }
 
@@ -238,7 +241,17 @@ export class Particle3DRenderer {
      * @param {number} coreScale - Final core scale to maintain particle/core size ratio (optional)
      * @param {string} geometryType - Geometry type for special rendering rules (optional)
      */
-    updateParticles(particles, translator, corePosition, canvasSize, rotationState, deltaTime, gestureData, coreScale, geometryType) {
+    updateParticles(
+        particles,
+        translator,
+        corePosition,
+        canvasSize,
+        rotationState,
+        deltaTime,
+        gestureData,
+        coreScale,
+        geometryType
+    ) {
         this.particleCount = Math.min(particles.length, this.maxParticles);
 
         // Update core scale uniform to maintain EXACT particle/core size ratio
@@ -282,7 +295,12 @@ export class Particle3DRenderer {
             // CRYSTAL/HEART/ROUGH: Cull particles in front of the soul
             // These geometries have a visible soul inside, particles in front block the view
             // Threshold slightly positive to allow particles at the edges
-            if ((geometryType === 'crystal' || geometryType === 'heart' || geometryType === 'rough') && pos3D.z > 0.15) {
+            if (
+                (geometryType === 'crystal' ||
+                    geometryType === 'heart' ||
+                    geometryType === 'rough') &&
+                pos3D.z > 0.15
+            ) {
                 // Hide particle by setting alpha to 0
                 this.alphas[i] = 0;
                 continue;
@@ -295,7 +313,9 @@ export class Particle3DRenderer {
             this.positions[posIndex + 2] = pos3D.z;
 
             // PRIORITY 5: Size variety - use particle's stable baseSize (already has variation)
-            const depthSize = particle.getDepthAdjustedSize ? particle.getDepthAdjustedSize() : particle.size;
+            const depthSize = particle.getDepthAdjustedSize
+                ? particle.getDepthAdjustedSize()
+                : particle.size;
             // Joy popcorn particles are larger (1.2x), others at normal size
             const sizeMultiplier = particle.behavior === 'popcorn' ? 1.2 : 0.85;
             this.sizes[i] = depthSize * sizeMultiplier; // Scale for point sprite size (particle.size already varies 4-10px)
@@ -356,7 +376,8 @@ export class Particle3DRenderer {
 
         // Firefly effect (sparkle gesture) - pulsing particles
         if (this.gestureEffects.firefly) {
-            const particlePhase = (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) % (Math.PI * 2);
+            const particlePhase =
+                (particle.x * 0.01 + particle.y * 0.01 + particle.size * 0.1) % (Math.PI * 2);
             const sineValue = (Math.sin(this.gestureEffects.time * 3 + particlePhase) + 1.0) * 0.5; // 0 to 1
             const fireflyGlow = 2.0 + sineValue * 10.0; // Range: 2.0 to 12.0
             glow = Math.max(glow, fireflyGlow);
@@ -423,7 +444,7 @@ export class Particle3DRenderer {
         return {
             r: parseInt(result[1], 16) / 255,
             g: parseInt(result[2], 16) / 255,
-            b: parseInt(result[3], 16) / 255
+            b: parseInt(result[3], 16) / 255,
         };
     }
 

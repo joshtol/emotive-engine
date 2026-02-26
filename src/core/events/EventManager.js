@@ -24,7 +24,7 @@ export class EventManager {
         this.stats = {
             registered: 0,
             removed: 0,
-            active: 0
+            active: 0,
         };
     }
 
@@ -49,7 +49,7 @@ export class EventManager {
             handler,
             options,
             group,
-            active: true
+            active: true,
         };
 
         // Store listener
@@ -204,7 +204,7 @@ export class EventManager {
 
         return {
             id,
-            remove: () => this.removeEventListener(id)
+            remove: () => this.removeEventListener(id),
         };
     }
 
@@ -292,7 +292,7 @@ export class EventManager {
         return {
             ...this.stats,
             groups: this.groups.size,
-            listeners: this.listeners.size
+            listeners: this.listeners.size,
         };
     }
 
@@ -309,7 +309,7 @@ export class EventManager {
                     id,
                     eventType: info.eventType,
                     group: info.group,
-                    target: info.target.constructor.name
+                    target: info.target.constructor.name,
                 });
             }
         }
@@ -328,22 +328,16 @@ export class EventManager {
             inactiveButNotRemoved: 0,
             byTarget: new Map(),
             byType: new Map(),
-            potentialLeaks: []
+            potentialLeaks: [],
         };
 
         for (const [id, info] of this.listeners.entries()) {
             // Count by target
             const targetName = info.target.constructor.name;
-            analysis.byTarget.set(
-                targetName,
-                (analysis.byTarget.get(targetName) || 0) + 1
-            );
+            analysis.byTarget.set(targetName, (analysis.byTarget.get(targetName) || 0) + 1);
 
             // Count by type
-            analysis.byType.set(
-                info.eventType,
-                (analysis.byType.get(info.eventType) || 0) + 1
-            );
+            analysis.byType.set(info.eventType, (analysis.byType.get(info.eventType) || 0) + 1);
 
             // Check for inactive but not removed
             if (!info.active) {
@@ -351,7 +345,7 @@ export class EventManager {
                 analysis.potentialLeaks.push({
                     id,
                     eventType: info.eventType,
-                    target: targetName
+                    target: targetName,
                 });
             }
         }
@@ -391,7 +385,7 @@ export class EventManager {
         this.stats = {
             registered: 0,
             removed: 0,
-            active: 0
+            active: 0,
         };
         return count;
     }

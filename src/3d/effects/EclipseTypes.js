@@ -9,36 +9,36 @@
 export const ECLIPSE_TYPES = {
     OFF: 'off',
     ANNULAR: 'annular',
-    TOTAL: 'total'
+    TOTAL: 'total',
 };
 
 export const ECLIPSE_CONFIG = {
     [ECLIPSE_TYPES.OFF]: {
         shadowCoverage: 0.0,
-        coronaIntensity: 1.0,        // Base corona intensity
-        coronaRaysEnabled: false,     // No rays when no eclipse
+        coronaIntensity: 1.0, // Base corona intensity
+        coronaRaysEnabled: false, // No rays when no eclipse
         baileyBeadsEnabled: false,
         baileyBeadsCount: 0,
-        baileyBeadsSize: 0.0
+        baileyBeadsSize: 0.0,
     },
 
     [ECLIPSE_TYPES.ANNULAR]: {
-        shadowCoverage: 0.950,       // Smaller shadow - leaves prominent "ring of fire"
-        coronaIntensity: 0.8,        // Slightly reduced corona (moon blocks some)
-        coronaRaysEnabled: false,     // No dramatic rays for annular
+        shadowCoverage: 0.95, // Smaller shadow - leaves prominent "ring of fire"
+        coronaIntensity: 0.8, // Slightly reduced corona (moon blocks some)
+        coronaRaysEnabled: false, // No dramatic rays for annular
         baileyBeadsEnabled: true,
-        baileyBeadsCount: 12,        // More beads for annular
-        baileyBeadsSize: 0.015       // Smaller beads
+        baileyBeadsCount: 12, // More beads for annular
+        baileyBeadsSize: 0.015, // Smaller beads
     },
 
     [ECLIPSE_TYPES.TOTAL]: {
-        shadowCoverage: 1.019,       // Larger shadow - complete coverage
-        coronaIntensity: 4.0,        // Dramatic corona effect visible
-        coronaRaysEnabled: true,      // Enable dramatic rays for total eclipse
+        shadowCoverage: 1.019, // Larger shadow - complete coverage
+        coronaIntensity: 4.0, // Dramatic corona effect visible
+        coronaRaysEnabled: true, // Enable dramatic rays for total eclipse
         baileyBeadsEnabled: true,
-        baileyBeadsCount: 6,         // Fewer beads for total
-        baileyBeadsSize: 0.025       // Larger, more dramatic beads
-    }
+        baileyBeadsCount: 6, // Fewer beads for total
+        baileyBeadsSize: 0.025, // Larger, more dramatic beads
+    },
 };
 
 /**
@@ -50,41 +50,41 @@ export const CORONA_CONFIG = {
     layers: [
         { name: 'inner', scale: 2.5, opacity: 0.6 },
         { name: 'middle', scale: 3.5, opacity: 0.4 },
-        { name: 'outer', scale: 5.0, opacity: 0.25 }
+        { name: 'outer', scale: 5.0, opacity: 0.25 },
     ],
 
     // Streamer configuration (plasma extensions)
     streamers: {
         enabled: true,
-        count: 8,           // Number of streamers around corona
-        length: 2.0,        // Length multiplier
-        width: 0.15         // Width of each streamer
+        count: 8, // Number of streamers around corona
+        length: 2.0, // Length multiplier
+        width: 0.15, // Width of each streamer
     },
 
     // Ray configuration (dramatic spikes for total eclipse)
     rays: {
-        enabled: false,     // Enabled dynamically for total eclipse
-        count: 16,          // Number of rays
-        rayLength: 2.5,     // Ray length
-        rayWidth: 0.05      // Ray thickness
+        enabled: false, // Enabled dynamically for total eclipse
+        count: 16, // Number of rays
+        rayLength: 2.5, // Ray length
+        rayWidth: 0.05, // Ray thickness
     },
 
     // Animation configuration
     animations: {
         rotation: {
             enabled: true,
-            speed: 0.05     // Radians per second
+            speed: 0.05, // Radians per second
         },
         pulse: {
             enabled: true,
-            freq: 0.3,      // Hz
-            amp: 0.08       // Amplitude (0-1)
+            freq: 0.3, // Hz
+            amp: 0.08, // Amplitude (0-1)
         },
         shimmer: {
             enabled: true,
-            noiseScale: 1.5 // Noise frequency
-        }
-    }
+            noiseScale: 1.5, // Noise frequency
+        },
+    },
 };
 
 /**

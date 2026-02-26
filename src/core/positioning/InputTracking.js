@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Input Tracking System
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Input-based positioning methods for mascot tracking
  * @author Emotive Engine Team
  * @module positioning/InputTracking
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides methods to position the mascot based on user input like mouse movement,   
- * ║ touch gestures, and audio levels. Creates interactive and responsive positioning.  
+ * ║ Provides methods to position the mascot based on user input like mouse movement,
+ * ║ touch gestures, and audio levels. Creates interactive and responsive positioning.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -34,17 +34,23 @@ class InputTracking {
      */
     moveToMouse(offset = { x: 20, y: 20 }, options = {}) {
         const callbackId = 'mouse-tracking';
-        
+
         const handleMouseMove = event => {
             const targetX = event.clientX + offset.x;
             const targetY = event.clientY + offset.y;
-            
+
             // Convert to mascot coordinate system
             const mascotX = targetX - window.innerWidth / 2;
             const mascotY = targetY - window.innerHeight / 2;
-            
+
             if (options.smooth !== false) {
-                this.positionController.animateOffset(mascotX, mascotY, 0, options.duration || 200, 'easeOutQuad');
+                this.positionController.animateOffset(
+                    mascotX,
+                    mascotY,
+                    0,
+                    options.duration || 200,
+                    'easeOutQuad'
+                );
             } else {
                 this.positionController.setOffset(mascotX, mascotY, 0);
             }
@@ -52,7 +58,7 @@ class InputTracking {
 
         this.trackingCallbacks.set(callbackId, handleMouseMove);
         window.addEventListener('mousemove', handleMouseMove);
-        
+
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             this.trackingCallbacks.delete(callbackId);
@@ -66,19 +72,25 @@ class InputTracking {
      */
     moveToTouch(offset = { x: 20, y: 20 }, options = {}) {
         const callbackId = 'touch-tracking';
-        
+
         const handleTouchMove = event => {
             if (event.touches.length > 0) {
                 const touch = event.touches[0];
                 const targetX = touch.clientX + offset.x;
                 const targetY = touch.clientY + offset.y;
-                
+
                 // Convert to mascot coordinate system
                 const mascotX = targetX - window.innerWidth / 2;
                 const mascotY = targetY - window.innerHeight / 2;
-                
+
                 if (options.smooth !== false) {
-                    this.positionController.animateOffset(mascotX, mascotY, 0, options.duration || 200, 'easeOutQuad');
+                    this.positionController.animateOffset(
+                        mascotX,
+                        mascotY,
+                        0,
+                        options.duration || 200,
+                        'easeOutQuad'
+                    );
                 } else {
                     this.positionController.setOffset(mascotX, mascotY, 0);
                 }
@@ -87,7 +99,7 @@ class InputTracking {
 
         this.trackingCallbacks.set(callbackId, handleTouchMove);
         window.addEventListener('touchmove', handleTouchMove);
-        
+
         return () => {
             window.removeEventListener('touchmove', handleTouchMove);
             this.trackingCallbacks.delete(callbackId);
@@ -111,30 +123,30 @@ class InputTracking {
         }
 
         const callbackId = 'audio-tracking';
-        
+
         const updateAudioPosition = () => {
             if (!this.isTracking) return;
-            
+
             this.audioAnalyser.getByteFrequencyData(this.audioData);
-            
+
             // Calculate average audio level
             let sum = 0;
             for (let i = 0; i < this.audioData.length; i++) {
                 sum += this.audioData[i];
             }
-            const averageLevel = (sum / this.audioData.length) / 255;
-            
+            const averageLevel = sum / this.audioData.length / 255;
+
             // Apply sensitivity and offset
             const audioOffset = averageLevel * sensitivity;
             const targetX = (options.centerX || 0) + audioOffset;
-            const targetY = (options.centerY || 0) + (audioOffset * 0.5);
-            
+            const targetY = (options.centerY || 0) + audioOffset * 0.5;
+
             // Convert to mascot coordinate system
             const mascotX = targetX - window.innerWidth / 2;
             const mascotY = targetY - window.innerHeight / 2;
-            
+
             this.positionController.setOffset(mascotX, mascotY, 0);
-            
+
             if (this.isTracking) {
                 requestAnimationFrame(updateAudioPosition);
             }
@@ -143,7 +155,7 @@ class InputTracking {
         this.trackingCallbacks.set(callbackId, updateAudioPosition);
         this.isTracking = true;
         updateAudioPosition();
-        
+
         return () => {
             this.isTracking = false;
             this.trackingCallbacks.delete(callbackId);
@@ -172,7 +184,7 @@ class InputTracking {
         if (!this.audioContext || !this.audioAnalyser) {
             this.initAudioContext();
         }
-        
+
         if (this.audioContext && this.audioAnalyser) {
             const source = this.audioContext.createMediaStreamSource(stream);
             source.connect(this.audioAnalyser);
@@ -186,49 +198,49 @@ class InputTracking {
      */
     moveToViewport(position = 'right', offset = { x: 20, y: 20 }) {
         let targetX, targetY;
-        
+
         switch (position) {
-        case 'top':
-            targetX = window.innerWidth / 2;
-            targetY = offset.y;
-            break;
-        case 'bottom':
-            targetX = window.innerWidth / 2;
-            targetY = window.innerHeight - offset.y;
-            break;
-        case 'left':
-            targetX = offset.x;
-            targetY = window.innerHeight / 2;
-            break;
-        case 'right':
-            targetX = window.innerWidth - offset.x;
-            targetY = window.innerHeight / 2;
-            break;
-        case 'top-left':
-            targetX = offset.x;
-            targetY = offset.y;
-            break;
-        case 'top-right':
-            targetX = window.innerWidth - offset.x;
-            targetY = offset.y;
-            break;
-        case 'bottom-left':
-            targetX = offset.x;
-            targetY = window.innerHeight - offset.y;
-            break;
-        case 'bottom-right':
-            targetX = window.innerWidth - offset.x;
-            targetY = window.innerHeight - offset.y;
-            break;
-        default:
-            targetX = window.innerWidth - offset.x;
-            targetY = window.innerHeight / 2;
+            case 'top':
+                targetX = window.innerWidth / 2;
+                targetY = offset.y;
+                break;
+            case 'bottom':
+                targetX = window.innerWidth / 2;
+                targetY = window.innerHeight - offset.y;
+                break;
+            case 'left':
+                targetX = offset.x;
+                targetY = window.innerHeight / 2;
+                break;
+            case 'right':
+                targetX = window.innerWidth - offset.x;
+                targetY = window.innerHeight / 2;
+                break;
+            case 'top-left':
+                targetX = offset.x;
+                targetY = offset.y;
+                break;
+            case 'top-right':
+                targetX = window.innerWidth - offset.x;
+                targetY = offset.y;
+                break;
+            case 'bottom-left':
+                targetX = offset.x;
+                targetY = window.innerHeight - offset.y;
+                break;
+            case 'bottom-right':
+                targetX = window.innerWidth - offset.x;
+                targetY = window.innerHeight - offset.y;
+                break;
+            default:
+                targetX = window.innerWidth - offset.x;
+                targetY = window.innerHeight / 2;
         }
-        
+
         // Convert to mascot coordinate system
         const mascotX = targetX - window.innerWidth / 2;
         const mascotY = targetY - window.innerHeight / 2;
-        
+
         this.positionController.setOffset(mascotX, mascotY, 0);
     }
 
@@ -261,4 +273,3 @@ class InputTracking {
 }
 
 export default InputTracking;
-

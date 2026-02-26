@@ -38,7 +38,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -85,7 +85,7 @@ export function buildEarthEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -94,14 +94,14 @@ export function buildEarthEffectGesture(config) {
             amplitudeSync: {
                 onBeat: config.category === 'emanating' ? 1.5 : 1.2,
                 offBeat: 1.0,
-                curve: config.category === 'emanating' ? 'sharp' : 'smooth'
-            }
+                curve: config.category === 'emanating' ? 'sharp' : 'smooth',
+            },
         },
 
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const { category } = cfg;
 
                 // ═══════════════════════════════════════════════════════════════
@@ -149,20 +149,22 @@ export function buildEarthEffectGesture(config) {
 
                 // Decay in final phase
                 const decayRate = cfg.decayRate || 0.2;
-                if (progress > (1 - decayRate)) {
+                if (progress > 1 - decayRate) {
                     const decayProgress = (progress - (1 - decayRate)) / decayRate;
                     if (cfg.endFlash) {
-                        effectStrength *= (1 - decayProgress * 0.99);
+                        effectStrength *= 1 - decayProgress * 0.99;
                     } else {
                         const easedDecay = decayProgress * decayProgress;
-                        effectStrength *= (1 - easedDecay);
+                        effectStrength *= 1 - easedDecay;
                     }
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 // Shake (rumble, quake, shatter)
                 if (cfg.shakeAmount > 0) {
@@ -170,8 +172,9 @@ export function buildEarthEffectGesture(config) {
                     let shakeStrength = cfg.shakeAmount * effectStrength;
 
                     if (cfg.shatterPoint && progress > cfg.shatterPoint) {
-                        const explodeProgress = (progress - cfg.shatterPoint) / (1 - cfg.shatterPoint);
-                        shakeStrength *= (1 + explodeProgress * (cfg.explosionForce || 0.5));
+                        const explodeProgress =
+                            (progress - cfg.shatterPoint) / (1 - cfg.shatterPoint);
+                        shakeStrength *= 1 + explodeProgress * (cfg.explosionForce || 0.5);
                     }
 
                     posX += (noise1D(shakeTime) - 0.5) * shakeStrength;
@@ -183,11 +186,12 @@ export function buildEarthEffectGesture(config) {
                 if (cfg.tremor > 0) {
                     let tremorStrength = cfg.tremor;
                     if (cfg.tremorDecay) {
-                        tremorStrength *= (1 - progress * cfg.tremorDecay);
+                        tremorStrength *= 1 - progress * cfg.tremorDecay;
                     }
                     const tremorTime = time * (cfg.tremorFrequency || 4);
                     posX += (noise1D(tremorTime) - 0.5) * tremorStrength * effectStrength;
-                    posY += (noise1D(tremorTime + 50) - 0.5) * tremorStrength * 0.5 * effectStrength;
+                    posY +=
+                        (noise1D(tremorTime + 50) - 0.5) * tremorStrength * 0.5 * effectStrength;
                 }
 
                 // Sink (burden, crumble)
@@ -200,7 +204,8 @@ export function buildEarthEffectGesture(config) {
                 if (cfg.driftAmount > 0) {
                     const driftTime = time * (cfg.driftSpeed || 1);
                     posX += (noise1D(driftTime) - 0.5) * cfg.driftAmount * effectStrength;
-                    posY += (noise1D(driftTime + 50) - 0.5) * cfg.driftAmount * 0.5 * effectStrength;
+                    posY +=
+                        (noise1D(driftTime + 50) - 0.5) * cfg.driftAmount * 0.5 * effectStrength;
                 }
 
                 // Hover (manifestation — gentle float)
@@ -236,7 +241,9 @@ export function buildEarthEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION
                 // ═══════════════════════════════════════════════════════════════
-                const rotX = 0; let rotY = 0; const rotZ = 0;
+                const rotX = 0;
+                let rotY = 0;
+                const rotZ = 0;
 
                 if (cfg.rotationSpeed > 0) {
                     rotY = time * cfg.rotationSpeed * Math.PI * 2 * effectStrength;
@@ -255,9 +262,10 @@ export function buildEarthEffectGesture(config) {
                     const endAt = cfg.fadeEndAt || 0.95;
                     if (progress >= startAt) {
                         const fadeProgress = Math.min(1, (progress - startAt) / (endAt - startAt));
-                        meshOpacity = cfg.fadeCurve === 'accelerating'
-                            ? Math.max(0, 1 - Math.pow(fadeProgress, 2))
-                            : Math.max(0, 1 - fadeProgress);
+                        meshOpacity =
+                            cfg.fadeCurve === 'accelerating'
+                                ? Math.max(0, 1 - Math.pow(fadeProgress, 2))
+                                : Math.max(0, 1 - fadeProgress);
                     }
                 }
 
@@ -269,21 +277,21 @@ export function buildEarthEffectGesture(config) {
 
                 if (category === 'emanating') {
                     flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.3 + 0.7;
-                    flickerValue *= (0.8 + hash(Math.floor(flickerTime * 3)) * 0.4);
+                    flickerValue *= 0.8 + hash(Math.floor(flickerTime * 3)) * 0.4;
                 } else if (cfg.shatterPoint && progress > cfg.shatterPoint) {
-                    flickerValue = 1.0 + (noise1D(flickerTime * 5) * 0.5);
+                    flickerValue = 1.0 + noise1D(flickerTime * 5) * 0.5;
                 } else {
                     flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.2 + 0.8;
                 }
 
                 const glowMin = cfg.glowIntensityMin || 0.5;
                 const glowMax = cfg.glowIntensityMax || 0.8;
-                const glowIntensity = glowMin +
-                    (glowMax - glowMin) * flickerValue * effectStrength;
+                const glowIntensity = glowMin + (glowMax - glowMin) * flickerValue * effectStrength;
 
                 // Negative glow boost — earth DARKENS (opposite of light)
-                const glowBoost = -0.15 * effectStrength * cfg.intensity * (cfg.petrification || 0.5)
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    -0.15 * effectStrength * cfg.intensity * (cfg.petrification || 0.5) +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
@@ -311,13 +319,13 @@ export function buildEarthEffectGesture(config) {
                         scale: config.spawnMode?.scale,
                         embedDepth: config.spawnMode?.embedDepth,
                         distortionStrength: config.distortionStrength,
-                    }
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 
 export default {
-    buildEarthEffectGesture
+    buildEarthEffectGesture,
 };

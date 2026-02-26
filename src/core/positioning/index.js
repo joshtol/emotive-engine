@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Positioning System Index
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Main positioning system that orchestrates all positioning modules
  * @author Emotive Engine Team
  * @module positioning/index
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides a unified interface for all positioning methods. Combines element        
- * ║ targeting, input tracking, physics, animation, and responsive positioning.        
+ * ║ Provides a unified interface for all positioning methods. Combines element
+ * ║ targeting, input tracking, physics, animation, and responsive positioning.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -26,14 +26,14 @@ import Responsive from './Responsive.js';
 class PositioningSystem {
     constructor(positionController) {
         this.positionController = positionController;
-        
+
         // Initialize all positioning modules
         this.elementTargeting = new ElementTargeting(positionController);
         this.inputTracking = new InputTracking(positionController);
         this.physics = new Physics(positionController);
         this.animation = new Animation(positionController);
         this.responsive = new Responsive(positionController);
-        
+
         // Method registry for easy access
         this.methods = new Map();
         this.registerMethods();
@@ -44,22 +44,55 @@ class PositioningSystem {
      */
     registerMethods() {
         // Element targeting methods
-        this.methods.set('moveToElement', this.elementTargeting.moveToElement.bind(this.elementTargeting));
-        this.methods.set('moveToButton', this.elementTargeting.moveToButton.bind(this.elementTargeting));
-        this.methods.set('moveToForm', this.elementTargeting.moveToForm.bind(this.elementTargeting));
-        this.methods.set('moveToModal', this.elementTargeting.moveToModal.bind(this.elementTargeting));
-        this.methods.set('moveToNavigation', this.elementTargeting.moveToNavigation.bind(this.elementTargeting));
-        this.methods.set('moveToContent', this.elementTargeting.moveToContent.bind(this.elementTargeting));
-        this.methods.set('moveToSidebar', this.elementTargeting.moveToSidebar.bind(this.elementTargeting));
-        this.methods.set('moveToHeader', this.elementTargeting.moveToHeader.bind(this.elementTargeting));
-        this.methods.set('moveToFooter', this.elementTargeting.moveToFooter.bind(this.elementTargeting));
-        this.methods.set('watchElement', this.elementTargeting.watchElement.bind(this.elementTargeting));
+        this.methods.set(
+            'moveToElement',
+            this.elementTargeting.moveToElement.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToButton',
+            this.elementTargeting.moveToButton.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToForm',
+            this.elementTargeting.moveToForm.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToModal',
+            this.elementTargeting.moveToModal.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToNavigation',
+            this.elementTargeting.moveToNavigation.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToContent',
+            this.elementTargeting.moveToContent.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToSidebar',
+            this.elementTargeting.moveToSidebar.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToHeader',
+            this.elementTargeting.moveToHeader.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'moveToFooter',
+            this.elementTargeting.moveToFooter.bind(this.elementTargeting)
+        );
+        this.methods.set(
+            'watchElement',
+            this.elementTargeting.watchElement.bind(this.elementTargeting)
+        );
 
         // Input tracking methods
         this.methods.set('moveToMouse', this.inputTracking.moveToMouse.bind(this.inputTracking));
         this.methods.set('moveToTouch', this.inputTracking.moveToTouch.bind(this.inputTracking));
         this.methods.set('moveToAudio', this.inputTracking.moveToAudio.bind(this.inputTracking));
-        this.methods.set('moveToViewport', this.inputTracking.moveToViewport.bind(this.inputTracking));
+        this.methods.set(
+            'moveToViewport',
+            this.inputTracking.moveToViewport.bind(this.inputTracking)
+        );
 
         // Physics methods
         this.methods.set('moveToGrid', this.physics.moveToGrid.bind(this.physics));
@@ -75,9 +108,15 @@ class PositioningSystem {
         this.methods.set('animateTo', this.animation.animateTo.bind(this.animation));
 
         // Responsive methods
-        this.methods.set('moveToResponsive', this.responsive.moveToResponsive.bind(this.responsive));
+        this.methods.set(
+            'moveToResponsive',
+            this.responsive.moveToResponsive.bind(this.responsive)
+        );
         this.methods.set('moveToGroup', this.responsive.moveToGroup.bind(this.responsive));
-        this.methods.set('moveToAccessibility', this.responsive.moveToAccessibility.bind(this.responsive));
+        this.methods.set(
+            'moveToAccessibility',
+            this.responsive.moveToAccessibility.bind(this.responsive)
+        );
     }
 
     /**

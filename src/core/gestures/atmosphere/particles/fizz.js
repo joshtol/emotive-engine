@@ -32,14 +32,14 @@ export default {
     config: {
         duration: 2500,
         musicalDuration: { musical: true, bars: 1.5 },
-        riseSpeed: 6.0,       // How fast bubbles rise
-        riseDistance: 300,    // How far bubbles travel
-        wobbleAmount: 2.0,    // Side-to-side wobble
+        riseSpeed: 6.0, // How fast bubbles rise
+        riseDistance: 300, // How far bubbles travel
+        wobbleAmount: 2.0, // Side-to-side wobble
         strength: 1.0,
         particleMotion: {
             type: 'fizz',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
         durationSync: { mode: 'bars', bars: 1.5 },
         intensitySync: {
             quiet: 0.5,
-            loud: 1.5
-        }
+            loud: 1.5,
+        },
     },
 
     initialize(particle, _motion) {
@@ -64,7 +64,7 @@ export default {
             wobbleSpeed: 0.4 + Math.random() * 0.6,
             // Random rise speed variation
             riseMultiplier: 0.7 + Math.random() * 0.6,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -77,7 +77,7 @@ export default {
         const strength = config.strength || 1.0;
         const data = particle.gestureData.fizz;
 
-        const safeDt = (typeof dt === 'number') ? dt : 1;
+        const safeDt = typeof dt === 'number' ? dt : 1;
 
         // Calculate rise based on progress
         const riseDistance = config.riseDistance || 300;
@@ -177,8 +177,8 @@ export default {
                 rotation: [rotX, rotY, rotZ],
                 scale: [scaleX, scaleY, scaleZ],
                 glowIntensity,
-                glowBoost: shakeIntensity * 0.2
+                glowBoost: shakeIntensity * 0.2,
             };
-        }
-    }
+        },
+    },
 };

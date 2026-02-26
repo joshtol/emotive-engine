@@ -32,7 +32,7 @@ export const ANIMATION_DEFAULTS = {
     appearAt: 0,
     disappearAt: 1.0,
     delayMs: 0,
-    lifetimeMs: null,  // null = use gesture progress
+    lifetimeMs: null, // null = use gesture progress
     stagger: 0,
     staggerMs: 0,
 
@@ -43,7 +43,7 @@ export const ANIMATION_DEFAULTS = {
         durationMs: 50,
         easing: 'easeOut',
         scale: [0, 1],
-        overshoot: 1.2
+        overshoot: 1.2,
     },
 
     // Exit animation
@@ -52,7 +52,7 @@ export const ANIMATION_DEFAULTS = {
         duration: 0.15,
         durationMs: 150,
         easing: 'easeIn',
-        scale: [1, 0]
+        scale: [1, 0],
     },
 
     // Hold animations (all optional)
@@ -94,7 +94,7 @@ export const ANIMATION_DEFAULTS = {
     onEnterComplete: null,
     onExitStart: null,
     onExitComplete: null,
-    onRespawn: null
+    onRespawn: null,
 };
 
 /**
@@ -104,7 +104,7 @@ export const PULSE_DEFAULTS = {
     amplitude: 0.1,
     frequency: 2,
     easing: 'easeInOut',
-    sync: 'global'
+    sync: 'global',
 };
 
 /**
@@ -114,7 +114,7 @@ export const FLICKER_DEFAULTS = {
     intensity: 0.2,
     rate: 10,
     pattern: 'random',
-    seed: null
+    seed: null,
 };
 
 /**
@@ -124,11 +124,11 @@ export const FLICKER_DEFAULTS = {
  */
 export const DRIFT_DEFAULTS = {
     direction: 'outward',
-    distance: 0.1,          // Total drift distance over gesture lifetime (musical timing)
-    speed: 0.02,            // Speed for physics-based drift (units per frame)
-    maxDistance: 1.0,       // Maximum drift distance cap
+    distance: 0.1, // Total drift distance over gesture lifetime (musical timing)
+    speed: 0.02, // Speed for physics-based drift (units per frame)
+    maxDistance: 1.0, // Maximum drift distance cap
     bounce: false,
-    noise: 0
+    noise: 0,
 };
 
 /**
@@ -142,12 +142,12 @@ export const DRIFT_DEFAULTS = {
  */
 export const ROTATE_DEFAULTS = {
     axis: 'y',
-    speed: 0.1,           // Legacy: arbitrary speed units
-    rotations: null,      // Musical timing: full rotations per gesture (overrides speed if set)
-    phase: 0,             // Starting angle in degrees
+    speed: 0.1, // Legacy: arbitrary speed units
+    rotations: null, // Musical timing: full rotations per gesture (overrides speed if set)
+    phase: 0, // Starting angle in degrees
     oscillate: false,
     range: Math.PI / 4,
-    easing: 'linear'
+    easing: 'linear',
 };
 
 /**
@@ -158,7 +158,7 @@ export const EMISSIVE_DEFAULTS = {
     max: 1.5,
     frequency: 1,
     pattern: 'sine',
-    dutyCycle: 0.5
+    dutyCycle: 0.5,
 };
 
 /**
@@ -169,9 +169,9 @@ export const PROCEDURAL_DEFAULTS = {
     // Geometry stability: use smooth fade for vertex displacement
     geometryStability: true,
     // Scale smoothing: lerp factor per frame (0 = instant, 1 = no change)
-    scaleSmoothing: 0,          // 0 = disabled (instant), 0.08 = smooth (fire), 0.15 = very smooth
+    scaleSmoothing: 0, // 0 = disabled (instant), 0.08 = smooth (fire), 0.15 = very smooth
     // Shader bindings: map animation state to shader uniforms
-    shaderBindings: null
+    shaderBindings: null,
 };
 
 /**
@@ -182,7 +182,7 @@ export const PARAMETER_ANIMATION_DEFAULTS = {
     start: 0,
     peak: 1,
     end: 0,
-    curve: 'bell'       // 'bell', 'spike', 'sustained', 'pulse', 'linear'
+    curve: 'bell', // 'bell', 'spike', 'sustained', 'pulse', 'linear'
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -218,7 +218,9 @@ export class AnimationConfig {
 
         // Parameter animation: animate shader uniforms over gesture lifetime
         // Generic system that works for any element (fire temperature, water flow, etc.)
-        this.parameterAnimation = this._parseParameterAnimation(config.parameterAnimation || config.temperature);
+        this.parameterAnimation = this._parseParameterAnimation(
+            config.parameterAnimation || config.temperature
+        );
 
         // Phase 11: Model-specific behavior overrides
         // Allows gestures to override MODEL_BEHAVIORS for specific models
@@ -248,16 +250,16 @@ export class AnimationConfig {
      */
     _parseIntensityScaling(scaling = {}) {
         return {
-            scale: scaling.scale ?? 1.0,              // At max intensity, scale multiplier
-            count: scaling.count ?? 1.0,              // At max intensity, count multiplier
-            lifetime: scaling.lifetime ?? 1.0,        // At max intensity, lifetime multiplier
+            scale: scaling.scale ?? 1.0, // At max intensity, scale multiplier
+            count: scaling.count ?? 1.0, // At max intensity, count multiplier
+            lifetime: scaling.lifetime ?? 1.0, // At max intensity, lifetime multiplier
             enterDuration: scaling.enterDuration ?? 1.0,
             exitDuration: scaling.exitDuration ?? 1.0,
             pulseAmplitude: scaling.pulseAmplitude ?? 1.0,
             flickerIntensity: scaling.flickerIntensity ?? 1.0,
             emissiveMax: scaling.emissiveMax ?? 1.0,
             driftSpeed: scaling.driftSpeed ?? 1.0,
-            rotateSpeed: scaling.rotateSpeed ?? 1.0
+            rotateSpeed: scaling.rotateSpeed ?? 1.0,
         };
     }
 
@@ -311,7 +313,7 @@ export class AnimationConfig {
             appearOnBeat: config.appearOnBeat ?? null,
 
             // Mode: 'progress' or 'ms'
-            mode: this._determineTimingMode(config)
+            mode: this._determineTimingMode(config),
         };
     }
 
@@ -345,7 +347,7 @@ export class AnimationConfig {
             easing: getEasing(enter.easing ?? defaults.easing),
             easingName: enter.easing ?? defaults.easing,
             scale: enter.scale ?? defaults.scale,
-            overshoot: enter.overshoot ?? defaults.overshoot
+            overshoot: enter.overshoot ?? defaults.overshoot,
         };
     }
 
@@ -361,7 +363,7 @@ export class AnimationConfig {
             durationMs: exit.durationMs ?? defaults.durationMs,
             easing: getEasing(exit.easing ?? defaults.easing),
             easingName: exit.easing ?? defaults.easing,
-            scale: exit.scale ?? defaults.scale
+            scale: exit.scale ?? defaults.scale,
         };
     }
 
@@ -375,7 +377,7 @@ export class AnimationConfig {
             flicker: config.flicker ? this._parseFlicker(config.flicker) : null,
             drift: config.drift ? this._parseDrift(config.drift) : null,
             rotate: config.rotate ? this._parseRotate(config.rotate) : null,
-            emissive: config.emissive ? this._parseEmissive(config.emissive) : null
+            emissive: config.emissive ? this._parseEmissive(config.emissive) : null,
         };
     }
 
@@ -388,7 +390,7 @@ export class AnimationConfig {
             amplitude: pulse.amplitude ?? PULSE_DEFAULTS.amplitude,
             frequency: pulse.frequency ?? PULSE_DEFAULTS.frequency,
             easing: getEasing(pulse.easing ?? PULSE_DEFAULTS.easing),
-            sync: pulse.sync ?? PULSE_DEFAULTS.sync
+            sync: pulse.sync ?? PULSE_DEFAULTS.sync,
         };
     }
 
@@ -401,7 +403,7 @@ export class AnimationConfig {
             intensity: flicker.intensity ?? FLICKER_DEFAULTS.intensity,
             rate: flicker.rate ?? FLICKER_DEFAULTS.rate,
             pattern: flicker.pattern ?? FLICKER_DEFAULTS.pattern,
-            seed: flicker.seed ?? FLICKER_DEFAULTS.seed
+            seed: flicker.seed ?? FLICKER_DEFAULTS.seed,
         };
     }
 
@@ -418,7 +420,7 @@ export class AnimationConfig {
             maxDistance: drift.maxDistance ?? DRIFT_DEFAULTS.maxDistance,
             gestureDuration: this.gestureDuration,
             bounce: drift.bounce ?? DRIFT_DEFAULTS.bounce,
-            noise: drift.noise ?? DRIFT_DEFAULTS.noise
+            noise: drift.noise ?? DRIFT_DEFAULTS.noise,
         };
     }
 
@@ -439,7 +441,7 @@ export class AnimationConfig {
                 // Shared settings (use first element's values as defaults for compatibility)
                 oscillate: elements[0]?.oscillate ?? ROTATE_DEFAULTS.oscillate,
                 range: elements[0]?.range ?? ROTATE_DEFAULTS.range,
-                easing: elements[0]?.easing ?? getEasing(ROTATE_DEFAULTS.easing)
+                easing: elements[0]?.easing ?? getEasing(ROTATE_DEFAULTS.easing),
             };
         }
 
@@ -447,8 +449,8 @@ export class AnimationConfig {
         const elem = this._parseRotateElement(rotate);
         return {
             isPerElement: false,
-            elements: [elem],  // Wrap in array for consistent access
-            ...elem
+            elements: [elem], // Wrap in array for consistent access
+            ...elem,
         };
     }
 
@@ -460,20 +462,24 @@ export class AnimationConfig {
         // Normalize axis to array format [x, y, z]
         let axis = elem.axis ?? ROTATE_DEFAULTS.axis;
         if (typeof axis === 'string') {
-            axis = axis === 'x' ? [1, 0, 0] :
-                axis === 'y' ? [0, 1, 0] :
-                    axis === 'z' ? [0, 0, 1] :
-                        [0, 1, 0];  // default to Y
+            axis =
+                axis === 'x'
+                    ? [1, 0, 0]
+                    : axis === 'y'
+                      ? [0, 1, 0]
+                      : axis === 'z'
+                        ? [0, 0, 1]
+                        : [0, 1, 0]; // default to Y
         }
 
         return {
             axis,
             speed: elem.speed ?? ROTATE_DEFAULTS.speed,
-            rotations: elem.rotations ?? ROTATE_DEFAULTS.rotations,  // Musical timing (overrides speed)
-            phase: elem.phase ?? ROTATE_DEFAULTS.phase,              // Starting angle in degrees
+            rotations: elem.rotations ?? ROTATE_DEFAULTS.rotations, // Musical timing (overrides speed)
+            phase: elem.phase ?? ROTATE_DEFAULTS.phase, // Starting angle in degrees
             oscillate: elem.oscillate ?? ROTATE_DEFAULTS.oscillate,
             range: elem.range ?? ROTATE_DEFAULTS.range,
-            easing: getEasing(elem.easing ?? ROTATE_DEFAULTS.easing)
+            easing: getEasing(elem.easing ?? ROTATE_DEFAULTS.easing),
         };
     }
 
@@ -487,7 +493,7 @@ export class AnimationConfig {
             max: emissive.max ?? EMISSIVE_DEFAULTS.max,
             frequency: emissive.frequency ?? EMISSIVE_DEFAULTS.frequency,
             pattern: emissive.pattern ?? EMISSIVE_DEFAULTS.pattern,
-            dutyCycle: emissive.dutyCycle ?? EMISSIVE_DEFAULTS.dutyCycle
+            dutyCycle: emissive.dutyCycle ?? EMISSIVE_DEFAULTS.dutyCycle,
         };
     }
 
@@ -500,7 +506,7 @@ export class AnimationConfig {
             scale: config.scaleVariance ?? ANIMATION_DEFAULTS.scaleVariance,
             lifetime: config.lifetimeVariance ?? ANIMATION_DEFAULTS.lifetimeVariance,
             color: config.colorVariance ?? ANIMATION_DEFAULTS.colorVariance,
-            delay: config.delayVariance ?? ANIMATION_DEFAULTS.delayVariance
+            delay: config.delayVariance ?? ANIMATION_DEFAULTS.delayVariance,
         };
     }
 
@@ -509,21 +515,27 @@ export class AnimationConfig {
      * @private
      */
     _parseAppearance(config) {
-        const color = config.color ? {
-            tint: config.color.tint ?? null,
-            multiply: config.color.multiply ?? true,
-            variance: config.color.variance ?? 0
-        } : null;
+        const color = config.color
+            ? {
+                  tint: config.color.tint ?? null,
+                  multiply: config.color.multiply ?? true,
+                  variance: config.color.variance ?? 0,
+              }
+            : null;
 
-        const opacity = config.opacity ? {
-            base: config.opacity.base ?? ANIMATION_DEFAULTS.opacity.base,
-            variance: config.opacity.variance ?? ANIMATION_DEFAULTS.opacity.variance
-        } : { ...ANIMATION_DEFAULTS.opacity };
+        const opacity = config.opacity
+            ? {
+                  base: config.opacity.base ?? ANIMATION_DEFAULTS.opacity.base,
+                  variance: config.opacity.variance ?? ANIMATION_DEFAULTS.opacity.variance,
+              }
+            : { ...ANIMATION_DEFAULTS.opacity };
 
-        const scale = config.scale ? {
-            base: config.scale.base ?? ANIMATION_DEFAULTS.scale.base,
-            variance: config.scale.variance ?? ANIMATION_DEFAULTS.scale.variance
-        } : { ...ANIMATION_DEFAULTS.scale };
+        const scale = config.scale
+            ? {
+                  base: config.scale.base ?? ANIMATION_DEFAULTS.scale.base,
+                  variance: config.scale.variance ?? ANIMATION_DEFAULTS.scale.variance,
+              }
+            : { ...ANIMATION_DEFAULTS.scale };
 
         return { color, opacity, scale };
     }
@@ -538,7 +550,7 @@ export class AnimationConfig {
             depthTest: config.depthTest ?? ANIMATION_DEFAULTS.depthTest,
             depthWrite: config.depthWrite ?? ANIMATION_DEFAULTS.depthWrite,
             blending: config.blending ?? ANIMATION_DEFAULTS.blending,
-            trail: config.trail ? this._parseTrail(config.trail) : null
+            trail: config.trail ? this._parseTrail(config.trail) : null,
         };
     }
 
@@ -551,7 +563,7 @@ export class AnimationConfig {
             count: trail.count ?? 3,
             fadeRate: trail.fadeRate ?? 0.3,
             spacing: trail.spacing ?? 0.05,
-            inheritRotation: trail.inheritRotation ?? true
+            inheritRotation: trail.inheritRotation ?? true,
         };
     }
 
@@ -564,7 +576,7 @@ export class AnimationConfig {
             respawn: config.respawn ?? ANIMATION_DEFAULTS.respawn,
             respawnDelay: config.respawnDelay ?? ANIMATION_DEFAULTS.respawnDelay,
             respawnDelayMs: config.respawnDelayMs ?? ANIMATION_DEFAULTS.respawnDelayMs,
-            maxRespawns: config.maxRespawns ?? ANIMATION_DEFAULTS.maxRespawns
+            maxRespawns: config.maxRespawns ?? ANIMATION_DEFAULTS.maxRespawns,
         };
     }
 
@@ -579,7 +591,7 @@ export class AnimationConfig {
             onEnterComplete: config.onEnterComplete ?? null,
             onExitStart: config.onExitStart ?? null,
             onExitComplete: config.onExitComplete ?? null,
-            onRespawn: config.onRespawn ?? null
+            onRespawn: config.onRespawn ?? null,
         };
     }
 
@@ -590,7 +602,8 @@ export class AnimationConfig {
      */
     _parseProcedural(config) {
         // Check if any procedural features are explicitly configured
-        const hasProceduralConfig = config.procedural ||
+        const hasProceduralConfig =
+            config.procedural ||
             config.scaleSmoothing !== undefined ||
             config.geometryStability !== undefined;
 
@@ -600,13 +613,15 @@ export class AnimationConfig {
 
         const procedural = config.procedural || {};
         return {
-            geometryStability: procedural.geometryStability ??
+            geometryStability:
+                procedural.geometryStability ??
                 config.geometryStability ??
                 PROCEDURAL_DEFAULTS.geometryStability,
-            scaleSmoothing: procedural.scaleSmoothing ??
+            scaleSmoothing:
+                procedural.scaleSmoothing ??
                 config.scaleSmoothing ??
                 PROCEDURAL_DEFAULTS.scaleSmoothing,
-            shaderBindings: procedural.shaderBindings ?? null
+            shaderBindings: procedural.shaderBindings ?? null,
         };
     }
 
@@ -626,8 +641,8 @@ export class AnimationConfig {
                     start: paramConfig.start ?? PARAMETER_ANIMATION_DEFAULTS.start,
                     peak: paramConfig.peak ?? PARAMETER_ANIMATION_DEFAULTS.peak,
                     end: paramConfig.end ?? PARAMETER_ANIMATION_DEFAULTS.end,
-                    curve: paramConfig.curve ?? PARAMETER_ANIMATION_DEFAULTS.curve
-                }
+                    curve: paramConfig.curve ?? PARAMETER_ANIMATION_DEFAULTS.curve,
+                },
             };
         }
 
@@ -640,7 +655,7 @@ export class AnimationConfig {
                     start: value.start ?? PARAMETER_ANIMATION_DEFAULTS.start,
                     peak: value.peak ?? PARAMETER_ANIMATION_DEFAULTS.peak,
                     end: value.end ?? PARAMETER_ANIMATION_DEFAULTS.end,
-                    curve: value.curve ?? PARAMETER_ANIMATION_DEFAULTS.curve
+                    curve: value.curve ?? PARAMETER_ANIMATION_DEFAULTS.curve,
                 };
             }
         }
@@ -677,7 +692,9 @@ export class AnimationConfig {
     getAppearTime(mode = 'auto') {
         const useMode = mode === 'auto' ? this.timing.mode : mode;
         if (useMode === 'ms') {
-            return this.timing.delayMs > 0 ? this.timing.delayMs : this.progressToMs(this.timing.appearAt);
+            return this.timing.delayMs > 0
+                ? this.timing.delayMs
+                : this.progressToMs(this.timing.appearAt);
         }
         return this.timing.appearAt;
     }
@@ -738,9 +755,12 @@ export class AnimationConfig {
             index,
             appearOffset: this.getStaggerOffset(index),
             scale: this.applyVariance(this.appearance.scale.base, this.variance.scale),
-            opacity: this.applyVariance(this.appearance.opacity.base, this.appearance.opacity.variance),
+            opacity: this.applyVariance(
+                this.appearance.opacity.base,
+                this.appearance.opacity.variance
+            ),
             lifetimeMultiplier: 1 + (Math.random() * 2 - 1) * this.variance.lifetime,
-            delayOffset: this.applyVariance(0, this.variance.delay)
+            delayOffset: this.applyVariance(0, this.variance.delay),
         };
     }
 
@@ -757,7 +777,7 @@ export class AnimationConfig {
             ...this.raw,
             ...elementConfig,
             enter: { ...this.raw.enter, ...elementConfig.enter },
-            exit: { ...this.raw.exit, ...elementConfig.exit }
+            exit: { ...this.raw.exit, ...elementConfig.exit },
         };
 
         return new AnimationConfig(merged, this.gestureDuration);
@@ -805,47 +825,47 @@ export function evaluateParameterValue(param, progress) {
     const { start, peak, end, curve } = param;
 
     switch (curve) {
-    case 'bell': {
-        // Smooth rise to peak at midpoint, smooth fall
-        if (progress <= 0.5) {
-            return start + (peak - start) * smoothstep(0, 0.5, progress);
+        case 'bell': {
+            // Smooth rise to peak at midpoint, smooth fall
+            if (progress <= 0.5) {
+                return start + (peak - start) * smoothstep(0, 0.5, progress);
+            }
+            return peak + (end - peak) * smoothstep(0.5, 1.0, progress);
         }
-        return peak + (end - peak) * smoothstep(0.5, 1.0, progress);
-    }
-    case 'spike': {
-        // Fast rise to peak at 25%, slow fall through remaining 75%
-        if (progress <= 0.25) {
-            return start + (peak - start) * smoothstep(0, 0.25, progress);
+        case 'spike': {
+            // Fast rise to peak at 25%, slow fall through remaining 75%
+            if (progress <= 0.25) {
+                return start + (peak - start) * smoothstep(0, 0.25, progress);
+            }
+            return peak + (end - peak) * smoothstep(0.25, 1.0, progress);
         }
-        return peak + (end - peak) * smoothstep(0.25, 1.0, progress);
-    }
-    case 'sustained': {
-        // Quick ramp up, hold at peak, quick ramp down
-        if (progress <= 0.15) {
-            return start + (peak - start) * smoothstep(0, 0.15, progress);
+        case 'sustained': {
+            // Quick ramp up, hold at peak, quick ramp down
+            if (progress <= 0.15) {
+                return start + (peak - start) * smoothstep(0, 0.15, progress);
+            }
+            if (progress >= 0.85) {
+                return peak + (end - peak) * smoothstep(0.85, 1.0, progress);
+            }
+            return peak;
         }
-        if (progress >= 0.85) {
-            return peak + (end - peak) * smoothstep(0.85, 1.0, progress);
+        case 'fadeOut': {
+            // Start at peak, smooth fade to end
+            return peak + (end - peak) * smoothstep(0, 1.0, progress);
         }
-        return peak;
-    }
-    case 'fadeOut': {
-        // Start at peak, smooth fade to end
-        return peak + (end - peak) * smoothstep(0, 1.0, progress);
-    }
-    case 'linear': {
-        // Linear two-segment interpolation
-        if (progress <= 0.5) {
-            return start + (peak - start) * (progress * 2);
+        case 'linear': {
+            // Linear two-segment interpolation
+            if (progress <= 0.5) {
+                return start + (peak - start) * (progress * 2);
+            }
+            return peak + (end - peak) * ((progress - 0.5) * 2);
         }
-        return peak + (end - peak) * ((progress - 0.5) * 2);
-    }
-    default:
-        // Unknown curve — use bell as fallback
-        if (progress <= 0.5) {
-            return start + (peak - start) * smoothstep(0, 0.5, progress);
-        }
-        return peak + (end - peak) * smoothstep(0.5, 1.0, progress);
+        default:
+            // Unknown curve — use bell as fallback
+            if (progress <= 0.5) {
+                return start + (peak - start) * smoothstep(0, 0.5, progress);
+            }
+            return peak + (end - peak) * smoothstep(0.5, 1.0, progress);
     }
 }
 

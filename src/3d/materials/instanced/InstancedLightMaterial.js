@@ -39,7 +39,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -61,7 +61,7 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -71,12 +71,12 @@ import {
 const LIGHT_DEFAULTS = {
     radiance: 0.5,
     intensity: 1.5,
-    opacity: 0.45,        // Low for additive stacking — gradual gold→white buildup
+    opacity: 0.45, // Low for additive stacking — gradual gold→white buildup
     pulseSpeed: 1.0,
     rayIntensity: 0.5,
     sparkleRate: 4.0,
     fadeInDuration: 0.15,
-    fadeOutDuration: 0.3
+    fadeOutDuration: 0.3,
 };
 
 function lerp(a, b, t) {
@@ -96,7 +96,7 @@ function deriveLightParameters(radiance, overrides = {}) {
         intensity: overrides.intensity ?? lerp(1.0, 2.5, radiance),
         pulseSpeed: overrides.pulseSpeed ?? lerp(0.5, 2.5, radiance),
         rayIntensity: overrides.rayIntensity ?? lerp(0.2, 0.8, radiance),
-        sparkleRate: overrides.sparkleRate ?? lerp(2.0, 8.0, radiance)
+        sparkleRate: overrides.sparkleRate ?? lerp(2.0, 8.0, radiance),
     };
 }
 
@@ -104,7 +104,7 @@ function deriveLightParameters(radiance, overrides = {}) {
 // NOISE GLSL (required by cutout system — snoise must exist)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 float noiseHash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
     p *= 17.0;
@@ -133,7 +133,7 @@ float snoise(vec3 p) {
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -286,7 +286,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uRadiance;
 uniform float uIntensity;
@@ -478,12 +478,15 @@ export function createInstancedLightMaterial(options = {}) {
         rayIntensity = null,
         sparkleRate = null,
         fadeInDuration = LIGHT_DEFAULTS.fadeInDuration,
-        fadeOutDuration = LIGHT_DEFAULTS.fadeOutDuration
+        fadeOutDuration = LIGHT_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive radiance-dependent parameters
     const derived = deriveLightParameters(radiance, {
-        intensity, pulseSpeed, rayIntensity, sparkleRate
+        intensity,
+        pulseSpeed,
+        rayIntensity,
+        sparkleRate,
     });
 
     const material = new THREE.ShaderMaterial({
@@ -504,14 +507,14 @@ export function createInstancedLightMaterial(options = {}) {
             uBloomThreshold: { value: 0.85 },
             uRelayCount: { value: 3 },
             uRelayArcWidth: { value: 3.14159 },
-            uRelayFloor: { value: 0.0 }
+            uRelayFloor: { value: 0.0 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.FrontSide
+        side: THREE.FrontSide,
     });
 
     material.userData.radiance = radiance;
@@ -613,7 +616,22 @@ export function resetRelay(material) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
+export {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    resetCutout,
+    setGrain,
+    resetGrain,
+    resetAnimation,
+};
 
 export default {
     createInstancedLightMaterial,
@@ -633,5 +651,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

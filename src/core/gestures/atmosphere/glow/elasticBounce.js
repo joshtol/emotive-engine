@@ -33,14 +33,14 @@ export default {
     config: {
         duration: 1200,
         musicalDuration: { musical: true, beats: 3 },
-        dropHeight: 0.15,     // Initial drop distance (3D units)
-        bounceCount: 3,       // Number of bounces
-        elasticity: 0.6,      // How much energy retained per bounce (0-1)
+        dropHeight: 0.15, // Initial drop distance (3D units)
+        bounceCount: 3, // Number of bounces
+        elasticity: 0.6, // How much energy retained per bounce (0-1)
         strength: 1.0,
         particleMotion: {
             type: 'elasticBounce',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -51,8 +51,8 @@ export default {
 
         amplitudeSync: {
             onBeat: 1.3,
-            offBeat: 0.8
-        }
+            offBeat: 0.8,
+        },
     },
 
     apply(particle, progress, motion, _dt, _centerX, _centerY) {
@@ -141,7 +141,8 @@ export default {
             }
 
             // Squash on ground contact
-            let scaleX = 1.0, scaleY = 1.0;
+            let scaleX = 1.0,
+                scaleY = 1.0;
             if (isOnGround) {
                 const squashAmount = 0.15 * strength * Math.pow(elasticity, bounceIndex);
                 scaleX = 1 + squashAmount;
@@ -158,8 +159,8 @@ export default {
                 position: [0, yOffset, 0],
                 rotation: [0, 0, 0],
                 scale,
-                glowIntensity
+                glowIntensity,
             };
-        }
-    }
+        },
+    },
 };

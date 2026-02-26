@@ -2,9 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                      ◐ ◑ ◒ ◓  CANVAS MANAGER  ◓ ◒ ◑ ◐                      
- *                                                                                    
+ *  └─○═╝
+ *                      ◐ ◑ ◒ ◓  CANVAS MANAGER  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Canvas Manager - High-DPI Rendering & Canvas Lifecycle
@@ -12,32 +12,32 @@
  * @version 2.1.0
  * @module CanvasManager
  * @changelog 2.1.0 - Added resize callback system for visual resampling
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The FOUNDATION of visual rendering. Handles canvas setup, high-DPI scaling,       
- * ║ resize events, and provides optimized 2D context for smooth animations.           
- * ║ Ensures crisp rendering on Retina displays and manages canvas lifecycle.          
+ * ║ The FOUNDATION of visual rendering. Handles canvas setup, high-DPI scaling,
+ * ║ resize events, and provides optimized 2D context for smooth animations.
+ * ║ Ensures crisp rendering on Retina displays and manages canvas lifecycle.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎨 CANVAS FEATURES                                                                
+ * │ 🎨 CANVAS FEATURES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Device Pixel Ratio (DPR) scaling for Retina displays                            
- * │ • Automatic resize handling with debouncing                                       
- * │ • Resize callback system for component notification                               
- * │ • Optimized 2D context settings for animations                                    
- * │ • Center point calculation for orb positioning                                    
- * │ • Clean canvas clearing with proper scaling                                       
+ * │ • Device Pixel Ratio (DPR) scaling for Retina displays
+ * │ • Automatic resize handling with debouncing
+ * │ • Resize callback system for component notification
+ * │ • Optimized 2D context settings for animations
+ * │ • Center point calculation for orb positioning
+ * │ • Clean canvas clearing with proper scaling
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ ⚡ CONTEXT OPTIMIZATIONS                                                           
+ * │ ⚡ CONTEXT OPTIMIZATIONS
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • alpha: true               - Enables transparency                                
- * │ • desynchronized: true      - Better animation performance                        
- * │ • willReadFrequently: false - We don't read pixels                                
+ * │ • alpha: true               - Enables transparency
+ * │ • desynchronized: true      - Better animation performance
+ * │ • willReadFrequently: false - We don't read pixels
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -48,25 +48,25 @@ class CanvasManager {
         // Get context with optimal settings for particle rendering
         this.ctx = canvas.getContext('2d', {
             alpha: true,
-            desynchronized: true,  // Better performance for animations
-            willReadFrequently: false  // We're not reading pixels
+            desynchronized: true, // Better performance for animations
+            willReadFrequently: false, // We're not reading pixels
         });
         this.dpr = window.devicePixelRatio || 1;
         this.width = 0;
         this.height = 0;
         this.centerX = 0;
         this.centerY = 0;
-        
+
         // Render size configuration
-        this.renderSize = null;  // { width: number, height: number } - if set, use exact dimensions
-        
+        this.renderSize = null; // { width: number, height: number } - if set, use exact dimensions
+
         // Resize callbacks
         this.resizeCallbacks = [];
-        
+
         // Bind resize handler
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
-        
+
         // Initial resize
         this.resize();
     }
@@ -80,11 +80,11 @@ class CanvasManager {
             // Use exact render dimensions
             this.width = this.renderSize.width;
             this.height = this.renderSize.height;
-            
+
             // Set actual canvas buffer size (no DPR scaling for fixed render size)
             this.canvas.width = this.width;
             this.canvas.height = this.height;
-            
+
             // No DPR scaling needed for fixed render size
             // The browser will handle the scaling automatically
         } else if (this.canvas.hasAttribute('width') && this.canvas.hasAttribute('height')) {
@@ -99,7 +99,7 @@ class CanvasManager {
 
             // If attribute dimensions are significantly larger than CSS dimensions,
             // assume they're DPR-scaled and we need context scaling
-            const isDprScaled = (attrWidth > cssWidth * 1.5) || (attrHeight > cssHeight * 1.5);
+            const isDprScaled = attrWidth > cssWidth * 1.5 || attrHeight > cssHeight * 1.5;
 
             if (isDprScaled) {
                 // Attributes contain DPR-scaled buffer dimensions
@@ -145,15 +145,15 @@ class CanvasManager {
             // Scale the drawing context for high-DPI rendering
             this.ctx.scale(this.dpr, this.dpr);
         }
-        
+
         // Update center coordinates
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
-        
+
         //     dpr: this.dpr,
         //     center: { x: this.centerX, y: this.centerY }
         // });
-        
+
         // Trigger resize callbacks
         this.resizeCallbacks.forEach(callback => {
             try {
@@ -163,7 +163,7 @@ class CanvasManager {
             }
         });
     }
-    
+
     /**
      * Register a callback to be called on canvas resize
      * @param {Function} callback - Function to call with (width, height, dpr) parameters
@@ -209,14 +209,14 @@ class CanvasManager {
     getCenter() {
         return {
             x: this.centerX,
-            y: this.centerY
+            y: this.centerY,
         };
     }
 
     /**
      * Sets transform for drawing operations
      * @param {number} x - X translation
-     * @param {number} y - Y translation  
+     * @param {number} y - Y translation
      * @param {number} scale - Scale factor
      * @param {number} rotation - Rotation in radians
      */
@@ -249,7 +249,7 @@ class CanvasManager {
     getDimensions() {
         return {
             width: this.width,
-            height: this.height
+            height: this.height,
         };
     }
 

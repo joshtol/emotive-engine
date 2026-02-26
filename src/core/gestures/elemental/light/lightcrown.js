@@ -45,8 +45,8 @@ const LIGHTCROWN_CONFIG = {
             orientation: 'flat',
             bob: {
                 amplitude: 0.02,
-                frequency: 0.3
-            }
+                frequency: 0.3,
+            },
         },
         count: 1,
         scale: 1.0,
@@ -62,14 +62,16 @@ const LIGHTCROWN_CONFIG = {
             emissive: { min: 1.2, max: 2.0, frequency: 1.5, pattern: 'sine' },
             rotate: { axis: 'z', rotations: 0.5, phase: 0 },
             // Golden firefly motes drifting up from the crown
-            atmospherics: [{
-                preset: 'firefly',
-                targets: ['light-crown'],
-                anchor: 'above',
-                intensity: 0.4,
-                sizeScale: 0.6,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: ['light-crown'],
+                    anchor: 'above',
+                    intensity: 0.4,
+                    sizeScale: 0.6,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'additive',
@@ -77,15 +79,15 @@ const LIGHTCROWN_CONFIG = {
             modelOverrides: {
                 'light-crown': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
+                        type: 1, // ROTATING_ARC
                         arcWidth: 0.7,
                         arcSpeed: 0.6,
-                        arcCount: 3
+                        arcCount: 3,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
@@ -96,7 +98,7 @@ const LIGHTCROWN_CONFIG = {
     scaleVibration: 0.008,
     scaleFrequency: 2,
     scalePulse: true,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildLightEffectGesture(LIGHTCROWN_CONFIG);

@@ -61,13 +61,10 @@ export class ThreatLevelCalculator {
         const distance = this.calculateDistance(mousePos, { x: centerX, y: centerY });
 
         // Maximum distance for threat calculation (canvas diagonal / 3)
-        const maxDist = Math.min(
-            this.canvasManager.width,
-            this.canvasManager.height
-        ) / 2;
+        const maxDist = Math.min(this.canvasManager.width, this.canvasManager.height) / 2;
 
         // Closer = higher threat (inverted distance)
-        return Math.max(0, Math.min(1, 1 - (distance / maxDist)));
+        return Math.max(0, Math.min(1, 1 - distance / maxDist));
     }
 
     /**
@@ -77,9 +74,6 @@ export class ThreatLevelCalculator {
      * @returns {number} Distance between points
      */
     calculateDistance(p1, p2) {
-        return Math.sqrt(
-            Math.pow(p1.x - p2.x, 2) +
-            Math.pow(p1.y - p2.y, 2)
-        );
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }
 }

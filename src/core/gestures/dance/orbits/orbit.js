@@ -28,64 +28,64 @@ export default {
 
     // Default configuration
     config: {
-        speed: 0.02,              // Orbital rotation speed
-        maintainRadius: true,     // Keep constant orbit radius
-        elliptical: false,        // Use circular orbit
-        use3D: true,              // Enable z-coordinate animation
-        zPhaseOffset: 0,          // Phase offset for z-oscillation
-        verticalOscillation: 0,   // Vertical movement for hula-hoop effect
-        duration: 3000,           // Legacy fallback
+        speed: 0.02, // Orbital rotation speed
+        maintainRadius: true, // Keep constant orbit radius
+        elliptical: false, // Use circular orbit
+        use3D: true, // Enable z-coordinate animation
+        zPhaseOffset: 0, // Phase offset for z-oscillation
+        verticalOscillation: 0, // Vertical movement for hula-hoop effect
+        duration: 3000, // Legacy fallback
         musicalDuration: { musical: true, bars: 2 }, // 2 bars (8 beats)
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'orbit',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     // Rhythm configuration - orbital paths sync to harmony
     rhythm: {
         enabled: true,
-        syncMode: 'harmonic',  // Orbit follows harmonic intervals
+        syncMode: 'harmonic', // Orbit follows harmonic intervals
         durationSync: { mode: 'bars', bars: 2 }, // 2 bars duration
 
         // Speed based on harmonic ratios
         speedSync: {
-            tonic: 0.02,              // Base orbit speed
-            fifth: 0.03,              // 3:2 ratio (perfect fifth)
-            octave: 0.04,             // 2:1 ratio (octave)
-            third: 0.025,             // 5:4 ratio (major third)
-            curve: 'smooth'           // Smooth transitions
+            tonic: 0.02, // Base orbit speed
+            fifth: 0.03, // 3:2 ratio (perfect fifth)
+            octave: 0.04, // 2:1 ratio (octave)
+            third: 0.025, // 5:4 ratio (major third)
+            curve: 'smooth', // Smooth transitions
         },
 
         // Orbital layers by pitch
         radiusSync: {
-            bass: 150,                // Outer orbit for low notes
-            mid: 100,                 // Middle orbit for mids
-            treble: 50,               // Inner orbit for highs
-            scaling: 'logarithmic'    // Natural pitch scaling
+            bass: 150, // Outer orbit for low notes
+            mid: 100, // Middle orbit for mids
+            treble: 50, // Inner orbit for highs
+            scaling: 'logarithmic', // Natural pitch scaling
         },
 
         // 3D depth syncs to chord progression
         depthSync: {
-            major: { z: 1.0, phase: 0 },        // Front-facing for major
+            major: { z: 1.0, phase: 0 }, // Front-facing for major
             minor: { z: -1.0, phase: Math.PI }, // Back-facing for minor
-            diminished: { z: 0.5, phase: Math.PI/2 }, // Side angle
-            augmented: { z: 0.8, phase: -Math.PI/2 }  // Other side
+            diminished: { z: 0.5, phase: Math.PI / 2 }, // Side angle
+            augmented: { z: 0.8, phase: -Math.PI / 2 }, // Other side
         },
 
         // Phase relationships
         phaseSync: {
-            mode: 'harmonic',         // Particles phase-lock harmonically
-            intervals: [1, 1.5, 2],   // Unison, fifth, octave
-            drift: 0.05               // Slight phase drift for organic feel
+            mode: 'harmonic', // Particles phase-lock harmonically
+            intervals: [1, 1.5, 2], // Unison, fifth, octave
+            drift: 0.05, // Slight phase drift for organic feel
         },
 
         // Musical dynamics
         dynamics: {
             forte: { speed: 0.04, maintainRadius: false }, // Chaotic orbits
-            piano: { speed: 0.01, maintainRadius: true }   // Stable orbits
-        }
+            piano: { speed: 0.01, maintainRadius: true }, // Stable orbits
+        },
     },
 
     initialize(particle, motion, centerX, centerY) {
@@ -104,7 +104,8 @@ export default {
         const MIN_RADIUS = 100;
         const radius = Math.max(calculatedRadius, MIN_RADIUS + Math.random() * 180);
 
-        const initialAngle = calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
+        const initialAngle =
+            calculatedRadius < 5 ? Math.random() * Math.PI * 2 : Math.atan2(dy, dx);
         particle.gestureData.orbit = {
             radius,
             targetRadius: radius,
@@ -114,7 +115,7 @@ export default {
             originalVy: particle.vy,
             originalZ: particle.z || 0,
             zPhase: Math.random() * Math.PI * 2,
-            direction
+            direction,
         };
     },
 
@@ -130,7 +131,7 @@ export default {
         data.angle += speed * dt * data.direction;
 
         // Use the stored radius (which has minimum enforced)
-        let {radius} = data;
+        let { radius } = data;
 
         if (!motion.maintainRadius) {
             // Allow radius to vary slightly for organic motion
@@ -185,7 +186,7 @@ export default {
                 return {
                     position: [0, 0, 0],
                     rotation: [0, 0, 0],
-                    scale: 1.0
+                    scale: 1.0,
                 };
             }
 
@@ -201,7 +202,7 @@ export default {
 
             // Orbital motion in XZ plane
             const orbitRadius = 0.3;
-            const angle = data.initialAngle + (progress * Math.PI * 2 * data.direction);
+            const angle = data.initialAngle + progress * Math.PI * 2 * data.direction;
 
             const xOffset = Math.cos(angle) * orbitRadius * envelope;
             const zOffset = Math.sin(angle) * orbitRadius * envelope;
@@ -212,7 +213,7 @@ export default {
 
             // Depth variation from particle.z
             const depthZ = particle.z || 0;
-            const finalZ = zOffset + (depthZ * 0.1 * envelope);
+            const finalZ = zOffset + depthZ * 0.1 * envelope;
 
             // Scale based on depth
             const depthScale = 1.0 + depthZ * 0.15 * envelope;
@@ -220,8 +221,8 @@ export default {
             return {
                 position: [xOffset, 0, finalZ],
                 rotation: [0, yRotation, 0],
-                scale: depthScale
+                scale: depthScale,
             };
-        }
-    }
+        },
+    },
 };

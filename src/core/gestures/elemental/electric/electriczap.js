@@ -53,7 +53,7 @@ const ELECTRICZAP_CONFIG = {
                 endScale: 1.6,
                 startDiameter: 0.8,
                 endDiameter: 1.0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'spiral',
@@ -61,7 +61,7 @@ const ELECTRICZAP_CONFIG = {
                 strands: 1,
                 spacing: 0,
                 arcOffset: 0,
-                phaseOffset: 0
+                phaseOffset: 0,
             },
             count: 1,
             scale: 1.5,
@@ -80,26 +80,28 @@ const ELECTRICZAP_CONFIG = {
                     blend: 'multiply',
                     travel: 'vertical',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: { type: 3, strength: 0.12, scale: 0.25, speed: 2.0, blend: 'multiply' },
                 // Per-gesture atmospheric particles: ionized air from zap
-                atmospherics: [{
-                    preset: 'ozone',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.5,
-                    sizeScale: 1.2,
-                    progressCurve: 'pulse',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'ozone',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.5,
+                        sizeScale: 1.2,
+                        progressCurve: 'pulse',
+                    },
+                ],
                 flash: {
                     events: [
-                        { at: 0.10, intensity: 2.5 },
-                        { at: 0.30, intensity: 4.0 },
-                        { at: 0.50, intensity: 5.0 },
-                        { at: 0.68, intensity: 3.0 }
+                        { at: 0.1, intensity: 2.5 },
+                        { at: 0.3, intensity: 4.0 },
+                        { at: 0.5, intensity: 5.0 },
+                        { at: 0.68, intensity: 3.0 },
                     ],
-                    decay: 0.02
+                    decay: 0.02,
                 },
                 rotate: { axis: 'y', rotations: 1.5, phase: 0 },
                 blending: 'additive',
@@ -107,10 +109,10 @@ const ELECTRICZAP_CONFIG = {
                 modelOverrides: {
                     'arc-medium': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -125,7 +127,7 @@ const ELECTRICZAP_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 1.6,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.8,
@@ -136,17 +138,22 @@ const ELECTRICZAP_CONFIG = {
                 enter: { type: 'scale', duration: 0.05, easing: 'easeOutBack' },
                 exit: { type: 'burst-fade', duration: 0.15, easing: 'easeIn', burstScale: 1.2 },
                 flicker: { intensity: 0.3, rate: 14, pattern: 'random' },
-                drift: { speed: 1.2, distance: 1.0, direction: { x: -1.0, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
+                drift: {
+                    speed: 1.2,
+                    distance: 1.0,
+                    direction: { x: -1.0, y: 0.5, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: -0.25, phase: 0 },
                 blending: 'additive',
                 renderOrder: 12,
                 modelOverrides: {
                     'spark-spike': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -160,7 +167,7 @@ const ELECTRICZAP_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 1.6,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.8,
@@ -171,17 +178,22 @@ const ELECTRICZAP_CONFIG = {
                 enter: { type: 'scale', duration: 0.05, easing: 'easeOutBack' },
                 exit: { type: 'burst-fade', duration: 0.15, easing: 'easeIn', burstScale: 1.2 },
                 flicker: { intensity: 0.3, rate: 14, pattern: 'random' },
-                drift: { speed: 1.2, distance: 1.0, direction: { x: 1.0, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
+                drift: {
+                    speed: 1.2,
+                    distance: 1.0,
+                    direction: { x: 1.0, y: 0.5, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: 0.25, phase: 0 },
                 blending: 'additive',
                 renderOrder: 12,
                 modelOverrides: {
                     'spark-spike': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -199,7 +211,7 @@ const ELECTRICZAP_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 0.8,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 2,
             scale: 0.6,
@@ -217,11 +229,11 @@ const ELECTRICZAP_CONFIG = {
                 modelOverrides: {
                     'arc-small': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     jitterFrequency: 8,
@@ -235,7 +247,7 @@ const ELECTRICZAP_CONFIG = {
     scaleFrequency: 4,
     scaleGrowth: 0.03,
     scalePulse: true,
-    riseAmount: 0.02
+    riseAmount: 0.02,
 };
 
 export default buildElectricEffectGesture(ELECTRICZAP_CONFIG);

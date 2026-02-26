@@ -38,9 +38,9 @@ export class LunarEclipse {
 
         // Blood Moon colors (based on real lunar eclipse photography)
         this.bloodMoonColor = {
-            r: 0.85,  // Very high red for deep blood moon
-            g: 0.18,  // Low green for reddish-orange
-            b: 0.08   // Very minimal blue for saturation
+            r: 0.85, // Very high red for deep blood moon
+            g: 0.18, // Low green for reddish-orange
+            b: 0.08, // Very minimal blue for saturation
         };
 
         // Eclipse timing (smooth, slow animation like real eclipse)
@@ -49,8 +49,8 @@ export class LunarEclipse {
 
         // Shadow animation state
         this.shadowX = -2.0; // Start off-screen left
-        this.shadowY = 0.0;  // Centered vertically
-        this.shadowRadius = 0.70; // Shadow size (Earth's umbra)
+        this.shadowY = 0.0; // Centered vertically
+        this.shadowRadius = 0.7; // Shadow size (Earth's umbra)
         this.targetShadowX = -2.0;
         this.shadowSpeed = 1.0; // Shadow movement speed multiplier
 
@@ -65,7 +65,7 @@ export class LunarEclipse {
             this.material.uniforms.eclipseProgress = { value: 0.0 };
             this.material.uniforms.eclipseIntensity = { value: 0.0 };
             this.material.uniforms.bloodMoonColor = {
-                value: [this.bloodMoonColor.r, this.bloodMoonColor.g, this.bloodMoonColor.b]
+                value: [this.bloodMoonColor.r, this.bloodMoonColor.g, this.bloodMoonColor.b],
             };
             this.material.uniforms.eclipseShadowPos = { value: [this.shadowX, this.shadowY] };
             this.material.uniforms.eclipseShadowRadius = { value: this.shadowRadius };
@@ -92,39 +92,38 @@ export class LunarEclipse {
         // Set target progress, shadow position, and visual parameters based on type
         // Each eclipse type has specific emissive (glow) and darkness settings
         switch (type) {
-        case 'off':
-            this.targetProgress = 0.0;
-            this.targetShadowX = 2.0; // Move shadow off-screen right (continue east, realistic exit)
-            this.targetEmissive = 0.0;
-            this.targetDarkness = 1.0;
-            break;
-        case 'penumbral':
-            this.targetProgress = 0.3; // 30% coverage (subtle darkening)
-            this.targetShadowX = -1.0; // Shadow edge just touching moon
-            this.targetEmissive = 0.05; // Very subtle glow
-            this.targetDarkness = 0.85; // Mild darkening
-            break;
-        case 'partial':
-            this.targetProgress = 0.65; // 65% coverage (edge of umbra)
-            this.targetShadowX = -0.4; // Shadow covering ~half of moon
-            this.targetEmissive = 0.20; // Moderate glow on shadowed portion
-            this.targetDarkness = 0.70; // Moderate darkening
-            break;
-        case 'total':
-            this.targetProgress = 1.0; // 100% coverage (full blood moon)
-            this.targetShadowX = 0.0;  // Shadow centered on moon
-            this.targetEmissive = 0.39; // Strong blood moon glow
-            this.targetDarkness = 0.53; // Less darkening so glow is visible
-            break;
-        default:
-            console.warn(`Unknown lunar eclipse type: ${type}`);
-            return;
+            case 'off':
+                this.targetProgress = 0.0;
+                this.targetShadowX = 2.0; // Move shadow off-screen right (continue east, realistic exit)
+                this.targetEmissive = 0.0;
+                this.targetDarkness = 1.0;
+                break;
+            case 'penumbral':
+                this.targetProgress = 0.3; // 30% coverage (subtle darkening)
+                this.targetShadowX = -1.0; // Shadow edge just touching moon
+                this.targetEmissive = 0.05; // Very subtle glow
+                this.targetDarkness = 0.85; // Mild darkening
+                break;
+            case 'partial':
+                this.targetProgress = 0.65; // 65% coverage (edge of umbra)
+                this.targetShadowX = -0.4; // Shadow covering ~half of moon
+                this.targetEmissive = 0.2; // Moderate glow on shadowed portion
+                this.targetDarkness = 0.7; // Moderate darkening
+                break;
+            case 'total':
+                this.targetProgress = 1.0; // 100% coverage (full blood moon)
+                this.targetShadowX = 0.0; // Shadow centered on moon
+                this.targetEmissive = 0.39; // Strong blood moon glow
+                this.targetDarkness = 0.53; // Less darkening so glow is visible
+                break;
+            default:
+                console.warn(`Unknown lunar eclipse type: ${type}`);
+                return;
         }
 
         // Start animation
         this.animating = true;
         this.startTime = performance.now();
-
     }
 
     /**
@@ -145,11 +144,14 @@ export class LunarEclipse {
         this.progress = this.progress + (this.targetProgress - this.progress) * eased;
 
         // Interpolate shadow position (animate shadow sweep)
-        this.shadowX = this.shadowX + (this.targetShadowX - this.shadowX) * eased * this.shadowSpeed;
+        this.shadowX =
+            this.shadowX + (this.targetShadowX - this.shadowX) * eased * this.shadowSpeed;
 
         // Interpolate visual parameters
-        this.emissiveStrength = this.emissiveStrength + (this.targetEmissive - this.emissiveStrength) * eased;
-        this.shadowDarkness = this.shadowDarkness + (this.targetDarkness - this.shadowDarkness) * eased;
+        this.emissiveStrength =
+            this.emissiveStrength + (this.targetEmissive - this.emissiveStrength) * eased;
+        this.shadowDarkness =
+            this.shadowDarkness + (this.targetDarkness - this.shadowDarkness) * eased;
 
         // Update shader uniforms
         this.material.uniforms.eclipseProgress.value = this.progress;
@@ -169,9 +171,9 @@ export class LunarEclipse {
         // Penumbral: subtle darkening only
         let intensity = 0.0;
         if (this.eclipseType === 'total') {
-            intensity = this.progress;  // Full darkening at totality
+            intensity = this.progress; // Full darkening at totality
         } else if (this.eclipseType === 'partial') {
-            intensity = this.progress * 0.6;  // Moderate darkening
+            intensity = this.progress * 0.6; // Moderate darkening
         } else if (this.eclipseType === 'penumbral') {
             intensity = this.progress * 0.25; // Subtle darkening
         }

@@ -10,6 +10,27 @@
 
 </div>
 
+## Table of Contents
+
+- [Quick Start](#30-second-quick-start)
+- [Features](#features)
+- [Demo Gallery](#demo-gallery)
+- [Installation](#installation)
+- [LLM Integration with feel()](#llm-integration-with-feel)
+- [Emotions](#emotions)
+- [Gestures](#gestures)
+- [3D Geometries](#3d-geometries)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+- [Running Locally](#running-locally)
+- [Browser Support](#browser-support)
+- [Multi-Instance Support](#multi-instance-support)
+- [Server-Side Rendering (SSR)](#server-side-rendering-ssr)
+- [Performance Tips](#performance-tips)
+- [License](#license)
+
+---
+
 ## 30-Second Quick Start
 
 ```javascript

@@ -52,10 +52,7 @@ export class RotationBrake {
      */
     brakeToTarget(targetAngle, options = {}) {
         return new Promise(resolve => {
-            const {
-                onProgress = null,
-                onComplete = null
-            } = options;
+            const { onProgress = null, onComplete = null } = options;
 
             this.onProgress = onProgress;
             this.onComplete = onComplete;
@@ -78,9 +75,11 @@ export class RotationBrake {
             // Calculate the nearest upright target rotation
             if (targetAngle === 0) {
                 // Special case for upright
-                if (currentVelocity > 0) { // Spinning clockwise
+                if (currentVelocity > 0) {
+                    // Spinning clockwise
                     this.brakeTargetRotation = (Math.floor(rotation / 360) + 1) * 360;
-                } else { // Spinning counter-clockwise
+                } else {
+                    // Spinning counter-clockwise
                     this.brakeTargetRotation = Math.floor(rotation / 360) * 360;
                 }
             } else {
@@ -89,13 +88,13 @@ export class RotationBrake {
                 const baseCycles = Math.floor(rotation / 360);
 
                 if (currentVelocity > 0) {
-                    if (normalizedTarget > (rotation % 360)) {
+                    if (normalizedTarget > rotation % 360) {
                         this.brakeTargetRotation = baseCycles * 360 + normalizedTarget;
                     } else {
                         this.brakeTargetRotation = (baseCycles + 1) * 360 + normalizedTarget;
                     }
                 } else {
-                    if (normalizedTarget < (rotation % 360)) {
+                    if (normalizedTarget < rotation % 360) {
                         this.brakeTargetRotation = baseCycles * 360 + normalizedTarget;
                     } else {
                         this.brakeTargetRotation = (baseCycles - 1) * 360 + normalizedTarget;
@@ -105,7 +104,10 @@ export class RotationBrake {
 
             // DYNAMIC DURATION CALCULATION - EXACTLY like the demo
             const angleToTravel = Math.abs(this.brakeTargetRotation - this.brakeStartRotation);
-            this.brakeDuration = Math.max(500, (angleToTravel / Math.abs(currentVelocity)) * this.DURATION_FACTOR * 5);
+            this.brakeDuration = Math.max(
+                500,
+                (angleToTravel / Math.abs(currentVelocity)) * this.DURATION_FACTOR * 5
+            );
 
             // Stop adding velocity immediately
             this.renderer.setRotationSpeed(0);
@@ -131,7 +133,8 @@ export class RotationBrake {
         const easedProgress = 1 - Math.pow(1 - progress, 4);
 
         // Calculate new rotation based on eased progress
-        const rotation = this.brakeStartRotation +
+        const rotation =
+            this.brakeStartRotation +
             (this.brakeTargetRotation - this.brakeStartRotation) * easedProgress;
 
         // Calculate virtual speed for UI (decreases with progress)
@@ -152,7 +155,7 @@ export class RotationBrake {
             return {
                 rotation: this.brakeTargetRotation,
                 speed: 0,
-                complete: true
+                complete: true,
             };
         }
 
@@ -160,7 +163,7 @@ export class RotationBrake {
         return {
             rotation,
             speed: virtualSpeed,
-            complete: false
+            complete: false,
         };
     }
 

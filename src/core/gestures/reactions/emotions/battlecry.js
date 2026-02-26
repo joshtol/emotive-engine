@@ -36,8 +36,8 @@ export default {
         strength: 1.0,
         particleMotion: {
             type: 'battlecry',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     '3d': {
@@ -63,8 +63,10 @@ export default {
             // Phase 3 (0.4-0.6): CRY - thrust forward, maximum
             // Phase 4 (0.6-1.0): Sustain and fade
 
-            let posY = 0, posZ = 0;
-            let rotX = 0, rotZ = 0;
+            let posY = 0,
+                posZ = 0;
+            let rotX = 0,
+                rotZ = 0;
             let scale = 1.0;
             let glowIntensity = 1.0;
             let glowBoost = 0;
@@ -86,7 +88,6 @@ export default {
 
                 // Building glow
                 glowIntensity = 1.0 + inhaleEase * 0.4;
-
             } else if (progress < 0.4) {
                 // Phase 2: Build - maximum gather
                 const buildT = (progress - 0.25) / 0.15;
@@ -105,7 +106,6 @@ export default {
                 // Bright before release
                 glowIntensity = 1.4 + buildEase * 0.5;
                 glowBoost = buildEase * 0.4;
-
             } else if (progress < 0.6) {
                 // Phase 3: THE CRY - explosive release
                 const cryT = (progress - 0.4) / 0.2;
@@ -128,13 +128,11 @@ export default {
                 // Vibration during cry
                 const vib = Math.sin(cryT * Math.PI * 20) * (1 - cryT) * 0.02;
                 rotZ = vib * strength;
-
             } else {
                 // Phase 4: Sustain and fade
                 const fadeT = (progress - 0.6) / 0.4;
-                const fadeEase = fadeT < 0.5
-                    ? 2 * fadeT * fadeT
-                    : 1 - Math.pow(-2 * fadeT + 2, 2) / 2;
+                const fadeEase =
+                    fadeT < 0.5 ? 2 * fadeT * fadeT : 1 - Math.pow(-2 * fadeT + 2, 2) / 2;
 
                 // Return to neutral
                 posZ = -0.1 * (1 - fadeEase) * strength;
@@ -158,8 +156,8 @@ export default {
                 rotation: [rotX, 0, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

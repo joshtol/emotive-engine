@@ -19,13 +19,13 @@ export class FeatureFlags {
             attributes: options.attributes || {},
             enableAnalytics: options.enableAnalytics !== false,
             enableCache: options.enableCache !== false,
-            defaultFlags: options.defaultFlags || {}
+            defaultFlags: options.defaultFlags || {},
         };
 
         this.callbacks = {
             onFlagChange: options.onFlagChange || null,
             onEvaluation: options.onEvaluation || null,
-            onError: options.onError || null
+            onError: options.onError || null,
         };
 
         this.refreshTimer = null;
@@ -103,7 +103,7 @@ export class FeatureFlags {
             animationSpeed: { enabled: true, variant: 'normal' },
             particleDensity: { enabled: true, variant: 'medium' },
 
-            ...this.config.defaultFlags
+            ...this.config.defaultFlags,
         };
 
         for (const [key, value] of Object.entries(defaults)) {
@@ -118,13 +118,13 @@ export class FeatureFlags {
             const response = await fetch(this.config.endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     userId: this.config.userId,
                     attributes: this.config.attributes,
-                    flags: Array.from(this.flags.keys())
-                })
+                    flags: Array.from(this.flags.keys()),
+                }),
             });
 
             if (!response.ok) {
@@ -199,11 +199,7 @@ export class FeatureFlags {
     }
 
     evaluate(flagKey, options = {}) {
-        const {
-            defaultEnabled = false,
-            defaultVariant = 'default',
-            attributes = {}
-        } = options;
+        const { defaultEnabled = false, defaultVariant = 'default', attributes = {} } = options;
 
         // Merge attributes
         const evalAttributes = { ...this.config.attributes, ...attributes };
@@ -216,7 +212,7 @@ export class FeatureFlags {
                 if (this.evaluateRule(rule, evalAttributes)) {
                     const result = {
                         enabled: rule.enabled !== undefined ? rule.enabled : flag.enabled,
-                        variant: rule.variant || flag.variant
+                        variant: rule.variant || flag.variant,
                     };
 
                     this.trackEvaluation(flagKey, result.enabled, result.variant);
@@ -228,7 +224,7 @@ export class FeatureFlags {
         // Default evaluation
         const result = {
             enabled: this.isEnabled(flagKey, defaultEnabled),
-            variant: this.getVariant(flagKey, defaultVariant)
+            variant: this.getVariant(flagKey, defaultVariant),
         };
 
         return result;
@@ -251,26 +247,26 @@ export class FeatureFlags {
         const attrValue = attributes[attribute];
 
         switch (operator) {
-        case 'equals':
-            return attrValue === value;
-        case 'not_equals':
-            return attrValue !== value;
-        case 'contains':
-            return String(attrValue).includes(value);
-        case 'not_contains':
-            return !String(attrValue).includes(value);
-        case 'greater_than':
-            return Number(attrValue) > Number(value);
-        case 'less_than':
-            return Number(attrValue) < Number(value);
-        case 'in':
-            return value.includes(attrValue);
-        case 'not_in':
-            return !value.includes(attrValue);
-        case 'matches':
-            return new RegExp(value).test(String(attrValue));
-        default:
-            return false;
+            case 'equals':
+                return attrValue === value;
+            case 'not_equals':
+                return attrValue !== value;
+            case 'contains':
+                return String(attrValue).includes(value);
+            case 'not_contains':
+                return !String(attrValue).includes(value);
+            case 'greater_than':
+                return Number(attrValue) > Number(value);
+            case 'less_than':
+                return Number(attrValue) < Number(value);
+            case 'in':
+                return value.includes(attrValue);
+            case 'not_in':
+                return !value.includes(attrValue);
+            case 'matches':
+                return new RegExp(value).test(String(attrValue));
+            default:
+                return false;
         }
     }
 
@@ -283,7 +279,7 @@ export class FeatureFlags {
             variant,
             timestamp: Date.now(),
             userId: this.config.userId,
-            attributes: this.config.attributes
+            attributes: this.config.attributes,
         };
 
         // Track locally
@@ -322,7 +318,7 @@ export class FeatureFlags {
         for (const [key, value] of this.flags) {
             result[key] = {
                 ...value,
-                overridden: this.overrides.has(key)
+                overridden: this.overrides.has(key),
             };
         }
 
@@ -351,7 +347,7 @@ export class FeatureFlags {
             const data = {
                 flags: Object.fromEntries(this.flags),
                 timestamp: Date.now(),
-                userId: this.config.userId
+                userId: this.config.userId,
             };
 
             storage.setItem(this.config.storageKey, JSON.stringify(data));
@@ -431,8 +427,8 @@ export class FeatureFlags {
             summary: {
                 total: 0,
                 byFlag: {},
-                byVariant: {}
-            }
+                byVariant: {},
+            },
         };
 
         for (const [flagKey, evals] of this.evaluations) {
@@ -442,7 +438,7 @@ export class FeatureFlags {
             analytics.summary.byFlag[flagKey] = {
                 count: evals.length,
                 enabled: evals.filter(e => e.enabled).length,
-                variants: {}
+                variants: {},
             };
 
             for (const evaluation of evals) {
@@ -480,7 +476,7 @@ export class FeatureFlags {
 export const featureFlags = new FeatureFlags({
     endpoint: null, // Disable auto-fetch to prevent 404 errors
     enableCache: true,
-    enableAnalytics: false // Disable analytics since we're not fetching
+    enableAnalytics: false, // Disable analytics since we're not fetching
 });
 
 // Helper functions

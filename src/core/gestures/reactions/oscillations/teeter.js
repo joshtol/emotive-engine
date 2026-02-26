@@ -31,21 +31,21 @@ export default {
     config: {
         duration: 1200,
         musicalDuration: { musical: true, beats: 3 },
-        tiltAngle: 0.25,      // Max tilt angle
-        frequency: 3,         // Rocks per gesture
-        irregularity: 0.3,    // How irregular the rocking is
+        tiltAngle: 0.25, // Max tilt angle
+        frequency: 3, // Rocks per gesture
+        irregularity: 0.3, // How irregular the rocking is
         strength: 1.0,
         particleMotion: {
             type: 'teeter',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'beats', beats: 3 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -68,7 +68,8 @@ export default {
             const rotX = normalizedRock * tiltAngle * strength * 0.7;
 
             // Side-to-side tilt (slightly different phase)
-            const rotZ = Math.sin(progress * frequency * Math.PI * 2 + 0.5) * tiltAngle * strength * 0.5;
+            const rotZ =
+                Math.sin(progress * frequency * Math.PI * 2 + 0.5) * tiltAngle * strength * 0.5;
 
             // Position wobble
             const xOffset = rotZ * 0.15;
@@ -86,8 +87,8 @@ export default {
                 rotation: [rotX, 0, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

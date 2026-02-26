@@ -64,13 +64,13 @@ export function resetMoon(material) {
 
     // Eclipse color grading
     if (u.eclipseShadowColor) {
-        u.eclipseShadowColor.value = [1.00, 0.58, 0.00];
+        u.eclipseShadowColor.value = [1.0, 0.58, 0.0];
     }
     if (u.eclipseMidtoneColor) {
         u.eclipseMidtoneColor.value = [0.71, 0.43, 0.03];
     }
     if (u.eclipseHighlightColor) {
-        u.eclipseHighlightColor.value = [1.00, 0.28, 0.10];
+        u.eclipseHighlightColor.value = [1.0, 0.28, 0.1];
     }
     if (u.eclipseGlowColor) {
         u.eclipseGlowColor.value = [0.09, 0.09, 0.09];
@@ -80,15 +80,15 @@ export function resetMoon(material) {
     }
 
     // Blend layers - reset to calibrated defaults
-    if (u.layer1Mode) u.layer1Mode.value = 9.0;  // Vivid Light
+    if (u.layer1Mode) u.layer1Mode.value = 9.0; // Vivid Light
     if (u.layer1Strength) u.layer1Strength.value = 0.322;
     if (u.layer1Enabled) u.layer1Enabled.value = 1.0;
 
-    if (u.layer2Mode) u.layer2Mode.value = 0.0;  // Multiply
+    if (u.layer2Mode) u.layer2Mode.value = 0.0; // Multiply
     if (u.layer2Strength) u.layer2Strength.value = 2.785;
     if (u.layer2Enabled) u.layer2Enabled.value = 1.0;
 
-    if (u.layer3Mode) u.layer3Mode.value = 7.0;  // Overlay
+    if (u.layer3Mode) u.layer3Mode.value = 7.0; // Overlay
     if (u.layer3Strength) u.layer3Strength.value = 0.199;
     if (u.layer3Enabled) u.layer3Enabled.value = 1.0;
 
@@ -100,7 +100,6 @@ export function resetMoon(material) {
     if (u.opacity) {
         u.opacity.value = 1.0;
     }
-
 }
 
 /**
@@ -121,18 +120,18 @@ export function resetSun(material) {
         u.eclipseProgress.value = 0.0;
     }
     if (u.eclipseShadowPos) {
-        u.eclipseShadowPos.value = [-2.0, 0.0];  // Off-screen
+        u.eclipseShadowPos.value = [-2.0, 0.0]; // Off-screen
     }
     if (u.eclipseShadowRadius) {
         u.eclipseShadowRadius.value = 0.882;
     }
     if (u.shadowDarkness) {
-        u.shadowDarkness.value = 1.0;  // Sun shadow is always 100%
+        u.shadowDarkness.value = 1.0; // Sun shadow is always 100%
     }
 
     // Standard shadow (legacy/fallback)
     if (u.shadowOffset) {
-        u.shadowOffset.value.set(200.0, 0.0);  // Far off-screen
+        u.shadowOffset.value.set(200.0, 0.0); // Far off-screen
     }
     if (u.shadowCoverage) {
         u.shadowCoverage.value = 0.5;
@@ -142,8 +141,8 @@ export function resetSun(material) {
     }
 
     // Blend layers - reset to sun defaults
-    if (u.layer1Mode) u.layer1Mode.value = 0.0;  // Multiply
-    if (u.layer1Strength) u.layer1Strength.value = 0.230;
+    if (u.layer1Mode) u.layer1Mode.value = 0.0; // Multiply
+    if (u.layer1Strength) u.layer1Strength.value = 0.23;
     if (u.layer1Enabled) u.layer1Enabled.value = 1.0;
 
     if (u.layer2Mode) u.layer2Mode.value = 0.0;
@@ -172,7 +171,6 @@ export function resetSun(material) {
     if (u.time) {
         u.time.value = 0;
     }
-
 }
 
 /**
@@ -233,7 +231,6 @@ export function resetCrystal(material) {
 
     // Reset time
     if (u.time) u.time.value = defaults.time;
-
 }
 
 /**
@@ -245,17 +242,17 @@ export function resetCrystal(material) {
  */
 export function resetGeometryState(geometryType, material) {
     switch (geometryType) {
-    case 'moon':
-        resetMoon(material);
-        break;
-    case 'sun':
-        resetSun(material);
-        break;
-    case 'crystal':
-    case 'diamond':
-        resetCrystal(material);
-        break;
-    default:
+        case 'moon':
+            resetMoon(material);
+            break;
+        case 'sun':
+            resetSun(material);
+            break;
+        case 'crystal':
+        case 'diamond':
+            resetCrystal(material);
+            break;
+        default:
     }
 }
 
@@ -268,26 +265,26 @@ export function resetGeometryState(geometryType, material) {
  */
 export function getDefaultState(geometryType) {
     switch (geometryType) {
-    case 'moon':
-        return {
-            shadowOffset: { x: MOON_PHASES['full'].x, y: MOON_PHASES['full'].y },
-            eclipseProgress: 0.0,
-            eclipseIntensity: 0.0,
-            bloodMoonColor: [0.85, 0.18, 0.08],
-            blendMode: 0.0,
-            blendStrength: 2.0
-        };
-    case 'sun':
-        return {
-            eclipseProgress: 0.0,
-            eclipseShadowPos: [-2.0, 0.0],
-            shadowOffset: { x: 200.0, y: 0.0 }
-        };
-    case 'crystal':
-    case 'diamond':
-        return { ...CRYSTAL_DEFAULT_UNIFORMS };
-    default:
-        return null;
+        case 'moon':
+            return {
+                shadowOffset: { x: MOON_PHASES['full'].x, y: MOON_PHASES['full'].y },
+                eclipseProgress: 0.0,
+                eclipseIntensity: 0.0,
+                bloodMoonColor: [0.85, 0.18, 0.08],
+                blendMode: 0.0,
+                blendStrength: 2.0,
+            };
+        case 'sun':
+            return {
+                eclipseProgress: 0.0,
+                eclipseShadowPos: [-2.0, 0.0],
+                shadowOffset: { x: 200.0, y: 0.0 },
+            };
+        case 'crystal':
+        case 'diamond':
+            return { ...CRYSTAL_DEFAULT_UNIFORMS };
+        default:
+            return null;
     }
 }
 
@@ -296,5 +293,5 @@ export default {
     resetSun,
     resetCrystal,
     resetGeometryState,
-    getDefaultState
+    getDefaultState,
 };

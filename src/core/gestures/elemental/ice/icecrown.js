@@ -57,8 +57,8 @@ const ICECROWN_CONFIG = {
             orientation: 'flat',
             bob: {
                 amplitude: 0.02,
-                frequency: 0.3
-            }
+                frequency: 0.3,
+            },
         },
         count: 1,
         scale: 1.0,
@@ -70,37 +70,39 @@ const ICECROWN_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.25,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.1,
-                geometryStability: true
+                geometryStability: true,
             },
             pulse: {
                 amplitude: 0.02,
                 frequency: 2,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             // Per-gesture atmospheric particles: cold mist below crown
-            atmospherics: [{
-                preset: 'mist',
-                targets: ['ice-crown'],
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: ['ice-crown'],
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                },
+            ],
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'normal',
-            renderOrder: 15
-        }
+            renderOrder: 15,
+        },
     },
 
     // Glow - constant, no flicker
@@ -115,7 +117,7 @@ const ICECROWN_CONFIG = {
     // No tremor
     tremor: 0,
     tremorFrequency: 0,
-    tremorDecay: 0
+    tremorDecay: 0,
 };
 
 /**

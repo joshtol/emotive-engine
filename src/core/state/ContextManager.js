@@ -22,10 +22,10 @@ export class ContextManager {
     constructor(options = {}) {
         // Current context state
         this.context = {
-            frustration: 0,              // 0-100 scale
-            urgency: 'medium',           // low | medium | high
-            magnitude: 'moderate',       // small | moderate | major | epic
-            customValues: {}             // User-defined context values
+            frustration: 0, // 0-100 scale
+            urgency: 'medium', // low | medium | high
+            magnitude: 'moderate', // small | moderate | major | epic
+            customValues: {}, // User-defined context values
         };
 
         // History tracking
@@ -85,7 +85,7 @@ export class ContextManager {
         if (updates.custom !== undefined) {
             this.context.customValues = {
                 ...this.context.customValues,
-                ...updates.custom
+                ...updates.custom,
             };
         }
 
@@ -147,8 +147,8 @@ export class ContextManager {
     setCustom(key, value) {
         this.update({
             custom: {
-                [key]: value
-            }
+                [key]: value,
+            },
         });
     }
 
@@ -190,9 +190,9 @@ export class ContextManager {
         // Urgency adjustment
         if (options.useUrgency !== false) {
             const urgencyBoost = {
-                'low': -0.1,
-                'medium': 0,
-                'high': 0.2
+                low: -0.1,
+                medium: 0,
+                high: 0.2,
             };
             intensity += urgencyBoost[this.context.urgency] || 0;
         }
@@ -200,10 +200,10 @@ export class ContextManager {
         // Magnitude adjustment
         if (options.useMagnitude !== false) {
             const magnitudeBoost = {
-                'small': -0.1,
-                'moderate': 0,
-                'major': 0.15,
-                'epic': 0.3
+                small: -0.1,
+                moderate: 0,
+                major: 0.15,
+                epic: 0.3,
             };
             intensity += magnitudeBoost[this.context.magnitude] || 0;
         }
@@ -233,8 +233,11 @@ export class ContextManager {
             delta: {
                 frustration: newContext.frustration - previousContext.frustration,
                 urgency: newContext.urgency !== previousContext.urgency ? newContext.urgency : null,
-                magnitude: newContext.magnitude !== previousContext.magnitude ? newContext.magnitude : null
-            }
+                magnitude:
+                    newContext.magnitude !== previousContext.magnitude
+                        ? newContext.magnitude
+                        : null,
+            },
         };
 
         this.history.push(entry);
@@ -271,7 +274,10 @@ export class ContextManager {
     startDecayTimer() {
         this.decayTimer = setInterval(() => {
             if (this.context.frustration > 0) {
-                const newFrustration = Math.max(0, this.context.frustration - this.frustrationDecayRate);
+                const newFrustration = Math.max(
+                    0,
+                    this.context.frustration - this.frustrationDecayRate
+                );
                 this.update({ frustration: newFrustration });
             }
         }, this.decayInterval);
@@ -306,7 +312,7 @@ export class ContextManager {
             frustration: 0,
             urgency: 'medium',
             magnitude: 'moderate',
-            customValues: {}
+            customValues: {},
         };
 
         if (this.enableHistory) {
@@ -324,7 +330,8 @@ export class ContextManager {
         }
 
         const frustrationLevels = this.history.map(h => h.current.frustration);
-        const avgFrustration = frustrationLevels.reduce((sum, val) => sum + val, 0) / frustrationLevels.length;
+        const avgFrustration =
+            frustrationLevels.reduce((sum, val) => sum + val, 0) / frustrationLevels.length;
         const maxFrustration = Math.max(...frustrationLevels);
         const minFrustration = Math.min(...frustrationLevels);
 
@@ -344,19 +351,19 @@ export class ContextManager {
                 current: this.context.frustration,
                 average: avgFrustration,
                 max: maxFrustration,
-                min: minFrustration
+                min: minFrustration,
             },
             urgency: {
                 current: this.context.urgency,
-                distribution: urgencyCounts
+                distribution: urgencyCounts,
             },
             magnitude: {
                 current: this.context.magnitude,
-                distribution: magnitudeCounts
+                distribution: magnitudeCounts,
             },
             historyLength: this.history.length,
             firstUpdate: this.history[0]?.timestamp,
-            lastUpdate: this.history[this.history.length - 1]?.timestamp
+            lastUpdate: this.history[this.history.length - 1]?.timestamp,
         };
     }
 

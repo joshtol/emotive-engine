@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Contract Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Contract gesture - particles move inward toward center
@@ -17,110 +17,110 @@ export default {
     emoji: '🌀',
     type: 'blending',
     description: 'Radial contraction toward center',
-    
+
     // Default configuration
     config: {
-        duration: 600,        // Gesture duration
-        scaleAmount: 0.2,     // Core scale reduction amount
-        scaleTarget: 0.2,     // Target contraction distance ratio
-        glowAmount: -0.2,     // Glow intensity reduction
-        easing: 'cubic',      // Smooth acceleration curve
-        strength: 2.5,        // Inward pull force intensity
+        duration: 600, // Gesture duration
+        scaleAmount: 0.2, // Core scale reduction amount
+        scaleTarget: 0.2, // Target contraction distance ratio
+        glowAmount: -0.2, // Glow intensity reduction
+        easing: 'cubic', // Smooth acceleration curve
+        strength: 2.5, // Inward pull force intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'pulse',
-            strength: 2.5,        // Particle pull strength
-            direction: 'inward',  // Movement toward center
-            persist: true         // Effect continues after gesture
-        }
+            strength: 2.5, // Particle pull strength
+            direction: 'inward', // Movement toward center
+            persist: true, // Effect continues after gesture
+        },
     },
-    
+
     // Rhythm configuration - magnetic contraction synced to musical tension
     rhythm: {
         enabled: true,
-        syncMode: 'tension',  // Contract during musical tension builds
-        
+        syncMode: 'tension', // Contract during musical tension builds
+
         // Contraction strength responds to musical intensity
         strengthSync: {
-            onTension: 4.0,       // Strong pull during tension
-            onRelease: 1.5,       // Gentle pull during release
-            curve: 'magnetic'     // Smooth magnetic pull curve
+            onTension: 4.0, // Strong pull during tension
+            onRelease: 1.5, // Gentle pull during release
+            curve: 'magnetic', // Smooth magnetic pull curve
         },
-        
+
         // Scale target changes with dynamics
         scaleTargetSync: {
-            forte: 0.1,           // Tight contraction for loud sections
-            piano: 0.4,           // Gentle contraction for soft sections
+            forte: 0.1, // Tight contraction for loud sections
+            piano: 0.4, // Gentle contraction for soft sections
             crescendo: 'gradual', // Gradual tightening on crescendos
-            diminuendo: 'ease'    // Easy relaxation on diminuendos
+            diminuendo: 'ease', // Easy relaxation on diminuendos
         },
-        
+
         // Duration responds to phrase length
         durationSync: {
             mode: 'phrases',
-            shortPhrase: 0.8,     // Quick contraction for short phrases  
-            longPhrase: 1.5,      // Extended contraction for long phrases
-            hold: 'sustain'       // Maintain contraction during holds
+            shortPhrase: 0.8, // Quick contraction for short phrases
+            longPhrase: 1.5, // Extended contraction for long phrases
+            hold: 'sustain', // Maintain contraction during holds
         },
-        
+
         // Strong accent response
         accentResponse: {
             enabled: true,
-            multiplier: 2.2,      // Sharp contraction on accents
-            type: 'strength'      // Accent affects pull force
+            multiplier: 2.2, // Sharp contraction on accents
+            type: 'strength', // Accent affects pull force
         },
-        
+
         // Pattern-specific contraction styles
         patternOverrides: {
-            'classical': {
+            classical: {
                 // Elegant, controlled contraction
                 strengthSync: { onTension: 3.5, onRelease: 1.8 },
-                scaleTargetSync: { forte: 0.15, piano: 0.35 }
+                scaleTargetSync: { forte: 0.15, piano: 0.35 },
             },
-            'metal': {
+            metal: {
                 // Aggressive, tight contraction
                 strengthSync: { onTension: 5.0, onRelease: 2.0, curve: 'sharp' },
-                scaleTargetSync: { forte: 0.05, piano: 0.25 }
+                scaleTargetSync: { forte: 0.05, piano: 0.25 },
             },
-            'ambient': {
+            ambient: {
                 // Slow, atmospheric contraction
                 strengthSync: { onTension: 2.8, onRelease: 1.2, curve: 'ease' },
-                durationSync: { shortPhrase: 1.2, longPhrase: 2.0 }
+                durationSync: { shortPhrase: 1.2, longPhrase: 2.0 },
             },
-            'trap': {
+            trap: {
                 // Sudden, rhythmic contraction on drops
-                strengthSync: { 
-                    onTension: 4.5, 
+                strengthSync: {
+                    onTension: 4.5,
                     onRelease: 1.0,
-                    dropBeat: 6.0   // Massive contraction on trap drops
+                    dropBeat: 6.0, // Massive contraction on trap drops
                 },
-                scaleTargetSync: { forte: 0.08, piano: 0.3 }
-            }
+                scaleTargetSync: { forte: 0.08, piano: 0.3 },
+            },
         },
-        
+
         // Musical dynamics variations
         dynamics: {
             forte: {
                 // Powerful, crushing contraction
-                strengthSync: { 
+                strengthSync: {
                     onTension: { multiplier: 1.8 },
-                    onRelease: { multiplier: 1.4 }
+                    onRelease: { multiplier: 1.4 },
                 },
-                scaleTargetSync: { multiplier: 0.6 },  // Tighter contraction
-                accentResponse: { multiplier: 2.8 }
+                scaleTargetSync: { multiplier: 0.6 }, // Tighter contraction
+                accentResponse: { multiplier: 2.8 },
             },
             piano: {
                 // Gentle, subtle contraction
-                strengthSync: { 
+                strengthSync: {
                     onTension: { multiplier: 0.7 },
-                    onRelease: { multiplier: 0.8 }
+                    onRelease: { multiplier: 0.8 },
                 },
-                scaleTargetSync: { multiplier: 1.4 },  // Looser contraction
-                accentResponse: { multiplier: 1.6 }
-            }
-        }
+                scaleTargetSync: { multiplier: 1.4 }, // Looser contraction
+                accentResponse: { multiplier: 1.6 },
+            },
+        },
     },
-    
+
     initialize(particle, motion, centerX, centerY) {
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -132,10 +132,10 @@ export default {
             startY: particle.y,
             angle: Math.atan2(dy, dx),
             baseRadius: Math.sqrt(dx * dx + dy * dy),
-            initialized: true
+            initialized: true,
         };
     },
-    
+
     /**
      * Apply contraction motion to particle
      * Pulls particles toward center with magnetic-like force
@@ -144,30 +144,30 @@ export default {
         if (!particle.gestureData?.contract?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
         }
-        
+
         const data = particle.gestureData.contract;
         const config = { ...this.config, ...motion };
         const strength = config.strength || 1.0;
-        
+
         // Calculate contraction amount based on progress
         const contractFactor = 1 - (1 - config.scaleTarget) * progress * strength;
         const targetRadius = data.baseRadius * contractFactor;
-        
+
         // Calculate target position closer to center
         const targetX = centerX + Math.cos(data.angle) * targetRadius;
         const targetY = centerY + Math.sin(data.angle) * targetRadius;
-        
+
         // Apply strong inward pull forces
         const dx = targetX - particle.x;
         const dy = targetY - particle.y;
-        particle.vx += dx * 0.5 * dt;  // Strong magnetic pull
-        particle.vy += dy * 0.5 * dt;  // Strong magnetic pull
-        
+        particle.vx += dx * 0.5 * dt; // Strong magnetic pull
+        particle.vy += dy * 0.5 * dt; // Strong magnetic pull
+
         // Apply velocity damping for controlled motion
         particle.vx *= 0.95;
         particle.vy *= 0.95;
     },
-    
+
     cleanup(particle) {
         if (particle.gestureData?.contract) {
             delete particle.gestureData.contract;
@@ -199,8 +199,8 @@ export default {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
                 scale: Math.max(scaleTarget, scale),
-                glowIntensity // Range: 1.0 to 0.85
+                glowIntensity, // Range: 1.0 to 0.85
             };
-        }
-    }
+        },
+    },
 };

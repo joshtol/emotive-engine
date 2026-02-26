@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Charleston Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Charleston gesture - classic hip-hop shuffle with modern twist
@@ -17,31 +17,31 @@ export default {
     emoji: '🕺',
     type: 'effect',
     description: 'Hip-hop Charleston shuffle with crisscross',
-    
+
     // Default configuration
     config: {
-        duration: 2500,        // Legacy fallback
+        duration: 2500, // Legacy fallback
         musicalDuration: { musical: true, bars: 1.5 }, // 1.5 bars (6 beats)
-        kickDistance: 35,      // Kick extension distance
-        swivelRange: 40,       // Hip swivel range
-        bounceHeight: 12,      // Vertical bounce
-        strength: 0.9,         // Overall effect intensity
+        kickDistance: 35, // Kick extension distance
+        swivelRange: 40, // Hip swivel range
+        bounceHeight: 12, // Vertical bounce
+        strength: 0.9, // Overall effect intensity
         // Particle motion configuration
         particleMotion: {
             type: 'charleston',
-            strength: 0.8
-        }
+            strength: 0.8,
+        },
     },
-    
+
     // Rhythm configuration - tight sync with beat
     rhythm: {
         enabled: true,
-        syncToBeat: true,      // Lock to beat grid
+        syncToBeat: true, // Lock to beat grid
         durationSync: { mode: 'bars', bars: 1.5 }, // 1.5 bars duration
-        beatMultiplier: 2,     // Double-time feel
-        accentBeats: [1, 2.5, 3, 4.5]  // Syncopated accents
+        beatMultiplier: 2, // Double-time feel
+        accentBeats: [1, 2.5, 3, 4.5], // Syncopated accents
     },
-    
+
     /**
      * Apply charleston motion - handled by GestureAnimator
      * This is a placeholder for the gesture system
@@ -50,7 +50,7 @@ export default {
         // Motion is handled by GestureAnimator.applyCharleston()
         return false;
     },
-    
+
     /**
      * Blend with existing motion
      */
@@ -89,12 +89,12 @@ export default {
             const glowBoost = Math.max(0, Math.abs(Math.sin(progress * Math.PI * 8))) * 0.4;
 
             return {
-                position: [kick, hop, 0],  // Screen-space: X = left/right, Y = up/down
-                rotation: [0, 0, rotationZ],  // Z rotation = screen tilt
+                position: [kick, hop, 0], // Screen-space: X = left/right, Y = up/down
+                rotation: [0, 0, rotationZ], // Z rotation = screen tilt
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

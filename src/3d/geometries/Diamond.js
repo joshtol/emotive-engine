@@ -11,10 +11,10 @@ export function createDiamond() {
     const indices = [];
 
     // Diamond proportions (brilliant cut inspired)
-    const topHeight = 1.2;    // Crown height
+    const topHeight = 1.2; // Crown height
     const bottomHeight = -0.8; // Pavilion depth
     // const tableSize = 0.4;     // Top facet size
-    const girdleSize = 0.8;    // Widest point
+    const girdleSize = 0.8; // Widest point
 
     // Key vertices
     const topPoint = [0, topHeight, 0];
@@ -26,11 +26,7 @@ export function createDiamond() {
 
     for (let i = 0; i < segments; i++) {
         const angle = (i / segments) * Math.PI * 2;
-        girdlePoints.push([
-            Math.cos(angle) * girdleSize,
-            0,
-            Math.sin(angle) * girdleSize
-        ]);
+        girdlePoints.push([Math.cos(angle) * girdleSize, 0, Math.sin(angle) * girdleSize]);
     }
 
     // Helper to add triangle
@@ -45,8 +41,8 @@ export function createDiamond() {
         const nz = v1[0] * v2[1] - v1[1] * v2[0];
 
         // Normalize
-        const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
-        const normal = [nx/len, ny/len, nz/len];
+        const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+        const normal = [nx / len, ny / len, nz / len];
 
         // Add vertices with normal
         const baseIdx = vertices.length / 3;
@@ -78,6 +74,6 @@ export function createDiamond() {
     return {
         vertices: new Float32Array(vertices),
         normals: new Float32Array(normals),
-        indices: new Uint16Array(indices)
+        indices: new Uint16Array(indices),
     };
 }

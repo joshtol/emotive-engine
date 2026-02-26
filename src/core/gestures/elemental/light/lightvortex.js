@@ -49,14 +49,14 @@ const LIGHTVORTEX_CONFIG = {
             endScale: 1.7,
             startDiameter: 0.6,
             endDiameter: 1.2,
-            orientation: 'flat'
+            orientation: 'flat',
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.0,
@@ -73,8 +73,8 @@ const LIGHTVORTEX_CONFIG = {
             emissive: { min: 1.0, max: 2.5, frequency: 8, pattern: 'sine' },
             cutout: {
                 strength: 0.7,
-                primary: { pattern: 6, scale: 2.5, weight: 1.0 },    // SPIRAL — vortex swirl
-                secondary: { pattern: 4, scale: 1.8, weight: 0.5 },  // WAVES — flowing energy
+                primary: { pattern: 6, scale: 2.5, weight: 1.0 }, // SPIRAL — vortex swirl
+                secondary: { pattern: 4, scale: 1.8, weight: 0.5 }, // WAVES — flowing energy
                 blend: 'add',
                 travel: 'spiral',
                 travelSpeed: 4.0,
@@ -84,24 +84,26 @@ const LIGHTVORTEX_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.1,
-                    tip: 0.25
-                }
+                    tip: 0.25,
+                },
             },
             grain: {
-                type: 2,              // WHITE — intense vortex texture
+                type: 2, // WHITE — intense vortex texture
                 strength: 0.12,
                 scale: 0.15,
                 speed: 2.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'additive',
@@ -109,38 +111,38 @@ const LIGHTVORTEX_CONFIG = {
             intensityScaling: {
                 scale: 1.4,
                 emissiveMax: 1.6,
-                pulseAmplitude: 1.3
+                pulseAmplitude: 1.3,
             },
             modelOverrides: {
                 'sun-ring': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.5,      // ~29% visible at a time
-                        arcSpeed: 6.0,      // 6 rotations over gesture duration
-                        arcCount: 1
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.5, // ~29% visible at a time
+                        arcSpeed: 6.0, // 6 rotations over gesture duration
+                        arcCount: 1,
                     },
                     scaling: {
                         mode: 'non-uniform',
                         axes: {
                             x: { expand: true, rate: 1.1 },
                             y: { expand: false, rate: 0.3 },
-                            z: { expand: true, rate: 1.1 }
-                        }
+                            z: { expand: true, rate: 1.1 },
+                        },
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [1.0, 0.95, 0.70],
+    glowColor: [1.0, 0.95, 0.7],
     glowIntensityMin: 1.0,
     glowIntensityMax: 2.2,
     glowFlickerRate: 8,
     scaleVibration: 0.02,
     scaleFrequency: 4,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTVORTEX_CONFIG);

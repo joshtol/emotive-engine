@@ -2,33 +2,33 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                 ◐ ◑ ◒ ◓  BROWSER COMPATIBILITY  ◓ ◒ ◑ ◐                 
- *                                                                                    
+ *  └─○═╝
+ *                 ◐ ◑ ◒ ◓  BROWSER COMPATIBILITY  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Browser Compatibility - Feature Detection & Graceful Degradation
  * @author Emotive Engine Team
  * @version 2.0.0
  * @module BrowserCompatibility
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The COMPATIBILITY LAYER of the engine. Ensures the Emotive Engine runs           
- * ║ smoothly across all modern browsers by detecting features, providing              
- * ║ polyfills, and enabling graceful degradation when features are missing.           
+ * ║ The COMPATIBILITY LAYER of the engine. Ensures the Emotive Engine runs
+ * ║ smoothly across all modern browsers by detecting features, providing
+ * ║ polyfills, and enabling graceful degradation when features are missing.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🌐 BROWSER FEATURES                                                               
+ * │ 🌐 BROWSER FEATURES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Web Audio API detection and fallbacks                                           
- * │ • Canvas 2D context recovery and management                                       
- * │ • RequestAnimationFrame polyfills                                                 
- * │ • Device pixel ratio handling                                                     
- * │ • Performance API detection                                                       
- * │ • Media device capabilities                                                       
+ * │ • Web Audio API detection and fallbacks
+ * │ • Canvas 2D context recovery and management
+ * │ • RequestAnimationFrame polyfills
+ * │ • Device pixel ratio handling
+ * │ • Performance API detection
+ * │ • Media device capabilities
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -45,7 +45,7 @@ export class FeatureDetection {
             this.capabilities = FeatureDetection._cachedCapabilities;
             return;
         }
-        
+
         this.features = {
             webAudio: this.detectWebAudio(),
             canvas2d: this.detectCanvas2D(),
@@ -54,11 +54,11 @@ export class FeatureDetection {
             audioContext: this.detectAudioContext(),
             mediaDevices: this.detectMediaDevices(),
             performance: this.detectPerformance(),
-            intersectionObserver: this.detectIntersectionObserver()
+            intersectionObserver: this.detectIntersectionObserver(),
         };
-        
+
         this.capabilities = this.assessCapabilities();
-        
+
         // Cache results for future instantiations
         FeatureDetection._cachedFeatures = this.features;
         FeatureDetection._cachedCapabilities = this.capabilities;
@@ -94,11 +94,13 @@ export class FeatureDetection {
      * @returns {boolean} True if requestAnimationFrame is supported
      */
     detectRequestAnimationFrame() {
-        return !!(window.requestAnimationFrame || 
-                 window.webkitRequestAnimationFrame || 
-                 window.mozRequestAnimationFrame || 
-                 window.oRequestAnimationFrame || 
-                 window.msRequestAnimationFrame);
+        return !!(
+            window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame
+        );
     }
 
     /**
@@ -117,7 +119,7 @@ export class FeatureDetection {
         try {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (!AudioContextClass) return false;
-            
+
             // Don't create a test context - just check if the class exists
             // Creating contexts is expensive and has limits
             return true;
@@ -169,7 +171,7 @@ export class FeatureDetection {
             total,
             percentage,
             level,
-            recommendations: this.getRecommendations(level)
+            recommendations: this.getRecommendations(level),
         };
     }
 
@@ -290,23 +292,23 @@ export function polyfillRequestAnimationFrame() {
     if (window.requestAnimationFrame) return;
 
     // Try vendor prefixes first
-    window.requestAnimationFrame = 
+    window.requestAnimationFrame =
         window.webkitRequestAnimationFrame ||
         window.mozRequestAnimationFrame ||
         window.oRequestAnimationFrame ||
         window.msRequestAnimationFrame ||
-        function(callback) {
+        function (callback) {
             return window.setTimeout(() => {
                 callback(Date.now());
             }, 1000 / 60); // 60 FPS fallback
         };
 
-    window.cancelAnimationFrame = 
+    window.cancelAnimationFrame =
         window.webkitCancelAnimationFrame ||
         window.mozCancelAnimationFrame ||
         window.oCancelAnimationFrame ||
         window.msCancelAnimationFrame ||
-        function(id) {
+        function (id) {
             window.clearTimeout(id);
         };
 }
@@ -322,7 +324,7 @@ export function polyfillPerformanceNow() {
     }
 
     const startTime = Date.now();
-    window.performance.now = function() {
+    window.performance.now = function () {
         return Date.now() - startTime;
     };
 }
@@ -334,35 +336,35 @@ export function polyfillWebAudio() {
     if (window.AudioContext || window.webkitAudioContext) return;
 
     // Create a minimal AudioContext-like interface
-    window.AudioContext = function() {
+    window.AudioContext = function () {
         this.state = 'suspended';
         this.sampleRate = 44100;
         this.currentTime = 0;
         this.destination = {
             connect() {},
-            disconnect() {}
+            disconnect() {},
         };
 
-        this.createGain = function() {
+        this.createGain = function () {
             return {
                 gain: { value: 1 },
                 connect() {},
-                disconnect() {}
+                disconnect() {},
             };
         };
 
-        this.createOscillator = function() {
+        this.createOscillator = function () {
             return {
                 frequency: { value: 440 },
                 type: 'sine',
                 start() {},
                 stop() {},
                 connect() {},
-                disconnect() {}
+                disconnect() {},
             };
         };
 
-        this.createAnalyser = function() {
+        this.createAnalyser = function () {
             return {
                 fftSize: 2048,
                 frequencyBinCount: 1024,
@@ -373,21 +375,21 @@ export function polyfillWebAudio() {
                     }
                 },
                 connect() {},
-                disconnect() {}
+                disconnect() {},
             };
         };
 
-        this.resume = function() {
+        this.resume = function () {
             this.state = 'running';
             return Promise.resolve();
         };
 
-        this.suspend = function() {
+        this.suspend = function () {
             this.state = 'suspended';
             return Promise.resolve();
         };
 
-        this.close = function() {
+        this.close = function () {
             this.state = 'closed';
             return Promise.resolve();
         };
@@ -533,11 +535,11 @@ export class BrowserOptimizations {
             this.optimizations = BrowserOptimizations._cachedOptimizations;
             return;
         }
-        
+
         this.browser = this.detectBrowser();
         this.optimizations = new Map();
         this.setupOptimizations();
-        
+
         // Cache for future instances
         BrowserOptimizations._cachedBrowser = this.browser;
         BrowserOptimizations._cachedOptimizations = this.optimizations;
@@ -548,11 +550,11 @@ export class BrowserOptimizations {
      * @returns {Object} Browser information
      */
     detectBrowser() {
-        const {userAgent} = navigator;
-        
+        const { userAgent } = navigator;
+
         let name = 'unknown';
         let version = 'unknown';
-        
+
         if (userAgent.includes('Chrome')) {
             name = 'chrome';
             const match = userAgent.match(/Chrome\/(\d+)/);
@@ -583,7 +585,7 @@ export class BrowserOptimizations {
             preferredAnimationMethod: 'requestAnimationFrame',
             audioContextOptions: { latencyHint: 'interactive' },
             canvasOptimizations: ['willReadFrequently'],
-            particleLimit: 50
+            particleLimit: 50,
         });
 
         // Firefox optimizations
@@ -591,7 +593,7 @@ export class BrowserOptimizations {
             preferredAnimationMethod: 'requestAnimationFrame',
             audioContextOptions: { latencyHint: 'balanced' },
             canvasOptimizations: [],
-            particleLimit: 40
+            particleLimit: 40,
         });
 
         // Safari optimizations
@@ -599,7 +601,7 @@ export class BrowserOptimizations {
             preferredAnimationMethod: 'requestAnimationFrame',
             audioContextOptions: { latencyHint: 'playback' },
             canvasOptimizations: [],
-            particleLimit: 30
+            particleLimit: 30,
         });
 
         // Edge optimizations
@@ -607,7 +609,7 @@ export class BrowserOptimizations {
             preferredAnimationMethod: 'requestAnimationFrame',
             audioContextOptions: { latencyHint: 'interactive' },
             canvasOptimizations: ['willReadFrequently'],
-            particleLimit: 45
+            particleLimit: 45,
         });
     }
 
@@ -634,7 +636,7 @@ export class BrowserOptimizations {
      */
     applyCanvasOptimizations(canvas, _context) {
         const opts = this.getOptimizations();
-        
+
         if (opts.canvasOptimizations.includes('willReadFrequently')) {
             try {
                 // Re-get context with optimization hint
@@ -676,7 +678,7 @@ export function initializeBrowserCompatibility() {
     if (_initializationCache) {
         return _initializationCache;
     }
-    
+
     const featureDetection = new FeatureDetection();
     const polyfillManager = new PolyfillManager();
     const browserOptimizations = new BrowserOptimizations();
@@ -688,19 +690,19 @@ export function initializeBrowserCompatibility() {
 
     // Apply necessary polyfills based on feature detection
     const appliedPolyfills = [];
-    
+
     if (!featureDetection.features.requestAnimationFrame) {
         if (polyfillManager.apply('requestAnimationFrame')) {
             appliedPolyfills.push('requestAnimationFrame');
         }
     }
-    
+
     if (!featureDetection.features.performance) {
         if (polyfillManager.apply('performanceNow')) {
             appliedPolyfills.push('performanceNow');
         }
     }
-    
+
     if (!featureDetection.features.webAudio) {
         if (polyfillManager.apply('webAudio')) {
             appliedPolyfills.push('webAudio');
@@ -714,9 +716,9 @@ export function initializeBrowserCompatibility() {
         browserOptimizations,
         appliedPolyfills,
         capabilities: featureDetection.getCapabilities(),
-        browser: browserOptimizations.getBrowser()
+        browser: browserOptimizations.getBrowser(),
     };
-    
+
     return _initializationCache;
 }
 

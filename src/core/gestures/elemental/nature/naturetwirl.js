@@ -40,7 +40,7 @@ const NATURETWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -53,24 +53,26 @@ const NATURETWIRL_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.12,
-                    sizeScale: 0.6,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.12,
+                        sizeScale: 0.6,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {
                     'vine-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B — lower-right — relay 1, CCW (second in cycle)
@@ -83,7 +85,7 @@ const NATURETWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -96,24 +98,26 @@ const NATURETWIRL_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: 5, phase: 0 }],
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.12,
-                    sizeScale: 0.6,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.12,
+                        sizeScale: 0.6,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {
                     'vine-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C — upper-center — relay 0, CW (first in cycle)
@@ -126,7 +130,7 @@ const NATURETWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -139,25 +143,27 @@ const NATURETWIRL_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.12,
-                    sizeScale: 0.6,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.12,
+                        sizeScale: 0.6,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {
                     'vine-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.25, 0.75, 0.2],
@@ -171,7 +177,7 @@ const NATURETWIRL_CONFIG = {
     tremorFrequency: 8,
     shakeAmount: 0.01,
     shakeFrequency: 12,
-    decayRate: 0.15
+    decayRate: 0.15,
 };
 
 export default buildNatureEffectGesture(NATURETWIRL_CONFIG);

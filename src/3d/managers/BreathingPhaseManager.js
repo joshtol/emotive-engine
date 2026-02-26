@@ -15,9 +15,9 @@
  * Scale targets for different phases
  */
 const PHASE_SCALES = {
-    inhale: 1.3,    // Max inhale size
-    exhale: 0.85,   // Min exhale size
-    neutral: 1.0    // Default/reset scale
+    inhale: 1.3, // Max inhale size
+    exhale: 0.85, // Min exhale size
+    neutral: 1.0, // Default/reset scale
 };
 
 /**
@@ -29,12 +29,12 @@ const MAX_DURATION = 30;
 export class BreathingPhaseManager {
     constructor() {
         // Current phase state
-        this._phase = null;           // 'inhale' | 'hold' | 'exhale' | null
+        this._phase = null; // 'inhale' | 'hold' | 'exhale' | null
         this._startTime = 0;
-        this._duration = 0;           // Duration in ms
+        this._duration = 0; // Duration in ms
         this._startScale = 1.0;
         this._targetScale = 1.0;
-        this._currentScale = 1.0;     // Current animated scale
+        this._currentScale = 1.0; // Current animated scale
     }
 
     /**
@@ -54,17 +54,17 @@ export class BreathingPhaseManager {
 
         // Set target scale based on phase
         switch (phase) {
-        case 'inhale':
-            this._targetScale = PHASE_SCALES.inhale;
-            break;
-        case 'exhale':
-            this._targetScale = PHASE_SCALES.exhale;
-            break;
-        case 'hold':
-        default:
-            // Hold at current scale - no animation needed
-            this._targetScale = this._startScale;
-            break;
+            case 'inhale':
+                this._targetScale = PHASE_SCALES.inhale;
+                break;
+            case 'exhale':
+                this._targetScale = PHASE_SCALES.exhale;
+                break;
+            case 'hold':
+            default:
+                // Hold at current scale - no animation needed
+                this._targetScale = this._startScale;
+                break;
         }
     }
 
@@ -114,11 +114,10 @@ export class BreathingPhaseManager {
         // Use sine easing for natural breathing rhythm
         // sin(0 to π/2) maps 0→1 smoothly, reaches target exactly at end
         // This feels more like natural breathing than cubic easing
-        const eased = Math.sin(progress * Math.PI / 2);
+        const eased = Math.sin((progress * Math.PI) / 2);
 
         // Interpolate between start and target scale
-        this._currentScale = this._startScale +
-            (this._targetScale - this._startScale) * eased;
+        this._currentScale = this._startScale + (this._targetScale - this._startScale) * eased;
 
         // Clear phase when complete
         if (progress >= 1.0) {
@@ -148,7 +147,7 @@ export class BreathingPhaseManager {
             targetScale: this._targetScale,
             currentScale: this._currentScale,
             duration: this._duration,
-            isActive: this._phase !== null
+            isActive: this._phase !== null,
         };
     }
 

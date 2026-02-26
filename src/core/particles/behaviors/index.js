@@ -2,22 +2,22 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE v4.0 - Behavior Registry
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central registry for all particle behaviors with plugin support
  * @author Emotive Engine Team
  * @version 4.0.0
  * @module particles/behaviors
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Control center for particle behaviors with plugin adapter integration.            
- * ║ • Each behavior defines unique particle physics and movement patterns             
- * ║ • Core behaviors loaded synchronously at startup                                  
- * ║ • Plugin behaviors registered dynamically via adapter                             
- * ║ • Value-agnostic design for easy physics tuning                                   
+ * ║ Control center for particle behaviors with plugin adapter integration.
+ * ║ • Each behavior defines unique particle physics and movement patterns
+ * ║ • Core behaviors loaded synchronously at startup
+ * ║ • Plugin behaviors registered dynamically via adapter
+ * ║ • Value-agnostic design for easy physics tuning
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -71,7 +71,7 @@ const BEHAVIORS = [
     surveillance,
     glitchy,
     spaz,
-    zen
+    zen,
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -151,9 +151,9 @@ export function listBehaviors() {
         name: behavior.name,
         emoji: behavior.emoji || '🎯',
         description: behavior.description || 'No description',
-        type: 'core'
+        type: 'core',
     }));
-    
+
     // Get plugin behaviors
     const pluginBehaviorNames = pluginAdapter.getAllPluginBehaviors();
     const pluginBehaviors = pluginBehaviorNames.map(name => {
@@ -162,10 +162,10 @@ export function listBehaviors() {
             name: behavior.name,
             emoji: behavior.emoji || '🔌',
             description: behavior.description || 'Plugin behavior',
-            type: 'plugin'
+            type: 'plugin',
         };
     });
-    
+
     return [...coreBehaviors, ...pluginBehaviors];
 }
 
@@ -176,7 +176,7 @@ if (typeof window !== 'undefined' && window.DEBUG_PARTICLES) {
     window.ParticleBehaviors = {
         registry: BEHAVIOR_REGISTRY,
         list: listBehaviors,
-        get: getBehavior
+        get: getBehavior,
     };
 }
 
@@ -190,5 +190,5 @@ export default {
     initializeBehavior,
     updateBehavior,
     listBehaviors,
-    pluginAdapter
+    pluginAdapter,
 };

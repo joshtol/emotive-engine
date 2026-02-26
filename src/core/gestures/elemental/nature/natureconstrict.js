@@ -51,50 +51,50 @@ const NATURECONSTRICT_CONFIG = {
                 easing: 'easeInCubic',
                 startScale: 0.0,
                 endScale: 1.0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'ring',
-                count: 4
+                count: 4,
             },
             count: 4,
             scale: 2.5,
             models: ['s-vine', 'vine-twist', 'thorn-curl', 'u-vine'],
             animation: {
                 appearAt: 0.0,
-                disappearAt: 0.80,
+                disappearAt: 0.8,
                 stagger: 0.12,
                 enter: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.25,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.08,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 pulse: {
                     amplitude: 0.06,
                     frequency: 1.5,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: {
                     min: 0.6,
                     max: 1.3,
                     frequency: 1.5,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.15, phase: 0 },
                     { axis: 'z', rotations: -0.25, phase: 45 },
                     { axis: 'z', rotations: 0.1, phase: 120 },
-                    { axis: 'z', rotations: -0.2, phase: 200 }
+                    { axis: 'z', rotations: -0.2, phase: 200 },
                 ],
                 cutout: {
                     strength: 0.5,
@@ -104,14 +104,14 @@ const NATURECONSTRICT_CONFIG = {
                     travel: 'spiral',
                     travelSpeed: 0.8,
                     strengthCurve: 'bell',
-                    bellPeakAt: 0.5
+                    bellPeakAt: 0.5,
                 },
                 grain: {
                     type: 3,
                     strength: 0.08,
                     scale: 0.3,
                     speed: 0.4,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
                 scaleVariance: 0.2,
                 blending: 'normal',
@@ -119,22 +119,22 @@ const NATURECONSTRICT_CONFIG = {
                 modelOverrides: {
                     's-vine': {
                         shaderAnimation: { type: 1, arcWidth: 0.5, arcSpeed: 0.6, arcCount: 1 },
-                        orientationOverride: 'camera'
+                        orientationOverride: 'camera',
                     },
                     'vine-twist': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.5, arcCount: 1 },
-                        orientationOverride: 'camera'
+                        orientationOverride: 'camera',
                     },
                     'thorn-curl': {
                         shaderAnimation: { type: 1, arcWidth: 0.4, arcSpeed: 0.7, arcCount: 2 },
-                        orientationOverride: 'camera'
+                        orientationOverride: 'camera',
                     },
                     'u-vine': {
                         shaderAnimation: { type: 1, arcWidth: 0.55, arcSpeed: 0.5, arcCount: 1 },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // ═════════════════════════════════════════════════════════════════════
@@ -149,39 +149,39 @@ const NATURECONSTRICT_CONFIG = {
                 startScale: 0.0,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.01, frequency: 0.3 }
+                bob: { amplitude: 0.01, frequency: 0.3 },
             },
             count: 1,
             scale: 2.0,
             models: ['vine-cluster'],
             animation: {
                 appearAt: 0.25,
-                disappearAt: 0.80,
+                disappearAt: 0.8,
                 enter: {
                     type: 'scale',
                     duration: 0.25,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.25,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.1,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 pulse: {
                     amplitude: 0.05,
                     frequency: 1.5,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: {
                     min: 0.7,
                     max: 1.4,
                     frequency: 1.5,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 rotate: { axis: 'z', rotations: -0.2, phase: 90 },
                 cutout: {
@@ -192,33 +192,35 @@ const NATURECONSTRICT_CONFIG = {
                     travel: 'radial',
                     travelSpeed: 0.6,
                     strengthCurve: 'bell',
-                    bellPeakAt: 0.5
+                    bellPeakAt: 0.5,
                 },
                 grain: {
                     type: 3,
                     strength: 0.06,
                     scale: 0.3,
                     speed: 0.3,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 6,
                 modelOverrides: {
                     'vine-cluster': {
                         shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.4, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.4, 0.85, 0.3],
@@ -240,8 +242,8 @@ const NATURECONSTRICT_CONFIG = {
                 { at: 0.5, value: 0.85 },
                 { at: 0.7, value: 0.95 },
                 { at: 0.85, value: 0.6 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         tremor: {
             keyframes: [
@@ -250,8 +252,8 @@ const NATURECONSTRICT_CONFIG = {
                 { at: 0.6, value: 0.008 },
                 { at: 0.75, value: 0.018 },
                 { at: 0.85, value: 0.005 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         scaleVibration: {
             keyframes: [
@@ -259,10 +261,10 @@ const NATURECONSTRICT_CONFIG = {
                 { at: 0.5, value: 0.01 },
                 { at: 0.7, value: 0.03 },
                 { at: 0.85, value: 0.01 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
-    }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
+    },
 };
 
 export default buildNatureEffectGesture(NATURECONSTRICT_CONFIG);

@@ -40,7 +40,7 @@ const EARTHQUAKE_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.3,
                 endScale: 2.5,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.8,
@@ -51,14 +51,16 @@ const EARTHQUAKE_CONFIG = {
                 enter: { type: 'fade', duration: 0.04, easing: 'linear' },
                 exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 2.0, frequency: 2, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['earth-ring'],
-                    anchor: 'above',
-                    intensity: 0.6,
-                    sizeScale: 2.0,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['earth-ring'],
+                        anchor: 'above',
+                        intensity: 0.6,
+                        sizeScale: 2.0,
+                        progressCurve: 'burst',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 4,
                 modelOverrides: {
@@ -67,12 +69,12 @@ const EARTHQUAKE_CONFIG = {
                             type: 1,
                             arcWidth: 0.9,
                             arcSpeed: 2.0,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ── Layer 2: Falling rocks from above ─────────────────────────────
@@ -87,18 +89,25 @@ const EARTHQUAKE_CONFIG = {
                 endScale: 1.2,
                 startDiameter: 1.8,
                 endDiameter: 0.8,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'spiral',
                 count: 6,
                 spacing: 0,
                 arcOffset: 60,
-                phaseOffset: 0
+                phaseOffset: 0,
             },
             count: 6,
             scale: 0.7,
-            models: ['boulder', 'rock-chunk-medium', 'rock-cluster', 'rock-chunk-medium', 'boulder', 'rock-chunk-small'],
+            models: [
+                'boulder',
+                'rock-chunk-medium',
+                'rock-cluster',
+                'rock-chunk-medium',
+                'boulder',
+                'rock-chunk-small',
+            ],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.55,
@@ -112,21 +121,23 @@ const EARTHQUAKE_CONFIG = {
                     { axis: 'y', rotations: 2.5, phase: 120 },
                     { axis: 'x', rotations: -1.8, phase: 180 },
                     { axis: 'z', rotations: 1.2, phase: 240 },
-                    { axis: 'y', rotations: -2.0, phase: 300 }
+                    { axis: 'y', rotations: -2.0, phase: 300 },
                 ],
-                atmospherics: [{
-                    preset: 'earth-gravel',
-                    targets: null,
-                    anchor: 'below',
-                    intensity: 0.5,
-                    sizeScale: 0.8,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-gravel',
+                        targets: null,
+                        anchor: 'below',
+                        intensity: 0.5,
+                        sizeScale: 0.8,
+                        progressCurve: 'burst',
+                    },
+                ],
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
-                renderOrder: 10
-            }
+                renderOrder: 10,
+            },
         },
 
         // ── Layer 3: Surface spikes erupting upward ───────────────────────
@@ -147,23 +158,23 @@ const EARTHQUAKE_CONFIG = {
                 enter: {
                     type: 'grow',
                     duration: 0.08,
-                    easing: 'easeOutQuad'
+                    easing: 'easeOutQuad',
                 },
                 exit: {
                     type: 'burst-fade',
                     duration: 0.15,
                     easing: 'easeIn',
-                    burstScale: 1.2
+                    burstScale: 1.2,
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 emissive: { min: 0.8, max: 1.8, frequency: 3, pattern: 'sine' },
                 pulse: {
                     amplitude: 0.06,
                     frequency: 6,
-                    easing: 'easeInOut'
+                    easing: 'easeInOut',
                 },
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.1,
@@ -176,12 +187,12 @@ const EARTHQUAKE_CONFIG = {
                             axes: {
                                 x: { expand: false, rate: 0.6 },
                                 y: { expand: true, rate: 2.5 },
-                                z: { expand: false, rate: 0.6 }
-                            }
-                        }
-                    }
-                }
-            }
+                                z: { expand: false, rate: 0.6 },
+                            },
+                        },
+                    },
+                },
+            },
         },
 
         // ── Layer 4: Radial debris burst ──────────────────────────────────
@@ -196,11 +207,17 @@ const EARTHQUAKE_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 0.7,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 5,
             scale: 0.45,
-            models: ['rock-chunk-small', 'rock-chunk-medium', 'rock-chunk-small', 'rock-chunk-small', 'rock-chunk-medium'],
+            models: [
+                'rock-chunk-small',
+                'rock-chunk-medium',
+                'rock-chunk-small',
+                'rock-chunk-small',
+                'rock-chunk-medium',
+            ],
             speedCurve: 'burst',
             animation: {
                 appearAt: 0.15,
@@ -214,33 +231,35 @@ const EARTHQUAKE_CONFIG = {
                     { axis: 'z', rotations: -2.0, phase: 72 },
                     { axis: 'y', rotations: 1.8, phase: 144 },
                     { axis: 'x', rotations: -1.5, phase: 216 },
-                    { axis: 'z', rotations: 2.2, phase: 288 }
+                    { axis: 'z', rotations: 2.2, phase: 288 },
                 ],
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.4,
-                    sizeScale: 1.5,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.4,
+                        sizeScale: 1.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 scaleVariance: 0.3,
                 blending: 'normal',
-                renderOrder: 12
-            }
-        }
+                renderOrder: 12,
+            },
+        },
     ],
 
     shakeAmount: 0.04,
     shakeFrequency: 16,
     endFlash: true,
     decayRate: 0.1,
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 1.0,
     glowIntensityMax: 2.5,
     glowFlickerRate: 8,
     tremor: 0.02,
-    tremorFrequency: 12
+    tremorFrequency: 12,
 };
 
 export default buildEarthEffectGesture(EARTHQUAKE_CONFIG);

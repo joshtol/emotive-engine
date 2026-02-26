@@ -33,7 +33,7 @@ import * as THREE from 'three';
 // SHARED VERTEX SHADER (used by both smoke and mist)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -106,7 +106,7 @@ void main() {
 // SMOKE FRAGMENT SHADER
 // =================================================================================================
 
-const SMOKE_FRAGMENT_GLSL = /* glsl */`
+const SMOKE_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform vec3 uColorWarm;
 uniform vec3 uColorCool;
@@ -176,15 +176,15 @@ export function createSmokeParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'SmokeParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.40 },
-            uColorWarm:          { value: new THREE.Color(...(config.colorWarm ?? [0.45, 0.38, 0.30])) },
-            uColorCool:          { value: new THREE.Color(...(config.colorCool ?? [0.30, 0.30, 0.30])) },
-            uBuoyancy:           { value: config.buoyancy ?? 0.3 },
-            uDrag:               { value: config.drag ?? 1.5 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.4 },
+            uColorWarm: { value: new THREE.Color(...(config.colorWarm ?? [0.45, 0.38, 0.3])) },
+            uColorCool: { value: new THREE.Color(...(config.colorCool ?? [0.3, 0.3, 0.3])) },
+            uBuoyancy: { value: config.buoyancy ?? 0.3 },
+            uDrag: { value: config.drag ?? 1.5 },
             uTurbulenceStrength: { value: config.turbulence ?? 0.4 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 3.5 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 1.5 },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 3.5 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 1.5 },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: SMOKE_FRAGMENT_GLSL,

@@ -18,7 +18,7 @@ export class GradientCache {
         this.stats = {
             hits: 0,
             misses: 0,
-            evictions: 0
+            evictions: 0,
         };
 
         // Cache configuration
@@ -138,7 +138,7 @@ export class GradientCache {
         // Store with timestamp
         this.cache.set(key, {
             gradient,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         });
 
         this.updateAccessOrder(key);
@@ -216,9 +216,10 @@ export class GradientCache {
      * @returns {Object} Cache stats
      */
     getStats() {
-        const hitRate = this.stats.hits + this.stats.misses > 0
-            ? (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(2)
-            : 0;
+        const hitRate =
+            this.stats.hits + this.stats.misses > 0
+                ? ((this.stats.hits / (this.stats.hits + this.stats.misses)) * 100).toFixed(2)
+                : 0;
 
         return {
             size: this.cache.size,
@@ -226,7 +227,7 @@ export class GradientCache {
             hits: this.stats.hits,
             misses: this.stats.misses,
             evictions: this.stats.evictions,
-            hitRate: `${hitRate}%`
+            hitRate: `${hitRate}%`,
         };
     }
 
@@ -239,8 +240,7 @@ export class GradientCache {
         return {
             radial: (x0, y0, r0, x1, y1, r1, stops) =>
                 this.getRadialGradient(ctx, x0, y0, r0, x1, y1, r1, stops),
-            linear: (x0, y0, x1, y1, stops) =>
-                this.getLinearGradient(ctx, x0, y0, x1, y1, stops)
+            linear: (x0, y0, x1, y1, stops) => this.getLinearGradient(ctx, x0, y0, x1, y1, stops),
         };
     }
 }

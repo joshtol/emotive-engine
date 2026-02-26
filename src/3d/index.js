@@ -41,7 +41,12 @@ import ParticleSystem from '../core/ParticleSystem.js'; // Reuse 2D particles!
 import { EventManager } from '../core/events/EventManager.js';
 import ErrorBoundary from '../core/events/ErrorBoundary.js';
 import { getEmotion, listEmotions, hasEmotion } from '../core/emotions/index.js';
-import { getGesture, listGestures, warmUpGestures as _warmUpGestures, GESTURE_CATEGORIES } from '../core/gestures/index.js';
+import {
+    getGesture,
+    listGestures,
+    warmUpGestures as _warmUpGestures,
+    GESTURE_CATEGORIES,
+} from '../core/gestures/index.js';
 import { FrameBudgetScheduler } from './FrameBudgetScheduler.js';
 // Import bare registry — element type registrations are side effects in
 // ElementRegistrations.js, loaded only by index-with-elementals.js.
@@ -104,7 +109,7 @@ export class EmotiveMascot3D {
             targetFPS: config.targetFPS || 60,
             enableParticles: config.enableParticles !== false,
             defaultEmotion: config.defaultEmotion || 'neutral',
-            ...config
+            ...config,
         };
 
         // Canvas layer manager (dual canvas architecture)
@@ -170,7 +175,7 @@ export class EmotiveMascot3D {
             calls: new Array(10).fill(0),
             index: 0,
             windowMs: 1000,
-            maxCallsPerSecond: 10
+            maxCallsPerSecond: 10,
         };
 
         // Audio bridge for audio-reactive animations (initialized lazily)
@@ -262,7 +267,7 @@ export class EmotiveMascot3D {
                     if (this.core3D?.rhythm3DAdapter) {
                         this.core3D.rhythm3DAdapter.setGrooveConfidence(confidence);
                     }
-                }
+                },
             });
         }
         return this._audioBridge;
@@ -279,7 +284,7 @@ export class EmotiveMascot3D {
         if (typeof window === 'undefined') {
             throw new Error(
                 'EmotiveMascot3D.init() requires a browser environment. ' +
-                'For SSR frameworks, use dynamic import with ssr:false (Next.js) or <ClientOnly> (Nuxt).'
+                    'For SSR frameworks, use dynamic import with ssr:false (Next.js) or <ClientOnly> (Nuxt).'
             );
         }
 
@@ -287,7 +292,7 @@ export class EmotiveMascot3D {
             // Setup dual canvas layers via CanvasLayerManager
             this._canvasLayerManager = new CanvasLayerManager({
                 canvasId: this.config.canvasId,
-                enableControls: this.config.enableControls
+                enableControls: this.config.enableControls,
             });
             const layers = this._canvasLayerManager.setup(container);
             this.container = layers.container;
@@ -313,7 +318,7 @@ export class EmotiveMascot3D {
                 materialVariant: this.config.materialVariant,
                 assetBasePath: this.config.assetBasePath,
                 preloadElements: this.config.preloadElements,
-                backgroundPrewarm: this.config.backgroundPrewarm
+                backgroundPrewarm: this.config.backgroundPrewarm,
             });
 
             // Cache 2D canvas context to prevent repeated getContext() calls
@@ -465,18 +470,19 @@ export class EmotiveMascot3D {
 
                 // Spawn particles - EXACT same as 2D site, no modifications
                 this.particleSystem.spawn(
-                    particleBehavior,   // Use emotion's particle behavior
-                    currentEmotion,     // emotion
-                    particleRate,       // Use emotion's spawn rate
-                    centerX, centerY,   // position
-                    deltaTime,          // deltaTime in milliseconds
-                    null,               // count (rate-based)
-                    minParticles,       // Use emotion's min particles
-                    maxParticles,       // Use emotion's max particles
-                    1.0,                // scaleFactor (same as 2D)
-                    1.0,                // particleSizeMultiplier
-                    particleColors,     // Use emotion's color palette
-                    this.undertone      // undertone modifier
+                    particleBehavior, // Use emotion's particle behavior
+                    currentEmotion, // emotion
+                    particleRate, // Use emotion's spawn rate
+                    centerX,
+                    centerY, // position
+                    deltaTime, // deltaTime in milliseconds
+                    null, // count (rate-based)
+                    minParticles, // Use emotion's min particles
+                    maxParticles, // Use emotion's max particles
+                    1.0, // scaleFactor (same as 2D)
+                    1.0, // particleSizeMultiplier
+                    particleColors, // Use emotion's color palette
+                    this.undertone // undertone modifier
                 );
 
                 // Apply gesture to particles if active
@@ -487,12 +493,19 @@ export class EmotiveMascot3D {
                     gestureProgress = Math.min(elapsed / this.currentGesture.duration, 1);
                     gestureMotion = {
                         ...this.currentGesture.config,
-                        type: this.currentGesture.name  // Use gesture NAME (e.g., "bounce"), not TYPE
+                        type: this.currentGesture.name, // Use gesture NAME (e.g., "bounce"), not TYPE
                     };
                 }
 
                 // Update particles - EXACT same as 2D site
-                this.particleSystem.update(deltaTime, centerX, centerY, gestureMotion, gestureProgress, this.undertone);
+                this.particleSystem.update(
+                    deltaTime,
+                    centerX,
+                    centerY,
+                    gestureMotion,
+                    gestureProgress,
+                    this.undertone
+                );
 
                 // Render particles with emotion color
                 this.particleSystem.render(this.ctx2D, glowColor, null);
@@ -522,13 +535,17 @@ export class EmotiveMascot3D {
 
         // Validate emotion parameter
         if (!emotion || typeof emotion !== 'string') {
-            console.warn(`[EmotiveMascot3D] setEmotion: Invalid emotion "${emotion}". Use getAvailableEmotions() for valid options.`);
+            console.warn(
+                `[EmotiveMascot3D] setEmotion: Invalid emotion "${emotion}". Use getAvailableEmotions() for valid options.`
+            );
             return this;
         }
 
         // Warn on unknown emotion (but still allow it for custom emotions)
         if (!hasEmotion(emotion)) {
-            console.warn(`[EmotiveMascot3D] Unknown emotion "${emotion}". Valid emotions: ${listEmotions().join(', ')}`);
+            console.warn(
+                `[EmotiveMascot3D] Unknown emotion "${emotion}". Valid emotions: ${listEmotions().join(', ')}`
+            );
         }
 
         this.emotion = emotion;
@@ -543,7 +560,10 @@ export class EmotiveMascot3D {
             } else if (typeof undertoneOrDurationOrOptions === 'number') {
                 // It's a duration - accepted for API compatibility but 3D doesn't use it yet
                 // Keep existing undertone
-            } else if (undertoneOrDurationOrOptions && typeof undertoneOrDurationOrOptions === 'object') {
+            } else if (
+                undertoneOrDurationOrOptions &&
+                typeof undertoneOrDurationOrOptions === 'object'
+            ) {
                 // It's an options object
                 this.undertone = undertoneOrDurationOrOptions.undertone || null;
                 // duration = undertoneOrDurationOrOptions.duration || 500;
@@ -607,7 +627,9 @@ export class EmotiveMascot3D {
 
         // Validate gesture parameter
         if (!gestureName || typeof gestureName !== 'string') {
-            console.warn(`[EmotiveMascot3D] express: Invalid gesture "${gestureName}". Use getAvailableGestures() for valid options.`);
+            console.warn(
+                `[EmotiveMascot3D] express: Invalid gesture "${gestureName}". Use getAvailableGestures() for valid options.`
+            );
             return this;
         }
 
@@ -622,8 +644,7 @@ export class EmotiveMascot3D {
             const config = gesture.config || {};
             const duration = config.musicalDuration?.musical
                 ? (config.musicalDuration.beats || 2) * 500
-                : (config.duration || 800);
-
+                : config.duration || 800;
 
             // Track current gesture for particle system
             this.currentGesture = {
@@ -631,7 +652,7 @@ export class EmotiveMascot3D {
                 gesture,
                 config,
                 startTime: performance.now(),
-                duration
+                duration,
             };
 
             // Clear gesture when complete
@@ -644,7 +665,9 @@ export class EmotiveMascot3D {
         } else {
             // Warn on unknown gesture
             const gestureNames = listGestures().map(g => g.name);
-            console.warn(`[EmotiveMascot3D] Unknown gesture "${gestureName}". Valid gestures: ${gestureNames.slice(0, 10).join(', ')}...`);
+            console.warn(
+                `[EmotiveMascot3D] Unknown gesture "${gestureName}". Valid gestures: ${gestureNames.slice(0, 10).join(', ')}...`
+            );
         }
 
         this.eventManager.emit('gesture:trigger', { gesture: gestureName });
@@ -671,26 +694,33 @@ export class EmotiveMascot3D {
     chain(chainName) {
         // Chain definitions from site demo
         const chainDefinitions = {
-            'rise': 'breathe > sway+lean+tilt',
-            'flow': 'sway > lean+tilt > spin > bounce',
-            'burst': 'jump > nod > shake > flash',
-            'drift': 'sway+breathe+float+drift',
-            'chaos': 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
-            'morph': 'expand > contract > morph+glow > expand+flash',
-            'rhythm': 'pulse > pulse+sparkle > pulse+flicker',
-            'spiral': 'spin > orbital > twist > orbital+sparkle',
-            'routine': 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
-            'radiance': 'sparkle > pulse+flicker > shimmer',
-            'twinkle': 'sparkle > flash > pulse+sparkle > shimmer+flicker',
-            'stream': 'wave > nod+pulse > sparkle > flash'
+            rise: 'breathe > sway+lean+tilt',
+            flow: 'sway > lean+tilt > spin > bounce',
+            burst: 'jump > nod > shake > flash',
+            drift: 'sway+breathe+float+drift',
+            chaos: 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
+            morph: 'expand > contract > morph+glow > expand+flash',
+            rhythm: 'pulse > pulse+sparkle > pulse+flicker',
+            spiral: 'spin > orbital > twist > orbital+sparkle',
+            routine: 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
+            radiance: 'sparkle > pulse+flicker > shimmer',
+            twinkle: 'sparkle > flash > pulse+sparkle > shimmer+flicker',
+            stream: 'wave > nod+pulse > sparkle > flash',
         };
 
         // Get chain definition
-        const chainString = typeof chainName === 'string' ? chainDefinitions[chainName] || chainName : chainName.join('>');
+        const chainString =
+            typeof chainName === 'string'
+                ? chainDefinitions[chainName] || chainName
+                : chainName.join('>');
 
         // Parse chain: split by '>' for sequential steps
         const steps = chainString.split('>').map(step =>
-            step.trim().split('+').map(g => g.trim()).filter(g => g.length > 0)
+            step
+                .trim()
+                .split('+')
+                .map(g => g.trim())
+                .filter(g => g.length > 0)
         );
 
         // Execute chain sequence
@@ -746,13 +776,17 @@ export class EmotiveMascot3D {
 
         // Validate shapeName parameter
         if (!shapeName || typeof shapeName !== 'string') {
-            console.warn(`[EmotiveMascot3D] morphTo: Invalid shape "${shapeName}". Use getAvailableGeometries() for valid options.`);
+            console.warn(
+                `[EmotiveMascot3D] morphTo: Invalid shape "${shapeName}". Use getAvailableGeometries() for valid options.`
+            );
             return this;
         }
 
         // Warn on unknown geometry
         if (!VALID_GEOMETRIES.includes(shapeName)) {
-            console.warn(`[EmotiveMascot3D] Unknown geometry "${shapeName}". Valid geometries: ${VALID_GEOMETRIES.join(', ')}`);
+            console.warn(
+                `[EmotiveMascot3D] Unknown geometry "${shapeName}". Valid geometries: ${VALID_GEOMETRIES.join(', ')}`
+            );
         }
 
         if (this.core3D) {
@@ -859,11 +893,13 @@ export class EmotiveMascot3D {
 
         // Check rate limit
         if (callsInWindow >= limiter.maxCallsPerSecond) {
-            console.warn(`[EmotiveMascot3D] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`);
+            console.warn(
+                `[EmotiveMascot3D] feel: Rate limit exceeded. Max ${limiter.maxCallsPerSecond} calls per second.`
+            );
             return {
                 success: false,
                 error: 'Rate limit exceeded',
-                parsed: null
+                parsed: null,
             };
         }
 
@@ -881,7 +917,7 @@ export class EmotiveMascot3D {
             return {
                 success: false,
                 error: validation.errors.join('; '),
-                parsed
+                parsed,
             };
         }
 
@@ -909,14 +945,14 @@ export class EmotiveMascot3D {
             return {
                 success: true,
                 error: null,
-                parsed
+                parsed,
             };
         } catch (error) {
             console.error('[feel] Execution error:', error);
             return {
                 success: false,
                 error: error.message,
-                parsed
+                parsed,
             };
         }
     }
@@ -980,7 +1016,8 @@ export class EmotiveMascot3D {
                 // Enable OrbitControls camera rotation
                 if (this.core3D.renderer?.controls) {
                     this.core3D.renderer.controls.autoRotate = true;
-                    this.core3D.renderer.controls.autoRotateSpeed = this.core3D.options?.autoRotateSpeed ?? 0.5;
+                    this.core3D.renderer.controls.autoRotateSpeed =
+                        this.core3D.options?.autoRotateSpeed ?? 0.5;
                 }
 
                 // Enable geometry's internal rotation behavior
@@ -1044,7 +1081,6 @@ export class EmotiveMascot3D {
             this.core3D.particleVisibility = true;
             this.core3D.particleOrchestrator.renderer.setVisible(true);
             this.core3D.particleOrchestrator.setEmotion(this.core3D.emotion, this.core3D.undertone);
-
         }
 
         // Only enable 2D canvas particle system if we don't have 3D particles
@@ -1596,7 +1632,7 @@ export class EmotiveMascot3D {
             peakCount: 0,
             histogramSize: 0,
             topAgents: [],
-            intervalCount: 0
+            intervalCount: 0,
         };
     }
 
@@ -1628,10 +1664,12 @@ export class EmotiveMascot3D {
         const r = Math.round(rgb[0] * 255);
         const g = Math.round(rgb[1] * 255);
         const b = Math.round(rgb[2] * 255);
-        return `#${[r, g, b].map(x => {
-            const hex = x.toString(16);
-            return hex.length === 1 ? `0${hex}` : hex;
-        }).join('')}`;
+        return `#${[r, g, b]
+            .map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? `0${hex}` : hex;
+            })
+            .join('')}`;
     }
 
     /**
@@ -1719,7 +1757,14 @@ export class EmotiveMascot3D {
      *   synchronous work that can't be broken into frame-budget-safe chunks.
      * @param {Function} [options.onModelsReady] - Called when all element models are pre-loaded
      */
-    warmUpGestures({ onBatch, onComplete, onFactoriesReady, prewarmFactories = true, prewarmModels = false, onModelsReady } = {}) {
+    warmUpGestures({
+        onBatch,
+        onComplete,
+        onFactoriesReady,
+        prewarmFactories = true,
+        prewarmModels = false,
+        onModelsReady,
+    } = {}) {
         // Phase 1: Yield names instantly
         const factoryWork = _warmUpGestures({ onBatch, onComplete });
 
@@ -1744,8 +1789,8 @@ export class EmotiveMascot3D {
                 this._frameBudgetScheduler = new FrameBudgetScheduler();
             }
             const elementTypes = ElementTypeRegistry.types();
-            const modelWork = elementTypes.map(type =>
-                () => this.core3D.elementSpawner.preloadModels(type)
+            const modelWork = elementTypes.map(
+                type => () => this.core3D.elementSpawner.preloadModels(type)
             );
             this._frameBudgetScheduler.enqueueAll(modelWork);
             const finalCallback = onModelsReady || onFactoriesReady;
@@ -1854,9 +1899,10 @@ export class EmotiveMascot3D {
      */
     attachToElement(elementOrSelector, options = {}) {
         // Get the target element
-        const element = typeof elementOrSelector === 'string'
-            ? document.querySelector(elementOrSelector)
-            : elementOrSelector;
+        const element =
+            typeof elementOrSelector === 'string'
+                ? document.querySelector(elementOrSelector)
+                : elementOrSelector;
 
         if (!element) {
             console.error(`[EmotiveMascot3D] Element not found: ${elementOrSelector}`);
@@ -1871,14 +1917,17 @@ export class EmotiveMascot3D {
             animate: options.animate !== false,
             duration: options.duration || 1000,
             scale: options.scale || 1,
-            containParticles: options.containParticles !== false
+            containParticles: options.containParticles !== false,
         };
         this._hasAttachedBefore = this._hasAttachedBefore || false;
 
         // Set containment bounds and scale if requested
         const rect = element.getBoundingClientRect();
         if (this._attachOptions.containParticles) {
-            this.setContainment({ width: rect.width, height: rect.height }, this._attachOptions.scale);
+            this.setContainment(
+                { width: rect.width, height: rect.height },
+                this._attachOptions.scale
+            );
         } else if (this._attachOptions.scale !== 1) {
             this.setContainment(null, this._attachOptions.scale);
         }
@@ -1934,7 +1983,7 @@ export class EmotiveMascot3D {
 
         this._elementTrackingHandlers = {
             scroll: () => this._updateAttachedPosition(),
-            resize: () => this._updateAttachedPosition()
+            resize: () => this._updateAttachedPosition(),
         };
 
         window.addEventListener('scroll', this._elementTrackingHandlers.scroll, { passive: true });
@@ -2023,8 +2072,16 @@ export class EmotiveMascot3D {
         // Capture current values as transition start
         this.core3D._sssTransitionStart = {
             sssStrength: u.sssStrength?.value ?? preset.sssStrength,
-            sssAbsorption: u.sssAbsorption?.value ? [u.sssAbsorption.value.x, u.sssAbsorption.value.y, u.sssAbsorption.value.z] : [...preset.sssAbsorption],
-            sssScatterDistance: u.sssScatterDistance?.value ? [u.sssScatterDistance.value.x, u.sssScatterDistance.value.y, u.sssScatterDistance.value.z] : [...preset.sssScatterDistance],
+            sssAbsorption: u.sssAbsorption?.value
+                ? [u.sssAbsorption.value.x, u.sssAbsorption.value.y, u.sssAbsorption.value.z]
+                : [...preset.sssAbsorption],
+            sssScatterDistance: u.sssScatterDistance?.value
+                ? [
+                      u.sssScatterDistance.value.x,
+                      u.sssScatterDistance.value.y,
+                      u.sssScatterDistance.value.z,
+                  ]
+                : [...preset.sssScatterDistance],
             sssThicknessBias: u.sssThicknessBias?.value ?? preset.sssThicknessBias,
             sssThicknessScale: u.sssThicknessScale?.value ?? preset.sssThicknessScale,
             sssCurvatureScale: u.sssCurvatureScale?.value ?? preset.sssCurvatureScale,
@@ -2033,7 +2090,7 @@ export class EmotiveMascot3D {
             innerGlowStrength: u.innerGlowStrength?.value ?? preset.innerGlowStrength,
             fresnelIntensity: u.fresnelIntensity?.value ?? preset.fresnelIntensity,
             causticIntensity: u.causticIntensity?.value ?? preset.causticIntensity,
-            emotionColorBleed: u.emotionColorBleed?.value ?? preset.emotionColorBleed
+            emotionColorBleed: u.emotionColorBleed?.value ?? preset.emotionColorBleed,
         };
 
         // Set target values (the preset we're transitioning to)
@@ -2049,7 +2106,7 @@ export class EmotiveMascot3D {
             innerGlowStrength: preset.innerGlowStrength,
             fresnelIntensity: preset.fresnelIntensity,
             causticIntensity: preset.causticIntensity,
-            emotionColorBleed: preset.emotionColorBleed
+            emotionColorBleed: preset.emotionColorBleed,
         };
 
         // Start transition
@@ -2171,7 +2228,10 @@ export class EmotiveMascot3D {
         // Clean up reduced motion listener
         if (this._reducedMotionMediaQuery && this._reducedMotionHandler) {
             if (this._reducedMotionMediaQuery.removeEventListener) {
-                this._reducedMotionMediaQuery.removeEventListener('change', this._reducedMotionHandler);
+                this._reducedMotionMediaQuery.removeEventListener(
+                    'change',
+                    this._reducedMotionHandler
+                );
             } else if (this._reducedMotionMediaQuery.removeListener) {
                 this._reducedMotionMediaQuery.removeListener(this._reducedMotionHandler);
             }
@@ -2239,8 +2299,21 @@ export { Core3DManager } from './Core3DManager.js';
 export { createSphere } from './geometries/Sphere.js';
 export { createCrystal } from './geometries/Crystal.js';
 export { createDiamond } from './geometries/Diamond.js';
-export { createSunGeometry, createSunMaterial, updateSunMaterial, disposeSun } from './geometries/Sun.js';
-export { createMoon, createMoonMaterial, createMoonCrescentMaterial, createMoonFallbackMaterial, updateMoonGlow, updateCrescentShadow, disposeMoon } from './geometries/Moon.js';
+export {
+    createSunGeometry,
+    createSunMaterial,
+    updateSunMaterial,
+    disposeSun,
+} from './geometries/Sun.js';
+export {
+    createMoon,
+    createMoonMaterial,
+    createMoonCrescentMaterial,
+    createMoonFallbackMaterial,
+    updateMoonGlow,
+    updateCrescentShadow,
+    disposeMoon,
+} from './geometries/Moon.js';
 
 // Export moon phase utilities
 export {
@@ -2248,15 +2321,11 @@ export {
     getMoonPhaseNames,
     getPhaseFromProgress,
     setMoonPhase,
-    animateMoonPhase
+    animateMoonPhase,
 } from './geometries/Moon.js';
 
 // Export blend mode utilities
-export {
-    blendModeNames,
-    getBlendModeName,
-    getBlendModeIndex
-} from './shaders/utils/blendModes.js';
+export { blendModeNames, getBlendModeName, getBlendModeIndex } from './shaders/utils/blendModes.js';
 
 // Export geometry cache for preloading
 export { default as GeometryCache } from './utils/GeometryCache.js';
@@ -2266,7 +2335,7 @@ export {
     SSSPresets,
     applySSSPreset,
     getPresetNames as getSSSPresetNames,
-    getPreset as getSSSPreset
+    getPreset as getSSSPreset,
 } from './presets/SSSPresets.js';
 
 // Export rhythm 3D adapter for advanced rhythm sync customization
@@ -2276,7 +2345,12 @@ export { rhythm3DAdapter, Rhythm3DAdapter, GROOVE_PRESETS } from './animation/Rh
 export { CrystalSoul } from './effects/CrystalSoul.js';
 
 // Export AudioInterpreter for LLM-based audio semantic interpretation
-export { AudioInterpreter, audioInterpreter, ENGINE_VOCABULARY, LLM_ENDPOINTS } from '../core/audio/AudioInterpreter.js';
+export {
+    AudioInterpreter,
+    audioInterpreter,
+    ENGINE_VOCABULARY,
+    LLM_ENDPOINTS,
+} from '../core/audio/AudioInterpreter.js';
 
 // Export performance profiler for debugging
 export { profiler, PerformanceProfiler } from './debug/PerformanceProfiler.js';

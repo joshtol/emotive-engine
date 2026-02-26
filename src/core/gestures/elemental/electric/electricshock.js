@@ -47,7 +47,7 @@ const ELECTRICSHOCK_CONFIG = {
             lifetime: { min: 100, max: 300 },
             flashIn: 30,
             fadeOut: 80,
-            respawn: true
+            respawn: true,
         },
         animation: {
             appearAt: 0.02,
@@ -65,32 +65,34 @@ const ELECTRICSHOCK_CONFIG = {
                 blend: 'multiply',
                 travel: 'oscillate',
                 travelSpeed: 2.5,
-                strengthCurve: 'bell'
+                strengthCurve: 'bell',
             },
             grain: { type: 3, strength: 0.25, scale: 0.3, speed: 3.0, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from shock
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.7,
-                sizeScale: 1.5,
-                progressCurve: 'pulse',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.7,
+                    sizeScale: 1.5,
+                    progressCurve: 'pulse',
+                },
+            ],
             flash: {
                 events: [
                     { at: 0.15, intensity: 2.0 },
-                    { at: 0.50, intensity: 3.0 }
+                    { at: 0.5, intensity: 3.0 },
                 ],
-                decay: 0.02
+                decay: 0.02,
             },
             scaleVariance: 0.4,
             lifetimeVariance: 0.5,
             delayVariance: 0.2,
             blending: 'additive',
             renderOrder: 15,
-            intensityScaling: { scale: 1.3, flickerIntensity: 1.5, emissiveMax: 1.8 }
-        }
+            intensityScaling: { scale: 1.3, flickerIntensity: 1.5, emissiveMax: 1.8 },
+        },
     },
 
     // Jitter - rapid violent shaking
@@ -104,7 +106,7 @@ const ELECTRICSHOCK_CONFIG = {
     glowFlickerRate: 25,
     // Scale vibration
     scaleVibration: 0.03,
-    scaleFrequency: 40
+    scaleFrequency: 40,
 };
 
 export default buildElectricEffectGesture(ELECTRICSHOCK_CONFIG);

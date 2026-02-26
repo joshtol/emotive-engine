@@ -44,7 +44,7 @@ const ELECTRICHELIX_CONFIG = {
             endScale: 1.1,
             startDiameter: 1.8,
             endDiameter: 2.0,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
@@ -52,7 +52,7 @@ const ELECTRICHELIX_CONFIG = {
             strands: 2,
             spacing: 0.2,
             arcOffset: 180,
-            phaseOffset: 0.05
+            phaseOffset: 0.05,
         },
         count: 2,
         scale: 2.0,
@@ -64,32 +64,32 @@ const ELECTRICHELIX_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             flicker: {
                 intensity: 0.25,
                 rate: 12,
-                pattern: 'random'
+                pattern: 'random',
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 4,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.0,
                 max: 2.2,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             cutout: {
                 strength: 0.8,
@@ -103,27 +103,29 @@ const ELECTRICHELIX_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.1,
-                    tip: 0.25
-                }
+                    tip: 0.25,
+                },
             },
             grain: {
                 type: 3,
                 strength: 0.08,
                 scale: 0.2,
                 speed: 1.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: ionized air from helix
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+                },
+            ],
             rotate: { axis: 'y', rotations: 2, phase: 0 },
             scaleVariance: 0.1,
             lifetimeVariance: 0.1,
@@ -135,12 +137,12 @@ const ELECTRICHELIX_CONFIG = {
                         type: 1,
                         arcWidth: 0.6,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     jitterFrequency: 0,
@@ -153,7 +155,7 @@ const ELECTRICHELIX_CONFIG = {
     scaleVibration: 0.01,
     scaleFrequency: 3,
     scalePulse: true,
-    rotationDrift: 0.015
+    rotationDrift: 0.015,
 };
 
 export default buildElectricEffectGesture(ELECTRICHELIX_CONFIG);

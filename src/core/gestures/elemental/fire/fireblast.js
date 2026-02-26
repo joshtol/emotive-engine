@@ -63,7 +63,7 @@ const FIREBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 2.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.5,
@@ -76,7 +76,7 @@ const FIREBLAST_CONFIG = {
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 2, scale: 1.8, weight: 1.0 },    // RADIAL - blast lines
+                    primary: { pattern: 2, scale: 1.8, weight: 1.0 }, // RADIAL - blast lines
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.0,
@@ -84,112 +84,254 @@ const FIREBLAST_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.25,
-                        softness: 1.2
-                    }
+                        softness: 1.2,
+                    },
                 },
                 grain: { type: 3, strength: 0.5, scale: 0.3, speed: 1.5, blend: 'multiply' },
                 // Per-gesture atmospheric particles: blast smoke
-                atmospherics: [{
-                    preset: 'smoke',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.3,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'smoke',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.3,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'additive',
                 renderOrder: 8,
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
                 modelOverrides: {
                     'flame-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: BIG fire-bursts shooting UP and OUT - main blast arms (5 directions)
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.3, endScale: 1.6, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 1.2, models: ['fire-burst'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.3,
+                endScale: 1.6,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 1.2,
+            models: ['fire-burst'],
             animation: {
-                appearAt: 0.0, disappearAt: 0.5,
+                appearAt: 0.0,
+                disappearAt: 0.5,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 5, scale: 1.0, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.4, distance: 0.8, direction: { x: 0, y: 1.0, z: 0 }, easing: 'easeOutQuad' },
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 5, scale: 1.0, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.4,
+                    distance: 0.8,
+                    direction: { x: 0, y: 1.0, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'fire-burst': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'fire-burst': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.25, endScale: 1.3, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 1.0, models: ['fire-burst'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.25,
+                endScale: 1.3,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 1.0,
+            models: ['fire-burst'],
             animation: {
-                appearAt: 0.02, disappearAt: 0.5,
+                appearAt: 0.02,
+                disappearAt: 0.5,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.45, primary: { pattern: 5, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.6, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.3, distance: 0.75, direction: { x: -0.7, y: 0.85, z: 0 }, easing: 'easeOutQuad' },
+                cutout: {
+                    strength: 0.45,
+                    primary: { pattern: 5, scale: 0.8, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.6,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.3,
+                    distance: 0.75,
+                    direction: { x: -0.7, y: 0.85, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'fire-burst': { shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'fire-burst': {
+                        shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.25, endScale: 1.3, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 1.0, models: ['fire-burst'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.25,
+                endScale: 1.3,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 1.0,
+            models: ['fire-burst'],
             animation: {
-                appearAt: 0.02, disappearAt: 0.5,
+                appearAt: 0.02,
+                disappearAt: 0.5,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.45, primary: { pattern: 5, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.6, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.3, distance: 0.75, direction: { x: 0.7, y: 0.85, z: 0 }, easing: 'easeOutQuad' },
+                cutout: {
+                    strength: 0.45,
+                    primary: { pattern: 5, scale: 0.8, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.6,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.3,
+                    distance: 0.75,
+                    direction: { x: 0.7, y: 0.85, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'fire-burst': { shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'fire-burst': {
+                        shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.2, endScale: 1.1, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 0.85, models: ['fire-burst'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 1.1,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 0.85,
+            models: ['fire-burst'],
             animation: {
-                appearAt: 0.03, disappearAt: 0.45,
+                appearAt: 0.03,
+                disappearAt: 0.45,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.18, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 5, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.1, distance: 0.6, direction: { x: -0.95, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 5, scale: 1.2, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.1,
+                    distance: 0.6,
+                    direction: { x: -0.95, y: 0.5, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                blending: 'additive', renderOrder: 11,
-                modelOverrides: { 'fire-burst': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                blending: 'additive',
+                renderOrder: 11,
+                modelOverrides: {
+                    'fire-burst': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.2, endScale: 1.1, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 0.85, models: ['fire-burst'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 1.1,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 0.85,
+            models: ['fire-burst'],
             animation: {
-                appearAt: 0.03, disappearAt: 0.45,
+                appearAt: 0.03,
+                disappearAt: 0.45,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.18, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 5, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.1, distance: 0.6, direction: { x: 0.95, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 5, scale: 1.2, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.1,
+                    distance: 0.6,
+                    direction: { x: 0.95, y: 0.5, z: 0 },
+                    easing: 'easeOutQuad',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                blending: 'additive', renderOrder: 11,
-                modelOverrides: { 'fire-burst': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                blending: 'additive',
+                renderOrder: 11,
+                modelOverrides: {
+                    'fire-burst': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 3: MEDIUM flame-tongues - secondary blast (radial burst, 8 directions)
@@ -205,20 +347,38 @@ const FIREBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 0.9,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 8, scale: 0.6, models: ['flame-tongue'],
+            count: 8,
+            scale: 0.6,
+            models: ['flame-tongue'],
             animation: {
-                appearAt: 0.02, disappearAt: 0.4, stagger: 0.008,
+                appearAt: 0.02,
+                disappearAt: 0.4,
+                stagger: 0.008,
                 enter: { type: 'scale', duration: 0.03, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.02, geometryStability: true },
-                cutout: { strength: 0.35, primary: { pattern: 5, scale: 0.7, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
+                cutout: {
+                    strength: 0.35,
+                    primary: { pattern: 5, scale: 0.7, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                scaleVariance: 0.3, lifetimeVariance: 0.15,
-                blending: 'additive', renderOrder: 14,
-                modelOverrides: { 'flame-tongue': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                scaleVariance: 0.3,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 14,
+                modelOverrides: {
+                    'flame-tongue': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 4: TINY ember particles - fine sparks (radial burst, 12 particles)
@@ -234,40 +394,81 @@ const FIREBLAST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.1,
                 endScale: 0.35,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 12, scale: 0.2, models: ['ember-cluster'],
+            count: 12,
+            scale: 0.2,
+            models: ['ember-cluster'],
             animation: {
-                appearAt: 0.01, disappearAt: 0.3, stagger: 0.005,
+                appearAt: 0.01,
+                disappearAt: 0.3,
+                stagger: 0.005,
                 enter: { type: 'scale', duration: 0.02, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.1, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.02, geometryStability: true },
-                cutout: { strength: 0.25, primary: { pattern: 7, scale: 0.5, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 1.0, strengthCurve: 'fadeOut' },
+                cutout: {
+                    strength: 0.25,
+                    primary: { pattern: 7, scale: 0.5, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 1.0,
+                    strengthCurve: 'fadeOut',
+                },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                scaleVariance: 0.5, lifetimeVariance: 0.25,
-                blending: 'additive', renderOrder: 16,
-                modelOverrides: { 'ember-cluster': { shaderAnimation: { type: 1, arcWidth: 0.98, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                scaleVariance: 0.5,
+                lifetimeVariance: 0.25,
+                blending: 'additive',
+                renderOrder: 16,
+                modelOverrides: {
+                    'ember-cluster': {
+                        shaderAnimation: { type: 1, arcWidth: 0.98, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 5: Ember cluster at base - impact embers
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: -0.1, z: 0.12 }, orientation: 'camera', startScale: 0.2, endScale: 0.9, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 0.7, models: ['ember-cluster'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: -0.1, z: 0.12 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 0.9,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 0.7,
+            models: ['ember-cluster'],
             animation: {
-                appearAt: 0.05, disappearAt: 0.6,
+                appearAt: 0.05,
+                disappearAt: 0.6,
                 enter: { type: 'scale', duration: 0.08, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.05, geometryStability: true },
-                cutout: { strength: 0.5, primary: { pattern: 5, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.5, strengthCurve: 'constant' },
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 5, scale: 1.2, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.5,
+                    strengthCurve: 'constant',
+                },
                 pulse: { amplitude: 0.1, frequency: 8, easing: 'easeInOut' },
                 rotate: { axis: 'z', rotations: 0, phase: 0 },
-                blending: 'additive', renderOrder: 6,
-                modelOverrides: { 'ember-cluster': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 2 }, orientationOverride: 'camera' } }
-            }
-        }
+                blending: 'additive',
+                renderOrder: 6,
+                modelOverrides: {
+                    'ember-cluster': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 2 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Flicker - punchy impact
@@ -282,7 +483,7 @@ const FIREBLAST_CONFIG = {
     glowColor: [1.0, 0.5, 0.15],
     glowIntensityMin: 1.2,
     glowIntensityMax: 2.5,
-    glowFlickerRate: 10
+    glowFlickerRate: 10,
 };
 
 /**

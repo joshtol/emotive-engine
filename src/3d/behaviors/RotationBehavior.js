@@ -47,7 +47,7 @@ export default class RotationBehavior {
             this.axes = [
                 geoAxes[0] * geoSpeed * this.speed,
                 geoAxes[1] * geoSpeed * this.speed,
-                geoAxes[2] * geoSpeed * this.speed
+                geoAxes[2] * geoSpeed * this.speed,
             ];
         } else {
             // Fall back to emotion's axes if no geometry rotation defined
@@ -78,14 +78,14 @@ export default class RotationBehavior {
 
         // Episodic wobble (random shake bursts, e.g., for nervous undertone)
         this.episodicWobble = {
-            enabled: false,              // Set by undertone
-            minInterval: 2000,           // Minimum time between wobbles (ms)
-            maxInterval: 5000,           // Maximum time between wobbles (ms)
-            amplitude: 0.05,             // Wobble amplitude (radians)
-            duration: 200,               // Wobble duration (ms)
-            nextWobbleTime: 0,           // When next wobble should trigger
-            wobbleStartTime: -1,         // When current wobble started (-1 = not wobbling)
-            wobbleTarget: [0, 0, 0]      // Random target angles for current wobble
+            enabled: false, // Set by undertone
+            minInterval: 2000, // Minimum time between wobbles (ms)
+            maxInterval: 5000, // Maximum time between wobbles (ms)
+            amplitude: 0.05, // Wobble amplitude (radians)
+            duration: 200, // Wobble duration (ms)
+            nextWobbleTime: 0, // When next wobble should trigger
+            wobbleStartTime: -1, // When current wobble started (-1 = not wobbling)
+            wobbleTarget: [0, 0, 0], // Random target angles for current wobble
         };
     }
 
@@ -107,26 +107,26 @@ export default class RotationBehavior {
 
         // Evaluate rotation based on type
         switch (this.type) {
-        case 'gentle':
-            return this._evaluateGentle(deltaTime, baseRotation);
+            case 'gentle':
+                return this._evaluateGentle(deltaTime, baseRotation);
 
-        case 'unstable':
-            return this._evaluateUnstable(deltaTime, baseRotation);
+            case 'unstable':
+                return this._evaluateUnstable(deltaTime, baseRotation);
 
-        case 'rhythmic':
-            return this._evaluateRhythmic(deltaTime, baseRotation);
+            case 'rhythmic':
+                return this._evaluateRhythmic(deltaTime, baseRotation);
 
-        case 'orbital':
-            return this._evaluateOrbital(deltaTime, baseRotation);
+            case 'orbital':
+                return this._evaluateOrbital(deltaTime, baseRotation);
 
-        case 'still':
-            return this._evaluateStill(deltaTime, baseRotation);
+            case 'still':
+                return this._evaluateStill(deltaTime, baseRotation);
 
-        case 'suspicious':
-            return this._evaluateSuspicious(deltaTime, baseRotation);
+            case 'suspicious':
+                return this._evaluateSuspicious(deltaTime, baseRotation);
 
-        default:
-            return this._evaluateGentle(deltaTime, baseRotation);
+            default:
+                return this._evaluateGentle(deltaTime, baseRotation);
         }
     }
 
@@ -156,7 +156,10 @@ export default class RotationBehavior {
         let eruptionMultiplier = 1.0;
         if (this.eruption.enabled) {
             // Check if it's time for next eruption
-            if (this.eruption.eruptionStartTime < 0 && this.time >= this.eruption.nextEruptionTime) {
+            if (
+                this.eruption.eruptionStartTime < 0 &&
+                this.time >= this.eruption.nextEruptionTime
+            ) {
                 this.eruption.eruptionStartTime = this.time;
             }
 
@@ -168,7 +171,8 @@ export default class RotationBehavior {
                     // Eruption is active - apply speed multiplier with ease in/out
                     const progress = eruptionElapsed / this.eruption.duration;
                     const easedProgress = Math.sin(progress * Math.PI); // Sine ease in/out
-                    eruptionMultiplier = 1.0 + (this.eruption.speedMultiplier - 1.0) * easedProgress;
+                    eruptionMultiplier =
+                        1.0 + (this.eruption.speedMultiplier - 1.0) * easedProgress;
                 } else {
                     // Eruption finished - schedule next one
                     this.eruption.eruptionStartTime = -1;
@@ -222,7 +226,7 @@ export default class RotationBehavior {
             // Pulse rotation speed on beat
             const beatPhase = (this.time * 0.001) % beatDuration;
             const beatPulse = Math.sin((beatPhase / beatDuration) * Math.PI * 2);
-            const speedMod = 1.0 + (beatPulse * 0.3); // Pulse ±30% speed
+            const speedMod = 1.0 + beatPulse * 0.3; // Pulse ±30% speed
 
             baseRotation[0] += this.axes[0] * this.speed * speedMod * dt;
             baseRotation[1] += this.axes[1] * this.speed * speedMod * dt;
@@ -336,13 +340,14 @@ export default class RotationBehavior {
 
             // Generate random target angles
             wobble.wobbleTarget = [
-                (Math.random() - 0.5) * wobble.amplitude,  // Pitch
-                (Math.random() - 0.5) * wobble.amplitude,  // Yaw
-                (Math.random() - 0.5) * wobble.amplitude   // Roll
+                (Math.random() - 0.5) * wobble.amplitude, // Pitch
+                (Math.random() - 0.5) * wobble.amplitude, // Yaw
+                (Math.random() - 0.5) * wobble.amplitude, // Roll
             ];
 
             // Schedule next wobble
-            const interval = wobble.minInterval + Math.random() * (wobble.maxInterval - wobble.minInterval);
+            const interval =
+                wobble.minInterval + Math.random() * (wobble.maxInterval - wobble.minInterval);
             wobble.nextWobbleTime = this.time + interval;
         }
 
@@ -382,7 +387,7 @@ export default class RotationBehavior {
             this.axes = [
                 geoAxes[0] * geoSpeed * this.speed,
                 geoAxes[1] * geoSpeed * this.speed,
-                geoAxes[2] * geoSpeed * this.speed
+                geoAxes[2] * geoSpeed * this.speed,
             ];
         } else {
             // Fall back to emotion's axes if no geometry rotation defined
@@ -415,8 +420,10 @@ export default class RotationBehavior {
 
             // Initialize first wobble timing if enabling
             if (this.episodicWobble.enabled && this.episodicWobble.nextWobbleTime === 0) {
-                const interval = this.episodicWobble.minInterval +
-                                Math.random() * (this.episodicWobble.maxInterval - this.episodicWobble.minInterval);
+                const interval =
+                    this.episodicWobble.minInterval +
+                    Math.random() *
+                        (this.episodicWobble.maxInterval - this.episodicWobble.minInterval);
                 this.episodicWobble.nextWobbleTime = this.time + interval;
             }
         }

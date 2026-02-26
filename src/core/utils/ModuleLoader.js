@@ -2,23 +2,23 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Module Loader
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Universal dynamic module loader with fallback for browser environments
  * @author Emotive Engine Team
  * @module utils/ModuleLoader
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Dynamically loads modules with fallback for environments without import.meta.glob  
- * ║                                                                                    
- * ║ FEATURES:                                                                          
- * ║ • Works in both build tools and raw browser environments                          
- * ║ • Auto-discovery when available, manual registry as fallback                      
- * ║ • Validation ensures modules have correct structure                               
- * ║ • Plugin support for extensibility                                                 
+ * ║ Dynamically loads modules with fallback for environments without import.meta.glob
+ * ║
+ * ║ FEATURES:
+ * ║ • Works in both build tools and raw browser environments
+ * ║ • Auto-discovery when available, manual registry as fallback
+ * ║ • Validation ensures modules have correct structure
+ * ║ • Plugin support for extensibility
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -33,7 +33,7 @@ class ModuleLoader {
     static hasGlobSupport() {
         return typeof import.meta.glob === 'function';
     }
-    
+
     /**
      * Load modules with automatic fallback
      * @param {string|Array} patternOrModules - Glob pattern or array of modules to load
@@ -56,7 +56,7 @@ class ModuleLoader {
         // ModuleLoader: import.meta.glob not available and no manual modules provided
         return registry;
     }
-    
+
     /**
      * Load modules using import.meta.glob (build tools only)
      * @private
@@ -64,41 +64,39 @@ class ModuleLoader {
     static loadWithGlob(pattern, registry = {}, validator = null) {
         try {
             const modules = import.meta.glob(pattern, { eager: true });
-            
+
             for (const [path, module] of Object.entries(modules)) {
                 try {
                     const mod = module.default || module;
-                    
+
                     if (!mod) {
                         // Empty module
                         continue;
                     }
-                    
+
                     if (validator && !validator(mod, path)) {
                         // Invalid module structure
                         continue;
                     }
-                    
+
                     if (!mod.name) {
                         const filename = path.split('/').pop().replace('.js', '');
                         mod.name = filename;
                     }
-                    
+
                     registry[mod.name] = mod;
-                    
                 } catch {
                     // Failed to load module
                 }
             }
-            
+
             return registry;
-            
         } catch {
             // Failed to load modules matching pattern
             return registry;
         }
     }
-    
+
     /**
      * Load modules manually (works everywhere)
      * @private
@@ -107,29 +105,28 @@ class ModuleLoader {
         for (const module of modules) {
             try {
                 const mod = module.default || module;
-                
+
                 if (!mod) continue;
-                
+
                 if (validator && !validator(mod, 'manual')) {
                     // Invalid module structure
                     continue;
                 }
-                
+
                 if (!mod.name) {
                     // Module missing name
                     continue;
                 }
-                
+
                 registry[mod.name] = mod;
-                
             } catch {
                 // Failed to load module
             }
         }
-        
+
         return registry;
     }
-    
+
     /**
      * Load modules from multiple sources
      * @param {Array} sources - Array of patterns or module arrays
@@ -143,7 +140,7 @@ class ModuleLoader {
         }
         return registry;
     }
-    
+
     /**
      * Create a module validator function
      * @param {Array<string>} requiredFields - Fields that must exist
@@ -161,7 +158,7 @@ class ModuleLoader {
             return true;
         };
     }
-    
+
     /**
      * Setup hot module replacement (if available)
      * @param {string} pattern - Glob pattern for modules
@@ -189,34 +186,22 @@ class ModuleLoader {
 /**
  * Validate gesture module structure
  */
-export const validateGesture = ModuleLoader.createValidator(
-    ['name', 'type', 'apply'],
-    'Gesture'
-);
+export const validateGesture = ModuleLoader.createValidator(['name', 'type', 'apply'], 'Gesture');
 
 /**
  * Validate emotion module structure
  */
-export const validateEmotion = ModuleLoader.createValidator(
-    ['name', 'color'],
-    'Emotion'
-);
+export const validateEmotion = ModuleLoader.createValidator(['name', 'color'], 'Emotion');
 
 /**
  * Validate particle behavior module structure
  */
-export const validateBehavior = ModuleLoader.createValidator(
-    ['name', 'apply'],
-    'Behavior'
-);
+export const validateBehavior = ModuleLoader.createValidator(['name', 'apply'], 'Behavior');
 
 /**
  * Validate effect module structure
  */
-export const validateEffect = ModuleLoader.createValidator(
-    ['name', 'apply'],
-    'Effect'
-);
+export const validateEffect = ModuleLoader.createValidator(['name', 'apply'], 'Effect');
 
 // Export the loader
 export default ModuleLoader;

@@ -82,13 +82,21 @@ export class ModularHandlersInitializer {
             errorBoundary: m.errorBoundary,
             config: m.config,
             state: {
-                get speaking() { return m.speaking; },
-                set speaking(v) { m.speaking = v; },
-                get audioLevel() { return m.audioLevel; },
-                set audioLevel(v) { m.audioLevel = v; }
+                get speaking() {
+                    return m.speaking;
+                },
+                set speaking(v) {
+                    m.speaking = v;
+                },
+                get audioLevel() {
+                    return m.audioLevel;
+                },
+                set audioLevel(v) {
+                    m.audioLevel = v;
+                },
             },
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // StateCoordinator - depends on state machine, renderer
@@ -100,7 +108,7 @@ export class ModularHandlersInitializer {
             soundSystem: m.soundSystem,
             config: m.config,
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // VisualizationRunner - depends on animation controller, state machine, renderer
@@ -119,13 +127,21 @@ export class ModularHandlersInitializer {
             config: m.config,
             canvas: m.canvas,
             state: {
-                get speaking() { return m.speaking; },
-                set speaking(v) { m.speaking = v; },
-                get isRunning() { return m.isRunning; },
-                set isRunning(v) { m.isRunning = v; }
+                get speaking() {
+                    return m.speaking;
+                },
+                set speaking(v) {
+                    m.speaking = v;
+                },
+                get isRunning() {
+                    return m.isRunning;
+                },
+                set isRunning(v) {
+                    m.isRunning = v;
+                },
             },
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // ExecutionLifecycleManager - depends on animation controller, idle behavior, visualization runner
@@ -137,11 +153,15 @@ export class ModularHandlersInitializer {
             renderer: m.renderer,
             errorBoundary: m.errorBoundary,
             state: {
-                get isRunning() { return m.isRunning; },
-                set isRunning(v) { m.isRunning = v; }
+                get isRunning() {
+                    return m.isRunning;
+                },
+                set isRunning(v) {
+                    m.isRunning = v;
+                },
             },
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // AnimationFrameController - depends on animation controller, position controller
@@ -151,7 +171,7 @@ export class ModularHandlersInitializer {
             config: m.config,
             errorBoundary: m.errorBoundary,
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // ShapeTransformManager - depends on shape morpher, renderer
@@ -160,14 +180,14 @@ export class ModularHandlersInitializer {
             renderer: m.renderer,
             errorBoundary: m.errorBoundary,
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // EventListenerManager - depends on event manager
         m.eventListenerManager = new EventListenerManager({
             eventManager: m.eventManager,
             errorBoundary: m.errorBoundary,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // TTSManager - depends on TTS state, sound system
@@ -177,11 +197,15 @@ export class ModularHandlersInitializer {
             config: m.config,
             tts: m.tts,
             state: {
-                get speaking() { return m.speaking; },
-                set speaking(v) { m.speaking = v; }
+                get speaking() {
+                    return m.speaking;
+                },
+                set speaking(v) {
+                    m.speaking = v;
+                },
             },
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // SpeechReactivityManager - depends on audio level processor
@@ -191,13 +215,21 @@ export class ModularHandlersInitializer {
             errorBoundary: m.errorBoundary,
             config: m.config,
             state: {
-                get speaking() { return m.speaking; },
-                set speaking(v) { m.speaking = v; },
-                get audioLevel() { return m.audioLevel; },
-                set audioLevel(v) { m.audioLevel = v; }
+                get speaking() {
+                    return m.speaking;
+                },
+                set speaking(v) {
+                    m.speaking = v;
+                },
+                get audioLevel() {
+                    return m.audioLevel;
+                },
+                set audioLevel(v) {
+                    m.audioLevel = v;
+                },
             },
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // CanvasResizeManager - depends on renderer, state machine, particle system
@@ -206,14 +238,14 @@ export class ModularHandlersInitializer {
             stateMachine: m.stateMachine,
             particleSystem: m.particleSystem,
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // OffsetPositionManager - depends on position controller, error boundary
         m.offsetPositionManager = new OffsetPositionManager({
             positionController: m.positionController,
             errorBoundary: m.errorBoundary,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // VisualTransformationManager - depends on canvas resize, offset position, shape transform managers
@@ -221,14 +253,14 @@ export class ModularHandlersInitializer {
             canvasResizeManager: m.canvasResizeManager,
             offsetPositionManager: m.offsetPositionManager,
             shapeTransformManager: m.shapeTransformManager,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // FrustrationContextManager - depends on context manager
         m.frustrationContextManager = new FrustrationContextManager({
             contextManager: m.contextManager,
             errorBoundary: m.errorBoundary,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // LLMIntegrationBridge - depends on state machine, gesture controller
@@ -237,11 +269,15 @@ export class ModularHandlersInitializer {
             gestureController: m.gestureController,
             errorBoundary: m.errorBoundary,
             state: {
-                get llmHandler() { return m.llmHandler; },
-                set llmHandler(v) { m.llmHandler = v; }
+                get llmHandler() {
+                    return m.llmHandler;
+                },
+                set llmHandler(v) {
+                    m.llmHandler = v;
+                },
             },
             emit: (event, data) => m.emit(event, data),
-            chainTarget: m
+            chainTarget: m,
         });
     }
 
@@ -259,14 +295,20 @@ export class ModularHandlersInitializer {
             performanceSystem: m.performanceSystem,
             config: m.config,
             state: {
-                get isRunning() { return m.isRunning; },
-                get speaking() { return m.speaking; },
-                get debugMode() { return m.debugMode; }
+                get isRunning() {
+                    return m.isRunning;
+                },
+                get speaking() {
+                    return m.speaking;
+                },
+                get debugMode() {
+                    return m.debugMode;
+                },
             },
             getCurrentState: () => m.getCurrentState(),
             getAudioStats: () => m.getAudioStats(),
             getEventStats: () => m.getEventStats(),
-            chainTarget: m
+            chainTarget: m,
         });
 
         // EmotionalStateQueryManager - depends on state machine, performance system, context manager
@@ -275,7 +317,7 @@ export class ModularHandlersInitializer {
             performanceSystem: m.performanceSystem,
             contextManager: m.contextManager,
             errorBoundary: m.errorBoundary,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // DebugProfilingManager - depends on diagnostics manager
@@ -283,10 +325,14 @@ export class ModularHandlersInitializer {
             diagnosticsManager: m.diagnosticsManager,
             errorBoundary: m.errorBoundary,
             state: {
-                get debugMode() { return m.debugMode; },
-                set debugMode(v) { m.debugMode = v; }
+                get debugMode() {
+                    return m.debugMode;
+                },
+                set debugMode(v) {
+                    m.debugMode = v;
+                },
             },
-            chainTarget: m
+            chainTarget: m,
         });
     }
 
@@ -302,7 +348,7 @@ export class ModularHandlersInitializer {
             frustrationContextManager: m.frustrationContextManager,
             emotionalStateQueryManager: m.emotionalStateQueryManager,
             diagnosticsManager: m.diagnosticsManager,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // HealthCheckManager - depends on diagnostics manager (must be before PerformanceMonitoringManager)
@@ -313,7 +359,7 @@ export class ModularHandlersInitializer {
             mobileOptimization: m.mobileOptimization,
             accessibilityManager: m.accessibilityManager,
             config: m.config,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // PerformanceMonitoringManager - depends on diagnostics manager, health check manager
@@ -325,7 +371,7 @@ export class ModularHandlersInitializer {
             particleSystem: m.particleSystem,
             healthCheckManager: m.healthCheckManager,
             config: m.config,
-            chainTarget: m
+            chainTarget: m,
         });
 
         // ConfigurationManager - depends on config, multiple systems
@@ -341,7 +387,7 @@ export class ModularHandlersInitializer {
             mobileOptimization: m.mobileOptimization,
             accessibilityManager: m.accessibilityManager,
             errorBoundary: m.errorBoundary,
-            chainTarget: m
+            chainTarget: m,
         });
     }
 }

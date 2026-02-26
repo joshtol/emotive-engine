@@ -47,6 +47,6 @@ export function createSphere(segments = 32, rings = 32) {
     return {
         vertices: new Float32Array(vertices),
         normals: new Float32Array(normals),
-        indices: new Uint16Array(indices)
+        indices: new Uint16Array(indices),
     };
 }

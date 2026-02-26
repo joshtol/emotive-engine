@@ -73,7 +73,7 @@ export class GestureBlender {
             crack: null,
             crackTriggers: null,
             crackHealTrigger: false,
-            crackHealDuration: 1500
+            crackHealDuration: 1500,
         };
 
         // Pre-allocated result object (avoids allocation on return)
@@ -114,7 +114,7 @@ export class GestureBlender {
             crackTriggers: null,
             crackHealTrigger: false,
             crackHealDuration: 1500,
-            gestureQuaternion: null
+            gestureQuaternion: null,
         };
 
         // Pre-allocated arrays for non-uniform scale result
@@ -127,9 +127,13 @@ export class GestureBlender {
      */
     _resetAccumulated() {
         const a = this._accumulated;
-        a.position[0] = 0; a.position[1] = 0; a.position[2] = 0;
+        a.position[0] = 0;
+        a.position[1] = 0;
+        a.position[2] = 0;
         a.scale = 1.0;
-        a.nonUniformScale[0] = 1.0; a.nonUniformScale[1] = 1.0; a.nonUniformScale[2] = 1.0;
+        a.nonUniformScale[0] = 1.0;
+        a.nonUniformScale[1] = 1.0;
+        a.nonUniformScale[2] = 1.0;
         a.glowIntensity = 1.0;
         a.glowBoost = 0.0;
         a.glowColorOverride = null;
@@ -144,10 +148,18 @@ export class GestureBlender {
         a.earthOverlay = null;
         a.natureOverlay = null;
         a.meshOpacity = 1.0;
-        a.cameraRelativePosition[0] = 0; a.cameraRelativePosition[1] = 0; a.cameraRelativePosition[2] = 0;
-        a.cameraRelativeRotation[0] = 0; a.cameraRelativeRotation[1] = 0; a.cameraRelativeRotation[2] = 0;
-        a.positionBoost[0] = 0; a.positionBoost[1] = 0; a.positionBoost[2] = 0;
-        a.rotationBoost[0] = 0; a.rotationBoost[1] = 0; a.rotationBoost[2] = 0;
+        a.cameraRelativePosition[0] = 0;
+        a.cameraRelativePosition[1] = 0;
+        a.cameraRelativePosition[2] = 0;
+        a.cameraRelativeRotation[0] = 0;
+        a.cameraRelativeRotation[1] = 0;
+        a.cameraRelativeRotation[2] = 0;
+        a.positionBoost[0] = 0;
+        a.positionBoost[1] = 0;
+        a.positionBoost[2] = 0;
+        a.rotationBoost[0] = 0;
+        a.rotationBoost[1] = 0;
+        a.rotationBoost[2] = 0;
         a.scaleBoost = 1.0;
         a.hasAccentGestures = false;
         a.hasAbsoluteGestures = false;
@@ -289,8 +301,10 @@ export class GestureBlender {
                     // ELECTRIC OVERLAY: Shader overlay for electrocution effect
                     // Last-wins blending (strongest charge takes precedence)
                     if (output.electricOverlay && output.electricOverlay.enabled) {
-                        if (!accumulated.electricOverlay ||
-                            output.electricOverlay.charge > accumulated.electricOverlay.charge) {
+                        if (
+                            !accumulated.electricOverlay ||
+                            output.electricOverlay.charge > accumulated.electricOverlay.charge
+                        ) {
                             accumulated.electricOverlay = { ...output.electricOverlay };
                         }
                     }
@@ -298,8 +312,10 @@ export class GestureBlender {
                     // WATER OVERLAY: Shader overlay for fluid/wet effect
                     // Last-wins blending (strongest wetness takes precedence)
                     if (output.waterOverlay && output.waterOverlay.enabled) {
-                        if (!accumulated.waterOverlay ||
-                            output.waterOverlay.wetness > accumulated.waterOverlay.wetness) {
+                        if (
+                            !accumulated.waterOverlay ||
+                            output.waterOverlay.wetness > accumulated.waterOverlay.wetness
+                        ) {
                             accumulated.waterOverlay = { ...output.waterOverlay };
                         }
                     }
@@ -307,8 +323,10 @@ export class GestureBlender {
                     // FIRE OVERLAY: Shader overlay for fire/heat effect
                     // Last-wins blending (strongest heat takes precedence)
                     if (output.fireOverlay && output.fireOverlay.enabled) {
-                        if (!accumulated.fireOverlay ||
-                            output.fireOverlay.heat > accumulated.fireOverlay.heat) {
+                        if (
+                            !accumulated.fireOverlay ||
+                            output.fireOverlay.heat > accumulated.fireOverlay.heat
+                        ) {
                             accumulated.fireOverlay = { ...output.fireOverlay };
                         }
                     }
@@ -316,8 +334,10 @@ export class GestureBlender {
                     // SMOKE OVERLAY: Shader overlay for smoke/fog effect
                     // Last-wins blending (strongest thickness takes precedence)
                     if (output.smokeOverlay && output.smokeOverlay.enabled) {
-                        if (!accumulated.smokeOverlay ||
-                            output.smokeOverlay.thickness > accumulated.smokeOverlay.thickness) {
+                        if (
+                            !accumulated.smokeOverlay ||
+                            output.smokeOverlay.thickness > accumulated.smokeOverlay.thickness
+                        ) {
                             accumulated.smokeOverlay = { ...output.smokeOverlay };
                         }
                     }
@@ -325,8 +345,10 @@ export class GestureBlender {
                     // VOID OVERLAY: Shader overlay for void/darkness absorption effect
                     // Last-wins blending (strongest strength takes precedence)
                     if (output.voidOverlay && output.voidOverlay.enabled) {
-                        if (!accumulated.voidOverlay ||
-                            output.voidOverlay.strength > accumulated.voidOverlay.strength) {
+                        if (
+                            !accumulated.voidOverlay ||
+                            output.voidOverlay.strength > accumulated.voidOverlay.strength
+                        ) {
                             accumulated.voidOverlay = { ...output.voidOverlay };
                         }
                     }
@@ -334,8 +356,10 @@ export class GestureBlender {
                     // ICE OVERLAY: Shader overlay for frost/freezing effect
                     // Last-wins blending (strongest strength takes precedence)
                     if (output.iceOverlay && output.iceOverlay.enabled) {
-                        if (!accumulated.iceOverlay ||
-                            output.iceOverlay.strength > accumulated.iceOverlay.strength) {
+                        if (
+                            !accumulated.iceOverlay ||
+                            output.iceOverlay.strength > accumulated.iceOverlay.strength
+                        ) {
                             accumulated.iceOverlay = { ...output.iceOverlay };
                         }
                     }
@@ -343,8 +367,10 @@ export class GestureBlender {
                     // LIGHT OVERLAY: Shader overlay for radiance/holy effect
                     // Last-wins blending (strongest strength takes precedence)
                     if (output.lightOverlay && output.lightOverlay.enabled) {
-                        if (!accumulated.lightOverlay ||
-                            output.lightOverlay.strength > accumulated.lightOverlay.strength) {
+                        if (
+                            !accumulated.lightOverlay ||
+                            output.lightOverlay.strength > accumulated.lightOverlay.strength
+                        ) {
                             accumulated.lightOverlay = { ...output.lightOverlay };
                         }
                     }
@@ -352,8 +378,10 @@ export class GestureBlender {
                     // POISON OVERLAY: Shader overlay for toxic/acid effect
                     // Last-wins blending (strongest strength takes precedence)
                     if (output.poisonOverlay && output.poisonOverlay.enabled) {
-                        if (!accumulated.poisonOverlay ||
-                            output.poisonOverlay.strength > accumulated.poisonOverlay.strength) {
+                        if (
+                            !accumulated.poisonOverlay ||
+                            output.poisonOverlay.strength > accumulated.poisonOverlay.strength
+                        ) {
                             accumulated.poisonOverlay = { ...output.poisonOverlay };
                         }
                     }
@@ -361,8 +389,10 @@ export class GestureBlender {
                     // EARTH OVERLAY: Shader overlay for stone/petrification effect
                     // Last-wins blending (strongest strength takes precedence)
                     if (output.earthOverlay && output.earthOverlay.enabled) {
-                        if (!accumulated.earthOverlay ||
-                            output.earthOverlay.strength > accumulated.earthOverlay.strength) {
+                        if (
+                            !accumulated.earthOverlay ||
+                            output.earthOverlay.strength > accumulated.earthOverlay.strength
+                        ) {
                             accumulated.earthOverlay = { ...output.earthOverlay };
                         }
                     }
@@ -370,8 +400,10 @@ export class GestureBlender {
                     // NATURE OVERLAY: Shader overlay for plant/growth effect
                     // Last-wins blending (strongest strength takes precedence)
                     if (output.natureOverlay && output.natureOverlay.enabled) {
-                        if (!accumulated.natureOverlay ||
-                            output.natureOverlay.strength > accumulated.natureOverlay.strength) {
+                        if (
+                            !accumulated.natureOverlay ||
+                            output.natureOverlay.strength > accumulated.natureOverlay.strength
+                        ) {
                             accumulated.natureOverlay = { ...output.natureOverlay };
                         }
                     }
@@ -379,7 +411,10 @@ export class GestureBlender {
                     // MESH OPACITY: Fade mascot visibility (for smokebomb/vanish/materialize)
                     // Takes minimum - most faded wins when multiple effects active
                     if (output.meshOpacity !== undefined) {
-                        accumulated.meshOpacity = Math.min(accumulated.meshOpacity, output.meshOpacity);
+                        accumulated.meshOpacity = Math.min(
+                            accumulated.meshOpacity,
+                            output.meshOpacity
+                        );
                     }
 
                     // ═══════════════════════════════════════════════════════════════
@@ -413,18 +448,24 @@ export class GestureBlender {
                     // Transformed to world-space in Core3DManager using camera direction
                     // Apply fadeEnvelope for smooth transitions
                     if (output.cameraRelativePosition) {
-                        accumulated.cameraRelativePosition[0] += output.cameraRelativePosition[0] * fadeEnvelope;
-                        accumulated.cameraRelativePosition[1] += output.cameraRelativePosition[1] * fadeEnvelope;
-                        accumulated.cameraRelativePosition[2] += output.cameraRelativePosition[2] * fadeEnvelope;
+                        accumulated.cameraRelativePosition[0] +=
+                            output.cameraRelativePosition[0] * fadeEnvelope;
+                        accumulated.cameraRelativePosition[1] +=
+                            output.cameraRelativePosition[1] * fadeEnvelope;
+                        accumulated.cameraRelativePosition[2] +=
+                            output.cameraRelativePosition[2] * fadeEnvelope;
                         accumulated.hasCameraRelativeGestures = true;
                     }
 
                     // Rotation in view space: Z = roll (tilt left/right as seen by camera)
                     // Transformed to world-space rotation in Core3DManager
                     if (output.cameraRelativeRotation) {
-                        accumulated.cameraRelativeRotation[0] += output.cameraRelativeRotation[0] * fadeEnvelope;
-                        accumulated.cameraRelativeRotation[1] += output.cameraRelativeRotation[1] * fadeEnvelope;
-                        accumulated.cameraRelativeRotation[2] += output.cameraRelativeRotation[2] * fadeEnvelope;
+                        accumulated.cameraRelativeRotation[0] +=
+                            output.cameraRelativeRotation[0] * fadeEnvelope;
+                        accumulated.cameraRelativeRotation[1] +=
+                            output.cameraRelativeRotation[1] * fadeEnvelope;
+                        accumulated.cameraRelativeRotation[2] +=
+                            output.cameraRelativeRotation[2] * fadeEnvelope;
                         accumulated.hasCameraRelativeGestures = true;
                     }
 
@@ -433,16 +474,28 @@ export class GestureBlender {
                     // ═══════════════════════════════════════════════════════════════
                     // Use MAX blending - strongest freeze wins
                     if (output.freezeRotation !== undefined) {
-                        accumulated.freezeRotation = Math.max(accumulated.freezeRotation, output.freezeRotation * fadeEnvelope);
+                        accumulated.freezeRotation = Math.max(
+                            accumulated.freezeRotation,
+                            output.freezeRotation * fadeEnvelope
+                        );
                     }
                     if (output.freezeWobble !== undefined) {
-                        accumulated.freezeWobble = Math.max(accumulated.freezeWobble, output.freezeWobble * fadeEnvelope);
+                        accumulated.freezeWobble = Math.max(
+                            accumulated.freezeWobble,
+                            output.freezeWobble * fadeEnvelope
+                        );
                     }
                     if (output.freezeGroove !== undefined) {
-                        accumulated.freezeGroove = Math.max(accumulated.freezeGroove, output.freezeGroove * fadeEnvelope);
+                        accumulated.freezeGroove = Math.max(
+                            accumulated.freezeGroove,
+                            output.freezeGroove * fadeEnvelope
+                        );
                     }
                     if (output.freezeParticles !== undefined) {
-                        accumulated.freezeParticles = Math.max(accumulated.freezeParticles, output.freezeParticles * fadeEnvelope);
+                        accumulated.freezeParticles = Math.max(
+                            accumulated.freezeParticles,
+                            output.freezeParticles * fadeEnvelope
+                        );
                     }
 
                     // ═══════════════════════════════════════════════════════════════
@@ -461,7 +514,10 @@ export class GestureBlender {
                     if (output.deformation && output.deformation.enabled) {
                         const d = output.deformation;
 
-                        if (!accumulated.deformation || d.strength > accumulated.deformation.strength) {
+                        if (
+                            !accumulated.deformation ||
+                            d.strength > accumulated.deformation.strength
+                        ) {
                             accumulated.deformation = { ...d };
                         }
                     }
@@ -483,7 +539,8 @@ export class GestureBlender {
                                 accumulated.shatter = { enabled: false };
                             }
                             accumulated.shatter.reassemble = true;
-                            accumulated.shatter.reassembleDuration = output.shatter.reassembleDuration || 1000;
+                            accumulated.shatter.reassembleDuration =
+                                output.shatter.reassembleDuration || 1000;
                         }
                     }
 
@@ -512,7 +569,7 @@ export class GestureBlender {
                                     screenDirection: c.screenDirection,
                                     propagation: c.propagation,
                                     amount: c.amount,
-                                    glowStrength: c.glowStrength
+                                    glowStrength: c.glowStrength,
                                 });
                             }
                         }
@@ -545,12 +602,18 @@ export class GestureBlender {
 
         // positionBoost: limit each axis to ±0.05 (prevents wild movements)
         for (let i = 0; i < 3; i++) {
-            accumulated.positionBoost[i] = Math.max(-0.05, Math.min(0.05, accumulated.positionBoost[i]));
+            accumulated.positionBoost[i] = Math.max(
+                -0.05,
+                Math.min(0.05, accumulated.positionBoost[i])
+            );
         }
 
         // rotationBoost: limit each axis to ±0.1 radians (~6 degrees)
         for (let i = 0; i < 3; i++) {
-            accumulated.rotationBoost[i] = Math.max(-0.1, Math.min(0.1, accumulated.rotationBoost[i]));
+            accumulated.rotationBoost[i] = Math.max(
+                -0.1,
+                Math.min(0.1, accumulated.rotationBoost[i])
+            );
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -578,7 +641,7 @@ export class GestureBlender {
         const finalRotation = [
             baseEuler[0] + gestureX,
             baseEuler[1] + gestureY,
-            baseEuler[2] + gestureZ
+            baseEuler[2] + gestureZ,
         ];
 
         // Clean up old crack trigger tracking (remove animations that are no longer active)
@@ -595,9 +658,10 @@ export class GestureBlender {
 
         // Combine uniform and non-uniform scale
         // If non-uniform scale is used, apply it on top of uniform scale
-        const hasNonUniformScale = accumulated.nonUniformScale[0] !== 1.0 ||
-                                   accumulated.nonUniformScale[1] !== 1.0 ||
-                                   accumulated.nonUniformScale[2] !== 1.0;
+        const hasNonUniformScale =
+            accumulated.nonUniformScale[0] !== 1.0 ||
+            accumulated.nonUniformScale[1] !== 1.0 ||
+            accumulated.nonUniformScale[2] !== 1.0;
 
         // Use pre-allocated non-uniform scale array when needed
         let finalNonUniformScale = null;

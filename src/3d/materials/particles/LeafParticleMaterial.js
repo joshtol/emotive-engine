@@ -26,7 +26,7 @@ import * as THREE from 'three';
 // VERTEX SHADER (same GPU-deterministic billboard as smoke/mist/spray/dust)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -98,7 +98,7 @@ void main() {
 // LEAF FRAGMENT SHADER
 // =================================================================================================
 
-const LEAF_FRAGMENT_GLSL = /* glsl */`
+const LEAF_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform float uTime;
 uniform vec3 uColor;
@@ -253,16 +253,20 @@ export function createLeafParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'LeafParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.55 },
-            uColor:              { value: new THREE.Color(...(config.color || [0.85, 0.65, 0.25])) },
-            uColorVariant:       { value: new THREE.Color(...(config.colorVariant || config.color || [0.70, 0.35, 0.15])) },
-            uBuoyancy:           { value: config.buoyancy ?? -0.005 },
-            uDrag:               { value: config.drag ?? 1.0 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.55 },
+            uColor: { value: new THREE.Color(...(config.color || [0.85, 0.65, 0.25])) },
+            uColorVariant: {
+                value: new THREE.Color(
+                    ...(config.colorVariant || config.color || [0.7, 0.35, 0.15])
+                ),
+            },
+            uBuoyancy: { value: config.buoyancy ?? -0.005 },
+            uDrag: { value: config.drag ?? 1.0 },
             uTurbulenceStrength: { value: config.turbulence ?? 0.25 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 0.85 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 2.5 },
-            uGravity:            { value: config.gravity ?? 0.03 },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 0.85 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 2.5 },
+            uGravity: { value: config.gravity ?? 0.03 },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: LEAF_FRAGMENT_GLSL,

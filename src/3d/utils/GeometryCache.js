@@ -42,7 +42,7 @@ export async function preload(geometryType, options = {}) {
         material: null,
         materialType: null,
         config,
-        loaded: false
+        loaded: false,
     };
 
     // Load geometry (may be async for OBJ models like crystal)
@@ -59,7 +59,7 @@ export async function preload(geometryType, options = {}) {
             glowIntensity: options.glowIntensity || 1.0,
             materialVariant: options.materialVariant,
             emotionData: options.emotionData,
-            assetBasePath: options.assetBasePath
+            assetBasePath: options.assetBasePath,
         });
 
         if (materialResult) {
@@ -110,7 +110,7 @@ export function updateMaterialOptions(geometryType, options) {
     }
 
     // Update uniforms directly on cached material
-    const {uniforms} = entry.material;
+    const { uniforms } = entry.material;
     if (uniforms) {
         if (options.glowColor && uniforms.glowColor) {
             uniforms.glowColor.value.set(...options.glowColor);
@@ -131,7 +131,6 @@ export async function preloadAll(options = {}) {
     const types = ['crystal', 'rough', 'heart', 'moon', 'sun'];
 
     await Promise.all(types.map(type => preload(type, options)));
-
 }
 
 /**
@@ -160,7 +159,7 @@ export function getStatus() {
             loaded: entry.loaded,
             hasGeometry: !!entry.geometry,
             hasMaterial: !!entry.material,
-            materialType: entry.materialType
+            materialType: entry.materialType,
         };
     }
     return status;
@@ -173,5 +172,5 @@ export default {
     has,
     updateMaterialOptions,
     dispose,
-    getStatus
+    getStatus,
 };

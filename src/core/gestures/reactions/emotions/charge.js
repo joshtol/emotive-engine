@@ -36,8 +36,8 @@ export default {
         strength: 1.0,
         particleMotion: {
             type: 'charge',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     '3d': {
@@ -63,8 +63,11 @@ export default {
             // Phase 3 (0.6-0.85): Impact/peak - at target
             // Phase 4 (0.85-1.0): Recovery - brake and return
 
-            let posX = 0, posY = 0, posZ = 0;
-            let rotX = 0, rotZ = 0;
+            let posX = 0,
+                posY = 0,
+                posZ = 0;
+            let rotX = 0,
+                rotZ = 0;
             const rotY = 0;
             let scale = 1.0;
             let glowIntensity = 1.0;
@@ -89,7 +92,6 @@ export default {
 
                 // Building energy
                 glowIntensity = 1.0 + windEase * 0.4;
-
             } else if (progress < 0.6) {
                 // Phase 2: CHARGE!
                 const chargeT = (progress - 0.2) / 0.4;
@@ -114,7 +116,6 @@ export default {
                 // Speed blur effect - slight wobble
                 const blur = Math.sin(chargeT * Math.PI * 10) * chargeEase * 0.02;
                 rotZ = blur * strength;
-
             } else if (progress < 0.85) {
                 // Phase 3: Impact/peak
                 const impactT = (progress - 0.6) / 0.25;
@@ -136,13 +137,13 @@ export default {
                 // Maximum intensity
                 glowIntensity = 2.0 - impactT * 0.3;
                 glowBoost = 0.4 * (1 - impactT * 0.5);
-
             } else {
                 // Phase 4: Recovery
                 const recoverT = (progress - 0.85) / 0.15;
-                const recoverEase = recoverT < 0.5
-                    ? 4 * recoverT * recoverT * recoverT
-                    : 1 - Math.pow(-2 * recoverT + 2, 3) / 2;
+                const recoverEase =
+                    recoverT < 0.5
+                        ? 4 * recoverT * recoverT * recoverT
+                        : 1 - Math.pow(-2 * recoverT + 2, 3) / 2;
 
                 // Return to center
                 posZ = -0.25 * (1 - recoverEase) * strength;
@@ -163,8 +164,8 @@ export default {
                 rotation: [rotX, rotY, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

@@ -40,9 +40,13 @@ export class ParticleConfigCalculator {
             this.calculateParticleBehavior(renderState, emotionParams);
 
         return {
-            orbX, orbY, particleBehavior, particleRate,
-            minParticles, maxParticles,
-            emotionParams
+            orbX,
+            orbY,
+            particleBehavior,
+            particleRate,
+            minParticles,
+            maxParticles,
+            emotionParams,
         };
     }
 
@@ -62,8 +66,10 @@ export class ParticleConfigCalculator {
 
         // Apply vertical offset for certain emotions (like excited for exclamation mark)
         if (stateProps.verticalOffset) {
-            orbY = effectiveCenter.y - this.config.topOffset +
-                   (this.canvasManager.height * stateProps.verticalOffset);
+            orbY =
+                effectiveCenter.y -
+                this.config.topOffset +
+                this.canvasManager.height * stateProps.verticalOffset;
         }
 
         return { orbX, orbY };
@@ -84,10 +90,14 @@ export class ParticleConfigCalculator {
         const stateProps = this.stateMachine.getCurrentEmotionalProperties();
 
         // Use emotionParams min/max if available, otherwise fall back to stateProps
-        const minParticles = emotionParams.minParticles !== undefined ?
-            emotionParams.minParticles : (stateProps.minParticles || 0);
-        let maxParticles = emotionParams.maxParticles !== undefined ?
-            emotionParams.maxParticles : (stateProps.maxParticles || 10);
+        const minParticles =
+            emotionParams.minParticles !== undefined
+                ? emotionParams.minParticles
+                : stateProps.minParticles || 0;
+        let maxParticles =
+            emotionParams.maxParticles !== undefined
+                ? emotionParams.maxParticles
+                : stateProps.maxParticles || 10;
 
         // Special case for zen: mix falling and orbiting behaviors
         if (renderState.emotion === 'zen') {
@@ -95,8 +105,11 @@ export class ParticleConfigCalculator {
         }
 
         // Apply renderer undertone overrides
-        ({ particleBehavior, particleRate, maxParticles } =
-            this.applyRendererOverrides(particleBehavior, particleRate, maxParticles));
+        ({ particleBehavior, particleRate, maxParticles } = this.applyRendererOverrides(
+            particleBehavior,
+            particleRate,
+            maxParticles
+        ));
 
         return { particleBehavior, particleRate, minParticles, maxParticles };
     }
@@ -138,14 +151,15 @@ export class ParticleConfigCalculator {
      */
     getParticleModifier(renderState) {
         // Get undertone modifier from renderer if present
-        const undertoneModifier = this.renderer.getUndertoneModifier ?
-            this.renderer.getUndertoneModifier() : null;
+        const undertoneModifier = this.renderer.getUndertoneModifier
+            ? this.renderer.getUndertoneModifier()
+            : null;
 
         // Add zen vortex intensity to undertone modifier if in zen state
         if (renderState.emotion === 'zen' && this.renderer.state.zenVortexIntensity) {
             return {
                 ...(undertoneModifier || {}),
-                zenVortexIntensity: this.renderer.state.zenVortexIntensity
+                zenVortexIntensity: this.renderer.state.zenVortexIntensity,
             };
         }
 

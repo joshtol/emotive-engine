@@ -120,11 +120,12 @@ export class RenderLayerOrchestrator {
 
         const renderTime = performance.now() - renderStart;
 
-        if (renderTime > 16.67) { // Longer than 60fps frame
+        if (renderTime > 16.67) {
+            // Longer than 60fps frame
             emotiveDebugger.log('WARN', 'Slow render frame detected', {
                 renderTime,
                 deltaTime,
-                particleCount: this.particleSystem.getStats().activeParticles
+                particleCount: this.particleSystem.getStats().activeParticles,
             });
         }
     }

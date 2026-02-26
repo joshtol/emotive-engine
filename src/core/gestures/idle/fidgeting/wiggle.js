@@ -41,20 +41,20 @@ export default {
 
     // Default configuration
     config: {
-        duration: 600,          // Legacy fallback
+        duration: 600, // Legacy fallback
         musicalDuration: { musical: true, beats: 1 }, // 1 beat (quarter note)
-        amplitude: 15,          // Wiggle distance (pixels)
-        frequency: 6,           // Number of oscillations
-        strength: 1.0,          // Motion intensity
-        damping: 0.3,           // Velocity damping (0-1, higher = faster slowdown)
-        easing: 'linear',       // Animation curve
+        amplitude: 15, // Wiggle distance (pixels)
+        frequency: 6, // Number of oscillations
+        strength: 1.0, // Motion intensity
+        damping: 0.3, // Velocity damping (0-1, higher = faster slowdown)
+        easing: 'linear', // Animation curve
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'wiggle',
             strength: 1.0,
             amplitude: 15,
-            frequency: 6
-        }
+            frequency: 6,
+        },
     },
 
     // Rhythm configuration
@@ -65,21 +65,21 @@ export default {
         // Frequency syncs to beat subdivision
         frequencySync: {
             subdivision: 'sixteenth', // Fast wiggles on 16th notes
-            wigglePerBeat: 4
+            wigglePerBeat: 4,
         },
 
         // Amplitude increases on beat
         amplitudeSync: {
             onBeat: 1.5,
             offBeat: 0.8,
-            curve: 'bounce'
+            curve: 'bounce',
         },
 
         // Duration in musical time
         durationSync: {
             mode: 'beats',
-            beats: 1  // Wiggle for 1 beat
-        }
+            beats: 1, // Wiggle for 1 beat
+        },
     },
 
     /**
@@ -101,14 +101,15 @@ export default {
         const oscillation = Math.sin(progress * Math.PI * frequency);
 
         // Apply damping envelope (fade out towards end)
-        const envelope = 1 - (progress * damping);
+        const envelope = 1 - progress * damping;
 
         // Horizontal velocity modification
         const wiggleForce = oscillation * amplitude * envelope;
         particle.vx += wiggleForce * 0.5;
 
         // Slight vertical component for natural feel (10% of horizontal)
-        const verticalWiggle = Math.cos(progress * Math.PI * frequency * 2) * amplitude * 0.1 * envelope;
+        const verticalWiggle =
+            Math.cos(progress * Math.PI * frequency * 2) * amplitude * 0.1 * envelope;
         particle.vy += verticalWiggle * 0.3;
     },
 
@@ -161,8 +162,8 @@ export default {
                 cameraRelativePosition: [horizontal, vertical, 0],
                 cameraRelativeRotation: [0, 0, rotZ],
                 scale: scaleOsc,
-                glowIntensity: 1.0 + Math.abs(osc) * 0.2
+                glowIntensity: 1.0 + Math.abs(osc) * 0.2,
             };
-        }
-    }
+        },
+    },
 };

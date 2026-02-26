@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting Animations
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Element targeting with animation capabilities for mascot movement
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/ElementTargetingAnimations
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides element targeting with animation capabilities including bounce, shake,    
- * ║ pulse, wiggle, and custom animation effects for mascot movement.                  
+ * ║ Provides element targeting with animation capabilities including bounce, shake,
+ * ║ pulse, wiggle, and custom animation effects for mascot movement.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -37,7 +37,12 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithBounce(targetSelector, bounceOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithBounce(
+        targetSelector,
+        bounceOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -45,12 +50,7 @@ class ElementTargetingAnimations extends ElementTargeting {
         }
 
         const animationId = `bounce-${Date.now()}-${Math.random()}`;
-        const {
-            duration = 1000,
-            intensity = 50,
-            bounces = 3,
-            onComplete = null
-        } = bounceOptions;
+        const { duration = 1000, intensity = 50, bounces = 3, onComplete = null } = bounceOptions;
 
         const rect = element.getBoundingClientRect();
         const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
@@ -65,7 +65,8 @@ class ElementTargetingAnimations extends ElementTargeting {
 
             // Bounce easing function
             const bounceProgress = 1 - Math.pow(1 - progress, 3);
-            const bounceOffset = Math.sin(bounceProgress * Math.PI * bounces) * intensity * (1 - progress);
+            const bounceOffset =
+                Math.sin(bounceProgress * Math.PI * bounces) * intensity * (1 - progress);
 
             const currentX = startOffset.x + (targetX - startOffset.x) * progress;
             const currentY = startOffset.y + (targetY - startOffset.y) * progress + bounceOffset;
@@ -111,7 +112,12 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithShake(targetSelector, shakeOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithShake(
+        targetSelector,
+        shakeOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -119,12 +125,7 @@ class ElementTargetingAnimations extends ElementTargeting {
         }
 
         const animationId = `shake-${Date.now()}-${Math.random()}`;
-        const {
-            duration = 500,
-            intensity = 10,
-            frequency = 20,
-            onComplete = null
-        } = shakeOptions;
+        const { duration = 500, intensity = 10, frequency = 20, onComplete = null } = shakeOptions;
 
         const rect = element.getBoundingClientRect();
         const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
@@ -186,7 +187,12 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithPulse(targetSelector, pulseOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithPulse(
+        targetSelector,
+        pulseOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -194,12 +200,7 @@ class ElementTargetingAnimations extends ElementTargeting {
         }
 
         const animationId = `pulse-${Date.now()}-${Math.random()}`;
-        const {
-            duration = 2000,
-            intensity = 20,
-            frequency = 2,
-            onComplete = null
-        } = pulseOptions;
+        const { duration = 2000, intensity = 20, frequency = 2, onComplete = null } = pulseOptions;
 
         const rect = element.getBoundingClientRect();
         const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
@@ -257,7 +258,12 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithWiggle(targetSelector, wiggleOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithWiggle(
+        targetSelector,
+        wiggleOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -265,12 +271,7 @@ class ElementTargetingAnimations extends ElementTargeting {
         }
 
         const animationId = `wiggle-${Date.now()}-${Math.random()}`;
-        const {
-            duration = 1000,
-            intensity = 15,
-            frequency = 8,
-            onComplete = null
-        } = wiggleOptions;
+        const { duration = 1000, intensity = 15, frequency = 8, onComplete = null } = wiggleOptions;
 
         const rect = element.getBoundingClientRect();
         const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
@@ -331,7 +332,13 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithCustom(targetSelector, animationFunction, animationOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithCustom(
+        targetSelector,
+        animationFunction,
+        animationOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -339,10 +346,7 @@ class ElementTargetingAnimations extends ElementTargeting {
         }
 
         const animationId = `custom-${Date.now()}-${Math.random()}`;
-        const {
-            duration = 1000,
-            onComplete = null
-        } = animationOptions;
+        const { duration = 1000, onComplete = null } = animationOptions;
 
         const rect = element.getBoundingClientRect();
         const targetX = rect.left + rect.width / 2 + offset.x - window.innerWidth / 2;
@@ -361,7 +365,7 @@ class ElementTargetingAnimations extends ElementTargeting {
                 startOffset,
                 targetX,
                 targetY,
-                currentTime
+                currentTime,
             });
 
             if (animationResult && typeof animationResult === 'object') {
@@ -440,21 +444,33 @@ class ElementTargetingAnimations extends ElementTargeting {
      * @returns {Function} Cleanup function
      */
     executeAnimation(animation) {
-        const { type, targetSelector, options = {}, position = 'right', offset = { x: 20, y: 0 } } = animation;
+        const {
+            type,
+            targetSelector,
+            options = {},
+            position = 'right',
+            offset = { x: 20, y: 0 },
+        } = animation;
 
         switch (type) {
-        case 'bounce':
-            return this.moveToElementWithBounce(targetSelector, options, position, offset);
-        case 'shake':
-            return this.moveToElementWithShake(targetSelector, options, position, offset);
-        case 'pulse':
-            return this.moveToElementWithPulse(targetSelector, options, position, offset);
-        case 'wiggle':
-            return this.moveToElementWithWiggle(targetSelector, options, position, offset);
-        case 'custom':
-            return this.moveToElementWithCustom(targetSelector, options.animationFunction, options, position, offset);
-        default:
-            return this.moveToElement(targetSelector, position, offset);
+            case 'bounce':
+                return this.moveToElementWithBounce(targetSelector, options, position, offset);
+            case 'shake':
+                return this.moveToElementWithShake(targetSelector, options, position, offset);
+            case 'pulse':
+                return this.moveToElementWithPulse(targetSelector, options, position, offset);
+            case 'wiggle':
+                return this.moveToElementWithWiggle(targetSelector, options, position, offset);
+            case 'custom':
+                return this.moveToElementWithCustom(
+                    targetSelector,
+                    options.animationFunction,
+                    options,
+                    position,
+                    offset
+                );
+            default:
+                return this.moveToElement(targetSelector, position, offset);
         }
     }
 
@@ -484,4 +500,3 @@ class ElementTargetingAnimations extends ElementTargeting {
 }
 
 export default ElementTargetingAnimations;
-

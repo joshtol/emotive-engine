@@ -35,12 +35,19 @@ export function createTiltGesture(direction) {
 
     return {
         name: `tilt${capitalize(direction)}`,
-        emoji: direction === 'up' ? '🔭' : direction === 'down' ? '😔' : direction === 'left' ? '🤔' : '🧐',
+        emoji:
+            direction === 'up'
+                ? '🔭'
+                : direction === 'down'
+                  ? '😔'
+                  : direction === 'left'
+                    ? '🤔'
+                    : '🧐',
         type: 'override',
         description: `Tilt ${direction} with curious expression`,
 
         config: {
-            duration: 500,  // Legacy fallback
+            duration: 500, // Legacy fallback
             musicalDuration: { musical: true, beats: 1 }, // 1 beat
             gatherPhase: 0.2,
             tiltAngle: 45,
@@ -54,8 +61,8 @@ export function createTiltGesture(direction) {
             particleMotion: {
                 type: 'tilt',
                 strength: 1.0,
-                tiltAmount: 40
-            }
+                tiltAmount: 40,
+            },
         },
 
         rhythm: {
@@ -67,19 +74,19 @@ export function createTiltGesture(direction) {
                 onBeat: 45,
                 offBeat: 30,
                 subdivision: 'triplet',
-                curve: 'ease-in-out'
+                curve: 'ease-in-out',
             },
 
             gatherSync: {
                 beatsBefore: 0.5,
                 releaseAfter: 0.25,
-                intensity: 'dynamic'
+                intensity: 'dynamic',
             },
 
             dynamics: {
                 forte: { tiltAngle: 60, tiltAmount: 60 },
-                piano: { tiltAngle: 25, tiltAmount: 25 }
-            }
+                piano: { tiltAngle: 25, tiltAmount: 25 },
+            },
         },
 
         initialize(particle, motion, centerX, centerY) {
@@ -106,7 +113,7 @@ export function createTiltGesture(direction) {
                 homeX: centerX + Math.cos(angle) * homeRadius,
                 homeY: centerY + Math.sin(angle) * homeRadius,
                 role: Math.random(),
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -132,7 +139,6 @@ export function createTiltGesture(direction) {
                 const speed = 0.6;
                 particle.x += (targetX - particle.x) * speed;
                 particle.y += (targetY - particle.y) * speed;
-
             } else if (progress < config.gatherPhase + config.holdPhase) {
                 // PHASE 2: Tilt and hold in direction
                 const tiltPhase = (progress - config.gatherPhase) / config.holdPhase;
@@ -157,10 +163,11 @@ export function createTiltGesture(direction) {
                 // Velocity for trails
                 particle.vx = (targetX - particle.x) * 0.5;
                 particle.vy = (targetY - particle.y) * 0.5;
-
             } else {
                 // PHASE 3: Return to origin
-                const returnPhase = (progress - config.gatherPhase - config.holdPhase) / (1 - config.gatherPhase - config.holdPhase);
+                const returnPhase =
+                    (progress - config.gatherPhase - config.holdPhase) /
+                    (1 - config.gatherPhase - config.holdPhase);
                 const easedReturn = this.easeInOutCubic(returnPhase);
 
                 targetX = particle.x + (data.startX - particle.x) * easedReturn;
@@ -190,9 +197,7 @@ export function createTiltGesture(direction) {
         },
 
         easeInOutCubic(t) {
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         },
 
         easeOutCubic(t) {
@@ -210,19 +215,21 @@ export function createTiltGesture(direction) {
 
                 const PIXEL_TO_3D = 0.004;
 
-                let posX = 0, posY = 0;
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let posX = 0,
+                    posY = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 if (progress < gatherPhase) {
                     // Gathering - no significant 3D change
                     // Just subtle anticipation
-
                 } else if (progress < gatherPhase + holdPhase) {
                     // PHASE 2: Tilt in direction
                     const tiltPhase = (progress - gatherPhase) / holdPhase;
                     const tiltEase = 1 - Math.pow(1 - Math.min(tiltPhase * 2, 1), 3);
 
-                    const tiltRad = (tiltAngle * Math.PI / 180) * strength * 0.4 * tiltEase;
+                    const tiltRad = ((tiltAngle * Math.PI) / 180) * strength * 0.4 * tiltEase;
                     const tiltDist = tiltAmount * PIXEL_TO_3D * strength * tiltEase;
 
                     if (isVertical) {
@@ -236,15 +243,17 @@ export function createTiltGesture(direction) {
                         // Slight Y rotation to look in direction
                         rotY = dir.x * tiltRad * 0.3;
                     }
-
                 } else {
                     // PHASE 3: Return
-                    const returnPhase = (progress - gatherPhase - holdPhase) / (1 - gatherPhase - holdPhase);
-                    const returnEase = returnPhase < 0.5
-                        ? 4 * returnPhase * returnPhase * returnPhase
-                        : 1 - Math.pow(-2 * returnPhase + 2, 3) / 2;
+                    const returnPhase =
+                        (progress - gatherPhase - holdPhase) / (1 - gatherPhase - holdPhase);
+                    const returnEase =
+                        returnPhase < 0.5
+                            ? 4 * returnPhase * returnPhase * returnPhase
+                            : 1 - Math.pow(-2 * returnPhase + 2, 3) / 2;
 
-                    const tiltRad = (tiltAngle * Math.PI / 180) * strength * 0.4 * (1 - returnEase);
+                    const tiltRad =
+                        ((tiltAngle * Math.PI) / 180) * strength * 0.4 * (1 - returnEase);
                     const tiltDist = tiltAmount * PIXEL_TO_3D * strength * (1 - returnEase);
 
                     if (isVertical) {
@@ -260,9 +269,9 @@ export function createTiltGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, rotY, rotZ],
-                    scale: 1.0
+                    scale: 1.0,
                 };
-            }
-        }
+            },
+        },
     };
 }

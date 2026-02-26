@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Utilities Index
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central export for all particle utilities
@@ -14,12 +14,7 @@
 export { cachedSin, cachedCos } from './mathCache.js';
 
 // Color utilities
-export { 
-    selectWeightedColor,
-    hexToRgb,
-    rgbToHex,
-    blendColors 
-} from './colorUtils.js';
+export { selectWeightedColor, hexToRgb, rgbToHex, blendColors } from './colorUtils.js';
 
 // Easing functions
 export {
@@ -31,7 +26,7 @@ export {
     easeOutElastic,
     easeOutBounce,
     easeInOutBack,
-    easeInOutSine
+    easeInOutSine,
 } from './easing.js';
 
 // Re-export as organized groups for convenience
@@ -42,5 +37,5 @@ import * as easing from './easing.js';
 export default {
     math: mathCache,
     color: colorUtils,
-    easing
+    easing,
 };

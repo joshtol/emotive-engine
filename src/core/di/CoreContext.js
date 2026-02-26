@@ -62,8 +62,8 @@ export function createCoreContext(mascot) {
             emit: (event, data) => mascot.emit(event, data),
             on: (event, cb) => mascot.eventManager.on(event, cb),
             off: (event, cb) => mascot.eventManager.off(event, cb),
-            once: (event, cb) => mascot.eventManager.once(event, cb)
-        }
+            once: (event, cb) => mascot.eventManager.once(event, cb),
+        },
     };
 }
 
@@ -83,7 +83,7 @@ export function createMockCoreContext(overrides = {}) {
         animationController: { start: () => {}, stop: () => {} },
         config: {},
         events: { emit: () => {}, on: () => {}, off: () => {}, once: () => {} },
-        ...overrides
+        ...overrides,
     };
 }
 

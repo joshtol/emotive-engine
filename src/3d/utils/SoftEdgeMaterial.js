@@ -40,7 +40,7 @@ export function addBarycentricCoordinates(geometry) {
     }
 
     const position = geometry.getAttribute('position');
-    const {count} = position;
+    const { count } = position;
 
     // Each triangle needs vertices with barycentric coords (1,0,0), (0,1,0), (0,0,1)
     const barycentric = new Float32Array(count * 3);
@@ -78,10 +78,7 @@ export function addBarycentricCoordinates(geometry) {
  * @returns {THREE.Material} The modified material (same reference)
  */
 export function applySoftEdge(material, options = {}) {
-    const {
-        fadeWidth = 0.15,
-        fadeExponent = 1.0
-    } = options;
+    const { fadeWidth = 0.15, fadeExponent = 1.0 } = options;
 
     // Store original onBeforeCompile if it exists
     const originalOnBeforeCompile = material.onBeforeCompile;
@@ -135,7 +132,7 @@ void main() {`
     // CRITICAL: Force unique shader program to bypass Three.js shader cache
     // Without this, cloned materials may reuse cached shader without our injection
     const uniqueId = Math.random().toString(36).substring(7);
-    material.customProgramCacheKey = function() {
+    material.customProgramCacheKey = function () {
         return `softEdge_${fadeWidth}_${fadeExponent}_${uniqueId}`;
     };
 
@@ -171,5 +168,5 @@ export default {
     addBarycentricCoordinates,
     applySoftEdge,
     hasBarycentricCoordinates,
-    createSoftEdgeMaterial
+    createSoftEdgeMaterial,
 };

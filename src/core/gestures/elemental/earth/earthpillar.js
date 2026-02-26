@@ -23,56 +23,58 @@ const SHARED_ANIMATION = {
     enter: {
         type: 'scale',
         duration: 0.2,
-        easing: 'easeOut'
+        easing: 'easeOut',
     },
     exit: {
         type: 'fade',
         duration: 0.3,
-        easing: 'easeIn'
+        easing: 'easeIn',
     },
     procedural: {
         scaleSmoothing: 0.1,
-        geometryStability: true
+        geometryStability: true,
     },
     parameterAnimation: {
         petrification: {
             start: 0.55,
             peak: 0.85,
             end: 0.65,
-            curve: 'bell'
-        }
+            curve: 'bell',
+        },
     },
     pulse: {
         amplitude: 0.05,
         frequency: 3,
-        easing: 'easeInOut'
+        easing: 'easeInOut',
     },
     emissive: {
         min: 0.9,
         max: 1.8,
         frequency: 4,
-        pattern: 'sine'
+        pattern: 'sine',
     },
     grain: {
         type: 3,
         strength: 0.35,
         scale: 0.2,
         speed: 1.5,
-        blend: 'multiply'
+        blend: 'multiply',
     },
     wetness: {
         wetness: 0.55,
-        wetSpeed: 0.3
+        wetSpeed: 0.3,
     },
-    atmospherics: [{
-        preset: 'earth-dust',
-        targets: ['earth-ring'],
-        anchor: 'below',
-        anchorOffset: -0.1,
-        intensity: 0.4,
-        sizeScale: 1.5,
-        progressCurve: 'sustain',
-    }],
+    atmospherics: [
+        {
+            preset: 'earth-dust',
+            targets: ['earth-ring'],
+            anchor: 'below',
+            anchorOffset: -0.1,
+            intensity: 0.4,
+            sizeScale: 1.5,
+            progressCurve: 'sustain',
+        },
+    ],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'normal',
@@ -83,10 +85,10 @@ const SHARED_ANIMATION = {
                 type: 1,
                 arcWidth: 0.95,
                 arcSpeed: 0.8,
-                arcCount: 2
-            }
-        }
-    }
+                arcCount: 2,
+            },
+        },
+    },
 };
 
 const EARTHPILLAR_CONFIG = {
@@ -117,7 +119,7 @@ const EARTHPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 0
+                startOffset: 0,
             },
             count: 1,
             scale: 1.6,
@@ -133,10 +135,10 @@ const EARTHPILLAR_CONFIG = {
                     travelSpeed: 1.2,
                     strengthCurve: 'fadeIn',
                     fadeInDuration: 0.3,
-                    geometricMask: { type: 'distance', core: 0.1, tip: 0.25 }
+                    geometricMask: { type: 'distance', core: 0.1, tip: 0.25 },
                 },
-                rotate: { axis: 'z', rotations: 0.3, phase: 0 }
-            }
+                rotate: { axis: 'z', rotations: 0.3, phase: 0 },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Middle ring - CRACKS pattern, radial travel
@@ -153,7 +155,7 @@ const EARTHPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 0.5
+                startOffset: 0.5,
             },
             count: 1,
             scale: 1.6,
@@ -170,10 +172,10 @@ const EARTHPILLAR_CONFIG = {
                     strengthCurve: 'bell',
                     bellPeakAt: 0.5,
                     bellWidth: 0.5,
-                    geometricMask: { type: 'tip-boost', core: 0.0, tip: 0.2 }
+                    geometricMask: { type: 'tip-boost', core: 0.0, tip: 0.2 },
                 },
-                rotate: { axis: 'z', rotations: -0.5, phase: 60 }
-            }
+                rotate: { axis: 'z', rotations: -0.5, phase: 60 },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 3: Top ring - VORONOI pattern, oscillate travel
@@ -190,7 +192,7 @@ const EARTHPILLAR_CONFIG = {
                 startDiameter: 1.2,
                 endDiameter: 2.2,
                 orientation: 'flat',
-                startOffset: 1.0
+                startOffset: 1.0,
             },
             count: 1,
             scale: 1.6,
@@ -206,14 +208,14 @@ const EARTHPILLAR_CONFIG = {
                     travelSpeed: 2.0,
                     strengthCurve: 'fadeOut',
                     fadeOutDuration: 0.4,
-                    geometricMask: { type: 'distance', core: 0.15, tip: 0.3 }
+                    geometricMask: { type: 'distance', core: 0.15, tip: 0.3 },
                 },
-                rotate: { axis: 'z', rotations: 0.7, phase: 90 }
-            }
-        }
+                rotate: { axis: 'z', rotations: 0.7, phase: 90 },
+            },
+        },
     ],
 
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.6,
     glowFlickerRate: 5,
@@ -221,7 +223,7 @@ const EARTHPILLAR_CONFIG = {
     scaleFrequency: 3,
     scaleGrowth: 0.025,
     tremor: 0.002,
-    tremorFrequency: 2
+    tremorFrequency: 2,
 };
 
 export default buildEarthEffectGesture(EARTHPILLAR_CONFIG);

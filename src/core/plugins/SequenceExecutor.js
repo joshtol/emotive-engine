@@ -62,7 +62,7 @@ export class SequenceExecutor {
 
         // Create cancellation token
         const cancellationToken = {
-            cancelled: false
+            cancelled: false,
         };
 
         this.activeSequences.set(sequenceId, cancellationToken);
@@ -73,7 +73,7 @@ export class SequenceExecutor {
                 this.eventManager.emit('sequenceStart', {
                     sequenceId,
                     steps: sortedSteps,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 });
             }
 
@@ -84,7 +84,7 @@ export class SequenceExecutor {
             if (this.eventManager) {
                 this.eventManager.emit('sequenceComplete', {
                     sequenceId,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 });
             }
         } catch (error) {
@@ -94,7 +94,7 @@ export class SequenceExecutor {
                 this.eventManager.emit('sequenceError', {
                     sequenceId,
                     error,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 });
             }
         } finally {
@@ -151,40 +151,44 @@ export class SequenceExecutor {
 
         try {
             switch (action) {
-            case 'emotion':
-                if (typeof mascot.setEmotion === 'function') {
-                    const emotionIntensity = intensity !== undefined ? intensity : options.intensity;
-                    const duration = stepOptions?.duration || options.emotionDuration || 500;
-                    mascot.setEmotion(value, emotionIntensity !== undefined ? emotionIntensity : duration);
-                }
-                break;
+                case 'emotion':
+                    if (typeof mascot.setEmotion === 'function') {
+                        const emotionIntensity =
+                            intensity !== undefined ? intensity : options.intensity;
+                        const duration = stepOptions?.duration || options.emotionDuration || 500;
+                        mascot.setEmotion(
+                            value,
+                            emotionIntensity !== undefined ? emotionIntensity : duration
+                        );
+                    }
+                    break;
 
-            case 'gesture':
-                if (typeof mascot.express === 'function') {
-                    mascot.express(value, stepOptions);
-                }
-                break;
+                case 'gesture':
+                    if (typeof mascot.express === 'function') {
+                        mascot.express(value, stepOptions);
+                    }
+                    break;
 
-            case 'morph':
-                if (typeof mascot.morphTo === 'function') {
-                    mascot.morphTo(value, stepOptions);
-                }
-                break;
+                case 'morph':
+                    if (typeof mascot.morphTo === 'function') {
+                        mascot.morphTo(value, stepOptions);
+                    }
+                    break;
 
-            case 'chain':
-                if (typeof mascot.chain === 'function') {
-                    mascot.chain(value, stepOptions);
-                }
-                break;
+                case 'chain':
+                    if (typeof mascot.chain === 'function') {
+                        mascot.chain(value, stepOptions);
+                    }
+                    break;
 
-            case 'sound':
-                if (typeof mascot.playSound === 'function') {
-                    mascot.playSound(value, stepOptions);
-                }
-                break;
+                case 'sound':
+                    if (typeof mascot.playSound === 'function') {
+                        mascot.playSound(value, stepOptions);
+                    }
+                    break;
 
-            default:
-                console.warn(`[SequenceExecutor] Unknown action: ${action}`);
+                default:
+                    console.warn(`[SequenceExecutor] Unknown action: ${action}`);
             }
 
             // Emit step executed event
@@ -192,7 +196,7 @@ export class SequenceExecutor {
                 this.eventManager.emit('stepExecuted', {
                     action,
                     value,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 });
             }
         } catch (error) {
@@ -244,7 +248,7 @@ export class SequenceExecutor {
             if (this.eventManager) {
                 this.eventManager.emit('sequenceCancelled', {
                     sequenceId,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 });
             }
         }
@@ -260,7 +264,7 @@ export class SequenceExecutor {
             if (this.eventManager) {
                 this.eventManager.emit('sequenceCancelled', {
                     sequenceId,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 });
             }
         });

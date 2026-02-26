@@ -41,8 +41,16 @@ export class EmotionDynamics {
             if (slot.intensity !== before) {
                 for (const cb of this._onDecay) cb(slot.emotion, slot.intensity, before);
                 // Emit decay event through stateMachine's event pipeline
-                this._sm._emitEvent('emotionDecayed', { emotion: slot.emotion, intensity: slot.intensity, removed: false });
-                this._sm._emitEvent('slotChanged', { emotion: slot.emotion, intensity: slot.intensity, action: 'decay' });
+                this._sm._emitEvent('emotionDecayed', {
+                    emotion: slot.emotion,
+                    intensity: slot.intensity,
+                    removed: false,
+                });
+                this._sm._emitEvent('slotChanged', {
+                    emotion: slot.emotion,
+                    intensity: slot.intensity,
+                    action: 'decay',
+                });
             }
         }
 
@@ -61,19 +69,47 @@ export class EmotionDynamics {
     }
 
     // Configuration
-    setDecayRate(rate) { this._decayRate = Math.max(0, rate); }
-    getDecayRate() { return this._decayRate; }
-    setAccumulationCap(cap) { this._accumulationCap = Math.max(0, Math.min(1, cap)); }
-    enable() { this._enabled = true; }
-    disable() { this._enabled = false; }
-    isEnabled() { return this._enabled; }
-    pause() { this._paused = true; }
-    resume() { this._paused = false; }
-    reset() { this._sm.clearEmotions(); }
+    setDecayRate(rate) {
+        this._decayRate = Math.max(0, rate);
+    }
+    getDecayRate() {
+        return this._decayRate;
+    }
+    setAccumulationCap(cap) {
+        this._accumulationCap = Math.max(0, Math.min(1, cap));
+    }
+    enable() {
+        this._enabled = true;
+    }
+    disable() {
+        this._enabled = false;
+    }
+    isEnabled() {
+        return this._enabled;
+    }
+    pause() {
+        this._paused = true;
+    }
+    resume() {
+        this._paused = false;
+    }
+    reset() {
+        this._sm.clearEmotions();
+    }
 
     // Callbacks
-    onDecay(cb) { this._onDecay.push(cb); return () => { this._onDecay = this._onDecay.filter(c => c !== cb); }; }
-    onNudge(cb) { this._onNudge.push(cb); return () => { this._onNudge = this._onNudge.filter(c => c !== cb); }; }
+    onDecay(cb) {
+        this._onDecay.push(cb);
+        return () => {
+            this._onDecay = this._onDecay.filter(c => c !== cb);
+        };
+    }
+    onNudge(cb) {
+        this._onNudge.push(cb);
+        return () => {
+            this._onNudge = this._onNudge.filter(c => c !== cb);
+        };
+    }
 
     // Serialization (UP-RESONANCE-2 Feature 3)
     serialize() {

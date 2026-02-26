@@ -30,7 +30,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -52,14 +52,14 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 import {
     WETNESS_UNIFORMS_GLSL,
     WETNESS_FUNC_GLSL,
     createWetnessUniforms,
     setWetness,
-    resetWetness
+    resetWetness,
 } from '../cores/WetnessCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -69,21 +69,21 @@ import {
 const ICE_DEFAULTS = {
     melt: 0.0,
     intensity: 1.0,
-    opacity: 0.70,
+    opacity: 0.7,
     frostAmount: 1.0,
     internalCracks: 0.8,
     subsurfaceScatter: 0.15,
     glowScale: 0.1,
-    wetSpeed: 0.5,          // Moderate pace for ice melt/moisture
+    wetSpeed: 0.5, // Moderate pace for ice melt/moisture
     fadeInDuration: 0.2,
-    fadeOutDuration: 0.4
+    fadeOutDuration: 0.4,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // NOISE GLSL (shared with other materials)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 // Hash function for noise
 float hash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
@@ -246,7 +246,7 @@ float fractureField3D(vec3 p, vec3 viewDir, float scale, float density) {
 // ICE COLOR GLSL
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const ICE_COLOR_GLSL = /* glsl */`
+const ICE_COLOR_GLSL = /* glsl */ `
 // Beer's Law absorption: light passing through ice loses red first, blue last
 // thickness: how much ice light passes through (0=surface, 1=deep)
 // melt: softens the absorption (melting ice is more transparent)
@@ -317,7 +317,7 @@ vec3 perturbNormal(vec3 normal, vec3 pos, float strength) {
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -515,7 +515,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uMelt;
 uniform float uIntensity;
@@ -1083,7 +1083,7 @@ export function createInstancedIceMaterial(options = {}) {
         glowScale = ICE_DEFAULTS.glowScale,
         tint = 0xffffff,
         fadeInDuration = ICE_DEFAULTS.fadeInDuration,
-        fadeOutDuration = ICE_DEFAULTS.fadeOutDuration
+        fadeOutDuration = ICE_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive values from melt
@@ -1106,7 +1106,10 @@ export function createInstancedIceMaterial(options = {}) {
             uRelayArcWidth: { value: 3.14159 },
             uRelayFloor: { value: 0.0 },
             // Shared wetness system — melt drives wetness (frozen=0.3, melting=1.0)
-            ...createWetnessUniforms({ wetness: melt * 0.7 + 0.3, wetSpeed: ICE_DEFAULTS.wetSpeed }),
+            ...createWetnessUniforms({
+                wetness: melt * 0.7 + 0.3,
+                wetSpeed: ICE_DEFAULTS.wetSpeed,
+            }),
             // Override glowScale if provided in options
             uGlowScale: { value: glowScale },
             // Ice uniforms
@@ -1123,13 +1126,13 @@ export function createInstancedIceMaterial(options = {}) {
             uBackgroundTexture: { value: null },
             uResolution: { value: new THREE.Vector2(1, 1) },
             uHasBackground: { value: 0 },
-            uIOR: { value: 1.31 }
+            uIOR: { value: 1.31 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
         depthWrite: true,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.melt = melt;
@@ -1269,7 +1272,7 @@ export {
     resetGrain,
     resetAnimation,
     setWetness,
-    resetWetness
+    resetWetness,
 };
 
 export default {
@@ -1294,5 +1297,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

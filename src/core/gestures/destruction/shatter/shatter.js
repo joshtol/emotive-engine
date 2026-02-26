@@ -31,15 +31,15 @@ export default {
     config: {
         duration: 1500,
         musicalDuration: { musical: true, bars: 1 },
-        explosionPhase: 0.3,   // Portion of animation for explosion
-        freezePhase: 0.7,      // When to start freezing (0-1)
-        distance: 100,         // How far shards fly
-        tumble: 1.0,           // Rotation amount
+        explosionPhase: 0.3, // Portion of animation for explosion
+        freezePhase: 0.7, // When to start freezing (0-1)
+        distance: 100, // How far shards fly
+        tumble: 1.0, // Rotation amount
         strength: 1.0,
         particleMotion: {
             type: 'shatter',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -50,8 +50,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     initialize(particle, _motion, _centerX, _centerY) {
@@ -74,7 +74,7 @@ export default {
             // Frozen position (will be set during freeze)
             frozenX: null,
             frozenY: null,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -104,7 +104,6 @@ export default {
 
             // Tumble during explosion
             data.tumbleAngle += data.tumbleSpeed * (1 - explosionProgress);
-
         } else if (progress < freezePhase) {
             // Drift phase - slow movement
             const driftProgress = (progress - explosionPhase) / (freezePhase - explosionPhase);
@@ -127,7 +126,6 @@ export default {
                 data.frozenX = particle.x;
                 data.frozenY = particle.y;
             }
-
         } else {
             // Frozen phase - particles stay in place
             if (data.frozenX !== null) {
@@ -164,9 +162,15 @@ export default {
             // Phase 3 (0.4-0.7): Fragments settle - slowing shake, collapse inward
             // Phase 4 (0.7-1.0): Reform - pieces come back together
 
-            let scaleX = 1.0, scaleY = 1.0, scaleZ = 1.0;
-            let rotX = 0, rotY = 0, rotZ = 0;
-            let posX = 0, posY = 0, posZ = 0;
+            let scaleX = 1.0,
+                scaleY = 1.0,
+                scaleZ = 1.0;
+            let rotX = 0,
+                rotY = 0,
+                rotZ = 0;
+            let posX = 0,
+                posY = 0,
+                posZ = 0;
             let glowIntensity = 1.0;
             let glowBoost = 0;
 
@@ -185,7 +189,6 @@ export default {
                 // Flash on impact
                 glowIntensity = 1.0 + impactEase * 1.0;
                 glowBoost = impactEase * 0.8;
-
             } else if (progress < 0.4) {
                 // Phase 2: Explosive shake - violent chaotic movement
                 const explodeT = (progress - 0.1) / 0.3;
@@ -210,13 +213,12 @@ export default {
 
                 // Chaotic position
                 posX = shake * 0.15 * strength;
-                posY = shake2 * 0.12 * strength + (explodeT * 0.1);
+                posY = shake2 * 0.12 * strength + explodeT * 0.1;
                 posZ = shake3 * 0.1 * strength;
 
                 // Pulsing glow
                 glowIntensity = 1.5 + Math.abs(shake) * 0.5;
                 glowBoost = 0.5 * decay;
-
             } else if (progress < 0.7) {
                 // Phase 3: Fragments settle - slowing shake, collapse inward
                 const settleT = (progress - 0.4) / 0.3;
@@ -241,13 +243,13 @@ export default {
 
                 glowIntensity = 1.5 - settleEase * 0.3;
                 glowBoost = 0.3 * decay;
-
             } else {
                 // Phase 4: Reform - smooth return to normal
                 const reformT = (progress - 0.7) / 0.3;
-                const reformEase = reformT < 0.5
-                    ? 4 * reformT * reformT * reformT
-                    : 1 - Math.pow(-2 * reformT + 2, 3) / 2;
+                const reformEase =
+                    reformT < 0.5
+                        ? 4 * reformT * reformT * reformT
+                        : 1 - Math.pow(-2 * reformT + 2, 3) / 2;
 
                 // Slight overshoot bounce on reform
                 const bounce = Math.sin(reformT * Math.PI * 2) * (1 - reformT) * 0.05;
@@ -269,10 +271,10 @@ export default {
             return {
                 position: [posX, posY, posZ],
                 rotation: [rotX, rotY, rotZ],
-                scale: [scaleX, scaleY, scaleZ],  // Non-uniform for squash effect
+                scale: [scaleX, scaleY, scaleZ], // Non-uniform for squash effect
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

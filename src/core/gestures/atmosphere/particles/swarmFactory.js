@@ -38,24 +38,24 @@ export function createSwarmGesture(direction) {
         config: {
             duration: 1800,
             musicalDuration: { musical: true, bars: 1 },
-            clusterPhase: 0.3,    // Portion of animation for clustering
-            moveDistance: 120,    // How far the swarm moves
+            clusterPhase: 0.3, // Portion of animation for clustering
+            moveDistance: 120, // How far the swarm moves
             clusterTightness: 0.5, // How tight particles cluster (0-1)
-            wobble: 1.0,          // Individual wobble amount
+            wobble: 1.0, // Individual wobble amount
             strength: 1.0,
             direction,
             particleMotion: {
                 type: 'swarm',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
             enabled: true,
             syncMode: 'beat',
             durationSync: { mode: 'bars', bars: 1 },
-            timingSync: 'onBeat'
+            timingSync: 'onBeat',
         },
 
         initialize(particle, _motion, _centerX, _centerY) {
@@ -70,7 +70,7 @@ export function createSwarmGesture(direction) {
                 wobbleSpeed: 0.3 + Math.random() * 0.4,
                 // Slightly different timing per particle
                 timeOffset: Math.random() * 0.1,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -100,8 +100,10 @@ export function createSwarmGesture(direction) {
                 const clusterProgress = offsetProgress / clusterPhase;
                 const eased = 1 - Math.pow(1 - clusterProgress, 2);
 
-                const clusterX = data.originalX + (centerX - data.originalX) * clusterTightness * eased;
-                const clusterY = data.originalY + (centerY - data.originalY) * clusterTightness * eased;
+                const clusterX =
+                    data.originalX + (centerX - data.originalX) * clusterTightness * eased;
+                const clusterY =
+                    data.originalY + (centerY - data.originalY) * clusterTightness * eased;
 
                 targetX = clusterX;
                 targetY = clusterY;
@@ -123,7 +125,7 @@ export function createSwarmGesture(direction) {
             }
 
             // Add individual wobble for organic flock feel
-            const safeDt = (typeof dt === 'number') ? dt : 1;
+            const safeDt = typeof dt === 'number' ? dt : 1;
             data.wobblePhase += data.wobbleSpeed * safeDt * 0.1;
             const wobbleX = Math.sin(data.wobblePhase * 3) * config.wobble * 5;
             const wobbleY = Math.cos(data.wobblePhase * 2.5) * config.wobble * 5;
@@ -158,7 +160,9 @@ export function createSwarmGesture(direction) {
                 const dirVec = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] };
                 const [dx, dy] = dirVec[swarmDirection] || [0, 1];
 
-                let posX = 0, posY = 0, scale = 1.0;
+                let posX = 0,
+                    posY = 0,
+                    scale = 1.0;
 
                 if (progress < clusterPhase) {
                     // Clustering - slight contraction
@@ -186,13 +190,17 @@ export function createSwarmGesture(direction) {
                 const fadeEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
 
                 return {
-                    cameraRelativePosition: [(posX + wobble) * fadeEnvelope, posY * fadeEnvelope, 0],
+                    cameraRelativePosition: [
+                        (posX + wobble) * fadeEnvelope,
+                        posY * fadeEnvelope,
+                        0,
+                    ],
                     rotation: [rotX, 0, rotZ],
                     scale,
-                    glowIntensity: 1.0 + (progress > clusterPhase ? 0.2 : 0)
+                    glowIntensity: 1.0 + (progress > clusterPhase ? 0.2 : 0),
                 };
-            }
-        }
+            },
+        },
     };
 }
 

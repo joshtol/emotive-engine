@@ -30,7 +30,8 @@ const EARTHSHATTER_CONFIG = {
     name: 'earthshatter',
     emoji: '💥',
     type: 'blending',
-    description: 'Violent shattering explosion — stone builds tension then detonates into fragments',
+    description:
+        'Violent shattering explosion — stone builds tension then detonates into fragments',
     duration: 1200,
     beats: 2,
     intensity: 1.6,
@@ -49,12 +50,22 @@ const EARTHSHATTER_CONFIG = {
             orientation: 'camera',
             startScale: 0.3,
             endScale: 1.0,
-            scaleEasing: 'easeOutQuad'
+            scaleEasing: 'easeOutQuad',
         },
         count: 10,
         scale: 0.8,
-        models: ['rock-chunk-small', 'boulder', 'rock-chunk-small', 'boulder', 'rock-chunk-small',
-            'boulder', 'rock-chunk-small', 'boulder', 'rock-chunk-small', 'boulder'],
+        models: [
+            'rock-chunk-small',
+            'boulder',
+            'rock-chunk-small',
+            'boulder',
+            'rock-chunk-small',
+            'boulder',
+            'rock-chunk-small',
+            'boulder',
+            'rock-chunk-small',
+            'boulder',
+        ],
         animation: {
             appearAt: 0.25,
             disappearAt: 0.55,
@@ -63,21 +74,24 @@ const EARTHSHATTER_CONFIG = {
             exit: { type: 'burst-fade', duration: 0.12, easing: 'easeIn', burstScale: 1.4 },
             procedural: { scaleSmoothing: 0.05, geometryStability: true },
             emissive: { min: 0.6, max: 1.2, frequency: 6, pattern: 'sine' },
-            atmospherics: [{
-                preset: 'earth-gravel',
-                targets: ['rock-cluster', 'stone-slab'],
-                anchor: 'below',
-                intensity: 0.5,
-                sizeScale: 0.8,
-                progressCurve: 'burst',
-            }, {
-                preset: 'earth-dust',
-                targets: ['rock-cluster'],
-                anchor: 'above',
-                intensity: 0.4,
-                sizeScale: 1.2,
-                progressCurve: 'burst',
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-gravel',
+                    targets: ['rock-cluster', 'stone-slab'],
+                    anchor: 'below',
+                    intensity: 0.5,
+                    sizeScale: 0.8,
+                    progressCurve: 'burst',
+                },
+                {
+                    preset: 'earth-dust',
+                    targets: ['rock-cluster'],
+                    anchor: 'above',
+                    intensity: 0.4,
+                    sizeScale: 1.2,
+                    progressCurve: 'burst',
+                },
+            ],
             rotate: [
                 { axis: 'x', rotations: 3, phase: 0 },
                 { axis: 'z', rotations: -2.5, phase: 36 },
@@ -88,13 +102,13 @@ const EARTHSHATTER_CONFIG = {
                 { axis: 'x', rotations: 2.5, phase: 216 },
                 { axis: 'z', rotations: -4, phase: 252 },
                 { axis: 'y', rotations: 3, phase: 288 },
-                { axis: 'x', rotations: -2, phase: 324 }
+                { axis: 'x', rotations: -2, phase: 324 },
             ],
             scaleVariance: 0.35,
             lifetimeVariance: 0.1,
             blending: 'normal',
-            renderOrder: 14
-        }
+            renderOrder: 14,
+        },
     },
 
     shakeAmount: 0.05,
@@ -102,14 +116,14 @@ const EARTHSHATTER_CONFIG = {
     explosionForce: 1.0,
     endFlash: true,
     decayRate: 0.1,
-    glowColor: [0.90, 0.65, 0.20],
+    glowColor: [0.9, 0.65, 0.2],
     glowIntensityMin: 0.7,
     glowIntensityMax: 1.3,
     glowFlickerRate: 8,
     scaleVibration: 0.02,
     scaleFrequency: 8,
     tremor: 0.02,
-    tremorFrequency: 10
+    tremorFrequency: 10,
 };
 
 export default buildEarthEffectGesture(EARTHSHATTER_CONFIG);

@@ -37,7 +37,7 @@ const EARTHTWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.15,
@@ -56,10 +56,10 @@ const EARTHTWIRL_CONFIG = {
                     'earth-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B — lower-right — relay 1, CCW
@@ -72,7 +72,7 @@ const EARTHTWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.15,
@@ -91,10 +91,10 @@ const EARTHTWIRL_CONFIG = {
                     'earth-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C — upper-center — relay 0, CW
@@ -107,7 +107,7 @@ const EARTHTWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.15,
@@ -126,14 +126,14 @@ const EARTHTWIRL_CONFIG = {
                     'earth-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 0.7,
     glowIntensityMax: 1.2,
     glowFlickerRate: 6,
@@ -144,7 +144,7 @@ const EARTHTWIRL_CONFIG = {
     tremorFrequency: 8,
     shakeAmount: 0.01,
     shakeFrequency: 12,
-    decayRate: 0.15
+    decayRate: 0.15,
 };
 
 export default buildEarthEffectGesture(EARTHTWIRL_CONFIG);

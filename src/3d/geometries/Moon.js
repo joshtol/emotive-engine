@@ -18,9 +18,9 @@ import { getMoonWithBlendLayersShaders } from '../shaders/shadows/moonWithBlendL
  * These values rotate the moon texture to match how we see it from Earth
  */
 export const MOON_CALIBRATION_ROTATION = {
-    x: 55.5,   // degrees
-    y: -85.0,  // degrees
-    z: -60.5   // degrees
+    x: 55.5, // degrees
+    y: -85.0, // degrees
+    z: -60.5, // degrees
 };
 
 /**
@@ -29,9 +29,9 @@ export const MOON_CALIBRATION_ROTATION = {
  */
 export const MOON_FACING_CONFIG = {
     enabled: true,
-    strength: 1.0,        // Full tidal lock
+    strength: 1.0, // Full tidal lock
     lockedFace: [0, 0, 1], // +Z axis faces camera
-    lerpSpeed: 10.0        // Fast snap to correct orientation
+    lerpSpeed: 10.0, // Fast snap to correct orientation
 };
 
 /**
@@ -49,20 +49,20 @@ export const MOON_PHASES = {
     // Manually calibrated to match astronomical reference images
 
     // New moon - Light from directly behind (extreme offset)
-    'new': { x: 200.0, y: 0.0, coverage: 0.0 },
+    new: { x: 200.0, y: 0.0, coverage: 0.0 },
 
     // Waxing phases (light from right side, progressively more frontal)
-    'waxing-crescent': { x: 1.5, y: 0.0, coverage: 0.25 },    // Thin crescent on right (CALIBRATED)
-    'first-quarter': { x: 1.0, y: 0.0, coverage: 0.5 },       // Half moon, light from right
-    'waxing-gibbous': { x: 0.7, y: 0.0, coverage: 0.75 },     // More than half (CALIBRATED)
+    'waxing-crescent': { x: 1.5, y: 0.0, coverage: 0.25 }, // Thin crescent on right (CALIBRATED)
+    'first-quarter': { x: 1.0, y: 0.0, coverage: 0.5 }, // Half moon, light from right
+    'waxing-gibbous': { x: 0.7, y: 0.0, coverage: 0.75 }, // More than half (CALIBRATED)
 
     // Full moon - Light from directly in front
-    'full': { x: 0.0, y: 0.0, coverage: 1.0 },
+    full: { x: 0.0, y: 0.0, coverage: 1.0 },
 
     // Waning phases (mirror of waxing, light from left side)
-    'waning-gibbous': { x: -0.7, y: 0.0, coverage: 0.75 },    // More than half (CALIBRATED)
-    'last-quarter': { x: -1.0, y: 0.0, coverage: 0.5 },       // Half moon, light from left
-    'waning-crescent': { x: -1.5, y: 0.0, coverage: 0.25 }    // Thin crescent on left (CALIBRATED)
+    'waning-gibbous': { x: -0.7, y: 0.0, coverage: 0.75 }, // More than half (CALIBRATED)
+    'last-quarter': { x: -1.0, y: 0.0, coverage: 0.5 }, // Half moon, light from left
+    'waning-crescent': { x: -1.5, y: 0.0, coverage: 0.25 }, // Thin crescent on left (CALIBRATED)
 };
 
 /**
@@ -120,15 +120,15 @@ export function getPhaseFromProgress(progress) {
         } else if (t <= 0.5) {
             // 0.625 to 0.75: waning gibbous to last quarter (-0.3 to -1)
             const subT = (t - 0.25) / 0.25;
-            x = -0.3 - (0.7 * subT);
+            x = -0.3 - 0.7 * subT;
         } else if (t <= 0.75) {
             // 0.75 to 0.875: last quarter to waning crescent (-1 to -3)
             const subT = (t - 0.5) / 0.25;
-            x = -1.0 - (2.0 * subT);
+            x = -1.0 - 2.0 * subT;
         } else {
             // 0.875 to 1.0: waning crescent to new moon (-3 to 10)
             const subT = (t - 0.75) / 0.25;
-            x = -3.0 + (13.0 * Math.pow(subT, 0.4));
+            x = -3.0 + 13.0 * Math.pow(subT, 0.4);
         }
     }
 
@@ -147,7 +147,7 @@ export function getPhaseFromProgress(progress) {
  */
 export function createMoon(widthSegments = 64, heightSegments = 64) {
     const geometry = new THREE.SphereGeometry(
-        0.5,           // radius 0.5 = 1.0 diameter (matches sphere geometry)
+        0.5, // radius 0.5 = 1.0 diameter (matches sphere geometry)
         widthSegments, // 64 segments for smooth normal mapping
         heightSegments
     );
@@ -174,11 +174,11 @@ export function disposeMoon(moonMesh) {
 
     // Dispose material and its textures
     if (moonMesh.material) {
-        const {material} = moonMesh;
+        const { material } = moonMesh;
 
         // Clean up pending texture loads
         if (material.userData && material.userData.pendingTextures) {
-            material.userData.pendingTextures.forEach(({texture}) => {
+            material.userData.pendingTextures.forEach(({ texture }) => {
                 if (texture) {
                     texture.dispose();
                 }
@@ -285,16 +285,16 @@ export function createMoonMaterial(textureLoader, options = {}) {
         normalScale: new THREE.Vector2(1.5, 1.5), // Adjust bump intensity (1.0 = subtle, 2.0 = pronounced)
 
         // Material properties for realistic lunar surface
-        roughness: 0.7,    // Slightly less rough for more brightness
-        metalness: 0.0,    // Non-metallic (moon rock is not metal)
+        roughness: 0.7, // Slightly less rough for more brightness
+        metalness: 0.0, // Non-metallic (moon rock is not metal)
 
         // Emissive glow (controlled by emotion system) - brightened for visibility
         emissive: new THREE.Color(0.3, 0.3, 0.3), // Base gray glow for brightness
-        emissiveIntensity: 0.5,  // Boost base brightness
+        emissiveIntensity: 0.5, // Boost base brightness
 
         // Enable transparency for future shader-based crescent clipping
         transparent: false, // Will be true in Phase 3 with shader material
-        side: THREE.FrontSide
+        side: THREE.FrontSide,
     });
 
     // Store pending textures for disposal
@@ -311,13 +311,16 @@ export function createMoonMaterial(textureLoader, options = {}) {
  * @param {number} glowIntensity - Emissive intensity
  * @returns {THREE.MeshStandardMaterial}
  */
-export function createMoonFallbackMaterial(glowColor = new THREE.Color(0xffffff), glowIntensity = 0) {
+export function createMoonFallbackMaterial(
+    glowColor = new THREE.Color(0xffffff),
+    glowIntensity = 0
+) {
     return new THREE.MeshStandardMaterial({
-        color: 0xe8e8e8,      // Light gray moon surface (matches 2D version)
+        color: 0xe8e8e8, // Light gray moon surface (matches 2D version)
         roughness: 0.9,
         metalness: 0.0,
         emissive: glowColor,
-        emissiveIntensity: glowIntensity
+        emissiveIntensity: glowIntensity,
     });
 }
 
@@ -396,7 +399,7 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
             glowIntensity: { value: glowIntensity },
             opacity: { value: 0.0 }, // Start invisible, fade in when texture loads
             // Lunar Eclipse (Blood Moon) uniforms
-            eclipseProgress: { value: 0.0 },  // 0 = no eclipse, 1 = totality
+            eclipseProgress: { value: 0.0 }, // 0 = no eclipse, 1 = totality
             eclipseIntensity: { value: 0.0 }, // Darkening strength
             bloodMoonColor: { value: [0.85, 0.18, 0.08] }, // Deep reddish-orange
             blendMode: { value: 0.0 }, // 0=Multiply, 1=LinearBurn, 2=ColorBurn, 3=ColorDodge, 4=Screen, 5=Overlay
@@ -408,12 +411,12 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
             eclipseShadowColor: { value: [0.85, 0.08, 0.02] },
             eclipseMidtoneColor: { value: [1.0, 0.12, 0.03] },
             eclipseHighlightColor: { value: [1.0, 0.35, 0.08] },
-            eclipseGlowColor: { value: [1.0, 0.40, 0.10] }
+            eclipseGlowColor: { value: [1.0, 0.4, 0.1] },
         },
         vertexShader,
         fragmentShader,
         transparent: true,
-        side: THREE.FrontSide
+        side: THREE.FrontSide,
     });
 
     // Initialize pending texture tracking for cleanup
@@ -591,9 +594,10 @@ export function animateMoonPhase(material, targetPhase, duration = 2000) {
             const progress = Math.min(elapsed / duration, 1.0);
 
             // Ease in-out cubic
-            const eased = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            const eased =
+                progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
             // Interpolate
             const currentX = startX + (targetX - startX) * eased;
@@ -620,7 +624,7 @@ export function animateMoonPhase(material, targetPhase, duration = 2000) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
-        }
+        },
     };
 }
 
@@ -677,7 +681,7 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
         resolution = '4k',
         glowColor = new THREE.Color(0xffffff),
         glowIntensity = 1.0,
-        assetBasePath = '/assets'
+        assetBasePath = '/assets',
     } = options;
 
     const { vertexShader, fragmentShader } = getMoonWithBlendLayersShaders();
@@ -701,69 +705,66 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
             eclipseShadowPos: { value: [-2.0, 0.0] },
             eclipseShadowRadius: { value: 1.2 },
             // Eclipse color grading - CALIBRATED from user screenshot (2025-01-15 v2)
-            eclipseShadowColor: { value: [1.00, 0.58, 0.00] },      // Bright orange umbra core
-            eclipseMidtoneColor: { value: [0.71, 0.43, 0.03] },     // Medium brownish-orange main body (PRIMARY COLOR)
-            eclipseHighlightColor: { value: [1.00, 0.28, 0.10] },   // Bright red-orange atmospheric rim
-            eclipseGlowColor: { value: [0.09, 0.09, 0.09] },        // Near-black limb rim (EDGE BRIGHTNESS)
-            eclipseBrightnessModel: { value: 0.0 },                 // 0 = centeredness, 1 = edge-based
-            shadowDarkness: { value: 0.53 },                        // Peak shadow darkness at total eclipse (0.0 = no darkening, 1.0 = maximum)
+            eclipseShadowColor: { value: [1.0, 0.58, 0.0] }, // Bright orange umbra core
+            eclipseMidtoneColor: { value: [0.71, 0.43, 0.03] }, // Medium brownish-orange main body (PRIMARY COLOR)
+            eclipseHighlightColor: { value: [1.0, 0.28, 0.1] }, // Bright red-orange atmospheric rim
+            eclipseGlowColor: { value: [0.09, 0.09, 0.09] }, // Near-black limb rim (EDGE BRIGHTNESS)
+            eclipseBrightnessModel: { value: 0.0 }, // 0 = centeredness, 1 = edge-based
+            shadowDarkness: { value: 0.53 }, // Peak shadow darkness at total eclipse (0.0 = no darkening, 1.0 = maximum)
 
             // Blend Multiplexer Layer 1 - Vivid Light @ 0.322
-            layer1Mode: { value: 9.0 },  // 9 = Vivid Light
+            layer1Mode: { value: 9.0 }, // 9 = Vivid Light
             layer1Strength: { value: 0.322 },
             layer1Enabled: { value: 1.0 },
 
             // Blend Multiplexer Layer 2 - Multiply @ 2.785
-            layer2Mode: { value: 0.0 },  // 0 = Multiply
+            layer2Mode: { value: 0.0 }, // 0 = Multiply
             layer2Strength: { value: 2.785 },
             layer2Enabled: { value: 1.0 },
 
             // Blend Multiplexer Layer 3 - Overlay @ 0.199
-            layer3Mode: { value: 7.0 },  // 7 = Overlay
+            layer3Mode: { value: 7.0 }, // 7 = Overlay
             layer3Strength: { value: 0.199 },
             layer3Enabled: { value: 1.0 },
 
             // Blend Multiplexer Layer 4 - DISABLED
             layer4Mode: { value: 0.0 },
             layer4Strength: { value: 0.0 },
-            layer4Enabled: { value: 0.0 }
+            layer4Enabled: { value: 0.0 },
         },
         vertexShader,
         fragmentShader,
         transparent: true,
         depthWrite: true,
-        side: THREE.FrontSide
+        side: THREE.FrontSide,
     });
 
     // Load textures with fade-in (same as standard material)
     const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
     const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
 
-    textureLoader.load(
-        colorPath,
-        texture => {
-            material.uniforms.colorMap.value = texture;
+    textureLoader.load(colorPath, texture => {
+        material.uniforms.colorMap.value = texture;
 
-            // Fade in moon when texture loads
-            const startTime = performance.now();
-            const fadeIn = () => {
-                const elapsed = performance.now() - startTime;
-                const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
-                material.uniforms.opacity.value = progress;
-                material.needsUpdate = true;
+        // Fade in moon when texture loads
+        const startTime = performance.now();
+        const fadeIn = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / 300, 1.0); // 300ms fade
+            material.uniforms.opacity.value = progress;
+            material.needsUpdate = true;
 
-                if (progress < 1.0) {
-                    requestAnimationFrame(fadeIn);
-                }
-            };
-            fadeIn();
-
-            // Notify that texture is ready (for shard material precomputation)
-            if (options.onTextureReady) {
-                options.onTextureReady(material);
+            if (progress < 1.0) {
+                requestAnimationFrame(fadeIn);
             }
+        };
+        fadeIn();
+
+        // Notify that texture is ready (for shard material precomputation)
+        if (options.onTextureReady) {
+            options.onTextureReady(material);
         }
-    );
+    });
 
     textureLoader.load(normalPath, texture => {
         material.uniforms.normalMap.value = texture;

@@ -15,27 +15,51 @@ export const undertones = {
     // ═══════════════════════════════════════════════════════════════════
     nervous: [
         // Core
-        'nervous', 'nervously',
+        'nervous',
+        'nervously',
 
         // Anxiety
-        'anxious', 'anxiously', 'worried', 'worriedly',
-        'uneasy', 'uneasily', 'apprehensive',
+        'anxious',
+        'anxiously',
+        'worried',
+        'worriedly',
+        'uneasy',
+        'uneasily',
+        'apprehensive',
 
         // Physical
-        'jittery', 'shaky', 'trembling', 'quivering',
-        'fidgety', 'restless', 'twitchy',
+        'jittery',
+        'shaky',
+        'trembling',
+        'quivering',
+        'fidgety',
+        'restless',
+        'twitchy',
 
         // Tension
-        'tense', 'tensely', 'on edge', 'edgy',
-        'keyed up', 'wound up', 'uptight',
+        'tense',
+        'tensely',
+        'on edge',
+        'edgy',
+        'keyed up',
+        'wound up',
+        'uptight',
 
         // Self-conscious
-        'self-conscious', 'awkward', 'awkwardly',
-        'hesitant', 'hesitantly', 'uncertain', 'uncertainly',
+        'self-conscious',
+        'awkward',
+        'awkwardly',
+        'hesitant',
+        'hesitantly',
+        'uncertain',
+        'uncertainly',
 
         // Slang
-        'sketchy', 'stressed', 'stressing',
-        'low-key panicking', 'kinda freaking out'
+        'sketchy',
+        'stressed',
+        'stressing',
+        'low-key panicking',
+        'kinda freaking out',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -43,31 +67,61 @@ export const undertones = {
     // ═══════════════════════════════════════════════════════════════════
     confident: [
         // Core
-        'confident', 'confidently', 'confidence',
+        'confident',
+        'confidently',
+        'confidence',
 
         // Assurance
-        'assured', 'assuredly', 'certain', 'certainly',
-        'sure', 'surely', 'positive', 'positively',
+        'assured',
+        'assuredly',
+        'certain',
+        'certainly',
+        'sure',
+        'surely',
+        'positive',
+        'positively',
 
         // Boldness
-        'bold', 'boldly', 'brave', 'bravely',
-        'daring', 'daringly', 'fearless', 'fearlessly',
+        'bold',
+        'boldly',
+        'brave',
+        'bravely',
+        'daring',
+        'daringly',
+        'fearless',
+        'fearlessly',
 
         // Strength
-        'strong', 'strongly', 'powerful', 'powerfully',
-        'firm', 'firmly', 'solid', 'solidly',
+        'strong',
+        'strongly',
+        'powerful',
+        'powerfully',
+        'firm',
+        'firmly',
+        'solid',
+        'solidly',
 
         // Authority
-        'authoritative', 'commanding', 'assertive',
-        'decisive', 'decisively', 'resolute', 'resolutely',
+        'authoritative',
+        'commanding',
+        'assertive',
+        'decisive',
+        'decisively',
+        'resolute',
+        'resolutely',
 
         // Poise
-        'poised', 'self-assured',
-        'unflappable', 'unfazed',
+        'poised',
+        'self-assured',
+        'unflappable',
+        'unfazed',
 
         // Slang
-        'owning it', 'killing it', 'crushing it',
-        'boss', 'like a boss'
+        'owning it',
+        'killing it',
+        'crushing it',
+        'boss',
+        'like a boss',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -75,27 +129,53 @@ export const undertones = {
     // ═══════════════════════════════════════════════════════════════════
     tired: [
         // Core
-        'tired', 'tiredly', 'tiredness',
+        'tired',
+        'tiredly',
+        'tiredness',
 
         // Exhaustion
-        'exhausted', 'weary', 'wearily',
-        'fatigued', 'drained', 'spent', 'depleted',
+        'exhausted',
+        'weary',
+        'wearily',
+        'fatigued',
+        'drained',
+        'spent',
+        'depleted',
 
         // Sluggishness
-        'sluggish', 'sluggishly', 'slow', 'slowly',
-        'lethargic', 'listless', 'languid',
+        'sluggish',
+        'sluggishly',
+        'slow',
+        'slowly',
+        'lethargic',
+        'listless',
+        'languid',
 
         // Low energy
-        'low energy', 'no energy', 'out of energy',
-        'running low', 'running on fumes',
+        'low energy',
+        'no energy',
+        'out of energy',
+        'running low',
+        'running on fumes',
 
         // Physical
-        'droopy', 'drooping', 'sagging', 'slumping',
-        'heavy', 'weighted', 'dragging',
+        'droopy',
+        'drooping',
+        'sagging',
+        'slumping',
+        'heavy',
+        'weighted',
+        'dragging',
 
         // Slang
-        'wiped', 'beat', 'dead', 'zonked',
-        'burned out', 'fried', 'cooked', 'toast'
+        'wiped',
+        'beat',
+        'dead',
+        'zonked',
+        'burned out',
+        'fried',
+        'cooked',
+        'toast',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -103,30 +183,64 @@ export const undertones = {
     // ═══════════════════════════════════════════════════════════════════
     intense: [
         // Core
-        'intense', 'intensely', 'intensity',
+        'intense',
+        'intensely',
+        'intensity',
 
         // Heightened
-        'heightened', 'elevated', 'amplified',
-        'magnified', 'increased', 'enhanced',
+        'heightened',
+        'elevated',
+        'amplified',
+        'magnified',
+        'increased',
+        'enhanced',
 
         // Force
-        'forceful', 'forcefully', 'powerful', 'powerfully',
-        'fierce', 'fiercely', 'strong', 'strongly',
+        'forceful',
+        'forcefully',
+        'powerful',
+        'powerfully',
+        'fierce',
+        'fiercely',
+        'strong',
+        'strongly',
 
         // Passion
-        'passionate', 'passionately', 'fervent', 'fervently',
-        'ardent', 'ardently', 'vehement', 'vehemently',
+        'passionate',
+        'passionately',
+        'fervent',
+        'fervently',
+        'ardent',
+        'ardently',
+        'vehement',
+        'vehemently',
 
         // Sharpness
-        'sharp', 'sharply', 'acute', 'acutely',
-        'keen', 'keenly', 'piercing', 'piercingly',
+        'sharp',
+        'sharply',
+        'acute',
+        'acutely',
+        'keen',
+        'keenly',
+        'piercing',
+        'piercingly',
 
         // Extreme
-        'extreme', 'extremely', 'deeply', 'profoundly',
-        'tremendously', 'immensely', 'incredibly',
+        'extreme',
+        'extremely',
+        'deeply',
+        'profoundly',
+        'tremendously',
+        'immensely',
+        'incredibly',
 
         // Slang
-        'super', 'mega', 'ultra', 'hella', 'mad', 'crazy'
+        'super',
+        'mega',
+        'ultra',
+        'hella',
+        'mad',
+        'crazy',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -134,30 +248,59 @@ export const undertones = {
     // ═══════════════════════════════════════════════════════════════════
     subdued: [
         // Core
-        'subdued', 'subduedly',
+        'subdued',
+        'subduedly',
 
         // Softness
-        'soft', 'softly', 'gentle', 'gently',
-        'mild', 'mildly', 'light', 'lightly',
+        'soft',
+        'softly',
+        'gentle',
+        'gently',
+        'mild',
+        'mildly',
+        'light',
+        'lightly',
 
         // Restraint
-        'restrained', 'held back', 'contained',
-        'tempered', 'moderated', 'toned down',
+        'restrained',
+        'held back',
+        'contained',
+        'tempered',
+        'moderated',
+        'toned down',
 
         // Quietness
-        'quiet', 'quietly', 'hushed', 'muted',
-        'understated', 'subtle', 'subtly',
+        'quiet',
+        'quietly',
+        'hushed',
+        'muted',
+        'understated',
+        'subtle',
+        'subtly',
 
         // Modesty
-        'modest', 'modestly', 'humble', 'humbly',
-        'reserved', 'demure', 'unassuming',
+        'modest',
+        'modestly',
+        'humble',
+        'humbly',
+        'reserved',
+        'demure',
+        'unassuming',
 
         // Fading
-        'faint', 'faintly', 'dim', 'dimly',
-        'pale', 'faded', 'washed out',
+        'faint',
+        'faintly',
+        'dim',
+        'dimly',
+        'pale',
+        'faded',
+        'washed out',
 
         // Slang
-        'low key', 'lowkey', 'easy', 'easy going'
+        'low key',
+        'lowkey',
+        'easy',
+        'easy going',
     ],
 
     // ═══════════════════════════════════════════════════════════════════
@@ -165,23 +308,48 @@ export const undertones = {
     // ═══════════════════════════════════════════════════════════════════
     clear: [
         // Core
-        'clear', 'clearly',
+        'clear',
+        'clearly',
 
         // Purity
-        'pure', 'purely', 'clean', 'cleanly',
-        'simple', 'simply', 'plain', 'plainly',
+        'pure',
+        'purely',
+        'clean',
+        'cleanly',
+        'simple',
+        'simply',
+        'plain',
+        'plainly',
 
         // Directness
-        'direct', 'directly', 'straightforward',
-        'honest', 'honestly', 'frank', 'frankly',
+        'direct',
+        'directly',
+        'straightforward',
+        'honest',
+        'honestly',
+        'frank',
+        'frankly',
 
         // Transparency
-        'transparent', 'transparently', 'open', 'openly',
-        'obvious', 'obviously', 'evident', 'evidently',
+        'transparent',
+        'transparently',
+        'open',
+        'openly',
+        'obvious',
+        'obviously',
+        'evident',
+        'evidently',
 
         // Absence of modifier
-        'unmodified', 'unaltered', 'unchanged',
-        'normal', 'normally', 'regular', 'regularly',
-        'standard', 'basic', 'baseline'
-    ]
+        'unmodified',
+        'unaltered',
+        'unchanged',
+        'normal',
+        'normally',
+        'regular',
+        'regularly',
+        'standard',
+        'basic',
+        'baseline',
+    ],
 };

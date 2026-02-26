@@ -43,11 +43,11 @@ const VOIDCROWN_CONFIG = {
         anchor: {
             landmark: 'top',
             offset: { x: 0, y: 0.05, z: 0 },
-            orientation: 'flat',        // void-crown is XY plane — 90° X makes it horizontal
+            orientation: 'flat', // void-crown is XY plane — 90° X makes it horizontal
             bob: {
                 amplitude: 0.02,
-                frequency: 0.25      // Slower than electric — ominous float
-            }
+                frequency: 0.25, // Slower than electric — ominous float
+            },
         },
         count: 1,
         scale: 0.85,
@@ -60,19 +60,21 @@ const VOIDCROWN_CONFIG = {
             exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
             procedural: { scaleSmoothing: 0.1, geometryStability: true },
             pulse: { amplitude: 0.02, frequency: 1.5, easing: 'easeInOut' },
-            rotate: { axis: 'z', rotations: 0.5, phase: 0 },   // Slow rotation
-            atmospherics: [{
-                preset: 'darkness',
-                targets: ['void-crown'],
-                anchor: 'above',
-                intensity: 0.5,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-            }],
+            rotate: { axis: 'z', rotations: 0.5, phase: 0 }, // Slow rotation
+            atmospherics: [
+                {
+                    preset: 'darkness',
+                    targets: ['void-crown'],
+                    anchor: 'above',
+                    intensity: 0.5,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                },
+            ],
             cutout: {
                 strength: 0.35,
-                primary: { pattern: 6, scale: 0.8, weight: 0.7 },    // SPIRAL
-                secondary: { pattern: 3, scale: 1.0, weight: 0.3 },  // VORONOI
+                primary: { pattern: 6, scale: 0.8, weight: 0.7 }, // SPIRAL
+                secondary: { pattern: 3, scale: 1.0, weight: 0.3 }, // VORONOI
                 blend: 'multiply',
                 travel: 'angular',
                 travelSpeed: 0.8,
@@ -80,8 +82,8 @@ const VOIDCROWN_CONFIG = {
                 trailDissolve: {
                     enabled: true,
                     offset: -0.4,
-                    softness: 1.2
-                }
+                    softness: 1.2,
+                },
             },
             scaleVariance: 0,
             lifetimeVariance: 0,
@@ -90,15 +92,15 @@ const VOIDCROWN_CONFIG = {
             modelOverrides: {
                 'void-crown': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.6,      // Wide arcs — regal, stately
-                        arcSpeed: 0.5,      // Slow rotation — ominous float
-                        arcCount: 2
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.6, // Wide arcs — regal, stately
+                        arcSpeed: 0.5, // Slow rotation — ominous float
+                        arcCount: 2,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     // No jitter — controlled manifestation
@@ -114,7 +116,7 @@ const VOIDCROWN_CONFIG = {
     scaleVibration: 0.005,
     scaleFrequency: 2,
     scalePulse: true,
-    rotationDrift: 0.008
+    rotationDrift: 0.008,
 };
 
 export default buildVoidEffectGesture(VOIDCROWN_CONFIG);

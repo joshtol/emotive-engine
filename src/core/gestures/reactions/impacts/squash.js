@@ -31,14 +31,14 @@ export default {
     config: {
         duration: 500,
         musicalDuration: { musical: true, beats: 1 },
-        squashAmount: 0.5,    // How flat to get (0.5 = half height)
-        stretchAmount: 1.5,   // How wide to stretch
-        bounce: true,         // Bounce back with overshoot
+        squashAmount: 0.5, // How flat to get (0.5 = half height)
+        stretchAmount: 1.5, // How wide to stretch
+        bounce: true, // Bounce back with overshoot
         strength: 1.0,
         particleMotion: {
             type: 'squash',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -49,8 +49,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.5
-        }
+            multiplier: 1.5,
+        },
     },
 
     '3d': {
@@ -80,7 +80,7 @@ export default {
 
             // Non-uniform scale: squash Y (flatten), stretch X/Z (widen)
             // scaleY goes DOWN (flattens), scaleXZ goes UP (stretches wide)
-            const scaleY = 1 - squash * (1 - squashAmount) * strength;  // e.g., 1 -> 0.5
+            const scaleY = 1 - squash * (1 - squashAmount) * strength; // e.g., 1 -> 0.5
             const scaleXZ = 1 + squash * (stretchAmount - 1) * strength; // e.g., 1 -> 1.5
 
             // Drop down when squashed (move to ground level)
@@ -96,8 +96,8 @@ export default {
                 // Return non-uniform scale as array [x, y, z]
                 scale: [scaleXZ, scaleY, scaleXZ],
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

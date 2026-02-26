@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Sway Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -11,47 +11,47 @@ export default {
     type: 'blending',
     emoji: '🌊',
     description: 'Gentle side-to-side swaying motion',
-    
+
     config: {
-        duration: 2000,  // Legacy fallback
+        duration: 2000, // Legacy fallback
         musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
         amplitude: 20,
         frequency: 1,
-        strength: 0.5
+        strength: 0.5,
     },
-    
+
     // Rhythm configuration - sway naturally follows the beat
     rhythm: {
         enabled: true,
-        syncMode: 'bar',  // Sway completes one cycle per bar
-        
+        syncMode: 'bar', // Sway completes one cycle per bar
+
         // Amplitude increases on downbeats
         amplitudeSync: {
             onBeat: 1.2,
             offBeat: 0.9,
-            curve: 'ease'  // Smooth transitions
+            curve: 'ease', // Smooth transitions
         },
-        
+
         // Duration syncs to bars for natural rhythm
         durationSync: {
             mode: 'bars',
-            bars: 1  // One full sway per bar
+            bars: 1, // One full sway per bar
         },
-        
+
         // Pattern-specific swaying
         patternOverrides: {
-            'waltz': {
+            waltz: {
                 // 3/4 time creates elegant waltz sway
                 durationSync: { bars: 1 },
-                amplitudeSync: { onBeat: 1.5, curve: 'ease' }
+                amplitudeSync: { onBeat: 1.5, curve: 'ease' },
             },
-            'swing': {
+            swing: {
                 // Jazzy swing sway
-                amplitudeSync: { onBeat: 1.3, offBeat: 0.7, curve: 'bounce' }
-            }
-        }
+                amplitudeSync: { onBeat: 1.3, offBeat: 0.7, curve: 'bounce' },
+            },
+        },
     },
-    
+
     /**
      * Apply sway motion to particle
      * @param {Particle} particle - The particle to animate
@@ -66,17 +66,17 @@ export default {
         const amplitude = config.amplitude || this.config.amplitude;
         const frequency = config.frequency || this.config.frequency;
         const strength = config.strength || this.config.strength;
-        
+
         // Smooth side-to-side motion
         const sway = Math.sin(progress * Math.PI * 2 * frequency) * amplitude;
-        
+
         // Apply horizontal sway
         particle.vx += sway * 0.01 * dt * strength;
-        
+
         // Slight vertical drift for natural feel
         particle.vy += Math.cos(progress * Math.PI * 4) * 0.5 * dt * strength;
     },
-    
+
     /**
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
@@ -101,8 +101,8 @@ export default {
 
             // Apply rhythm modulation if present
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Smooth sinusoidal sway
@@ -128,8 +128,8 @@ export default {
             return {
                 position: [posX, posY, posZ],
                 rotation: [0, yawRotation, rollRotation],
-                scale: 1.0
+                scale: 1.0,
             };
-        }
-    }
+        },
+    },
 };

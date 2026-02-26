@@ -22,11 +22,11 @@ export { getMoonCrescentShaders };
  */
 export function getShadowShaders(shadowType) {
     switch (shadowType) {
-    case 'crescent':
-        return getMoonCrescentShaders();
+        case 'crescent':
+            return getMoonCrescentShaders();
 
-    default:
-        console.warn(`Unknown shadow type: ${shadowType}, defaulting to crescent`);
-        return getMoonCrescentShaders();
+        default:
+            console.warn(`Unknown shadow type: ${shadowType}, defaulting to crescent`);
+            return getMoonCrescentShaders();
     }
 }

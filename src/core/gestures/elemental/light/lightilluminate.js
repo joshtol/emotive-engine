@@ -60,9 +60,11 @@ const LIGHTILLUMINATE_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 2.0,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
-            count: 1, scale: 1.6, models: ['sun-ring'],
+            count: 1,
+            scale: 1.6,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.6,
@@ -74,8 +76,8 @@ const LIGHTILLUMINATE_CONFIG = {
                 rotate: { axis: 'z', rotations: 0.3, phase: 0 },
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 4, scale: 2.0, weight: 1.0 },     // WAVES
-                    secondary: { pattern: 6, scale: 1.5, weight: 0.4 },   // SPIRAL
+                    primary: { pattern: 4, scale: 2.0, weight: 1.0 }, // WAVES
+                    secondary: { pattern: 6, scale: 1.5, weight: 0.4 }, // SPIRAL
                     blend: 'add',
                     travel: 'radial',
                     travelSpeed: 0.8,
@@ -83,25 +85,31 @@ const LIGHTILLUMINATE_CONFIG = {
                     bellPeakAt: 0.5,
                 },
                 grain: {
-                    type: 3, strength: 0.15, scale: 0.3, speed: 0.6, blend: 'multiply'
+                    type: 3,
+                    strength: 0.15,
+                    scale: 0.3,
+                    speed: 0.6,
+                    blend: 'multiply',
                 },
-                atmospherics: [{
-                    preset: 'firefly',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.35,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'firefly',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.35,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'additive',
                 renderOrder: 14,
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // Ring 2 — middle ripple, slightly delayed
         {
@@ -112,9 +120,11 @@ const LIGHTILLUMINATE_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.15,
                 endScale: 2.5,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
-            count: 1, scale: 1.3, models: ['sun-ring'],
+            count: 1,
+            scale: 1.3,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.08,
                 disappearAt: 0.65,
@@ -128,10 +138,10 @@ const LIGHTILLUMINATE_CONFIG = {
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.4, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // Ring 3 — outermost ripple, most delayed
         {
@@ -142,9 +152,11 @@ const LIGHTILLUMINATE_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.1,
                 endScale: 3.0,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
-            count: 1, scale: 1.0, models: ['sun-ring'],
+            count: 1,
+            scale: 1.0,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.16,
                 disappearAt: 0.7,
@@ -158,10 +170,10 @@ const LIGHTILLUMINATE_CONFIG = {
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.75, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -174,15 +186,17 @@ const LIGHTILLUMINATE_CONFIG = {
                 height: 'center',
                 endHeight: 'center',
                 radius: 0.8,
-                endRadius: 1.2,                 // Drifting outward with the light
-                speed: 1,                       // 1 full orbit
+                endRadius: 1.2, // Drifting outward with the light
+                speed: 1, // 1 full orbit
                 easing: 'linear',
                 startScale: 0.6,
                 endScale: 1.0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: { type: 'ring', count: 4 },
-            count: 4, scale: 0.9, models: ['prism-shard'],
+            count: 4,
+            scale: 0.9,
+            models: ['prism-shard'],
             animation: {
                 appearAt: 0.05,
                 disappearAt: 0.65,
@@ -194,13 +208,13 @@ const LIGHTILLUMINATE_CONFIG = {
                     { axis: 'y', rotations: 1.5, phase: 0 },
                     { axis: 'x', rotations: -1.5, phase: 90 },
                     { axis: 'z', rotations: 1.5, phase: 180 },
-                    { axis: 'y', rotations: -1.5, phase: 270 }
+                    { axis: 'y', rotations: -1.5, phase: 270 },
                 ],
                 scaleVariance: 0.2,
                 blending: 'additive',
                 renderOrder: 16,
-            }
-        }
+            },
+        },
     ],
 
     decayRate: 0.2,
@@ -210,7 +224,7 @@ const LIGHTILLUMINATE_CONFIG = {
     glowFlickerRate: 3,
     scaleVibration: 0.012,
     scaleFrequency: 2.5,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTILLUMINATE_CONFIG);

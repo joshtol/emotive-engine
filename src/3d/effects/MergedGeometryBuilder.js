@@ -36,7 +36,7 @@ export class MergedGeometryBuilder {
      */
     addGeometry(geometry, name = null) {
         const index = this.geometries.length;
-        this.geometries.push(geometry.clone());  // Clone to avoid mutation
+        this.geometries.push(geometry.clone()); // Clone to avoid mutation
         this.modelNames.push(name || `model_${index}`);
         return index;
     }
@@ -67,9 +67,7 @@ export class MergedGeometryBuilder {
 
         for (const geometry of this.geometries) {
             // Ensure geometry has an index (convert non-indexed to indexed)
-            const indexed = geometry.index
-                ? geometry
-                : this._convertToIndexed(geometry);
+            const indexed = geometry.index ? geometry : this._convertToIndexed(geometry);
 
             processedGeometries.push(indexed);
             totalVertices += indexed.attributes.position.count;
@@ -83,7 +81,7 @@ export class MergedGeometryBuilder {
         const positions = new Float32Array(totalVertices * 3);
         const normals = new Float32Array(totalVertices * 3);
         const uvs = new Float32Array(totalVertices * 2);
-        const modelIndices = new Float32Array(totalVertices);  // Our custom attribute
+        const modelIndices = new Float32Array(totalVertices); // Our custom attribute
         const indices = new Uint32Array(totalIndices);
 
         // Second pass: copy data into merged buffers
@@ -161,7 +159,7 @@ export class MergedGeometryBuilder {
         return {
             geometry: mergedGeometry,
             modelCount: this.geometries.length,
-            modelMap
+            modelMap,
         };
     }
 
@@ -216,7 +214,7 @@ export function mergeGeometries(geometryList) {
         builder.addGeometry(item.geometry, item.name);
     }
     const result = builder.build();
-    builder.dispose();  // Clean up clones
+    builder.dispose(); // Clean up clones
     return result;
 }
 

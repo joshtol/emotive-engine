@@ -27,7 +27,7 @@ import { buildNatureEffectGesture } from './natureEffectFactory.js';
 
 const SHARED_ANIMATION = {
     blending: 'normal',
-    renderOrder: 10
+    renderOrder: 10,
 };
 
 const CONFIG = {
@@ -68,8 +68,8 @@ const CONFIG = {
                 lifetimeVariance: 0.12,
                 blending: 'normal',
                 renderOrder: 8,
-                intensityScaling: { scale: 1.25, emissiveMax: 1.3 }
-            }
+                intensityScaling: { scale: 1.25, emissiveMax: 1.3 },
+            },
         },
 
         // ── Layer 2: Center u-vine wreath — slow spin, arc reveal, 1.5 rotations ──
@@ -86,7 +86,7 @@ const CONFIG = {
                 endDiameter: 1.6,
                 startScale: 0.3,
                 endScale: 1.0,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.0,
@@ -98,34 +98,36 @@ const CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.18,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 rotate: { axis: 'y', rotations: 1.5 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['u-vine'],
-                    anchor: 'around',
-                    intensity: 0.5,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.3,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['u-vine'],
+                        anchor: 'around',
+                        intensity: 0.5,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.3,
+                    },
+                ],
                 modelOverrides: {
                     'u-vine': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.65,
                             arcSpeed: 1.2,
-                            arcCount: 1
-                        }
-                    }
-                }
-            }
+                            arcCount: 1,
+                        },
+                    },
+                },
+            },
         },
 
         // ── Layer 3: Upper u-vine wreath — faster counter-spin, relay delay, 2 rotations ──
@@ -142,7 +144,7 @@ const CONFIG = {
                 endDiameter: 1.3,
                 startScale: 0.2,
                 endScale: 0.9,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 0.85,
@@ -154,12 +156,12 @@ const CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.15,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.18,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 rotate: { axis: 'y', rotations: -2.0, phase: 120 },
                 modelOverrides: {
@@ -168,11 +170,11 @@ const CONFIG = {
                             type: 1,
                             arcWidth: 0.5,
                             arcSpeed: 1.8,
-                            arcCount: 2
-                        }
-                    }
-                }
-            }
+                            arcCount: 2,
+                        },
+                    },
+                },
+            },
         },
 
         // ── Layer 4: Lower u-vine wreath — phase offset, 1 rotation, earliest exit ──
@@ -189,7 +191,7 @@ const CONFIG = {
                 endDiameter: 1.3,
                 startScale: 0.2,
                 endScale: 0.9,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 0.85,
@@ -201,12 +203,12 @@ const CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.15,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 rotate: { axis: 'y', rotations: 1.0, phase: 240 },
                 modelOverrides: {
@@ -215,12 +217,12 @@ const CONFIG = {
                             type: 1,
                             arcWidth: 0.55,
                             arcSpeed: 1.0,
-                            arcCount: 1
-                        }
-                    }
-                }
-            }
-        }
+                            arcCount: 1,
+                        },
+                    },
+                },
+            },
+        },
     ],
 
     // Glow - rich forest green
@@ -244,17 +246,17 @@ const CONFIG = {
                 { at: 0.25, value: 0.9 },
                 { at: 0.6, value: 0.85 },
                 { at: 0.85, value: 0.6 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
     },
 
     // Post-processing
     cutout: {
         primary: { pattern: 'leaf', scale: 3.0, blend: 'multiply', travelSpeed: 0.3 },
-        secondary: { pattern: 'organic', scale: 5.0, blend: 'overlay', travelSpeed: 0.2 }
+        secondary: { pattern: 'organic', scale: 5.0, blend: 'overlay', travelSpeed: 0.2 },
     },
-    grain: { type: 3, strength: 0.03, blend: 'multiply', speed: 0.35 }
+    grain: { type: 3, strength: 0.03, blend: 'multiply', speed: 0.35 },
 };
 
 export default buildNatureEffectGesture(CONFIG);

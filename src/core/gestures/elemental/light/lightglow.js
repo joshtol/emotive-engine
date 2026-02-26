@@ -47,11 +47,11 @@ const LIGHTGLOW_CONFIG = {
             endHeight: 'center',
             radius: 0.8,
             endRadius: 0.9,
-            speed: 0.5,                     // Very slow — lazy drift
+            speed: 0.5, // Very slow — lazy drift
             easing: 'linear',
             startScale: 0.8,
             endScale: 1.0,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: { type: 'ring', count: 3 },
         count: 3,
@@ -66,23 +66,25 @@ const LIGHTGLOW_CONFIG = {
             procedural: { scaleSmoothing: 0.15, geometryStability: true },
             pulse: { amplitude: 0.1, frequency: 1.5, easing: 'easeInOut', sync: 'global' },
             emissive: { min: 0.6, max: 1.2, frequency: 1.5, pattern: 'sine' },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.2,
-                sizeScale: 0.4,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.2,
+                    sizeScale: 0.4,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
             blending: 'additive',
             renderOrder: 10,
-        }
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [1.0, 0.90, 0.70],      // Warm amber
+    glowColor: [1.0, 0.9, 0.7], // Warm amber
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.9,
     glowFlickerRate: 2,
@@ -90,7 +92,7 @@ const LIGHTGLOW_CONFIG = {
     scaleFrequency: 1.5,
     scalePulse: true,
     floatAmount: 0.003,
-    floatSpeed: 1
+    floatSpeed: 1,
 };
 
 export default buildLightEffectGesture(LIGHTGLOW_CONFIG);

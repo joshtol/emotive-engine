@@ -77,8 +77,21 @@ const calm = mergeEmotion(calmBase, calmRhythm);
  */
 export function getFullEmotions() {
     return [
-        neutral, joy, sadness, anger, fear, surprise, disgust,
-        love, suspicion, excited, resting, euphoria, focused, glitch, calm
+        neutral,
+        joy,
+        sadness,
+        anger,
+        fear,
+        surprise,
+        disgust,
+        love,
+        suspicion,
+        excited,
+        resting,
+        euphoria,
+        focused,
+        glitch,
+        calm,
     ];
 }
 
@@ -89,8 +102,21 @@ export function getFullEmotions() {
  */
 export function getFullEmotion(name) {
     const emotions = {
-        neutral, joy, sadness, anger, fear, surprise, disgust,
-        love, suspicion, excited, resting, euphoria, focused, glitch, calm
+        neutral,
+        joy,
+        sadness,
+        anger,
+        fear,
+        surprise,
+        disgust,
+        love,
+        suspicion,
+        excited,
+        resting,
+        euphoria,
+        focused,
+        glitch,
+        calm,
     };
     return emotions[name] || null;
 }

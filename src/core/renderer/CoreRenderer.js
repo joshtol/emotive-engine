@@ -10,17 +10,17 @@ export class CoreRenderer {
         this.renderer = renderer;
         this.ctx = renderer.ctx;
         this.canvas = renderer.canvas;
-        
+
         // Core appearance
         this.coreColor = '#FFFFFF';
         this.coreOpacity = 1.0;
         this.coreBorderWidth = 0;
         this.coreBorderColor = null;
-        
+
         // Shape state
         this.shapePoints = null;
         this.isMorphing = false;
-        
+
         // Helper method references
         this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
@@ -34,8 +34,8 @@ export class CoreRenderer {
      * @param {Object} params - Rendering parameters
      */
     renderCore(x, y, radius, params = {}) {
-        const {ctx} = this;
-        
+        const { ctx } = this;
+
         // Extract parameters
         const scaleX = params.scaleX || 1;
         const scaleY = params.scaleY || 1;
@@ -43,33 +43,33 @@ export class CoreRenderer {
         const opacity = params.opacity !== undefined ? params.opacity : this.coreOpacity;
         const color = params.color || this.coreColor;
         const shapePoints = params.shapePoints || this.shapePoints;
-        
+
         ctx.save();
-        
+
         // Apply transformations
         ctx.translate(x, y);
         if (rotation !== 0) {
             ctx.rotate(rotation);
         }
         ctx.scale(scaleX, scaleY);
-        
+
         // Set core style
         ctx.fillStyle = this.hexToRgba(color, opacity);
-        
+
         // Draw shape based on points or default circle
         if (shapePoints && shapePoints.length > 0) {
             this.drawMorphedShape(ctx, shapePoints, radius);
         } else {
             this.drawCircle(ctx, radius);
         }
-        
+
         // Draw border if needed
         if (this.coreBorderWidth > 0 && this.coreBorderColor) {
             ctx.strokeStyle = this.coreBorderColor;
             ctx.lineWidth = this.scaleValue(this.coreBorderWidth);
             ctx.stroke();
         }
-        
+
         ctx.restore();
     }
 
@@ -81,10 +81,10 @@ export class CoreRenderer {
      */
     drawDropShadow(ctx, radius, shapePoints) {
         ctx.save();
-        
+
         const shadowOffset = this.scaleValue(2);
         ctx.translate(0, shadowOffset);
-        
+
         // Use simpler shadow for complex deformed shapes
         if (shapePoints && shapePoints.length > 32) {
             // Simple dark circle shadow when shape is complex
@@ -95,11 +95,17 @@ export class CoreRenderer {
         } else {
             // Shadow gradient - dark center fading to transparent
             const shadowGradient = gradientCache.getRadialGradient(
-                ctx, 0, 0, radius * 0.7, 0, 0, radius * 1.2,
+                ctx,
+                0,
+                0,
+                radius * 0.7,
+                0,
+                0,
+                radius * 1.2,
                 [
                     { offset: 0, color: 'rgba(0, 0, 0, 0.2)' },
                     { offset: 0.8, color: 'rgba(0, 0, 0, 0.1)' },
-                    { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+                    { offset: 1, color: 'rgba(0, 0, 0, 0)' },
                 ]
             );
 
@@ -119,10 +125,10 @@ export class CoreRenderer {
             }
             ctx.fill();
         }
-        
+
         ctx.restore();
     }
-    
+
     /**
      * Draw a simple circle
      * @param {CanvasRenderingContext2D} ctx - Canvas context
@@ -146,9 +152,9 @@ export class CoreRenderer {
             this.drawCircle(ctx, baseRadius);
             return;
         }
-        
+
         ctx.beginPath();
-        
+
         // Points from getCanvasPoints are already in canvas coordinates
         // relative to the center (0,0) after translation
         points.forEach((point, i) => {
@@ -158,7 +164,7 @@ export class CoreRenderer {
                 ctx.lineTo(point.x, point.y);
             }
         });
-        
+
         ctx.closePath();
         ctx.fill();
     }
@@ -171,34 +177,34 @@ export class CoreRenderer {
      * @param {number} time - Current time for animation
      */
     renderZenCore(x, y, radius, time) {
-        const {ctx} = this;
-        
+        const { ctx } = this;
+
         // Zen breathing effect
         const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
         const zenRadius = radius * (0.95 + breathPhase * 0.05);
-        
+
         // Draw zen core with subtle inner glow
         ctx.save();
-        
+
         // Inner shadow for depth
         ctx.shadowBlur = this.scaleValue(10);
         ctx.shadowColor = 'rgba(147, 112, 219, 0.3)';
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
-        
+
         // Main core
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
         ctx.arc(x, y, zenRadius, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Inner ring
         ctx.strokeStyle = 'rgba(147, 112, 219, 0.2)';
         ctx.lineWidth = this.scaleValue(1);
         ctx.beginPath();
         ctx.arc(x, y, zenRadius * 0.9, 0, Math.PI * 2);
         ctx.stroke();
-        
+
         ctx.restore();
     }
 
@@ -209,18 +215,18 @@ export class CoreRenderer {
      * @param {number} radius - Core radius
      */
     renderSleepyCore(x, y, radius) {
-        const {ctx} = this;
-        
+        const { ctx } = this;
+
         // Slightly squished for sleepy look
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(1, 0.85);
-        
+
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
         ctx.arc(0, 0, radius, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.restore();
     }
 
@@ -232,17 +238,17 @@ export class CoreRenderer {
      * @param {number} glitchIntensity - Glitch intensity (0-1)
      */
     renderGlitchedCore(x, y, radius, glitchIntensity) {
-        const {ctx} = this;
-        
+        const { ctx } = this;
+
         // Draw multiple offset cores for glitch effect
         const offsets = [
             { x: -2, y: 0, alpha: 0.3 },
             { x: 2, y: 0, alpha: 0.3 },
-            { x: 0, y: -1, alpha: 0.2 }
+            { x: 0, y: -1, alpha: 0.2 },
         ];
-        
+
         ctx.save();
-        
+
         offsets.forEach(offset => {
             ctx.fillStyle = this.hexToRgba('#FFFFFF', offset.alpha * glitchIntensity);
             ctx.beginPath();
@@ -255,13 +261,13 @@ export class CoreRenderer {
             );
             ctx.fill();
         });
-        
+
         // Main core
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.restore();
     }
 
@@ -318,7 +324,7 @@ export class CoreRenderer {
             opacity: this.coreOpacity,
             hasBorder: this.coreBorderWidth > 0,
             isMorphing: this.isMorphing,
-            shapePointCount: this.shapePoints ? this.shapePoints.length : 0
+            shapePointCount: this.shapePoints ? this.shapePoints.length : 0,
         };
     }
 }

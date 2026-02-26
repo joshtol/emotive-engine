@@ -25,7 +25,7 @@ import * as THREE from 'three';
 // VERTEX SHADER (same GPU-deterministic billboard as smoke/mist/spray/firefly)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -98,7 +98,7 @@ void main() {
 // DUST/GRAVEL FRAGMENT SHADER
 // =================================================================================================
 
-const DUST_FRAGMENT_GLSL = /* glsl */`
+const DUST_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform float uTime;
 uniform vec3 uColor;
@@ -166,16 +166,20 @@ export function createDustParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'DustParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.75 },
-            uColor:              { value: new THREE.Color(...(config.color || [0.55, 0.45, 0.35])) },
-            uColorVariant:       { value: new THREE.Color(...(config.colorVariant || config.color || [0.55, 0.45, 0.35])) },
-            uBuoyancy:           { value: config.buoyancy ?? 0.01 },
-            uDrag:               { value: config.drag ?? 0.8 },
-            uTurbulenceStrength: { value: config.turbulence ?? 0.10 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 0.6 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 1.5 },
-            uGravity:            { value: config.gravity ?? 0.0 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.75 },
+            uColor: { value: new THREE.Color(...(config.color || [0.55, 0.45, 0.35])) },
+            uColorVariant: {
+                value: new THREE.Color(
+                    ...(config.colorVariant || config.color || [0.55, 0.45, 0.35])
+                ),
+            },
+            uBuoyancy: { value: config.buoyancy ?? 0.01 },
+            uDrag: { value: config.drag ?? 0.8 },
+            uTurbulenceStrength: { value: config.turbulence ?? 0.1 },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 0.6 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 1.5 },
+            uGravity: { value: config.gravity ?? 0.0 },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: DUST_FRAGMENT_GLSL,

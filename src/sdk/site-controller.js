@@ -6,59 +6,73 @@
  */
 export class SiteController {
     /**
-   * @param {{ mascot: any, onError?: (error: Error) => void }} [options]
-   */
+     * @param {{ mascot: any, onError?: (error: Error) => void }} [options]
+     */
     constructor(options = {}) {
         const { mascot = null, onError } = options;
         this.mascot = mascot;
-        this._onError = onError ?? (error => {
-            if (process.env.NODE_ENV !== 'production') {
-                console.error('SiteController error:', error);
-            }
-        });
+        this._onError =
+            onError ??
+            (error => {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.error('SiteController error:', error);
+                }
+            });
     }
 
     /**
-   * Update the mascot reference if the caller reinitialises the engine.
-   * @param {any} mascot
-   */
+     * Update the mascot reference if the caller reinitialises the engine.
+     * @param {any} mascot
+     */
     updateMascot(mascot) {
         this.mascot = mascot;
         return this;
     }
 
     /**
-   * @returns {any|null}
-   */
+     * @returns {any|null}
+     */
     get positionController() {
         return this.mascot?.positionController ?? null;
     }
 
     /**
-   * @returns {any|null}
-   */
+     * @returns {any|null}
+     */
     getElementTargeting() {
         return this.positionController?.getElementTargeting?.() ?? null;
     }
 
     /**
-   * Move the mascot toward a DOM element using the engine path helper when available.
-   * @param {string} selector
-   * @param {{ offset?: { x: number; y: number }, speed?: number, easing?: string, coordinateSystem?: string }} [options]
-   */
+     * Move the mascot toward a DOM element using the engine path helper when available.
+     * @param {string} selector
+     * @param {{ offset?: { x: number; y: number }, speed?: number, easing?: string, coordinateSystem?: string }} [options]
+     */
     moveToElement(selector, options = {}) {
-        return this.moveToElementWithPath(selector, [], 'center', options.offset ?? { x: 0, y: 0 }, options);
+        return this.moveToElementWithPath(
+            selector,
+            [],
+            'center',
+            options.offset ?? { x: 0, y: 0 },
+            options
+        );
     }
 
     /**
-   * Move the mascot using explicit path points.
-   * @param {string} selector
-   * @param {Array<{ x: number; y: number }>} pathPoints
-   * @param {'center' | 'start' | 'end'} [alignment]
-   * @param {{ x: number; y: number }} [offset]
-   * @param {{ speed?: number; easing?: string; coordinateSystem?: string }} [options]
-   */
-    moveToElementWithPath(selector, pathPoints = [], alignment = 'center', offset = { x: 0, y: 0 }, options = {}) {
+     * Move the mascot using explicit path points.
+     * @param {string} selector
+     * @param {Array<{ x: number; y: number }>} pathPoints
+     * @param {'center' | 'start' | 'end'} [alignment]
+     * @param {{ x: number; y: number }} [offset]
+     * @param {{ speed?: number; easing?: string; coordinateSystem?: string }} [options]
+     */
+    moveToElementWithPath(
+        selector,
+        pathPoints = [],
+        alignment = 'center',
+        offset = { x: 0, y: 0 },
+        options = {}
+    ) {
         const controller = this.positionController;
         if (!controller) {
             return undefined;
@@ -91,8 +105,8 @@ export class SiteController {
     }
 
     /**
-   * Directly set the mascot offset.
-   */
+     * Directly set the mascot offset.
+     */
     setOffset(x, y, z = 0) {
         try {
             this.positionController?.setOffset?.(x, y, z);
@@ -102,8 +116,8 @@ export class SiteController {
     }
 
     /**
-   * Get the current offset from the position controller.
-   */
+     * Get the current offset from the position controller.
+     */
     getOffset() {
         try {
             return this.positionController?.getOffset?.() ?? { x: 0, y: 0 };
@@ -114,8 +128,8 @@ export class SiteController {
     }
 
     /**
-   * Update mascot emotion.
-   */
+     * Update mascot emotion.
+     */
     setEmotion(emotion) {
         try {
             this.mascot?.setEmotion?.(emotion);
@@ -125,8 +139,8 @@ export class SiteController {
     }
 
     /**
-   * Trigger gesture or chain.
-   */
+     * Trigger gesture or chain.
+     */
     express(gesture, options = {}) {
         try {
             if (options.chain && this.mascot?.chain) {
@@ -140,8 +154,8 @@ export class SiteController {
     }
 
     /**
-   * Stop active paths/animations without destroying configuration.
-   */
+     * Stop active paths/animations without destroying configuration.
+     */
     stop() {
         try {
             const controller = this.positionController;
@@ -154,8 +168,8 @@ export class SiteController {
     }
 
     /**
-   * Resume mascot playback.
-   */
+     * Resume mascot playback.
+     */
     play() {
         try {
             this.mascot?.play?.();
@@ -165,8 +179,8 @@ export class SiteController {
     }
 
     /**
-   * Destroy controller references and clear listeners.
-   */
+     * Destroy controller references and clear listeners.
+     */
     destroy() {
         this.stop();
         this.mascot = null;

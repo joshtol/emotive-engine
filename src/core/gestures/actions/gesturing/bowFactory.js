@@ -31,21 +31,23 @@ import { capitalize } from '../../_shared/directions.js';
 export function createBowGesture(direction) {
     const validDirections = ['forward', 'left', 'right', 'back'];
     if (!validDirections.includes(direction)) {
-        throw new Error(`Invalid bow direction: ${direction}. Use 'forward', 'left', 'right', or 'back'.`);
+        throw new Error(
+            `Invalid bow direction: ${direction}. Use 'forward', 'left', 'right', or 'back'.`
+        );
     }
 
     const emojis = {
         forward: '🙇',
         left: '🙇',
         right: '🙇',
-        back: '🙇'
+        back: '🙇',
     };
 
     const descriptions = {
         forward: 'Graceful forward bow of respect',
         left: 'Theatrical bow with leftward flourish',
         right: 'Theatrical bow with rightward flourish',
-        back: 'Humble retreating bow'
+        back: 'Humble retreating bow',
     };
 
     return {
@@ -57,23 +59,23 @@ export function createBowGesture(direction) {
         config: {
             duration: 1200,
             musicalDuration: { musical: true, beats: 3 },
-            depth: 0.4,           // How deep to bow (rotation amount)
-            holdTime: 0.4,        // How long to hold the bow
+            depth: 0.4, // How deep to bow (rotation amount)
+            holdTime: 0.4, // How long to hold the bow
             graceful: true,
             strength: 1.0,
             direction,
             particleMotion: {
                 type: 'bow',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
             enabled: true,
             syncMode: 'beat',
             durationSync: { mode: 'beats', beats: 3 },
-            timingSync: 'onBeat'
+            timingSync: 'onBeat',
         },
 
         '3d': {
@@ -92,20 +94,23 @@ export function createBowGesture(direction) {
                 if (progress < downPhase) {
                     // Bowing down
                     bowAmount = progress / downPhase;
-                    bowAmount = Math.sin(bowAmount * Math.PI / 2); // Smooth ease
+                    bowAmount = Math.sin((bowAmount * Math.PI) / 2); // Smooth ease
                 } else if (progress < upStart) {
                     // Holding bow
                     bowAmount = 1.0;
                 } else {
                     // Rising up
-                    bowAmount = 1 - ((progress - upStart) / (1 - upStart));
-                    bowAmount = Math.sin(bowAmount * Math.PI / 2);
+                    bowAmount = 1 - (progress - upStart) / (1 - upStart);
+                    bowAmount = Math.sin((bowAmount * Math.PI) / 2);
                 }
 
                 // Calculate position and rotation based on direction
                 // All in camera-relative space for tidal lock
-                let xOffset = 0, yOffset = 0, zOffset = 0;
-                let rotX = 0, rotZ = 0;
+                let xOffset = 0,
+                    yOffset = 0,
+                    zOffset = 0;
+                let rotX = 0,
+                    rotZ = 0;
                 const rotY = 0;
 
                 // Base bow: always tilt forward (toward camera)
@@ -113,33 +118,33 @@ export function createBowGesture(direction) {
                 yOffset = -bowAmount * 0.1 * strength; // Lower during bow
 
                 switch (dir) {
-                case 'forward':
-                    // Standard forward bow
-                    rotX = baseTilt;
-                    zOffset = -bowAmount * 0.05 * strength; // Move toward camera
-                    break;
+                    case 'forward':
+                        // Standard forward bow
+                        rotX = baseTilt;
+                        zOffset = -bowAmount * 0.05 * strength; // Move toward camera
+                        break;
 
-                case 'back':
-                    // Bow backward (retreating, humble)
-                    rotX = baseTilt * 0.7; // Slightly less forward tilt
-                    zOffset = bowAmount * 0.1 * strength; // Move away from camera
-                    break;
+                    case 'back':
+                        // Bow backward (retreating, humble)
+                        rotX = baseTilt * 0.7; // Slightly less forward tilt
+                        zOffset = bowAmount * 0.1 * strength; // Move away from camera
+                        break;
 
-                case 'left':
-                    // Theatrical bow to the left
-                    // In camera space: positive rotZ = CCW = top goes to viewer's LEFT
-                    rotX = baseTilt * 0.8;
-                    rotZ = bowAmount * 0.3 * strength; // Lean left (positive = CCW = top-left)
-                    xOffset = -bowAmount * 0.08 * strength; // Move left (negative X in camera space)
-                    break;
+                    case 'left':
+                        // Theatrical bow to the left
+                        // In camera space: positive rotZ = CCW = top goes to viewer's LEFT
+                        rotX = baseTilt * 0.8;
+                        rotZ = bowAmount * 0.3 * strength; // Lean left (positive = CCW = top-left)
+                        xOffset = -bowAmount * 0.08 * strength; // Move left (negative X in camera space)
+                        break;
 
-                case 'right':
-                    // Theatrical bow to the right
-                    // In camera space: negative rotZ = CW = top goes to viewer's RIGHT
-                    rotX = baseTilt * 0.8;
-                    rotZ = -bowAmount * 0.3 * strength; // Lean right (negative = CW = top-right)
-                    xOffset = bowAmount * 0.08 * strength; // Move right (positive X in camera space)
-                    break;
+                    case 'right':
+                        // Theatrical bow to the right
+                        // In camera space: negative rotZ = CW = top goes to viewer's RIGHT
+                        rotX = baseTilt * 0.8;
+                        rotZ = -bowAmount * 0.3 * strength; // Lean right (negative = CW = top-right)
+                        xOffset = bowAmount * 0.08 * strength; // Move right (positive X in camera space)
+                        break;
                 }
 
                 // Soft, respectful glow
@@ -152,10 +157,10 @@ export function createBowGesture(direction) {
                     cameraRelativeRotation: [rotX, rotY, rotZ],
                     scale: 1.0,
                     glowIntensity,
-                    glowBoost
+                    glowBoost,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

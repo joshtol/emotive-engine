@@ -56,8 +56,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 export const WETNESS_DEFAULTS = {
-    wetness: 0.5,       // Master wetness amount (0=bone dry, 1=fully wet)
-    wetSpeed: 0.3       // Temporal animation speed (drift + breathing)
+    wetness: 0.5, // Master wetness amount (0=bone dry, 1=fully wet)
+    wetSpeed: 0.3, // Temporal animation speed (drift + breathing)
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -68,7 +68,7 @@ export const WETNESS_DEFAULTS = {
  * Wetness uniform declarations for fragment shader.
  * Inject into the uniforms section of the fragment shader.
  */
-export const WETNESS_UNIFORMS_GLSL = /* glsl */`
+export const WETNESS_UNIFORMS_GLSL = /* glsl */ `
 // Shared wetness system (WetnessCore)
 uniform float uWetness;       // Master wetness amount (0-1)
 uniform float uWetSpeed;      // Temporal drift/breathing speed
@@ -82,7 +82,7 @@ uniform float uWetSpeed;      // Temporal drift/breathing speed
  * Wetness calculation functions.
  * MUST be injected AFTER the host material's NOISE_GLSL — calls noise(vec3).
  */
-export const WETNESS_FUNC_GLSL = /* glsl */`
+export const WETNESS_FUNC_GLSL = /* glsl */ `
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // WETNESS SYSTEM (shared across earth, ice, nature)
 //
@@ -168,7 +168,7 @@ vec3 applyWetDarkening(vec3 color, float wetMask, float darkeningFactor) {
 export function createWetnessUniforms(defaults = {}) {
     return {
         uWetness: { value: defaults.wetness ?? WETNESS_DEFAULTS.wetness },
-        uWetSpeed: { value: defaults.wetSpeed ?? WETNESS_DEFAULTS.wetSpeed }
+        uWetSpeed: { value: defaults.wetSpeed ?? WETNESS_DEFAULTS.wetSpeed },
     };
 }
 
@@ -214,5 +214,5 @@ export default {
     WETNESS_FUNC_GLSL,
     createWetnessUniforms,
     setWetness,
-    resetWetness
+    resetWetness,
 };

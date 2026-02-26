@@ -55,9 +55,11 @@ const LIGHTBEACON_CONFIG = {
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'camera',
                 cameraOffset: 1.0,
-                bob: { amplitude: 0.015, frequency: 0.25 }
+                bob: { amplitude: 0.015, frequency: 0.25 },
             },
-            count: 1, scale: 1.8, models: ['sun-ring'],
+            count: 1,
+            scale: 1.8,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.85,
@@ -72,10 +74,10 @@ const LIGHTBEACON_CONFIG = {
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -90,12 +92,14 @@ const LIGHTBEACON_CONFIG = {
                 offset: { x: 0, y: 0, z: 0 },
                 orientation: 'camera',
                 cameraOffset: 1.0,
-                bob: { amplitude: 0.012, frequency: 0.3 }
+                bob: { amplitude: 0.012, frequency: 0.3 },
             },
-            count: 1, scale: 1.5, models: ['sun-ring'],
+            count: 1,
+            scale: 1.5,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.0,
-                disappearAt: 0.80,
+                disappearAt: 0.8,
                 enter: { type: 'fade', duration: 0.15, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.1, geometryStability: true },
@@ -104,31 +108,33 @@ const LIGHTBEACON_CONFIG = {
                 rotate: { axis: 'z', rotations: -0.5, phase: 0 },
                 cutout: {
                     strength: 0.3,
-                    primary: { pattern: 5, scale: 0.8, weight: 0.6 },    // EMBERS — sparkling texture in beam
-                    secondary: { pattern: 0, scale: 1.2, weight: 0.3 },  // CELLULAR — organic breakup
+                    primary: { pattern: 5, scale: 0.8, weight: 0.6 }, // EMBERS — sparkling texture in beam
+                    secondary: { pattern: 0, scale: 1.2, weight: 0.3 }, // CELLULAR — organic breakup
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.0,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: { type: 3, strength: 0.1, scale: 0.25, speed: 0.5, blend: 'multiply' },
-                atmospherics: [{
-                    preset: 'firefly',
-                    targets: ['sun-ring'],
-                    anchor: 'around',
-                    intensity: 0.6,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'firefly',
+                        targets: ['sun-ring'],
+                        anchor: 'around',
+                        intensity: 0.6,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'additive',
                 renderOrder: 16,
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.35, arcSpeed: 1.5, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -144,24 +150,32 @@ const LIGHTBEACON_CONFIG = {
                 cameraOffset: 1.0,
             },
             formation: { type: 'ring', count: 3 },
-            count: 3, scale: 0.6, models: ['prism-shard'],
+            count: 3,
+            scale: 0.6,
+            models: ['prism-shard'],
             animation: {
                 appearAt: 0.05,
                 disappearAt: 0.75,
                 stagger: 0.04,
                 enter: { type: 'scale', duration: 0.15, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
-                pulse: { amplitude: 0.15, frequency: 3, easing: 'easeInOut', perElement: true, phaseOffset: 120 },
+                pulse: {
+                    amplitude: 0.15,
+                    frequency: 3,
+                    easing: 'easeInOut',
+                    perElement: true,
+                    phaseOffset: 120,
+                },
                 emissive: { min: 1.0, max: 2.5, frequency: 4, pattern: 'sine' },
                 rotate: [
                     { axis: 'z', rotations: 2, phase: 0 },
                     { axis: 'z', rotations: -2, phase: 120 },
-                    { axis: 'z', rotations: 2, phase: 240 }
+                    { axis: 'z', rotations: 2, phase: 240 },
                 ],
                 scaleVariance: 0.2,
                 blending: 'additive',
                 renderOrder: 15,
-            }
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -179,17 +193,25 @@ const LIGHTBEACON_CONFIG = {
                 easing: 'linear',
                 startScale: 0.8,
                 endScale: 1.0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: { type: 'ring', count: 6 },
-            count: 6, scale: 0.45, models: ['sparkle-star'],
+            count: 6,
+            scale: 0.45,
+            models: ['sparkle-star'],
             animation: {
                 appearAt: 0.05,
                 disappearAt: 0.75,
                 stagger: 0.04,
                 enter: { type: 'fade', duration: 0.12, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
-                pulse: { amplitude: 0.25, frequency: 5, easing: 'easeInOut', perElement: true, phaseOffset: 60 },
+                pulse: {
+                    amplitude: 0.25,
+                    frequency: 5,
+                    easing: 'easeInOut',
+                    perElement: true,
+                    phaseOffset: 60,
+                },
                 emissive: { min: 0.8, max: 2.5, frequency: 6, pattern: 'sine' },
                 rotate: [
                     { axis: 'z', rotations: 1.5, phase: 0 },
@@ -197,14 +219,14 @@ const LIGHTBEACON_CONFIG = {
                     { axis: 'z', rotations: 1.5, phase: 120 },
                     { axis: 'z', rotations: -1.5, phase: 180 },
                     { axis: 'z', rotations: 1.5, phase: 240 },
-                    { axis: 'z', rotations: -1.5, phase: 300 }
+                    { axis: 'z', rotations: -1.5, phase: 300 },
                 ],
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.1,
                 blending: 'additive',
                 renderOrder: 14,
-            }
-        }
+            },
+        },
     ],
 
     decayRate: 0.2,
@@ -216,7 +238,7 @@ const LIGHTBEACON_CONFIG = {
     scaleFrequency: 2,
     scalePulse: true,
     hover: true,
-    hoverAmount: 0.006
+    hoverAmount: 0.006,
 };
 
 export default buildLightEffectGesture(LIGHTBEACON_CONFIG);

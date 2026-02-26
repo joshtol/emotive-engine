@@ -2,33 +2,33 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Falling Behavior
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Heavy downward drift for sad emotional states
  * @author Emotive Engine Team
  * @module particles/behaviors/falling
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a melancholic atmosphere with particles slowly falling like tears         
- * ║ or autumn leaves. Heavy, weighted movement conveys sadness.                       
+ * ║ Creates a melancholic atmosphere with particles slowly falling like tears
+ * ║ or autumn leaves. Heavy, weighted movement conveys sadness.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * VISUAL DIAGRAM:
  *     ·  ·  ·
- *    ·  ·  ·  
+ *    ·  ·  ·
  *   ·  ⭐  ·     ← orb center
  *    ·  ·  ·
  *     ·  ·  ·    ← particles fall slowly
  *      ↓  ↓  ↓
- * 
+ *
  * USED BY EMOTIONS:
  * - sadness (melancholy, grief)
  * - disappointment
  * - tired
- * 
+ *
  * RECIPE TO MODIFY:
  * - Increase gravity for heavier falling (more weight)
  * - Decrease drag for faster falling (less air resistance)
@@ -52,7 +52,7 @@ export function initializeFalling(particle) {
             originalOpacity: particle.opacity ?? particle.life ?? 1,
             wobblePhase: Math.random() * Math.PI * 2,
             wobbleSpeed: 0.3 + Math.random() * 0.4,
-            fallProgress: 0
+            fallProgress: 0,
         };
     }
 
@@ -69,15 +69,15 @@ export function initializeFalling(particle) {
     const sinPhi = Math.sqrt(1.0 - cosPhi * cosPhi);
 
     particle.behaviorData = {
-        fallSpeed: 8.0,         // DRAMATIC fall speed
-        fallDistance: 400,      // Total fall distance
-        wobbleAmount: 1.5,      // Wind wobble
+        fallSpeed: 8.0, // DRAMATIC fall speed
+        fallDistance: 400, // Total fall distance
+        wobbleAmount: 1.5, // Wind wobble
         fallingDir: {
             x: sinPhi * Math.cos(theta),
             y: cosPhi,
-            z: sinPhi * Math.sin(theta)
+            z: sinPhi * Math.sin(theta),
         },
-        orbitDistanceRatio: 0.7 + Math.random() * 0.4
+        orbitDistanceRatio: 0.7 + Math.random() * 0.4,
     };
 }
 
@@ -136,5 +136,5 @@ export default {
     emoji: '💧',
     description: 'Heavy downward drift like tears',
     initialize: initializeFalling,
-    update: updateFalling
+    update: updateFalling,
 };

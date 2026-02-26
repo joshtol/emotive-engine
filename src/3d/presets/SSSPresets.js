@@ -22,15 +22,15 @@ export const SSSPresets = {
         sssStrength: 0.8,
         sssAbsorption: [2.8, 2.9, 3.0],
         sssScatterDistance: [0.2, 0.2, 0.25],
-        sssThicknessBias: 0.60,
+        sssThicknessBias: 0.6,
         sssThicknessScale: 1.8,
         sssCurvatureScale: 3.0,
         sssAmbient: 0.12,
         frostiness: 0.15,
-        innerGlowStrength: 0.20,
+        innerGlowStrength: 0.2,
         fresnelIntensity: 1.5,
         causticIntensity: 1.2,
-        emotionColorBleed: 0.0
+        emotionColorBleed: 0.0,
     },
     emerald: {
         sssStrength: 2.0,
@@ -39,12 +39,12 @@ export const SSSPresets = {
         sssThicknessBias: 0.65,
         sssThicknessScale: 1.8,
         sssCurvatureScale: 3.0,
-        sssAmbient: 0.10,
-        frostiness: 0.20,
+        sssAmbient: 0.1,
+        frostiness: 0.2,
         innerGlowStrength: 0.15,
         fresnelIntensity: 1.2,
         causticIntensity: 1.0,
-        emotionColorBleed: 0.35
+        emotionColorBleed: 0.35,
     },
     ruby: {
         sssStrength: 1.8,
@@ -58,7 +58,7 @@ export const SSSPresets = {
         innerGlowStrength: 0.12,
         fresnelIntensity: 1.2,
         causticIntensity: 1.15,
-        emotionColorBleed: 0.35
+        emotionColorBleed: 0.35,
     },
     sapphire: {
         sssStrength: 2.2,
@@ -67,18 +67,18 @@ export const SSSPresets = {
         sssThicknessBias: 0.65,
         sssThicknessScale: 1.8,
         sssCurvatureScale: 3.0,
-        sssAmbient: 0.10,
+        sssAmbient: 0.1,
         frostiness: 0.18,
         innerGlowStrength: 0.15,
         fresnelIntensity: 1.3,
         causticIntensity: 1.0,
-        emotionColorBleed: 0.35
+        emotionColorBleed: 0.35,
     },
     amethyst: {
         sssStrength: 2.5,
         sssAbsorption: [3.0, 0.05, 4.5],
         sssScatterDistance: [0.4, 0.05, 0.5],
-        sssThicknessBias: 0.70,
+        sssThicknessBias: 0.7,
         sssThicknessScale: 2.0,
         sssCurvatureScale: 3.0,
         sssAmbient: 0.08,
@@ -86,13 +86,13 @@ export const SSSPresets = {
         innerGlowStrength: 0.12,
         fresnelIntensity: 1.4,
         causticIntensity: 1.0,
-        emotionColorBleed: 0.35
+        emotionColorBleed: 0.35,
     },
     topaz: {
         sssStrength: 1.5,
         sssAbsorption: [3.5, 2.0, 0.1],
         sssScatterDistance: [0.3, 0.2, 0.05],
-        sssThicknessBias: 0.60,
+        sssThicknessBias: 0.6,
         sssThicknessScale: 1.7,
         sssCurvatureScale: 2.8,
         sssAmbient: 0.12,
@@ -100,7 +100,7 @@ export const SSSPresets = {
         innerGlowStrength: 0.18,
         fresnelIntensity: 1.4,
         causticIntensity: 1.1,
-        emotionColorBleed: 0.25
+        emotionColorBleed: 0.25,
     },
     citrine: {
         sssStrength: 1.6,
@@ -114,7 +114,7 @@ export const SSSPresets = {
         innerGlowStrength: 0.22,
         fresnelIntensity: 1.3,
         causticIntensity: 1.2,
-        emotionColorBleed: 0.20
+        emotionColorBleed: 0.2,
     },
     diamond: {
         sssStrength: 0.5,
@@ -128,8 +128,8 @@ export const SSSPresets = {
         innerGlowStrength: 0.25,
         fresnelIntensity: 2.0,
         causticIntensity: 1.5,
-        emotionColorBleed: 0.0
-    }
+        emotionColorBleed: 0.0,
+    },
 };
 
 /**
@@ -192,5 +192,5 @@ export default {
     presets: SSSPresets,
     apply: applySSSPreset,
     getNames: getPresetNames,
-    get: getPreset
+    get: getPreset,
 };

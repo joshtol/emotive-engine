@@ -41,7 +41,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n * 127.1 + n * 311.7) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n * 127.1 + n * 311.7) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -73,7 +73,7 @@ export function buildElectricEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -82,14 +82,14 @@ export function buildElectricEffectGesture(config) {
             amplitudeSync: {
                 onBeat: 1.5,
                 offBeat: 1.0,
-                curve: config.category === 'powered' ? 'smooth' : 'sharp'
-            }
+                curve: config.category === 'powered' ? 'smooth' : 'sharp',
+            },
         },
 
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const isPowered = cfg.category === 'powered';
 
                 // ═══════════════════════════════════════════════════════════════
@@ -108,15 +108,17 @@ export function buildElectricEffectGesture(config) {
                     effectStrength = Math.pow(progress, 0.7);
                 }
 
-                if (progress > (1 - cfg.jitterDecay)) {
+                if (progress > 1 - cfg.jitterDecay) {
                     const decayProgress = (progress - (1 - cfg.jitterDecay)) / cfg.jitterDecay;
-                    effectStrength *= (1 - decayProgress);
+                    effectStrength *= 1 - decayProgress;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION - Jitter (electrocution) or controlled (powered)
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 if (cfg.jitterAmplitude > 0) {
                     const jitterTime = time * cfg.jitterFrequency;
@@ -129,23 +131,33 @@ export function buildElectricEffectGesture(config) {
                         }
                     }
 
-                    posX = (
-                        noise1D(jitterTime) - 0.5 +
-                        (noise1D(jitterTime * 2.3 + 50) - 0.5) * 0.5 +
-                        (noise1D(jitterTime * 4.7 + 100) - 0.5) * 0.25
-                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
+                    posX =
+                        (noise1D(jitterTime) -
+                            0.5 +
+                            (noise1D(jitterTime * 2.3 + 50) - 0.5) * 0.5 +
+                            (noise1D(jitterTime * 4.7 + 100) - 0.5) * 0.25) *
+                        cfg.jitterAmplitude *
+                        effectStrength *
+                        holdMultiplier;
 
-                    posY = (
-                        noise1D(jitterTime + 33) - 0.5 +
-                        (noise1D(jitterTime * 2.1 + 83) - 0.5) * 0.5 +
-                        (noise1D(jitterTime * 5.3 + 133) - 0.5) * 0.25
-                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier;
+                    posY =
+                        (noise1D(jitterTime + 33) -
+                            0.5 +
+                            (noise1D(jitterTime * 2.1 + 83) - 0.5) * 0.5 +
+                            (noise1D(jitterTime * 5.3 + 133) - 0.5) * 0.25) *
+                        cfg.jitterAmplitude *
+                        effectStrength *
+                        holdMultiplier;
 
-                    posZ = (
-                        noise1D(jitterTime + 66) - 0.5 +
-                        (noise1D(jitterTime * 1.9 + 116) - 0.5) * 0.5 +
-                        (noise1D(jitterTime * 3.7 + 166) - 0.5) * 0.25
-                    ) * cfg.jitterAmplitude * effectStrength * holdMultiplier * 0.5;
+                    posZ =
+                        (noise1D(jitterTime + 66) -
+                            0.5 +
+                            (noise1D(jitterTime * 1.9 + 116) - 0.5) * 0.5 +
+                            (noise1D(jitterTime * 3.7 + 166) - 0.5) * 0.25) *
+                        cfg.jitterAmplitude *
+                        effectStrength *
+                        holdMultiplier *
+                        0.5;
                 }
 
                 if (cfg.hover && cfg.hoverAmount) {
@@ -158,14 +170,20 @@ export function buildElectricEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION
                 // ═══════════════════════════════════════════════════════════════
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 if (!isPowered && cfg.jitterAmplitude > 0) {
                     const jitterTime = time * cfg.jitterFrequency;
                     const rotJitterAmt = cfg.jitterAmplitude * 2;
                     rotX = (noise1D(jitterTime * 1.3 + 200) - 0.5) * rotJitterAmt * effectStrength;
                     rotY = (noise1D(jitterTime * 1.7 + 250) - 0.5) * rotJitterAmt * effectStrength;
-                    rotZ = (noise1D(jitterTime * 2.1 + 300) - 0.5) * rotJitterAmt * effectStrength * 0.5;
+                    rotZ =
+                        (noise1D(jitterTime * 2.1 + 300) - 0.5) *
+                        rotJitterAmt *
+                        effectStrength *
+                        0.5;
                 } else if (cfg.rotationDrift) {
                     rotY = time * cfg.rotationDrift * effectStrength;
                 }
@@ -183,8 +201,9 @@ export function buildElectricEffectGesture(config) {
                         scale += cfg.scaleGrowth * effectStrength;
                     }
                 } else {
-                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.5 +
-                                      Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
+                    const scaleNoise =
+                        Math.sin(scaleTime * Math.PI * 2) * 0.5 +
+                        Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
                     scale = 1.0 + scaleNoise * cfg.scaleVibration * effectStrength;
                 }
 
@@ -203,13 +222,15 @@ export function buildElectricEffectGesture(config) {
                     const flicker1 = Math.sin(flickerTime * Math.PI * 2);
                     const flicker2 = Math.sin(flickerTime * Math.PI * 5.3 + 1.7);
                     const flicker3 = hash(Math.floor(flickerTime * 2)) > 0.7 ? 1 : 0;
-                    flickerValue = (flicker1 * 0.4 + flicker2 * 0.3 + flicker3 * 0.5 + 0.5);
+                    flickerValue = flicker1 * 0.4 + flicker2 * 0.3 + flicker3 * 0.5 + 0.5;
                 }
 
-                const glowIntensity = cfg.glowIntensityMin +
+                const glowIntensity =
+                    cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
-                const glowBoost = (flickerValue * 0.8 + 0.2) * effectStrength * cfg.intensity
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    (flickerValue * 0.8 + 0.2) * effectStrength * cfg.intensity +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN — with new instanced spawner fields
@@ -235,11 +256,11 @@ export function buildElectricEffectGesture(config) {
                         models: config.spawnMode?.models,
                         count: config.spawnMode?.count,
                         scale: config.spawnMode?.scale,
-                        embedDepth: config.spawnMode?.embedDepth
-                    }
+                        embedDepth: config.spawnMode?.embedDepth,
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 

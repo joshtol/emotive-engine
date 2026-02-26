@@ -92,11 +92,9 @@ export default class FacingBehavior {
 
         // Calculate target quaternion that orients lockedFace toward camera
         // Reuse cached vector instead of creating new one
-        this._lockedFaceVec.set(
-            this.lockedFace[0],
-            this.lockedFace[1],
-            this.lockedFace[2]
-        ).normalize();
+        this._lockedFaceVec
+            .set(this.lockedFace[0], this.lockedFace[1], this.lockedFace[2])
+            .normalize();
 
         // Use lookAt-style rotation (object's Z-axis points toward camera)
         // Reuse cached matrix and vectors
@@ -104,9 +102,11 @@ export default class FacingBehavior {
         this.targetQuaternion.setFromRotationMatrix(this._targetMatrix);
 
         // Apply calibration rotation (fixed offset, e.g., "Man in the Moon" orientation)
-        if (this.calibrationRotation[0] !== 0 ||
+        if (
+            this.calibrationRotation[0] !== 0 ||
             this.calibrationRotation[1] !== 0 ||
-            this.calibrationRotation[2] !== 0) {
+            this.calibrationRotation[2] !== 0
+        ) {
             this._tempEuler.set(
                 this.calibrationRotation[0],
                 this.calibrationRotation[1],

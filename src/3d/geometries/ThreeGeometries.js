@@ -78,7 +78,7 @@ function loadCrystalGeometry(assetBasePath = '/assets') {
                     const size = new THREE.Vector3();
                     geometry.boundingBox.getSize(size);
                     const maxDim = Math.max(size.x, size.y, size.z);
-                    const scale = 1.6 / maxDim;  // Scale to ~1.6 diameter to match sun/moon size
+                    const scale = 1.6 / maxDim; // Scale to ~1.6 diameter to match sun/moon size
                     geometry.scale(scale, scale, scale);
                     // Preserve original OBJ normals if present, otherwise compute them
                     if (!geometry.attributes.normal) {
@@ -91,19 +91,22 @@ function loadCrystalGeometry(assetBasePath = '/assets') {
                     const finalSize = new THREE.Vector3();
                     geometry.boundingBox.getSize(finalSize);
 
-
                     // Simplify geometry to reduce triangle count
                     let finalGeometry = geometry;
                     if (crystalSimplificationRatio > 0) {
                         const originalVertexCount = geometry.attributes.position.count;
-                        const targetCount = Math.floor(originalVertexCount * (1 - crystalSimplificationRatio));
+                        const targetCount = Math.floor(
+                            originalVertexCount * (1 - crystalSimplificationRatio)
+                        );
 
                         try {
                             const modifier = new SimplifyModifier();
                             finalGeometry = modifier.modify(geometry, targetCount);
-
                         } catch (err) {
-                            console.warn('💎 [CRYSTAL] Simplification failed, using original:', err);
+                            console.warn(
+                                '💎 [CRYSTAL] Simplification failed, using original:',
+                                err
+                            );
                             finalGeometry = geometry;
                         }
                     }
@@ -113,11 +116,17 @@ function loadCrystalGeometry(assetBasePath = '/assets') {
                         try {
                             // Merge vertices to create smooth normals across shared vertices
                             const merged = mergeVerticesForSmoothNormals(finalGeometry);
-                            if (merged && merged.attributes.position && merged.attributes.position.count > 0) {
+                            if (
+                                merged &&
+                                merged.attributes.position &&
+                                merged.attributes.position.count > 0
+                            ) {
                                 finalGeometry = merged;
                                 finalGeometry.computeVertexNormals();
                             } else {
-                                console.warn('💎 [CRYSTAL] Merge produced empty geometry, using original with recomputed normals');
+                                console.warn(
+                                    '💎 [CRYSTAL] Merge produced empty geometry, using original with recomputed normals'
+                                );
                                 finalGeometry.computeVertexNormals();
                             }
                         } catch (err) {
@@ -270,15 +279,27 @@ export const THREE_GEOMETRIES = {
     moon: {
         geometry: createMoon(64, 64),
         material: 'custom',
-        blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.2, curve: 'sine' },
-        particleRadiusMultiplier: 1.4  // Wider sphere needs particles further out
+        blink: {
+            type: 'gentle-pulse',
+            duration: 180,
+            scaleAxis: [0.95, 0.95, 0.95],
+            glowBoost: 0.2,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.4, // Wider sphere needs particles further out
     },
 
     sun: {
         geometry: new THREE.SphereGeometry(0.5, 64, 64),
         material: 'emissive',
-        blink: { type: 'radial-pulse', duration: 200, scaleAxis: [1.05, 1.05, 1.05], glowBoost: 0.5, curve: 'sine' },
-        particleRadiusMultiplier: 1.5  // Sun with corona needs particles even further
+        blink: {
+            type: 'radial-pulse',
+            duration: 200,
+            scaleAxis: [1.05, 1.05, 1.05],
+            glowBoost: 0.5,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.5, // Sun with corona needs particles even further
     },
 
     // Crystal with inner soul glow
@@ -286,8 +307,14 @@ export const THREE_GEOMETRIES = {
         geometry: null,
         geometryLoader: loadCrystalGeometry,
         material: 'custom',
-        blink: { type: 'facet-flash', duration: 160, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.4, curve: 'sine' },
-        particleRadiusMultiplier: 1.4  // Spread particles out from the crystal
+        blink: {
+            type: 'facet-flash',
+            duration: 160,
+            scaleAxis: [0.95, 0.95, 0.95],
+            glowBoost: 0.4,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.4, // Spread particles out from the crystal
     },
 
     // Rough (raw crystal formation)
@@ -295,8 +322,14 @@ export const THREE_GEOMETRIES = {
         geometry: null,
         geometryLoader: loadRoughGeometry,
         material: 'custom',
-        blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.95, 0.95, 0.95], glowBoost: 0.5, curve: 'sine' },
-        particleRadiusMultiplier: 1.3  // Spread particles out from the rough formation
+        blink: {
+            type: 'facet-flash',
+            duration: 150,
+            scaleAxis: [0.95, 0.95, 0.95],
+            glowBoost: 0.5,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.3, // Spread particles out from the rough formation
     },
 
     // Heart-cut crystal
@@ -304,8 +337,14 @@ export const THREE_GEOMETRIES = {
         geometry: null,
         geometryLoader: loadHeartGeometry,
         material: 'custom',
-        blink: { type: 'gentle-pulse', duration: 180, scaleAxis: [0.92, 0.92, 0.92], glowBoost: 0.6, curve: 'sine' },
-        particleRadiusMultiplier: 1.3  // Spread particles out from the heart
+        blink: {
+            type: 'gentle-pulse',
+            duration: 180,
+            scaleAxis: [0.92, 0.92, 0.92],
+            glowBoost: 0.6,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.3, // Spread particles out from the heart
     },
 
     // Star-cut crystal
@@ -313,7 +352,13 @@ export const THREE_GEOMETRIES = {
         geometry: null,
         geometryLoader: loadStarGeometry,
         material: 'custom',
-        blink: { type: 'facet-flash', duration: 150, scaleAxis: [0.93, 0.93, 0.93], glowBoost: 0.5, curve: 'sine' },
-        particleRadiusMultiplier: 1.4  // Spread particles out from the star
-    }
+        blink: {
+            type: 'facet-flash',
+            duration: 150,
+            scaleAxis: [0.93, 0.93, 0.93],
+            glowBoost: 0.5,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.4, // Spread particles out from the star
+    },
 };

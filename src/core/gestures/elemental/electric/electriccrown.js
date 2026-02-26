@@ -43,8 +43,8 @@ const ELECTRICCROWN_CONFIG = {
             orientation: 'flat',
             bob: {
                 amplitude: 0.02,
-                frequency: 0.3
-            }
+                frequency: 0.3,
+            },
         },
         count: 1,
         scale: 1.2,
@@ -59,19 +59,21 @@ const ELECTRICCROWN_CONFIG = {
             pulse: { amplitude: 0.02, frequency: 2, easing: 'easeInOut' },
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             // Per-gesture atmospheric particles: ionized air from crown
-            atmospherics: [{
-                preset: 'ozone',
-                targets: ['lightning-ring'],
-                anchor: 'above',
-                intensity: 0.04,
-                sizeScale: 0.6,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: ['lightning-ring'],
+                    anchor: 'above',
+                    intensity: 0.04,
+                    sizeScale: 0.6,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'additive',
-            renderOrder: 15
-        }
+            renderOrder: 15,
+        },
     },
 
     // No jitter — controlled powered energy
@@ -87,7 +89,7 @@ const ELECTRICCROWN_CONFIG = {
     scaleFrequency: 3,
     scaleGrowth: 0,
     scalePulse: true,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildElectricEffectGesture(ELECTRICCROWN_CONFIG);

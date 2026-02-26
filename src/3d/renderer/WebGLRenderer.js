@@ -21,7 +21,7 @@ export class WebGLRenderer {
             alpha: true,
             antialias: true,
             depth: true,
-            premultipliedAlpha: false
+            premultipliedAlpha: false,
         });
 
         if (!this.gl) {
@@ -46,7 +46,7 @@ export class WebGLRenderer {
             projectionMatrix: this.gl.getUniformLocation(this.program, 'u_projectionMatrix'),
             glowColor: this.gl.getUniformLocation(this.program, 'u_glowColor'),
             glowIntensity: this.gl.getUniformLocation(this.program, 'u_glowIntensity'),
-            cameraPosition: this.gl.getUniformLocation(this.program, 'u_cameraPosition')
+            cameraPosition: this.gl.getUniformLocation(this.program, 'u_cameraPosition'),
         };
 
         // Camera setup (closer and looking straight at origin)
@@ -66,7 +66,7 @@ export class WebGLRenderer {
      * Setup WebGL state
      */
     setupGL() {
-        const {gl} = this;
+        const { gl } = this;
 
         // Enable depth testing
         gl.enable(gl.DEPTH_TEST);
@@ -87,7 +87,7 @@ export class WebGLRenderer {
      * Create shader program
      */
     createProgram(vertSource, fragSource) {
-        const {gl} = this;
+        const { gl } = this;
 
         // Compile vertex shader
         const vertShader = gl.createShader(gl.VERTEX_SHADER);
@@ -127,7 +127,7 @@ export class WebGLRenderer {
      * Upload geometry to GPU
      */
     uploadGeometry(geometry) {
-        const {gl} = this;
+        const { gl } = this;
 
         // Create buffers if needed
         if (!this.buffers.position) {
@@ -155,8 +155,15 @@ export class WebGLRenderer {
      * Render frame
      */
     render(params) {
-        const {gl} = this;
-        const { geometry, position = [0,0,0], rotation = [0,0,0], scale = 1.0, glowColor = [1,1,1], glowIntensity = 1.0 } = params;
+        const { gl } = this;
+        const {
+            geometry,
+            position = [0, 0, 0],
+            rotation = [0, 0, 0],
+            scale = 1.0,
+            glowColor = [1, 1, 1],
+            glowIntensity = 1.0,
+        } = params;
 
         // Upload geometry if changed
         if (geometry !== this.currentGeometry) {
@@ -218,7 +225,7 @@ export class WebGLRenderer {
      * Create perspective projection matrix
      */
     createPerspectiveMatrix() {
-        const fov = 45 * Math.PI / 180;
+        const fov = (45 * Math.PI) / 180;
         const aspect = this.canvas.width / this.canvas.height;
         const near = 0.1;
         const far = 100.0;
@@ -227,10 +234,22 @@ export class WebGLRenderer {
         const rangeInv = 1 / (near - far);
 
         return new Float32Array([
-            f / aspect, 0, 0, 0,
-            0, f, 0, 0,
-            0, 0, (near + far) * rangeInv, -1,
-            0, 0, near * far * rangeInv * 2, 0
+            f / aspect,
+            0,
+            0,
+            0,
+            0,
+            f,
+            0,
+            0,
+            0,
+            0,
+            (near + far) * rangeInv,
+            -1,
+            0,
+            0,
+            near * far * rangeInv * 2,
+            0,
         ]);
     }
 
@@ -247,42 +266,42 @@ export class WebGLRenderer {
         const fx = center[0] - eye[0];
         const fy = center[1] - eye[1];
         const fz = center[2] - eye[2];
-        const fLen = Math.sqrt(fx*fx + fy*fy + fz*fz);
-        const f = [fx/fLen, fy/fLen, fz/fLen];
+        const fLen = Math.sqrt(fx * fx + fy * fy + fz * fz);
+        const f = [fx / fLen, fy / fLen, fz / fLen];
 
         // Right = forward × up
-        const rx = f[1]*up[2] - f[2]*up[1];
-        const ry = f[2]*up[0] - f[0]*up[2];
-        const rz = f[0]*up[1] - f[1]*up[0];
-        const rLen = Math.sqrt(rx*rx + ry*ry + rz*rz);
-        const r = [rx/rLen, ry/rLen, rz/rLen];
+        const rx = f[1] * up[2] - f[2] * up[1];
+        const ry = f[2] * up[0] - f[0] * up[2];
+        const rz = f[0] * up[1] - f[1] * up[0];
+        const rLen = Math.sqrt(rx * rx + ry * ry + rz * rz);
+        const r = [rx / rLen, ry / rLen, rz / rLen];
 
         // Up = right × forward
-        const u = [
-            r[1]*f[2] - r[2]*f[1],
-            r[2]*f[0] - r[0]*f[2],
-            r[0]*f[1] - r[1]*f[0]
-        ];
+        const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
 
         return new Float32Array([
-            r[0], u[0], -f[0], 0,
-            r[1], u[1], -f[1], 0,
-            r[2], u[2], -f[2], 0,
-            -(r[0]*eye[0] + r[1]*eye[1] + r[2]*eye[2]),
-            -(u[0]*eye[0] + u[1]*eye[1] + u[2]*eye[2]),
-            f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2],
-            1
+            r[0],
+            u[0],
+            -f[0],
+            0,
+            r[1],
+            u[1],
+            -f[1],
+            0,
+            r[2],
+            u[2],
+            -f[2],
+            0,
+            -(r[0] * eye[0] + r[1] * eye[1] + r[2] * eye[2]),
+            -(u[0] * eye[0] + u[1] * eye[1] + u[2] * eye[2]),
+            f[0] * eye[0] + f[1] * eye[1] + f[2] * eye[2],
+            1,
         ]);
     }
 
     // Matrix helpers
     identity() {
-        return new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ]);
+        return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
     }
 
     translate(mat, [x, y, z]) {
@@ -294,8 +313,14 @@ export class WebGLRenderer {
     rotateX(mat, angle) {
         const c = Math.cos(angle);
         const s = Math.sin(angle);
-        const m1 = mat[4], m2 = mat[5], m3 = mat[6], m4 = mat[7];
-        const m5 = mat[8], m6 = mat[9], m7 = mat[10], m8 = mat[11];
+        const m1 = mat[4],
+            m2 = mat[5],
+            m3 = mat[6],
+            m4 = mat[7];
+        const m5 = mat[8],
+            m6 = mat[9],
+            m7 = mat[10],
+            m8 = mat[11];
         mat[4] = m1 * c + m5 * s;
         mat[5] = m2 * c + m6 * s;
         mat[6] = m3 * c + m7 * s;
@@ -309,8 +334,14 @@ export class WebGLRenderer {
     rotateY(mat, angle) {
         const c = Math.cos(angle);
         const s = Math.sin(angle);
-        const m0 = mat[0], m1 = mat[1], m2 = mat[2], m3 = mat[3];
-        const m8 = mat[8], m9 = mat[9], m10 = mat[10], m11 = mat[11];
+        const m0 = mat[0],
+            m1 = mat[1],
+            m2 = mat[2],
+            m3 = mat[3];
+        const m8 = mat[8],
+            m9 = mat[9],
+            m10 = mat[10],
+            m11 = mat[11];
         mat[0] = m0 * c - m8 * s;
         mat[1] = m1 * c - m9 * s;
         mat[2] = m2 * c - m10 * s;
@@ -324,8 +355,14 @@ export class WebGLRenderer {
     rotateZ(mat, angle) {
         const c = Math.cos(angle);
         const s = Math.sin(angle);
-        const m0 = mat[0], m1 = mat[1], m2 = mat[2], m3 = mat[3];
-        const m4 = mat[4], m5 = mat[5], m6 = mat[6], m7 = mat[7];
+        const m0 = mat[0],
+            m1 = mat[1],
+            m2 = mat[2],
+            m3 = mat[3];
+        const m4 = mat[4],
+            m5 = mat[5],
+            m6 = mat[6],
+            m7 = mat[7];
         mat[0] = m0 * c + m4 * s;
         mat[1] = m1 * c + m5 * s;
         mat[2] = m2 * c + m6 * s;
@@ -355,7 +392,7 @@ export class WebGLRenderer {
      * Cleanup
      */
     destroy() {
-        const {gl} = this;
+        const { gl } = this;
         if (this.buffers.position) gl.deleteBuffer(this.buffers.position);
         if (this.buffers.normal) gl.deleteBuffer(this.buffers.normal);
         if (this.buffers.indices) gl.deleteBuffer(this.buffers.indices);

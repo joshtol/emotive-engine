@@ -68,18 +68,18 @@ export class ObjectSpaceCrackManager {
 
         const position = Array.isArray(impact.position)
             ? new THREE.Vector3(...impact.position)
-            : impact.position?.clone() ?? new THREE.Vector3();
+            : (impact.position?.clone() ?? new THREE.Vector3());
 
         const direction = Array.isArray(impact.direction)
             ? new THREE.Vector3(...impact.direction)
-            : impact.direction?.clone() ?? new THREE.Vector3();
+            : (impact.direction?.clone() ?? new THREE.Vector3());
 
         const newImpact = {
             position,
             direction,
             propagation: impact.propagation ?? 0.8,
             amount: impact.amount ?? 1.0,
-            seed
+            seed,
         };
 
         // Enforce max impacts (FIFO)
@@ -114,11 +114,11 @@ export class ObjectSpaceCrackManager {
 
         // Impact position: project from camera through screen offset onto mesh surface
         // Scale by approximate mesh size
-        const meshScale = 0.4;  // Approximate mesh radius
+        const meshScale = 0.4; // Approximate mesh radius
         const worldPos = new THREE.Vector3()
             .addScaledVector(cameraRight, screenOffset[0] * meshScale)
             .addScaledVector(cameraUp, screenOffset[1] * meshScale)
-            .addScaledVector(cameraForward.clone().negate(), 0.3);  // Push slightly toward camera
+            .addScaledVector(cameraForward.clone().negate(), 0.3); // Push slightly toward camera
 
         // Transform to mesh local space
         mesh.updateWorldMatrix(true, false);
@@ -140,7 +140,7 @@ export class ObjectSpaceCrackManager {
             position: worldPos,
             direction: worldDir,
             propagation: cameraRelativeImpact.propagation ?? 0.8,
-            amount: cameraRelativeImpact.amount ?? 1.0
+            amount: cameraRelativeImpact.amount ?? 1.0,
         };
     }
 
@@ -192,7 +192,7 @@ export class ObjectSpaceCrackManager {
 
         // Smooth fade curve (ease-out)
         const t = this.healProgress;
-        const fadeAmount = 1.0 - (t * t * (3 - 2 * t));  // smoothstep
+        const fadeAmount = 1.0 - t * t * (3 - 2 * t); // smoothstep
 
         // Fade all impacts
         for (const impact of this.impacts) {
@@ -215,7 +215,7 @@ export class ObjectSpaceCrackManager {
     applyToMaterial(material) {
         if (!material?.uniforms) return;
 
-        const {uniforms} = material;
+        const { uniforms } = material;
 
         // Set number of impacts
         if (uniforms.crackNumImpacts) {
@@ -238,11 +238,7 @@ export class ObjectSpaceCrackManager {
                     directionUniform.value.copy(impact.direction);
                 }
                 if (paramsUniform) {
-                    paramsUniform.value.set(
-                        impact.propagation,
-                        impact.amount,
-                        impact.seed
-                    );
+                    paramsUniform.value.set(impact.propagation, impact.amount, impact.seed);
                 }
             } else {
                 // Clear unused slots

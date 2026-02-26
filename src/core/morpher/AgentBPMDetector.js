@@ -39,19 +39,19 @@ export class AgentBPMDetector {
         // Stage 2: Refinement - can apply ONE halve/double correction
         // Stage 3: Final Lock - micro-tuning only, then memory cleanup
         this.lockStage = 0;
-        this.stage1LockTime = 0;           // When Stage 1 lock occurred
+        this.stage1LockTime = 0; // When Stage 1 lock occurred
         this.stage2CorrectionApplied = false;
-        this.correctionType = 'none';      // 'none', 'halved', or 'doubled'
+        this.correctionType = 'none'; // 'none', 'halved', or 'doubled'
         this._recentSubdivisionChecks = []; // Rolling buffer for Stage 2 evidence
-        this._stage3StartTime = 0;         // When Stage 3 began
-        this._stage3StableTime = 0;        // How long BPM has been stable in Stage 3
-        this._memoryCleanedUp = false;     // Flag to prevent repeated cleanup
-        this._microTuneBPM = 0;            // Fractional BPM for micro-tuning accumulation
+        this._stage3StartTime = 0; // When Stage 3 began
+        this._stage3StableTime = 0; // How long BPM has been stable in Stage 3
+        this._memoryCleanedUp = false; // Flag to prevent repeated cleanup
+        this._microTuneBPM = 0; // Fractional BPM for micro-tuning accumulation
 
         // Groove confidence: smooth value for animation intensity scaling
         // Maps lockStage to target: Stage 0=15%, Stage 1=40%, Stage 2=65%, Stage 3=85%, Finalized=100%
         // Never decreases within a song, smoothly interpolates toward target
-        this.grooveConfidence = 0.15;      // Start at minimal groove
+        this.grooveConfidence = 0.15; // Start at minimal groove
         this._grooveConfidenceTarget = 0.15;
 
         // Debug logging - periodic to avoid spam
@@ -66,7 +66,6 @@ export class AgentBPMDetector {
         // Log buffer for copy-to-clipboard functionality
         this._logBuffer = [];
         this._maxLogEntries = 20; // Keep last 20 log entries
-
     }
 
     /**
@@ -249,7 +248,9 @@ export class AgentBPMDetector {
             }
             if (pairSums.length >= 2) {
                 const avgPairSum = pairSums.reduce((a, b) => a + b, 0) / pairSums.length;
-                const pairSumVariance = pairSums.reduce((sum, ps) => sum + Math.abs(ps - avgPairSum), 0) / pairSums.length;
+                const pairSumVariance =
+                    pairSums.reduce((sum, ps) => sum + Math.abs(ps - avgPairSum), 0) /
+                    pairSums.length;
                 pairVariancePercent = pairSumVariance / avgPairSum;
             }
         }
@@ -266,8 +267,10 @@ export class AgentBPMDetector {
             let consistentCount = 0;
             for (const interval of recentIntervals) {
                 const matchesBeat = Math.abs(interval - expectedInterval) / expectedInterval < 0.15;
-                const matchesSubdivision = Math.abs(interval - subdivisionInterval) / subdivisionInterval < 0.15;
-                const matchesDouble = Math.abs(interval - expectedInterval * 2) / (expectedInterval * 2) < 0.15;
+                const matchesSubdivision =
+                    Math.abs(interval - subdivisionInterval) / subdivisionInterval < 0.15;
+                const matchesDouble =
+                    Math.abs(interval - expectedInterval * 2) / (expectedInterval * 2) < 0.15;
                 if (matchesBeat || matchesSubdivision || matchesDouble) {
                     consistentCount++;
                 }
@@ -300,12 +303,12 @@ export class AgentBPMDetector {
                 adjustedBPM: bestBPM,
                 isSubdivision: false,
                 stage: 0,
-                failReasons: []
+                failReasons: [],
             };
 
             // Simple lock criteria - no subdivision gating, lock fast for UX
             const minIntervals = bestBPM > 120 ? 12 : 8;
-            const confidenceThreshold = 0.20;
+            const confidenceThreshold = 0.2;
             const consistencyThreshold = 0.45;
 
             if (this.intervals.length < minIntervals) {
@@ -315,17 +318,22 @@ export class AgentBPMDetector {
                 this._lastLockCheck.failReasons.push('votes<=5');
             }
             if (this.confidence <= confidenceThreshold) {
-                this._lastLockCheck.failReasons.push(`conf<=${(confidenceThreshold*100).toFixed(0)}%`);
+                this._lastLockCheck.failReasons.push(
+                    `conf<=${(confidenceThreshold * 100).toFixed(0)}%`
+                );
             }
             if (intervalConsistency <= consistencyThreshold) {
-                this._lastLockCheck.failReasons.push(`consistency<=${(consistencyThreshold*100).toFixed(0)}%`);
+                this._lastLockCheck.failReasons.push(
+                    `consistency<=${(consistencyThreshold * 100).toFixed(0)}%`
+                );
             }
 
-            if (this.intervals.length >= minIntervals &&
+            if (
+                this.intervals.length >= minIntervals &&
                 effectiveVotes > 5 &&
                 this.confidence > confidenceThreshold &&
-                intervalConsistency > consistencyThreshold) {
-
+                intervalConsistency > consistencyThreshold
+            ) {
                 // Stage 1 lock - fast initial lock, refinement coming
                 this.lockedBPM = Math.round(this.currentBPM);
                 this.lockStage = 1;
@@ -340,26 +348,33 @@ export class AgentBPMDetector {
                 alternatingScore,
                 pairVariance: pairVariancePercent,
                 halfVoteRatio,
-                time: now
+                time: now,
             });
             if (this._recentSubdivisionChecks.length > 15) {
                 this._recentSubdivisionChecks.shift();
             }
 
             // Calculate evidence for halving
-            const positiveChecks = this._recentSubdivisionChecks.filter(c =>
-                c.alternatingScore > 0.70 && c.pairVariance < 0.10
+            const positiveChecks = this._recentSubdivisionChecks.filter(
+                c => c.alternatingScore > 0.7 && c.pairVariance < 0.1
             ).length;
 
             // Also check average metrics
-            const avgAltScore = this._recentSubdivisionChecks.reduce((s, c) => s + c.alternatingScore, 0) / this._recentSubdivisionChecks.length;
-            const avgPairVar = this._recentSubdivisionChecks.reduce((s, c) => s + c.pairVariance, 0) / this._recentSubdivisionChecks.length;
-            const avgHalfRatio = this._recentSubdivisionChecks.reduce((s, c) => s + c.halfVoteRatio, 0) / this._recentSubdivisionChecks.length;
+            const avgAltScore =
+                this._recentSubdivisionChecks.reduce((s, c) => s + c.alternatingScore, 0) /
+                this._recentSubdivisionChecks.length;
+            const avgPairVar =
+                this._recentSubdivisionChecks.reduce((s, c) => s + c.pairVariance, 0) /
+                this._recentSubdivisionChecks.length;
+            const avgHalfRatio =
+                this._recentSubdivisionChecks.reduce((s, c) => s + c.halfVoteRatio, 0) /
+                this._recentSubdivisionChecks.length;
 
             // Check for doubling (song detected too slow)
-            const avgInterval = this.intervals.length > 0
-                ? this.intervals.reduce((a, b) => a + b, 0) / this.intervals.length
-                : 0;
+            const avgInterval =
+                this.intervals.length > 0
+                    ? this.intervals.reduce((a, b) => a + b, 0) / this.intervals.length
+                    : 0;
             const doubleVoteRatio = effectiveVotes > 0 ? doubleBPMVotes / effectiveVotes : 0;
 
             // Calculate interval variance for debug (with outlier filtering)
@@ -373,7 +388,10 @@ export class AgentBPMDetector {
                 filteredCountDebug = filtered.length;
                 if (filtered.length >= 6) {
                     const avgInt = filtered.reduce((a, b) => a + b, 0) / filtered.length;
-                    intervalVarianceDebug = filtered.reduce((sum, i) => sum + Math.abs(i - avgInt), 0) / filtered.length / avgInt;
+                    intervalVarianceDebug =
+                        filtered.reduce((sum, i) => sum + Math.abs(i - avgInt), 0) /
+                        filtered.length /
+                        avgInt;
                 }
             }
 
@@ -392,28 +410,32 @@ export class AgentBPMDetector {
                 intervalVariance: `${(intervalVarianceDebug * 100).toFixed(1)}%`,
                 filteredCount: filteredCountDebug,
                 correctionApplied: this.stage2CorrectionApplied,
-                failReasons: []
+                failReasons: [],
             };
 
             // Stage 2 halving trigger (if in Stage 1, auto-advance to Stage 2)
-            if (!this.stage2CorrectionApplied &&
+            if (
+                !this.stage2CorrectionApplied &&
                 this._recentSubdivisionChecks.length >= 10 &&
-                halfBPM >= this.minBPM) {
-
+                halfBPM >= this.minBPM
+            ) {
                 // PATH A: Strong alternating pattern evidence (visible subdivisions)
-                const shouldHalveByPattern = positiveChecks >= 7 &&   // 7/10+ checks positive
-                    avgAltScore > 0.70 &&                    // Strong alternating pattern
-                    avgPairVar < 0.10 &&                     // Consistent pair sums
-                    this.lockedBPM > 100;                    // Only halve fast tempos
+                const shouldHalveByPattern =
+                    positiveChecks >= 7 && // 7/10+ checks positive
+                    avgAltScore > 0.7 && // Strong alternating pattern
+                    avgPairVar < 0.1 && // Consistent pair sums
+                    this.lockedBPM > 100; // Only halve fast tempos
 
                 // PATH B: Significant half-BPM votes (for fingerpicking where subdivisions
                 // aren't detected by onset detector, but some intervals hit the half-tempo)
                 // This catches Landslide-style songs where bass notes are consistent but
                 // the actual tempo is half of what we detected
                 // TIGHTENED: 40% threshold and >150 BPM to avoid false halving on fast syncopated songs
-                const shouldHalveByVotes = avgHalfRatio > 0.40 &&   // 40%+ votes for half-BPM (was 25%)
-                    this.lockedBPM > 150 &&                         // Only very fast detections (was 130)
-                    halfBPM >= 65 && halfBPM <= 85;                 // Tighter range for acoustic ballads
+                const shouldHalveByVotes =
+                    avgHalfRatio > 0.4 && // 40%+ votes for half-BPM (was 25%)
+                    this.lockedBPM > 150 && // Only very fast detections (was 130)
+                    halfBPM >= 65 &&
+                    halfBPM <= 85; // Tighter range for acoustic ballads
 
                 // PATH C: Very consistent high-tempo intervals (fingerpicking signature)
                 // Real fast songs (EDM, punk) have varied intervals due to syncopation
@@ -431,15 +453,20 @@ export class AgentBPMDetector {
                     filteredIntervalCount = filtered.length;
                     if (filtered.length >= 6) {
                         const avgInt = filtered.reduce((a, b) => a + b, 0) / filtered.length;
-                        intervalVariance = filtered.reduce((sum, i) => sum + Math.abs(i - avgInt), 0) / filtered.length / avgInt;
+                        intervalVariance =
+                            filtered.reduce((sum, i) => sum + Math.abs(i - avgInt), 0) /
+                            filtered.length /
+                            avgInt;
                     }
                 }
                 // Require enough consistent intervals after filtering
                 // TIGHT threshold: fingerpicking produces ~3% variance, real fast songs ~8%+
-                const shouldHalveByConsistency = this.lockedBPM > 140 &&  // Very fast detection
-                    halfBPM >= 65 && halfBPM <= 85 &&                     // Half in acoustic ballad range
-                    filteredIntervalCount >= 8 &&                         // Enough consistent intervals
-                    intervalVariance < 0.05;                              // Very consistent intervals (<5% variance)
+                const shouldHalveByConsistency =
+                    this.lockedBPM > 140 && // Very fast detection
+                    halfBPM >= 65 &&
+                    halfBPM <= 85 && // Half in acoustic ballad range
+                    filteredIntervalCount >= 8 && // Enough consistent intervals
+                    intervalVariance < 0.05; // Very consistent intervals (<5% variance)
 
                 if (shouldHalveByPattern || shouldHalveByVotes || shouldHalveByConsistency) {
                     this.lockedBPM = Math.round(this.lockedBPM / 2);
@@ -450,14 +477,16 @@ export class AgentBPMDetector {
             }
 
             // Stage 2 doubling trigger (for songs detected too slow)
-            if (!this.stage2CorrectionApplied &&
+            if (
+                !this.stage2CorrectionApplied &&
                 this._recentSubdivisionChecks.length >= 10 &&
-                doubleBPM <= this.maxBPM) {
-
+                doubleBPM <= this.maxBPM
+            ) {
                 // Doubling conditions: very slow intervals + strong double-BPM votes
-                const shouldDouble = avgInterval > 900 &&    // Very slow (<67 BPM)
-                    doubleVoteRatio > 0.5 &&                 // Significant double-BPM votes
-                    this.lockedBPM < 75;                     // Only double slow tempos
+                const shouldDouble =
+                    avgInterval > 900 && // Very slow (<67 BPM)
+                    doubleVoteRatio > 0.5 && // Significant double-BPM votes
+                    this.lockedBPM < 75; // Only double slow tempos
 
                 if (shouldDouble) {
                     this.lockedBPM = Math.round(this.lockedBPM * 2);
@@ -475,10 +504,14 @@ export class AgentBPMDetector {
             }
 
             // Exit Stage 2 → Stage 3 conditions
-            const conclusivelyNotSubdivision = this._recentSubdivisionChecks.length >= 12 && positiveChecks < 3;
+            const conclusivelyNotSubdivision =
+                this._recentSubdivisionChecks.length >= 12 && positiveChecks < 3;
             const timeoutReached = timeSinceLock > 10000; // 10 seconds
 
-            if (this.lockStage === 2 && (this.stage2CorrectionApplied || conclusivelyNotSubdivision || timeoutReached)) {
+            if (
+                this.lockStage === 2 &&
+                (this.stage2CorrectionApplied || conclusivelyNotSubdivision || timeoutReached)
+            ) {
                 this.lockStage = 3;
                 this._stage3StartTime = now;
             }
@@ -491,7 +524,8 @@ export class AgentBPMDetector {
             // Micro-tuning: allow small adjustments within ±5%
             const recentIntervals = this.intervals.slice(-8);
             if (recentIntervals.length >= 4) {
-                const avgRecentInterval = recentIntervals.reduce((a, b) => a + b, 0) / recentIntervals.length;
+                const avgRecentInterval =
+                    recentIntervals.reduce((a, b) => a + b, 0) / recentIntervals.length;
                 const recentBPM = 60000 / avgRecentInterval;
                 const drift = Math.abs(recentBPM - this.lockedBPM) / this.lockedBPM;
 
@@ -502,7 +536,7 @@ export class AgentBPMDetector {
                         this._microTuneBPM = this.lockedBPM;
                     }
                     // Smooth fractional adjustment (10% weight for faster response)
-                    this._microTuneBPM = this._microTuneBPM * 0.90 + recentBPM * 0.10;
+                    this._microTuneBPM = this._microTuneBPM * 0.9 + recentBPM * 0.1;
                     const newBPM = Math.round(this._microTuneBPM);
                     if (newBPM !== this.lockedBPM) {
                         this.lockedBPM = newBPM;
@@ -515,7 +549,8 @@ export class AgentBPMDetector {
             }
 
             // Final cleanup after 5 seconds OR stable for 3 seconds (only once)
-            const shouldFinalize = (timeSinceStage3 > 5000 || this._stage3StableTime > 3000) && !this._memoryCleanedUp;
+            const shouldFinalize =
+                (timeSinceStage3 > 5000 || this._stage3StableTime > 3000) && !this._memoryCleanedUp;
 
             if (shouldFinalize && this.lockStage === 3) {
                 this._performMemoryCleanup();
@@ -530,7 +565,7 @@ export class AgentBPMDetector {
                 timeSinceStage3: `${(timeSinceStage3 / 1000).toFixed(1)}s`,
                 stableTime: `${(this._stage3StableTime / 1000).toFixed(1)}s`,
                 finalized: shouldFinalize,
-                failReasons: []
+                failReasons: [],
             };
         }
 
@@ -553,7 +588,7 @@ export class AgentBPMDetector {
         // Stage 2 (Refinement): 65% - refining, getting comfortable
         // Stage 3 (Final Lock): 85% - confident, grooving
         // Finalized: 100% - locked in, full groove
-        const stageTargets = [0.15, 0.40, 0.65, 0.85];
+        const stageTargets = [0.15, 0.4, 0.65, 0.85];
 
         if (this._memoryCleanedUp) {
             // Finalized - full groove
@@ -565,7 +600,9 @@ export class AgentBPMDetector {
         // Smoothly interpolate toward target (but never decrease)
         // Use exponential smoothing: ~0.1 per call means ~10 calls to reach halfway
         const smoothingFactor = 0.08;
-        const newConfidence = this.grooveConfidence + (this._grooveConfidenceTarget - this.grooveConfidence) * smoothingFactor;
+        const newConfidence =
+            this.grooveConfidence +
+            (this._grooveConfidenceTarget - this.grooveConfidence) * smoothingFactor;
 
         // Only increase, never decrease (maintain achieved groove level)
         if (newConfidence > this.grooveConfidence) {
@@ -595,7 +632,6 @@ export class AgentBPMDetector {
         this._recentIntervals = [];
         this._recentRawBPMs = [];
         this._recentNormalizedBPMs = [];
-
     }
 
     /**
@@ -645,7 +681,6 @@ export class AgentBPMDetector {
         this._logBuffer = [];
         this._lastLockCheck = null;
         this._subdivisionHistory = [];
-
     }
 
     getBPM() {
@@ -664,13 +699,13 @@ export class AgentBPMDetector {
             locked: this.lockedBPM > 0,
             lockStage: this.lockStage,
             correctionType: this.correctionType,
-            finalized: this._memoryCleanedUp,  // True only after final lock + cleanup
-            grooveConfidence: this.grooveConfidence,  // Smooth animation intensity (0.15-1.0)
+            finalized: this._memoryCleanedUp, // True only after final lock + cleanup
+            grooveConfidence: this.grooveConfidence, // Smooth animation intensity (0.15-1.0)
             agentCount: this.bpmVotes.size,
             peakCount: this.peakCount,
             histogramSize: this.bpmVotes.size,
             topAgents: this.getTopCandidates(5),
-            intervalCount: this.intervals.length
+            intervalCount: this.intervals.length,
         };
     }
 
@@ -681,7 +716,7 @@ export class AgentBPMDetector {
             .map(([bpm, score]) => ({
                 bpm,
                 score: score.toFixed(1),
-                interval: Math.round(60000 / bpm)
+                interval: Math.round(60000 / bpm),
             }));
     }
 
@@ -689,7 +724,7 @@ export class AgentBPMDetector {
         return this.getTopCandidates(count).map(c => ({
             interval: c.interval,
             bpm: c.bpm,
-            weight: c.score
+            weight: c.score,
         }));
     }
 
@@ -712,10 +747,14 @@ export class AgentBPMDetector {
         const stageName = stageNames[this.lockStage] || 'Unknown';
 
         lines.push('═══════════════════════════════════════════════════');
-        lines.push(`Status: Stage ${this.lockStage} (${stageName}) | Current: ${Math.round(this.currentBPM)} BPM | Locked: ${this.lockedBPM || '-'}`);
+        lines.push(
+            `Status: Stage ${this.lockStage} (${stageName}) | Current: ${Math.round(this.currentBPM)} BPM | Locked: ${this.lockedBPM || '-'}`
+        );
 
         // Peak stats
-        lines.push(`Peaks: ${this.peakCount} total | ${this._skippedPeaks} skipped (weak) | ${this._skippedIntervals} intervals out-of-range`);
+        lines.push(
+            `Peaks: ${this.peakCount} total | ${this._skippedPeaks} skipped (weak) | ${this._skippedIntervals} intervals out-of-range`
+        );
 
         // Recent intervals (raw data)
         if (this._recentIntervals.length > 0) {
@@ -751,14 +790,20 @@ export class AgentBPMDetector {
                 }
             } else if (lc.stage === 1 || lc.stage === 2) {
                 // Stage 1/2: Refinement phase
-                lines.push(`Stage ${lc.stage}: Locked=${lc.adjustedBPM} BPM | checks=${lc.subdivisionChecks} positive=${lc.positiveChecks}`);
-                lines.push(`  altScore=${lc.avgAltScore} pairVar=${lc.avgPairVar} halfRatio=${lc.avgHalfRatio}`);
+                lines.push(
+                    `Stage ${lc.stage}: Locked=${lc.adjustedBPM} BPM | checks=${lc.subdivisionChecks} positive=${lc.positiveChecks}`
+                );
+                lines.push(
+                    `  altScore=${lc.avgAltScore} pairVar=${lc.avgPairVar} halfRatio=${lc.avgHalfRatio}`
+                );
                 if (lc.correctionApplied) {
                     lines.push(`  Correction applied: ${this.correctionType}`);
                 }
             } else if (lc.stage === 3) {
                 // Stage 3: Final lock phase
-                lines.push(`Stage 3: Final=${lc.lockedBPM} BPM | correction=${lc.correctionType} | time=${lc.timeSinceStage3} stable=${lc.stableTime}`);
+                lines.push(
+                    `Stage 3: Final=${lc.lockedBPM} BPM | correction=${lc.correctionType} | time=${lc.timeSinceStage3} stable=${lc.stableTime}`
+                );
                 if (lc.finalized) {
                     lines.push('  FINALIZED - memory cleaned');
                 }
@@ -769,8 +814,10 @@ export class AgentBPMDetector {
         if (this.intervals.length >= 6) {
             const recentIntervals = this.intervals.slice(-8);
             const avgInterval = recentIntervals.reduce((a, b) => a + b, 0) / recentIntervals.length;
-            const variance = recentIntervals.reduce((sum, i) => sum + Math.abs(i - avgInterval), 0) / recentIntervals.length;
-            const variancePct = (variance / avgInterval * 100).toFixed(1);
+            const variance =
+                recentIntervals.reduce((sum, i) => sum + Math.abs(i - avgInterval), 0) /
+                recentIntervals.length;
+            const variancePct = ((variance / avgInterval) * 100).toFixed(1);
 
             // Calculate alternating score
             let alternatingCount = 0;
@@ -779,9 +826,11 @@ export class AgentBPMDetector {
                 const nextAboveAvg = recentIntervals[i + 1] > avgInterval;
                 if (currAboveAvg !== nextAboveAvg) alternatingCount++;
             }
-            const altScore = (alternatingCount / (recentIntervals.length - 1) * 100).toFixed(0);
+            const altScore = ((alternatingCount / (recentIntervals.length - 1)) * 100).toFixed(0);
 
-            lines.push(`Interval pattern: variance=${variancePct}% alternating=${altScore}% (>70% triggers subdivision)`);
+            lines.push(
+                `Interval pattern: variance=${variancePct}% alternating=${altScore}% (>70% triggers subdivision)`
+            );
         }
 
         // Interval histogram summary
@@ -790,18 +839,23 @@ export class AgentBPMDetector {
             const min = Math.min(...allIntervals);
             const max = Math.max(...allIntervals);
             const avg = Math.round(allIntervals.reduce((a, b) => a + b, 0) / allIntervals.length);
-            lines.push(`Interval buffer (${allIntervals.length}/${this.maxIntervals}): min=${min}ms max=${max}ms avg=${avg}ms (=${Math.round(60000/avg)} BPM)`);
+            lines.push(
+                `Interval buffer (${allIntervals.length}/${this.maxIntervals}): min=${min}ms max=${max}ms avg=${avg}ms (=${Math.round(60000 / avg)} BPM)`
+            );
         }
 
         lines.push('═══════════════════════════════════════════════════');
 
         // Store in buffer with timestamp
         const timestamp = new Date().toLocaleTimeString('en-US', {
-            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
         });
         this._logBuffer.push({
             time: timestamp,
-            lines
+            lines,
         });
 
         // Trim buffer to max entries

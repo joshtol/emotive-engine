@@ -39,14 +39,14 @@ const EARTHVORTEX_CONFIG = {
             endScale: 1.2,
             startDiameter: 0.6,
             endDiameter: 2.0,
-            orientation: 'flat'
+            orientation: 'flat',
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.5,
@@ -60,21 +60,24 @@ const EARTHVORTEX_CONFIG = {
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
             pulse: { amplitude: 0.12, frequency: 6, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 2.0, frequency: 5, pattern: 'sine' },
-            atmospherics: [{
-                preset: 'earth-dust',
-                targets: ['earth-ring'],
-                anchor: 'around',
-                intensity: 0.4,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-            }, {
-                preset: 'earth-gravel',
-                targets: ['earth-ring'],
-                anchor: 'around',
-                intensity: 0.2,
-                sizeScale: 0.6,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-dust',
+                    targets: ['earth-ring'],
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                },
+                {
+                    preset: 'earth-gravel',
+                    targets: ['earth-ring'],
+                    anchor: 'around',
+                    intensity: 0.2,
+                    sizeScale: 0.6,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'normal',
@@ -85,16 +88,16 @@ const EARTHVORTEX_CONFIG = {
                         type: 1,
                         arcWidth: 0.5,
                         arcSpeed: 5.0,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 0.6,
     glowIntensityMax: 1.0,
     glowFlickerRate: 2,
@@ -102,7 +105,7 @@ const EARTHVORTEX_CONFIG = {
     scaleFrequency: 3,
     scalePulse: true,
     tremor: 0.006,
-    tremorFrequency: 4
+    tremorFrequency: 4,
 };
 
 export default buildEarthEffectGesture(EARTHVORTEX_CONFIG);

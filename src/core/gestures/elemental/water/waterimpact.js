@@ -51,19 +51,19 @@ const WATERIMPACT_CONFIG = {
     spawnMode: {
         type: 'orbit',
         orbit: {
-            height: 'above',              // Start above mascot
-            endHeight: 'center',           // Crash down to center
-            radius: 3.5,                   // Far out — dramatic approach distance
-            endRadius: 0.1,               // Slam tight into mascot center
-            speed: 3,                      // 3 revolutions
-            easing: 'easeOut',            // Fast inward rush → visible convergence
-            startScale: 0.4,              // Small and distant at first
-            endScale: 1.8,                // Loom huge as they barrel in
-            orientation: 'vertical'
+            height: 'above', // Start above mascot
+            endHeight: 'center', // Crash down to center
+            radius: 3.5, // Far out — dramatic approach distance
+            endRadius: 0.1, // Slam tight into mascot center
+            speed: 3, // 3 revolutions
+            easing: 'easeOut', // Fast inward rush → visible convergence
+            startScale: 0.4, // Small and distant at first
+            endScale: 1.8, // Loom huge as they barrel in
+            orientation: 'vertical',
         },
         formation: {
             type: 'ring',
-            count: 7
+            count: 7,
         },
         count: 7,
         scale: 1.4,
@@ -75,36 +75,36 @@ const WATERIMPACT_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.06,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'burst-fade',
-                duration: 0.05,            // Snap-vanish on impact
+                duration: 0.05, // Snap-vanish on impact
                 easing: 'easeOut',
-                burstScale: 0.2            // Crushed small on impact
+                burstScale: 0.2, // Crushed small on impact
             },
             procedural: {
                 scaleSmoothing: 0.04,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.3,
                     peak: 0.9,
                     end: 0.85,
-                    curve: 'fadeIn'         // Turbulence intensifies as water converges
-                }
+                    curve: 'fadeIn', // Turbulence intensifies as water converges
+                },
             },
             pulse: {
                 amplitude: 0.12,
                 frequency: 8,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.0,
                 max: 3.0,
                 frequency: 9,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Violent per-element tumbling — faster spins for aggressive motion
             rotate: [
@@ -114,24 +114,26 @@ const WATERIMPACT_CONFIG = {
                 { axis: 'z', rotations: 4, phase: 155 },
                 { axis: 'x', rotations: -3.5, phase: 210 },
                 { axis: 'y', rotations: 3, phase: 260 },
-                { axis: 'z', rotations: -4.5, phase: 315 }
+                { axis: 'z', rotations: -4.5, phase: 315 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.08,
             blending: 'normal',
             renderOrder: 12,
             // Spray flung from converging orbit impacts — inherits orbital motion
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.8,
-                sizeScale: 1.0,
-                burstCount: 15,
-                progressCurve: 'burst',
-                velocityInheritance: 0.7,
-            }]
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.8,
+                    sizeScale: 1.0,
+                    burstCount: 15,
+                    progressCurve: 'burst',
+                    velocityInheritance: 0.7,
+                },
+            ],
+        },
     },
 
     // Wobble - intense impact water
@@ -145,7 +147,7 @@ const WATERIMPACT_CONFIG = {
     scaleFrequency: 6,
     scaleContract: 0.05,
     tremor: 0.018,
-    tremorFrequency: 9
+    tremorFrequency: 9,
 };
 
 /**

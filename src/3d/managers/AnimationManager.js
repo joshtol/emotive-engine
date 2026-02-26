@@ -52,7 +52,7 @@ export class AnimationManager {
                 baseSize: 1,
                 opacity: 1,
                 scaleFactor: 1,
-                gestureData: null
+                gestureData: null,
             });
         }
         return pool;
@@ -129,7 +129,9 @@ export class AnimationManager {
         if (this.animator.animations.length >= MAX_ACTIVE_ANIMATIONS) {
             // Remove oldest animation (FIFO cleanup)
             const removed = this.animator.animations.shift();
-            console.warn(`Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`);
+            console.warn(
+                `Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`
+            );
         }
 
         // Create persistent gesture data object for this gesture instance
@@ -160,7 +162,7 @@ export class AnimationManager {
                         gesture2D.initialize(virtualParticle, config, 0, 0);
                         gestureData.initialized = true;
                     }
-                    gesture2D.apply(virtualParticle, t, config, 1/60, 0, 0);
+                    gesture2D.apply(virtualParticle, t, config, 1 / 60, 0, 0);
                 }
 
                 // Call gesture's 3D evaluate function with particle data
@@ -168,7 +170,7 @@ export class AnimationManager {
                     ...config,
                     particle: virtualParticle,
                     config,
-                    strength: config.strength || 1.0
+                    strength: config.strength || 1.0,
                 };
 
                 // Safety check: if gesture doesn't have 3D implementation, return neutral transform
@@ -176,7 +178,7 @@ export class AnimationManager {
                     return {
                         position: [0, 0, 0],
                         rotation: [0, 0, 0],
-                        scale: 1.0
+                        scale: 1.0,
                     };
                 }
 
@@ -194,8 +196,8 @@ export class AnimationManager {
                     if (callbacks.onComplete) {
                         callbacks.onComplete();
                     }
-                }
-            }
+                },
+            },
         });
 
         return true;
@@ -221,7 +223,9 @@ export class AnimationManager {
         // Enforce animation array size limit
         if (this.animator.animations.length >= MAX_ACTIVE_ANIMATIONS) {
             const removed = this.animator.animations.shift();
-            console.warn(`Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`);
+            console.warn(
+                `Animation limit reached (${MAX_ACTIVE_ANIMATIONS}), removed oldest: ${removed.gestureName || 'unknown'}`
+            );
         }
 
         // Add to animator's active animations
@@ -230,12 +234,12 @@ export class AnimationManager {
             gestureName,
             duration,
             startTime,
-            isAccent: proceduralGesture.isAccent || false,  // Pass isAccent flag for GestureBlender
+            isAccent: proceduralGesture.isAccent || false, // Pass isAccent flag for GestureBlender
             evaluate: proceduralGesture.evaluate,
             callbacks: {
                 onUpdate: callbacks.onUpdate || null,
-                onComplete: callbacks.onComplete || null
-            }
+                onComplete: callbacks.onComplete || null,
+            },
         });
 
         return true;

@@ -224,7 +224,7 @@ export class MascotStateManager {
             currentModularGesture: this._currentModularGesture,
             breathePhase: this._breathePhase,
             breatheStartTime: this._breatheStartTime,
-            orbScale: this._orbScale
+            orbScale: this._orbScale,
         };
     }
 

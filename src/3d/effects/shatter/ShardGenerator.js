@@ -38,11 +38,7 @@ class ShardGenerator {
      * @returns {THREE.BufferGeometry[]} Array of shard geometries
      */
     static generate(geometry, options = {}) {
-        const {
-            shardCount = 30,
-            seed = Date.now(),
-            preserveUVs = true
-        } = options;
+        const { shardCount = 30, seed = Date.now(), preserveUVs = true } = options;
 
         // Ensure geometry is indexed
         const indexedGeometry = geometry.index ? geometry : this._toIndexed(geometry);
@@ -73,13 +69,15 @@ class ShardGenerator {
         // Generate BufferGeometry for each cluster
         const shards = clusters
             .filter(cluster => cluster.length > 0)
-            .map(cluster => this._createShardGeometry(
-                cluster,
-                positions,
-                indices,
-                preserveUVs ? uvs : null,
-                normals
-            ));
+            .map(cluster =>
+                this._createShardGeometry(
+                    cluster,
+                    positions,
+                    indices,
+                    preserveUVs ? uvs : null,
+                    normals
+                )
+            );
 
         return shards;
     }
@@ -119,7 +117,7 @@ class ShardGenerator {
             const edges = [
                 [Math.min(i0, i1), Math.max(i0, i1)],
                 [Math.min(i1, i2), Math.max(i1, i2)],
-                [Math.min(i2, i0), Math.max(i2, i0)]
+                [Math.min(i2, i0), Math.max(i2, i0)],
             ];
 
             edges.forEach(([a, b]) => {
@@ -228,14 +226,18 @@ class ShardGenerator {
         const shardIndices = [];
         const vertexMap = new Map();
 
-        let minX = Infinity, minY = Infinity, minZ = Infinity;
-        let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+        let minX = Infinity,
+            minY = Infinity,
+            minZ = Infinity;
+        let maxX = -Infinity,
+            maxY = -Infinity,
+            maxZ = -Infinity;
 
         for (const f of faceIndices) {
             const triIndices = [
                 indices.getX(f * 3),
                 indices.getX(f * 3 + 1),
-                indices.getX(f * 3 + 2)
+                indices.getX(f * 3 + 2),
             ];
 
             const newTriIndices = triIndices.map(oldIdx => {
@@ -294,11 +296,7 @@ class ShardGenerator {
         geometry.setIndex(shardIndices);
 
         // Compute centroid
-        const centroid = new THREE.Vector3(
-            (minX + maxX) / 2,
-            (minY + maxY) / 2,
-            (minZ + maxZ) / 2
-        );
+        const centroid = new THREE.Vector3((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
         geometry.userData.centroid = centroid;
 
         // Approximate volume for mass calculation

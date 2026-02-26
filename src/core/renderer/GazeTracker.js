@@ -60,7 +60,7 @@ export class GazeTracker {
             // Normalize to -1 to 1 range
             this.renderer.state.gazeTarget = {
                 x: x / centerX,
-                y: y / centerY
+                y: y / centerY,
             };
         };
 
@@ -78,7 +78,7 @@ export class GazeTracker {
                 // Normalize to -1 to 1 range
                 this.renderer.state.gazeTarget = {
                     x: x / centerX,
-                    y: y / centerY
+                    y: y / centerY,
                 };
             }
         };

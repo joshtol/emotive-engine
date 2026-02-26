@@ -38,7 +38,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -85,7 +85,7 @@ export function buildLightEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -94,14 +94,14 @@ export function buildLightEffectGesture(config) {
             amplitudeSync: {
                 onBeat: config.category === 'afflicted' ? 1.5 : 1.3,
                 offBeat: 1.0,
-                curve: config.category === 'afflicted' ? 'sharp' : 'smooth'
-            }
+                curve: config.category === 'afflicted' ? 'sharp' : 'smooth',
+            },
         },
 
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const { category } = cfg;
 
                 // ═══════════════════════════════════════════════════════════════
@@ -120,7 +120,8 @@ export function buildLightEffectGesture(config) {
                         if (progress < cfg.flashPeak) {
                             effectStrength = Math.pow(progress / cfg.flashPeak, 0.5);
                         } else {
-                            effectStrength = 1 - ((progress - cfg.flashPeak) * (cfg.flashDecay || 0.5));
+                            effectStrength =
+                                1 - (progress - cfg.flashPeak) * (cfg.flashDecay || 0.5);
                             effectStrength = Math.max(0.3, effectStrength);
                         }
                     } else if (progress < 0.2) {
@@ -150,22 +151,24 @@ export function buildLightEffectGesture(config) {
 
                 // Decay in final phase — smooth to zero unless endFlash is set
                 const decayRate = cfg.decayRate || 0.2;
-                if (progress > (1 - decayRate)) {
+                if (progress > 1 - decayRate) {
                     const decayProgress = (progress - (1 - decayRate)) / decayRate;
                     if (cfg.endFlash) {
                         // End flash: keep 1% residual for a subtle pop
-                        effectStrength *= (1 - decayProgress * 0.99);
+                        effectStrength *= 1 - decayProgress * 0.99;
                     } else {
                         // Smooth exit: fully fade to zero with eased curve
                         const easedDecay = decayProgress * decayProgress; // Ease-in (slow start, fast finish)
-                        effectStrength *= (1 - easedDecay);
+                        effectStrength *= 1 - easedDecay;
                     }
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 // Rise (ascend, purify)
                 if (cfg.riseAmount > 0) {
@@ -190,7 +193,8 @@ export function buildLightEffectGesture(config) {
                 if (cfg.driftAmount > 0) {
                     const driftTime = time * (cfg.driftSpeed || 1);
                     posX += (noise1D(driftTime) - 0.5) * cfg.driftAmount * effectStrength;
-                    posY += (noise1D(driftTime + 50) - 0.5) * cfg.driftAmount * 0.5 * effectStrength;
+                    posY +=
+                        (noise1D(driftTime + 50) - 0.5) * cfg.driftAmount * 0.5 * effectStrength;
                 }
 
                 // Tremor (beacon, steady gestures)
@@ -230,7 +234,9 @@ export function buildLightEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION
                 // ═══════════════════════════════════════════════════════════════
-                const rotX = 0; let rotY = 0; const rotZ = 0;
+                const rotX = 0;
+                let rotY = 0;
+                const rotZ = 0;
 
                 if (cfg.rotationSpeed > 0) {
                     rotY = time * cfg.rotationSpeed * Math.PI * 2 * effectStrength;
@@ -249,9 +255,10 @@ export function buildLightEffectGesture(config) {
                     const endAt = cfg.fadeEndAt || 0.9;
                     if (progress >= startAt) {
                         const fadeProgress = Math.min(1, (progress - startAt) / (endAt - startAt));
-                        meshOpacity = cfg.fadeCurve === 'accelerating'
-                            ? Math.max(0, 1 - Math.pow(fadeProgress, 2))
-                            : Math.max(0, 1 - fadeProgress);
+                        meshOpacity =
+                            cfg.fadeCurve === 'accelerating'
+                                ? Math.max(0, 1 - Math.pow(fadeProgress, 2))
+                                : Math.max(0, 1 - fadeProgress);
                     }
                 }
 
@@ -275,12 +282,12 @@ export function buildLightEffectGesture(config) {
 
                 const glowMin = cfg.glowIntensityMin || 0.8;
                 const glowMax = cfg.glowIntensityMax || 1.4;
-                const glowIntensity = glowMin +
-                    (glowMax - glowMin) * flickerValue * effectStrength;
+                const glowIntensity = glowMin + (glowMax - glowMin) * flickerValue * effectStrength;
 
                 // Positive glow boost — light BRIGHTENS
-                const glowBoost = 0.4 * effectStrength * cfg.intensity * (cfg.radiance || 0.5)
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    0.4 * effectStrength * cfg.intensity * (cfg.radiance || 0.5) +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
@@ -308,13 +315,13 @@ export function buildLightEffectGesture(config) {
                         scale: config.spawnMode?.scale,
                         embedDepth: config.spawnMode?.embedDepth,
                         distortionStrength: config.distortionStrength,
-                    }
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 
 export default {
-    buildLightEffectGesture
+    buildLightEffectGesture,
 };

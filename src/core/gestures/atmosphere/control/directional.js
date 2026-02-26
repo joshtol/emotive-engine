@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Directional Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Directional gesture - move particles in specific direction
@@ -17,105 +17,105 @@ export default {
     emoji: '➡️',
     type: 'blending',
     description: 'Move particles in a specific direction',
-    
+
     // Default configuration
     config: {
-        angle: 0,                // Movement direction in degrees
-        returnToOrigin: false,   // Whether particles return to start
-        strength: 1.0           // Force intensity
+        angle: 0, // Movement direction in degrees
+        returnToOrigin: false, // Whether particles return to start
+        strength: 1.0, // Force intensity
     },
-    
+
     // Rhythm configuration - directional movement following musical flow
     rhythm: {
         enabled: true,
-        syncMode: 'flow',  // Follow musical flow and direction
-        
+        syncMode: 'flow', // Follow musical flow and direction
+
         // Direction changes with musical progression
         angleSync: {
-            verse: 0,             // Right movement in verses
-            chorus: 90,           // Upward movement in choruses  
-            bridge: 180,          // Left movement in bridges
-            outro: 270,           // Downward movement in outros
-            transition: 'smooth'  // Smooth direction changes
+            verse: 0, // Right movement in verses
+            chorus: 90, // Upward movement in choruses
+            bridge: 180, // Left movement in bridges
+            outro: 270, // Downward movement in outros
+            transition: 'smooth', // Smooth direction changes
         },
-        
+
         // Strength pulses with rhythm
         strengthSync: {
-            onBeat: 1.8,          // Strong push on beats
-            offBeat: 0.6,         // Gentle drift off-beat
-            curve: 'wave'         // Wave-like motion curve
+            onBeat: 1.8, // Strong push on beats
+            offBeat: 0.6, // Gentle drift off-beat
+            curve: 'wave', // Wave-like motion curve
         },
-        
+
         // Return motion syncs to musical sections
         returnSync: {
             enabled: true,
             onSectionChange: true, // Return on section changes
             duration: 'transition', // Use transition timing
-            strength: 1.2
+            strength: 1.2,
         },
-        
+
         // Accent response affects direction
         accentResponse: {
             enabled: true,
-            multiplier: 2.0,      // Sharp directional push on accents
-            type: 'strength'      // Accent affects movement force
+            multiplier: 2.0, // Sharp directional push on accents
+            type: 'strength', // Accent affects movement force
         },
-        
+
         // Pattern-specific directional styles
         patternOverrides: {
-            'march': {
+            march: {
                 // Military-style directional movement
                 angleSync: { verse: 0, chorus: 0 }, // Always forward
-                strengthSync: { onBeat: 2.5, offBeat: 1.0 }
+                strengthSync: { onBeat: 2.5, offBeat: 1.0 },
             },
-            'waltz': {
+            waltz: {
                 // Flowing, circular directional movement
-                angleSync: { 
-                    verse: 45, 
+                angleSync: {
+                    verse: 45,
                     chorus: 135,
                     bridge: 225,
                     outro: 315,
-                    transition: 'circular'
-                }
+                    transition: 'circular',
+                },
             },
-            'swing': {
+            swing: {
                 // Syncopated directional swaying
-                strengthSync: { 
-                    onBeat: 1.6, 
-                    offBeat: 1.4,  // Strong off-beat emphasis
-                    swing: true 
-                }
+                strengthSync: {
+                    onBeat: 1.6,
+                    offBeat: 1.4, // Strong off-beat emphasis
+                    swing: true,
+                },
             },
-            'electronic': {
+            electronic: {
                 // Sharp, precise directional cuts
                 angleSync: { transition: 'instant' },
-                strengthSync: { onBeat: 2.2, offBeat: 0.4, curve: 'sharp' }
-            }
+                strengthSync: { onBeat: 2.2, offBeat: 0.4, curve: 'sharp' },
+            },
         },
-        
+
         // Musical dynamics variations
         dynamics: {
             forte: {
                 // Powerful, decisive direction changes
-                strengthSync: { 
+                strengthSync: {
                     onBeat: { multiplier: 1.6 },
-                    offBeat: { multiplier: 1.2 }
+                    offBeat: { multiplier: 1.2 },
                 },
                 angleSync: { transition: 'sharp' },
-                accentResponse: { multiplier: 2.5 }
+                accentResponse: { multiplier: 2.5 },
             },
             piano: {
                 // Gentle, subtle directional drift
-                strengthSync: { 
+                strengthSync: {
                     onBeat: { multiplier: 0.7 },
-                    offBeat: { multiplier: 0.8 }
+                    offBeat: { multiplier: 0.8 },
                 },
                 angleSync: { transition: 'gradual' },
-                accentResponse: { multiplier: 1.4 }
-            }
-        }
+                accentResponse: { multiplier: 1.4 },
+            },
+        },
     },
-    
+
     /**
      * Initialize directional movement data
      * Stores particle's starting position for return motion
@@ -126,10 +126,10 @@ export default {
         }
         particle.gestureData.directional = {
             initialX: particle.x,
-            initialY: particle.y
+            initialY: particle.y,
         };
     },
-    
+
     /**
      * Apply directional force to particle
      * Pushes particles in specified direction with optional return
@@ -140,7 +140,7 @@ export default {
         }
 
         // Convert angle to radians for calculation
-        const angle = (motion.angle || this.config.angle) * Math.PI / 180;
+        const angle = ((motion.angle || this.config.angle) * Math.PI) / 180;
         const strength = motion.strength || this.config.strength;
 
         // Apply directional force
@@ -169,12 +169,14 @@ export default {
     '3d': {
         evaluate(progress, motion) {
             const config = { ...this.config, ...motion };
-            const angle = (config.angle || 0) * Math.PI / 180;
+            const angle = ((config.angle || 0) * Math.PI) / 180;
             const strength = motion.strength || 1.0;
 
             // Directional movement in XY
             const moveProgress = config.returnToOrigin
-                ? (progress < 0.5 ? progress * 2 : (1 - progress) * 2)
+                ? progress < 0.5
+                    ? progress * 2
+                    : (1 - progress) * 2
                 : progress;
 
             const posX = Math.cos(angle) * moveProgress * 0.4 * strength;
@@ -184,8 +186,8 @@ export default {
                 position: [posX, posY, 0],
                 rotation: [0, 0, 0],
                 scale: 1.0,
-                glowIntensity: 1.0
+                glowIntensity: 1.0,
             };
-        }
-    }
+        },
+    },
 };

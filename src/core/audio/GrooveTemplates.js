@@ -15,18 +15,18 @@ class GrooveTemplates {
                 pattern: {
                     emphasis: [1, 0, 0.5, 0], // Strong on 1, medium on 3
                     velocities: [1.0, 0, 0.6, 0],
-                    subdivisions: [0, 0.5] // Only play on beats and offbeats
+                    subdivisions: [0, 0.5], // Only play on beats and offbeats
                 },
                 swing: 0,
                 humanization: 0.05, // 5% timing variance for human feel
                 preferredGestures: {
                     downbeat: ['bounce', 'headBob', 'jump'],
                     offbeat: ['pulse', 'breathe'],
-                    fills: ['sparkle', 'glow']
+                    fills: ['sparkle', 'glow'],
                 },
                 compositeMove: null, // No special composite for straight
                 intensity: 'moderate',
-                description: 'Standard 4/4 rhythm, good for pop/rock'
+                description: 'Standard 4/4 rhythm, good for pop/rock',
             },
 
             swing: {
@@ -38,17 +38,17 @@ class GrooveTemplates {
                 pattern: {
                     emphasis: [1, 0, 0.66, 0], // Swung eighth notes
                     velocities: [1.0, 0, 0.7, 0],
-                    subdivisions: [0, 0.66] // Delayed upbeat for swing feel
+                    subdivisions: [0, 0.66], // Delayed upbeat for swing feel
                 },
                 swing: 0.67, // 67% swing ratio (2:1 triplet feel)
                 humanization: 0.08,
                 preferredGestures: {
                     downbeat: ['sway', 'lean', 'bounce'],
                     offbeat: ['wiggle', 'pulse'],
-                    fills: ['shimmer', 'float']
+                    fills: ['shimmer', 'float'],
                 },
                 intensity: 'moderate',
-                description: 'Jazz swing feel with triplet subdivision'
+                description: 'Jazz swing feel with triplet subdivision',
             },
 
             shuffle: {
@@ -60,7 +60,7 @@ class GrooveTemplates {
                 pattern: {
                     emphasis: [1, 0.25, 0.5, 0.75], // Driving shuffle
                     velocities: [1.0, 0.3, 0.7, 0.3],
-                    subdivisions: [0, 0.25, 0.5, 0.75]
+                    subdivisions: [0, 0.25, 0.5, 0.75],
                 },
                 swing: 0.75, // Heavy shuffle
                 humanization: 0.06,
@@ -68,10 +68,10 @@ class GrooveTemplates {
                     downbeat: ['bounce', 'headBob'],
                     upbeat: ['twist', 'wiggle'],
                     offbeat: ['pulse', 'breathe'],
-                    fills: ['sparkle', 'flash']
+                    fills: ['sparkle', 'flash'],
                 },
                 intensity: 'dense',
-                description: 'Blues/rock shuffle with heavy swing'
+                description: 'Blues/rock shuffle with heavy swing',
             },
 
             latin: {
@@ -84,7 +84,7 @@ class GrooveTemplates {
                     // Clave-inspired pattern: 1 e + a 2 e + a 3 e + a 4 e + a
                     emphasis: [1, 0, 0.375, 0.5, 0, 0.75, 0, 0],
                     velocities: [1.0, 0, 0.8, 0.9, 0, 0.8, 0, 0],
-                    subdivisions: [0, 0.375, 0.5, 0.75] // Syncopated
+                    subdivisions: [0, 0.375, 0.5, 0.75], // Syncopated
                 },
                 swing: 0,
                 humanization: 0.04,
@@ -92,10 +92,10 @@ class GrooveTemplates {
                     downbeat: ['sway', 'wiggle'],
                     syncopation: ['twist', 'lean'],
                     offbeat: ['pulse', 'shimmer'],
-                    fills: ['sparkle', 'shake']
+                    fills: ['sparkle', 'shake'],
                 },
                 intensity: 'dense',
-                description: 'Latin clave rhythm with syncopation'
+                description: 'Latin clave rhythm with syncopation',
             },
 
             breakbeat: {
@@ -108,7 +108,7 @@ class GrooveTemplates {
                     // Classic Amen break pattern simplified
                     emphasis: [1, 0, 0, 0.75, 0.25, 0.5, 0, 0.625],
                     velocities: [1.0, 0, 0, 0.9, 0.6, 0.8, 0, 0.7],
-                    subdivisions: [0, 0.25, 0.5, 0.625, 0.75] // Complex syncopation
+                    subdivisions: [0, 0.25, 0.5, 0.625, 0.75], // Complex syncopation
                 },
                 swing: 0,
                 humanization: 0.03, // Tighter timing for electronic feel
@@ -116,10 +116,10 @@ class GrooveTemplates {
                     downbeat: ['bounce', 'twist'],
                     syncopation: ['flash', 'shake'],
                     offbeat: ['pulse', 'wiggle'],
-                    fills: ['sparkle', 'glitch']
+                    fills: ['sparkle', 'glitch'],
                 },
                 intensity: 'chaos',
-                description: 'Hip-hop/DnB breakbeat pattern'
+                description: 'Hip-hop/DnB breakbeat pattern',
             },
 
             waltz: {
@@ -131,17 +131,17 @@ class GrooveTemplates {
                 pattern: {
                     emphasis: [1, 0.33, 0.67], // 1-2-3, 1-2-3
                     velocities: [1.0, 0.5, 0.5],
-                    subdivisions: [0, 0.33, 0.67]
+                    subdivisions: [0, 0.33, 0.67],
                 },
                 swing: 0,
                 humanization: 0.07,
                 preferredGestures: {
                     downbeat: ['sway', 'float'],
                     weak: ['breathe', 'lean'],
-                    fills: ['shimmer', 'glow']
+                    fills: ['shimmer', 'glow'],
                 },
                 intensity: 'sparse',
-                description: '3/4 waltz time'
+                description: '3/4 waltz time',
             },
 
             techno: {
@@ -154,17 +154,17 @@ class GrooveTemplates {
                     // Four-on-the-floor with 16th note variations
                     emphasis: [1, 0.25, 0.5, 0.75, 1, 0.25, 0.5, 0.75],
                     velocities: [1.0, 0.6, 1.0, 0.6, 1.0, 0.6, 1.0, 0.6],
-                    subdivisions: [0, 0.25, 0.5, 0.75] // All subdivisions
+                    subdivisions: [0, 0.25, 0.5, 0.75], // All subdivisions
                 },
                 swing: 0,
                 humanization: 0.02, // Very tight, machine-like
                 preferredGestures: {
                     downbeat: ['pulse', 'bounce'],
                     subdivision: ['flash', 'glitch'],
-                    fills: ['sparkle', 'strobe']
+                    fills: ['sparkle', 'strobe'],
                 },
                 intensity: 'dense',
-                description: 'Driving techno four-on-the-floor'
+                description: 'Driving techno four-on-the-floor',
             },
 
             ambient: {
@@ -176,17 +176,17 @@ class GrooveTemplates {
                 pattern: {
                     emphasis: [0.8, 0, 0.3, 0, 0.5, 0, 0.3, 0],
                     velocities: [0.8, 0, 0.3, 0, 0.5, 0, 0.3, 0],
-                    subdivisions: [0, 0.5] // Sparse
+                    subdivisions: [0, 0.5], // Sparse
                 },
                 swing: 0,
                 humanization: 0.15, // Very loose timing
                 preferredGestures: {
                     downbeat: ['float', 'breathe'],
                     offbeat: ['sway', 'shimmer'],
-                    fills: ['glow', 'pulse']
+                    fills: ['glow', 'pulse'],
                 },
                 intensity: 'sparse',
-                description: 'Floating ambient rhythm'
+                description: 'Floating ambient rhythm',
             },
 
             funk: {
@@ -199,7 +199,7 @@ class GrooveTemplates {
                     // "One" emphasis with 16th note ghost notes
                     emphasis: [1.2, 0.125, 0.25, 0, 0.625, 0.75, 0, 0.875],
                     velocities: [1.2, 0.3, 0.4, 0, 0.8, 0.6, 0, 0.4],
-                    subdivisions: [0, 0.125, 0.25, 0.625, 0.75, 0.875]
+                    subdivisions: [0, 0.125, 0.25, 0.625, 0.75, 0.875],
                 },
                 swing: 0.1, // Slight swing
                 humanization: 0.06,
@@ -207,10 +207,10 @@ class GrooveTemplates {
                     one: ['bounce', 'twist'], // THE ONE
                     ghost: ['wiggle', 'pulse'], // Ghost notes
                     syncopation: ['lean', 'shake'],
-                    fills: ['flash', 'sparkle']
+                    fills: ['flash', 'sparkle'],
                 },
                 intensity: 'chaos',
-                description: 'Funky syncopated rhythm with THE ONE'
+                description: 'Funky syncopated rhythm with THE ONE',
             },
 
             trap: {
@@ -223,7 +223,7 @@ class GrooveTemplates {
                     // Hi-hat rolls and syncopated kicks
                     emphasis: [1, 0, 0, 0.375, 0, 0.75, 0.875, 0],
                     velocities: [1.0, 0, 0, 0.7, 0, 0.8, 0.6, 0],
-                    subdivisions: [0, 0.375, 0.75, 0.875] // Triplet feel
+                    subdivisions: [0, 0.375, 0.75, 0.875], // Triplet feel
                 },
                 swing: 0,
                 humanization: 0.03,
@@ -231,11 +231,11 @@ class GrooveTemplates {
                     downbeat: ['bounce', 'lean'],
                     hihat: ['shake', 'shimmer'],
                     syncopation: ['twist', 'flash'],
-                    fills: ['sparkle', 'glitch']
+                    fills: ['sparkle', 'glitch'],
                 },
                 intensity: 'moderate',
-                description: 'Trap rhythm with triplet hi-hats'
-            }
+                description: 'Trap rhythm with triplet hi-hats',
+            },
         };
 
         // Transition rules for smooth groove changes
@@ -243,7 +243,7 @@ class GrooveTemplates {
             instant: 0, // Change immediately
             nextBar: 1, // Change on next bar line
             nextPhrase: 4, // Change on next 4-bar phrase
-            fadeIn: 8 // Gradually introduce over 8 beats
+            fadeIn: 8, // Gradually introduce over 8 beats
         };
 
         // Current active groove
@@ -265,9 +265,6 @@ class GrooveTemplates {
     getEmphasis(groove, beatNumber, subdivision) {
         if (!groove || !groove.pattern) return 0;
 
-
-
-
         // Find closest pattern position
         const patternIndex = groove.pattern.subdivisions.findIndex(
             sub => Math.abs(sub - subdivision) < 0.01
@@ -283,9 +280,6 @@ class GrooveTemplates {
      */
     getVelocity(groove, beatNumber, subdivision) {
         if (!groove || !groove.pattern) return 1.0;
-
-
-
 
         const patternIndex = groove.pattern.subdivisions.findIndex(
             sub => Math.abs(sub - subdivision) < 0.01
@@ -451,7 +445,7 @@ class GrooveTemplates {
             accent: null,
             transition: null,
             composite: null,
-            velocity: 1.0
+            velocity: 1.0,
         };
 
         // Check for composite move trigger
@@ -464,11 +458,7 @@ class GrooveTemplates {
         const velocity = this.getVelocity(this.currentGroove, beatNumber, subdivision);
 
         if (emphasis > 0.3 && velocity > 0.3) {
-            config.accent = this.getPreferredGesture(
-                this.currentGroove,
-                beatNumber,
-                subdivision
-            );
+            config.accent = this.getPreferredGesture(this.currentGroove, beatNumber, subdivision);
             config.velocity = velocity;
         }
 
@@ -501,7 +491,7 @@ class GrooveTemplates {
             intensity: template.intensity,
             swing: template.swing,
             baseMovement: template.baseMovement,
-            compositeMove: template.compositeMove
+            compositeMove: template.compositeMove,
         };
     }
 }

@@ -200,24 +200,24 @@ vec3 applyBlendLayers(
  * Blend mode names for UI dropdowns
  */
 export const blendModeNames = [
-    'Multiply',       // 0 - Darkening
-    'Linear Burn',    // 1 - Darkening
-    'Color Burn',     // 2 - Darkening (intense)
-    'Color Dodge',    // 3 - Brightening (intense)
-    'Screen',         // 4 - Brightening
-    'Overlay',        // 5 - Contrast
-    'Add',            // 6 - Brightening (glow)
-    'Soft Light',     // 7 - Contrast (gentle)
-    'Hard Light',     // 8 - Contrast (strong)
-    'Vivid Light',    // 9 - Saturation boost
-    'Linear Light',   // 10 - Linear saturation
-    'Difference',     // 11 - Inversion
-    'Exclusion',      // 12 - Soft inversion
-    'Darken',         // 13 - Comparison (darker)
-    'Lighten',        // 14 - Comparison (lighter)
-    'Subtract',       // 15 - Deep shadows
-    'Divide',         // 16 - Ethereal glow
-    'Pin Light'       // 17 - Posterization
+    'Multiply', // 0 - Darkening
+    'Linear Burn', // 1 - Darkening
+    'Color Burn', // 2 - Darkening (intense)
+    'Color Dodge', // 3 - Brightening (intense)
+    'Screen', // 4 - Brightening
+    'Overlay', // 5 - Contrast
+    'Add', // 6 - Brightening (glow)
+    'Soft Light', // 7 - Contrast (gentle)
+    'Hard Light', // 8 - Contrast (strong)
+    'Vivid Light', // 9 - Saturation boost
+    'Linear Light', // 10 - Linear saturation
+    'Difference', // 11 - Inversion
+    'Exclusion', // 12 - Soft inversion
+    'Darken', // 13 - Comparison (darker)
+    'Lighten', // 14 - Comparison (lighter)
+    'Subtract', // 15 - Deep shadows
+    'Divide', // 16 - Ethereal glow
+    'Pin Light', // 17 - Posterization
 ];
 
 /**

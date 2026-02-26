@@ -61,11 +61,11 @@ const WATERCRUSH_CONFIG = {
                 start: 'below',
                 end: 'center',
                 easing: 'linear',
-                startScale: 2.2,                 // Start huge
-                endScale: 0.3,                   // Crush to nothing
+                startScale: 2.2, // Start huge
+                endScale: 0.3, // Crush to nothing
                 startDiameter: 2.5,
                 endDiameter: 0.5,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: { type: 'stack', count: 3, spacing: 0.35 },
             count: 3,
@@ -83,13 +83,13 @@ const WATERCRUSH_CONFIG = {
                         start: 0.3,
                         peak: 0.8,
                         end: 0.9,
-                        curve: 'fadeIn'
-                    }
+                        curve: 'fadeIn',
+                    },
                 },
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 0, scale: 1.3, weight: 1.0 },    // CELLULAR - heavy water mass
-                    secondary: { pattern: 3, scale: 0.6, weight: 0.6 },  // VORONOI - chunky pressure
+                    primary: { pattern: 0, scale: 1.3, weight: 1.0 }, // CELLULAR - heavy water mass
+                    secondary: { pattern: 3, scale: 0.6, weight: 0.6 }, // VORONOI - chunky pressure
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.5,
@@ -97,8 +97,8 @@ const WATERCRUSH_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.3,
-                        softness: 1.4
-                    }
+                        softness: 1.4,
+                    },
                 },
                 grain: { type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply' },
                 pulse: { amplitude: 0.08, frequency: 4, easing: 'easeInOut' },
@@ -107,21 +107,23 @@ const WATERCRUSH_CONFIG = {
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0.4, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
+                        orientationOverride: 'camera',
+                    },
                 },
                 // Burst spray from crushing impact — inherits downward axis-travel motion
-                atmospherics: [{
-                    preset: 'spray',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 1.0,
-                    sizeScale: 1.2,
-                    burstCount: 30,
-                    progressCurve: 'burst',
-                    velocityInheritance: 0.4,
-                }]
-            }
+                atmospherics: [
+                    {
+                        preset: 'spray',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 1.0,
+                        sizeScale: 1.2,
+                        burstCount: 30,
+                        progressCurve: 'burst',
+                        velocityInheritance: 0.4,
+                    },
+                ],
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Bubble spray at impact - water splashing out on crush
@@ -137,20 +139,38 @@ const WATERCRUSH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.15,
                 endScale: 0.7,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 6, scale: 0.5, models: ['bubble-cluster'],
+            count: 6,
+            scale: 0.5,
+            models: ['bubble-cluster'],
             animation: {
-                appearAt: 0.35, disappearAt: 0.75, stagger: 0.01,
+                appearAt: 0.35,
+                disappearAt: 0.75,
+                stagger: 0.01,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 0, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 1.0, strengthCurve: 'fadeOut' },
-                scaleVariance: 0.3, lifetimeVariance: 0.15,
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'bubble-cluster': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
-        }
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 1.0,
+                    strengthCurve: 'fadeOut',
+                },
+                scaleVariance: 0.3,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'bubble-cluster': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Wobble - heavy crushing impact
@@ -168,7 +188,7 @@ const WATERCRUSH_CONFIG = {
     glowPulseRate: 4,
     // Tremor - impact shake
     tremor: 0.015,
-    tremorFrequency: 8
+    tremorFrequency: 8,
 };
 
 /**

@@ -130,9 +130,9 @@ export class InitializationManager {
         // Create MascotStateManager - centralized state management
         this.mascot.stateManager = new MascotStateManager({
             initialState: {
-                debugMode: this.userConfig.enableDebug || false
+                debugMode: this.userConfig.enableDebug || false,
             },
-            emit: (event, data) => this.mascot.emit(event, data)
+            emit: (event, data) => this.mascot.emit(event, data),
         });
 
         // Create property aliases on mascot for backward compatibility
@@ -170,15 +170,15 @@ export class InitializationManager {
                 coreColor: '#FFFFFF',
                 coreSizeDivisor: 12,
                 glowMultiplier: 2.5,
-                defaultGlowColor: '#14B8A6'
+                defaultGlowColor: '#14B8A6',
             },
             topOffset: 0,
             sentry: {
                 enabled: false,
                 dsn: null,
                 environment: 'production',
-                tracesSampleRate: 0.1
-            }
+                tracesSampleRate: 0.1,
+            },
         };
 
         const config = { ...defaults, ...this.userConfig };
@@ -196,9 +196,10 @@ export class InitializationManager {
      */
     initializeCanvas(config) {
         // Get canvas element
-        this.mascot.canvas = typeof config.canvasId === 'string'
-            ? document.getElementById(config.canvasId)
-            : config.canvasId;
+        this.mascot.canvas =
+            typeof config.canvasId === 'string'
+                ? document.getElementById(config.canvasId)
+                : config.canvasId;
 
         if (!this.mascot.canvas) {
             throw new Error(`Canvas with ID '${config.canvasId}' not found`);
@@ -216,12 +217,15 @@ export class InitializationManager {
                 if (this.mascot.renderer) {
                     this.mascot.renderer.updateEffectiveCenter(effectiveCenter);
                 }
-            }
+            },
         });
 
         // Set render size if specified
         if (config.renderSize && config.renderSize.width && config.renderSize.height) {
-            this.mascot.canvasManager.setRenderSize(config.renderSize.width, config.renderSize.height);
+            this.mascot.canvasManager.setRenderSize(
+                config.renderSize.width,
+                config.renderSize.height
+            );
         }
 
         // Set up canvas context recovery
@@ -248,7 +252,10 @@ export class InitializationManager {
         this.mascot.stateMachine = new EmotiveStateMachine(this.mascot.errorBoundary);
 
         // Particle system
-        this.mascot.particleSystem = new ParticleSystem(config.maxParticles, this.mascot.errorBoundary);
+        this.mascot.particleSystem = new ParticleSystem(
+            config.maxParticles,
+            this.mascot.errorBoundary
+        );
         this.mascot.particleSystem.canvasWidth = this.mascot.canvasManager.width;
         this.mascot.particleSystem.canvasHeight = this.mascot.canvasManager.height;
 
@@ -256,7 +263,7 @@ export class InitializationManager {
         this.mascot.renderer = new EmotiveRenderer(this.mascot.canvasManager, {
             ...config.classicConfig,
             topOffset: config.topOffset || 0,
-            positionController: this.mascot.positionController
+            positionController: this.mascot.positionController,
         });
 
         // Connect renderer and state machine for undertone modifiers
@@ -290,7 +297,7 @@ export class InitializationManager {
         this.mascot.tts = {
             available: typeof window !== 'undefined' && 'speechSynthesis' in window,
             speaking: false,
-            currentUtterance: null
+            currentUtterance: null,
         };
 
         // Initialize gesture controller
@@ -301,11 +308,15 @@ export class InitializationManager {
             soundSystem: m.soundSystem,
             config: m.config,
             state: {
-                get currentModularGesture() { return m.currentModularGesture; },
-                set currentModularGesture(v) { m.currentModularGesture = v; }
+                get currentModularGesture() {
+                    return m.currentModularGesture;
+                },
+                set currentModularGesture(v) {
+                    m.currentModularGesture = v;
+                },
             },
             throttledWarn: m.throttledWarn,
-            chainTarget: m
+            chainTarget: m,
         });
         this.mascot.gestureController.gestureCompatibility = gestureCompatibility;
         this.mascot.gestureController.init();
@@ -314,7 +325,7 @@ export class InitializationManager {
         this.mascot.audioLevelProcessor = new AudioLevelProcessor({
             spikeThreshold: config.spikeThreshold || 1.5,
             minimumSpikeLevel: config.minimumSpikeLevel || 0.1,
-            spikeMinInterval: config.spikeMinInterval || 1000
+            spikeMinInterval: config.spikeMinInterval || 1000,
         });
     }
 
@@ -328,7 +339,7 @@ export class InitializationManager {
             this.mascot.gazeTracker = new GazeTracker(this.mascot.canvas, {
                 smoothing: 0.1,
                 maxOffset: 0.15,
-                enabled: true
+                enabled: true,
             });
 
             // Reset idle timer on interaction and wake if sleeping
@@ -345,7 +356,7 @@ export class InitializationManager {
         if (config.enableIdleBehaviors) {
             this.mascot.idleBehavior = new IdleBehavior({
                 enabled: true,
-                sleepTimeout: Infinity  // Disable automatic sleep
+                sleepTimeout: Infinity, // Disable automatic sleep
             });
 
             // Connect idle behavior callbacks to renderer
@@ -383,14 +394,14 @@ export class InitializationManager {
             enableHighContrast: config.enableHighContrast !== false,
             enableScreenReaderSupport: config.enableScreenReaderSupport !== false,
             enableKeyboardNavigation: config.enableKeyboardNavigation !== false,
-            colorBlindMode: config.colorBlindMode || 'none'
+            colorBlindMode: config.colorBlindMode || 'none',
         });
 
         // Mobile optimization
         this.mascot.mobileOptimization = new MobileOptimization({
             enableTouchOptimization: config.enableTouchOptimization !== false,
             enableViewportHandling: config.enableViewportHandling !== false,
-            enableBatteryOptimization: config.enableBatteryOptimization !== false
+            enableBatteryOptimization: config.enableBatteryOptimization !== false,
         });
         this.mascot.mobileOptimization.setCanvas(this.mascot.canvas);
 
@@ -399,7 +410,7 @@ export class InitializationManager {
             mascot: this.mascot,
             enablePlugins: config.enablePlugins !== false,
             validatePlugins: config.validatePlugins !== false,
-            sandboxPlugins: config.sandboxPlugins !== false
+            sandboxPlugins: config.sandboxPlugins !== false,
         });
     }
 
@@ -411,12 +422,14 @@ export class InitializationManager {
         // Initialize animation controller with fallback
         try {
             this.mascot.animationController = new AnimationController(this.mascot.errorBoundary, {
-                targetFPS: config.targetFPS
+                targetFPS: config.targetFPS,
             });
         } catch (error) {
             console.error('AnimationController initialization failed:', error);
             // Fallback: create minimal animation controller interface
-            this.mascot.animationController = this.createFallbackAnimationController(config.targetFPS);
+            this.mascot.animationController = this.createFallbackAnimationController(
+                config.targetFPS
+            );
         }
 
         // Configure animation controller with subsystems
@@ -425,7 +438,7 @@ export class InitializationManager {
             particleSystem: this.mascot.particleSystem,
             renderer: this.mascot.renderer,
             soundSystem: this.mascot.soundSystem,
-            canvasManager: this.mascot.canvasManager
+            canvasManager: this.mascot.canvasManager,
         });
 
         // Set up event forwarding
@@ -449,8 +462,14 @@ export class InitializationManager {
     createFallbackAnimationController(targetFPS) {
         return {
             isAnimating: () => this.mascot.isRunning,
-            start: () => { this.mascot.isRunning = true; return true; },
-            stop: () => { this.mascot.isRunning = false; return true; },
+            start: () => {
+                this.mascot.isRunning = true;
+                return true;
+            },
+            stop: () => {
+                this.mascot.isRunning = false;
+                return true;
+            },
             setTargetFPS: () => {},
             targetFPS,
             getPerformanceMetrics: () => ({
@@ -459,13 +478,13 @@ export class InitializationManager {
                 performanceDegradation: false,
                 deltaTime: 16,
                 frameCount: 0,
-                targetFPS
+                targetFPS,
             }),
             setSubsystems: () => {},
             setEventCallback: () => {},
             setParentMascot: () => {},
             destroy: () => {},
-            deltaTime: 16
+            deltaTime: 16,
         };
     }
 
@@ -480,14 +499,14 @@ export class InitializationManager {
             enableDecay: config.enableFrustrationDecay !== false,
             historyLimit: config.performanceHistoryLimit || 50,
             frustrationDecayRate: config.frustrationDecayRate || 5,
-            decayInterval: config.frustrationDecayInterval || 10000
+            decayInterval: config.frustrationDecayInterval || 10000,
         });
 
         // Sequence executor
         this.mascot.sequenceExecutor = new SequenceExecutor({
             mascot: this.mascot,
             eventManager: this.mascot.eventManager,
-            allowConcurrent: config.allowConcurrentPerformances !== false
+            allowConcurrent: config.allowConcurrentPerformances !== false,
         });
 
         // Performance system
@@ -496,7 +515,7 @@ export class InitializationManager {
             contextManager: this.mascot.contextManager,
             sequenceExecutor: this.mascot.sequenceExecutor,
             eventManager: this.mascot.eventManager,
-            enableAnalytics: config.enablePerformanceAnalytics !== false
+            enableAnalytics: config.enablePerformanceAnalytics !== false,
         });
     }
 
@@ -535,11 +554,11 @@ export class InitializationManager {
         if (this.mascot.debugMode) {
             emotiveDebugger.log('INFO', 'Debug mode enabled for EmotiveMascot', {
                 config,
-                runtimeCapabilities: runtimeCapabilities.generateReport()
+                runtimeCapabilities: runtimeCapabilities.generateReport(),
             });
             emotiveDebugger.startProfile('mascot-initialization', {
                 canvasId: config.canvasId,
-                maxParticles: config.maxParticles
+                maxParticles: config.maxParticles,
             });
         }
 
@@ -573,83 +592,135 @@ export class InitializationManager {
         // Define getters/setters that delegate to stateManager
         Object.defineProperties(m, {
             speaking: {
-                get() { return sm.speaking; },
-                set(v) { sm.speaking = v; },
+                get() {
+                    return sm.speaking;
+                },
+                set(v) {
+                    sm.speaking = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             recording: {
-                get() { return sm.recording; },
-                set(v) { sm.recording = v; },
+                get() {
+                    return sm.recording;
+                },
+                set(v) {
+                    sm.recording = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             sleeping: {
-                get() { return sm.sleeping; },
-                set(v) { sm.sleeping = v; },
+                get() {
+                    return sm.sleeping;
+                },
+                set(v) {
+                    sm.sleeping = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             isRunning: {
-                get() { return sm.isRunning; },
-                set(v) { sm.isRunning = v; },
+                get() {
+                    return sm.isRunning;
+                },
+                set(v) {
+                    sm.isRunning = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             debugMode: {
-                get() { return sm.debugMode; },
-                set(v) { sm.debugMode = v; },
+                get() {
+                    return sm.debugMode;
+                },
+                set(v) {
+                    sm.debugMode = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             audioLevel: {
-                get() { return sm.audioLevel; },
-                set(v) { sm.audioLevel = v; },
+                get() {
+                    return sm.audioLevel;
+                },
+                set(v) {
+                    sm.audioLevel = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             rhythmEnabled: {
-                get() { return sm.rhythmEnabled; },
-                set(v) { sm.rhythmEnabled = v; },
+                get() {
+                    return sm.rhythmEnabled;
+                },
+                set(v) {
+                    sm.rhythmEnabled = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             currentModularGesture: {
-                get() { return sm.currentModularGesture; },
-                set(v) { sm.currentModularGesture = v; },
+                get() {
+                    return sm.currentModularGesture;
+                },
+                set(v) {
+                    sm.currentModularGesture = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             breathePhase: {
-                get() { return sm.breathePhase; },
-                set(v) { sm.breathePhase = v; },
+                get() {
+                    return sm.breathePhase;
+                },
+                set(v) {
+                    sm.breathePhase = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             breatheStartTime: {
-                get() { return sm.breatheStartTime; },
-                set(v) { sm.breatheStartTime = v; },
+                get() {
+                    return sm.breatheStartTime;
+                },
+                set(v) {
+                    sm.breatheStartTime = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             orbScale: {
-                get() { return sm.orbScale; },
-                set(v) { sm.orbScale = v; },
+                get() {
+                    return sm.orbScale;
+                },
+                set(v) {
+                    sm.orbScale = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             warningTimestamps: {
-                get() { return sm.warningTimestamps; },
-                set(v) { sm.warningTimestamps = v; },
+                get() {
+                    return sm.warningTimestamps;
+                },
+                set(v) {
+                    sm.warningTimestamps = v;
+                },
                 enumerable: true,
-                configurable: true
+                configurable: true,
             },
             warningThrottle: {
-                get() { return sm.warningThrottle; },
-                set(v) { sm.warningThrottle = v; },
+                get() {
+                    return sm.warningThrottle;
+                },
+                set(v) {
+                    sm.warningThrottle = v;
+                },
                 enumerable: true,
-                configurable: true
-            }
+                configurable: true,
+            },
         });
     }
 }

@@ -46,8 +46,10 @@ export class GazeInputHandler {
      * @returns {boolean} True if old format
      */
     isOldFormat(gazeData) {
-        return Object.prototype.hasOwnProperty.call(gazeData, 'x') &&
-               Object.prototype.hasOwnProperty.call(gazeData, 'y');
+        return (
+            Object.prototype.hasOwnProperty.call(gazeData, 'x') &&
+            Object.prototype.hasOwnProperty.call(gazeData, 'y')
+        );
     }
 
     /**
@@ -85,7 +87,7 @@ export class GazeInputHandler {
 
         return {
             x: centerX + this.renderer.state.gazeOffset.x,
-            y: centerY + this.renderer.state.gazeOffset.y
+            y: centerY + this.renderer.state.gazeOffset.y,
         };
     }
 }

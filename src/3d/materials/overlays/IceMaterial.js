@@ -40,10 +40,7 @@ function lerp(a, b, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createIceMaterial(options = {}) {
-    const {
-        melt = 0.0,
-        opacity = 0.7
-    } = options;
+    const { melt = 0.0, opacity = 0.7 } = options;
 
     const pulseSpeed = lerp(0.6, 1.2, melt);
 
@@ -53,10 +50,10 @@ export function createIceMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -72,7 +69,7 @@ export function createIceMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uMelt;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -216,7 +213,7 @@ export function createIceMaterial(options = {}) {
         transparent: true,
         blending: THREE.NormalBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.melt = melt;
@@ -250,7 +247,7 @@ export function getIcePhysics(melt = 0.0) {
         shatterThreshold: lerp(0.3, 0.6, melt),
         slideOnSurface: lerp(0.9, 0.5, melt),
         brittleness: lerp(1.0, 0.3, melt),
-        crackOnImpact: melt < 0.5
+        crackOnImpact: melt < 0.5,
     };
 }
 
@@ -263,7 +260,7 @@ export function getIceCrackStyle(melt = 0.0) {
         emissive: lerp(0.4, 0.1, melt),
         animated: false,
         pattern: 'crystalline',
-        frostEdges: melt < 0.5
+        frostEdges: melt < 0.5,
     };
 }
 
@@ -271,5 +268,5 @@ export default {
     createIceMaterial,
     updateIceMaterial,
     getIcePhysics,
-    getIceCrackStyle
+    getIceCrackStyle,
 };

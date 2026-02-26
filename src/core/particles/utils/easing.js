@@ -2,23 +2,23 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Easing Functions
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Easing functions for smooth animations
  * @author Emotive Engine Team
  * @module particles/utils/easing
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Easing functions create smooth, natural-looking animations. Instead of linear     
- * ║ movement (boring), these functions create acceleration and deceleration           
- * ║ (organic and pleasing to the eye).                                               
+ * ║ Easing functions create smooth, natural-looking animations. Instead of linear
+ * ║ movement (boring), these functions create acceleration and deceleration
+ * ║ (organic and pleasing to the eye).
  * ╚═══════════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * VISUAL GUIDE TO EASING:
- * 
+ *
  * Linear (boring):        Ease In Out (smooth):
  * 1 │      ╱             1 │      ╭─╮
  *   │    ╱                 │    ╱   ╲
@@ -43,8 +43,8 @@ export function linear(t) {
  * @returns {number} Eased value (0 to 1)
  */
 export function easeInOutCubic(t) {
-    return t < 0.5 
-        ? 4 * t * t * t                    // First half: ease in
+    return t < 0.5
+        ? 4 * t * t * t // First half: ease in
         : 1 - Math.pow(-2 * t + 2, 3) / 2; // Second half: ease out
 }
 
@@ -75,9 +75,7 @@ export function easeOutQuad(t) {
  * @returns {number} Eased value (0 to 1)
  */
 export function easeInOutQuad(t) {
-    return t < 0.5 
-        ? 2 * t * t 
-        : -1 + (4 - 2 * t) * t;
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 }
 
 /**
@@ -88,7 +86,7 @@ export function easeInOutQuad(t) {
  */
 export function easeOutElastic(t) {
     const p = 0.3;
-    return Math.pow(2, -10 * t) * Math.sin((t - p / 4) * (2 * Math.PI) / p) + 1;
+    return Math.pow(2, -10 * t) * Math.sin(((t - p / 4) * (2 * Math.PI)) / p) + 1;
 }
 
 /**
@@ -146,5 +144,5 @@ export default {
     easeOutElastic,
     easeOutBounce,
     easeInOutBack,
-    easeInOutSine
+    easeInOutSine,
 };

@@ -63,7 +63,11 @@ export class AudioLayerManager {
         const layer = this._layers.get(name);
         if (!layer) return;
         if (layer.sourceNode) {
-            try { layer.sourceNode.stop(); } catch { /* already stopped */ }
+            try {
+                layer.sourceNode.stop();
+            } catch {
+                /* already stopped */
+            }
         }
         layer.gainNode.disconnect();
         this._layers.delete(name);
@@ -115,7 +119,11 @@ export class AudioLayerManager {
     _stopAllSources() {
         for (const [, layer] of this._layers) {
             if (layer.sourceNode) {
-                try { layer.sourceNode.stop(); } catch { /* already stopped */ }
+                try {
+                    layer.sourceNode.stop();
+                } catch {
+                    /* already stopped */
+                }
                 layer.sourceNode = null;
             }
         }
@@ -189,7 +197,7 @@ export class AudioLayerManager {
             }
         }
         // Undercurrents at reduced weight
-        for (const uc of (emotionalState.undercurrents || [])) {
+        for (const uc of emotionalState.undercurrents || []) {
             const ucMod = this._emotionMod[uc.emotion];
             if (ucMod) {
                 for (const [layer, offset] of Object.entries(ucMod)) {
@@ -230,12 +238,21 @@ export class AudioLayerManager {
      * @param {number} volume - 0-1
      */
     setMasterVolume(volume) {
-        this._masterGain.gain.setValueAtTime(Math.max(0, Math.min(1, volume)), this._ctx.currentTime);
+        this._masterGain.gain.setValueAtTime(
+            Math.max(0, Math.min(1, volume)),
+            this._ctx.currentTime
+        );
     }
 
-    getLayerNames() { return [...this._layers.keys()]; }
-    getCurrentMix() { return { ...this._currentMix }; }
-    isPlaying() { return this._isPlaying; }
+    getLayerNames() {
+        return [...this._layers.keys()];
+    }
+    getCurrentMix() {
+        return { ...this._currentMix };
+    }
+    isPlaying() {
+        return this._isPlaying;
+    }
 
     destroy() {
         this.stop();

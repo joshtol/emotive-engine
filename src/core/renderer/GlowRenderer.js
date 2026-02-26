@@ -10,24 +10,24 @@ export class GlowRenderer {
         this.renderer = renderer;
         this.ctx = renderer.ctx;
         this.canvas = renderer.canvas;
-        
+
         // Glow state
         this.glowIntensity = 1.0;
         this.glowColor = '#4a90e2';
         this.targetGlowColor = '#4a90e2';
         this.glowColorTransition = 0;
         this.glowColorTransitionSpeed = 0.05;
-        
+
         // Offscreen canvas for caching glow gradients
         this.offscreenCanvas = null;
         this.offscreenCtx = null;
         this.cachedGlowColor = null;
         this.cachedGlowRadius = 0;
-        
+
         // Helper method references
         this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
-        
+
         this.initOffscreenCanvas();
     }
 
@@ -59,10 +59,10 @@ export class GlowRenderer {
      * @param {Object} params - Additional parameters
      */
     renderGlow(x, y, radius, params = {}) {
-        const {ctx} = this;
+        const { ctx } = this;
         const color = params.color || this.glowColor;
         const intensity = params.intensity !== undefined ? params.intensity : this.glowIntensity;
-        
+
         // Skip if intensity is too low
         if (intensity < 0.01) return;
 
@@ -78,28 +78,34 @@ export class GlowRenderer {
     cacheGlowGradient(color, size) {
         const offCtx = this.offscreenCtx;
         const center = size;
-        
+
         // Update offscreen canvas size
         this.updateOffscreenSize(size * 2);
-        
+
         // Clear offscreen canvas
         offCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-        
+
         // Use cached gradient - higher opacity to match original brightness
         const gradient = gradientCache.getRadialGradient(
-            offCtx, center, center, 0, center, center, size,
+            offCtx,
+            center,
+            center,
+            0,
+            center,
+            center,
+            size,
             [
                 { offset: 0, color: this.hexToRgba(color, 0.4) },
                 { offset: 0.3, color: this.hexToRgba(color, 0.2) },
                 { offset: 0.6, color: this.hexToRgba(color, 0.1) },
-                { offset: 1, color: this.hexToRgba(color, 0) }
+                { offset: 1, color: this.hexToRgba(color, 0) },
             ]
         );
 
         // Draw gradient to offscreen canvas
         offCtx.fillStyle = gradient;
         offCtx.fillRect(0, 0, size * 2, size * 2);
-        
+
         // Update cache info
         this.cachedGlowColor = color;
         this.cachedGlowRadius = size;
@@ -134,9 +140,7 @@ export class GlowRenderer {
         }
 
         // Use cached gradient
-        const gradient = gradientCache.getRadialGradient(
-            ctx, x, y, 0, x, y, radius, gradientStops
-        );
+        const gradient = gradientCache.getRadialGradient(ctx, x, y, 0, x, y, radius, gradientStops);
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -154,17 +158,14 @@ export class GlowRenderer {
      * @param {number} intensity - Glow intensity
      */
     renderRecordingGlow(x, y, radius, intensity) {
-        const {ctx} = this;
+        const { ctx } = this;
         const glowSize = radius * 2.5;
-        const gradient = gradientCache.getRadialGradient(
-            ctx, x, y, 0, x, y, glowSize,
-            [
-                { offset: 0, color: `rgba(255, 0, 0, ${0.3 * intensity})` },
-                { offset: 0.5, color: `rgba(255, 0, 0, ${0.15 * intensity})` },
-                { offset: 1, color: 'rgba(255, 0, 0, 0)' }
-            ]
-        );
-        
+        const gradient = gradientCache.getRadialGradient(ctx, x, y, 0, x, y, glowSize, [
+            { offset: 0, color: `rgba(255, 0, 0, ${0.3 * intensity})` },
+            { offset: 0.5, color: `rgba(255, 0, 0, ${0.15 * intensity})` },
+            { offset: 1, color: 'rgba(255, 0, 0, 0)' },
+        ]);
+
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.fillStyle = gradient;
@@ -180,20 +181,17 @@ export class GlowRenderer {
      * @param {number} time - Current time for animation
      */
     renderZenGlow(x, y, radius, time) {
-        const {ctx} = this;
+        const { ctx } = this;
         const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
         const zenRadius = radius * (0.9 + breathPhase * 0.1);
-        
+
         // Inner glow
-        const gradient = gradientCache.getRadialGradient(
-            ctx, x, y, 0, x, y, zenRadius,
-            [
-                { offset: 0, color: 'rgba(147, 112, 219, 0.8)' },
-                { offset: 0.7, color: 'rgba(147, 112, 219, 0.3)' },
-                { offset: 1, color: 'rgba(147, 112, 219, 0)' }
-            ]
-        );
-        
+        const gradient = gradientCache.getRadialGradient(ctx, x, y, 0, x, y, zenRadius, [
+            { offset: 0, color: 'rgba(147, 112, 219, 0.8)' },
+            { offset: 0.7, color: 'rgba(147, 112, 219, 0.3)' },
+            { offset: 1, color: 'rgba(147, 112, 219, 0)' },
+        ]);
+
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.fillStyle = gradient;
@@ -213,11 +211,18 @@ export class GlowRenderer {
             this.targetGlowColor = targetColor;
             this.glowColorTransition = 0;
         }
-        
+
         // Animate color transition
         if (this.glowColorTransition < 1) {
-            this.glowColorTransition = Math.min(1, this.glowColorTransition + this.glowColorTransitionSpeed);
-            this.glowColor = this.lerpColor(this.glowColor, this.targetGlowColor, this.glowColorTransition);
+            this.glowColorTransition = Math.min(
+                1,
+                this.glowColorTransition + this.glowColorTransitionSpeed
+            );
+            this.glowColor = this.lerpColor(
+                this.glowColor,
+                this.targetGlowColor,
+                this.glowColorTransition
+            );
         }
     }
 
@@ -232,12 +237,12 @@ export class GlowRenderer {
         // Convert hex to RGB
         const rgb1 = this.hexToRgb(color1);
         const rgb2 = this.hexToRgb(color2);
-        
+
         // Interpolate
         const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
         const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
         const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
-        
+
         // Convert back to hex
         return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
     }
@@ -249,11 +254,13 @@ export class GlowRenderer {
      */
     hexToRgb(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : { r: 0, g: 0, b: 0 };
+        return result
+            ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16),
+              }
+            : { r: 0, g: 0, b: 0 };
     }
 
     /**
@@ -281,7 +288,12 @@ export class GlowRenderer {
         // Clean up offscreen canvas
         if (this.offscreenCanvas) {
             if (this.offscreenCtx) {
-                this.offscreenCtx.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+                this.offscreenCtx.clearRect(
+                    0,
+                    0,
+                    this.offscreenCanvas.width,
+                    this.offscreenCanvas.height
+                );
                 this.offscreenCtx = null;
             }
             this.offscreenCanvas.width = 0;

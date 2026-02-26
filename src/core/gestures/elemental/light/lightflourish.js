@@ -44,12 +44,21 @@ const LIGHTFLOURISH_CONFIG = {
             easing: 'easeOut',
             startScale: 0.5,
             endScale: 1.4,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: { type: 'ring', count: 8 },
         count: 8,
         scale: 1.2,
-        models: ['sun-ring', 'sparkle-star', 'prism-shard', 'sun-ring', 'sparkle-star', 'prism-shard', 'sun-ring', 'sparkle-star'],
+        models: [
+            'sun-ring',
+            'sparkle-star',
+            'prism-shard',
+            'sun-ring',
+            'sparkle-star',
+            'prism-shard',
+            'sun-ring',
+            'sparkle-star',
+        ],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.55,
@@ -61,7 +70,7 @@ const LIGHTFLOURISH_CONFIG = {
             emissive: { min: 1.2, max: 2.5, frequency: 5, pattern: 'sine' },
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 5, scale: 1.0, weight: 0.8 },   // EMBERS
+                primary: { pattern: 5, scale: 1.0, weight: 0.8 }, // EMBERS
                 secondary: { pattern: 1, scale: 1.5, weight: 0.4 }, // RADIAL
                 blend: 'add',
                 travel: 'radial',
@@ -69,15 +78,17 @@ const LIGHTFLOURISH_CONFIG = {
                 strengthCurve: 'bell',
                 bellPeakAt: 0.4,
             },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.4,
-                sizeScale: 1.0,
-                progressCurve: 'burst',
-                velocityInheritance: 0.6,
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 1.0,
+                    progressCurve: 'burst',
+                    velocityInheritance: 0.6,
+                },
+            ],
             rotate: [
                 { axis: 'z', rotations: 1, phase: 0 },
                 { axis: 'z', rotations: -1.5, phase: 45 },
@@ -92,17 +103,17 @@ const LIGHTFLOURISH_CONFIG = {
             lifetimeVariance: 0.15,
             blending: 'additive',
             renderOrder: 18,
-        }
+        },
     },
 
     decayRate: 0.15,
-    glowColor: [1.0, 0.95, 0.70],
+    glowColor: [1.0, 0.95, 0.7],
     glowIntensityMin: 0.9,
     glowIntensityMax: 1.6,
     glowFlickerRate: 6,
     scaleVibration: 0.02,
     scaleFrequency: 4,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTFLOURISH_CONFIG);

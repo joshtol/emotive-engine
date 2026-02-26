@@ -2,25 +2,25 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Gesture Cache
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview High-performance gesture caching system
  * @author Emotive Engine Team
  * @module cache/GestureCache
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Pre-caches all gesture definitions, properties, and common combinations for       
- * ║ maximum performance. Reduces gesture lookup time by 50-75% and composition       
- * ║ time by 60-80%.                                                                  
- * ║                                                                                    
- * ║ CACHES:                                                                           
- * ║ • Gesture definitions (26+ gestures)                                              
- * ║ • Gesture properties (metadata, timing, easing)                                  
- * ║ • Common gesture combinations                                                     
- * ║ • Plugin gesture data                                                            
+ * ║ Pre-caches all gesture definitions, properties, and common combinations for
+ * ║ maximum performance. Reduces gesture lookup time by 50-75% and composition
+ * ║ time by 60-80%.
+ * ║
+ * ║ CACHES:
+ * ║ • Gesture definitions (26+ gestures)
+ * ║ • Gesture properties (metadata, timing, easing)
+ * ║ • Common gesture combinations
+ * ║ • Plugin gesture data
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -41,7 +41,7 @@ export class GestureCache {
             cacheSize: 0,
             gestureHits: 0,
             propertyHits: 0,
-            compositionHits: 0
+            compositionHits: 0,
         };
         this.isInitialized = false;
         this.loadStartTime = 0;
@@ -63,26 +63,26 @@ export class GestureCache {
      */
     initialize() {
         this.loadStartTime = performance.now();
-        
+
         try {
             // Pre-cache all core gestures
             this.cacheCoreGestures();
-            
+
             // Pre-cache gesture properties
             this.cacheGestureProperties();
-            
+
             // Pre-cache common gesture combinations
             this.cacheCommonCombinations();
-            
+
             // Pre-cache plugin gestures
             this.cachePluginGestures();
-            
+
             this.stats.loadTime = performance.now() - this.loadStartTime;
-            this.stats.cacheSize = this.gestureCache.size + this.propertyCache.size + this.compositionCache.size;
+            this.stats.cacheSize =
+                this.gestureCache.size + this.propertyCache.size + this.compositionCache.size;
             this.isInitialized = true;
 
             // Removed verbose initialization log
-
         } catch (error) {
             console.error('GestureCache initialization failed:', error);
             this.isInitialized = false;
@@ -98,7 +98,7 @@ export class GestureCache {
                 this.gestureCache.set(gesture.name, {
                     ...gesture,
                     cached: true,
-                    cacheTime: performance.now()
+                    cacheTime: performance.now(),
                 });
             }
         });
@@ -118,9 +118,9 @@ export class GestureCache {
                 duration: this.calculateGestureDuration(gesture),
                 easing: this.extractEasingFunction(gesture),
                 physics: this.extractPhysicsProperties(gesture),
-                timing: this.extractTimingProperties(gesture)
+                timing: this.extractTimingProperties(gesture),
             };
-            
+
             this.propertyCache.set(name, properties);
         });
     }
@@ -137,7 +137,7 @@ export class GestureCache {
             ['breathe', 'fade'],
             ['wave', 'drift'],
             ['nod', 'sway'],
-            ['jump', 'stretch']
+            ['jump', 'stretch'],
         ];
 
         commonPairs.forEach(([gesture1, gesture2]) => {
@@ -162,7 +162,7 @@ export class GestureCache {
                         ...gesture,
                         cached: true,
                         cacheTime: performance.now(),
-                        isPlugin: true
+                        isPlugin: true,
                     });
                 });
             }
@@ -232,13 +232,13 @@ export class GestureCache {
         if (!gesture.config) return 1000; // Default 1 second
 
         const { musicalDuration, duration } = gesture.config;
-        
+
         if (musicalDuration && musicalDuration.musical) {
             // Convert beats to milliseconds (assuming 120 BPM)
             const beats = musicalDuration.beats || 2;
-            return (beats * 500); // 500ms per beat at 120 BPM
+            return beats * 500; // 500ms per beat at 120 BPM
         }
-        
+
         return duration || 1000;
     }
 
@@ -247,7 +247,7 @@ export class GestureCache {
      */
     extractEasingFunction(gesture) {
         if (!gesture.config) return 'sine';
-        
+
         const { easing, particleMotion } = gesture.config;
         return easing || particleMotion?.easing || 'sine';
     }
@@ -263,7 +263,7 @@ export class GestureCache {
             amplitude: amplitude || 20,
             strength: strength || 1.0,
             size: size || 80,
-            rotation: rotation || 0
+            rotation: rotation || 0,
         };
     }
 
@@ -278,7 +278,7 @@ export class GestureCache {
             phases: phases || [],
             timingSync: timingSync || {},
             hasPhases: !!(phases && phases.length > 0),
-            hasTimingSync: !!(timingSync && Object.keys(timingSync).length > 0)
+            hasTimingSync: !!(timingSync && Object.keys(timingSync).length > 0),
         };
     }
 
@@ -288,7 +288,7 @@ export class GestureCache {
     calculateGestureCombination(gesture1, gesture2) {
         const g1 = this.getGesture(gesture1);
         const g2 = this.getGesture(gesture2);
-        
+
         if (!g1 || !g2) return null;
 
         return {
@@ -300,7 +300,7 @@ export class GestureCache {
             combinedType: g1.type === g2.type ? g1.type : 'mixed',
             combinedEasing: this.extractEasingFunction(g1),
             combinedPhysics: this.combinePhysicsProperties(g1, g2),
-            compatibility: this.calculateCompatibility(g1, g2)
+            compatibility: this.calculateCompatibility(g1, g2),
         };
     }
 
@@ -310,12 +310,12 @@ export class GestureCache {
     combinePhysicsProperties(g1, g2) {
         const p1 = this.extractPhysicsProperties(g1);
         const p2 = this.extractPhysicsProperties(g2);
-        
+
         return {
             amplitude: Math.max(p1.amplitude, p2.amplitude),
             strength: (p1.strength + p2.strength) / 2,
             size: Math.max(p1.size, p2.size),
-            rotation: (p1.rotation + p2.rotation) / 2
+            rotation: (p1.rotation + p2.rotation) / 2,
         };
     }
 
@@ -333,9 +333,11 @@ export class GestureCache {
      * Get cache statistics
      */
     getStats() {
-        const hitRate = this.stats.hits + this.stats.misses > 0 ? 
-            (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(1) : 0;
-        
+        const hitRate =
+            this.stats.hits + this.stats.misses > 0
+                ? ((this.stats.hits / (this.stats.hits + this.stats.misses)) * 100).toFixed(1)
+                : 0;
+
         return {
             ...this.stats,
             hitRate: `${hitRate}%`,
@@ -344,7 +346,7 @@ export class GestureCache {
             coreGestures: this.gestureCache.size,
             pluginGestures: this.pluginCache.size,
             properties: this.propertyCache.size,
-            combinations: this.compositionCache.size
+            combinations: this.compositionCache.size,
         };
     }
 
@@ -356,14 +358,14 @@ export class GestureCache {
         this.propertyCache.clear();
         this.compositionCache.clear();
         this.pluginCache.clear();
-        this.stats = { 
-            hits: 0, 
-            misses: 0, 
-            loadTime: 0, 
+        this.stats = {
+            hits: 0,
+            misses: 0,
+            loadTime: 0,
             cacheSize: 0,
             gestureHits: 0,
             propertyHits: 0,
-            compositionHits: 0
+            compositionHits: 0,
         };
         this.isInitialized = false;
     }

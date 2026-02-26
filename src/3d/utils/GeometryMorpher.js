@@ -76,9 +76,8 @@ export class GeometryMorpher {
                 this.morphDuration = duration;
                 // Map current scale back to progress (inverse of shrink calculation)
                 // scale = 1 - (progress*2)^2, so progress = sqrt(1-scale) / 2
-                const inverseProgress = currentScale > 0
-                    ? Math.sqrt(1 - Math.min(currentScale, 1)) / 2
-                    : 0.5;
+                const inverseProgress =
+                    currentScale > 0 ? Math.sqrt(1 - Math.min(currentScale, 1)) / 2 : 0.5;
                 this.morphProgress = inverseProgress;
                 this.visualProgress = inverseProgress;
                 this.hasSwappedGeometry = false; // Need to swap again at midpoint
@@ -185,7 +184,7 @@ export class GeometryMorpher {
                 isTransitioning: false,
                 progress: 0,
                 visualProgress: 0,
-                scaleMultiplier: 1.0
+                scaleMultiplier: 1.0,
             };
         }
 
@@ -196,7 +195,7 @@ export class GeometryMorpher {
                 progress: 0.5,
                 visualProgress: 0.5,
                 scaleMultiplier: 0.0,
-                waitingForGeometry: true
+                waitingForGeometry: true,
             };
         }
 
@@ -231,7 +230,7 @@ export class GeometryMorpher {
                 progress: 1.0,
                 visualProgress: 1.0,
                 scaleMultiplier: 1.0,
-                completed: true
+                completed: true,
             };
         }
 
@@ -240,7 +239,7 @@ export class GeometryMorpher {
             progress: this.morphProgress,
             visualProgress: this.visualProgress,
             scaleMultiplier,
-            shouldSwapGeometry: shouldSwap
+            shouldSwapGeometry: shouldSwap,
         };
     }
 
@@ -299,22 +298,20 @@ export class GeometryMorpher {
      */
     applyEasing(t) {
         switch (this.easing) {
-        case 'linear':
-            return t;
-        case 'easeInQuad':
-            return t * t;
-        case 'easeOutQuad':
-            return t * (2 - t);
-        case 'easeInOutQuad':
-            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        case 'easeInOutSine':
-            return -(Math.cos(Math.PI * t) - 1) / 2;
-        case 'easeInOutCubic':
-        default:
-            // Same as 2D ShapeMorpher
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            case 'linear':
+                return t;
+            case 'easeInQuad':
+                return t * t;
+            case 'easeOutQuad':
+                return t * (2 - t);
+            case 'easeInOutQuad':
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            case 'easeInOutSine':
+                return -(Math.cos(Math.PI * t) - 1) / 2;
+            case 'easeInOutCubic':
+            default:
+                // Same as 2D ShapeMorpher
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         }
     }
 
@@ -328,7 +325,7 @@ export class GeometryMorpher {
             currentGeometryType: this.currentGeometryType,
             targetGeometryType: this.targetGeometryType,
             progress: this.morphProgress,
-            visualProgress: this.visualProgress
+            visualProgress: this.visualProgress,
         };
     }
 

@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Spin Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Spin gesture - orbital rotation around center
@@ -10,12 +10,12 @@
  * @module gestures/transforms/spin
  * @complexity ⭐⭐⭐ Intermediate-Advanced
  * @audience Transform patterns for complex animations
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a spinning vortex effect with particles orbiting around the center.       
- * ║ This is an OVERRIDE gesture that completely replaces particle motion.             
+ * ║ Creates a spinning vortex effect with particles orbiting around the center.
+ * ║ This is an OVERRIDE gesture that completely replaces particle motion.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * VISUAL DIAGRAM:
@@ -23,9 +23,9 @@
  *      · → ·
  *     ↓     ↑
  *    · ← ⭐ → ·
- *     ↑     ↓  
+ *     ↑     ↓
  *      · ← ·
- * 
+ *
  * USED BY:
  * - Dizzy/confused states
  * - Celebration spins
@@ -41,84 +41,84 @@ export default {
     emoji: '🌀',
     type: 'override', // Completely replaces motion
     description: 'Orbital rotation around center point',
-    
+
     // Default configuration
     config: {
-        duration: 600,          // Legacy fallback
+        duration: 600, // Legacy fallback
         musicalDuration: { musical: true, beats: 1 }, // 1 beat (quarter note)
-        rotations: 1,           // Number of full rotations
-        direction: 'random',    // 'clockwise', 'counter-clockwise', or 'random'
-        radiusMultiplier: 1.0,  // Orbital radius multiplier
-        spiralOut: false,       // Spiral outward while spinning
-        accelerate: true,       // Speed up then slow down
+        rotations: 1, // Number of full rotations
+        direction: 'random', // 'clockwise', 'counter-clockwise', or 'random'
+        radiusMultiplier: 1.0, // Orbital radius multiplier
+        spiralOut: false, // Spiral outward while spinning
+        accelerate: true, // Speed up then slow down
         maintainDistance: true, // Keep relative distance from center
-        scaleAmount: 0.1,       // Scale change during spin
-        easing: 'linear',       // Animation curve type
-        strength: 0.7,          // Particle motion strength
+        scaleAmount: 0.1, // Scale change during spin
+        easing: 'linear', // Animation curve type
+        strength: 0.7, // Particle motion strength
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'spin',
             strength: 0.7,
             rotations: 1,
-            radius: 1.0
-        }
+            radius: 1.0,
+        },
     },
-    
+
     // Rhythm configuration - spin as a dance move
     rhythm: {
         enabled: true,
         syncMode: 'bar',
-        
+
         // Rotations sync to musical time
         rotationSync: {
             mode: 'bars',
-            rotationsPerBar: 1,  // One spin per bar
-            accelerateOnBeat: true  // Speed up on downbeats
+            rotationsPerBar: 1, // One spin per bar
+            accelerateOnBeat: true, // Speed up on downbeats
         },
-        
+
         // Radius changes with beat
         radiusSync: {
             subdivision: 'quarter',
             expandOnBeat: 1.2,
             contractOffBeat: 0.9,
-            curve: 'bounce'
+            curve: 'bounce',
         },
-        
+
         // Duration in musical time
         durationSync: {
             mode: 'beats',
-            beats: 4  // Spin for 4 beats (1 bar)
+            beats: 4, // Spin for 4 beats (1 bar)
         },
-        
+
         // Pattern-specific spins
         patternOverrides: {
-            'waltz': {
+            waltz: {
                 // Elegant waltz spin
                 rotationSync: { rotationsPerBar: 0.75 },
-                radiusSync: { curve: 'ease' }
+                radiusSync: { curve: 'ease' },
             },
-            'swing': {
+            swing: {
                 // Jazzy swing spin
                 rotationSync: { accelerateOnBeat: false },
-                direction: 'alternating'  // Change direction each bar
+                direction: 'alternating', // Change direction each bar
             },
-            'dubstep': {
+            dubstep: {
                 // Aggressive spin with wobble
                 radiusSync: {
                     subdivision: 'eighth',
                     expandOnBeat: 1.5,
-                    dropMultiplier: 2.0
+                    dropMultiplier: 2.0,
                 },
-                spiralOut: true
+                spiralOut: true,
             },
-            'breakbeat': {
+            breakbeat: {
                 // Chaotic spin patterns
                 rotationSync: { mode: 'random', range: [0.5, 2] },
-                direction: 'random'
-            }
-        }
+                direction: 'random',
+            },
+        },
     },
-    
+
     /**
      * Initialize gesture data for a particle
      * @param {Particle} particle - The particle to initialize
@@ -130,17 +130,17 @@ export default {
         if (!particle.gestureData) {
             particle.gestureData = {};
         }
-        
+
         // Calculate starting position relative to center
         const dx = particle.x - centerX;
         const dy = particle.y - centerY;
-        
+
         // Determine spin direction
         let direction = motion.direction || this.config.direction;
         if (direction === 'random') {
             direction = Math.random() < 0.5 ? 'clockwise' : 'counter-clockwise';
         }
-        
+
         particle.gestureData.spin = {
             startAngle: Math.atan2(dy, dx),
             startRadius: Math.sqrt(dx * dx + dy * dy) || 30, // Min radius if at center
@@ -149,10 +149,10 @@ export default {
             originalVx: particle.vx,
             originalVy: particle.vy,
             direction, // Store chosen direction
-            initialized: true
+            initialized: true,
         };
     },
-    
+
     /**
      * Apply spin motion to particle
      * @param {Particle} particle - The particle to animate
@@ -167,14 +167,14 @@ export default {
         if (!particle.gestureData?.spin?.initialized) {
             this.initialize(particle, motion, centerX, centerY);
         }
-        
+
         const data = particle.gestureData.spin;
         const config = { ...this.config, ...motion };
         const strength = motion.strength || 1.0;
-        
+
         // Apply rhythm modulation if present
-        let {rotations} = config;
-        let {radiusMultiplier} = config;
+        let { rotations } = config;
+        let { radiusMultiplier } = config;
         if (motion.rhythmModulation) {
             if (motion.rhythmModulation.rotationMultiplier) {
                 rotations *= motion.rhythmModulation.rotationMultiplier;
@@ -183,7 +183,7 @@ export default {
                 radiusMultiplier *= motion.rhythmModulation.radiusMultiplier;
             }
         }
-        
+
         // Apply acceleration curve if enabled
         let speedProgress = progress;
         if (config.accelerate) {
@@ -194,36 +194,36 @@ export default {
                 speedProgress = 0.5 + this.easeOutQuad((progress - 0.5) * 2) * 0.5;
             }
         }
-        
+
         // Calculate rotation angle using stored direction
         const rotationAmount = rotations * Math.PI * 2 * strength;
         const direction = data.direction === 'counter-clockwise' ? -1 : 1;
-        const currentAngle = data.startAngle + (rotationAmount * speedProgress * direction);
-        
+        const currentAngle = data.startAngle + rotationAmount * speedProgress * direction;
+
         // Calculate radius (with optional spiral)
         let currentRadius = data.startRadius;
         if (config.spiralOut) {
-            currentRadius *= (1 + progress * 0.5); // Expand outward during spin
+            currentRadius *= 1 + progress * 0.5; // Expand outward during spin
         }
         if (radiusMultiplier !== 1) {
             // Apply radius multiplier with smooth curve
             const radiusCurve = Math.sin(progress * Math.PI); // Peak at middle
-            currentRadius *= (1 + (radiusMultiplier - 1) * radiusCurve);
+            currentRadius *= 1 + (radiusMultiplier - 1) * radiusCurve;
         }
-        
+
         // Calculate target position
         const targetX = centerX + Math.cos(currentAngle) * currentRadius;
         const targetY = centerY + Math.sin(currentAngle) * currentRadius;
-        
+
         // For override gesture, directly set position with smooth interpolation
         const moveSpeed = 0.25; // Adjust for smoothness
         particle.x += (targetX - particle.x) * moveSpeed;
         particle.y += (targetY - particle.y) * moveSpeed;
-        
+
         // Set velocity to match movement (for trail effects)
         particle.vx = (targetX - particle.x) * 0.5;
         particle.vy = (targetY - particle.y) * 0.5;
-        
+
         // Smooth ending - return to original velocities
         if (progress > 0.9) {
             const endFactor = (1 - progress) * 10;
@@ -231,7 +231,7 @@ export default {
             particle.vy = particle.vy * endFactor + data.originalVy * (1 - endFactor);
         }
     },
-    
+
     /**
      * Clean up gesture data when complete
      * @param {Particle} particle - The particle to clean up
@@ -245,7 +245,7 @@ export default {
             delete particle.gestureData.spin;
         }
     },
-    
+
     /**
      * Easing function for acceleration
      * @param {number} t - Progress (0-1)
@@ -254,7 +254,7 @@ export default {
     easeInQuad(t) {
         return t * t;
     },
-    
+
     /**
      * Easing function for deceleration
      * @param {number} t - Progress (0-1)
@@ -284,7 +284,8 @@ export default {
             const particle = motion?.particle;
             let directionSign = 1;
             if (particle?.gestureData?.spin) {
-                directionSign = particle.gestureData.spin.direction === 'counter-clockwise' ? -1 : 1;
+                directionSign =
+                    particle.gestureData.spin.direction === 'counter-clockwise' ? -1 : 1;
             } else if (config.direction === 'counter-clockwise' || config.direction === 'left') {
                 directionSign = -1;
             }
@@ -293,9 +294,9 @@ export default {
             let speedProgress = progress;
             if (config.accelerate !== false) {
                 if (progress < 0.5) {
-                    speedProgress = (progress * progress * 4) * 0.5; // easeInQuad
+                    speedProgress = progress * progress * 4 * 0.5; // easeInQuad
                 } else {
-                    speedProgress = 0.5 + ((progress - 0.5) * (2 - (progress - 0.5))) * 0.5; // easeOutQuad
+                    speedProgress = 0.5 + (progress - 0.5) * (2 - (progress - 0.5)) * 0.5; // easeOutQuad
                 }
             }
 
@@ -309,14 +310,14 @@ export default {
             // Scale changes during spin
             const scaleAmount = config.scaleAmount || 0.1;
             const scaleCurve = Math.sin(progress * Math.PI); // Peak at middle
-            const scale = 1.0 + (scaleAmount * scaleCurve * strength);
+            const scale = 1.0 + scaleAmount * scaleCurve * strength;
 
             // Mascot stays in place - only rotates on Y axis
             return {
                 position: [0, 0, 0], // Stay in place
                 rotation: [0, yRotation, 0], // Y-axis rotation only
-                scale
+                scale,
             };
-        }
-    }
+        },
+    },
 };

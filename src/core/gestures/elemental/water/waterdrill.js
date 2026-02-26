@@ -44,9 +44,9 @@ const WATERDRILL_CONFIG = {
     emoji: '🔩',
     type: 'blending',
     description: 'Fast tight descending water helix',
-    duration: 1200,         // Quick intense burst
+    duration: 1200, // Quick intense burst
     beats: 2,
-    intensity: 1.5,         // High intensity
+    intensity: 1.5, // High intensity
     category: 'transform',
     turbulence: 0.6,
 
@@ -57,19 +57,19 @@ const WATERDRILL_CONFIG = {
             axis: 'y',
             start: 'feet',
             end: 'below',
-            easing: 'easeIn',       // Accelerating downward
+            easing: 'easeIn', // Accelerating downward
             startScale: 1.0,
             endScale: 0.8,
-            startDiameter: 1.8,     // Wide at top
-            endDiameter: 1.4,       // Narrower at drill point
-            orientation: 'vertical'
+            startDiameter: 1.8, // Wide at top
+            endDiameter: 1.4, // Narrower at drill point
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 6,
-            spacing: 0.1,           // Tight spacing
-            arcOffset: 60,          // 60° between each (6 * 60 = 360)
-            phaseOffset: 0
+            spacing: 0.1, // Tight spacing
+            arcOffset: 60, // 60° between each (6 * 60 = 360)
+            phaseOffset: 0,
         },
         count: 6,
         scale: 0.8,
@@ -77,54 +77,54 @@ const WATERDRILL_CONFIG = {
         animation: {
             appearAt: 0.0,
             disappearAt: 0.6,
-            stagger: 0.03,          // Fast sequential spawn
+            stagger: 0.03, // Fast sequential spawn
             enter: {
                 type: 'fade',
                 duration: 0.05,
-                easing: 'linear'
+                easing: 'linear',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.05,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.3,
                     peak: 0.7,
                     end: 0.5,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             // SPIRAL cutout for drilling effect
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 6, scale: 1.5, weight: 1.0 },    // SPIRAL - drilling motion
+                primary: { pattern: 6, scale: 1.5, weight: 1.0 }, // SPIRAL - drilling motion
                 secondary: { pattern: 1, scale: 0.8, weight: 0.35 }, // STREAKS - speed lines
                 blend: 'add',
                 travel: 'vertical',
-                travelSpeed: 3.0,           // Fast drilling travel
-                strengthCurve: 'constant'
+                travelSpeed: 3.0, // Fast drilling travel
+                strengthCurve: 'constant',
             },
             // Grain: intense film grain for drilling spray
             grain: {
-                type: 3,              // FILM
-                strength: 0.3,        // Stronger for intense effect
+                type: 3, // FILM
+                strength: 0.3, // Stronger for intense effect
                 scale: 0.2,
-                speed: 4.0,           // Fast for drilling energy
-                blend: 'multiply'
+                speed: 4.0, // Fast for drilling energy
+                blend: 'multiply',
             },
             pulse: {
                 amplitude: 0.08,
-                frequency: 10,      // Fast pulse
-                easing: 'linear'
+                frequency: 10, // Fast pulse
+                easing: 'linear',
             },
             // Fast unified rotation for drill effect
-            rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations
+            rotate: { axis: 'y', rotations: 4, phase: 0 }, // 4 full rotations
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
             blending: 'normal',
@@ -133,25 +133,27 @@ const WATERDRILL_CONFIG = {
                 'splash-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.5,    // Narrow arcs for drill bits
-                        arcSpeed: 3.0,    // Fast internal animation
-                        arcCount: 1
+                        arcWidth: 0.5, // Narrow arcs for drill bits
+                        arcSpeed: 3.0, // Fast internal animation
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
+                    orientationOverride: 'vertical',
+                },
             },
             // Sustained spray thrown off drilling rotation
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
-            }],
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 1.0, tangentialBias: 0.3 },
+                },
+            ],
+        },
     },
 
     // Wobble - minimal for focused drill
@@ -168,7 +170,7 @@ const WATERDRILL_CONFIG = {
     glowIntensityMax: 2.8,
     glowPulseRate: 10,
     // Drill-specific
-    rotationFlow: 0.05
+    rotationFlow: 0.05,
 };
 
 /**

@@ -38,7 +38,7 @@ const VOIDTWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.15,
@@ -53,15 +53,17 @@ const VOIDTWIRL_CONFIG = {
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
                 blending: 'normal',
                 renderOrder: 10,
-                atmospherics: [{ preset: 'shadow', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
+                atmospherics: [
+                    { preset: 'shadow', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' },
+                ],
                 modelOverrides: {
                     'void-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B — lower-right — relay 1, CCW
@@ -74,7 +76,7 @@ const VOIDTWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.15,
@@ -93,10 +95,10 @@ const VOIDTWIRL_CONFIG = {
                     'void-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C — upper-center — relay 0, CW
@@ -109,7 +111,7 @@ const VOIDTWIRL_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 1.15,
@@ -128,11 +130,11 @@ const VOIDTWIRL_CONFIG = {
                     'void-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.25, 0.1, 0.35],
@@ -146,7 +148,7 @@ const VOIDTWIRL_CONFIG = {
     tremorFrequency: 8,
     shakeAmount: 0.01,
     shakeFrequency: 12,
-    decayRate: 0.15
+    decayRate: 0.15,
 };
 
 export default buildVoidEffectGesture(VOIDTWIRL_CONFIG);

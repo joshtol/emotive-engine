@@ -49,19 +49,19 @@ const FIRECROWN_CONFIG = {
     intensity: 1.0,
     mascotGlow: 0.3,
     category: 'radiating',
-    temperature: 0.65,  // Warm gold
+    temperature: 0.65, // Warm gold
 
     // 3D Element spawning - anchored crown ring
     spawnMode: {
         type: 'anchor',
         anchor: {
             landmark: 'top',
-            offset: { x: 0, y: 0.05, z: 0 },  // Slight hover above mascot top
-            orientation: 'flat',              // Horizontal ring
+            offset: { x: 0, y: 0.05, z: 0 }, // Slight hover above mascot top
+            orientation: 'flat', // Horizontal ring
             bob: {
                 amplitude: 0.02,
-                frequency: 0.3                // Slow gentle bob
-            }
+                frequency: 0.3, // Slow gentle bob
+            },
         },
         count: 1,
         scale: 1.2,
@@ -73,22 +73,22 @@ const FIRECROWN_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.25,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.1,
-                geometryStability: true
+                geometryStability: true,
             },
             // Two-layer cutout: EMBERS + SPIRAL for organic crown erosion
             cutout: {
                 strength: 0.65,
-                primary: { pattern: 5, scale: 1.5, weight: 1.0 },    // EMBERS - burning holes
-                secondary: { pattern: 6, scale: 2.0, weight: 0.4 },  // SPIRAL - crown rotation
+                primary: { pattern: 5, scale: 1.5, weight: 1.0 }, // EMBERS - burning holes
+                secondary: { pattern: 6, scale: 2.0, weight: 0.4 }, // SPIRAL - crown rotation
                 blend: 'add',
                 travel: 'angular',
                 travelSpeed: 1.5,
@@ -98,51 +98,53 @@ const FIRECROWN_CONFIG = {
                 geometricMask: {
                     type: 'distance',
                     core: 0.15,
-                    tip: 0.3
-                }
+                    tip: 0.3,
+                },
             },
             // Grain: perlin noise for gritty, organic flame texture
             // NOTE: Uses MULTIPLY blend (not overlay) because overlay has no effect on bright fire colors
             grain: {
-                type: 0,              // PERLIN - smooth flowing noise
-                strength: 0.35,       // Visible grain (0.18 was too subtle)
-                scale: 0.25,          // Coarser texture for more visible variation
-                speed: 1.5,           // Faster for flickering
-                blend: 'multiply'     // Darkens bright areas for visible grit
+                type: 0, // PERLIN - smooth flowing noise
+                strength: 0.35, // Visible grain (0.18 was too subtle)
+                scale: 0.25, // Coarser texture for more visible variation
+                speed: 1.5, // Faster for flickering
+                blend: 'multiply', // Darkens bright areas for visible grit
             },
             parameterAnimation: {
                 temperature: {
                     start: 0.5,
                     peak: 0.7,
                     end: 0.6,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             flicker: {
                 intensity: 0.15,
                 rate: 8,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 2,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.2,
                 max: 2.0,
                 frequency: 3,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Per-gesture atmospheric particles: smoke rising from crown
-            atmospherics: [{
-                preset: 'smoke',
-                targets: ['flame-ring'],
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: ['flame-ring'],
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             // Slow majestic rotation (Z axis because ring is flat - local Z points up)
             rotate: { axis: 'z', rotations: 1, phase: 0 },
             scaleVariance: 0,
@@ -153,27 +155,27 @@ const FIRECROWN_CONFIG = {
                 'flame-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.9,    // Wide arcs for full crown
-                        arcSpeed: 0.8,    // Slow internal animation
-                        arcCount: 3       // Multiple arcs for regal look
-                    }
-                }
-            }
-        }
+                        arcWidth: 0.9, // Wide arcs for full crown
+                        arcSpeed: 0.8, // Slow internal animation
+                        arcCount: 3, // Multiple arcs for regal look
+                    },
+                },
+            },
+        },
     },
 
     // Mesh effects - warm golden glow
     flickerFrequency: 6,
     flickerAmplitude: 0.006,
     flickerDecay: 0.25,
-    glowColor: [1.0, 0.7, 0.3],       // Warm gold
+    glowColor: [1.0, 0.7, 0.3], // Warm gold
     glowIntensityMin: 0.9,
     glowIntensityMax: 1.4,
     glowFlickerRate: 5,
     scaleVibration: 0.008,
     scaleFrequency: 3,
     scaleGrowth: 0.01,
-    rotationEffect: false
+    rotationEffect: false,
 };
 
 /**

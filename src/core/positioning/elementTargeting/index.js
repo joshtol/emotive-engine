@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting Module Index
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Export all element targeting modules for easy importing
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/index
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides a single import point for all element targeting functionality, making    
- * ║ it easy to use any combination of targeting features in the engine.               
+ * ║ Provides a single import point for all element targeting functionality, making
+ * ║ it easy to use any combination of targeting features in the engine.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -54,7 +54,7 @@ import ElementTargetingAccessibility from './ElementTargetingAccessibility.js';
 export class ElementTargetingAll {
     constructor(positionController) {
         this.positionController = positionController;
-        
+
         // Initialize all targeting modules
         this.callbacks = new ElementTargetingCallbacks(positionController);
         this.advanced = new ElementTargetingAdvanced(positionController);
@@ -66,52 +66,128 @@ export class ElementTargetingAll {
     }
 
     // Delegate methods to appropriate modules
-    moveToElementWithCallback(...args) { return this.callbacks.moveToElementWithCallback(...args); }
-    moveToElementSequence(...args) { return this.callbacks.moveToElementSequence(...args); }
-    moveToElementWithDelay(...args) { return this.callbacks.moveToElementWithDelay(...args); }
-    moveToElementWithCondition(...args) { return this.callbacks.moveToElementWithCondition(...args); }
-    moveToElementWithRepeat(...args) { return this.callbacks.moveToElementWithRepeat(...args); }
-    moveToElementWithProximity(...args) { return this.callbacks.moveToElementWithProximity(...args); }
+    moveToElementWithCallback(...args) {
+        return this.callbacks.moveToElementWithCallback(...args);
+    }
+    moveToElementSequence(...args) {
+        return this.callbacks.moveToElementSequence(...args);
+    }
+    moveToElementWithDelay(...args) {
+        return this.callbacks.moveToElementWithDelay(...args);
+    }
+    moveToElementWithCondition(...args) {
+        return this.callbacks.moveToElementWithCondition(...args);
+    }
+    moveToElementWithRepeat(...args) {
+        return this.callbacks.moveToElementWithRepeat(...args);
+    }
+    moveToElementWithProximity(...args) {
+        return this.callbacks.moveToElementWithProximity(...args);
+    }
 
-    moveToElementWithPath(...args) { return this.advanced.moveToElementWithPath(...args); }
-    moveToElementWithEasing(...args) { return this.advanced.moveToElementWithEasing(...args); }
-    moveToElementWithCollision(...args) { return this.advanced.moveToElementWithCollision(...args); }
-    moveToElementWithAudio(...args) { return this.advanced.moveToElementWithAudio(...args); }
-    moveToElementWithGaze(...args) { return this.advanced.moveToElementWithGaze(...args); }
+    moveToElementWithPath(...args) {
+        return this.advanced.moveToElementWithPath(...args);
+    }
+    moveToElementWithEasing(...args) {
+        return this.advanced.moveToElementWithEasing(...args);
+    }
+    moveToElementWithCollision(...args) {
+        return this.advanced.moveToElementWithCollision(...args);
+    }
+    moveToElementWithAudio(...args) {
+        return this.advanced.moveToElementWithAudio(...args);
+    }
+    moveToElementWithGaze(...args) {
+        return this.advanced.moveToElementWithGaze(...args);
+    }
 
-    moveToElementWithScroll(...args) { return this.context.moveToElementWithScroll(...args); }
-    moveToElementWithPhysics(...args) { return this.context.moveToElementWithPhysics(...args); }
-    moveToElementWithGroup(...args) { return this.context.moveToElementWithGroup(...args); }
-    moveToElementWithResponsive(...args) { return this.context.moveToElementWithResponsive(...args); }
-    moveToElementWithAccessibility(...args) { return this.context.moveToElementWithAccessibility(...args); }
+    moveToElementWithScroll(...args) {
+        return this.context.moveToElementWithScroll(...args);
+    }
+    moveToElementWithPhysics(...args) {
+        return this.context.moveToElementWithPhysics(...args);
+    }
+    moveToElementWithGroup(...args) {
+        return this.context.moveToElementWithGroup(...args);
+    }
+    moveToElementWithResponsive(...args) {
+        return this.context.moveToElementWithResponsive(...args);
+    }
+    moveToElementWithAccessibility(...args) {
+        return this.context.moveToElementWithAccessibility(...args);
+    }
 
-    moveToElementWithHover(...args) { return this.interactions.moveToElementWithHover(...args); }
-    moveToElementWithClick(...args) { return this.interactions.moveToElementWithClick(...args); }
-    moveToElementWithTouch(...args) { return this.interactions.moveToElementWithTouch(...args); }
-    moveToElementWithFocus(...args) { return this.interactions.moveToElementWithFocus(...args); }
-    moveToElementWithKeyboard(...args) { return this.interactions.moveToElementWithKeyboard(...args); }
+    moveToElementWithHover(...args) {
+        return this.interactions.moveToElementWithHover(...args);
+    }
+    moveToElementWithClick(...args) {
+        return this.interactions.moveToElementWithClick(...args);
+    }
+    moveToElementWithTouch(...args) {
+        return this.interactions.moveToElementWithTouch(...args);
+    }
+    moveToElementWithFocus(...args) {
+        return this.interactions.moveToElementWithFocus(...args);
+    }
+    moveToElementWithKeyboard(...args) {
+        return this.interactions.moveToElementWithKeyboard(...args);
+    }
 
-    moveToElementWithBounce(...args) { return this.animations.moveToElementWithBounce(...args); }
-    moveToElementWithShake(...args) { return this.animations.moveToElementWithShake(...args); }
-    moveToElementWithPulse(...args) { return this.animations.moveToElementWithPulse(...args); }
-    moveToElementWithWiggle(...args) { return this.animations.moveToElementWithWiggle(...args); }
-    moveToElementWithCustom(...args) { return this.animations.moveToElementWithCustom(...args); }
+    moveToElementWithBounce(...args) {
+        return this.animations.moveToElementWithBounce(...args);
+    }
+    moveToElementWithShake(...args) {
+        return this.animations.moveToElementWithShake(...args);
+    }
+    moveToElementWithPulse(...args) {
+        return this.animations.moveToElementWithPulse(...args);
+    }
+    moveToElementWithWiggle(...args) {
+        return this.animations.moveToElementWithWiggle(...args);
+    }
+    moveToElementWithCustom(...args) {
+        return this.animations.moveToElementWithCustom(...args);
+    }
 
-    moveToElementWithTrail(...args) { return this.effects.moveToElementWithTrail(...args); }
-    moveToElementWithParticles(...args) { return this.effects.moveToElementWithParticles(...args); }
-    moveToElementWithGlow(...args) { return this.effects.moveToElementWithGlow(...args); }
+    moveToElementWithTrail(...args) {
+        return this.effects.moveToElementWithTrail(...args);
+    }
+    moveToElementWithParticles(...args) {
+        return this.effects.moveToElementWithParticles(...args);
+    }
+    moveToElementWithGlow(...args) {
+        return this.effects.moveToElementWithGlow(...args);
+    }
 
-    moveToElementWithScreenReader(...args) { return this.accessibility.moveToElementWithScreenReader(...args); }
-    moveToElementWithKeyboardAccessible(...args) { return this.accessibility.moveToElementWithKeyboard(...args); }
-    moveToElementWithHighContrast(...args) { return this.accessibility.moveToElementWithHighContrast(...args); }
-    moveToElementWithReducedMotion(...args) { return this.accessibility.moveToElementWithReducedMotion(...args); }
-    moveToElementWithFocusAccessible(...args) { return this.accessibility.moveToElementWithFocus(...args); }
+    moveToElementWithScreenReader(...args) {
+        return this.accessibility.moveToElementWithScreenReader(...args);
+    }
+    moveToElementWithKeyboardAccessible(...args) {
+        return this.accessibility.moveToElementWithKeyboard(...args);
+    }
+    moveToElementWithHighContrast(...args) {
+        return this.accessibility.moveToElementWithHighContrast(...args);
+    }
+    moveToElementWithReducedMotion(...args) {
+        return this.accessibility.moveToElementWithReducedMotion(...args);
+    }
+    moveToElementWithFocusAccessible(...args) {
+        return this.accessibility.moveToElementWithFocus(...args);
+    }
 
     // Utility methods
-    announceToScreenReader(...args) { return this.accessibility.announceToScreenReader(...args); }
-    navigateFocus(...args) { return this.accessibility.navigateFocus(...args); }
-    enableAccessibility(...args) { return this.accessibility.enableAccessibility(...args); }
-    disableAccessibility(...args) { return this.accessibility.disableAccessibility(...args); }
+    announceToScreenReader(...args) {
+        return this.accessibility.announceToScreenReader(...args);
+    }
+    navigateFocus(...args) {
+        return this.accessibility.navigateFocus(...args);
+    }
+    enableAccessibility(...args) {
+        return this.accessibility.enableAccessibility(...args);
+    }
+    disableAccessibility(...args) {
+        return this.accessibility.disableAccessibility(...args);
+    }
 
     // Destroy all modules
     destroy() {

@@ -8,5 +8,13 @@
 export { createSphere } from './Sphere.js';
 export { createCrystal } from './Crystal.js';
 export { createDiamond } from './Diamond.js';
-export { createMoon, createMoonMaterial, createMoonCrescentMaterial, createMoonFallbackMaterial, updateMoonGlow, updateCrescentShadow, disposeMoon } from './Moon.js';
+export {
+    createMoon,
+    createMoonMaterial,
+    createMoonCrescentMaterial,
+    createMoonFallbackMaterial,
+    updateMoonGlow,
+    updateCrescentShadow,
+    disposeMoon,
+} from './Moon.js';
 export { createSunGeometry, createSunMaterial, updateSunMaterial, disposeSun } from './Sun.js';

@@ -43,7 +43,7 @@ const ICEFLOURISH_CONFIG = {
     emoji: '❄',
     type: 'blending',
     description: 'Spinning ice flourish with crystal trails',
-    duration: 1200,             // Fast triplet flourish
+    duration: 1200, // Fast triplet flourish
     beats: 4,
     intensity: 1.3,
     mascotGlow: 0.3,
@@ -60,13 +60,13 @@ const ICEFLOURISH_CONFIG = {
             axisTravel: {
                 axis: 'y',
                 start: 'center',
-                end: 'center',              // Stay at center (no travel)
+                end: 'center', // Stay at center (no travel)
                 easing: 'linear',
                 startScale: 0.7,
                 endScale: 1.2,
                 startDiameter: 1.8,
                 endDiameter: 2.8,
-                orientation: 'camera'       // Billboard: always face camera
+                orientation: 'camera', // Billboard: always face camera
             },
             formation: {
                 type: 'spiral',
@@ -74,7 +74,7 @@ const ICEFLOURISH_CONFIG = {
                 spacing: 0,
                 arcOffset: 72,
                 phaseOffset: 0.05,
-                zOffset: 0
+                zOffset: 0,
             },
             count: 5,
             scale: 1.5,
@@ -86,68 +86,70 @@ const ICEFLOURISH_CONFIG = {
                 enter: {
                     type: 'fade',
                     duration: 0.03,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'burst-fade',
                     duration: 0.85,
                     easing: 'easeIn',
-                    burstScale: 1.15
+                    burstScale: 1.15,
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     frost: {
                         start: 0.35,
                         peak: 0.7,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // VORONOI cutout for crystalline holes
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 3, scale: 1.0, weight: 1.0 },    // VORONOI - crystalline
-                    secondary: { pattern: 8, scale: 0.6, weight: 0.5 },  // CRACKS - fracture edges
+                    primary: { pattern: 3, scale: 1.0, weight: 1.0 }, // VORONOI - crystalline
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.5 }, // CRACKS - fracture edges
                     blend: 'multiply',
                     strengthCurve: 'constant',
                     trailDissolve: {
                         enabled: true,
                         offset: -0.6,
-                        softness: 1.5
-                    }
+                        softness: 1.5,
+                    },
                 },
                 // Grain: film grain for icy spray texture
                 grain: {
-                    type: 3,              // FILM
+                    type: 3, // FILM
                     strength: 0.2,
                     scale: 0.25,
                     speed: 2.5,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
                 // Per-gesture atmospheric particles: cold mist from flourish
-                atmospherics: [{
-                    preset: 'mist',
-                    targets: ['ice-ring'],
-                    anchor: 'below',
-                    intensity: 0.3,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.4,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'mist',
+                        targets: ['ice-ring'],
+                        anchor: 'below',
+                        intensity: 0.3,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.4,
+                    },
+                ],
                 pulse: {
                     amplitude: 0.15,
                     frequency: 5,
                     easing: 'easeInOut',
-                    perElement: true
+                    perElement: true,
                 },
                 drift: {
                     speed: 0.3,
                     distance: 0.18,
                     pattern: 'radial',
-                    accelerate: true
+                    accelerate: true,
                 },
                 opacityGradient: [1.0, 0.9, 0.8, 0.7, 0.6],
                 rotate: [
@@ -155,38 +157,38 @@ const ICEFLOURISH_CONFIG = {
                     { axis: 'z', rotations: -2.0, phase: 72 },
                     { axis: 'z', rotations: 1.8, phase: 144 },
                     { axis: 'z', rotations: -2.3, phase: 216 },
-                    { axis: 'z', rotations: 2.0, phase: 288 }
+                    { axis: 'z', rotations: 2.0, phase: 288 },
                 ],
                 tilt: {
                     axis: 'y',
                     oscillate: true,
                     range: 0.4,
-                    speed: 3.5
+                    speed: 3.5,
                 },
                 wobble: {
                     axis: 'x',
                     oscillate: true,
                     range: 0.15,
                     speed: 2.0,
-                    phase: 90
+                    phase: 90,
                 },
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.15,
                 blending: 'normal',
                 depthWrite: false,
-                renderOrder: -8,    // Behind mascot
+                renderOrder: -8, // Behind mascot
                 modelOverrides: {
                     'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.5,
                             arcSpeed: 1.0,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -197,11 +199,11 @@ const ICEFLOURISH_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: -0.7, y: 0.4, z: 0 },     // Start top-left
+                offset: { x: -0.7, y: 0.4, z: 0 }, // Start top-left
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.2,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.2,
@@ -212,73 +214,75 @@ const ICEFLOURISH_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.06,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.3,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     frost: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // CRACKS cutout for motion blur effect
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 8, scale: 1.0, weight: 1.0 },    // CRACKS - fracture motion
-                    secondary: { pattern: 3, scale: 0.7, weight: 0.4 },  // VORONOI - crystalline breaks
+                    primary: { pattern: 8, scale: 1.0, weight: 1.0 }, // CRACKS - fracture motion
+                    secondary: { pattern: 3, scale: 0.7, weight: 0.4 }, // VORONOI - crystalline breaks
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply',
                 },
                 // Diagonal sweep: top-left to bottom-right
                 drift: {
                     speed: 0.9,
                     distance: 0.35,
                     direction: { x: 1.0, y: -0.7, z: -0.15 },
-                    easing: 'easeInOutCubic'
+                    easing: 'easeInOutCubic',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 1.0, phase: -45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 1.0, phase: -45 }],
                 blending: 'normal',
                 depthWrite: false,
-                renderOrder: -6,    // Behind mascot
+                renderOrder: -6, // Behind mascot
                 modelOverrides: {
                     'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 2.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0.7, y: 0.4, z: 0 },      // Start top-right
+                offset: { x: 0.7, y: 0.4, z: 0 }, // Start top-right
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.2,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.2,
@@ -289,63 +293,65 @@ const ICEFLOURISH_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.06,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.3,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     frost: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // CRACKS cutout for motion blur effect
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 8, scale: 1.0, weight: 1.0 },    // CRACKS
-                    secondary: { pattern: 3, scale: 0.7, weight: 0.4 },  // VORONOI
+                    primary: { pattern: 8, scale: 1.0, weight: 1.0 }, // CRACKS
+                    secondary: { pattern: 3, scale: 0.7, weight: 0.4 }, // VORONOI
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply',
                 },
                 // Diagonal sweep: top-right to bottom-left
                 drift: {
                     speed: 0.9,
                     distance: 0.35,
                     direction: { x: -1.0, y: -0.7, z: -0.15 },
-                    easing: 'easeInOutCubic'
+                    easing: 'easeInOutCubic',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 1.0, phase: 45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 1.0, phase: 45 }],
                 blending: 'normal',
                 depthWrite: false,
-                renderOrder: -6,    // Behind mascot
+                renderOrder: -6, // Behind mascot
                 modelOverrides: {
                     'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 2.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -360,68 +366,70 @@ const ICEFLOURISH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 1.5,
             models: ['ice-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.70,
+                appearAt: 0.3,
+                disappearAt: 0.7,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.28,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     frost: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // VORONOI + CRACKS for slash arc texture
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 3, scale: 0.8, weight: 1.0 },    // VORONOI
-                    secondary: { pattern: 8, scale: 0.6, weight: 0.4 },  // CRACKS
+                    primary: { pattern: 3, scale: 0.8, weight: 1.0 }, // VORONOI
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.4 }, // CRACKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.0,
+                    blend: 'multiply',
                 },
                 // Tilted 45° clockwise
-                rotate: [
-                    { axis: 'z', rotations: 0.001, phase: 45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 0.001, phase: 45 }],
                 blending: 'normal',
                 depthWrite: false,
-                renderOrder: -10,   // Behind mascot
+                renderOrder: -10, // Behind mascot
                 modelOverrides: {
                     'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
@@ -431,69 +439,71 @@ const ICEFLOURISH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 1.5,
             models: ['ice-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.70,
+                appearAt: 0.3,
+                disappearAt: 0.7,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.28,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     frost: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // VORONOI + CRACKS for slash arc texture
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 3, scale: 0.8, weight: 1.0 },    // VORONOI
-                    secondary: { pattern: 8, scale: 0.6, weight: 0.4 },  // CRACKS
+                    primary: { pattern: 3, scale: 0.8, weight: 1.0 }, // VORONOI
+                    secondary: { pattern: 8, scale: 0.6, weight: 0.4 }, // CRACKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.0,
+                    blend: 'multiply',
                 },
                 // Tilted 45° counter-clockwise
-                rotate: [
-                    { axis: 'z', rotations: 0.001, phase: -45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 0.001, phase: -45 }],
                 blending: 'normal',
                 depthWrite: false,
-                renderOrder: -10,   // Behind mascot
+                renderOrder: -10, // Behind mascot
                 modelOverrides: {
                     'ice-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Glow - bright ice display
@@ -507,7 +517,7 @@ const ICEFLOURISH_CONFIG = {
     scaleGrowth: 0.015,
     // Tremor
     tremor: 0.003,
-    tremorFrequency: 4
+    tremorFrequency: 4,
 };
 
 /**

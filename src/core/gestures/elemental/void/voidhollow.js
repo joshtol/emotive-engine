@@ -44,7 +44,7 @@ const VOIDHOLLOW_CONFIG = {
     intensity: 0.8,
     category: 'absorption',
     depth: 0.5,
-    distortionStrength: 0,       // No distortion — hollow is still, cold
+    distortionStrength: 0, // No distortion — hollow is still, cold
 
     spawnMode: [
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -70,30 +70,32 @@ const VOIDHOLLOW_CONFIG = {
                 exit: { type: 'shrink', duration: 0.15, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.1, geometryStability: true },
                 pulse: { amplitude: 0.04, frequency: 0.8, easing: 'easeInOut' },
-                atmospherics: [{
-                    preset: 'darkness',
-                    targets: ['void-disk'],
-                    anchor: 'around',
-                    intensity: 0.8,
-                    sizeScale: 0.5,
-                    speedScale: 0.1,            // Near-zero initial velocity — gravity does the work
-                    lifetimeScale: 0.4,          // Short-lived (0.8-1.6s) — consumed quickly
-                    progressCurve: 'sustain',
-                    gravity: {
-                        strength: 1.5,           // Strong inward pull
-                        spawnRadius: 0.35,       // Spawn in ring around disk — NOT at center
+                atmospherics: [
+                    {
+                        preset: 'darkness',
+                        targets: ['void-disk'],
+                        anchor: 'around',
+                        intensity: 0.8,
+                        sizeScale: 0.5,
+                        speedScale: 0.1, // Near-zero initial velocity — gravity does the work
+                        lifetimeScale: 0.4, // Short-lived (0.8-1.6s) — consumed quickly
+                        progressCurve: 'sustain',
+                        gravity: {
+                            strength: 1.5, // Strong inward pull
+                            spawnRadius: 0.35, // Spawn in ring around disk — NOT at center
+                        },
                     },
-                }],
+                ],
                 scaleVariance: 0,
                 lifetimeVariance: 0,
                 blending: 'normal',
                 renderOrder: 1,
                 modelOverrides: {
                     'void-disk': {
-                        diskMode: true
-                    }
-                }
-            }
+                        diskMode: true,
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -107,11 +109,11 @@ const VOIDHOLLOW_CONFIG = {
                 endHeight: 0.1,
                 radius: 0.6,
                 endRadius: 0.5,
-                speed: 0.5,            // Very slow orbit — eerie drift
+                speed: 0.5, // Very slow orbit — eerie drift
                 easing: 'linear',
                 startScale: 0.6,
                 endScale: 1.0,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             count: 2,
             scale: 0.4,
@@ -127,8 +129,8 @@ const VOIDHOLLOW_CONFIG = {
                 emissive: { min: 0.15, max: 0.45, frequency: 1.5, pattern: 'sine' },
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 0, scale: 0.8, weight: 0.7 },    // CELLULAR — organic gaps
-                    secondary: { pattern: 6, scale: 0.6, weight: 0.3 },  // SPIRAL — subtle motion
+                    primary: { pattern: 0, scale: 0.8, weight: 0.7 }, // CELLULAR — organic gaps
+                    secondary: { pattern: 6, scale: 0.6, weight: 0.3 }, // SPIRAL — subtle motion
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 0.6,
@@ -136,17 +138,19 @@ const VOIDHOLLOW_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.3,
-                        softness: 1.0
-                    }
+                        softness: 1.0,
+                    },
                 },
-                atmospherics: [{
-                    preset: 'darkness',
-                    targets: ['void-wrap'],
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.4,
-                    progressCurve: 'rampUp',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'darkness',
+                        targets: ['void-wrap'],
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.4,
+                        progressCurve: 'rampUp',
+                    },
+                ],
                 scaleVariance: 0.15,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
@@ -156,12 +160,12 @@ const VOIDHOLLOW_CONFIG = {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.4,
-                            arcSpeed: 0.5,      // Crawling rotation
-                            arcCount: 1
-                        }
-                    }
-                }
-            }
+                            arcSpeed: 0.5, // Crawling rotation
+                            arcCount: 1,
+                        },
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -170,9 +174,9 @@ const VOIDHOLLOW_CONFIG = {
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'surface',
-            pattern: 'shell',           // Even coverage — whole mascot is failing
-            embedDepth: 0.25,           // Deep embed — cracks go INTO the shell
-            cameraFacing: 0.15,         // Mostly surface-aligned — structural
+            pattern: 'shell', // Even coverage — whole mascot is failing
+            embedDepth: 0.25, // Deep embed — cracks go INTO the shell
+            cameraFacing: 0.15, // Mostly surface-aligned — structural
             clustering: 0.4,
             count: 5,
             scale: 0.8,
@@ -181,19 +185,21 @@ const VOIDHOLLOW_CONFIG = {
             animation: {
                 appearAt: 0.15,
                 disappearAt: 0.9,
-                stagger: 0.08,          // Slow progression — cracks spread gradually
+                stagger: 0.08, // Slow progression — cracks spread gradually
                 enter: { type: 'grow', duration: 0.2, easing: 'easeOutQuad' },
                 exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
                 pulse: { amplitude: 0.04, frequency: 0.8, easing: 'easeInOut', sync: 'global' },
                 emissive: { min: 0.2, max: 0.5, frequency: 1, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'darkness',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.3,
-                    progressCurve: 'rampUp',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'darkness',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.3,
+                        sizeScale: 0.3,
+                        progressCurve: 'rampUp',
+                    },
+                ],
                 scaleVariance: 0.15,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
@@ -205,25 +211,25 @@ const VOIDHOLLOW_CONFIG = {
                             axes: {
                                 x: { expand: true, rate: 1.3 },
                                 y: { expand: true, rate: 1.1 },
-                                z: { expand: true, rate: 0.9 }
-                            }
-                        }
+                                z: { expand: true, rate: 0.9 },
+                            },
+                        },
                     },
                     'void-shard': {
-                        opacityLink: 'dissipate'
-                    }
-                }
-            }
-        }
+                        opacityLink: 'dissipate',
+                    },
+                },
+            },
+        },
     ],
 
     // Absorption effects — cold, empty, trembling
     hollowCore: true,
     hollowProgress: 0.7,
-    glowColor: [0.25, 0.25, 0.35],     // Cold gray-purple — not warm corruption
+    glowColor: [0.25, 0.25, 0.35], // Cold gray-purple — not warm corruption
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.75,
-    glowFlickerRate: 1.5,              // Very slow — emptiness doesn't flicker
+    glowFlickerRate: 1.5, // Very slow — emptiness doesn't flicker
     dimStrength: 0.2,
     scaleVibration: 0.008,
     scaleFrequency: 1,
@@ -231,7 +237,7 @@ const VOIDHOLLOW_CONFIG = {
     scalePulse: true,
     tremor: 0.003,
     tremorFrequency: 6,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildVoidEffectGesture(VOIDHOLLOW_CONFIG);

@@ -51,7 +51,7 @@ export class GestureMotionProvider {
             type: gesture.type,
             amplitude: 1.0,
             frequency: 1.0,
-            intensity: 1.0
+            intensity: 1.0,
         };
 
         if (gestureProgress >= 1) {
@@ -83,7 +83,7 @@ export class GestureMotionProvider {
         if (currentGesture && currentGesture.particleMotion) {
             return {
                 gestureMotion: currentGesture.particleMotion,
-                gestureProgress: currentGesture.progress || 0
+                gestureProgress: currentGesture.progress || 0,
             };
         }
 

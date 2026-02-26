@@ -44,14 +44,14 @@ const ELECTRICDRILL_CONFIG = {
             endScale: 0.8,
             startDiameter: 1.8,
             endDiameter: 1.4,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 2,
             spacing: 0.1,
             arcOffset: 180,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 2,
         scale: 2.0,
@@ -63,32 +63,32 @@ const ELECTRICDRILL_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.05,
-                easing: 'linear'
+                easing: 'linear',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.05,
-                geometryStability: true
+                geometryStability: true,
             },
             flicker: {
                 intensity: 0.4,
                 rate: 25,
-                pattern: 'random'
+                pattern: 'random',
             },
             pulse: {
                 amplitude: 0.08,
                 frequency: 10,
-                easing: 'linear'
+                easing: 'linear',
             },
             emissive: {
                 min: 1.5,
                 max: 3.5,
                 frequency: 12,
-                pattern: 'random'
+                pattern: 'random',
             },
             cutout: {
                 strength: 0.55,
@@ -97,26 +97,28 @@ const ELECTRICDRILL_CONFIG = {
                 blend: 'add',
                 travel: 'vertical',
                 travelSpeed: 3.0,
-                strengthCurve: 'constant'
+                strengthCurve: 'constant',
             },
             grain: {
                 type: 3,
                 strength: 0.3,
                 scale: 0.2,
                 speed: 4.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: ionized air from drill
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 1.0, tangentialBias: 0.3 },
+                },
+            ],
             rotate: { axis: 'y', rotations: 4, phase: 0 },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
@@ -128,12 +130,12 @@ const ELECTRICDRILL_CONFIG = {
                         type: 1,
                         arcWidth: 0.5,
                         arcSpeed: 3.0,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     // Drill generates jitter — electrocuting
@@ -146,7 +148,7 @@ const ELECTRICDRILL_CONFIG = {
     glowFlickerRate: 15,
     scaleVibration: 0.02,
     scaleFrequency: 8,
-    scaleGrowth: 0.03
+    scaleGrowth: 0.03,
 };
 
 export default buildElectricEffectGesture(ELECTRICDRILL_CONFIG);

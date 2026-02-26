@@ -38,15 +38,10 @@ export {
     getEmotion,
     getEmotionVisualParams,
     hasEmotion,
-    listEmotions
+    listEmotions,
 } from './core/emotions/index.js';
 
-export {
-    getGesture,
-    applyGesture,
-    listGestures,
-    GESTURE_TYPES
-} from './core/gestures/index.js';
+export { getGesture, applyGesture, listGestures, GESTURE_TYPES } from './core/gestures/index.js';
 
 // ============================================================================
 // UTILITIES
@@ -80,14 +75,14 @@ export const BUILD_TYPE = 'minimal';
 // ============================================================================
 
 export const FEATURES = {
-    rhythmSync: false,          // Audio features disabled
-    grooveTemplates: false,     // Audio features disabled
-    gestureBlending: true,      // Core feature
-    audioReactive: false,       // Audio features disabled
-    particleSystem: true,       // Core feature
-    accessibility: false,       // Disabled for size
-    mobileOptimization: false,  // Disabled for size
-    performanceMonitoring: false // Disabled for size
+    rhythmSync: false, // Audio features disabled
+    grooveTemplates: false, // Audio features disabled
+    gestureBlending: true, // Core feature
+    audioReactive: false, // Audio features disabled
+    particleSystem: true, // Core feature
+    accessibility: false, // Disabled for size
+    mobileOptimization: false, // Disabled for size
+    performanceMonitoring: false, // Disabled for size
 };
 
 // ============================================================================

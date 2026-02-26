@@ -37,9 +37,12 @@ export class ExecutionLifecycleManager {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.errorBoundary) throw new Error('ExecutionLifecycleManager: errorBoundary required');
-        if (!deps.animationController) throw new Error('ExecutionLifecycleManager: animationController required');
-        if (!deps.visualizationRunner) throw new Error('ExecutionLifecycleManager: visualizationRunner required');
+        if (!deps.errorBoundary)
+            throw new Error('ExecutionLifecycleManager: errorBoundary required');
+        if (!deps.animationController)
+            throw new Error('ExecutionLifecycleManager: animationController required');
+        if (!deps.visualizationRunner)
+            throw new Error('ExecutionLifecycleManager: visualizationRunner required');
         if (!deps.state) throw new Error('ExecutionLifecycleManager: state required');
         if (!deps.emit) throw new Error('ExecutionLifecycleManager: emit required');
 
@@ -57,9 +60,13 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     start() {
-        return this.errorBoundary.wrap(() => {
-            return this.visualizationRunner.start();
-        }, 'start', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.visualizationRunner.start();
+            },
+            'start',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -67,9 +74,13 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     stop() {
-        return this.errorBoundary.wrap(() => {
-            return this.visualizationRunner.stop();
-        }, 'stop', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.visualizationRunner.stop();
+            },
+            'stop',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -77,25 +88,29 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     pause() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.animationController.isAnimating()) {
-                // EmotiveMascot is not running
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.animationController.isAnimating()) {
+                    // EmotiveMascot is not running
+                    return this._chainTarget;
+                }
+
+                // Stop animation controller
+                this.animationController.stop();
+                this._state.isRunning = false;
+
+                // Pause ambient audio
+                if (this.soundSystem && this.soundSystem.isAvailable()) {
+                    this.soundSystem.stopAmbientTone(200); // Quick fade out
+                }
+
+                this._emit('paused');
+                // EmotiveMascot paused
                 return this._chainTarget;
-            }
-
-            // Stop animation controller
-            this.animationController.stop();
-            this._state.isRunning = false;
-
-            // Pause ambient audio
-            if (this.soundSystem && this.soundSystem.isAvailable()) {
-                this.soundSystem.stopAmbientTone(200); // Quick fade out
-            }
-
-            this._emit('paused');
-            // EmotiveMascot paused
-            return this._chainTarget;
-        }, 'pause', this._chainTarget)();
+            },
+            'pause',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -103,27 +118,31 @@ export class ExecutionLifecycleManager {
      * @returns {EmotiveMascot} Mascot instance for chaining
      */
     resume() {
-        return this.errorBoundary.wrap(() => {
-            if (this.animationController.isAnimating()) {
-                // EmotiveMascot is already running
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.animationController.isAnimating()) {
+                    // EmotiveMascot is already running
+                    return this._chainTarget;
+                }
+
+                // Start animation controller
+                this.animationController.start();
+                this._state.isRunning = true;
+
+                // Resume ambient audio
+                // Update ambient tone based on emotional state - DISABLED (annoying)
+                // if (this.soundSystem && this.soundSystem.isAvailable()) {
+                //     const currentEmotion = this.stateMachine.getCurrentState().emotion;
+                //     this.soundSystem.setAmbientTone(currentEmotion, 200);
+                // }
+
+                this._emit('resumed');
+                // EmotiveMascot resumed
                 return this._chainTarget;
-            }
-
-            // Start animation controller
-            this.animationController.start();
-            this._state.isRunning = true;
-
-            // Resume ambient audio
-            // Update ambient tone based on emotional state - DISABLED (annoying)
-            // if (this.soundSystem && this.soundSystem.isAvailable()) {
-            //     const currentEmotion = this.stateMachine.getCurrentState().emotion;
-            //     this.soundSystem.setAmbientTone(currentEmotion, 200);
-            // }
-
-            this._emit('resumed');
-            // EmotiveMascot resumed
-            return this._chainTarget;
-        }, 'resume', this._chainTarget)();
+            },
+            'resume',
+            this._chainTarget
+        )();
     }
 
     /**

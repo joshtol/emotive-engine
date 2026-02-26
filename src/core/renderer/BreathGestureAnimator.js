@@ -19,21 +19,21 @@ export class BreathGestureAnimator {
      */
     applyBreathe(anim, progress) {
         // Deliberate, mindful breathing animation
-        const {params} = anim;
+        const { params } = anim;
         const holdPercent = params.particleMotion?.holdPercent || 0.1;
 
         // Create a breathing curve with holds at peaks
         let breathPhase;
         if (progress < 0.4) {
             // Inhale phase (0-40%)
-            breathPhase = Math.sin((progress / 0.4) * Math.PI / 2);
+            breathPhase = Math.sin(((progress / 0.4) * Math.PI) / 2);
         } else if (progress < 0.4 + holdPercent) {
             // Hold at full inhale
             breathPhase = 1.0;
         } else if (progress < 0.9) {
             // Exhale phase
             const exhaleProgress = (progress - 0.4 - holdPercent) / (0.5 - holdPercent);
-            breathPhase = Math.cos(exhaleProgress * Math.PI / 2);
+            breathPhase = Math.cos((exhaleProgress * Math.PI) / 2);
         } else {
             // Hold at full exhale
             breathPhase = 0;
@@ -53,7 +53,7 @@ export class BreathGestureAnimator {
         return {
             scale,
             glow,
-            breathPhase // Pass to particles for synchronized motion
+            breathPhase, // Pass to particles for synchronized motion
         };
     }
 
@@ -64,9 +64,9 @@ export class BreathGestureAnimator {
      * @returns {Object} Transform with scale
      */
     applyBreathIn(anim, progress) {
-        const breathScale = 1 + (anim.params.scaleAmount - 1) * Math.sin(progress * Math.PI / 2);
+        const breathScale = 1 + (anim.params.scaleAmount - 1) * Math.sin((progress * Math.PI) / 2);
         return {
-            scale: breathScale
+            scale: breathScale,
         };
     }
 
@@ -77,9 +77,9 @@ export class BreathGestureAnimator {
      * @returns {Object} Transform with scale
      */
     applyBreathOut(anim, progress) {
-        const breathScale = 1 - (1 - anim.params.scaleAmount) * Math.sin(progress * Math.PI / 2);
+        const breathScale = 1 - (1 - anim.params.scaleAmount) * Math.sin((progress * Math.PI) / 2);
         return {
-            scale: breathScale
+            scale: breathScale,
         };
     }
 
@@ -92,7 +92,7 @@ export class BreathGestureAnimator {
     applyBreathHold(anim, _progress) {
         // Hold at expanded state
         return {
-            scale: anim.params.scaleAmount
+            scale: anim.params.scaleAmount,
         };
     }
 
@@ -105,7 +105,7 @@ export class BreathGestureAnimator {
     applyBreathHoldEmpty(anim, _progress) {
         // Hold at contracted state
         return {
-            scale: anim.params.scaleAmount
+            scale: anim.params.scaleAmount,
         };
     }
 }

@@ -128,10 +128,14 @@ export class FrameBudgetScheduler {
     }
 
     /** Number of items remaining in the queue */
-    get pending() { return this._queue.length; }
+    get pending() {
+        return this._queue.length;
+    }
 
     /** Whether the queue has been fully drained */
-    get isDrained() { return this._drained && !this._awaitingAsync; }
+    get isDrained() {
+        return this._drained && !this._awaitingAsync;
+    }
 
     /** Clear all pending work without executing it */
     clear() {

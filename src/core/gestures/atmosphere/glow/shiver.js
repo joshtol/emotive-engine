@@ -31,14 +31,14 @@ export default {
     config: {
         duration: 1500,
         musicalDuration: { musical: true, bars: 1 },
-        frequency: 30,        // Vibrations per second
-        amplitude: 0.02,      // Small amplitude for micro-vibrations
-        decay: 0.3,           // How quickly shiver fades
+        frequency: 30, // Vibrations per second
+        amplitude: 0.02, // Small amplitude for micro-vibrations
+        decay: 0.3, // How quickly shiver fades
         strength: 1.0,
         particleMotion: {
             type: 'shiver',
-            strength: 0.8
-        }
+            strength: 0.8,
+        },
     },
 
     rhythm: {
@@ -49,8 +49,8 @@ export default {
             quiet: 0.5,
             loud: 1.5,
             crescendo: 'increase',
-            diminuendo: 'decrease'
-        }
+            diminuendo: 'decrease',
+        },
     },
 
     apply(particle, progress, motion, _dt, _centerX, _centerY) {
@@ -86,8 +86,12 @@ export default {
 
             // High-frequency noise
             const time = progress * frequency * Math.PI * 2;
-            const noiseX = Math.sin(time) * 0.6 + Math.sin(time * 1.7) * 0.3 + Math.sin(time * 2.3) * 0.1;
-            const noiseY = Math.cos(time * 1.1) * 0.5 + Math.cos(time * 1.9) * 0.3 + Math.cos(time * 2.7) * 0.2;
+            const noiseX =
+                Math.sin(time) * 0.6 + Math.sin(time * 1.7) * 0.3 + Math.sin(time * 2.3) * 0.1;
+            const noiseY =
+                Math.cos(time * 1.1) * 0.5 +
+                Math.cos(time * 1.9) * 0.3 +
+                Math.cos(time * 2.7) * 0.2;
             const noiseZ = Math.sin(time * 0.9 + 1) * 0.4 + Math.sin(time * 1.5 + 2) * 0.4;
 
             const xOffset = noiseX * amplitude * strength * envelope;
@@ -105,8 +109,8 @@ export default {
                 position: [xOffset, yOffset, zOffset],
                 rotation: [rotX, 0, rotZ],
                 scale,
-                glowIntensity: 1.0 + Math.abs(noiseX) * 0.1 * envelope
+                glowIntensity: 1.0 + Math.abs(noiseX) * 0.1 * envelope,
             };
-        }
-    }
+        },
+    },
 };

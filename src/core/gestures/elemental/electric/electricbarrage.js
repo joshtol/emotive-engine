@@ -45,7 +45,7 @@ const ELECTRICBARRAGE_CONFIG = {
             easing: 'easeIn',
             startScale: 1.0,
             endScale: 0.6,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: { type: 'ring', count: 5 },
         count: 5,
@@ -61,22 +61,24 @@ const ELECTRICBARRAGE_CONFIG = {
             flicker: { intensity: 0.4, rate: 16, pattern: 'random' },
             grain: { type: 3, strength: 0.12, scale: 0.3, speed: 2.0, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from barrage
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.7,
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.25,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.7,
+                },
+            ],
             flash: {
                 events: [
-                    { at: 0.10, intensity: 1.5 },
-                    { at: 0.30, intensity: 2.5 },
-                    { at: 0.50, intensity: 3.0 }
+                    { at: 0.1, intensity: 1.5 },
+                    { at: 0.3, intensity: 2.5 },
+                    { at: 0.5, intensity: 3.0 },
                 ],
-                decay: 0.02
+                decay: 0.02,
             },
             pulse: { amplitude: 0.12, frequency: 6, easing: 'easeInOut' },
             emissive: { min: 1.2, max: 3.0, frequency: 8, pattern: 'sine' },
@@ -85,13 +87,13 @@ const ELECTRICBARRAGE_CONFIG = {
                 { axis: 'y', rotations: -3, phase: 40 },
                 { axis: 'z', rotations: 2.5, phase: 100 },
                 { axis: 'x', rotations: -2, phase: 180 },
-                { axis: 'y', rotations: 3, phase: 250 }
+                { axis: 'y', rotations: 3, phase: 250 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'additive',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     jitterFrequency: 10,
@@ -104,7 +106,7 @@ const ELECTRICBARRAGE_CONFIG = {
     scaleVibration: 0.015,
     scaleFrequency: 4,
     scaleGrowth: 0.02,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildElectricEffectGesture(ELECTRICBARRAGE_CONFIG);

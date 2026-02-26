@@ -51,19 +51,11 @@ function getElectricColor(charge, tint) {
     } else if (charge < 0.7) {
         // Medium - bright cyan
         const t = (charge - 0.3) / 0.4;
-        color.setRGB(
-            lerp(0.6, 0.3, t),
-            lerp(0.8, 1.0, t),
-            1.0
-        );
+        color.setRGB(lerp(0.6, 0.3, t), lerp(0.8, 1.0, t), 1.0);
     } else {
         // High charge - white-blue intense
         const t = (charge - 0.7) / 0.3;
-        color.setRGB(
-            lerp(0.3, 0.9, t),
-            1.0,
-            1.0
-        );
+        color.setRGB(lerp(0.3, 0.9, t), 1.0, 1.0);
     }
 
     return color;
@@ -79,11 +71,7 @@ function getElectricColor(charge, tint) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createElectricMaterial(options = {}) {
-    const {
-        charge = 0.5,
-        color = null,
-        opacity = 0.9
-    } = options;
+    const { charge = 0.5, color = null, opacity = 0.9 } = options;
 
     // Derive properties from charge
     const electricColor = getElectricColor(charge, color);
@@ -103,10 +91,10 @@ export function createElectricMaterial(options = {}) {
             uFlickerRate: { value: flickerRate },
             uOpacity: { value: opacity },
             uTime: { value: 0 },
-            uCharge: { value: charge }
+            uCharge: { value: charge },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vWorldPosition;
             varying vec3 vNormal;
@@ -131,7 +119,7 @@ export function createElectricMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform vec3 uColor;
             uniform float uIntensity;
             uniform float uArcFrequency;
@@ -408,7 +396,7 @@ export function createElectricMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     // Store parameters for external access
@@ -440,14 +428,14 @@ export function updateElectricMaterial(material, deltaTime) {
  */
 export function getElectricPhysics(charge = 0.5) {
     return {
-        gravity: 0.0,                                // Electric floats/hovers
-        drag: lerp(0.3, 0.02, charge),              // High charge = less drag
+        gravity: 0.0, // Electric floats/hovers
+        drag: lerp(0.3, 0.02, charge), // High charge = less drag
         bounce: 0.0,
-        chainToNearby: charge > 0.3,                 // Arcs jump between shards
+        chainToNearby: charge > 0.3, // Arcs jump between shards
         chainRadius: lerp(0.5, 2.0, charge),
-        lifetime: lerp(0.3, 0.8, charge),           // Quick flashes
+        lifetime: lerp(0.3, 0.8, charge), // Quick flashes
         flickerOnMove: true,
-        attractToMetal: charge > 0.5                 // High charge attracted to metallic objects
+        attractToMetal: charge > 0.5, // High charge attracted to metallic objects
     };
 }
 
@@ -466,7 +454,7 @@ export function getElectricCrackStyle(charge = 0.5) {
         emissive: lerp(1.0, 6.0, charge),
         animated: true,
         pattern: 'branching',
-        arcBetweenCracks: charge > 0.5   // Lightning jumps between crack lines
+        arcBetweenCracks: charge > 0.5, // Lightning jumps between crack lines
     };
 }
 
@@ -474,5 +462,5 @@ export default {
     createElectricMaterial,
     updateElectricMaterial,
     getElectricPhysics,
-    getElectricCrackStyle
+    getElectricCrackStyle,
 };

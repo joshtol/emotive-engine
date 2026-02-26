@@ -36,10 +36,10 @@ const SHATTER_VARIANTS = {
         duration: 2500,
         beats: 4,
         intensity: 1.0,
-        impactPoint: [0, 0, 0.4],     // Front-center
-        impactDirection: [0, 0, -1],   // Toward camera
+        impactPoint: [0, 0, 0.4], // Front-center
+        impactDirection: [0, 0, -1], // Toward camera
         reassemble: false,
-        revealSoul: false              // No soul reveal for standard shatter
+        revealSoul: false, // No soul reveal for standard shatter
     },
     explosive: {
         name: 'shatterExplosive',
@@ -48,28 +48,28 @@ const SHATTER_VARIANTS = {
         duration: 2000,
         beats: 3,
         intensity: 1.5,
-        impactPoint: [0, 0, 0],        // Center
-        impactDirection: [0, 1, 0],    // Upward explosion
+        impactPoint: [0, 0, 0], // Center
+        impactDirection: [0, 1, 0], // Upward explosion
         reassemble: false,
-        revealSoul: true               // Soul reveal for explosive
+        revealSoul: true, // Soul reveal for explosive
     },
     crumble: {
         name: 'shatterCrumble',
         emoji: '🪨',
         description: 'Slow crumbling collapse',
-        duration: 8000,               // Long duration for dramatic effect
-        beats: 16,                    // More beats for longer duration
-        intensity: 0.15,              // Very low intensity
-        impactPoint: [0, -0.4, 0],    // Bottom
-        impactDirection: [0, -1, 0],  // Downward
+        duration: 8000, // Long duration for dramatic effect
+        beats: 16, // More beats for longer duration
+        intensity: 0.15, // Very low intensity
+        impactPoint: [0, -0.4, 0], // Bottom
+        impactDirection: [0, -1, 0], // Downward
         reassemble: false,
-        revealSoul: true,             // Soul reveal for crumble
+        revealSoul: true, // Soul reveal for crumble
         // Crumble-specific physics - ultra slow motion
-        gravity: -0.8,                // Extremely slow gravity (normal is -9.8)
-        explosionForce: 0.1,          // Almost no explosion - gentle fall apart
-        rotationForce: 0.5,           // Very slow tumble
+        gravity: -0.8, // Extremely slow gravity (normal is -9.8)
+        explosionForce: 0.1, // Almost no explosion - gentle fall apart
+        rotationForce: 0.5, // Very slow tumble
         // Trigger shatter immediately (no build-up phase)
-        shatterTriggerAt: 0.0         // Shatter at 0% instead of default 10%
+        shatterTriggerAt: 0.0, // Shatter at 0% instead of default 10%
     },
     // Shatter then reassemble (dramatic reveal then reform)
     reform: {
@@ -82,9 +82,9 @@ const SHATTER_VARIANTS = {
         impactPoint: [0, 0, 0.4],
         impactDirection: [0, 0, -1],
         reassemble: true,
-        reassembleAt: 0.5,             // Start reassembly at 50%
-        reassembleDuration: 1500,      // ms for reassembly
-        revealSoul: true               // Soul reveal for reform
+        reassembleAt: 0.5, // Start reassembly at 50%
+        reassembleDuration: 1500, // ms for reassembly
+        revealSoul: true, // Soul reveal for reform
     },
     // Punch from a specific direction (uses oof deformation before shatter)
     punchLeft: {
@@ -94,12 +94,12 @@ const SHATTER_VARIANTS = {
         duration: 1500,
         beats: 2,
         intensity: 1.2,
-        impactPoint: [-0.4, 0, 0],     // Dent on left side (negative X) - hit from left
-        impactDirection: [1, 0, 0],    // Shards fly right (positive X) - away from punch
+        impactPoint: [-0.4, 0, 0], // Dent on left side (negative X) - hit from left
+        impactDirection: [1, 0, 0], // Shards fly right (positive X) - away from punch
         reassemble: false,
         useDeformation: true,
         direction: 'left',
-        revealSoul: false              // No soul reveal for punch
+        revealSoul: false, // No soul reveal for punch
     },
     punchRight: {
         name: 'shatterPunchRight',
@@ -108,12 +108,12 @@ const SHATTER_VARIANTS = {
         duration: 1500,
         beats: 2,
         intensity: 1.2,
-        impactPoint: [0.4, 0, 0],      // Dent on right side (positive X) - hit from right
-        impactDirection: [-1, 0, 0],   // Shards fly left (negative X) - away from punch
+        impactPoint: [0.4, 0, 0], // Dent on right side (positive X) - hit from right
+        impactDirection: [-1, 0, 0], // Shards fly left (negative X) - away from punch
         reassemble: false,
         useDeformation: true,
         direction: 'right',
-        revealSoul: false              // No soul reveal for punch
+        revealSoul: false, // No soul reveal for punch
     },
     punchFront: {
         name: 'shatterPunchFront',
@@ -122,12 +122,12 @@ const SHATTER_VARIANTS = {
         duration: 1500,
         beats: 2,
         intensity: 1.2,
-        impactPoint: [0, 0, 0.4],      // Front
-        impactDirection: [0, 0, -1],   // Force goes back
+        impactPoint: [0, 0, 0.4], // Front
+        impactDirection: [0, 0, -1], // Force goes back
         reassemble: false,
         useDeformation: true,
         direction: 'front',
-        revealSoul: false              // No soul reveal for punch
+        revealSoul: false, // No soul reveal for punch
     },
     // Suspend mode: explode, freeze mid-air, then reassemble
     suspend: {
@@ -136,41 +136,41 @@ const SHATTER_VARIANTS = {
         description: 'Shatter, freeze mid-air, then reassemble',
         duration: 4000,
         beats: 8,
-        intensity: 0.8,                // Slightly reduced intensity
-        impactPoint: [0, 0, 0],        // Center explosion
-        impactDirection: [0, 1, 0],    // Upward bias
+        intensity: 0.8, // Slightly reduced intensity
+        impactPoint: [0, 0, 0], // Center explosion
+        impactDirection: [0, 1, 0], // Upward bias
         reassemble: true,
-        reassembleAt: 0.70,            // Start reassembly at 70%
-        reassembleDuration: 1200,      // ms for reassembly (slightly shorter)
-        revealSoul: true,              // Soul reveal during suspend
+        reassembleAt: 0.7, // Start reassembly at 70%
+        reassembleDuration: 1200, // ms for reassembly (slightly shorter)
+        revealSoul: true, // Soul reveal during suspend
         // Suspend-specific settings
         isSuspendMode: true,
-        suspendAt: 0.12,               // Start decelerating IMMEDIATELY after shatter (shatter is at 10%)
-        suspendDuration: 0.20,         // Quick deceleration (12-32%)
+        suspendAt: 0.12, // Start decelerating IMMEDIATELY after shatter (shatter is at 10%)
+        suspendDuration: 0.2, // Quick deceleration (12-32%)
         // Lower initial forces so shards don't go too far before freezing
-        gravity: -2.0,                 // Much lower gravity
-        explosionForce: 1.2            // Reduced explosion force
+        gravity: -2.0, // Much lower gravity
+        explosionForce: 1.2, // Reduced explosion force
     },
     // Freeze mode: explode, freeze mid-air indefinitely (manual reassembly via API)
     freeze: {
         name: 'shatterFreeze',
         emoji: '❄️',
         description: 'Shatter and freeze mid-air (call triggerReassembly to reform)',
-        duration: 2000,                // Short duration - just enough for explosion + freeze
+        duration: 2000, // Short duration - just enough for explosion + freeze
         beats: 4,
         intensity: 0.8,
-        impactPoint: [0, 0, 0],        // Center explosion
-        impactDirection: [0, 1, 0],    // Upward bias
-        reassemble: false,             // NO auto-reassembly - must be triggered via API
-        revealSoul: true,              // Soul reveal during freeze
+        impactPoint: [0, 0, 0], // Center explosion
+        impactDirection: [0, 1, 0], // Upward bias
+        reassemble: false, // NO auto-reassembly - must be triggered via API
+        revealSoul: true, // Soul reveal during freeze
         // Freeze-specific settings
-        isFreezeMode: true,            // New flag for freeze behavior
-        isSuspendMode: true,           // Use suspend physics to freeze shards
-        suspendAt: 0.12,               // Start decelerating immediately
-        suspendDuration: 0.20,         // Quick deceleration
+        isFreezeMode: true, // New flag for freeze behavior
+        isSuspendMode: true, // Use suspend physics to freeze shards
+        suspendAt: 0.12, // Start decelerating immediately
+        suspendDuration: 0.2, // Quick deceleration
         // Lower initial forces
         gravity: -2.0,
-        explosionForce: 1.2
+        explosionForce: 1.2,
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ const SHATTER_VARIANTS = {
         dualModeDuration: 1800,
         // Normal shatter physics (no freeze)
         gravity: -3.0,
-        explosionForce: 1.2
+        explosionForce: 1.2,
     },
 
     // Gravity: shards fall and bounce on invisible floor
@@ -220,10 +220,10 @@ const SHATTER_VARIANTS = {
         isDualMode: true,
         dualModeType: 'gravity',
         dualModeDuration: 3000,
-        floorY: -0.35,              // Floor just below mascot center
+        floorY: -0.35, // Floor just below mascot center
         // Minimal explosion - shards mostly just fall
         gravity: -2.0,
-        explosionForce: 0.4
+        explosionForce: 0.4,
     },
 
     // Orbit: shards transition into orbiting paths around soul, then reassemble
@@ -238,19 +238,19 @@ const SHATTER_VARIANTS = {
         intensity: 0.6,
         impactPoint: [0, 0, 0],
         impactDirection: [0, 1, 0],
-        reassemble: true,           // Reassemble after orbit
-        reassembleAt: 0.75,         // Start reassembly at 75%
-        reassembleDuration: 1200,   // 1.2s reassembly
+        reassemble: true, // Reassemble after orbit
+        reassembleAt: 0.75, // Start reassembly at 75%
+        reassembleDuration: 1200, // 1.2s reassembly
         revealSoul: true,
         // Dual-mode settings
         isDualMode: true,
         dualModeType: 'orbit',
-        dualModeDuration: 3500,     // Orbit duration before reassembly kicks in
+        dualModeDuration: 3500, // Orbit duration before reassembly kicks in
         orbitSpeed: 1.5,
         radiusMultiplier: 1.2,
         // Normal shatter physics
         gravity: -3.0,
-        explosionForce: 1.0
+        explosionForce: 1.0,
     },
 };
 
@@ -272,7 +272,7 @@ export function createShatterGesture(variant = 'default') {
             duration: config.duration,
             musicalDuration: { musical: true, beats: config.beats },
             intensity: config.intensity,
-            variant
+            variant,
         },
 
         rhythm: {
@@ -282,8 +282,8 @@ export function createShatterGesture(variant = 'default') {
             timingSync: 'onBeat',
             accentResponse: {
                 enabled: true,
-                multiplier: 1.3
-            }
+                multiplier: 1.3,
+            },
         },
 
         '3d': {
@@ -323,42 +323,44 @@ export function createShatterGesture(variant = 'default') {
                     let recoil;
                     if (progress < 0.3) {
                         const t = progress / 0.3;
-                        recoil = t * (2 - t);  // Fast out
+                        recoil = t * (2 - t); // Fast out
                     } else {
-                        recoil = 0;  // Shattered, no more recoil
+                        recoil = 0; // Shattered, no more recoil
                     }
 
                     // Dent strength (builds up, then mesh shatters)
                     let dentStrength = 0;
                     if (progress < 0.25) {
-                        dentStrength = progress / 0.25;  // Ramp up
+                        dentStrength = progress / 0.25; // Ramp up
                     } else if (progress < 0.3) {
-                        dentStrength = 1.0;  // Hold at max
+                        dentStrength = 1.0; // Hold at max
                     }
                     // After 0.3, mesh is shattered - no deformation
 
                     const moveDist = 0.15 * intensity;
                     const tiltAngle = 0.25 * intensity;
 
-                    let posX = 0, posZ = 0;
+                    let posX = 0,
+                        posZ = 0;
                     const posY = 0;
-                    let rotX = 0, rotZ = 0;
+                    let rotX = 0,
+                        rotZ = 0;
 
                     switch (punchDir) {
-                    case 'left':
-                        // Punched from left = recoil to the RIGHT (positive X in camera space)
-                        posX = recoil * moveDist;
-                        rotZ = -recoil * tiltAngle;  // Tilt away from punch (top goes right)
-                        break;
-                    case 'right':
-                        // Punched from right = recoil to the LEFT (negative X in camera space)
-                        posX = -recoil * moveDist;
-                        rotZ = recoil * tiltAngle;   // Tilt away from punch (top goes left)
-                        break;
-                    case 'front':
-                        posZ = -recoil * moveDist;
-                        rotX = recoil * tiltAngle * 0.7;
-                        break;
+                        case 'left':
+                            // Punched from left = recoil to the RIGHT (positive X in camera space)
+                            posX = recoil * moveDist;
+                            rotZ = -recoil * tiltAngle; // Tilt away from punch (top goes right)
+                            break;
+                        case 'right':
+                            // Punched from right = recoil to the LEFT (negative X in camera space)
+                            posX = -recoil * moveDist;
+                            rotZ = recoil * tiltAngle; // Tilt away from punch (top goes left)
+                            break;
+                        case 'front':
+                            posZ = -recoil * moveDist;
+                            rotX = recoil * tiltAngle * 0.7;
+                            break;
                     }
 
                     if (recoil > 0) {
@@ -372,7 +374,7 @@ export function createShatterGesture(variant = 'default') {
                             enabled: true,
                             strength: dentStrength * intensity * 2.5,
                             impactPoint: variantConfig.impactPoint,
-                            falloffRadius: 0.5
+                            falloffRadius: 0.5,
                         };
                     }
 
@@ -393,7 +395,10 @@ export function createShatterGesture(variant = 'default') {
                 // ═══════════════════════════════════════════════════════════════
                 else {
                     // Custom trigger point (e.g., crumble triggers immediately at 0%)
-                    const triggerAt = variantConfig.shatterTriggerAt !== undefined ? variantConfig.shatterTriggerAt : 0.1;
+                    const triggerAt =
+                        variantConfig.shatterTriggerAt !== undefined
+                            ? variantConfig.shatterTriggerAt
+                            : 0.1;
                     const triggerEnd = triggerAt + 0.02;
 
                     // PHASE 1: BUILD-UP (0 to triggerAt)
@@ -430,14 +435,19 @@ export function createShatterGesture(variant = 'default') {
                     // ═══════════════════════════════════════════════════════════════
                     else {
                         // Check for reassembly trigger
-                        if (hasReassembly && progress >= reassembleAt && progress < reassembleAt + 0.02) {
+                        if (
+                            hasReassembly &&
+                            progress >= reassembleAt &&
+                            progress < reassembleAt + 0.02
+                        ) {
                             reassembleTrigger = true;
                         }
 
                         // Glow behavior differs for reform variant
                         if (hasReassembly && progress >= reassembleAt) {
                             // Build up glow during reassembly
-                            const reassemblyProgress = (progress - reassembleAt) / (1 - reassembleAt);
+                            const reassemblyProgress =
+                                (progress - reassembleAt) / (1 - reassembleAt);
                             const eased = reassemblyProgress * reassemblyProgress;
                             glowIntensity = 1.0 + eased * 0.8;
                             glowBoost = eased * 0.5;
@@ -448,7 +458,9 @@ export function createShatterGesture(variant = 'default') {
                                 glowBoost = 0.8;
                             }
                         } else {
-                            const t = (progress - triggerEnd) / (hasReassembly ? (reassembleAt - triggerEnd) : (1 - triggerEnd));
+                            const t =
+                                (progress - triggerEnd) /
+                                (hasReassembly ? reassembleAt - triggerEnd : 1 - triggerEnd);
                             const clampedT = Math.min(1, t);
                             // Ease out
                             const eased = 1 - (1 - clampedT) * (1 - clampedT);
@@ -484,7 +496,7 @@ export function createShatterGesture(variant = 'default') {
                         // Freeze mode: explode, freeze indefinitely (manual reassembly via API)
                         isFreezeMode: variantConfig.isFreezeMode || false,
                         // Physics overrides (for crumble, etc.)
-                        gravity: variantConfig.gravity,           // undefined = use default
+                        gravity: variantConfig.gravity, // undefined = use default
                         explosionForce: variantConfig.explosionForce,
                         rotationForce: variantConfig.rotationForce,
                         // Gesture duration for suspend timing calculation
@@ -504,9 +516,9 @@ export function createShatterGesture(variant = 'default') {
                             radiusMultiplier: variantConfig.radiusMultiplier,
                             // Reassembly settings for dual-mode gestures (like orbit)
                             reassemble: variantConfig.reassemble,
-                            reassembleDuration: variantConfig.reassembleDuration
-                        }
-                    }
+                            reassembleDuration: variantConfig.reassembleDuration,
+                        },
+                    },
                 };
 
                 // Add deformation for punch variants
@@ -523,8 +535,8 @@ export function createShatterGesture(variant = 'default') {
                 }
 
                 return result;
-            }
-        }
+            },
+        },
     };
 }
 

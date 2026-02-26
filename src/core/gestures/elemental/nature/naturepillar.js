@@ -25,44 +25,46 @@ const SHARED_ANIMATION = {
     enter: {
         type: 'scale',
         duration: 0.15,
-        easing: 'easeOutBack'
+        easing: 'easeOutBack',
     },
     exit: {
         type: 'scale',
         duration: 0.2,
-        easing: 'easeInCubic'
+        easing: 'easeInCubic',
     },
     procedural: {
         scaleSmoothing: 0.08,
-        geometryStability: true
+        geometryStability: true,
     },
     pulse: {
         amplitude: 0.04,
         frequency: 2,
         easing: 'easeInOut',
-        sync: 'global'
+        sync: 'global',
     },
     emissive: {
         min: 0.7,
         max: 1.4,
         frequency: 2,
-        pattern: 'sine'
+        pattern: 'sine',
     },
     grain: {
         type: 3,
         strength: 0.03,
         scale: 0.3,
         speed: 0.35,
-        blend: 'multiply'
+        blend: 'multiply',
     },
-    atmospherics: [{
-        preset: 'falling-leaves',
-        targets: null,
-        anchor: 'around',
-        intensity: 0.3,
-        sizeScale: 0.8,
-        progressCurve: 'sustain',
-    }],
+    atmospherics: [
+        {
+            preset: 'falling-leaves',
+            targets: null,
+            anchor: 'around',
+            intensity: 0.3,
+            sizeScale: 0.8,
+            progressCurve: 'sustain',
+        },
+    ],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'normal',
@@ -73,11 +75,11 @@ const SHARED_ANIMATION = {
                 type: 1,
                 arcWidth: 0.85,
                 arcSpeed: 1.5,
-                arcCount: 2
+                arcCount: 2,
             },
-            orientationOverride: 'flat'
-        }
-    }
+            orientationOverride: 'flat',
+        },
+    },
 };
 
 const NATUREPILLAR_CONFIG = {
@@ -109,12 +111,12 @@ const NATUREPILLAR_CONFIG = {
                 endDiameter: 2.0,
                 diameterUnit: 'mascot',
                 orientation: 'flat',
-                startOffset: 0
+                startOffset: 0,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 2.2,
@@ -130,13 +132,13 @@ const NATUREPILLAR_CONFIG = {
                     travel: 'angular',
                     travelSpeed: 1.2,
                     strengthCurve: 'fadeIn',
-                    fadeInDuration: 0.3
+                    fadeInDuration: 0.3,
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.3, phase: 0 },
-                    { axis: 'z', rotations: -0.35, phase: 180 }
-                ]
-            }
+                    { axis: 'z', rotations: -0.35, phase: 180 },
+                ],
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Middle 2 rings — VORONOI + radial travel
@@ -154,12 +156,12 @@ const NATUREPILLAR_CONFIG = {
                 endDiameter: 2.0,
                 diameterUnit: 'mascot',
                 orientation: 'flat',
-                startOffset: 0.5
+                startOffset: 0.5,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 2.2,
@@ -176,13 +178,13 @@ const NATUREPILLAR_CONFIG = {
                     travelSpeed: 1.5,
                     strengthCurve: 'bell',
                     bellPeakAt: 0.5,
-                    bellWidth: 0.5
+                    bellWidth: 0.5,
                 },
                 rotate: [
                     { axis: 'z', rotations: -0.4, phase: 60 },
-                    { axis: 'z', rotations: 0.45, phase: 240 }
-                ]
-            }
+                    { axis: 'z', rotations: 0.45, phase: 240 },
+                ],
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 3: Top 2 rings — CRACKS + oscillate travel (narrow crown)
@@ -200,12 +202,12 @@ const NATUREPILLAR_CONFIG = {
                 endDiameter: 2.0,
                 diameterUnit: 'mascot',
                 orientation: 'flat',
-                startOffset: 1.0
+                startOffset: 1.0,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 2.2,
@@ -221,14 +223,14 @@ const NATUREPILLAR_CONFIG = {
                     travel: 'oscillate',
                     travelSpeed: 2.0,
                     strengthCurve: 'fadeOut',
-                    fadeOutDuration: 0.4
+                    fadeOutDuration: 0.4,
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.5, phase: 90 },
-                    { axis: 'z', rotations: -0.4, phase: 270 }
-                ]
-            }
-        }
+                    { axis: 'z', rotations: -0.4, phase: 270 },
+                ],
+            },
+        },
     ],
 
     glowColor: [0.25, 0.7, 0.2],
@@ -240,7 +242,7 @@ const NATUREPILLAR_CONFIG = {
     scaleGrow: 0.03,
     tremor: 0.004,
     tremorFrequency: 3,
-    decayRate: 0.18
+    decayRate: 0.18,
 };
 
 export default buildNatureEffectGesture(NATUREPILLAR_CONFIG);

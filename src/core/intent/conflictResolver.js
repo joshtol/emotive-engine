@@ -42,16 +42,16 @@ function hasContextFor(tokens, tokenIndex, category) {
  */
 function hasCategory(parsed, category) {
     switch (category) {
-    case 'emotion':
-        return parsed.emotion !== null;
-    case 'gesture':
-        return parsed.gestures && parsed.gestures.length > 0;
-    case 'shape':
-        return parsed.shape !== null;
-    case 'undertone':
-        return parsed.undertone !== null;
-    default:
-        return false;
+        case 'emotion':
+            return parsed.emotion !== null;
+        case 'gesture':
+            return parsed.gestures && parsed.gestures.length > 0;
+        case 'shape':
+            return parsed.shape !== null;
+        case 'undertone':
+            return parsed.undertone !== null;
+        default:
+            return false;
     }
 }
 
@@ -88,65 +88,65 @@ export function resolve(token, allTokens, tokenIndex, currentParsed) {
 
     // Apply the specific rule
     switch (ruleName) {
-    case 'standalone_is_emotion': {
-        // If we already have an emotion, this becomes undertone/gesture
-        if (hasCategory(currentParsed, 'emotion')) {
-            // Find first non-emotion candidate
-            const nonEmotion = candidates.find(c => c.category !== 'emotion');
-            if (nonEmotion) return nonEmotion;
-        }
-        // Check for emotion context words
-        if (hasContextFor(allTokens, tokenIndex, 'emotion')) {
+        case 'standalone_is_emotion': {
+            // If we already have an emotion, this becomes undertone/gesture
+            if (hasCategory(currentParsed, 'emotion')) {
+                // Find first non-emotion candidate
+                const nonEmotion = candidates.find(c => c.category !== 'emotion');
+                if (nonEmotion) return nonEmotion;
+            }
+            // Check for emotion context words
+            if (hasContextFor(allTokens, tokenIndex, 'emotion')) {
+                return candidates.find(c => c.category === 'emotion') || candidates[0];
+            }
+            // Default to emotion
             return candidates.find(c => c.category === 'emotion') || candidates[0];
         }
-        // Default to emotion
-        return candidates.find(c => c.category === 'emotion') || candidates[0];
-    }
 
-    case 'standalone_is_gesture': {
-        // If we already have this gesture type, maybe it's something else
-        if (hasCategory(currentParsed, 'gesture')) {
-            const nonGesture = candidates.find(c => c.category !== 'gesture');
-            if (nonGesture) return nonGesture;
-        }
-        // Check for gesture context words
-        if (hasContextFor(allTokens, tokenIndex, 'gesture')) {
+        case 'standalone_is_gesture': {
+            // If we already have this gesture type, maybe it's something else
+            if (hasCategory(currentParsed, 'gesture')) {
+                const nonGesture = candidates.find(c => c.category !== 'gesture');
+                if (nonGesture) return nonGesture;
+            }
+            // Check for gesture context words
+            if (hasContextFor(allTokens, tokenIndex, 'gesture')) {
+                return candidates.find(c => c.category === 'gesture') || candidates[0];
+            }
+            // Default to gesture
             return candidates.find(c => c.category === 'gesture') || candidates[0];
         }
-        // Default to gesture
-        return candidates.find(c => c.category === 'gesture') || candidates[0];
-    }
 
-    case 'prefer_undertone': {
-        // If emotion context is explicit, use emotion
-        if (hasContextFor(allTokens, tokenIndex, 'emotion')) {
-            return candidates.find(c => c.category === 'emotion') || candidates[0];
-        }
-        // Default to undertone
-        return candidates.find(c => c.category === 'undertone') || candidates[0];
-    }
-
-    case 'always_gesture':
-        return candidates.find(c => c.category === 'gesture') || candidates[0];
-
-    case 'always_emotion':
-        return candidates.find(c => c.category === 'emotion') || candidates[0];
-
-    case 'context_dependent': {
-        // Check each category's context
-        for (const category of ['emotion', 'gesture', 'shape', 'undertone']) {
-            if (hasContextFor(allTokens, tokenIndex, category)) {
-                const match = candidates.find(c => c.category === category);
-                if (match) return match;
+        case 'prefer_undertone': {
+            // If emotion context is explicit, use emotion
+            if (hasContextFor(allTokens, tokenIndex, 'emotion')) {
+                return candidates.find(c => c.category === 'emotion') || candidates[0];
             }
+            // Default to undertone
+            return candidates.find(c => c.category === 'undertone') || candidates[0];
         }
-        // Fall back to highest priority
-        return candidates.sort((a, b) => a.priority - b.priority)[0];
-    }
 
-    default:
-        // Unknown rule, use priority
-        return candidates.sort((a, b) => a.priority - b.priority)[0];
+        case 'always_gesture':
+            return candidates.find(c => c.category === 'gesture') || candidates[0];
+
+        case 'always_emotion':
+            return candidates.find(c => c.category === 'emotion') || candidates[0];
+
+        case 'context_dependent': {
+            // Check each category's context
+            for (const category of ['emotion', 'gesture', 'shape', 'undertone']) {
+                if (hasContextFor(allTokens, tokenIndex, category)) {
+                    const match = candidates.find(c => c.category === category);
+                    if (match) return match;
+                }
+            }
+            // Fall back to highest priority
+            return candidates.sort((a, b) => a.priority - b.priority)[0];
+        }
+
+        default:
+            // Unknown rule, use priority
+            return candidates.sort((a, b) => a.priority - b.priority)[0];
     }
 }
 

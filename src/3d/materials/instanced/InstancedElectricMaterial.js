@@ -33,7 +33,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -55,7 +55,7 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -70,7 +70,7 @@ const ELECTRIC_DEFAULTS = {
     flickerAmount: 0.3,
     sparkDensity: 0.5,
     fadeInDuration: 0.15,
-    fadeOutDuration: 0.3
+    fadeOutDuration: 0.3,
 };
 
 function lerp(a, b, t) {
@@ -90,7 +90,7 @@ function deriveElectricParameters(charge, overrides = {}) {
         intensity: overrides.intensity ?? lerp(1.0, 4.0, charge),
         flickerSpeed: overrides.flickerSpeed ?? lerp(4.0, 16.0, charge),
         flickerAmount: overrides.flickerAmount ?? lerp(0.1, 0.4, charge),
-        sparkDensity: overrides.sparkDensity ?? lerp(0.2, 0.8, charge)
+        sparkDensity: overrides.sparkDensity ?? lerp(0.2, 0.8, charge),
     };
 }
 
@@ -98,7 +98,7 @@ function deriveElectricParameters(charge, overrides = {}) {
 // NOISE GLSL
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 // 2D hash for Voronoi cell positions — sin-free
 vec2 hash2(vec2 p) {
     p = fract(p * vec2(0.1031, 0.1030));
@@ -142,7 +142,7 @@ float snoise(vec3 p) {
 // ELECTRIC SHADER GLSL
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const ELECTRIC_GLSL = /* glsl */`
+const ELECTRIC_GLSL = /* glsl */ `
 // Electric color from charge level: pale blue → cyan → white-blue
 vec3 getElectricColor(float charge) {
     vec3 low = vec3(0.5, 0.7, 1.0);      // pale blue
@@ -252,7 +252,7 @@ float voronoiEdge3D(vec3 p, float time, float jitter) {
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -396,7 +396,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uCharge;
 uniform float uIntensity;
@@ -568,12 +568,15 @@ export function createInstancedElectricMaterial(options = {}) {
         flickerAmount = null,
         sparkDensity = null,
         fadeInDuration = ELECTRIC_DEFAULTS.fadeInDuration,
-        fadeOutDuration = ELECTRIC_DEFAULTS.fadeOutDuration
+        fadeOutDuration = ELECTRIC_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive charge-dependent parameters
     const derived = deriveElectricParameters(charge, {
-        intensity, flickerSpeed, flickerAmount, sparkDensity
+        intensity,
+        flickerSpeed,
+        flickerAmount,
+        sparkDensity,
     });
 
     const material = new THREE.ShaderMaterial({
@@ -595,14 +598,14 @@ export function createInstancedElectricMaterial(options = {}) {
             uFlashIntensity: { value: 0 },
             uRelayCount: { value: 3 },
             uRelayArcWidth: { value: 3.14159 },
-            uRelayFloor: { value: 0.0 }
+            uRelayFloor: { value: 0.0 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.FrontSide
+        side: THREE.FrontSide,
     });
 
     material.userData.charge = charge;
@@ -631,7 +634,7 @@ export function updateInstancedElectricMaterial(material, time, gestureProgress 
     const flashConfig = material?.userData?.flashConfig;
     if (flashConfig && material.uniforms?.uFlashIntensity) {
         let maxFlash = 0;
-        const {events} = flashConfig;
+        const { events } = flashConfig;
         const decay = flashConfig.decay || 0.03;
         for (let i = 0; i < events.length; i++) {
             if (gestureProgress >= events[i].at) {
@@ -753,7 +756,22 @@ export function resetRelay(material) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
+export {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    resetCutout,
+    setGrain,
+    resetGrain,
+    resetAnimation,
+};
 
 export default {
     createInstancedElectricMaterial,
@@ -775,5 +793,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

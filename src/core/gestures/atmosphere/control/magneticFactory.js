@@ -44,7 +44,7 @@ export function createMagneticGesture(direction) {
         up: '⬆️',
         down: '⬇️',
         attract: '🧲',
-        repel: '💥'
+        repel: '💥',
     };
 
     const descriptions = {
@@ -55,7 +55,7 @@ export function createMagneticGesture(direction) {
         up: 'Magnetic pull upward',
         down: 'Magnetic pull downward',
         attract: 'Magnetic attraction to center',
-        repel: 'Magnetic repulsion from center'
+        repel: 'Magnetic repulsion from center',
     };
 
     return {
@@ -74,8 +74,8 @@ export function createMagneticGesture(direction) {
             particleMotion: {
                 type: 'magnetic',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -86,8 +86,8 @@ export function createMagneticGesture(direction) {
 
             strengthSync: {
                 onBeat: 1.5,
-                offBeat: 0.7
-            }
+                offBeat: 0.7,
+            },
         },
 
         // 2D particle effects (inherited from base magnetic)
@@ -98,7 +98,7 @@ export function createMagneticGesture(direction) {
                 originalX: particle.x,
                 originalY: particle.y,
                 originalOpacity: particle.opacity ?? 1,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -125,40 +125,42 @@ export function createMagneticGesture(direction) {
             // Direction vectors for 2D
             let targetX, targetY;
             switch (dir) {
-            case 'left':
-                targetX = data.originalX - 100;
-                targetY = data.originalY;
-                break;
-            case 'right':
-                targetX = data.originalX + 100;
-                targetY = data.originalY;
-                break;
-            case 'up':
-                targetX = data.originalX;
-                targetY = data.originalY - 100;
-                break;
-            case 'down':
-                targetX = data.originalX;
-                targetY = data.originalY + 100;
-                break;
-            case 'repel': {
-                // Push away from center
-                const dx = data.originalX - centerX;
-                const dy = data.originalY - centerY;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                targetX = data.originalX + (dx / dist) * 100;
-                targetY = data.originalY + (dy / dist) * 100;
-                break;
-            }
-            default:
-                // attract, forward, back - pull to center
-                targetX = centerX;
-                targetY = centerY;
+                case 'left':
+                    targetX = data.originalX - 100;
+                    targetY = data.originalY;
+                    break;
+                case 'right':
+                    targetX = data.originalX + 100;
+                    targetY = data.originalY;
+                    break;
+                case 'up':
+                    targetX = data.originalX;
+                    targetY = data.originalY - 100;
+                    break;
+                case 'down':
+                    targetX = data.originalX;
+                    targetY = data.originalY + 100;
+                    break;
+                case 'repel': {
+                    // Push away from center
+                    const dx = data.originalX - centerX;
+                    const dy = data.originalY - centerY;
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    targetX = data.originalX + (dx / dist) * 100;
+                    targetY = data.originalY + (dy / dist) * 100;
+                    break;
+                }
+                default:
+                    // attract, forward, back - pull to center
+                    targetX = centerX;
+                    targetY = centerY;
             }
 
             // Calculate movement
-            const moveX = (targetX - data.originalX) * effectStrength * pullStrength * strength * 0.5;
-            const moveY = (targetY - data.originalY) * effectStrength * pullStrength * strength * 0.5;
+            const moveX =
+                (targetX - data.originalX) * effectStrength * pullStrength * strength * 0.5;
+            const moveY =
+                (targetY - data.originalY) * effectStrength * pullStrength * strength * 0.5;
 
             particle.x = data.originalX + moveX;
             particle.y = data.originalY + moveY;
@@ -189,7 +191,9 @@ export function createMagneticGesture(direction) {
                     effectStrength = Math.min(1, progress * 2);
                 }
 
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
                 let scale = 1.0;
 
                 // Direction-specific movement
@@ -200,38 +204,38 @@ export function createMagneticGesture(direction) {
                 // Y: positive = up, negative = down
                 // Z: POSITIVE = toward camera, NEGATIVE = away from camera
                 switch (dir) {
-                case 'forward':
-                    // Forward = pull toward camera = positive Z
-                    posZ = moveAmount;
-                    scale = 1 + effectStrength * 0.1 * strength;
-                    break;
-                case 'back':
-                    // Back = push away from camera = negative Z
-                    posZ = -moveAmount;
-                    scale = 1 - effectStrength * 0.08 * strength;
-                    break;
-                case 'left':
-                    posX = -moveAmount;
-                    break;
-                case 'right':
-                    posX = moveAmount;
-                    break;
-                case 'up':
-                    posY = moveAmount;
-                    break;
-                case 'down':
-                    posY = -moveAmount;
-                    break;
-                case 'attract':
-                    // Classic attract - pull toward camera, contract
-                    posZ = moveAmount;
-                    scale = 1 - effectStrength * 0.1 * strength;
-                    break;
-                case 'repel':
-                    // Classic repel - push away, expand
-                    posZ = -moveAmount;
-                    scale = 1 + effectStrength * 0.1 * strength;
-                    break;
+                    case 'forward':
+                        // Forward = pull toward camera = positive Z
+                        posZ = moveAmount;
+                        scale = 1 + effectStrength * 0.1 * strength;
+                        break;
+                    case 'back':
+                        // Back = push away from camera = negative Z
+                        posZ = -moveAmount;
+                        scale = 1 - effectStrength * 0.08 * strength;
+                        break;
+                    case 'left':
+                        posX = -moveAmount;
+                        break;
+                    case 'right':
+                        posX = moveAmount;
+                        break;
+                    case 'up':
+                        posY = moveAmount;
+                        break;
+                    case 'down':
+                        posY = -moveAmount;
+                        break;
+                    case 'attract':
+                        // Classic attract - pull toward camera, contract
+                        posZ = moveAmount;
+                        scale = 1 - effectStrength * 0.1 * strength;
+                        break;
+                    case 'repel':
+                        // Classic repel - push away, expand
+                        posZ = -moveAmount;
+                        scale = 1 + effectStrength * 0.1 * strength;
+                        break;
                 }
 
                 // Glow intensifies with magnetic field
@@ -239,9 +243,10 @@ export function createMagneticGesture(direction) {
                 const glowBoost = effectStrength * 0.3;
 
                 // Vibration at peak magnetism
-                const vibration = effectStrength > 0.5
-                    ? Math.sin(progress * Math.PI * 20) * 0.01 * (effectStrength - 0.5) * 2
-                    : 0;
+                const vibration =
+                    effectStrength > 0.5
+                        ? Math.sin(progress * Math.PI * 20) * 0.01 * (effectStrength - 0.5) * 2
+                        : 0;
 
                 // Use camera-relative for ALL directions so magnetic works regardless of model rotation
                 return {
@@ -249,10 +254,10 @@ export function createMagneticGesture(direction) {
                     rotation: [0, 0, 0],
                     scale,
                     glowIntensity,
-                    glowBoost
+                    glowBoost,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

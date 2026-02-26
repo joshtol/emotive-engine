@@ -19,21 +19,18 @@ export {
     parseOrbitConfig,
     parseOrbitFormation,
     expandOrbitFormation,
-    calculateOrbitPosition
+    calculateOrbitPosition,
 } from './OrbitMode.js';
 
 // SurfaceMode - class and static utilities
-export {
-    SurfaceMode,
-    parseSurfaceConfig
-} from './SurfaceMode.js';
+export { SurfaceMode, parseSurfaceConfig } from './SurfaceMode.js';
 
 // AnchorMode - class and static utilities
 export {
     AnchorMode,
     parseAnchorConfig,
     calculateAnchorPosition,
-    getAnchorOrientation
+    getAnchorOrientation,
 } from './AnchorMode.js';
 
 // RadialBurstMode - class and static utilities
@@ -43,7 +40,7 @@ export {
     calculateRadialDirection,
     calculateRadialBurstPosition,
     calculateInitialState as calculateRadialBurstInitialState,
-    calculateUpdateState as calculateRadialBurstUpdateState
+    calculateUpdateState as calculateRadialBurstUpdateState,
 } from './RadialBurstMode.js';
 
 // AxisTravelMode - class and static utilities
@@ -54,7 +51,7 @@ export {
     parseAxisTravelConfig,
     expandFormation,
     calculateAxisTravelPosition,
-    normalizeOrientation  // Shared orientation value normalizer
+    normalizeOrientation, // Shared orientation value normalizer
 } from './AxisTravelMode.js';
 
 /**
@@ -69,9 +66,9 @@ import { RadialBurstMode } from './RadialBurstMode.js';
 
 export const SPAWN_MODES = {
     'axis-travel': AxisTravelMode,
-    'anchor': AnchorMode,
-    'orbit': OrbitMode,
-    'surface': SurfaceMode,
+    anchor: AnchorMode,
+    orbit: OrbitMode,
+    surface: SurfaceMode,
     'radial-burst': RadialBurstMode,
 };
 
@@ -101,5 +98,3 @@ export function createSpawnMode(type, spawner, spatialRef) {
 export function isNewSpawnMode(type) {
     return type in SPAWN_MODES;
 }
-
-

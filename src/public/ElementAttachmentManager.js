@@ -90,9 +90,10 @@ export class ElementAttachmentManager {
         }
 
         // Get the target element
-        const element = typeof elementOrSelector === 'string'
-            ? document.querySelector(elementOrSelector)
-            : elementOrSelector;
+        const element =
+            typeof elementOrSelector === 'string'
+                ? document.querySelector(elementOrSelector)
+                : elementOrSelector;
 
         if (!element) {
             console.error(`[EmotiveMascot] Element not found: ${elementOrSelector}`);
@@ -107,13 +108,16 @@ export class ElementAttachmentManager {
             animate: options.animate !== false,
             duration: options.duration || 1000,
             scale: options.scale || 1,
-            containParticles: options.containParticles !== false
+            containParticles: options.containParticles !== false,
         };
 
         // Set containment bounds and scale if requested
         const rect = element.getBoundingClientRect();
         if (this._attachOptions.containParticles) {
-            this._mascot.setContainment({ width: rect.width, height: rect.height }, this._attachOptions.scale);
+            this._mascot.setContainment(
+                { width: rect.width, height: rect.height },
+                this._attachOptions.scale
+            );
         } else if (this._attachOptions.scale !== 1) {
             this._mascot.setContainment(null, this._attachOptions.scale);
         }
@@ -174,7 +178,7 @@ export class ElementAttachmentManager {
 
         this._elementTrackingHandlers = {
             scroll: () => this._updatePosition(),
-            resize: () => this._updatePosition()
+            resize: () => this._updatePosition(),
         };
 
         window.addEventListener('scroll', this._elementTrackingHandlers.scroll, { passive: true });

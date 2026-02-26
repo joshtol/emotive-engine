@@ -35,7 +35,7 @@ export function createRecoilGesture(direction) {
     const RECOIL_DIRECTIONS = {
         ...DIRECTIONS,
         forward: { x: 0, y: 0, z: -1 },
-        back: { x: 0, y: 0, z: 1 }
+        back: { x: 0, y: 0, z: 1 },
     };
 
     const dir = RECOIL_DIRECTIONS[direction];
@@ -47,7 +47,7 @@ export function createRecoilGesture(direction) {
         left: '😰',
         right: '😰',
         up: '😲',
-        down: '😨'
+        down: '😨',
     };
 
     return {
@@ -67,8 +67,8 @@ export function createRecoilGesture(direction) {
             particleMotion: {
                 type: 'recoil',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -79,8 +79,8 @@ export function createRecoilGesture(direction) {
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.6
-            }
+                multiplier: 1.6,
+            },
         },
 
         '3d': {
@@ -96,14 +96,14 @@ export function createRecoilGesture(direction) {
                 let recoilAmount;
                 if (progress < 0.15) {
                     // Instant snap
-                    recoilAmount = (progress / 0.15);
+                    recoilAmount = progress / 0.15;
                     recoilAmount = 1 - Math.pow(1 - recoilAmount, 4); // Very fast ease out
                 } else if (progress < 0.4) {
                     // Hold in shock
                     recoilAmount = 1.0;
                 } else if (recover) {
                     // Slow recovery
-                    recoilAmount = 1 - ((progress - 0.4) / 0.6);
+                    recoilAmount = 1 - (progress - 0.4) / 0.6;
                     recoilAmount = Math.pow(recoilAmount, 0.5); // Slow ease
                 } else {
                     recoilAmount = 1.0;
@@ -111,7 +111,9 @@ export function createRecoilGesture(direction) {
 
                 // Calculate position based on direction
                 // ALL directions use camera-relative so they work regardless of model rotation
-                let xOffset = 0, yOffset = 0, zOffset = 0;
+                let xOffset = 0,
+                    yOffset = 0,
+                    zOffset = 0;
                 let rotX = 0;
                 const rotY = 0;
                 let rotZ = 0;
@@ -124,36 +126,36 @@ export function createRecoilGesture(direction) {
                 // rotZ: positive = tilt top to viewer's left (CCW), negative = right (CW)
 
                 switch (moveDir) {
-                case 'back':
-                    // Recoil back = move away from camera = negative Z (camera faces +Z)
-                    zOffset = -recoilAmount * distance * strength * intensity;
-                    rotX = -recoilAmount * 0.25 * strength * intensity; // Lean back (tilt away)
-                    yOffset = recoilAmount * 0.05 * strength; // Slight rise
-                    break;
-                case 'forward':
-                    // Recoil forward = move towards camera = positive Z (camera faces +Z)
-                    zOffset = recoilAmount * distance * strength * intensity;
-                    rotX = recoilAmount * 0.25 * strength * intensity; // Lean forward (tilt towards)
-                    yOffset = -recoilAmount * 0.05 * strength; // Slight dip
-                    break;
-                case 'left':
-                    // Recoil left = move left from camera's view = negative X
-                    xOffset = -recoilAmount * distance * strength * intensity;
-                    rotZ = recoilAmount * 0.2 * strength * intensity; // Lean left (top goes left = positive)
-                    break;
-                case 'right':
-                    // Recoil right = move right from camera's view = positive X
-                    xOffset = recoilAmount * distance * strength * intensity;
-                    rotZ = -recoilAmount * 0.2 * strength * intensity; // Lean right (top goes right = negative)
-                    break;
-                case 'up':
-                    yOffset = recoilAmount * distance * strength * intensity;
-                    rotX = -recoilAmount * 0.1 * strength * intensity; // Slight tilt back
-                    break;
-                case 'down':
-                    yOffset = -recoilAmount * distance * strength * intensity;
-                    rotX = recoilAmount * 0.3 * strength * intensity; // Cower forward
-                    break;
+                    case 'back':
+                        // Recoil back = move away from camera = negative Z (camera faces +Z)
+                        zOffset = -recoilAmount * distance * strength * intensity;
+                        rotX = -recoilAmount * 0.25 * strength * intensity; // Lean back (tilt away)
+                        yOffset = recoilAmount * 0.05 * strength; // Slight rise
+                        break;
+                    case 'forward':
+                        // Recoil forward = move towards camera = positive Z (camera faces +Z)
+                        zOffset = recoilAmount * distance * strength * intensity;
+                        rotX = recoilAmount * 0.25 * strength * intensity; // Lean forward (tilt towards)
+                        yOffset = -recoilAmount * 0.05 * strength; // Slight dip
+                        break;
+                    case 'left':
+                        // Recoil left = move left from camera's view = negative X
+                        xOffset = -recoilAmount * distance * strength * intensity;
+                        rotZ = recoilAmount * 0.2 * strength * intensity; // Lean left (top goes left = positive)
+                        break;
+                    case 'right':
+                        // Recoil right = move right from camera's view = positive X
+                        xOffset = recoilAmount * distance * strength * intensity;
+                        rotZ = -recoilAmount * 0.2 * strength * intensity; // Lean right (top goes right = negative)
+                        break;
+                    case 'up':
+                        yOffset = recoilAmount * distance * strength * intensity;
+                        rotX = -recoilAmount * 0.1 * strength * intensity; // Slight tilt back
+                        break;
+                    case 'down':
+                        yOffset = -recoilAmount * distance * strength * intensity;
+                        rotX = recoilAmount * 0.3 * strength * intensity; // Cower forward
+                        break;
                 }
 
                 // Contract slightly in shock
@@ -169,10 +171,10 @@ export function createRecoilGesture(direction) {
                     cameraRelativeRotation: [rotX, rotY, rotZ],
                     scale,
                     glowIntensity,
-                    glowBoost
+                    glowBoost,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

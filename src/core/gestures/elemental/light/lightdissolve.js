@@ -45,22 +45,29 @@ const LIGHTDISSOLVE_CONFIG = {
         type: 'orbit',
         orbit: {
             height: 'center',
-            endHeight: 'above',             // Drifting upward as they scatter
-            radius: 0.4,                    // Start tight
-            endRadius: 2.5,                 // Scatter far
-            speed: 1.5,                     // 1.5 revolutions
-            easing: 'easeOut',              // Fast initial scatter, then trailing
-            startScale: 1.2,               // Start bright and full
-            endScale: 0.3,                  // Shrink to nothing
-            orientation: 'camera'
+            endHeight: 'above', // Drifting upward as they scatter
+            radius: 0.4, // Start tight
+            endRadius: 2.5, // Scatter far
+            speed: 1.5, // 1.5 revolutions
+            easing: 'easeOut', // Fast initial scatter, then trailing
+            startScale: 1.2, // Start bright and full
+            endScale: 0.3, // Shrink to nothing
+            orientation: 'camera',
         },
         formation: { type: 'ring', count: 6 },
         count: 6,
         scale: 1.0,
-        models: ['sparkle-star', 'prism-shard', 'sparkle-star', 'prism-shard', 'sparkle-star', 'prism-shard'],
+        models: [
+            'sparkle-star',
+            'prism-shard',
+            'sparkle-star',
+            'prism-shard',
+            'sparkle-star',
+            'prism-shard',
+        ],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.85,              // Long tail — reluctant to leave
+            disappearAt: 0.85, // Long tail — reluctant to leave
             stagger: 0.04,
             enter: { type: 'fade', duration: 0.05, easing: 'easeOut' },
             exit: { type: 'fade', duration: 0.4, easing: 'easeIn' },
@@ -69,38 +76,40 @@ const LIGHTDISSOLVE_CONFIG = {
             emissive: { min: 0.4, max: 2.0, frequency: 2, pattern: 'sine' },
             // Slow sad pulse
             pulse: { amplitude: 0.06, frequency: 1.5, easing: 'easeInOut' },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.3,
-                sizeScale: 0.5,
-                progressCurve: 'fadeOut',    // Particles fade too
-                velocityInheritance: 0.4,
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 0.5,
+                    progressCurve: 'fadeOut', // Particles fade too
+                    velocityInheritance: 0.4,
+                },
+            ],
             rotate: [
                 { axis: 'z', rotations: 1, phase: 0 },
                 { axis: 'z', rotations: -1.5, phase: 60 },
                 { axis: 'z', rotations: 1, phase: 120 },
                 { axis: 'z', rotations: -1, phase: 180 },
                 { axis: 'z', rotations: 1.5, phase: 240 },
-                { axis: 'z', rotations: -1, phase: 300 }
+                { axis: 'z', rotations: -1, phase: 300 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'additive',
             renderOrder: 15,
-        }
+        },
     },
 
     decayRate: 0.25,
-    glowColor: [1.0, 0.92, 0.65],      // Fading gold
+    glowColor: [1.0, 0.92, 0.65], // Fading gold
     glowIntensityMin: 0.4,
     glowIntensityMax: 1.0,
     glowFlickerRate: 3,
     scaleVibration: 0.01,
     scaleFrequency: 2,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTDISSOLVE_CONFIG);

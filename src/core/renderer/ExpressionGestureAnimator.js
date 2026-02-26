@@ -19,7 +19,10 @@ export class ExpressionGestureAnimator {
      * @returns {Object} Transform with offsetY
      */
     applyNod(anim, progress) {
-        const nod = Math.sin(progress * Math.PI * anim.params.frequency) * anim.params.amplitude * this.scaleFactor;
+        const nod =
+            Math.sin(progress * Math.PI * anim.params.frequency) *
+            anim.params.amplitude *
+            this.scaleFactor;
         return { offsetY: nod };
     }
 
@@ -35,18 +38,18 @@ export class ExpressionGestureAnimator {
             anim.tiltDirection = Math.random() < 0.5 ? -1 : 1;
         }
         const frequency = anim.params.frequency || 2;
-        const angle = (anim.params.angle || 15) * Math.PI / 180; // Convert to radians
+        const angle = ((anim.params.angle || 15) * Math.PI) / 180; // Convert to radians
         const tiltProgress = Math.sin(progress * Math.PI * frequency) * anim.tiltDirection;
 
         // Apply both rotation and skew to make tilt visible on circular orb
         return {
             rotation: tiltProgress * angle,
             // Skew the orb slightly to show tilt motion
-            scaleX: 1 + Math.abs(tiltProgress) * 0.1,  // Widen when tilted
+            scaleX: 1 + Math.abs(tiltProgress) * 0.1, // Widen when tilted
             scaleY: 1 - Math.abs(tiltProgress) * 0.05, // Compress slightly
             // Move slightly with tilt
             offsetX: tiltProgress * 10,
-            offsetY: Math.abs(tiltProgress) * -5  // Lift slightly when tilted
+            offsetY: Math.abs(tiltProgress) * -5, // Lift slightly when tilted
         };
     }
 
@@ -61,7 +64,7 @@ export class ExpressionGestureAnimator {
         let scaleY = 1;
         if (progress < 0.3) {
             // Closing
-            scaleY = 1 - (progress / 0.3);
+            scaleY = 1 - progress / 0.3;
         } else if (progress < 0.5) {
             // Closed
             scaleY = 0;
@@ -75,7 +78,7 @@ export class ExpressionGestureAnimator {
 
         // Since we can't do scaleY separately, dim the orb instead
         return {
-            glow: scaleY
+            glow: scaleY,
         };
     }
 
@@ -91,29 +94,30 @@ export class ExpressionGestureAnimator {
             const direction = anim.params.lookDirection;
             const distance = anim.params.lookDistance * 50 * this.scaleFactor; // Convert to pixels and scale
 
-            switch(direction) {
-            case 'left':
-                anim.targetX = -distance;
-                anim.targetY = 0;
-                break;
-            case 'right':
-                anim.targetX = distance;
-                anim.targetY = 0;
-                break;
-            case 'up':
-                anim.targetX = 0;
-                anim.targetY = -distance;
-                break;
-            case 'down':
-                anim.targetX = 0;
-                anim.targetY = distance;
-                break;
-            default: { // random
-                const angle = Math.random() * Math.PI * 2;
-                anim.targetX = Math.cos(angle) * distance;
-                anim.targetY = Math.sin(angle) * distance;
-                break;
-            }
+            switch (direction) {
+                case 'left':
+                    anim.targetX = -distance;
+                    anim.targetY = 0;
+                    break;
+                case 'right':
+                    anim.targetX = distance;
+                    anim.targetY = 0;
+                    break;
+                case 'up':
+                    anim.targetX = 0;
+                    anim.targetY = -distance;
+                    break;
+                case 'down':
+                    anim.targetX = 0;
+                    anim.targetY = distance;
+                    break;
+                default: {
+                    // random
+                    const angle = Math.random() * Math.PI * 2;
+                    anim.targetX = Math.cos(angle) * distance;
+                    anim.targetY = Math.sin(angle) * distance;
+                    break;
+                }
             }
         }
 
@@ -132,7 +136,7 @@ export class ExpressionGestureAnimator {
 
         return {
             offsetX: anim.targetX * lookProgress,
-            offsetY: anim.targetY * lookProgress
+            offsetY: anim.targetY * lookProgress,
         };
     }
 
@@ -144,11 +148,14 @@ export class ExpressionGestureAnimator {
      */
     applySettle(anim, progress) {
         // Damped oscillation
-        const wobble = Math.sin(progress * Math.PI * anim.params.wobbleFreq) *
-                      Math.exp(-progress * 3) * 20 * this.scaleFactor;
+        const wobble =
+            Math.sin(progress * Math.PI * anim.params.wobbleFreq) *
+            Math.exp(-progress * 3) *
+            20 *
+            this.scaleFactor;
         return {
             offsetY: wobble,
-            scale: 1 + wobble * 0.01
+            scale: 1 + wobble * 0.01,
         };
     }
 }

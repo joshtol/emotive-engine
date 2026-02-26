@@ -13,25 +13,25 @@
 import { FRAME_TIMING } from './config/defaults.js';
 
 /**
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                               MODULAR ARCHITECTURE                                
+ * ║                               MODULAR ARCHITECTURE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ This is a drop-in replacement for the original Particle.js                        
- * ║ Same API, but with modular architecture for easier maintenance                    
- * ║                                                                                    
- * ║ STRUCTURE:                                                                         
- * ║ - Particle class (this file) - orchestrates everything                            
- * ║ - particles/behaviors/* - behavior modules                                     
- * ║ - particles/config/* - configuration constants                                    
- * ║ - particles/utils/* - utility functions                                           
- * ║ - gestures/* - modular gesture system                                             
- * ║                                                                                    
- * ║ 3D DEPTH SYSTEM:                                                                   
- * ║ - Z-coordinate ranges from -1 (behind orb) to +1 (in front)                       
- * ║ - 1/13 particles spawn in foreground, 12/13 in background                         
- * ║ - Depth affects visual size (20% scaling based on z)                              
- * ║ - Foreground particles spawn with offset to prevent stacking                      
+ * ║ This is a drop-in replacement for the original Particle.js
+ * ║ Same API, but with modular architecture for easier maintenance
+ * ║
+ * ║ STRUCTURE:
+ * ║ - Particle class (this file) - orchestrates everything
+ * ║ - particles/behaviors/* - behavior modules
+ * ║ - particles/config/* - configuration constants
+ * ║ - particles/utils/* - utility functions
+ * ║ - gestures/* - modular gesture system
+ * ║
+ * ║ 3D DEPTH SYSTEM:
+ * ║ - Z-coordinate ranges from -1 (behind orb) to +1 (in front)
+ * ║ - 1/13 particles spawn in foreground, 12/13 in background
+ * ║ - Depth affects visual size (20% scaling based on z)
+ * ║ - Foreground particles spawn with offset to prevent stacking
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -47,13 +47,13 @@ import { initializeBehavior } from './particles/behaviors/index.js';
 // Import gesture system - NOW USING MODULAR GESTURES!
 import {
     applyGestureMotion as applyFullGestureMotion,
-    isGestureOverriding
+    isGestureOverriding,
     // isGestureBlending // Unused - available for future use
 } from './gestures/GestureMotion.js';
 
 /**
  * Particle class - Individual particle with behavior and rendering
- * 
+ *
  * LIFECYCLE:
  * 1. Created by ParticleSystem with position and behavior
  * 2. Initialized with behavior-specific properties
@@ -64,7 +64,7 @@ import {
 class Particle {
     /**
      * Creates a new particle with specific behavior and appearance
-     * 
+     *
      * @param {number} x - Starting X position on canvas
      * @param {number} y - Starting Y position on canvas
      * @param {string} behavior - Behavior type (ambient, rising, falling, etc.)
@@ -72,12 +72,19 @@ class Particle {
      * @param {number} particleSizeMultiplier - Additional size multiplier
      * @param {Array} emotionColors - Array of color options with weights
      */
-    constructor(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
+    constructor(
+        x,
+        y,
+        behavior = 'ambient',
+        scaleFactor = 1,
+        particleSizeMultiplier = 1,
+        emotionColors = null
+    ) {
         // Position and movement (now with z-coordinate for depth)
         // 1/13 chance of being in front (z > 0), 12/13 chance of being behind (z < 0)
         const zRoll = Math.random();
-        this.z = zRoll < (1/13) ? 0.5 + Math.random() * 0.5 : -1 + Math.random() * 0.9;
-        
+        this.z = zRoll < 1 / 13 ? 0.5 + Math.random() * 0.5 : -1 + Math.random() * 0.9;
+
         // Add spawn offset to prevent stacking
         // Much larger offset for foreground particles to completely avoid visual stacking
         const spawnRadius = this.z > 0 ? (20 + Math.random() * 20) * scaleFactor : 3 * scaleFactor;
@@ -87,7 +94,7 @@ class Particle {
         this.vx = 0;
         this.vy = 0;
         this.vz = 0; // For future 3D motion effects
-        
+
         // Lifecycle
         this.life = 0.0; // Start at 0 for fade-in
         this.maxLife = 1.0;
@@ -96,7 +103,7 @@ class Particle {
         this.fadeOutTime = 0.3; // Last 30% of life for fade-out
         this.isFadingOut = false; // Track if particle is in fade-out phase
         this.age = 0; // Track particle age for smooth fading
-        
+
         // Visual properties - matching original Emotive scale
         this.scaleFactor = scaleFactor;
         this.particleSizeMultiplier = particleSizeMultiplier;
@@ -105,34 +112,34 @@ class Particle {
         this.emotionColors = emotionColors; // Store emotion colors for use in behaviors
         this.color = '#ffffff';
         this.opacity = 1.0;
-        
+
         // Glow properties - 1/3 of particles have glow with varying sizes
-        this.hasGlow = Math.random() < 0.333;  // 1/3 chance of glow
-        this.glowSizeMultiplier = this.hasGlow ? (1.33 + Math.random() * 0.33) : 0;  // 1.33x to 1.66x particle size
-        
+        this.hasGlow = Math.random() < 0.333; // 1/3 chance of glow
+        this.glowSizeMultiplier = this.hasGlow ? 1.33 + Math.random() * 0.33 : 0; // 1.33x to 1.66x particle size
+
         // Cell shading - 1/3 of particles are cell shaded (cartoon style)
-        this.isCellShaded = Math.random() < 0.333;  // 1/3 chance of cell shading
-        
+        this.isCellShaded = Math.random() < 0.333; // 1/3 chance of cell shading
+
         // Make particles more ephemeral
-        this.baseOpacity = 0.3 + Math.random() * 0.4;  // 30-70% max opacity for ethereal look
-        
+        this.baseOpacity = 0.3 + Math.random() * 0.4; // 30-70% max opacity for ethereal look
+
         // Color caching for performance with LRU eviction
         this.cachedColors = new Map(); // Cache RGBA strings
         this.maxCachedColors = 20; // Maximum cached colors per particle
         this.colorAccessOrder = []; // LRU tracking for color keys
         this.lastColor = null;
         this.lastOpacity = -1;
-        
+
         // Behavior properties
         this.behavior = behavior;
         this.behaviorData = {}; // Behavior-specific data
-        
+
         // Gesture properties for motion system
         this.gestureData = {
             initialX: x,
-            initialY: y
+            initialY: y,
         };
-        
+
         // Initialize behavior-specific properties
         initializeBehavior(this, behavior);
     }
@@ -147,7 +154,15 @@ class Particle {
      * @param {number} gestureProgress - Progress of the gesture (0-1)
      * @param {Object} containmentBounds - Optional containment bounds {width, height}
      */
-    update(deltaTime, centerX, centerY, _undertoneModifier = null, gestureMotion = null, gestureProgress = 0, containmentBounds = null) {
+    update(
+        deltaTime,
+        centerX,
+        centerY,
+        _undertoneModifier = null,
+        gestureMotion = null,
+        gestureProgress = 0,
+        containmentBounds = null
+    ) {
         // Cap deltaTime to prevent huge jumps
         const cappedDeltaTime = Math.min(deltaTime, FRAME_TIMING.PARTICLE_DELTA_CAP);
         // Normalize to 60 FPS equivalent for consistent physics
@@ -155,11 +170,18 @@ class Particle {
 
         // Universal law: Gestures override state behavior based on their motion type
         // Use the modular gesture system to determine gesture behavior
-        const gestureIsOverriding = gestureMotion && gestureMotion.type && gestureProgress > 0 &&
+        const gestureIsOverriding =
+            gestureMotion &&
+            gestureMotion.type &&
+            gestureProgress > 0 &&
             isGestureOverriding(gestureMotion.type);
 
         // Check if rain/falling is active or gesture is directly controlling position
-        const isRaining = this.rainData || this.gestureBehavior === 'falling' || this.fallingData || this.gestureData?.rain;
+        const isRaining =
+            this.rainData ||
+            this.gestureBehavior === 'falling' ||
+            this.fallingData ||
+            this.gestureData?.rain;
 
         // Skip velocity and boundary constraints when gesture is overriding OR rain is active
         const skipPhysics = gestureIsOverriding || isRaining;
@@ -182,9 +204,10 @@ class Particle {
                 boundsHeight = containmentBounds.height;
             } else {
                 // Get actual canvas dimensions from the DOM
-                const canvas = document.getElementById('card-mascot') ||
-                              document.getElementById('cherokee-guide-mascot') ||
-                              document.querySelector('canvas');
+                const canvas =
+                    document.getElementById('card-mascot') ||
+                    document.getElementById('cherokee-guide-mascot') ||
+                    document.querySelector('canvas');
                 boundsWidth = canvas ? canvas.width : centerX * 2;
                 boundsHeight = canvas ? canvas.height : centerY * 2;
             }
@@ -212,7 +235,7 @@ class Particle {
                 this.vy = -Math.abs(this.vy) * 0.5;
             }
         }
-        
+
         // Update age and life (EXACT COPY FROM ORIGINAL)
         this.age += this.lifeDecay * dt;
 
@@ -221,7 +244,7 @@ class Particle {
             this.life = this.age / this.fadeInTime;
         }
         // Full opacity in middle of life
-        else if (this.age < (1.0 - this.fadeOutTime)) {
+        else if (this.age < 1.0 - this.fadeOutTime) {
             this.life = 1.0;
         }
         // Smooth fade-out at death
@@ -246,11 +269,14 @@ class Particle {
         }
 
         // Update size based on life for some behaviors
-        if (this.behavior === 'burst' && this.behaviorData && this.life < this.behaviorData.fadeStart) {
+        if (
+            this.behavior === 'burst' &&
+            this.behaviorData &&
+            this.life < this.behaviorData.fadeStart
+        ) {
             this.size = this.baseSize * (this.life / this.behaviorData.fadeStart);
         }
     }
-
 
     /**
      * DEPRECATED - Undertones no longer affect particle motion
@@ -261,7 +287,6 @@ class Particle {
     applyUndertoneModifier(_dt, _modifier) {
         // Undertones no longer affect particles
         // They only affect color saturation and core behaviors
-        
     }
 
     /**
@@ -285,8 +310,12 @@ class Particle {
      */
     isOutOfBounds(width, height) {
         const margin = 50; // Allow some margin for particles to re-enter
-        return this.x < -margin || this.x > width + margin || 
-               this.y < -margin || this.y > height + margin;
+        return (
+            this.x < -margin ||
+            this.x > width + margin ||
+            this.y < -margin ||
+            this.y > height + margin
+        );
     }
 
     /**
@@ -312,9 +341,9 @@ class Particle {
     /**
      * Get depth-adjusted size for 3D effect
      * Particles farther away (negative z) appear smaller for depth perception
-     * 
+     *
      * @returns {number} Adjusted size based on z-depth
-     * 
+     *
      * DEPTH SCALING:
      * - z = -1.0: 80% size (farthest back)
      * - z =  0.0: 100% size (orb plane)
@@ -323,10 +352,10 @@ class Particle {
     getDepthAdjustedSize() {
         // Map z from [-1, 1] to scale [0.8, 1.2]
         // Negative z (behind) = smaller, positive z (front) = larger
-        const depthScale = 1 + (this.z * 0.2);
+        const depthScale = 1 + this.z * 0.2;
         return this.size * depthScale;
     }
-    
+
     /**
      * Get particle state for debugging
      * @returns {Object} Current particle state
@@ -338,10 +367,9 @@ class Particle {
             life: this.life,
             behavior: this.behavior,
             size: this.size,
-            opacity: this.opacity
+            opacity: this.opacity,
         };
     }
-
 
     /**
      * Reset particle for reuse from pool
@@ -352,11 +380,18 @@ class Particle {
      * @param {number} particleSizeMultiplier - Size multiplier
      * @param {Array} emotionColors - Emotion colors
      */
-    reset(x, y, behavior = 'ambient', scaleFactor = 1, particleSizeMultiplier = 1, emotionColors = null) {
+    reset(
+        x,
+        y,
+        behavior = 'ambient',
+        scaleFactor = 1,
+        particleSizeMultiplier = 1,
+        emotionColors = null
+    ) {
         // 1/13 chance of being in front (z > 0), 12/13 chance of being behind (z < 0)
         const zRoll = Math.random();
-        this.z = zRoll < (1/13) ? 0.5 + Math.random() * 0.5 : -1 + Math.random() * 0.9;
-        
+        this.z = zRoll < 1 / 13 ? 0.5 + Math.random() * 0.5 : -1 + Math.random() * 0.9;
+
         // Add spawn offset to prevent stacking
         // Much larger offset for foreground particles to completely avoid visual stacking
         const spawnRadius = this.z > 0 ? (20 + Math.random() * 20) * scaleFactor : 3 * scaleFactor;
@@ -366,26 +401,26 @@ class Particle {
         this.vx = 0;
         this.vy = 0;
         this.vz = 0;
-        this.life = 0.0;  // Start at 0 for fade-in
-        this.age = 0;  // Reset age
+        this.life = 0.0; // Start at 0 for fade-in
+        this.age = 0; // Reset age
         this.scaleFactor = scaleFactor;
         this.particleSizeMultiplier = particleSizeMultiplier;
-        this.size = (4 + Math.random() * 6) * scaleFactor * particleSizeMultiplier;  // Scaled size
+        this.size = (4 + Math.random() * 6) * scaleFactor * particleSizeMultiplier; // Scaled size
         this.baseSize = this.size;
-        this.emotionColors = emotionColors;  // Store emotion colors
-        
+        this.emotionColors = emotionColors; // Store emotion colors
+
         // Clear cached colors for reuse
         this.cachedColors.clear();
         this.colorAccessOrder = []; // Clear LRU tracking
-        this.opacity = 0.0;  // Start invisible
+        this.opacity = 0.0; // Start invisible
         this.isFadingOut = false;
-        this.baseOpacity = 0.3 + Math.random() * 0.4;  // Reset base opacity
-        this.color = '#ffffff';  // Reset color to white before reinitializing
+        this.baseOpacity = 0.3 + Math.random() * 0.4; // Reset base opacity
+        this.color = '#ffffff'; // Reset color to white before reinitializing
         this.behavior = behavior;
-        
+
         // Clear gesture data if it exists
         this.gestureData = null;
-        
+
         // Reset behavior data
         if (!this.behaviorData) {
             this.behaviorData = {};
@@ -395,7 +430,7 @@ class Particle {
                 delete this.behaviorData[key];
             }
         }
-        
+
         // Reinitialize behavior
         initializeBehavior(this, behavior);
     }
@@ -441,7 +476,7 @@ class Particle {
     hexToRgba(hex, alpha) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         if (!result) return `rgba(255, 255, 255, ${alpha})`;
-        
+
         return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})`;
     }
 
@@ -451,9 +486,7 @@ class Particle {
      * @returns {number} Eased value (0-1)
      */
     easeInOutCubic(t) {
-        return t < 0.5 
-            ? 4 * t * t * t 
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**
@@ -463,70 +496,99 @@ class Particle {
      */
     render(ctx, emotionColor = '#ffffff') {
         if (this.life <= 0) return;
-        
+
         // Validate position values to prevent rendering errors
         if (!isFinite(this.x) || !isFinite(this.y)) {
             return;
         }
-        
+
         // Use sub-pixel accurate coordinates for smooth rendering
         const renderX = this.x;
         const renderY = this.y;
-        
+
         // Ensure size is never negative
         const safeSize = Math.max(0.1, this.size);
-        
+
         // Use the particle's own color if set, otherwise fall back to emotion color
         const particleColor = this.tempColor || this.color || emotionColor;
-        
+
         ctx.save();
-        
+
         if (this.isCellShaded) {
             // Cell shaded style - hard edges, no gradients
-            
+
             // Draw outline (darker color)
             ctx.strokeStyle = this.getCachedColor(particleColor, this.opacity * 0.9);
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(renderX, renderY, safeSize, 0, Math.PI * 2);
             ctx.stroke();
-            
+
             // Draw flat color fill with discrete opacity levels
             const discreteOpacity = Math.floor(this.opacity * 3) / 3;
-            ctx.fillStyle = this.getCachedColor(particleColor, discreteOpacity * (this.baseOpacity || 0.5) * 0.5);
+            ctx.fillStyle = this.getCachedColor(
+                particleColor,
+                discreteOpacity * (this.baseOpacity || 0.5) * 0.5
+            );
             ctx.beginPath();
             ctx.arc(renderX, renderY, Math.max(0.1, safeSize - 1), 0, Math.PI * 2);
             ctx.fill();
-            
+
             // Add hard-edged highlight
             if (discreteOpacity > 0.5) {
                 ctx.fillStyle = this.getCachedColor('#FFFFFF', 0.3);
                 ctx.beginPath();
-                ctx.arc(renderX - safeSize * 0.3, renderY - safeSize * 0.3, safeSize * 0.3, 0, Math.PI * 2);
+                ctx.arc(
+                    renderX - safeSize * 0.3,
+                    renderY - safeSize * 0.3,
+                    safeSize * 0.3,
+                    0,
+                    Math.PI * 2
+                );
                 ctx.fill();
             }
         } else {
             // Standard gradient style
-            
+
             // Create radial gradient for soft particle
-            const gradient = ctx.createRadialGradient(renderX, renderY, 0, renderX, renderY, safeSize);
-            
+            const gradient = ctx.createRadialGradient(
+                renderX,
+                renderY,
+                0,
+                renderX,
+                renderY,
+                safeSize
+            );
+
             // Core is full opacity with base opacity applied
-            gradient.addColorStop(0, this.getCachedColor(particleColor, this.opacity * (this.baseOpacity || 0.5)));
+            gradient.addColorStop(
+                0,
+                this.getCachedColor(particleColor, this.opacity * (this.baseOpacity || 0.5))
+            );
             // Mid fade
-            gradient.addColorStop(0.5, this.getCachedColor(particleColor, this.opacity * (this.baseOpacity || 0.5) * 0.5));
+            gradient.addColorStop(
+                0.5,
+                this.getCachedColor(particleColor, this.opacity * (this.baseOpacity || 0.5) * 0.5)
+            );
             // Edge is transparent
             gradient.addColorStop(1, this.getCachedColor(particleColor, 0));
-            
+
             ctx.fillStyle = gradient;
             ctx.beginPath();
             ctx.arc(renderX, renderY, safeSize, 0, Math.PI * 2);
             ctx.fill();
-            
+
             // Add glow effect if enabled
             if (this.hasGlow && this.glowSizeMultiplier > 0) {
                 const glowSize = safeSize * this.glowSizeMultiplier;
-                const glowGradient = ctx.createRadialGradient(renderX, renderY, safeSize * 0.5, renderX, renderY, glowSize);
+                const glowGradient = ctx.createRadialGradient(
+                    renderX,
+                    renderY,
+                    safeSize * 0.5,
+                    renderX,
+                    renderY,
+                    glowSize
+                );
 
                 // Make glow visible even when particles are subdued
                 // Use a minimum opacity for glow to ensure visibility
@@ -538,10 +600,34 @@ class Particle {
                 const glowIntensity = Math.min(1.0, this.glowSizeMultiplier / 3); // More aggressive scaling
 
                 // Create bright, visible glow with minimum opacity thresholds
-                glowGradient.addColorStop(0, this.getCachedColor(particleColor, Math.max(0.5, particleOpacity * 0.8) * glowIntensity));
-                glowGradient.addColorStop(0.25, this.getCachedColor(particleColor, Math.max(0.3, particleOpacity * 0.6) * glowIntensity));
-                glowGradient.addColorStop(0.5, this.getCachedColor(particleColor, Math.max(0.2, particleOpacity * 0.4) * glowIntensity));
-                glowGradient.addColorStop(0.75, this.getCachedColor(particleColor, Math.max(0.1, particleOpacity * 0.2) * glowIntensity));
+                glowGradient.addColorStop(
+                    0,
+                    this.getCachedColor(
+                        particleColor,
+                        Math.max(0.5, particleOpacity * 0.8) * glowIntensity
+                    )
+                );
+                glowGradient.addColorStop(
+                    0.25,
+                    this.getCachedColor(
+                        particleColor,
+                        Math.max(0.3, particleOpacity * 0.6) * glowIntensity
+                    )
+                );
+                glowGradient.addColorStop(
+                    0.5,
+                    this.getCachedColor(
+                        particleColor,
+                        Math.max(0.2, particleOpacity * 0.4) * glowIntensity
+                    )
+                );
+                glowGradient.addColorStop(
+                    0.75,
+                    this.getCachedColor(
+                        particleColor,
+                        Math.max(0.1, particleOpacity * 0.2) * glowIntensity
+                    )
+                );
                 glowGradient.addColorStop(1, this.getCachedColor(particleColor, 0));
 
                 // Use additive blending for brighter glow effect
@@ -554,7 +640,7 @@ class Particle {
                 ctx.restore();
             }
         }
-        
+
         ctx.restore();
     }
 }

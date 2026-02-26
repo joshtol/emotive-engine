@@ -61,59 +61,70 @@ const VOIDHELIX_CONFIG = {
             start: 'bottom',
             end: 'above',
             easing: 'easeInOut',
-            startScale: 0.7,          // Visible at bottom — seed of corruption
-            endScale: 2.0,            // Large at top — fully manifested
-            startDiameter: 0.4,       // Very tight at bottom — dramatic funnel
-            endDiameter: 3.0,         // Very wide at top — 7.5× expansion ratio
-            orientation: 'camera'     // Billboard — floating dark matter
+            startScale: 0.7, // Visible at bottom — seed of corruption
+            endScale: 2.0, // Large at top — fully manifested
+            startDiameter: 0.4, // Very tight at bottom — dramatic funnel
+            endDiameter: 3.0, // Very wide at top — 7.5× expansion ratio
+            orientation: 'camera', // Billboard — floating dark matter
         },
         formation: {
             type: 'spiral',
             count: 10,
             strands: 2,
-            spacing: 0.08,            // Dense packing — tight helix rungs
-            arcOffset: 180,           // True double helix — strands opposite
-            phaseOffset: 0.03
+            spacing: 0.08, // Dense packing — tight helix rungs
+            arcOffset: 180, // True double helix — strands opposite
+            phaseOffset: 0.03,
         },
         count: 10,
-        scale: 1.2,                   // Larger fragments — visible dark matter (vs dance's 1.0)
+        scale: 1.2, // Larger fragments — visible dark matter (vs dance's 1.0)
         // Strand A (even indices): void-wrap — wraith tendrils
         // Strand B (odd indices): alternating void-orb + void-crack — dark mass + sharp shards
-        models: ['void-wrap', 'void-orb', 'void-wrap', 'void-crack', 'void-wrap', 'void-orb', 'void-wrap', 'void-crack', 'void-wrap', 'void-orb'],
+        models: [
+            'void-wrap',
+            'void-orb',
+            'void-wrap',
+            'void-crack',
+            'void-wrap',
+            'void-orb',
+            'void-wrap',
+            'void-crack',
+            'void-wrap',
+            'void-orb',
+        ],
         animation: {
             appearAt: 0.0,
-            disappearAt: 0.40,        // Early exit — all 10 elements fully gone before gesture end
-            stagger: 0.02,            // Rapid sequential — DNA unzipping effect
+            disappearAt: 0.4, // Early exit — all 10 elements fully gone before gesture end
+            stagger: 0.02, // Rapid sequential — DNA unzipping effect
             enter: {
                 type: 'scale',
                 duration: 0.1,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             pulse: {
                 amplitude: 0.12,
                 frequency: 4,
                 easing: 'easeInOut',
-                perElement: true      // Each fragment pulses independently
+                perElement: true, // Each fragment pulses independently
             },
             emissive: {
                 min: 0.15,
                 max: 0.55,
                 frequency: 4,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             cutout: {
                 strength: 0.4,
-                primary: { pattern: 0, scale: 1.0, weight: 0.7 },    // CELLULAR — organic fracturing
-                secondary: { pattern: 3, scale: 0.8, weight: 0.5 },  // VORONOI — cracked cells (vs dance's spiral)
+                primary: { pattern: 0, scale: 1.0, weight: 0.7 }, // CELLULAR — organic fracturing
+                secondary: { pattern: 3, scale: 0.8, weight: 0.5 }, // VORONOI — cracked cells (vs dance's spiral)
                 blend: 'multiply',
                 travel: 'angular',
                 travelSpeed: 3.0,
@@ -122,24 +133,26 @@ const VOIDHELIX_CONFIG = {
                 trailDissolve: {
                     enabled: true,
                     offset: -0.5,
-                    softness: 1.5
-                }
+                    softness: 1.5,
+                },
             },
-            atmospherics: [{
-                preset: 'darkness',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.6,
-                sizeScale: 0.8,       // Smaller wisps — matching smaller fragments
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'darkness',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.6,
+                    sizeScale: 0.8, // Smaller wisps — matching smaller fragments
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+                },
+            ],
             // Per-strand counter-rotation: strand A clockwise, strand B counter-clockwise
             // Creates visible "unwinding DNA" motion vs dance's same-direction spin
             rotate: [
-                { axis: 'y', rotations: 4, phase: 0 },       // strand A ↻
-                { axis: 'y', rotations: -4, phase: 180 },    // strand B ↺
+                { axis: 'y', rotations: 4, phase: 0 }, // strand A ↻
+                { axis: 'y', rotations: -4, phase: 180 }, // strand B ↺
                 { axis: 'y', rotations: 4, phase: 0 },
                 { axis: 'y', rotations: -4, phase: 180 },
                 { axis: 'y', rotations: 4, phase: 0 },
@@ -149,37 +162,37 @@ const VOIDHELIX_CONFIG = {
                 { axis: 'y', rotations: 4, phase: 0 },
                 { axis: 'y', rotations: -4, phase: 180 },
             ],
-            scaleVariance: 0.3,       // High variance — organic, uneven fragments
+            scaleVariance: 0.3, // High variance — organic, uneven fragments
             lifetimeVariance: 0.1,
             blending: 'normal',
             renderOrder: 3,
             modelOverrides: {
                 'void-wrap': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.35,     // Narrow arcs — wraith-like tendrils
-                        arcSpeed: 2.0,      // Faster — agitated
-                        arcCount: 2
-                    }
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.35, // Narrow arcs — wraith-like tendrils
+                        arcSpeed: 2.0, // Faster — agitated
+                        arcCount: 2,
+                    },
                 },
                 'void-orb': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.7,      // Wide arcs — solid dark mass
-                        arcSpeed: 0.8,      // Slow — heavy, ponderous
-                        arcCount: 1
-                    }
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.7, // Wide arcs — solid dark mass
+                        arcSpeed: 0.8, // Slow — heavy, ponderous
+                        arcCount: 1,
+                    },
                 },
                 'void-crack': {
                     shaderAnimation: {
-                        type: 1,            // ROTATING_ARC
-                        arcWidth: 0.5,      // Medium arcs — jagged shards
+                        type: 1, // ROTATING_ARC
+                        arcWidth: 0.5, // Medium arcs — jagged shards
                         arcSpeed: 1.2,
-                        arcCount: 3         // More arcs — fragmented, splintered
-                    }
-                }
-            }
-        }
+                        arcCount: 3, // More arcs — fragmented, splintered
+                    },
+                },
+            },
+        },
     },
 
     jitterAmount: 0,
@@ -193,7 +206,7 @@ const VOIDHELIX_CONFIG = {
     scaleVibration: 0.01,
     scaleFrequency: 3,
     scalePulse: true,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildVoidEffectGesture(VOIDHELIX_CONFIG);

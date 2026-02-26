@@ -21,7 +21,7 @@ export class MascotSpatialRef {
             minY: -0.5,
             maxY: 0.5,
             centerY: 0,
-            height: 1
+            height: 1,
         };
 
         /**
@@ -57,8 +57,8 @@ export class MascotSpatialRef {
             return;
         }
 
-        const {geometry} = coreMesh;
-        const {scale} = coreMesh;
+        const { geometry } = coreMesh;
+        const { scale } = coreMesh;
 
         // Calculate bounding box
         if (!geometry.boundingBox) {
@@ -73,7 +73,7 @@ export class MascotSpatialRef {
                 minY: box.min.y,
                 maxY: box.max.y,
                 centerY: (box.min.y + box.max.y) * 0.5,
-                height: (box.max.y - box.min.y)
+                height: box.max.y - box.min.y,
             };
         }
 
@@ -89,7 +89,6 @@ export class MascotSpatialRef {
 
         // Ensure reasonable minimum radius (matches original ElementSpawner)
         this.radius = Math.max(0.1, this.radius);
-
 
         this._computeLandmarks();
     }
@@ -108,10 +107,10 @@ export class MascotSpatialRef {
             top: b.maxY,
             head: b.maxY + headOffset,
             // Additional useful landmarks
-            feet: b.minY,                           // Alias for bottom
-            middle: b.centerY,                      // Alias for center
-            above: b.maxY + b.height * 0.3,         // Well above mascot
-            below: b.minY - b.height * 0.2,         // Below mascot
+            feet: b.minY, // Alias for bottom
+            middle: b.centerY, // Alias for center
+            above: b.maxY + b.height * 0.3, // Well above mascot
+            below: b.minY - b.height * 0.2, // Below mascot
         };
     }
 
@@ -176,11 +175,21 @@ export class MascotSpatialRef {
     }
 
     // Convenience getters for common landmarks
-    get top() { return this.landmarks.top; }
-    get bottom() { return this.landmarks.bottom; }
-    get center() { return this.landmarks.center; }
-    get head() { return this.landmarks.head; }
-    get height() { return this.bounds.height; }
+    get top() {
+        return this.landmarks.top;
+    }
+    get bottom() {
+        return this.landmarks.bottom;
+    }
+    get center() {
+        return this.landmarks.center;
+    }
+    get head() {
+        return this.landmarks.head;
+    }
+    get height() {
+        return this.bounds.height;
+    }
 
     /**
      * Update bounds if the mesh scale changes

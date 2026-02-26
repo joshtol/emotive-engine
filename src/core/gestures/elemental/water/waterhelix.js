@@ -43,7 +43,7 @@ const WATERHELIX_CONFIG = {
     emoji: '🧬',
     type: 'blending',
     description: 'DNA-style double helix ascending water',
-    duration: 2000,         // Longer duration to appreciate the helix
+    duration: 2000, // Longer duration to appreciate the helix
     beats: 4,
     intensity: 1.2,
     category: 'ambient',
@@ -61,15 +61,15 @@ const WATERHELIX_CONFIG = {
             endScale: 1.1,
             startDiameter: 1.8,
             endDiameter: 2.0,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
-            count: 6,               // 3 per strand
-            strands: 2,             // Double helix!
-            spacing: 0.2,           // Spacing within each strand
-            arcOffset: 120,         // 120° between elements in same strand
-            phaseOffset: 0.05
+            count: 6, // 3 per strand
+            strands: 2, // Double helix!
+            spacing: 0.2, // Spacing within each strand
+            arcOffset: 120, // 120° between elements in same strand
+            phaseOffset: 0.05,
         },
         count: 6,
         scale: 0.7,
@@ -81,30 +81,30 @@ const WATERHELIX_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.5,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 turbulence: {
                     start: 0.2,
                     peak: 0.4,
                     end: 0.25,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             // SPIRAL cutout for DNA helix effect
             cutout: {
                 strength: 0.5,
-                primary: { pattern: 6, scale: 1.3, weight: 1.0 },    // SPIRAL - helix motion
-                secondary: { pattern: 0, scale: 0.7, weight: 0.3 },  // CELLULAR - organic gaps
+                primary: { pattern: 6, scale: 1.3, weight: 1.0 }, // SPIRAL - helix motion
+                secondary: { pattern: 0, scale: 0.7, weight: 0.3 }, // CELLULAR - organic gaps
                 blend: 'multiply',
                 travel: 'vertical',
                 travelSpeed: 1.2,
@@ -112,21 +112,21 @@ const WATERHELIX_CONFIG = {
                 trailDissolve: {
                     enabled: true,
                     offset: -0.4,
-                    softness: 1.0
-                }
+                    softness: 1.0,
+                },
             },
             // Grain: film grain for mystical water texture
             grain: {
-                type: 3,              // FILM
+                type: 3, // FILM
                 strength: 0.2,
                 scale: 0.25,
                 speed: 1.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             pulse: {
                 amplitude: 0.08,
                 frequency: 3,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             // Rotation to show the helix structure
             rotate: { axis: 'y', rotations: 2.5, phase: 0 },
@@ -140,23 +140,25 @@ const WATERHELIX_CONFIG = {
                         type: 1,
                         arcWidth: 0.6,
                         arcSpeed: 1.5,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
+                    orientationOverride: 'vertical',
+                },
             },
             // Sustained spray thrown off spiraling helix
-            atmospherics: [{
-                preset: 'spray',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.25,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 0.8, tangentialBias: 0.4 },
-            }],
-        }
+            atmospherics: [
+                {
+                    preset: 'spray',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.25,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 0.8, tangentialBias: 0.4 },
+                },
+            ],
+        },
     },
 
     // Wobble - smooth for mystical effect
@@ -173,7 +175,7 @@ const WATERHELIX_CONFIG = {
     glowIntensityMax: 2.2,
     glowPulseRate: 4,
     // Helix-specific
-    rotationFlow: 0.015
+    rotationFlow: 0.015,
 };
 
 /**

@@ -43,7 +43,7 @@ const WATERFLOURISH_CONFIG = {
     emoji: '🔱',
     type: 'blending',
     description: 'Spinning water flourish with wave trails',
-    duration: 1200,             // Fast triplet flourish
+    duration: 1200, // Fast triplet flourish
     beats: 4,
     intensity: 1.3,
     mascotGlow: 0.3,
@@ -60,13 +60,13 @@ const WATERFLOURISH_CONFIG = {
             axisTravel: {
                 axis: 'y',
                 start: 'center',
-                end: 'center',              // Stay at center (no travel)
+                end: 'center', // Stay at center (no travel)
                 easing: 'linear',
                 startScale: 0.7,
                 endScale: 1.2,
                 startDiameter: 1.8,
                 endDiameter: 2.8,
-                orientation: 'camera'       // Billboard: always face camera
+                orientation: 'camera', // Billboard: always face camera
             },
             formation: {
                 type: 'spiral',
@@ -74,7 +74,7 @@ const WATERFLOURISH_CONFIG = {
                 spacing: 0,
                 arcOffset: 72,
                 phaseOffset: 0.05,
-                zOffset: 0                  // No z offset - use renderOrder only
+                zOffset: 0, // No z offset - use renderOrder only
             },
             count: 5,
             scale: 0.9,
@@ -86,59 +86,59 @@ const WATERFLOURISH_CONFIG = {
                 enter: {
                     type: 'fade',
                     duration: 0.03,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'burst-fade',
                     duration: 0.85,
                     easing: 'easeIn',
-                    burstScale: 1.15
+                    burstScale: 1.15,
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     turbulence: {
                         start: 0.35,
                         peak: 0.7,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // Cutout with trail dissolve - cellular holes fade at ring bottoms
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 0, scale: 1.0, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 3, scale: 0.6, weight: 0.5 },  // VORONOI - chunky edges
+                    primary: { pattern: 0, scale: 1.0, weight: 1.0 }, // CELLULAR
+                    secondary: { pattern: 3, scale: 0.6, weight: 0.5 }, // VORONOI - chunky edges
                     blend: 'multiply',
                     strengthCurve: 'constant',
                     // Trail dissolve: organic fade at bottom of camera-facing rings
                     trailDissolve: {
                         enabled: true,
-                        offset: -0.6,        // Floor 0.6 units below instance center
-                        softness: 1.5        // Wide gradient for visible dissolve
-                    }
+                        offset: -0.6, // Floor 0.6 units below instance center
+                        softness: 1.5, // Wide gradient for visible dissolve
+                    },
                 },
                 // Grain: film grain for flourish spray texture
                 grain: {
-                    type: 3,              // FILM
+                    type: 3, // FILM
                     strength: 0.2,
                     scale: 0.25,
                     speed: 2.5,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
                 pulse: {
                     amplitude: 0.15,
                     frequency: 5,
                     easing: 'easeInOut',
-                    perElement: true
+                    perElement: true,
                 },
                 drift: {
                     speed: 0.3,
                     distance: 0.18,
                     pattern: 'radial',
-                    accelerate: true
+                    accelerate: true,
                 },
                 opacityGradient: [1.0, 0.9, 0.8, 0.7, 0.6],
                 rotate: [
@@ -146,47 +146,49 @@ const WATERFLOURISH_CONFIG = {
                     { axis: 'z', rotations: -2.0, phase: 72 },
                     { axis: 'z', rotations: 1.8, phase: 144 },
                     { axis: 'z', rotations: -2.3, phase: 216 },
-                    { axis: 'z', rotations: 2.0, phase: 288 }
+                    { axis: 'z', rotations: 2.0, phase: 288 },
                 ],
                 tilt: {
                     axis: 'y',
                     oscillate: true,
                     range: 0.4,
-                    speed: 3.5
+                    speed: 3.5,
                 },
                 wobble: {
                     axis: 'x',
                     oscillate: true,
                     range: 0.15,
                     speed: 2.0,
-                    phase: 90
+                    phase: 90,
                 },
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.15,
                 blending: 'normal',
-                renderOrder: -8,    // Behind mascot
+                renderOrder: -8, // Behind mascot
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.5,
                             arcSpeed: 1.0,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'camera'
-                    }
+                        orientationOverride: 'camera',
+                    },
                 },
                 // Sustained spray trailing from theatrical sweep
-                atmospherics: [{
-                    preset: 'spray',
-                    targets: ['splash-ring'],
-                    anchor: 'above',
-                    intensity: 0.25,
-                    sizeScale: 1.0,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.4,
-                }],
-            }
+                atmospherics: [
+                    {
+                        preset: 'spray',
+                        targets: ['splash-ring'],
+                        anchor: 'above',
+                        intensity: 0.25,
+                        sizeScale: 1.0,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.4,
+                    },
+                ],
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -197,11 +199,11 @@ const WATERFLOURISH_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: -0.7, y: 0.4, z: 0 },     // Start top-left
+                offset: { x: -0.7, y: 0.4, z: 0 }, // Start top-left
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.2,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 0.7,
@@ -212,72 +214,74 @@ const WATERFLOURISH_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.06,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.3,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     turbulence: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // STREAKS cutout for motion blur effect
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },    // STREAKS - motion blur
-                    secondary: { pattern: 0, scale: 0.7, weight: 0.4 },  // CELLULAR - organic breaks
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 }, // STREAKS - motion blur
+                    secondary: { pattern: 0, scale: 0.7, weight: 0.4 }, // CELLULAR - organic breaks
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply',
                 },
                 // Diagonal sweep: top-left to bottom-right
                 drift: {
                     speed: 0.9,
                     distance: 0.35,
                     direction: { x: 1.0, y: -0.7, z: -0.15 },
-                    easing: 'easeInOutCubic'
+                    easing: 'easeInOutCubic',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 1.0, phase: -45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 1.0, phase: -45 }],
                 blending: 'additive',
-                renderOrder: -6,    // Behind mascot
+                renderOrder: -6, // Behind mascot
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 2.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0.7, y: 0.4, z: 0 },      // Start top-right
+                offset: { x: 0.7, y: 0.4, z: 0 }, // Start top-right
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.2,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 0.7,
@@ -288,62 +292,64 @@ const WATERFLOURISH_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.06,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.3,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     turbulence: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // STREAKS cutout for motion blur effect
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 1, scale: 1.0, weight: 1.0 },    // STREAKS - motion blur
-                    secondary: { pattern: 0, scale: 0.7, weight: 0.4 },  // CELLULAR - organic breaks
+                    primary: { pattern: 1, scale: 1.0, weight: 1.0 }, // STREAKS - motion blur
+                    secondary: { pattern: 0, scale: 0.7, weight: 0.4 }, // CELLULAR - organic breaks
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply',
                 },
                 // Diagonal sweep: top-right to bottom-left
                 drift: {
                     speed: 0.9,
                     distance: 0.35,
                     direction: { x: -1.0, y: -0.7, z: -0.15 },
-                    easing: 'easeInOutCubic'
+                    easing: 'easeInOutCubic',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 1.0, phase: 45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 1.0, phase: 45 }],
                 blending: 'additive',
-                renderOrder: -6,    // Behind mascot
+                renderOrder: -6, // Behind mascot
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 2.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -354,155 +360,163 @@ const WATERFLOURISH_CONFIG = {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0, y: 0, z: 0 },          // No z offset - use renderOrder only
-                orientation: 'camera',                 // Face camera (tidally locked)
+                offset: { x: 0, y: 0, z: 0 }, // No z offset - use renderOrder only
+                orientation: 'camera', // Face camera (tidally locked)
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 0.9,
             models: ['splash-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.70,
+                appearAt: 0.3,
+                disappearAt: 0.7,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.28,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     turbulence: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // Two-layer cutout for slash arc texture
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 },  // STREAKS
+                    primary: { pattern: 0, scale: 0.8, weight: 1.0 }, // CELLULAR
+                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 }, // STREAKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.0,
+                    blend: 'multiply',
                 },
                 // Tilted 45° clockwise (Z rotation on top of camera-facing)
                 rotate: [
-                    { axis: 'z', rotations: 0.001, phase: 45 }   // Near-static 45° tilt
+                    { axis: 'z', rotations: 0.001, phase: 45 }, // Near-static 45° tilt
                 ],
                 blending: 'normal',
-                renderOrder: -10,   // Behind mascot
+                renderOrder: -10, // Behind mascot
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: {
                             type: 1,
-                            arcWidth: 0.35,           // Narrow slash arc
-                            arcSpeed: 1.5,            // Fast sweep
-                            arcCount: 1               // Single blade
+                            arcWidth: 0.35, // Narrow slash arc
+                            arcSpeed: 1.5, // Fast sweep
+                            arcCount: 1, // Single blade
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
             anchor: {
                 landmark: 'center',
-                offset: { x: 0, y: 0, z: 0 },          // No z offset - use renderOrder only
-                orientation: 'camera',                 // Face camera (tidally locked)
+                offset: { x: 0, y: 0, z: 0 }, // No z offset - use renderOrder only
+                orientation: 'camera', // Face camera (tidally locked)
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 0.9,
             models: ['splash-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.70,
+                appearAt: 0.3,
+                disappearAt: 0.7,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.28,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     turbulence: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 // Two-layer cutout for slash arc texture
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },    // CELLULAR
-                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 },  // STREAKS
+                    primary: { pattern: 0, scale: 0.8, weight: 1.0 }, // CELLULAR
+                    secondary: { pattern: 1, scale: 0.6, weight: 0.4 }, // STREAKS
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.0,
+                    blend: 'multiply',
                 },
                 // Tilted 45° counter-clockwise (Z rotation on top of camera-facing)
                 rotate: [
-                    { axis: 'z', rotations: 0.001, phase: -45 }  // Near-static -45° tilt
+                    { axis: 'z', rotations: 0.001, phase: -45 }, // Near-static -45° tilt
                 ],
                 blending: 'normal',
-                renderOrder: -10,   // Behind mascot
+                renderOrder: -10, // Behind mascot
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Mesh effects - bright water display
     wobbleFrequency: 2,
     wobbleAmplitude: 0.01,
     wobbleDecay: 0.15,
-    glowColor: [0.3, 0.6, 1.0],     // Cool blue
+    glowColor: [0.3, 0.6, 1.0], // Cool blue
     glowIntensityMin: 1.0,
     glowIntensityMax: 2.0,
     glowPulseRate: 6,
     scaleWobble: 0.012,
     scaleFrequency: 8,
-    scaleGrowth: 0.015
+    scaleGrowth: 0.015,
 };
 
 /**

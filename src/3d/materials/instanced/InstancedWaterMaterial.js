@@ -22,7 +22,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -44,7 +44,7 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // WATER UTILITIES (inlined from WaterShaderCore.js — single consumer)
@@ -74,7 +74,7 @@ const WATER_DEFAULTS = {
 // WATER GLSL (inlined from WaterShaderCore.js — single consumer)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 // Permutation polynomial hash
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -246,7 +246,7 @@ vec2 waterBubbles3D(vec3 p, float scale, float density, float time) {
 }
 `;
 
-const WATER_COLOR_GLSL = /* glsl */`
+const WATER_COLOR_GLSL = /* glsl */ `
 const vec3 WATER_DEEP = vec3(0.05, 0.15, 0.35);
 const vec3 WATER_MID = vec3(0.15, 0.4, 0.6);
 const vec3 WATER_BRIGHT = vec3(0.3, 0.6, 0.8);
@@ -266,7 +266,7 @@ vec3 waterColor(float intensity, float turbulence) {
 }
 `;
 
-const WATER_FRAGMENT_CORE = /* glsl */`
+const WATER_FRAGMENT_CORE = /* glsl */ `
     vec3 viewDir = normalize(vViewDir);
 
     vec3 worldNormal = normalize(vWorldNormal);
@@ -419,7 +419,7 @@ const WATER_FRAGMENT_CORE = /* glsl */`
     float alpha = edgeAlpha * skyAlpha;
 `;
 
-const WATER_ARC_FOAM_GLSL = /* glsl */`
+const WATER_ARC_FOAM_GLSL = /* glsl */ `
     float arcEdgeFoam = smoothstep(0.5, 0.85, vArcVisibility) * (1.0 - smoothstep(0.85, 1.0, vArcVisibility));
     float leadingFoam = smoothstep(0.0, 0.3, vArcVisibility) * (1.0 - smoothstep(0.3, 0.5, vArcVisibility));
     float totalFoam = max(arcEdgeFoam, leadingFoam * 0.7);
@@ -438,7 +438,7 @@ const WATER_ARC_FOAM_GLSL = /* glsl */`
     alpha = mix(alpha, min(1.0, alpha + 0.15), arcEdgeIntensity * 0.4);
 `;
 
-const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
+const WATER_CUTOUT_FOAM_GLSL = /* glsl */ `
     if (uCutoutStrength > 0.01 && finalCutout < 0.99) {
         float cutoutThreshold = 0.5;
 
@@ -459,7 +459,7 @@ const WATER_CUTOUT_FOAM_GLSL = /* glsl */`
     }
 `;
 
-const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
+const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */ `
     // Hash-based noise instead of snoise — these just drive threshold masks
     float dripHash1 = noise(vPosition * 8.0 + vec3(12.34, 56.78, 90.12)) * 2.0 - 1.0;
     float dripHash2 = noise(vPosition * 8.0 + vec3(98.76, 54.32, 10.98)) * 2.0 - 1.0;
@@ -505,7 +505,7 @@ const WATER_DRIP_ANTICIPATION_GLSL = /* glsl */`
     color += tensionBulge * WATER_BRIGHT * 0.10;
 `;
 
-const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
+const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */ `
     if (alpha < 0.1) discard;
 `;
 
@@ -513,7 +513,7 @@ const WATER_FLOOR_AND_DISCARD_GLSL = /* glsl */`
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -755,7 +755,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uTurbulence;
 uniform float uIntensity;
@@ -900,7 +900,7 @@ export function createInstancedWaterMaterial(options = {}) {
         glowScale = WATER_DEFAULTS.glowScale,
         tint = 0xffffff,
         fadeInDuration = WATER_DEFAULTS.fadeInDuration,
-        fadeOutDuration = WATER_DEFAULTS.fadeOutDuration
+        fadeOutDuration = WATER_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive values from turbulence if not explicitly set
@@ -933,23 +933,23 @@ export function createInstancedWaterMaterial(options = {}) {
             uFlowSpeed: { value: finalFlowSpeed },
             uNoiseScale: { value: noiseScale },
             uEdgeFade: { value: edgeFade },
-            uBloomThreshold: { value: 0.5 },  // Mascot bloom threshold (0.35 crystal, 0.85 moon)
+            uBloomThreshold: { value: 0.5 }, // Mascot bloom threshold (0.35 crystal, 0.85 moon)
             uTint: { value: tintColor },
             // Enhanced water system uniforms
-            uDepthGradient: { value: 0.3 },      // Depth color variation
-            uInternalFlowSpeed: { value: 1.0 },  // Internal flow speed multiplier
-            uSparkleIntensity: { value: 0.4 },   // Specular sparkle intensity
+            uDepthGradient: { value: 0.3 }, // Depth color variation
+            uInternalFlowSpeed: { value: 1.0 }, // Internal flow speed multiplier
+            uSparkleIntensity: { value: 0.4 }, // Specular sparkle intensity
             // Screen-space refraction
             uBackgroundTexture: { value: null },
             uResolution: { value: new THREE.Vector2(1, 1) },
-            uHasBackground: { value: 0 }
+            uHasBackground: { value: 0 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
     });
 
     material.userData.turbulence = turbulence;
@@ -1118,7 +1118,22 @@ export function resetRelay(material) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
+export {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    resetCutout,
+    setGrain,
+    resetGrain,
+    resetAnimation,
+};
 
 export default {
     createInstancedWaterMaterial,
@@ -1143,7 +1158,7 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };
 
 // Note: Water element is registered in ElementRegistrations.js to avoid

@@ -30,7 +30,7 @@ const SHARED_RING_ANIMATION = {
         blend: 'add',
         travel: 'angular',
         travelSpeed: 0.5,
-        strengthCurve: 'constant'
+        strengthCurve: 'constant',
     },
     grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.6, blend: 'multiply' },
     blending: 'additive',
@@ -50,46 +50,110 @@ const ELECTRICSHIELD_CONFIG = {
     spawnMode: [
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'flat', bob: { amplitude: 0.008, frequency: 0.3 } },
-            count: 1, scale: 1.5, models: ['lightning-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'flat',
+                bob: { amplitude: 0.008, frequency: 0.3 },
+            },
+            count: 1,
+            scale: 1.5,
+            models: ['lightning-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.0,
-                rotate: { axis: 'x', rotations: 0.75, phase: 0 }, renderOrder: 6,
-                modelOverrides: { 'lightning-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 }, orientationOverride: 'flat' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.0,
+                rotate: { axis: 'x', rotations: 0.75, phase: 0 },
+                renderOrder: 6,
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 },
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'vertical', bob: { amplitude: 0.008, frequency: 0.35 } },
-            count: 1, scale: 1.5, models: ['lightning-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.35 },
+            },
+            count: 1,
+            scale: 1.5,
+            models: ['lightning-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.04,
-                rotate: { axis: 'y', rotations: -0.75, phase: 0 }, renderOrder: 8,
-                modelOverrides: { 'lightning-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 }, orientationOverride: 'vertical' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.04,
+                rotate: { axis: 'y', rotations: -0.75, phase: 0 },
+                renderOrder: 8,
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.45, arcCount: 2 },
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'vertical', bob: { amplitude: 0.008, frequency: 0.4 } },
-            count: 1, scale: 1.5, models: ['lightning-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'vertical',
+                bob: { amplitude: 0.008, frequency: 0.4 },
+            },
+            count: 1,
+            scale: 1.5,
+            models: ['lightning-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.08,
-                rotate: { axis: 'x', rotations: 0.75, phase: 90 }, renderOrder: 10,
-                modelOverrides: { 'lightning-ring': { shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 }, orientationOverride: 'vertical' } }
-            }
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.08,
+                rotate: { axis: 'x', rotations: 0.75, phase: 90 },
+                renderOrder: 10,
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.5, arcCount: 2 },
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0 }, orientation: 'radial', bob: { amplitude: 0.008, frequency: 0.42 } },
-            count: 1, scale: 1.5, models: ['lightning-ring'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0 },
+                orientation: 'radial',
+                bob: { amplitude: 0.008, frequency: 0.42 },
+            },
+            count: 1,
+            scale: 1.5,
+            models: ['lightning-ring'],
             animation: {
-                ...SHARED_RING_ANIMATION, appearAt: 0.12,
+                ...SHARED_RING_ANIMATION,
+                appearAt: 0.12,
                 rotate: { axis: 'y', rotations: -0.75, phase: -45 },
-                atmospherics: [{ preset: 'ozone', targets: ['lightning-ring'], anchor: 'around', intensity: 0.2, sizeScale: 0.7, progressCurve: 'sustain' }],
+                atmospherics: [
+                    {
+                        preset: 'ozone',
+                        targets: ['lightning-ring'],
+                        anchor: 'around',
+                        intensity: 0.2,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 renderOrder: 12,
-                modelOverrides: { 'lightning-ring': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 }, orientationOverride: 'radial' } }
-            }
-        }
+                modelOverrides: {
+                    'lightning-ring': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.55, arcCount: 2 },
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.35, 0.9, 1.0],
@@ -100,7 +164,7 @@ const ELECTRICSHIELD_CONFIG = {
     scaleFrequency: 2,
     tremor: 0.002,
     tremorFrequency: 2,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildElectricEffectGesture(ELECTRICSHIELD_CONFIG);

@@ -29,7 +29,7 @@ import * as THREE from 'three';
 // SHARED NOISE (inline hash-based value noise — lightweight, no simplex overhead)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const DISTORTION_NOISE_GLSL = /* glsl */`
+const DISTORTION_NOISE_GLSL = /* glsl */ `
 float dHash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -50,7 +50,7 @@ float dNoise2D(vec2 p) {
 // SHARED VERTEX SHADER (all distortion types)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const DISTORTION_VERTEX_GLSL = /* glsl */`
+const DISTORTION_VERTEX_GLSL = /* glsl */ `
 varying vec2 vUv;
 varying vec3 vWorldPos;
 
@@ -78,7 +78,7 @@ export function createFireDistortionMaterial() {
             uStrength: { value: 0.005 },
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uTime;
             uniform float uStrength;
             varying vec2 vUv;
@@ -136,7 +136,7 @@ export function createIceDistortionMaterial() {
             uStrength: { value: 0.003 },
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uTime;
             uniform float uStrength;
             varying vec2 vUv;
@@ -193,7 +193,7 @@ export function createWaterDistortionMaterial() {
             uStrength: { value: 0.003 },
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uTime;
             uniform float uStrength;
             varying vec2 vUv;
@@ -248,10 +248,10 @@ export function createVoidDistortionMaterial() {
         uniforms: {
             uTime: { value: 0.0 },
             uStrength: { value: 0.018 },
-            uFadeProgress: { value: 0.0 },  // 0-1-0 lifecycle easing (enter/hold/exit)
+            uFadeProgress: { value: 0.0 }, // 0-1-0 lifecycle easing (enter/hold/exit)
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uTime;
             uniform float uStrength;
             uniform float uFadeProgress;
@@ -342,7 +342,7 @@ export function createLightDistortionMaterial() {
             uStrength: { value: 0.004 },
         },
         vertexShader: DISTORTION_VERTEX_GLSL,
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uTime;
             uniform float uStrength;
             varying vec2 vUv;

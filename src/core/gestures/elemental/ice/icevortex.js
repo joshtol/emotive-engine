@@ -60,16 +60,16 @@ const ICE_VORTEX_CONFIG = {
             easing: 'easeInOut',
             startScale: 1.2,
             endScale: 1.5,
-            startDiameter: 0.6,     // Narrow at bottom for cone
-            endDiameter: 2.0,       // Wider at top for dramatic funnel
-            orientation: 'flat'     // Horizontal crystals stacking upward
+            startDiameter: 0.6, // Narrow at bottom for cone
+            endDiameter: 2.0, // Wider at top for dramatic funnel
+            orientation: 'flat', // Horizontal crystals stacking upward
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.5,
@@ -81,55 +81,57 @@ const ICE_VORTEX_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.1,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'burst-fade',
                 duration: 0.15,
                 easing: 'easeIn',
-                burstScale: 1.1
+                burstScale: 1.1,
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 frost: {
                     start: 0.5,
                     peak: 0.9,
                     end: 0.6,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.12,
                 frequency: 6,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 1.0,
                 max: 2.0,
                 frequency: 5,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             grain: {
                 type: 3,
                 strength: 0.2,
                 scale: 0.3,
                 speed: 2.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: cold mist from vortex
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.6,
-                centrifugal: { speed: 1.2, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.6,
+                    centrifugal: { speed: 1.2, tangentialBias: 0.3 },
+                },
+            ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
             blending: 'normal',
@@ -140,20 +142,20 @@ const ICE_VORTEX_CONFIG = {
                         type: 1,
                         arcWidth: 0.5,
                         arcSpeed: 5.0,
-                        arcCount: 1
+                        arcCount: 1,
                     },
                     scaling: {
                         mode: 'non-uniform',
                         axes: {
                             x: { expand: true, rate: 1.1 },
                             y: { expand: false, rate: 0.3 },
-                            z: { expand: true, rate: 1.1 }
-                        }
+                            z: { expand: true, rate: 1.1 },
+                        },
                     },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     // Glow - intense ice blue
@@ -167,7 +169,7 @@ const ICE_VORTEX_CONFIG = {
     scaleGrowth: 0.03,
     // Tremor - vortex energy
     tremor: 0.008,
-    tremorFrequency: 5
+    tremorFrequency: 5,
 };
 
 /**

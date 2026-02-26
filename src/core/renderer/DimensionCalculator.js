@@ -27,10 +27,16 @@ export class DimensionCalculator {
         const effectiveCenter = this.renderer.getEffectiveCenter();
 
         // Calculate global scale factor for core rendering (uses coreScale for independent control)
-        this.renderer.scaleFactor = (canvasSize / this.renderer.config.referenceSize) * this.renderer.config.baseScale * (effectiveCenter.coreScale || effectiveCenter.scale);
+        this.renderer.scaleFactor =
+            (canvasSize / this.renderer.config.referenceSize) *
+            this.renderer.config.baseScale *
+            (effectiveCenter.coreScale || effectiveCenter.scale);
 
         // Store particle scale factor separately for particle system
-        this.renderer.particleScaleFactor = (canvasSize / this.renderer.config.referenceSize) * this.renderer.config.baseScale * (effectiveCenter.particleScale || effectiveCenter.scale);
+        this.renderer.particleScaleFactor =
+            (canvasSize / this.renderer.config.referenceSize) *
+            this.renderer.config.baseScale *
+            (effectiveCenter.particleScale || effectiveCenter.scale);
 
         return { canvasSize, effectiveCenter };
     }
@@ -48,7 +54,10 @@ export class DimensionCalculator {
 
         // Apply vertical offset for certain emotions (like excited for exclamation mark)
         if (state.properties && state.properties.verticalOffset) {
-            centerY = effectiveCenter.y - this.renderer.config.topOffset + (logicalHeight * state.properties.verticalOffset);
+            centerY =
+                effectiveCenter.y -
+                this.renderer.config.topOffset +
+                logicalHeight * state.properties.verticalOffset;
         }
 
         return { centerX, centerY };
@@ -70,7 +79,7 @@ export class DimensionCalculator {
             centerX += gestureTransform.x || 0;
             centerY += gestureTransform.y || 0;
             scaleMultiplier = gestureTransform.scale || 1;
-            rotationAngle = (gestureTransform.rotation || 0) * Math.PI / 180;
+            rotationAngle = ((gestureTransform.rotation || 0) * Math.PI) / 180;
             glowMultiplier = gestureTransform.glowIntensity || 1;
         }
 
@@ -93,12 +102,19 @@ export class DimensionCalculator {
             centerX += gestureTransforms.offsetX || 0;
             centerY += gestureTransforms.offsetY || 0;
             scaleMultiplier *= gestureTransforms.scale || 1;
-            rotationAngle += (gestureTransforms.rotation || 0) * Math.PI / 180;
+            rotationAngle += ((gestureTransforms.rotation || 0) * Math.PI) / 180;
             // DON'T MULTIPLY - just use the glow value directly to prevent accumulation
             glowMultiplier = gestureTransforms.glow || 1;
         }
 
-        return { centerX, centerY, scaleMultiplier, rotationAngle, glowMultiplier, gestureTransforms };
+        return {
+            centerX,
+            centerY,
+            scaleMultiplier,
+            rotationAngle,
+            glowMultiplier,
+            gestureTransforms,
+        };
     }
 
     /**
@@ -111,10 +127,17 @@ export class DimensionCalculator {
      */
     calculateRenderDimensions(logicalWidth, logicalHeight, state, gestureTransform) {
         // Calculate base dimensions and scale factors
-        const { canvasSize, effectiveCenter } = this.calculateBaseDimensions(logicalWidth, logicalHeight);
+        const { canvasSize, effectiveCenter } = this.calculateBaseDimensions(
+            logicalWidth,
+            logicalHeight
+        );
 
         // Calculate center position with emotion offsets
-        let { centerX, centerY } = this.calculateCenterPosition(effectiveCenter, state, logicalHeight);
+        let { centerX, centerY } = this.calculateCenterPosition(
+            effectiveCenter,
+            state,
+            logicalHeight
+        );
 
         // Apply gesture transform
         let scaleMultiplier, rotationAngle, glowMultiplier;
@@ -122,7 +145,13 @@ export class DimensionCalculator {
             this.applyGestureTransform(centerX, centerY, gestureTransform));
 
         // Apply gesture animations
-        const result = this.applyGestureAnimations(centerX, centerY, scaleMultiplier, rotationAngle, glowMultiplier);
+        const result = this.applyGestureAnimations(
+            centerX,
+            centerY,
+            scaleMultiplier,
+            rotationAngle,
+            glowMultiplier
+        );
         ({ centerX, centerY, scaleMultiplier, rotationAngle, glowMultiplier } = result);
         const { gestureTransforms } = result;
 
@@ -134,7 +163,7 @@ export class DimensionCalculator {
             scaleMultiplier,
             rotationAngle,
             glowMultiplier,
-            gestureTransforms
+            gestureTransforms,
         };
     }
 }

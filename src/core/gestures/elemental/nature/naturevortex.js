@@ -60,14 +60,14 @@ const NATUREVORTEX_CONFIG = {
             endScale: 1.4,
             startDiameter: 0.8,
             endDiameter: 2.5,
-            orientation: 'flat'
+            orientation: 'flat',
         },
         formation: {
             type: 'spiral',
             count: 3,
             spacing: 0,
             arcOffset: 120,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 3,
         scale: 1.4,
@@ -79,24 +79,24 @@ const NATUREVORTEX_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.1,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'burst-fade',
                 duration: 0.15,
                 easing: 'easeIn',
-                burstScale: 1.1
+                burstScale: 1.1,
             },
             pulse: {
                 amplitude: 0.1,
                 frequency: 5,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.8,
                 max: 1.8,
                 frequency: 4,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             scaleVariance: 0.2,
             lifetimeVariance: 0.15,
@@ -108,10 +108,10 @@ const NATUREVORTEX_CONFIG = {
                         type: 1,
                         arcWidth: 0.5,
                         arcSpeed: 4.0,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'flat'
-                }
+                    orientationOverride: 'flat',
+                },
             },
             cutout: {
                 strength: 0.55,
@@ -120,24 +120,26 @@ const NATUREVORTEX_CONFIG = {
                 blend: 'add',
                 travel: 'spiral',
                 travelSpeed: 2.5,
-                strengthCurve: 'constant'
+                strengthCurve: 'constant',
             },
             grain: {
                 type: 3,
                 strength: 0.04,
                 scale: 0.25,
                 speed: 0.5,
-                blend: 'multiply'
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'falling-leaves',
-                targets: ['vine-ring'],
-                anchor: 'around',
-                intensity: 0.5,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }]
-        }
+            atmospherics: [
+                {
+                    preset: 'falling-leaves',
+                    targets: ['vine-ring'],
+                    anchor: 'around',
+                    intensity: 0.5,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
+        },
     },
 
     // Glow - bright green energy
@@ -152,7 +154,7 @@ const NATUREVORTEX_CONFIG = {
     // Tremor - vortex energy
     tremor: 0.007,
     tremorFrequency: 5,
-    decayRate: 0.15
+    decayRate: 0.15,
 };
 
 /**

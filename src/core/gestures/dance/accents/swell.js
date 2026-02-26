@@ -14,7 +14,7 @@ export default {
     config: {
         duration: 600,
         musicalDuration: { musical: true, beats: 1.5 },
-        strength: 1.0
+        strength: 1.0,
     },
 
     rhythm: {
@@ -24,7 +24,7 @@ export default {
         durationSync: { mode: 'beats', beats: 1.5 },
         interruptible: true,
         priority: 4,
-        blendable: true
+        blendable: true,
     },
 
     apply: (_particle, _progress, _params) => false,
@@ -45,7 +45,7 @@ export default {
             } else {
                 // Gradual release (40% of time for falling)
                 const releaseT = (progress - 0.6) / 0.4;
-                envelope = 1 - (releaseT * releaseT); // Ease out - gentle release
+                envelope = 1 - releaseT * releaseT; // Ease out - gentle release
             }
 
             // Rise up slightly during swell
@@ -57,8 +57,8 @@ export default {
                 scale: 1.0,
                 scaleBoost: 1.0 + envelope * 0.1 * strength,
                 glowBoost: envelope * 0.4 * strength,
-                positionBoost: [0, rise, 0]
+                positionBoost: [0, rise, 0],
             };
-        }
-    }
+        },
+    },
 };

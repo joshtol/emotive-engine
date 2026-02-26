@@ -68,7 +68,9 @@ export class StanceRegistry {
 
     /** @returns {{name: string, config: Object}|null} */
     getActiveStance() {
-        return this._active ? { name: this._active.name, config: { ...this._active.config } } : null;
+        return this._active
+            ? { name: this._active.name, config: { ...this._active.config } }
+            : null;
     }
 
     /** @returns {string[]} */

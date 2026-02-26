@@ -51,7 +51,7 @@ export const ATMOSPHERIC_PRESETS = {
         spawnRate: 18,
         lifetimeMin: 1.5,
         lifetimeMax: 2.5,
-        sizeMin: 0.10,
+        sizeMin: 0.1,
         sizeMax: 0.18,
         spawnOffsetY: 0.0,
         initialSpeedMin: 0.1,
@@ -63,9 +63,9 @@ export const ATMOSPHERIC_PRESETS = {
         turbulence: 0.2,
         rotationSpeedMax: 1.0,
         endSizeMultiplier: 1.8,
-        opacity: 0.20,
+        opacity: 0.2,
         colorWarm: [0.25, 0.22, 0.18],
-        colorCool: [0.18, 0.18, 0.20],
+        colorCool: [0.18, 0.18, 0.2],
     },
 
     /**
@@ -79,11 +79,11 @@ export const ATMOSPHERIC_PRESETS = {
         lifetimeMin: 1.5,
         lifetimeMax: 3.0,
         sizeMin: 0.25,
-        sizeMax: 0.50,
-        spawnOffsetY: -0.10,
+        sizeMax: 0.5,
+        spawnOffsetY: -0.1,
         initialSpeedMin: 0.02,
         initialSpeedMax: 0.06,
-        spreadXZ: 0.20,
+        spreadXZ: 0.2,
         directionY: -0.05,
         buoyancy: -0.005,
         drag: 0.8,
@@ -91,7 +91,7 @@ export const ATMOSPHERIC_PRESETS = {
         rotationSpeedMax: 0.4,
         endSizeMultiplier: 1.5,
         opacity: 0.12,
-        color: [0.75, 0.82, 0.90],
+        color: [0.75, 0.82, 0.9],
     },
 
     /**
@@ -117,8 +117,8 @@ export const ATMOSPHERIC_PRESETS = {
         rotationSpeedMax: 2.0,
         endSizeMultiplier: 2.5,
         opacity: 0.25,
-        colorWarm: [0.80, 0.80, 0.80],
-        colorCool: [0.60, 0.60, 0.60],
+        colorWarm: [0.8, 0.8, 0.8],
+        colorCool: [0.6, 0.6, 0.6],
     },
 
     /**
@@ -131,8 +131,8 @@ export const ATMOSPHERIC_PRESETS = {
         spawnRate: 1,
         lifetimeMin: 6.0,
         lifetimeMax: 10.0,
-        sizeMin: 0.50,
-        sizeMax: 1.00,
+        sizeMin: 0.5,
+        sizeMax: 1.0,
         spawnOffsetY: 0.0,
         initialSpeedMin: 0.01,
         initialSpeedMax: 0.03,
@@ -144,7 +144,7 @@ export const ATMOSPHERIC_PRESETS = {
         rotationSpeedMax: 0.15,
         endSizeMultiplier: 1.1,
         opacity: 0.03,
-        color: [0.65, 0.70, 0.75],
+        color: [0.65, 0.7, 0.75],
     },
 
     /**
@@ -162,7 +162,7 @@ export const ATMOSPHERIC_PRESETS = {
         spawnOffsetY: 0.0,
         initialSpeedMin: 0.3,
         initialSpeedMax: 0.8,
-        spreadXZ: 0.10,
+        spreadXZ: 0.1,
         directionY: 1.0,
         buoyancy: 0.15,
         drag: 2.5,
@@ -170,8 +170,8 @@ export const ATMOSPHERIC_PRESETS = {
         rotationSpeedMax: 2.0,
         endSizeMultiplier: 2.0,
         opacity: 0.15,
-        colorWarm: [0.60, 0.70, 0.85],
-        colorCool: [0.40, 0.45, 0.55],
+        colorWarm: [0.6, 0.7, 0.85],
+        colorCool: [0.4, 0.45, 0.55],
     },
 
     /**
@@ -191,7 +191,7 @@ export const ATMOSPHERIC_PRESETS = {
         sizeMax: 0.25,
         spawnOffsetY: 0.0,
         initialSpeedMin: 0.03,
-        initialSpeedMax: 0.10,
+        initialSpeedMax: 0.1,
         spreadXZ: 0.15,
         directionY: -0.1,
         buoyancy: -0.01,
@@ -230,7 +230,7 @@ export const ATMOSPHERIC_PRESETS = {
         turbulence: 0.04,
         rotationSpeedMax: 0.15,
         endSizeMultiplier: 1.5,
-        opacity: 0.70,
+        opacity: 0.7,
     },
 
     /**
@@ -247,12 +247,12 @@ export const ATMOSPHERIC_PRESETS = {
         lifetimeMin: 0.5,
         lifetimeMax: 1.2,
         sizeMin: 0.14,
-        sizeMax: 0.30,
+        sizeMax: 0.3,
         spawnOffsetY: 0.05,
         spawnRadius: 0.35,
         initialSpeedMin: 0.8,
         initialSpeedMax: 1.6,
-        spreadXZ: 0.40,
+        spreadXZ: 0.4,
         directionY: 0.5,
         buoyancy: -0.8,
         drag: 1.0,
@@ -282,14 +282,14 @@ export const ATMOSPHERIC_PRESETS = {
         spawnOffsetY: 0.0,
         initialSpeedMin: 0.02,
         initialSpeedMax: 0.08,
-        spreadXZ: 0.30,
+        spreadXZ: 0.3,
         directionY: 0.3,
         buoyancy: 0.015,
         drag: 0.6,
         turbulence: 0.25,
         rotationSpeedMax: 0.0,
         endSizeMultiplier: 0.7,
-        opacity: 0.90,
+        opacity: 0.9,
         color: [1.0, 0.85, 0.4],
     },
 
@@ -305,21 +305,21 @@ export const ATMOSPHERIC_PRESETS = {
         spawnRate: 20,
         lifetimeMin: 1.5,
         lifetimeMax: 3.0,
-        sizeMin: 0.02,                  // Tiny specks
-        sizeMax: 0.10,                  // Up to visible motes (not chunks)
+        sizeMin: 0.02, // Tiny specks
+        sizeMax: 0.1, // Up to visible motes (not chunks)
         spawnOffsetY: -0.1,
         initialSpeedMin: 0.01,
         initialSpeedMax: 0.04,
-        spreadXZ: 0.30,
+        spreadXZ: 0.3,
         directionY: 0.4,
         buoyancy: 0.008,
         drag: 1.2,
-        turbulence: 0.20,
-        rotationSpeedMax: 0.3,          // Slow tumble — dust barely rotates
+        turbulence: 0.2,
+        rotationSpeedMax: 0.3, // Slow tumble — dust barely rotates
         endSizeMultiplier: 0.4,
-        opacity: 0.35,                  // Subtle haze — barely perceptible motes
-        color: [0.60, 0.48, 0.32],          // Warmer tan dust
-        colorVariant: [0.70, 0.45, 0.25],   // Warm ochre variant
+        opacity: 0.35, // Subtle haze — barely perceptible motes
+        color: [0.6, 0.48, 0.32], // Warmer tan dust
+        colorVariant: [0.7, 0.45, 0.25], // Warm ochre variant
         gravity: 0.0,
     },
 
@@ -336,20 +336,20 @@ export const ATMOSPHERIC_PRESETS = {
         lifetimeMin: 0.8,
         lifetimeMax: 1.6,
         sizeMin: 0.03,
-        sizeMax: 0.14,                  // Wider range — rare larger pebbles
+        sizeMax: 0.14, // Wider range — rare larger pebbles
         spawnOffsetY: 0.15,
         initialSpeedMin: 0.08,
-        initialSpeedMax: 0.20,
-        spreadXZ: 0.40,
+        initialSpeedMax: 0.2,
+        spreadXZ: 0.4,
         directionY: 0.1,
         buoyancy: 0.0,
         drag: 0.3,
         turbulence: 0.05,
         rotationSpeedMax: 3.0,
         endSizeMultiplier: 0.9,
-        opacity: 0.80,
-        color: [0.45, 0.40, 0.35],          // Dark grey-brown stone
-        colorVariant: [0.55, 0.42, 0.28],   // Warmer brown variant
+        opacity: 0.8,
+        color: [0.45, 0.4, 0.35], // Dark grey-brown stone
+        colorVariant: [0.55, 0.42, 0.28], // Warmer brown variant
         gravity: 0.4,
     },
 
@@ -364,21 +364,21 @@ export const ATMOSPHERIC_PRESETS = {
         spawnRate: 8,
         lifetimeMin: 0.6,
         lifetimeMax: 1.2,
-        sizeMin: 0.10,
+        sizeMin: 0.1,
         sizeMax: 0.22,
-        spawnOffsetY: 0.10,
+        spawnOffsetY: 0.1,
         initialSpeedMin: 0.15,
         initialSpeedMax: 0.35,
-        spreadXZ: 0.50,
+        spreadXZ: 0.5,
         directionY: 0.3,
         buoyancy: 0.0,
         drag: 0.15,
         turbulence: 0.02,
         rotationSpeedMax: 4.0,
         endSizeMultiplier: 0.95,
-        opacity: 0.90,
-        color: [0.40, 0.36, 0.30],          // Dark stone
-        colorVariant: [0.50, 0.35, 0.20],   // Brown variant
+        opacity: 0.9,
+        color: [0.4, 0.36, 0.3], // Dark stone
+        colorVariant: [0.5, 0.35, 0.2], // Brown variant
         gravity: 0.8,
     },
 
@@ -399,16 +399,16 @@ export const ATMOSPHERIC_PRESETS = {
         spawnOffsetY: 0.5,
         initialSpeedMin: 0.01,
         initialSpeedMax: 0.06,
-        spreadXZ: 0.50,
+        spreadXZ: 0.5,
         directionY: -0.3,
         buoyancy: -0.005,
         drag: 1.0,
         turbulence: 0.25,
         rotationSpeedMax: 2.5,
-        endSizeMultiplier: 0.80,
+        endSizeMultiplier: 0.8,
         opacity: 0.65,
-        color: [0.90, 0.70, 0.25],          // Golden yellow
-        colorVariant: [0.75, 0.30, 0.12],   // Warm orange-red
+        color: [0.9, 0.7, 0.25], // Golden yellow
+        colorVariant: [0.75, 0.3, 0.12], // Warm orange-red
         gravity: 0.03,
     },
 };
@@ -435,18 +435,18 @@ function smoothstep(edge0, edge1, x) {
  */
 export function evaluateProgressCurve(curve, progress) {
     switch (curve) {
-    case 'sustain':
-        return 1.0;
-    case 'rampUp':
-        return smoothstep(0, 0.5, progress);
-    case 'rampDown':
-        return 1 - smoothstep(0.5, 1.0, progress);
-    case 'pulse':
-        return Math.sin(progress * Math.PI);
-    case 'burst':
-        return 1 - smoothstep(0, 0.3, progress);
-    default:
-        return 1.0;
+        case 'sustain':
+            return 1.0;
+        case 'rampUp':
+            return smoothstep(0, 0.5, progress);
+        case 'rampDown':
+            return 1 - smoothstep(0.5, 1.0, progress);
+        case 'pulse':
+            return Math.sin(progress * Math.PI);
+        case 'burst':
+            return 1 - smoothstep(0, 0.3, progress);
+        default:
+            return 1.0;
     }
 }
 
@@ -516,25 +516,25 @@ export function resolveLayerConfig(layerConfig) {
 
     // Apply anchor offset to spawnOffsetY
     const anchor = layerConfig.anchor || 'above';
-    let {spawnOffsetY} = preset;
+    let { spawnOffsetY } = preset;
     const anchorOffset = layerConfig.anchorOffset ?? 0;
 
     switch (anchor) {
-    case 'above':
-        spawnOffsetY = Math.abs(preset.spawnOffsetY) + anchorOffset;
-        materialConfig.directionY = 1.0;
-        break;
-    case 'below':
-        spawnOffsetY = -(Math.abs(preset.spawnOffsetY)) + anchorOffset;
-        materialConfig.directionY = preset.directionY ?? -0.3;
-        break;
-    case 'around':
-        spawnOffsetY = anchorOffset;
-        materialConfig.spreadXZ = preset.spreadXZ * 1.5; // Wider lateral spread
-        break;
-    case 'trailing':
-        spawnOffsetY = anchorOffset;
-        break;
+        case 'above':
+            spawnOffsetY = Math.abs(preset.spawnOffsetY) + anchorOffset;
+            materialConfig.directionY = 1.0;
+            break;
+        case 'below':
+            spawnOffsetY = -Math.abs(preset.spawnOffsetY) + anchorOffset;
+            materialConfig.directionY = preset.directionY ?? -0.3;
+            break;
+        case 'around':
+            spawnOffsetY = anchorOffset;
+            materialConfig.spreadXZ = preset.spreadXZ * 1.5; // Wider lateral spread
+            break;
+        case 'trailing':
+            spawnOffsetY = anchorOffset;
+            break;
     }
     materialConfig.spawnOffsetY = spawnOffsetY;
 

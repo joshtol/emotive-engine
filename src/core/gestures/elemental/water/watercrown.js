@@ -57,12 +57,12 @@ const WATERCROWN_CONFIG = {
         type: 'anchor',
         anchor: {
             landmark: 'top',
-            offset: { x: 0, y: 0.1, z: 0 },   // Higher hover for larger crown
-            orientation: 'flat',              // Horizontal ring
+            offset: { x: 0, y: 0.1, z: 0 }, // Higher hover for larger crown
+            orientation: 'flat', // Horizontal ring
             bob: {
                 amplitude: 0.025,
-                frequency: 0.3                // Slow gentle bob
-            }
+                frequency: 0.3, // Slow gentle bob
+            },
         },
         count: 1,
         scale: 2.0,
@@ -74,16 +74,16 @@ const WATERCROWN_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.25,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.1,
-                geometryStability: true
+                geometryStability: true,
             },
             // No cutout — transparent refraction shows background through water
             // No grain — multiply grain on transparent refraction = dark speckles
@@ -92,13 +92,13 @@ const WATERCROWN_CONFIG = {
                     start: 0.1,
                     peak: 0.25,
                     end: 0.15,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.06,
                 frequency: 2,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             // Slow majestic rotation (Z axis because ring is flat)
             rotate: { axis: 'z', rotations: 1, phase: 0 },
@@ -110,14 +110,14 @@ const WATERCROWN_CONFIG = {
                 'splash-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.9,    // Wide arcs for full crown
-                        arcSpeed: 0.8,    // Slow internal animation
-                        arcCount: 3       // Multiple arcs for regal look
-                    }
-                }
+                        arcWidth: 0.9, // Wide arcs for full crown
+                        arcSpeed: 0.8, // Slow internal animation
+                        arcCount: 3, // Multiple arcs for regal look
+                    },
+                },
             },
             // No atmospherics — crown floats serenely, no violent water motion
-        }
+        },
     },
 
     // Wobble - minimal for regal effect
@@ -132,7 +132,7 @@ const WATERCROWN_CONFIG = {
     glowColor: [0.3, 0.6, 1.0],
     glowIntensityMin: 0.9,
     glowIntensityMax: 1.4,
-    glowPulseRate: 3
+    glowPulseRate: 3,
 };
 
 /**

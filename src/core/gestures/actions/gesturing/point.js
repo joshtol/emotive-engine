@@ -41,59 +41,59 @@ export default {
 
     // Default configuration
     config: {
-        duration: 1000,     // Legacy fallback
+        duration: 1000, // Legacy fallback
         musicalDuration: { musical: true, beats: 2 }, // 2 beats
-        amplitude: 15,      // Point extension distance (pixels)
+        amplitude: 15, // Point extension distance (pixels)
         direction: 'right', // Point direction: 'left', 'right', 'up', 'down'
-        strength: 0.8,      // Overall motion intensity
+        strength: 0.8, // Overall motion intensity
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'point',
             direction: 'right',
-            strength: 0.8
-        }
+            strength: 0.8,
+        },
     },
 
     // Rhythm configuration - point syncs to musical timing
     rhythm: {
         enabled: true,
-        syncMode: 'beat',         // Point on beat
-        timingSync: 'nextBeat',   // Start on next beat
-        interruptible: true,      // Can interrupt mid-point
-        priority: 4,              // Medium priority
-        blendable: true,          // Can blend with other effects
+        syncMode: 'beat', // Point on beat
+        timingSync: 'nextBeat', // Start on next beat
+        interruptible: true, // Can interrupt mid-point
+        priority: 4, // Medium priority
+        blendable: true, // Can blend with other effects
         crossfadePoint: 'anyBeat', // Can transition out on any beat
 
         // Point emphasis syncs to beat
         amplitudeSync: {
-            onBeat: 1.5,      // Stronger point on beat
-            offBeat: 0.7,     // Gentler between beats
-            curve: 'ease'     // Smooth curve
+            onBeat: 1.5, // Stronger point on beat
+            offBeat: 0.7, // Gentler between beats
+            curve: 'ease', // Smooth curve
         },
 
         // Duration syncs to musical time
         durationSync: {
             mode: 'beats',
-            beats: 2          // Point for 2 beats
+            beats: 2, // Point for 2 beats
         },
 
         // Accent response for emphasis
         accentResponse: {
             enabled: true,
-            multiplier: 1.6   // 60% stronger on accented beats
+            multiplier: 1.6, // 60% stronger on accented beats
         },
 
         // Pattern-specific pointing styles
         patternOverrides: {
-            'march': {
+            march: {
                 // Strong, deliberate pointing
-                amplitudeSync: { onBeat: 2.0, offBeat: 0.5, curve: 'pulse' }
+                amplitudeSync: { onBeat: 2.0, offBeat: 0.5, curve: 'pulse' },
             },
-            'swing': {
+            swing: {
                 // Smooth jazzy pointing
-                amplitudeSync: { onBeat: 1.4, offBeat: 0.8, curve: 'bounce' }
-            }
-        }
+                amplitudeSync: { onBeat: 1.4, offBeat: 0.8, curve: 'bounce' },
+            },
+        },
     },
 
     /**
@@ -112,7 +112,7 @@ export default {
             startY: particle.y,
             startVx: particle.vx,
             startVy: particle.vy,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -140,8 +140,8 @@ export default {
         // Apply rhythm modulation if present
         let amplitude = config.amplitude * strength * particle.scaleFactor;
         if (motion.rhythmModulation) {
-            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+            amplitude *= motion.rhythmModulation.accentMultiplier || 1;
         }
 
         // Point curve - extends and returns (sine wave)
@@ -149,21 +149,22 @@ export default {
 
         // Direction vectors
         const direction = config.direction || 'right';
-        let vx = 0, vy = 0;
+        let vx = 0,
+            vy = 0;
 
-        switch(direction) {
-        case 'right':
-            vx = 1;
-            break;
-        case 'left':
-            vx = -1;
-            break;
-        case 'up':
-            vy = -1;
-            break;
-        case 'down':
-            vy = 1;
-            break;
+        switch (direction) {
+            case 'right':
+                vx = 1;
+                break;
+            case 'left':
+                vx = -1;
+                break;
+            case 'up':
+                vy = -1;
+                break;
+            case 'down':
+                vy = 1;
+                break;
         }
 
         // Apply forward momentum
@@ -172,7 +173,7 @@ export default {
 
         // Smooth ending - gradually reduce velocity modifications
         if (progress > 0.9) {
-            const endFactor = 1 - ((progress - 0.9) * 10);
+            const endFactor = 1 - (progress - 0.9) * 10;
             particle.vx = particle.vx * (0.95 + endFactor * 0.05);
             particle.vy = particle.vy * (0.95 + endFactor * 0.05);
         }
@@ -194,9 +195,7 @@ export default {
      * @returns {number} Eased value
      */
     easeInOutCubic(t) {
-        return t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
 
     /**
@@ -221,9 +220,10 @@ export default {
             const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
             // Apply easing
-            const easeProgress = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            const easeProgress =
+                progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
             // Point curve - sine wave that returns to 0
             const pointCurve = Math.sin(easeProgress * Math.PI);
@@ -232,29 +232,29 @@ export default {
             let xPosition = 0;
             let yRotation = 0;
 
-            switch(direction) {
-            case 'right':
-                xPosition = pointCurve * amplitude;
-                yRotation = pointCurve * 0.25; // ~14 degrees
-                break;
-            case 'left':
-                xPosition = -pointCurve * amplitude;
-                yRotation = -pointCurve * 0.25;
-                break;
-            case 'up':
-                // Point upward uses slight Y-axis tilt
-                yRotation = 0;
-                break;
-            case 'down':
-                yRotation = 0;
-                break;
+            switch (direction) {
+                case 'right':
+                    xPosition = pointCurve * amplitude;
+                    yRotation = pointCurve * 0.25; // ~14 degrees
+                    break;
+                case 'left':
+                    xPosition = -pointCurve * amplitude;
+                    yRotation = -pointCurve * 0.25;
+                    break;
+                case 'up':
+                    // Point upward uses slight Y-axis tilt
+                    yRotation = 0;
+                    break;
+                case 'down':
+                    yRotation = 0;
+                    break;
             }
 
             return {
                 position: [xPosition, 0, 0],
                 rotation: [0, yRotation, 0],
-                scale: 1.0
+                scale: 1.0,
             };
-        }
-    }
+        },
+    },
 };

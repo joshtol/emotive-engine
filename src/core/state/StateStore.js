@@ -39,7 +39,7 @@ export class StateStore {
             updates: 0,
             notifications: 0,
             computedCacheHits: 0,
-            computedCacheMisses: 0
+            computedCacheMisses: 0,
         };
     }
 
@@ -133,7 +133,7 @@ export class StateStore {
         const subscriber = {
             path,
             callback: cb,
-            id
+            id,
         };
 
         this._subscribers.set(id, subscriber);
@@ -171,7 +171,7 @@ export class StateStore {
                 this._computed.set(name, result);
 
                 return result;
-            }
+            },
         });
     }
 
@@ -294,9 +294,12 @@ export class StateStore {
     notifySubscribers(updates) {
         for (const subscriber of this._subscribers.values()) {
             // Check if subscriber cares about these updates
-            if (!subscriber.path || Object.keys(updates).some(path =>
-                path.startsWith(subscriber.path) || subscriber.path.startsWith(path)
-            )) {
+            if (
+                !subscriber.path ||
+                Object.keys(updates).some(
+                    path => path.startsWith(subscriber.path) || subscriber.path.startsWith(path)
+                )
+            ) {
                 subscriber.callback(this._state, updates);
                 this._stats.notifications++;
             }
@@ -309,9 +312,11 @@ export class StateStore {
      */
     invalidateComputed(changedPaths) {
         for (const [name, deps] of this._computedDeps.entries()) {
-            if (deps.some(dep => changedPaths.some(path =>
-                dep.startsWith(path) || path.startsWith(dep)
-            ))) {
+            if (
+                deps.some(dep =>
+                    changedPaths.some(path => dep.startsWith(path) || path.startsWith(dep))
+                )
+            ) {
                 this._computed.delete(name);
             }
         }
@@ -325,7 +330,7 @@ export class StateStore {
         this._history.push({
             timestamp: Date.now(),
             updates,
-            state: this.deepClone(this._state)
+            state: this.deepClone(this._state),
         });
 
         // Limit history size
@@ -358,8 +363,13 @@ export class StateStore {
      * @private
      */
     getNestedValue(obj, path) {
-        return path.split('.').reduce((current, key) =>
-            current && current[key] !== undefined ? current[key] : undefined, obj);
+        return path
+            .split('.')
+            .reduce(
+                (current, key) =>
+                    current && current[key] !== undefined ? current[key] : undefined,
+                obj
+            );
     }
 
     /**
@@ -391,7 +401,7 @@ export class StateStore {
                 diff[key] = {
                     type: 'changed',
                     oldValue: oldObj[key],
-                    newValue: newObj[key]
+                    newValue: newObj[key],
                 };
             }
         }
@@ -416,7 +426,7 @@ export class StateStore {
             subscribers: this._subscribers.size,
             historySize: this._history.length,
             computedValues: this._computed.size,
-            validators: this._validators.size
+            validators: this._validators.size,
         };
     }
 }
@@ -429,7 +439,7 @@ export const engineState = new StateStore({
         running: false,
         paused: false,
         fps: 60,
-        frameCount: 0
+        frameCount: 0,
     },
 
     // Renderer state
@@ -440,13 +450,13 @@ export const engineState = new StateStore({
         breathRate: 1.0,
         breathDepth: 1.0,
         sleeping: false,
-        zenMode: false
+        zenMode: false,
     },
 
     // Animation state
     animation: {
         currentGesture: null,
-        activeLoops: 0
+        activeLoops: 0,
     },
 
     // Emotion state
@@ -454,14 +464,14 @@ export const engineState = new StateStore({
         current: 'neutral',
         intensity: 1.0,
         undertone: null,
-        transitioning: false
+        transitioning: false,
     },
 
     // Particle state
     particles: {
         active: true,
         count: 0,
-        maxParticles: 100
+        maxParticles: 100,
     },
 
     // Sound state
@@ -469,7 +479,7 @@ export const engineState = new StateStore({
         enabled: false,
         volume: 1.0,
         bpm: 120,
-        rhythmEnabled: false
+        rhythmEnabled: false,
     },
 
     // Performance state
@@ -477,8 +487,8 @@ export const engineState = new StateStore({
         quality: 'high',
         adaptiveQuality: true,
         targetFPS: 60,
-        actualFPS: 60
-    }
+        actualFPS: 60,
+    },
 });
 
 // Export for convenience

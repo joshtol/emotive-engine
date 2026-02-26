@@ -14,7 +14,7 @@ export const STATE_PERFORMANCES = {
         delay: 0,
         baseIntensity: 0.5,
         emotionDuration: 600,
-        description: 'System idle, waiting for user'
+        description: 'System idle, waiting for user',
     },
 
     ready: {
@@ -25,7 +25,7 @@ export const STATE_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.6,
         emotionDuration: 500,
-        description: 'System ready for interaction'
+        description: 'System ready for interaction',
     },
 
     waiting: {
@@ -38,7 +38,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 600,
         description: 'System waiting for process to complete',
         loop: true,
-        loopInterval: 1500
+        loopInterval: 1500,
     },
 
     // Workflow states
@@ -52,7 +52,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 600,
         description: 'System actively processing',
         loop: true,
-        loopInterval: 1200
+        loopInterval: 1200,
     },
 
     scanning: {
@@ -65,7 +65,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 500,
         description: 'Scanning or searching',
         loop: true,
-        loopInterval: 1000
+        loopInterval: 1000,
     },
 
     analyzing: {
@@ -78,7 +78,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 600,
         description: 'Analyzing data or input',
         loop: true,
-        loopInterval: 1400
+        loopInterval: 1400,
     },
 
     // Completion states
@@ -90,7 +90,7 @@ export const STATE_PERFORMANCES = {
         delay: 100,
         baseIntensity: 0.8,
         emotionDuration: 500,
-        description: 'Final step, about to complete'
+        description: 'Final step, about to complete',
     },
 
     completed: {
@@ -101,7 +101,7 @@ export const STATE_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.85,
         emotionDuration: 500,
-        description: 'Process completed successfully'
+        description: 'Process completed successfully',
     },
 
     // Review states
@@ -113,7 +113,7 @@ export const STATE_PERFORMANCES = {
         delay: 0,
         baseIntensity: 0.65,
         emotionDuration: 600,
-        description: 'Reviewing information or results'
+        description: 'Reviewing information or results',
     },
 
     // Active monitoring
@@ -127,7 +127,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 700,
         description: 'Actively monitoring for changes',
         loop: true,
-        loopInterval: 2000
+        loopInterval: 2000,
     },
 
     // Paused state
@@ -139,7 +139,7 @@ export const STATE_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.5,
         emotionDuration: 600,
-        description: 'System paused, can resume'
+        description: 'System paused, can resume',
     },
 
     // Loading state
@@ -153,7 +153,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 500,
         description: 'Loading data or content',
         loop: true,
-        loopInterval: 1100
+        loopInterval: 1100,
     },
 
     // Connecting state
@@ -167,7 +167,7 @@ export const STATE_PERFORMANCES = {
         emotionDuration: 600,
         description: 'Establishing connection',
         loop: true,
-        loopInterval: 1300
+        loopInterval: 1300,
     },
 
     // Active state
@@ -179,8 +179,8 @@ export const STATE_PERFORMANCES = {
         delay: 0,
         baseIntensity: 0.75,
         emotionDuration: 500,
-        description: 'System actively engaged'
-    }
+        description: 'System actively engaged',
+    },
 };
 
 export default STATE_PERFORMANCES;

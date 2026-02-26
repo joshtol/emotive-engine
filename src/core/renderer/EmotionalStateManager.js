@@ -70,24 +70,32 @@ export class EmotionalStateManager {
     applyUndertoneModifiers(undertone) {
         // Handle weighted modifier from state machine
         if (undertone && typeof undertone === 'object' && undertone.weight !== undefined) {
-            const {weight} = undertone;
+            const { weight } = undertone;
 
             // Apply weighted modifiers for smooth transitions
             // Use default value of 1.0 if property is undefined
-            this.renderer.state.sizeMultiplier = 1.0 + ((undertone.sizeMultiplier || 1.0) - 1.0) * weight;
+            this.renderer.state.sizeMultiplier =
+                1.0 + ((undertone.sizeMultiplier || 1.0) - 1.0) * weight;
             this.renderer.state.jitterAmount = (undertone.jitterAmount || 0) * weight;
-            this.renderer.state.episodicFlutter = weight > 0.5 ? (undertone.episodicFlutter || false) : false;
-            this.renderer.state.glowRadiusMult = 1.0 + ((undertone.glowRadiusMult || 1.0) - 1.0) * weight;
-            this.renderer.state.breathRateMult = 1.0 + ((undertone.breathRateMult || 1.0) - 1.0) * weight;
-            this.renderer.state.breathDepthMult = 1.0 + ((undertone.breathDepthMult || 1.0) - 1.0) * weight;
-            this.renderer.state.breathIrregular = weight > 0.5 ? (undertone.breathIrregular || false) : false;
+            this.renderer.state.episodicFlutter =
+                weight > 0.5 ? undertone.episodicFlutter || false : false;
+            this.renderer.state.glowRadiusMult =
+                1.0 + ((undertone.glowRadiusMult || 1.0) - 1.0) * weight;
+            this.renderer.state.breathRateMult =
+                1.0 + ((undertone.breathRateMult || 1.0) - 1.0) * weight;
+            this.renderer.state.breathDepthMult =
+                1.0 + ((undertone.breathDepthMult || 1.0) - 1.0) * weight;
+            this.renderer.state.breathIrregular =
+                weight > 0.5 ? undertone.breathIrregular || false : false;
             this.renderer.state.particleRateMult = 1.0;
 
             // Apply weighted glow and color effects
             this.renderer.state.glowPulse = (undertone.glowPulse || 0) * weight;
             this.renderer.state.brightnessFlicker = (undertone.brightnessFlicker || 0) * weight;
-            this.renderer.state.brightnessMult = 1.0 + ((undertone.brightnessMult || 1.0) - 1.0) * weight;
-            this.renderer.state.saturationMult = 1.0 + ((undertone.saturationMult || 1.0) - 1.0) * weight;
+            this.renderer.state.brightnessMult =
+                1.0 + ((undertone.brightnessMult || 1.0) - 1.0) * weight;
+            this.renderer.state.saturationMult =
+                1.0 + ((undertone.saturationMult || 1.0) - 1.0) * weight;
             this.renderer.state.hueShift = (undertone.hueShift || 0) * weight;
             return;
         }
@@ -148,19 +156,26 @@ export class EmotionalStateManager {
         this.renderer.currentUndertone = undertone;
 
         // Get weighted undertone modifier from state machine if available
-        const weightedModifier = this.renderer.stateMachine && this.renderer.stateMachine.getWeightedUndertoneModifiers ?
-            this.renderer.stateMachine.getWeightedUndertoneModifiers() : null;
+        const weightedModifier =
+            this.renderer.stateMachine && this.renderer.stateMachine.getWeightedUndertoneModifiers
+                ? this.renderer.stateMachine.getWeightedUndertoneModifiers()
+                : null;
 
         // Apply all undertone modifiers (visual, breathing only - no particles)
         this.applyUndertoneModifiers(weightedModifier || undertone);
 
         // Update colors with the new undertone
         if (this.renderer.state.emotion) {
-            const emotionConfig = emotionCache && emotionCache.isInitialized ?
-                emotionCache.getEmotion(this.renderer.state.emotion) : getEmotion(this.renderer.state.emotion);
+            const emotionConfig =
+                emotionCache && emotionCache.isInitialized
+                    ? emotionCache.getEmotion(this.renderer.state.emotion)
+                    : getEmotion(this.renderer.state.emotion);
             if (emotionConfig) {
                 const baseColor = emotionConfig.glowColor || this.renderer.config.defaultGlowColor;
-                const targetColor = this.renderer.applyUndertoneToColor(baseColor, weightedModifier || undertone);
+                const targetColor = this.renderer.applyUndertoneToColor(
+                    baseColor,
+                    weightedModifier || undertone
+                );
 
                 // Start color transition to new undertone color (faster for responsiveness)
                 this.renderer.startColorTransition(targetColor, 200); // 200ms transition
@@ -175,9 +190,12 @@ export class EmotionalStateManager {
      * @param {string|Object|null} undertone - Optional undertone modifier
      */
     setEmotionalState(emotion, properties, undertone = null) {
-
         // Clear glow cache when emotion or undertone changes (colors will change)
-        if ((this.renderer.state.emotion !== emotion || this.renderer.state.undertone !== undertone) && this.renderer.glowCache) {
+        if (
+            (this.renderer.state.emotion !== emotion ||
+                this.renderer.state.undertone !== undertone) &&
+            this.renderer.glowCache
+        ) {
             this.renderer.glowCache.clear();
         }
 
@@ -186,8 +204,10 @@ export class EmotionalStateManager {
         this.renderer.currentUndertone = undertone;
 
         // Get weighted undertone modifier from state machine if available
-        const weightedModifier = this.renderer.stateMachine && this.renderer.stateMachine.getWeightedUndertoneModifiers ?
-            this.renderer.stateMachine.getWeightedUndertoneModifiers() : null;
+        const weightedModifier =
+            this.renderer.stateMachine && this.renderer.stateMachine.getWeightedUndertoneModifiers
+                ? this.renderer.stateMachine.getWeightedUndertoneModifiers()
+                : null;
 
         // Apply all undertone modifiers (visual, breathing, particles)
         this.applyUndertoneModifiers(weightedModifier || undertone);
@@ -201,11 +221,15 @@ export class EmotionalStateManager {
             // Use the dynamic color from properties (includes threat level)
             targetColor = properties.glowColor || baseColor;
         } else {
-            targetColor = this.renderer.applyUndertoneToColor(baseColor, weightedModifier || undertone);
+            targetColor = this.renderer.applyUndertoneToColor(
+                baseColor,
+                weightedModifier || undertone
+            );
         }
 
         // Apply intensity modifier from undertone
-        const modifier = weightedModifier || (undertone ? this.renderer.undertoneModifiers[undertone] : null);
+        const modifier =
+            weightedModifier || (undertone ? this.renderer.undertoneModifiers[undertone] : null);
         const baseIntensity = properties.glowIntensity || 1.0;
 
         // Get the glow multiplier - check for glowRadiusMult or use default of 1.0
@@ -215,7 +239,11 @@ export class EmotionalStateManager {
                 // For weighted modifiers, check if glowRadiusMult exists
                 // Check for NaN in weight calculation
                 const weight = modifier.weight || 0;
-                if (modifier.glowRadiusMult !== undefined && isFinite(modifier.glowRadiusMult) && isFinite(weight)) {
+                if (
+                    modifier.glowRadiusMult !== undefined &&
+                    isFinite(modifier.glowRadiusMult) &&
+                    isFinite(weight)
+                ) {
                     glowMult = 1.0 + (modifier.glowRadiusMult - 1.0) * weight;
                 } else {
                     glowMult = 1.0;
@@ -246,7 +274,8 @@ export class EmotionalStateManager {
         if (emotion === 'suspicion') {
             this.renderer.state.isSuspicious = true;
             // Store target squint amount, we'll animate to it
-            this.renderer.state.targetSquintAmount = properties && properties.coreSquint ? properties.coreSquint : 0.4;
+            this.renderer.state.targetSquintAmount =
+                properties && properties.coreSquint ? properties.coreSquint : 0.4;
             if (this.renderer.state.squintAmount === undefined) {
                 this.renderer.state.squintAmount = 0; // Start from no squint
             }
@@ -275,11 +304,16 @@ export class EmotionalStateManager {
         // Apply breathing with undertone modifiers
         const baseBreathRate = properties.breathRate || 1.0;
         const baseBreathDepth = properties.breathDepth || this.renderer.config.breathingDepth;
-        this.renderer.state.breathRate = modifier ? baseBreathRate * modifier.breathRateMult : baseBreathRate;
-        this.renderer.state.breathDepth = modifier ? baseBreathDepth * modifier.breathDepthMult : baseBreathDepth;
+        this.renderer.state.breathRate = modifier
+            ? baseBreathRate * modifier.breathRateMult
+            : baseBreathRate;
+        this.renderer.state.breathDepth = modifier
+            ? baseBreathDepth * modifier.breathDepthMult
+            : baseBreathDepth;
 
         // Jitter combines emotion jitter with undertone jitter
-        this.renderer.state.coreJitter = properties.coreJitter || (modifier && modifier.jitterAmount > 0);
+        this.renderer.state.coreJitter =
+            properties.coreJitter || (modifier && modifier.jitterAmount > 0);
         this.renderer.state.emotionEyeOpenness = properties.eyeOpenness;
         this.renderer.state.emotionEyeArc = properties.eyeArc;
     }

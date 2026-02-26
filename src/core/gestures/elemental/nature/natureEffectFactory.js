@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -52,7 +52,7 @@ export function buildNatureEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -61,14 +61,14 @@ export function buildNatureEffectGesture(config) {
             amplitudeSync: {
                 onBeat: config.category === 'emanating' ? 1.4 : 1.2,
                 offBeat: 1.0,
-                curve: 'smooth'
-            }
+                curve: 'smooth',
+            },
         },
 
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const { category } = cfg;
 
                 // ═══════════════════════════════════════════════════════════════
@@ -93,31 +93,44 @@ export function buildNatureEffectGesture(config) {
                 }
 
                 const decayRate = cfg.decayRate || 0.18;
-                if (progress > (1 - decayRate)) {
+                if (progress > 1 - decayRate) {
                     const decayProgress = (progress - (1 - decayRate)) / decayRate;
-                    effectStrength *= (1 - decayProgress);
+                    effectStrength *= 1 - decayProgress;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 if (cfg.floatAmount > 0) {
-                    posY += Math.sin(time * (cfg.floatSpeed || 1) * Math.PI * 2) * cfg.floatAmount * effectStrength;
+                    posY +=
+                        Math.sin(time * (cfg.floatSpeed || 1) * Math.PI * 2) *
+                        cfg.floatAmount *
+                        effectStrength;
                 }
                 if (cfg.riseAmount > 0) {
                     posY += cfg.riseAmount * progress * effectStrength;
                 }
                 if (cfg.droopAmount > 0) {
-                    posY -= cfg.droopAmount * progress * (1 + (cfg.droopAcceleration || 0) * progress) * effectStrength;
+                    posY -=
+                        cfg.droopAmount *
+                        progress *
+                        (1 + (cfg.droopAcceleration || 0) * progress) *
+                        effectStrength;
                 }
                 if (cfg.sinkAmount > 0) {
-                    posY -= cfg.sinkAmount * progress * (1 + (cfg.sinkAcceleration || 0) * progress) * effectStrength;
+                    posY -=
+                        cfg.sinkAmount *
+                        progress *
+                        (1 + (cfg.sinkAcceleration || 0) * progress) *
+                        effectStrength;
                 }
                 if (cfg.tremor > 0) {
                     let tremorStr = cfg.tremor;
-                    if (cfg.tremorDecay) tremorStr *= (1 - progress * cfg.tremorDecay);
+                    if (cfg.tremorDecay) tremorStr *= 1 - progress * cfg.tremorDecay;
                     const tTime = time * (cfg.tremorFrequency || 4);
                     posX += (noise1D(tTime) - 0.5) * tremorStr * effectStrength;
                     posY += (noise1D(tTime + 50) - 0.5) * tremorStr * 0.5 * effectStrength;
@@ -134,8 +147,9 @@ export function buildNatureEffectGesture(config) {
                     const breathe = Math.sin(scaleTime * Math.PI * 2) * 0.5 + 0.5;
                     scale = 1.0 + (breathe - 0.5) * (cfg.scaleVibration || 0.02) * effectStrength;
                 } else {
-                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.6 +
-                                      Math.sin(scaleTime * Math.PI * 2.7) * 0.4;
+                    const scaleNoise =
+                        Math.sin(scaleTime * Math.PI * 2) * 0.6 +
+                        Math.sin(scaleTime * Math.PI * 2.7) * 0.4;
                     scale = 1.0 + scaleNoise * (cfg.scaleVibration || 0.02) * effectStrength;
                 }
                 if (cfg.scaleGrow > 0) scale += cfg.scaleGrow * progress * effectStrength;
@@ -146,7 +160,9 @@ export function buildNatureEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION
                 // ═══════════════════════════════════════════════════════════════
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 if (cfg.rotationSpeed > 0) {
                     rotY = time * cfg.rotationSpeed * Math.PI * 2 * effectStrength;
@@ -170,7 +186,12 @@ export function buildNatureEffectGesture(config) {
                     const endAt = cfg.fadeEndAt || 0.95;
                     if (progress >= startAt) {
                         const fadeProg = Math.min(1, (progress - startAt) / (endAt - startAt));
-                        meshOpacity = Math.max(0, cfg.fadeCurve === 'accelerating' ? 1 - fadeProg * fadeProg : 1 - fadeProg);
+                        meshOpacity = Math.max(
+                            0,
+                            cfg.fadeCurve === 'accelerating'
+                                ? 1 - fadeProg * fadeProg
+                                : 1 - fadeProg
+                        );
                     }
                 }
 
@@ -186,11 +207,15 @@ export function buildNatureEffectGesture(config) {
                 } else {
                     flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.15 + 0.85;
                 }
-                const glowIntensity = (cfg.glowIntensityMin || 0.5) +
-                    ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) * flickerValue * effectStrength;
+                const glowIntensity =
+                    (cfg.glowIntensityMin || 0.5) +
+                    ((cfg.glowIntensityMax || 0.8) - (cfg.glowIntensityMin || 0.5)) *
+                        flickerValue *
+                        effectStrength;
                 // mascotGlow: opt-in additive boost to screen-space glow layer
                 // Shared pattern — any elemental factory can use config.mascotGlow
-                const baseGlowBoost = 0.2 * effectStrength * (cfg.intensity || 1) * (cfg.growth || 0.5);
+                const baseGlowBoost =
+                    0.2 * effectStrength * (cfg.intensity || 1) * (cfg.growth || 0.5);
                 const glowBoost = baseGlowBoost + (config.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
@@ -210,7 +235,7 @@ export function buildNatureEffectGesture(config) {
                         models: config.spawnMode?.models,
                         count: config.spawnMode?.count,
                         scale: config.spawnMode?.scale,
-                        embedDepth: config.spawnMode?.embedDepth
+                        embedDepth: config.spawnMode?.embedDepth,
                     },
                     position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],
@@ -218,10 +243,10 @@ export function buildNatureEffectGesture(config) {
                     meshOpacity,
                     glowIntensity,
                     glowBoost,
-                    glowColorOverride: cfg.glowColor
+                    glowColorOverride: cfg.glowColor,
                 };
-            }
-        }
+            },
+        },
     };
 }
 
@@ -237,5 +262,5 @@ export function buildNatureEffectGesture(config) {
 // overgrow — use individual overgrow.js file
 
 export default {
-    buildNatureEffectGesture
+    buildNatureEffectGesture,
 };

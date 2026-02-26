@@ -19,35 +19,35 @@ export default {
 
     // Visual properties
     visual: {
-        glowColor: '#FFD700',       // Bright gold (shining surprise)
-        particleRate: 5,            // Burst flow - 5/sec with max 15 = ~3 sec particle life
-        minParticles: 0,            // Can start from nothing
-        maxParticles: 15,           // Burst of shocked particles
-        particleBehavior: 'burst',  // Explosive outward motion
-        breathRate: 0.3,            // Gasping, held breath
-        breathDepth: 0.18,          // Large shocked inhale
-        coreJitter: false,          // Frozen in surprise
-        blinkRate: 1.4,             // More frequent blinking (shocked)
-        blinkSpeed: 1.2,            // Faster blink animation (startled)
+        glowColor: '#FFD700', // Bright gold (shining surprise)
+        particleRate: 5, // Burst flow - 5/sec with max 15 = ~3 sec particle life
+        minParticles: 0, // Can start from nothing
+        maxParticles: 15, // Burst of shocked particles
+        particleBehavior: 'burst', // Explosive outward motion
+        breathRate: 0.3, // Gasping, held breath
+        breathDepth: 0.18, // Large shocked inhale
+        coreJitter: false, // Frozen in surprise
+        blinkRate: 1.4, // More frequent blinking (shocked)
+        blinkSpeed: 1.2, // Faster blink animation (startled)
         particleColors: [
-            { color: '#FFD700', weight: 25 },  // Gold burst
-            { color: '#FFA500', weight: 20 },  // Orange shock
-            { color: '#FFFF00', weight: 15 },  // Yellow flash
-            { color: '#FF6347', weight: 15 },  // Tomato red excitement
-            { color: '#FFE4B5', weight: 10 },  // Moccasin highlight
-            { color: '#FF4500', weight: 10 },  // OrangeRed pop
-            { color: '#FFFACD', weight: 5 }    // LemonChiffon sparkle
-        ]
+            { color: '#FFD700', weight: 25 }, // Gold burst
+            { color: '#FFA500', weight: 20 }, // Orange shock
+            { color: '#FFFF00', weight: 15 }, // Yellow flash
+            { color: '#FF6347', weight: 15 }, // Tomato red excitement
+            { color: '#FFE4B5', weight: 10 }, // Moccasin highlight
+            { color: '#FF4500', weight: 10 }, // OrangeRed pop
+            { color: '#FFFACD', weight: 5 }, // LemonChiffon sparkle
+        ],
     },
 
     // Gesture modifiers
     modifiers: {
-        speed: 1.6,         // Rapid, startled reactions
-        amplitude: 1.5,     // Large, exaggerated movements
-        intensity: 1.4,     // Strong shock force
-        smoothness: 0.7,    // Abrupt, jerky motions
-        regularity: 0.8,    // Erratic surprise patterns
-        addPop: true        // Popping, explosive effect
+        speed: 1.6, // Rapid, startled reactions
+        amplitude: 1.5, // Large, exaggerated movements
+        intensity: 1.4, // Strong shock force
+        smoothness: 0.7, // Abrupt, jerky motions
+        regularity: 0.8, // Erratic surprise patterns
+        addPop: true, // Popping, explosive effect
     },
 
     // Typical gestures for surprise
@@ -55,47 +55,47 @@ export default {
 
     // Transition configuration
     transitions: {
-        duration: 200,           // Instant shock response
-        easing: 'easeOutBack',  // Snappy, elastic reaction
-        priority: 6             // High interrupt priority
+        duration: 200, // Instant shock response
+        easing: 'easeOutBack', // Snappy, elastic reaction
+        priority: 6, // High interrupt priority
     },
 
     // 3D rotation behavior and effects
     '3d': {
         rotation: {
-            type: 'unstable',           // Jerky, startled pattern
-            speed: 1.6,                 // Rapid rotation (matches modifiers.speed)
-            axes: [0, 0.45, 0],         // Fast Y-axis spin
+            type: 'unstable', // Jerky, startled pattern
+            speed: 1.6, // Rapid rotation (matches modifiers.speed)
+            axes: [0, 0.45, 0], // Fast Y-axis spin
             shake: {
-                amplitude: 0.01,        // Minimal startled wobble (reduced to not overcome righting)
-                frequency: 3.0          // Medium frequency jerking
+                amplitude: 0.01, // Minimal startled wobble (reduced to not overcome righting)
+                frequency: 3.0, // Medium frequency jerking
             },
-            musicSync: false            // Surprise is chaotic
+            musicSync: false, // Surprise is chaotic
         },
         glow: {
-            color: '#FFD700',           // Bright gold (matches visual.glowColor)
-            intensity: 1.8,             // Very intense flash
+            color: '#FFD700', // Bright gold (matches visual.glowColor)
+            intensity: 1.8, // Very intense flash
             pulse: {
-                speed: 0.3,             // Gasping pulsing (matches breathRate)
-                range: [1.0, 2.2]       // Large pulse variation (shock)
-            }
+                speed: 0.3, // Gasping pulsing (matches breathRate)
+                range: [1.0, 2.2], // Large pulse variation (shock)
+            },
         },
         scale: {
             base: 1.0,
             breathe: {
                 enabled: true,
-                depth: 0.18,            // Large shocked inhale (matches breathDepth)
-                rate: 0.3               // Gasping breathing (matches breathRate)
-            }
-        }
+                depth: 0.18, // Large shocked inhale (matches breathDepth)
+                rate: 0.3, // Gasping breathing (matches breathRate)
+            },
+        },
     },
 
     // Soul/energy animation parameters (geometry-agnostic)
     // Used by: Crystal (inner core), Sun (plasma flow), Moon (subtle glow pulse)
     soulAnimation: {
-        driftSpeed: 1.5,        // Energy movement speed - sudden, startled bursts
-        shimmerSpeed: 2.0,      // Vertical pulse speed - shocked flashing
-        turbulence: 0.5         // Chaos/randomness factor - unexpected variation
+        driftSpeed: 1.5, // Energy movement speed - sudden, startled bursts
+        shimmerSpeed: 2.0, // Vertical pulse speed - shocked flashing
+        turbulence: 0.5, // Chaos/randomness factor - unexpected variation
     },
 
     // Rhythm game modifiers
@@ -103,6 +103,6 @@ export default {
         windowMultiplier: 2.0,
         visualNoise: 0,
         inputDelay: 0,
-        tempoShift: 0
-    }
+        tempoShift: 0,
+    },
 };

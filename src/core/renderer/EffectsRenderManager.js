@@ -32,20 +32,28 @@ export class EffectsRenderManager {
                 x: coreX,
                 y: coreY,
                 radius: glowRadius,
-                deltaTime
+                deltaTime,
             });
         } else if (isEffectActive('zen-vortex', this.renderer.state)) {
             // Zen vortex handles its own visuals
             // Skip normal glow to prevent flash
         } else {
             // Normal glow with sleep dimming
-            if (this.renderer.state.sleeping || this.renderer.state.emotion === 'resting' || isEffectActive('sleeping', this.renderer.state)) {
+            if (
+                this.renderer.state.sleeping ||
+                this.renderer.state.emotion === 'resting' ||
+                isEffectActive('sleeping', this.renderer.state)
+            ) {
                 this.renderer.ctx.save();
                 this.renderer.ctx.globalAlpha = glowOpacityMod;
-                this.renderer.glowRenderer.renderGlow(coreX, coreY, glowRadius, { intensity: effectiveGlowIntensity });
+                this.renderer.glowRenderer.renderGlow(coreX, coreY, glowRadius, {
+                    intensity: effectiveGlowIntensity,
+                });
                 this.renderer.ctx.restore();
             } else {
-                this.renderer.glowRenderer.renderGlow(coreX, coreY, glowRadius, { intensity: effectiveGlowIntensity });
+                this.renderer.glowRenderer.renderGlow(coreX, coreY, glowRadius, {
+                    intensity: effectiveGlowIntensity,
+                });
             }
         }
     }
@@ -61,7 +69,7 @@ export class EffectsRenderManager {
         // Render flash wave if present
         if (gestureTransforms && gestureTransforms.flashWave) {
             const wave = gestureTransforms.flashWave;
-            const {ctx} = this.renderer;
+            const { ctx } = this.renderer;
 
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
@@ -73,13 +81,19 @@ export class EffectsRenderManager {
             if (outerR > innerR) {
                 // Use cached gradient for flash wave
                 const gradient = gradientCache.getRadialGradient(
-                    ctx, coreX, coreY, innerR, coreX, coreY, outerR,
+                    ctx,
+                    coreX,
+                    coreY,
+                    innerR,
+                    coreX,
+                    coreY,
+                    outerR,
                     [
                         { offset: 0, color: 'rgba(255, 255, 255, 0)' },
                         { offset: 0.2, color: `rgba(255, 255, 255, ${wave.intensity * 0.15})` },
                         { offset: 0.5, color: `rgba(255, 255, 255, ${wave.intensity * 0.25})` }, // Peak in center
                         { offset: 0.8, color: `rgba(255, 255, 255, ${wave.intensity * 0.15})` },
-                        { offset: 1, color: 'rgba(255, 255, 255, 0)' }
+                        { offset: 1, color: 'rgba(255, 255, 255, 0)' },
                     ]
                 );
 
@@ -109,7 +123,7 @@ export class EffectsRenderManager {
                 y: coreY,
                 radius: coreRadius,
                 audioLevel: this.renderer.state.audioLevel || 0,
-                deltaTime
+                deltaTime,
             });
         }
     }
@@ -119,10 +133,25 @@ export class EffectsRenderManager {
      * @param {Object} params - Rendering parameters
      */
     renderAllEffects(params) {
-        const { coreX, coreY, glowRadius, effectiveGlowIntensity, glowOpacityMod,
-            gestureTransforms, coreRadius, deltaTime } = params;
+        const {
+            coreX,
+            coreY,
+            glowRadius,
+            effectiveGlowIntensity,
+            glowOpacityMod,
+            gestureTransforms,
+            coreRadius,
+            deltaTime,
+        } = params;
 
-        this.renderGlow(coreX, coreY, glowRadius, effectiveGlowIntensity, glowOpacityMod, deltaTime);
+        this.renderGlow(
+            coreX,
+            coreY,
+            glowRadius,
+            effectiveGlowIntensity,
+            glowOpacityMod,
+            deltaTime
+        );
         this.renderFlashWave(gestureTransforms, coreX, coreY, coreRadius);
         this.renderSpeakingPulse(coreX, coreY, coreRadius, deltaTime);
     }

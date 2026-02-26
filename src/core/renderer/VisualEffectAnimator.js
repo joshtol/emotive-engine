@@ -20,11 +20,11 @@ export class VisualEffectAnimator {
      */
     applyFlash(anim, progress) {
         const flash = Math.sin(progress * Math.PI); // Quick up and down
-        const glowPeak = anim.params.glowPeak || 2.0;  // Default if not defined
+        const glowPeak = anim.params.glowPeak || 2.0; // Default if not defined
         const scalePeak = anim.params.scalePeak || 1.1; // Default if not defined
         return {
             glow: 1 + (glowPeak - 1) * flash,
-            scale: 1 + (scalePeak - 1) * flash
+            scale: 1 + (scalePeak - 1) * flash,
         };
     }
 
@@ -42,7 +42,7 @@ export class VisualEffectAnimator {
 
         return {
             scale: 1 + glowPulse * (anim.params.scaleAmount || 0.1), // Very subtle scale like new glow config
-            glow: 1 + glowPulse * (anim.params.glowAmount || 0.8)    // Strong glow like new glow config
+            glow: 1 + glowPulse * (anim.params.glowAmount || 0.8), // Strong glow like new glow config
         };
     }
 
@@ -74,7 +74,7 @@ export class VisualEffectAnimator {
             glow,
             particleGlow: mainPulse * intensity, // Pass intensity to particles
             flickerTime: time,
-            flickerEffect: true // Flag to enable flicker effect on particles (shimmer-like)
+            flickerEffect: true, // Flag to enable flicker effect on particles (shimmer-like)
         };
     }
 
@@ -102,7 +102,7 @@ export class VisualEffectAnimator {
             particleGlow: intensity, // Intensity for individual particles
             glow: mainPulse, // Gentle overall glow
             fireflyTime: time, // Pass time for particle calculations
-            fireflyEffect: true // Flag to enable firefly effect on particles
+            fireflyEffect: true, // Flag to enable firefly effect on particles
         };
     }
 
@@ -137,7 +137,7 @@ export class VisualEffectAnimator {
             particleGlow: 1 + wave * 0.2, // Very subtle particle effect
             shimmerTime: time,
             shimmerWave: wave,
-            shimmerEffect: true // Flag to enable shimmer effect on particles
+            shimmerEffect: true, // Flag to enable shimmer effect on particles
         };
     }
 }

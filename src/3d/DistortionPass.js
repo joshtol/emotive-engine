@@ -15,12 +15,12 @@ export const DistortionShader = {
     name: 'DistortionShader',
 
     uniforms: {
-        tDiffuse: { value: null },              // Auto-filled by ShaderPass from readBuffer
-        tDistortion: { value: null },           // Distortion map (half-res RT)
+        tDiffuse: { value: null }, // Auto-filled by ShaderPass from readBuffer
+        tDistortion: { value: null }, // Distortion map (half-res RT)
         uGlobalStrength: { value: 1.0 },
     },
 
-    vertexShader: /* glsl */`
+    vertexShader: /* glsl */ `
         varying vec2 vUv;
         void main() {
             vUv = uv;
@@ -28,7 +28,7 @@ export const DistortionShader = {
         }
     `,
 
-    fragmentShader: /* glsl */`
+    fragmentShader: /* glsl */ `
         uniform sampler2D tDiffuse;
         uniform sampler2D tDistortion;
         uniform float uGlobalStrength;
@@ -59,5 +59,5 @@ export const DistortionShader = {
 
             gl_FragColor = scene;
         }
-    `
+    `,
 };

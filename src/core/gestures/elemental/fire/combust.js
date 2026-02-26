@@ -44,100 +44,102 @@ const COMBUST_CONFIG = {
     beats: 4,
     intensity: 1.5,
     category: 'burning',
-    temperature: 0.9,              // Very hot at burst
+    temperature: 0.9, // Very hot at burst
 
     // 3D Element spawning - explosive flame burst
     spawnMode: {
         type: 'surface',
-        pattern: 'spikes',          // Flames burst outward
+        pattern: 'spikes', // Flames burst outward
         embedDepth: 0.1,
         cameraFacing: 0.35,
         clustering: 0.3,
         count: 12,
         scale: 1.2,
         models: ['fire-burst', 'flame-tongue', 'ember-cluster'],
-        minDistance: 0.08,          // Dense explosion
+        minDistance: 0.08, // Dense explosion
         animation: {
-            appearAt: 0.55,         // Appears at burst moment
+            appearAt: 0.55, // Appears at burst moment
             disappearAt: 0.95,
-            stagger: 0.01,          // Rapid sequential burst
+            stagger: 0.01, // Rapid sequential burst
             enter: {
-                type: 'fade',       // Quick fade for procedural fire
+                type: 'fade', // Quick fade for procedural fire
                 duration: 0.03,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.1,
-                easing: 'easeInCubic'
+                easing: 'easeInCubic',
             },
             // Procedural shader config
             procedural: {
-                scaleSmoothing: 0.06,   // Slightly faster for explosive effect
-                geometryStability: true
+                scaleSmoothing: 0.06, // Slightly faster for explosive effect
+                geometryStability: true,
             },
             // Temperature: spike at burst
             parameterAnimation: {
                 temperature: {
-                    start: 0.5,         // Building heat
-                    peak: 0.95,         // Explosive plasma burst
-                    end: 0.6,           // Hot aftermath
-                    curve: 'spike'      // Slow rise then explosive peak
-                }
+                    start: 0.5, // Building heat
+                    peak: 0.95, // Explosive plasma burst
+                    end: 0.6, // Hot aftermath
+                    curve: 'spike', // Slow rise then explosive peak
+                },
             },
             flicker: {
-                intensity: 0.5,     // Very chaotic at burst
-                rate: 25,           // Extremely fast
-                pattern: 'random'
+                intensity: 0.5, // Very chaotic at burst
+                rate: 25, // Extremely fast
+                pattern: 'random',
             },
             pulse: {
                 amplitude: 0.25,
                 frequency: 15,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             emissive: {
                 min: 1.5,
-                max: 4.0,           // Extremely bright burst
+                max: 4.0, // Extremely bright burst
                 frequency: 20,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Two-layer cutout: VORONOI + CRACKS for shattered explosion
             cutout: {
                 strength: 0.75,
-                primary: { pattern: 3, scale: 2.5, weight: 1.0 },    // VORONOI - shattered cells
-                secondary: { pattern: 8, scale: 2.0, weight: 0.6 },  // CRACKS - fracture lines
+                primary: { pattern: 3, scale: 2.5, weight: 1.0 }, // VORONOI - shattered cells
+                secondary: { pattern: 8, scale: 2.0, weight: 0.6 }, // CRACKS - fracture lines
                 blend: 'multiply',
                 travel: 'radial',
-                travelSpeed: 6.0,        // Fast explosive expansion
+                travelSpeed: 6.0, // Fast explosive expansion
                 strengthCurve: 'fadeIn',
-                fadeInDuration: 0.15,    // Quick appearance with burst
+                fadeInDuration: 0.15, // Quick appearance with burst
                 geometricMask: {
                     type: 'tip-boost',
                     core: 0.0,
-                    tip: 0.2
-                }
+                    tip: 0.2,
+                },
             },
             // Grain: white noise for chaotic explosion texture
             grain: {
-                type: 2,              // WHITE - chaotic explosion texture
+                type: 2, // WHITE - chaotic explosion texture
                 strength: 0.15,
                 scale: 0.1,
-                speed: 4.0,           // Very fast for chaos
-                blend: 'multiply'
+                speed: 4.0, // Very fast for chaos
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: smoke from combustion
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                },
+            ],
             drift: {
                 direction: 'outward', // Explodes outward
-                distance: 0.15,       // Total expansion over gesture lifetime
-                noise: 0.02
+                distance: 0.15, // Total expansion over gesture lifetime
+                noise: 0.02,
             },
             scaleVariance: 0.4,
             lifetimeVariance: 0.25,
@@ -148,7 +150,7 @@ const COMBUST_CONFIG = {
                 scale: 1.5,
                 emissiveMax: 2.0,
                 flickerIntensity: 1.6,
-                driftSpeed: 1.4
+                driftSpeed: 1.4,
             },
             // Varied sizes for fire-bursts (some huge, some small)
             scalePerElement: [1.0, 0.5, 1.3, 0.6, 1.5, 0.4, 1.2, 0.7, 1.4, 0.55, 1.1, 0.65],
@@ -160,11 +162,11 @@ const COMBUST_CONFIG = {
                         axes: {
                             x: { expand: true, rate: 1.8 },
                             y: { expand: true, rate: 2.0 },
-                            z: { expand: true, rate: 1.8 }
-                        }
+                            z: { expand: true, rate: 1.8 },
+                        },
                     },
                     drift: { direction: 'outward', speed: 0.06, noise: 0.15 },
-                    opacityLink: 'inverse-scale'
+                    opacityLink: 'inverse-scale',
                 },
                 'flame-tongue': {
                     scaling: {
@@ -172,38 +174,39 @@ const COMBUST_CONFIG = {
                         axes: {
                             x: { expand: true, rate: 1.4, oscillate: true },
                             y: { expand: true, rate: 1.6 },
-                            z: { expand: true, rate: 1.4, oscillate: true }
+                            z: { expand: true, rate: 1.4, oscillate: true },
                         },
-                        wobbleFrequency: 8, wobbleAmplitude: 0.2
+                        wobbleFrequency: 8,
+                        wobbleAmplitude: 0.2,
                     },
-                    drift: { direction: 'outward', speed: 0.04, noise: 0.1 }
+                    drift: { direction: 'outward', speed: 0.04, noise: 0.1 },
                 },
                 'ember-cluster': {
                     drift: { direction: 'outward', speed: 0.05, noise: 0.3 },
-                    opacityLink: 'flicker'
-                }
-            }
-        }
+                    opacityLink: 'flicker',
+                },
+            },
+        },
     },
 
     // Buildup then burst
-    buildupPhase: 0.6,             // 60% buildup
-    burstPhase: 0.4,               // 40% burst
+    buildupPhase: 0.6, // 60% buildup
+    burstPhase: 0.4, // 40% burst
     // Minimal flicker during buildup
     flickerFrequency: 20,
-    flickerAmplitude: 0.025,       // Stronger at burst
+    flickerAmplitude: 0.025, // Stronger at burst
     flickerDecay: 0.15,
     // Glow - ramps up dramatically
-    glowColor: [1.0, 0.6, 0.2],    // Orange-yellow
+    glowColor: [1.0, 0.6, 0.2], // Orange-yellow
     glowIntensityMin: 0.8,
-    glowIntensityMax: 4.0,         // Bright burst
+    glowIntensityMax: 4.0, // Bright burst
     glowFlickerRate: 25,
     // Scale - compress then burst
     scaleVibration: 0.03,
     scaleFrequency: 15,
-    scaleBurst: 0.08,              // Expands 8% at burst
+    scaleBurst: 0.08, // Expands 8% at burst
     // Position burst
-    burstJitter: 0.03              // Violent shake at burst
+    burstJitter: 0.03, // Violent shake at burst
 };
 
 /**

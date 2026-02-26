@@ -35,7 +35,14 @@ export function createPointGesture(direction) {
 
     return {
         name: `point${capitalize(direction)}`,
-        emoji: direction === 'up' ? '☝️' : direction === 'down' ? '👇' : direction === 'left' ? '👈' : '👉',
+        emoji:
+            direction === 'up'
+                ? '☝️'
+                : direction === 'down'
+                  ? '👇'
+                  : direction === 'left'
+                    ? '👈'
+                    : '👉',
         type: 'blending',
         description: `Point ${direction} with extension and return`,
 
@@ -43,7 +50,7 @@ export function createPointGesture(direction) {
             duration: 500,
             amplitude: 15,
             strength: 0.8,
-            direction
+            direction,
         },
 
         rhythm: {
@@ -56,19 +63,19 @@ export function createPointGesture(direction) {
 
             durationSync: {
                 mode: 'beats',
-                beats: 1
+                beats: 1,
             },
 
             amplitudeSync: {
                 onBeat: 1.5,
                 offBeat: 0.7,
-                curve: 'ease'
+                curve: 'ease',
             },
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.6
-            }
+                multiplier: 1.6,
+            },
         },
 
         initialize(particle, _motion) {
@@ -78,7 +85,7 @@ export function createPointGesture(direction) {
             particle.gestureData.point = {
                 startX: particle.x,
                 startY: particle.y,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -94,8 +101,8 @@ export function createPointGesture(direction) {
             let amplitude = config.amplitude * strength * particle.scaleFactor;
 
             if (motion.rhythmModulation) {
-                amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-                amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+                amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+                amplitude *= motion.rhythmModulation.accentMultiplier || 1;
             }
 
             // Point curve - extends and returns
@@ -103,13 +110,13 @@ export function createPointGesture(direction) {
 
             // Apply directional momentum
             particle.vx += pointCurve * amplitude * 0.02 * dt * dir.x;
-            particle.vy += pointCurve * amplitude * 0.02 * dt * (-dir.y); // Invert Y for screen coords
+            particle.vy += pointCurve * amplitude * 0.02 * dt * -dir.y; // Invert Y for screen coords
 
             // Smooth ending
             if (progress > 0.9) {
-                const endFactor = 1 - ((progress - 0.9) * 10);
-                particle.vx *= (0.95 + endFactor * 0.05);
-                particle.vy *= (0.95 + endFactor * 0.05);
+                const endFactor = 1 - (progress - 0.9) * 10;
+                particle.vx *= 0.95 + endFactor * 0.05;
+                particle.vy *= 0.95 + endFactor * 0.05;
             }
         },
 
@@ -120,9 +127,7 @@ export function createPointGesture(direction) {
         },
 
         easeInOutCubic(t) {
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         },
 
         '3d': {
@@ -135,9 +140,10 @@ export function createPointGesture(direction) {
                 const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
                 // Easing
-                const easeProgress = progress < 0.5
-                    ? 4 * progress * progress * progress
-                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                const easeProgress =
+                    progress < 0.5
+                        ? 4 * progress * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
                 // Point curve
                 const pointCurve = Math.sin(easeProgress * Math.PI);
@@ -147,7 +153,9 @@ export function createPointGesture(direction) {
                 const posY = dir.y * pointCurve * amplitude;
 
                 // Rotation: lean into the point direction
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 if (isVertical) {
                     // Vertical pointing: tilt forward/back
@@ -162,9 +170,9 @@ export function createPointGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, rotY, rotZ],
-                    scale: 1.0
+                    scale: 1.0,
                 };
-            }
-        }
+            },
+        },
     };
 }

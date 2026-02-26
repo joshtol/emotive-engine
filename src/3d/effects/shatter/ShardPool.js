@@ -39,10 +39,7 @@ class ShardPool {
      * @param {THREE.Scene} [options.scene] - Scene to add shards to
      */
     constructor(options = {}) {
-        const {
-            maxShards = 50,
-            scene = null
-        } = options;
+        const { maxShards = 50, scene = null } = options;
 
         this.maxShards = maxShards;
         this.scene = scene;
@@ -57,7 +54,7 @@ class ShardPool {
         this._tempVec3_up = new THREE.Vector3(0, 1, 0);
         this._tempVec3_perpX = new THREE.Vector3();
         this._tempVec3_perpY = new THREE.Vector3();
-        this._tempVec3_perpAxis = new THREE.Vector3();  // For activate() angular velocity
+        this._tempVec3_perpAxis = new THREE.Vector3(); // For activate() angular velocity
         this._tempVec3_targetPos = new THREE.Vector3(); // For reassembly target calculation
         this._tempQuat = new THREE.Quaternion();
 
@@ -109,9 +106,9 @@ class ShardPool {
             metalness: 0.1,
             roughness: 0.15,
             // Glass-like properties
-            transmission: 0.3,        // Slight transparency
-            thickness: 0.2,           // Refraction thickness
-            ior: 1.5,                 // Index of refraction (glass)
+            transmission: 0.3, // Slight transparency
+            thickness: 0.2, // Refraction thickness
+            ior: 1.5, // Index of refraction (glass)
             // Emissive for glow
             emissive: new THREE.Color(0x000000),
             emissiveIntensity: 0,
@@ -120,7 +117,7 @@ class ShardPool {
             iridescenceIOR: 1.3,
             // Clearcoat for shine
             clearcoat: 0.3,
-            clearcoatRoughness: 0.2
+            clearcoatRoughness: 0.2,
         });
     }
 
@@ -138,26 +135,26 @@ class ShardPool {
             gravity: -9.8,
             originalPosition: new THREE.Vector3(),
             originalRotation: new THREE.Euler(),
-            originalQuaternion: new THREE.Quaternion(),  // For slerp during reassembly
-            originalScale: new THREE.Vector3(1, 1, 1),  // Original mesh scale
+            originalQuaternion: new THREE.Quaternion(), // For slerp during reassembly
+            originalScale: new THREE.Vector3(1, 1, 1), // Original mesh scale
             // LOCAL-SPACE centroid - used to compute dynamic target during reassembly
             // This allows shards to track the mesh even if it moves during reassembly
             localCentroid: new THREE.Vector3(),
             // Impact glow state
-            impactGlow: 1.0,          // Initial glow intensity (fades over time)
+            impactGlow: 1.0, // Initial glow intensity (fades over time)
             baseEmissiveIntensity: 0.5, // Base emissive for shards
             // Reassembly state
             reassemblyStartPos: new THREE.Vector3(),
             reassemblyStartRot: new THREE.Euler(),
-            reassemblyStartQuat: new THREE.Quaternion(),  // For slerp during reassembly
+            reassemblyStartQuat: new THREE.Quaternion(), // For slerp during reassembly
             reassemblyStartScale: new THREE.Vector3(1, 1, 1),
             // Depth-based timing for reassembly (front shards arrive first)
-            depthFactor: 0,           // 0 = front, 1 = back (normalized z-depth)
-            vortexPhase: 0,           // Random phase for spiral motion
+            depthFactor: 0, // 0 = front, 1 = back (normalized z-depth)
+            vortexPhase: 0, // Random phase for spiral motion
             // Suspend mode state
             isSuspendMode: false,
-            suspendProgress: 0,           // 0 = exploding, 1 = fully suspended
-            floatPhase: Math.random() * Math.PI * 2,  // Random phase for gentle bobbing
+            suspendProgress: 0, // 0 = exploding, 1 = fully suspended
+            floatPhase: Math.random() * Math.PI * 2, // Random phase for gentle bobbing
             // Dual-mode state (implode, dissolve, ripple, gravity, orbit)
             dualMode: null,
             // Implode mode
@@ -166,7 +163,7 @@ class ShardPool {
             dissolveVelocity: new THREE.Vector3(),
             dissolveOpacity: 1.0,
             // Ripple mode
-            rippleDelay: 0,               // Delay before this shard peels off
+            rippleDelay: 0, // Delay before this shard peels off
             ripplePhase: 0,
             // Gravity mode
             gravityVelocity: new THREE.Vector3(),
@@ -181,23 +178,23 @@ class ShardPool {
             // ═══════════════════════════════════════════════════════════════
             // FIERY MATERIAL STATE (sun shards)
             // ═══════════════════════════════════════════════════════════════
-            isFiery: false,                    // Flag for fire-specific effects
-            flickerPhase: 0,                   // Random phase for flicker animation
-            flickerSpeed: 0,                   // Random speed multiplier for flicker
-            scalePulsePhase: 0,                // Random phase for scale pulsing
-            jitterSeed: 0,                     // Seed for position jitter noise
-            distFromCenter: 0,                 // Distance from explosion center (for radial gradient)
-            baseScale: new THREE.Vector3(1, 1, 1),  // Original scale before pulsing
-            basePosition: new THREE.Vector3(),  // Position before jitter
+            isFiery: false, // Flag for fire-specific effects
+            flickerPhase: 0, // Random phase for flicker animation
+            flickerSpeed: 0, // Random speed multiplier for flicker
+            scalePulsePhase: 0, // Random phase for scale pulsing
+            jitterSeed: 0, // Seed for position jitter noise
+            distFromCenter: 0, // Distance from explosion center (for radial gradient)
+            baseScale: new THREE.Vector3(1, 1, 1), // Original scale before pulsing
+            basePosition: new THREE.Vector3(), // Position before jitter
             // ═══════════════════════════════════════════════════════════════
             // ELEMENTAL STATE
             // ═══════════════════════════════════════════════════════════════
-            elementalType: null,               // Element type for this shard
-            elementalDrag: 0,                  // Elemental-specific drag
-            elementalBounce: 0,                // Elemental-specific bounce
-            riseSpeed: 0,                      // For fire/smoke rising
-            disperseRate: 0,                   // For smoke dispersion
-            isSharedElementalMaterial: false   // If true, don't dispose material on deactivate
+            elementalType: null, // Element type for this shard
+            elementalDrag: 0, // Elemental-specific drag
+            elementalBounce: 0, // Elemental-specific bounce
+            riseSpeed: 0, // For fire/smoke rising
+            disperseRate: 0, // For smoke dispersion
+            isSharedElementalMaterial: false, // If true, don't dispose material on deactivate
         };
     }
 
@@ -225,7 +222,7 @@ class ShardPool {
             baseMaterial = null,
             // Elemental physics for specialized shard behavior
             elementalPhysics = null,
-            elementalType = null
+            elementalType = null,
         } = config;
 
         // Store elemental config for update methods
@@ -256,7 +253,7 @@ class ShardPool {
 
             // Transform centroid to world space (apply scale, rotation, then translation)
             const worldCentroid = localCentroid.clone();
-            worldCentroid.multiply(meshScale);  // Scale first
+            worldCentroid.multiply(meshScale); // Scale first
             worldCentroid.applyQuaternion(meshQuaternion);
             worldCentroid.add(meshPosition);
 
@@ -359,7 +356,8 @@ class ShardPool {
                 // ═══════════════════════════════════════════════════════════════
                 // DEBUG LOGGING - ShardPool material assignment
                 // ═══════════════════════════════════════════════════════════════
-                if (i === 0) { // Only log for first shard
+                if (i === 0) {
+                    // Only log for first shard
                 }
 
                 // Dispose old material if it was a dynamic clone (not the shared default)
@@ -371,10 +369,11 @@ class ShardPool {
                 // ShaderMaterials have complex uniform structures that can fail on clone()
                 // For elemental materials, use the base material directly (shared) since
                 // they have uniform appearance by design and flicker/animation via uniforms
-                const isElementalShader = baseMaterial.type === 'ShaderMaterial' &&
-                    baseMaterial.userData?.elementalType;
+                const isElementalShader =
+                    baseMaterial.type === 'ShaderMaterial' && baseMaterial.userData?.elementalType;
 
-                if (i === 0) { // Only log for first shard
+                if (i === 0) {
+                    // Only log for first shard
                 }
 
                 if (isElementalShader) {
@@ -394,7 +393,8 @@ class ShardPool {
                     shard.userData.state.isSharedElementalMaterial = false;
                 }
             } else {
-                if (i === 0) { // Only log for first shard
+                if (i === 0) {
+                    // Only log for first shard
                 }
             }
 
@@ -428,9 +428,10 @@ class ShardPool {
                 shard.userData.state.isFiery = true;
 
                 // Extract fire color from the original material before replacing
-                const fireColor = shard.material.emissive?.clone() ||
-                                  shard.material.color?.clone() ||
-                                  new THREE.Color(0xffaa00);
+                const fireColor =
+                    shard.material.emissive?.clone() ||
+                    shard.material.color?.clone() ||
+                    new THREE.Color(0xffaa00);
 
                 // Apply color variation (yellow → orange spectrum)
                 const lerpFactor = Math.random();
@@ -459,7 +460,7 @@ class ShardPool {
                 shard.material = createFireShardMaterial({
                     color: fireColor,
                     intensity,
-                    opacity: 0.6 + Math.random() * 0.2
+                    opacity: 0.6 + Math.random() * 0.2,
                 });
 
                 // Cache base intensity in state for update loop (avoid reading uniform)
@@ -491,7 +492,8 @@ class ShardPool {
         // Front shards (high z) get depthFactor=0, back shards get depthFactor=1
         // ═══════════════════════════════════════════════════════════════
         if (activatedShards.length > 1) {
-            let minDepth = Infinity, maxDepth = -Infinity;
+            let minDepth = Infinity,
+                maxDepth = -Infinity;
             for (const shard of activatedShards) {
                 const depth = shard.userData.state.depthFactor;
                 minDepth = Math.min(minDepth, depth);
@@ -565,8 +567,10 @@ class ShardPool {
                     // Gentle vertical bob
                     shard.position.y += Math.sin(time * bobSpeed + state.floatPhase) * bobAmount;
                     // Subtle horizontal drift
-                    shard.position.x += Math.sin(time * bobSpeed * 0.7 + state.floatPhase * 1.3) * driftAmount;
-                    shard.position.z += Math.cos(time * bobSpeed * 0.5 + state.floatPhase * 0.7) * driftAmount;
+                    shard.position.x +=
+                        Math.sin(time * bobSpeed * 0.7 + state.floatPhase * 1.3) * driftAmount;
+                    shard.position.z +=
+                        Math.cos(time * bobSpeed * 0.5 + state.floatPhase * 0.7) * driftAmount;
                 }
 
                 // Update rotation (slows down as suspended)
@@ -600,7 +604,9 @@ class ShardPool {
             if (state.isFiery) {
                 // 1. ANIMATED FLICKER - Oscillate emissive intensity
                 const flickerBase = Math.sin(time * state.flickerSpeed + state.flickerPhase);
-                const flickerNoise = Math.sin(time * state.flickerSpeed * 2.3 + state.flickerPhase * 1.7);
+                const flickerNoise = Math.sin(
+                    time * state.flickerSpeed * 2.3 + state.flickerPhase * 1.7
+                );
                 const flicker = 0.85 + (flickerBase * 0.1 + flickerNoise * 0.05); // Range 0.7-1.0
                 state.flickerMultiplier = flicker;
 
@@ -641,7 +647,7 @@ class ShardPool {
 
                 // Fade opacity in last 30% using shader uniform
                 if (progress > 0.7 && !state.isSuspendMode) {
-                    state.opacity = 1 - ((progress - 0.7) / 0.3);
+                    state.opacity = 1 - (progress - 0.7) / 0.3;
                     if (shard.material.uniforms.uOpacity) {
                         shard.material.uniforms.uOpacity.value = state.opacity * 0.7;
                     }
@@ -657,7 +663,7 @@ class ShardPool {
 
                 // Fade opacity in last 30%
                 if (progress > 0.7 && !state.isSuspendMode) {
-                    state.opacity = 1 - ((progress - 0.7) / 0.3);
+                    state.opacity = 1 - (progress - 0.7) / 0.3;
                     shard.material.uniforms.uOpacity.value = state.opacity * 0.6;
                 }
             } else {
@@ -668,18 +674,21 @@ class ShardPool {
                 if (progress < 0.2) {
                     const glowProgress = progress / 0.2;
                     state.impactGlow = 1.0 - glowProgress * glowProgress;
-                    const totalEmissive = state.baseEmissiveIntensity + state.impactGlow * glowScale;
+                    const totalEmissive =
+                        state.baseEmissiveIntensity + state.impactGlow * glowScale;
                     shard.material.emissiveIntensity = totalEmissive;
                 } else if (progress < 0.5) {
-                    shard.material.emissiveIntensity = state.baseEmissiveIntensity * 0.8 * glowScale;
+                    shard.material.emissiveIntensity =
+                        state.baseEmissiveIntensity * 0.8 * glowScale;
                 } else {
                     const fadeProgress = (progress - 0.5) / 0.5;
-                    shard.material.emissiveIntensity = state.baseEmissiveIntensity * (1 - fadeProgress) * glowScale;
+                    shard.material.emissiveIntensity =
+                        state.baseEmissiveIntensity * (1 - fadeProgress) * glowScale;
                 }
 
                 // Fade out opacity in last 30%
                 if (progress > 0.7 && !state.isSuspendMode) {
-                    state.opacity = 1 - ((progress - 0.7) / 0.3);
+                    state.opacity = 1 - (progress - 0.7) / 0.3;
                     shard.material.opacity = state.opacity * 0.9;
                 }
             }
@@ -808,10 +817,9 @@ class ShardPool {
             const spiralRadius = spiralStrength * (1 - clampedProgress);
 
             // Calculate spiral offset perpendicular to movement direction
-            const moveDir = this._tempVec3_moveDir.subVectors(
-                targetPosition,
-                state.reassemblyStartPos
-            ).normalize();
+            const moveDir = this._tempVec3_moveDir
+                .subVectors(targetPosition, state.reassemblyStartPos)
+                .normalize();
 
             // Create perpendicular vectors for spiral plane
             const up = this._tempVec3_up.set(0, 1, 0);
@@ -827,7 +835,11 @@ class ShardPool {
             // ═══════════════════════════════════════════════════════════════
             // ROTATION - Smooth slerp back to original orientation
             // ═══════════════════════════════════════════════════════════════
-            this._tempQuat.slerpQuaternions(state.reassemblyStartQuat, targetQuaternion, clampedProgress);
+            this._tempQuat.slerpQuaternions(
+                state.reassemblyStartQuat,
+                targetQuaternion,
+                clampedProgress
+            );
             shard.quaternion.copy(this._tempQuat);
 
             // Lerp scale back to original mesh scale
@@ -924,7 +936,6 @@ class ShardPool {
             state.floatPhase = Math.random() * Math.PI * 2;
         }
     }
-
 
     /**
      * Initialize gravity mode - shards will fall and bounce
@@ -1027,11 +1038,7 @@ class ShardPool {
             if (state.dualMode !== 'implode') continue;
 
             // Lerp from start position to center with spiral (reuse temp vector)
-            this._tempVec3_basePos.lerpVectors(
-                state.implodeStartPos,
-                centerPoint,
-                eased
-            );
+            this._tempVec3_basePos.lerpVectors(state.implodeStartPos, centerPoint, eased);
 
             // Add spiral motion (diminishes as approaching center)
             const spiralRadius = (1 - eased) * 0.15;
@@ -1100,7 +1107,6 @@ class ShardPool {
         }
     }
 
-
     /**
      * Update gravity bounce mode - shards fall and bounce on floor
      * @param {number} deltaTime - Time since last frame in ms
@@ -1147,7 +1153,10 @@ class ShardPool {
             }
 
             // Fade glow over time
-            shard.material.emissiveIntensity = Math.max(0.1, shard.material.emissiveIntensity - dt * 0.5);
+            shard.material.emissiveIntensity = Math.max(
+                0.1,
+                shard.material.emissiveIntensity - dt * 0.5
+            );
 
             // Fade in final phase
             if (progress > 0.7) {
@@ -1184,7 +1193,8 @@ class ShardPool {
             const y = centerPoint.y + state.orbitHeight + heightBob;
 
             // Apply tilt (orbit plane isn't flat)
-            const tiltOffset = Math.sin(state.orbitAngle + state.orbitTilt) * state.orbitRadius * 0.1;
+            const tiltOffset =
+                Math.sin(state.orbitAngle + state.orbitTilt) * state.orbitRadius * 0.1;
 
             shard.position.set(x, y + tiltOffset, z);
 

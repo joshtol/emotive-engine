@@ -33,23 +33,23 @@ export class ParticleEffectsBuilder {
         // Map gesture names to effect builder methods
         this.effectMap = {
             // Firefly effect (pulsing glow)
-            'sparkle': this.buildFireflyEffect.bind(this),
-            'twinkle': this.buildFireflyEffect.bind(this),
+            sparkle: this.buildFireflyEffect.bind(this),
+            twinkle: this.buildFireflyEffect.bind(this),
 
             // Flicker effect (rapid shimmer)
-            'flicker': this.buildFlickerEffect.bind(this),
+            flicker: this.buildFlickerEffect.bind(this),
 
             // Shimmer effect (traveling wave)
-            'shimmer': this.buildShimmerEffect.bind(this),
+            shimmer: this.buildShimmerEffect.bind(this),
 
             // Glow effect (radiant burst)
-            'glow': this.buildGlowEffect.bind(this),
+            glow: this.buildGlowEffect.bind(this),
 
             // Burst effect (explosion glow)
-            'burst': this.buildGlowEffect.bind(this),
+            burst: this.buildGlowEffect.bind(this),
 
             // Flash effect (instant brightness)
-            'flash': this.buildFlickerEffect.bind(this)
+            flash: this.buildFlickerEffect.bind(this),
         };
     }
 
@@ -65,7 +65,7 @@ export class ParticleEffectsBuilder {
             return null;
         }
 
-        const {gestureName} = gestureData;
+        const { gestureName } = gestureData;
         const builder = this.effectMap[gestureName];
 
         if (!builder) {
@@ -93,7 +93,7 @@ export class ParticleEffectsBuilder {
             fireflyTime: Date.now() * 0.001, // Convert to seconds
             particleGlow: config.particleGlow || 2.0,
             centerX,
-            centerY
+            centerY,
         };
     }
 
@@ -113,7 +113,7 @@ export class ParticleEffectsBuilder {
             flickerTime: Date.now() * 0.001,
             particleGlow: config.particleGlow || 2.0,
             centerX,
-            centerY
+            centerY,
         };
     }
 
@@ -135,7 +135,7 @@ export class ParticleEffectsBuilder {
             shimmerWave: progress * Math.PI * 2, // Wave phase based on progress
             particleGlow: config.particleGlow || 1.2,
             centerX,
-            centerY
+            centerY,
         };
     }
 
@@ -156,7 +156,7 @@ export class ParticleEffectsBuilder {
             glowProgress: progress,
             particleGlow: config.particleGlow || 2.0,
             centerX,
-            centerY
+            centerY,
         };
     }
 

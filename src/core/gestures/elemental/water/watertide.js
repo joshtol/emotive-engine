@@ -63,7 +63,7 @@ const WATERTIDE_CONFIG = {
             endScale: 1.0,
             startDiameter: 1.0,
             endDiameter: 1.0,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: { type: 'ring', count: 1, phaseOffset: 0 },
         count: 1,
@@ -79,15 +79,15 @@ const WATERTIDE_CONFIG = {
             // Rotating wave cutout - angular sweep creates swirling tide
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 4, scale: 1.2, weight: 1.0 },    // WAVES
+                primary: { pattern: 4, scale: 1.2, weight: 1.0 }, // WAVES
                 secondary: { pattern: 0, scale: 0.6, weight: 0.25 }, // CELLULAR - organic texture
                 blend: 'multiply',
                 travel: 'angular',
-                travelSpeed: -1.5,          // Clockwise rotating sweep
-                strengthCurve: 'constant'
+                travelSpeed: -1.5, // Clockwise rotating sweep
+                strengthCurve: 'constant',
             },
             grain: { type: 3, strength: 0.2, scale: 0.25, speed: 1.0, blend: 'multiply' },
-            rotate: { axis: 'z', rotations: -0.25, phase: 0 },  // Clockwise rotation
+            rotate: { axis: 'z', rotations: -0.25, phase: 0 }, // Clockwise rotation
             // Breathing pulse for tidal rhythm
             pulse: { amplitude: 0.15, frequency: 0.6, easing: 'easeInOut' },
             blending: 'additive',
@@ -96,11 +96,11 @@ const WATERTIDE_CONFIG = {
                 'wave-curl': {
                     // Slower, wider arc sweep for flowing wave motion
                     shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.8, arcCount: 2 },
-                    orientationOverride: 'camera'
-                }
+                    orientationOverride: 'camera',
+                },
             },
             // No atmospherics — tidal motion is smooth, no violent splash
-        }
+        },
     },
 
     // Wobble - gentle sway
@@ -114,7 +114,7 @@ const WATERTIDE_CONFIG = {
     glowColor: [0.15, 0.45, 0.85],
     glowIntensityMin: 0.85,
     glowIntensityMax: 1.4,
-    glowPulseRate: 0.8
+    glowPulseRate: 0.8,
 };
 
 /**

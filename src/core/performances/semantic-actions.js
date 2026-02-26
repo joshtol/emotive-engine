@@ -43,18 +43,14 @@ export const SEMANTIC_ACTIONS = {
      * User needs assistance - mascot offers help
      */
     offer_help: {
-        performance: 'offering_help',      // Semantic performance name
-        defaultShape: 'heart',             // Empathetic shape
-        defaultGesture: 'reach',           // Reaching out gesture
-        emotionMatch: 'empathy',           // Best matching emotion
+        performance: 'offering_help', // Semantic performance name
+        defaultShape: 'heart', // Empathetic shape
+        defaultGesture: 'reach', // Reaching out gesture
+        emotionMatch: 'empathy', // Best matching emotion
         category: 'conversational',
         description: 'Offering assistance to user',
-        intensityModifier: 1.0,            // No modification to calculated intensity
-        examples: [
-            'How can I help you?',
-            'Let me assist you with that',
-            'I\'m here to help'
-        ]
+        intensityModifier: 1.0, // No modification to calculated intensity
+        examples: ['How can I help you?', 'Let me assist you with that', "I'm here to help"],
     },
 
     /**
@@ -62,17 +58,13 @@ export const SEMANTIC_ACTIONS = {
      */
     celebrate: {
         performance: 'celebrating',
-        defaultShape: 'star',              // Achievement shape
-        defaultGesture: 'sparkle',         // Celebratory gesture
+        defaultShape: 'star', // Achievement shape
+        defaultGesture: 'sparkle', // Celebratory gesture
         emotionMatch: 'joy',
         category: 'conversational',
         description: 'Celebrating success or completion',
-        intensityModifier: 1.2,            // Amplify celebrations
-        examples: [
-            'Great job!',
-            'You did it!',
-            'Perfect!'
-        ]
+        intensityModifier: 1.2, // Amplify celebrations
+        examples: ['Great job!', 'You did it!', 'Perfect!'],
     },
 
     /**
@@ -80,17 +72,13 @@ export const SEMANTIC_ACTIONS = {
      */
     guide: {
         performance: 'guiding',
-        defaultShape: 'square',            // Structured shape for instructions
-        defaultGesture: 'point',           // Directional gesture
+        defaultShape: 'square', // Structured shape for instructions
+        defaultGesture: 'point', // Directional gesture
         emotionMatch: 'calm',
         category: 'conversational',
         description: 'Providing step-by-step guidance',
-        intensityModifier: 0.8,            // Calm, measured guidance
-        examples: [
-            'Here\'s how to do that',
-            'Follow these steps',
-            'Let me show you'
-        ]
+        intensityModifier: 0.8, // Calm, measured guidance
+        examples: ["Here's how to do that", 'Follow these steps', 'Let me show you'],
     },
 
     /**
@@ -98,17 +86,13 @@ export const SEMANTIC_ACTIONS = {
      */
     reassure: {
         performance: 'reassuring',
-        defaultShape: 'heart',             // Caring shape
-        defaultGesture: 'nod',             // Affirming gesture
+        defaultShape: 'heart', // Caring shape
+        defaultGesture: 'nod', // Affirming gesture
         emotionMatch: 'empathy',
         category: 'conversational',
         description: 'Providing comfort and reassurance',
-        intensityModifier: 0.9,            // Gentle reassurance
-        examples: [
-            'Don\'t worry, we\'ll fix this',
-            'Everything will be okay',
-            'You\'re doing great'
-        ]
+        intensityModifier: 0.9, // Gentle reassurance
+        examples: ["Don't worry, we'll fix this", 'Everything will be okay', "You're doing great"],
     },
 
     /**
@@ -116,17 +100,13 @@ export const SEMANTIC_ACTIONS = {
      */
     greet: {
         performance: 'greeting',
-        defaultShape: 'sun',               // Bright, welcoming shape
-        defaultGesture: 'wave',            // Welcoming gesture
+        defaultShape: 'sun', // Bright, welcoming shape
+        defaultGesture: 'wave', // Welcoming gesture
         emotionMatch: 'joy',
         category: 'conversational',
         description: 'Welcoming user',
         intensityModifier: 1.0,
-        examples: [
-            'Hello!',
-            'Welcome!',
-            'Hi there!'
-        ]
+        examples: ['Hello!', 'Welcome!', 'Hi there!'],
     },
 
     /**
@@ -134,17 +114,13 @@ export const SEMANTIC_ACTIONS = {
      */
     confirm: {
         performance: 'confirming',
-        defaultShape: 'circle',            // Neutral shape
-        defaultGesture: 'nod',             // Affirmative gesture
+        defaultShape: 'circle', // Neutral shape
+        defaultGesture: 'nod', // Affirmative gesture
         emotionMatch: 'calm',
         category: 'conversational',
         description: 'Confirming user action or understanding',
-        intensityModifier: 0.7,            // Subtle confirmation
-        examples: [
-            'Yes, that\'s correct',
-            'I understand',
-            'Got it'
-        ]
+        intensityModifier: 0.7, // Subtle confirmation
+        examples: ["Yes, that's correct", 'I understand', 'Got it'],
     },
 
     /**
@@ -152,17 +128,13 @@ export const SEMANTIC_ACTIONS = {
      */
     deny: {
         performance: 'denying',
-        defaultShape: 'circle',            // Neutral shape
-        defaultGesture: 'shake',           // Negative gesture
+        defaultShape: 'circle', // Neutral shape
+        defaultGesture: 'shake', // Negative gesture
         emotionMatch: 'concern',
         category: 'conversational',
         description: 'Correcting or indicating no',
         intensityModifier: 0.8,
-        examples: [
-            'That\'s not quite right',
-            'No, let me clarify',
-            'Not exactly'
-        ]
+        examples: ["That's not quite right", 'No, let me clarify', 'Not exactly'],
     },
 
     /**
@@ -170,17 +142,13 @@ export const SEMANTIC_ACTIONS = {
      */
     emphasize: {
         performance: 'emphasizing',
-        defaultShape: 'star',              // Attention-grabbing shape
-        defaultGesture: 'pulse',           // Pulsing for emphasis
+        defaultShape: 'star', // Attention-grabbing shape
+        defaultGesture: 'pulse', // Pulsing for emphasis
         emotionMatch: 'excitement',
         category: 'conversational',
         description: 'Drawing attention to key information',
-        intensityModifier: 1.1,            // Slightly amplified
-        examples: [
-            'This is important',
-            'Pay attention to this',
-            'Remember this'
-        ]
+        intensityModifier: 1.1, // Slightly amplified
+        examples: ['This is important', 'Pay attention to this', 'Remember this'],
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -192,17 +160,13 @@ export const SEMANTIC_ACTIONS = {
      */
     question: {
         performance: 'questioning',
-        defaultShape: 'circle',            // Open, curious shape
-        defaultGesture: 'tilt',            // Inquisitive tilt
+        defaultShape: 'circle', // Open, curious shape
+        defaultGesture: 'tilt', // Inquisitive tilt
         emotionMatch: 'curiosity',
         category: 'cognitive',
         description: 'Asking for clarification or more info',
         intensityModifier: 0.8,
-        examples: [
-            'Could you clarify?',
-            'What do you mean?',
-            'Can you tell me more?'
-        ]
+        examples: ['Could you clarify?', 'What do you mean?', 'Can you tell me more?'],
     },
 
     /**
@@ -210,17 +174,13 @@ export const SEMANTIC_ACTIONS = {
      */
     think: {
         performance: 'thinking',
-        defaultShape: 'circle',            // Neutral while processing
-        defaultGesture: 'orbit',           // Contemplative orbit
+        defaultShape: 'circle', // Neutral while processing
+        defaultGesture: 'orbit', // Contemplative orbit
         emotionMatch: 'calm',
         category: 'cognitive',
         description: 'Processing information',
-        intensityModifier: 0.6,            // Calm thinking
-        examples: [
-            'Let me think about that',
-            'Processing...',
-            'Hmm...'
-        ]
+        intensityModifier: 0.6, // Calm thinking
+        examples: ['Let me think about that', 'Processing...', 'Hmm...'],
     },
 
     /**
@@ -228,17 +188,13 @@ export const SEMANTIC_ACTIONS = {
      */
     listen: {
         performance: 'listening',
-        defaultShape: 'circle',            // Attentive shape
-        defaultGesture: 'settle',          // Focused, still
+        defaultShape: 'circle', // Attentive shape
+        defaultGesture: 'settle', // Focused, still
         emotionMatch: 'calm',
         category: 'cognitive',
         description: 'Actively listening to user',
-        intensityModifier: 0.5,            // Very calm, attentive
-        examples: [
-            'I\'m listening',
-            'Go on...',
-            'Tell me more'
-        ]
+        intensityModifier: 0.5, // Very calm, attentive
+        examples: ["I'm listening", 'Go on...', 'Tell me more'],
     },
 
     /**
@@ -246,17 +202,13 @@ export const SEMANTIC_ACTIONS = {
      */
     respond: {
         performance: 'responding',
-        defaultShape: 'circle',            // Neutral response
-        defaultGesture: 'bounce',          // Engaged bounce
+        defaultShape: 'circle', // Neutral response
+        defaultGesture: 'bounce', // Engaged bounce
         emotionMatch: 'calm',
         category: 'cognitive',
         description: 'General response to user',
         intensityModifier: 0.8,
-        examples: [
-            'Here\'s what I think',
-            'My response is...',
-            'To answer your question'
-        ]
+        examples: ["Here's what I think", 'My response is...', 'To answer your question'],
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -268,17 +220,13 @@ export const SEMANTIC_ACTIONS = {
      */
     attack: {
         performance: 'attacking',
-        defaultShape: 'diamond',           // Sharp, aggressive shape
-        defaultGesture: 'lunge',           // Forward attack motion
+        defaultShape: 'diamond', // Sharp, aggressive shape
+        defaultGesture: 'lunge', // Forward attack motion
         emotionMatch: 'anger',
         category: 'physical',
         description: 'Aggressive forward action',
-        intensityModifier: 1.3,            // High intensity
-        examples: [
-            'Take this!',
-            'Attack!',
-            'Charge!'
-        ]
+        intensityModifier: 1.3, // High intensity
+        examples: ['Take this!', 'Attack!', 'Charge!'],
     },
 
     /**
@@ -286,17 +234,13 @@ export const SEMANTIC_ACTIONS = {
      */
     hit: {
         performance: 'hit_reaction',
-        defaultShape: 'circle',            // Defensive shape
-        defaultGesture: 'oofFront',        // Impact reaction
+        defaultShape: 'circle', // Defensive shape
+        defaultGesture: 'oofFront', // Impact reaction
         emotionMatch: 'pain',
         category: 'physical',
         description: 'Reacting to being hit',
         intensityModifier: 1.1,
-        examples: [
-            'Oof!',
-            'Ouch!',
-            'That hurt!'
-        ]
+        examples: ['Oof!', 'Ouch!', 'That hurt!'],
     },
 
     /**
@@ -304,17 +248,13 @@ export const SEMANTIC_ACTIONS = {
      */
     dodge: {
         performance: 'dodging',
-        defaultShape: 'circle',            // Agile shape
-        defaultGesture: 'wobble',          // Quick evasive motion
+        defaultShape: 'circle', // Agile shape
+        defaultGesture: 'wobble', // Quick evasive motion
         emotionMatch: 'fear',
         category: 'physical',
         description: 'Evading an attack or obstacle',
         intensityModifier: 1.0,
-        examples: [
-            'Whoa!',
-            'Close one!',
-            'Missed me!'
-        ]
+        examples: ['Whoa!', 'Close one!', 'Missed me!'],
     },
 
     /**
@@ -322,17 +262,13 @@ export const SEMANTIC_ACTIONS = {
      */
     dance: {
         performance: 'dancing',
-        defaultShape: 'star',              // Fun, dynamic shape
-        defaultGesture: 'runningman',      // Classic dance move
+        defaultShape: 'star', // Fun, dynamic shape
+        defaultGesture: 'runningman', // Classic dance move
         emotionMatch: 'joy',
         category: 'physical',
         description: 'Dancing or moving to rhythm',
         intensityModifier: 1.2,
-        examples: [
-            'Let\'s dance!',
-            'Groove time!',
-            'Feel the beat!'
-        ]
+        examples: ["Let's dance!", 'Groove time!', 'Feel the beat!'],
     },
 
     /**
@@ -340,17 +276,13 @@ export const SEMANTIC_ACTIONS = {
      */
     jump: {
         performance: 'jumping',
-        defaultShape: 'star',              // Energetic shape
-        defaultGesture: 'jump',            // Vertical jump
+        defaultShape: 'star', // Energetic shape
+        defaultGesture: 'jump', // Vertical jump
         emotionMatch: 'excitement',
         category: 'physical',
         description: 'Jumping with energy',
         intensityModifier: 1.1,
-        examples: [
-            'Jump!',
-            'Boing!',
-            'Up we go!'
-        ]
+        examples: ['Jump!', 'Boing!', 'Up we go!'],
     },
 
     /**
@@ -358,17 +290,13 @@ export const SEMANTIC_ACTIONS = {
      */
     spin: {
         performance: 'spinning',
-        defaultShape: 'circle',            // Rotational shape
-        defaultGesture: 'spin',            // Full rotation
+        defaultShape: 'circle', // Rotational shape
+        defaultGesture: 'spin', // Full rotation
         emotionMatch: 'excitement',
         category: 'physical',
         description: 'Spinning or rotating',
         intensityModifier: 1.0,
-        examples: [
-            'Wheee!',
-            'Spin!',
-            'Round and round!'
-        ]
+        examples: ['Wheee!', 'Spin!', 'Round and round!'],
     },
 
     /**
@@ -376,17 +304,13 @@ export const SEMANTIC_ACTIONS = {
      */
     bow: {
         performance: 'bowing',
-        defaultShape: 'circle',            // Humble shape
-        defaultGesture: 'bow',             // Respectful bow
+        defaultShape: 'circle', // Humble shape
+        defaultGesture: 'bow', // Respectful bow
         emotionMatch: 'calm',
         category: 'physical',
         description: 'Showing respect or gratitude',
         intensityModifier: 0.7,
-        examples: [
-            'Thank you',
-            'I\'m honored',
-            'My pleasure'
-        ]
+        examples: ['Thank you', "I'm honored", 'My pleasure'],
     },
 
     /**
@@ -394,17 +318,13 @@ export const SEMANTIC_ACTIONS = {
      */
     point: {
         performance: 'pointing',
-        defaultShape: 'triangle',          // Directional shape
-        defaultGesture: 'point',           // Pointing gesture
+        defaultShape: 'triangle', // Directional shape
+        defaultGesture: 'point', // Pointing gesture
         emotionMatch: 'calm',
         category: 'physical',
         description: 'Directing attention somewhere',
         intensityModifier: 0.9,
-        examples: [
-            'Look over there!',
-            'This way!',
-            'Right here!'
-        ]
+        examples: ['Look over there!', 'This way!', 'Right here!'],
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -416,17 +336,13 @@ export const SEMANTIC_ACTIONS = {
      */
     celebrate_big: {
         performance: 'celebrating_big',
-        defaultShape: 'star',              // Celebratory shape
-        defaultGesture: 'confetti',        // Party effect
+        defaultShape: 'star', // Celebratory shape
+        defaultGesture: 'confetti', // Party effect
         emotionMatch: 'joy',
         category: 'dramatic',
         description: 'Major celebration with dramatic effects',
-        intensityModifier: 1.4,            // Maximum celebration
-        examples: [
-            'AMAZING!',
-            'INCREDIBLE!',
-            'WE DID IT!'
-        ]
+        intensityModifier: 1.4, // Maximum celebration
+        examples: ['AMAZING!', 'INCREDIBLE!', 'WE DID IT!'],
     },
 
     /**
@@ -434,17 +350,13 @@ export const SEMANTIC_ACTIONS = {
      */
     rage: {
         performance: 'raging',
-        defaultShape: 'diamond',           // Sharp, angry shape
-        defaultGesture: 'rage',            // Intense anger gesture
+        defaultShape: 'diamond', // Sharp, angry shape
+        defaultGesture: 'rage', // Intense anger gesture
         emotionMatch: 'anger',
         category: 'dramatic',
         description: 'Expressing intense anger or frustration',
         intensityModifier: 1.3,
-        examples: [
-            'ARGH!',
-            'This is unacceptable!',
-            'I\'ve had enough!'
-        ]
+        examples: ['ARGH!', 'This is unacceptable!', "I've had enough!"],
     },
 
     /**
@@ -452,17 +364,13 @@ export const SEMANTIC_ACTIONS = {
      */
     transform: {
         performance: 'transforming',
-        defaultShape: 'star',              // Dynamic shape
-        defaultGesture: 'morph',           // Transformation effect
+        defaultShape: 'star', // Dynamic shape
+        defaultGesture: 'morph', // Transformation effect
         emotionMatch: 'excitement',
         category: 'dramatic',
         description: 'Dramatic shape or state transformation',
         intensityModifier: 1.2,
-        examples: [
-            'Transforming!',
-            'Watch this!',
-            'Behold!'
-        ]
+        examples: ['Transforming!', 'Watch this!', 'Behold!'],
     },
 
     /**
@@ -470,17 +378,13 @@ export const SEMANTIC_ACTIONS = {
      */
     shatter: {
         performance: 'shattering',
-        defaultShape: 'circle',            // Pre-shatter shape
-        defaultGesture: 'shatter',         // Break apart effect
+        defaultShape: 'circle', // Pre-shatter shape
+        defaultGesture: 'shatter', // Break apart effect
         emotionMatch: 'surprise',
         category: 'dramatic',
         description: 'Breaking apart into pieces',
         intensityModifier: 1.3,
-        examples: [
-            'Breaking!',
-            'Shattered!',
-            'Falling apart!'
-        ]
+        examples: ['Breaking!', 'Shattered!', 'Falling apart!'],
     },
 
     /**
@@ -488,17 +392,13 @@ export const SEMANTIC_ACTIONS = {
      */
     dissolve: {
         performance: 'dissolving',
-        defaultShape: 'circle',            // Fading shape
-        defaultGesture: 'dissolveUp',      // Dissolve effect
+        defaultShape: 'circle', // Fading shape
+        defaultGesture: 'dissolveUp', // Dissolve effect
         emotionMatch: 'sadness',
         category: 'dramatic',
         description: 'Fading or dissolving away',
         intensityModifier: 0.8,
-        examples: [
-            'Goodbye...',
-            'Fading away...',
-            'Disappearing...'
-        ]
+        examples: ['Goodbye...', 'Fading away...', 'Disappearing...'],
     },
 
     /**
@@ -506,17 +406,13 @@ export const SEMANTIC_ACTIONS = {
      */
     knockdown: {
         performance: 'knocked_down',
-        defaultShape: 'circle',            // Defeated shape
-        defaultGesture: 'knockdown',       // Fall down gesture
+        defaultShape: 'circle', // Defeated shape
+        defaultGesture: 'knockdown', // Fall down gesture
         emotionMatch: 'sadness',
         category: 'dramatic',
         description: 'Being knocked down or defeated',
         intensityModifier: 1.1,
-        examples: [
-            'I\'m down!',
-            'Defeated...',
-            'Can\'t go on...'
-        ]
+        examples: ["I'm down!", 'Defeated...', "Can't go on..."],
     },
 
     /**
@@ -524,17 +420,13 @@ export const SEMANTIC_ACTIONS = {
      */
     victory: {
         performance: 'victorious',
-        defaultShape: 'star',              // Triumphant shape
-        defaultGesture: 'burstUp',         // Upward celebration
+        defaultShape: 'star', // Triumphant shape
+        defaultGesture: 'burstUp', // Upward celebration
         emotionMatch: 'joy',
         category: 'dramatic',
         description: 'Celebrating victory',
         intensityModifier: 1.3,
-        examples: [
-            'Victory!',
-            'I won!',
-            'Champion!'
-        ]
+        examples: ['Victory!', 'I won!', 'Champion!'],
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -546,17 +438,13 @@ export const SEMANTIC_ACTIONS = {
      */
     idle: {
         performance: 'idling',
-        defaultShape: 'circle',            // Relaxed shape
-        defaultGesture: 'breathe',         // Subtle breathing
+        defaultShape: 'circle', // Relaxed shape
+        defaultGesture: 'breathe', // Subtle breathing
         emotionMatch: 'neutral',
         category: 'ambient',
         description: 'Idle state with subtle animation',
-        intensityModifier: 0.4,            // Very subtle
-        examples: [
-            '...',
-            '*waiting*',
-            '*idle*'
-        ]
+        intensityModifier: 0.4, // Very subtle
+        examples: ['...', '*waiting*', '*idle*'],
     },
 
     /**
@@ -564,17 +452,13 @@ export const SEMANTIC_ACTIONS = {
      */
     ambient: {
         performance: 'ambient_effect',
-        defaultShape: 'circle',            // Neutral shape
-        defaultGesture: 'glow',            // Ambient glow
+        defaultShape: 'circle', // Neutral shape
+        defaultGesture: 'glow', // Ambient glow
         emotionMatch: 'calm',
         category: 'ambient',
         description: 'Ambient environmental effect',
         intensityModifier: 0.5,
-        examples: [
-            '*glowing*',
-            '*ambient*',
-            '*atmospheric*'
-        ]
+        examples: ['*glowing*', '*ambient*', '*atmospheric*'],
     },
 
     /**
@@ -582,17 +466,13 @@ export const SEMANTIC_ACTIONS = {
      */
     weather: {
         performance: 'weather_effect',
-        defaultShape: 'circle',            // Neutral shape
-        defaultGesture: 'rain',            // Weather particles
+        defaultShape: 'circle', // Neutral shape
+        defaultGesture: 'rain', // Weather particles
         emotionMatch: 'calm',
         category: 'ambient',
         description: 'Weather or particle effect',
         intensityModifier: 0.6,
-        examples: [
-            '*raining*',
-            '*snowing*',
-            '*stormy*'
-        ]
+        examples: ['*raining*', '*snowing*', '*stormy*'],
     },
 
     /**
@@ -600,17 +480,13 @@ export const SEMANTIC_ACTIONS = {
      */
     sleepy: {
         performance: 'sleeping',
-        defaultShape: 'circle',            // Relaxed shape
-        defaultGesture: 'sway',            // Drowsy sway
+        defaultShape: 'circle', // Relaxed shape
+        defaultGesture: 'sway', // Drowsy sway
         emotionMatch: 'calm',
         category: 'ambient',
         description: 'Sleepy or drowsy state',
-        intensityModifier: 0.3,            // Very low energy
-        examples: [
-            '*yawn*',
-            'So sleepy...',
-            'Zzz...'
-        ]
+        intensityModifier: 0.3, // Very low energy
+        examples: ['*yawn*', 'So sleepy...', 'Zzz...'],
     },
 
     /**
@@ -618,17 +494,13 @@ export const SEMANTIC_ACTIONS = {
      */
     alert: {
         performance: 'alerting',
-        defaultShape: 'diamond',           // Sharp, alert shape
-        defaultGesture: 'snap',            // Quick snap to attention
+        defaultShape: 'diamond', // Sharp, alert shape
+        defaultGesture: 'snap', // Quick snap to attention
         emotionMatch: 'surprise',
         category: 'ambient',
         description: 'Becoming alert or awakening',
         intensityModifier: 1.0,
-        examples: [
-            'What?!',
-            'Huh?',
-            'I\'m awake!'
-        ]
+        examples: ['What?!', 'Huh?', "I'm awake!"],
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -640,17 +512,13 @@ export const SEMANTIC_ACTIONS = {
      */
     surprise: {
         performance: 'surprised',
-        defaultShape: 'star',              // Startled shape
-        defaultGesture: 'elasticBounce',   // Springy surprise
+        defaultShape: 'star', // Startled shape
+        defaultGesture: 'elasticBounce', // Springy surprise
         emotionMatch: 'surprise',
         category: 'emotional',
         description: 'Surprised or startled reaction',
         intensityModifier: 1.1,
-        examples: [
-            'Oh!',
-            'Wow!',
-            'What?!'
-        ]
+        examples: ['Oh!', 'Wow!', 'What?!'],
     },
 
     /**
@@ -658,17 +526,13 @@ export const SEMANTIC_ACTIONS = {
      */
     scared: {
         performance: 'frightened',
-        defaultShape: 'circle',            // Defensive shape
-        defaultGesture: 'shiver',          // Fearful shiver
+        defaultShape: 'circle', // Defensive shape
+        defaultGesture: 'shiver', // Fearful shiver
         emotionMatch: 'fear',
         category: 'emotional',
         description: 'Scared or frightened reaction',
         intensityModifier: 1.0,
-        examples: [
-            'Eek!',
-            'I\'m scared!',
-            'Help!'
-        ]
+        examples: ['Eek!', "I'm scared!", 'Help!'],
     },
 
     /**
@@ -676,17 +540,13 @@ export const SEMANTIC_ACTIONS = {
      */
     sad: {
         performance: 'saddened',
-        defaultShape: 'heart',             // Emotional shape
-        defaultGesture: 'deflate',         // Deflating sadly
+        defaultShape: 'heart', // Emotional shape
+        defaultGesture: 'deflate', // Deflating sadly
         emotionMatch: 'sadness',
         category: 'emotional',
         description: 'Sad or disappointed reaction',
         intensityModifier: 0.7,
-        examples: [
-            'Oh no...',
-            'That\'s sad...',
-            'I\'m sorry to hear that'
-        ]
+        examples: ['Oh no...', "That's sad...", "I'm sorry to hear that"],
     },
 
     /**
@@ -694,17 +554,13 @@ export const SEMANTIC_ACTIONS = {
      */
     excited: {
         performance: 'excited',
-        defaultShape: 'star',              // Energetic shape
-        defaultGesture: 'sparkle',         // Excited sparkle
+        defaultShape: 'star', // Energetic shape
+        defaultGesture: 'sparkle', // Excited sparkle
         emotionMatch: 'excitement',
         category: 'emotional',
         description: 'Excited or thrilled reaction',
         intensityModifier: 1.2,
-        examples: [
-            'Yes!',
-            'This is exciting!',
-            'I can\'t wait!'
-        ]
+        examples: ['Yes!', 'This is exciting!', "I can't wait!"],
     },
 
     /**
@@ -712,17 +568,13 @@ export const SEMANTIC_ACTIONS = {
      */
     confused: {
         performance: 'confused',
-        defaultShape: 'circle',            // Uncertain shape
-        defaultGesture: 'wobble',          // Confused wobble
+        defaultShape: 'circle', // Uncertain shape
+        defaultGesture: 'wobble', // Confused wobble
         emotionMatch: 'confusion',
         category: 'emotional',
         description: 'Confused or puzzled reaction',
         intensityModifier: 0.8,
-        examples: [
-            'Huh?',
-            'I don\'t understand...',
-            'That\'s confusing'
-        ]
+        examples: ['Huh?', "I don't understand...", "That's confusing"],
     },
 
     /**
@@ -730,17 +582,13 @@ export const SEMANTIC_ACTIONS = {
      */
     love: {
         performance: 'loving',
-        defaultShape: 'heart',             // Love shape
-        defaultGesture: 'heartbeat',       // Pulsing heart
+        defaultShape: 'heart', // Love shape
+        defaultGesture: 'heartbeat', // Pulsing heart
         emotionMatch: 'love',
         category: 'emotional',
         description: 'Expressing love or affection',
         intensityModifier: 1.1,
-        examples: [
-            'I love it!',
-            'So sweet!',
-            'Adorable!'
-        ]
+        examples: ['I love it!', 'So sweet!', 'Adorable!'],
     },
 
     // ═══════════════════════════════════════════════════════════════════════════════════
@@ -751,19 +599,15 @@ export const SEMANTIC_ACTIONS = {
      * No specific action - neutral state
      */
     none: {
-        performance: null,                 // No performance
-        defaultShape: 'circle',            // Default shape
-        defaultGesture: null,              // No gesture
+        performance: null, // No performance
+        defaultShape: 'circle', // Default shape
+        defaultGesture: null, // No gesture
         emotionMatch: 'neutral',
         category: 'neutral',
         description: 'Neutral state with no specific action',
         intensityModifier: 0.5,
-        examples: [
-            'Okay',
-            'I see',
-            'Understood'
-        ]
-    }
+        examples: ['Okay', 'I see', 'Understood'],
+    },
 };
 
 /**
@@ -799,9 +643,7 @@ export function getActionsByCategory(category) {
  * @returns {Array<string>} List of unique category names
  */
 export function getAvailableCategories() {
-    const categories = new Set(
-        Object.values(SEMANTIC_ACTIONS).map(config => config.category)
-    );
+    const categories = new Set(Object.values(SEMANTIC_ACTIONS).map(config => config.category));
     return Array.from(categories);
 }
 
@@ -824,13 +666,13 @@ export function getActionConfig(actionName, overrides = {}) {
             category: 'unknown',
             description: 'Unknown action',
             intensityModifier: 1.0,
-            ...overrides
+            ...overrides,
         };
     }
 
     return {
         ...action,
-        ...overrides
+        ...overrides,
     };
 }
 

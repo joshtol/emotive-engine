@@ -66,7 +66,9 @@ export class PerformanceProfiler {
         this.enabled = true;
         this.reset();
         console.log('[PerformanceProfiler] Enabled - collecting data...');
-        console.log('[PerformanceProfiler] TIP: Run profiler.enableGPUSync() for accurate GPU timing (will slow things down)');
+        console.log(
+            '[PerformanceProfiler] TIP: Run profiler.enableGPUSync() for accurate GPU timing (will slow things down)'
+        );
     }
 
     disable() {
@@ -160,17 +162,17 @@ export class PerformanceProfiler {
         if (this._gpuSyncEnabled) {
             report += 'GPU Sync: ENABLED (accurate GPU timing)\n';
         } else {
-            report += 'GPU Sync: disabled (CPU time only - run profiler.enableGPUSync() for GPU timing)\n';
+            report +=
+                'GPU Sync: disabled (CPU time only - run profiler.enableGPUSync() for GPU timing)\n';
         }
         report += '\nSection Breakdown:\n';
 
         // Sort by total time descending
-        const sorted = [...this.sections.entries()]
-            .sort((a, b) => b[1].total - a[1].total);
+        const sorted = [...this.sections.entries()].sort((a, b) => b[1].total - a[1].total);
 
         for (const [name, data] of sorted) {
             const avg = data.total / data.count;
-            const pct = (data.total / this.totalFrameTime * 100).toFixed(1);
+            const pct = ((data.total / this.totalFrameTime) * 100).toFixed(1);
             report += `  ${name.padEnd(30)} avg: ${avg.toFixed(2)}ms  min: ${data.min.toFixed(2)}ms  max: ${data.max.toFixed(2)}ms  (${pct}%)\n`;
         }
 
@@ -180,7 +182,7 @@ export class PerformanceProfiler {
             accountedTime += data.total;
         }
         const unaccounted = this.totalFrameTime - accountedTime;
-        const unaccountedPct = (unaccounted / this.totalFrameTime * 100).toFixed(1);
+        const unaccountedPct = ((unaccounted / this.totalFrameTime) * 100).toFixed(1);
         report += `  ${'(unaccounted)'.padEnd(30)} total: ${unaccounted.toFixed(2)}ms  (${unaccountedPct}%)\n`;
 
         // Add bottleneck analysis

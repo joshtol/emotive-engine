@@ -56,22 +56,22 @@ const VOIDCONSUME_CONFIG = {
                 axis: 'y',
                 start: 'below',
                 end: 'above',
-                easing: 'easeIn',           // Accelerates — the void gains momentum
+                easing: 'easeIn', // Accelerates — the void gains momentum
                 startScale: 0.8,
-                endScale: 1.5,              // Widens as it rises — maw opening
+                endScale: 1.5, // Widens as it rises — maw opening
                 startDiameter: 1.2,
                 endDiameter: 2.5,
-                orientation: 'flat'         // Horizontal — a scanning plane of annihilation
+                orientation: 'flat', // Horizontal — a scanning plane of annihilation
             },
             formation: {
                 type: 'spiral',
                 count: 1,
                 spacing: 0,
                 arcOffset: 0,
-                phaseOffset: 0
+                phaseOffset: 0,
             },
             count: 1,
-            scale: 0.5,                     // Smaller for void's opaque large class
+            scale: 0.5, // Smaller for void's opaque large class
             models: ['void-ring'],
             animation: {
                 appearAt: 0.0,
@@ -83,40 +83,42 @@ const VOIDCONSUME_CONFIG = {
                 emissive: { min: 0.2, max: 0.6, frequency: 5, pattern: 'sine' },
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 6, scale: 1.2, weight: 0.8 },    // SPIRAL — swirling void
-                    secondary: { pattern: 3, scale: 0.8, weight: 0.4 },  // VORONOI — organic breakup
+                    primary: { pattern: 6, scale: 1.2, weight: 0.8 }, // SPIRAL — swirling void
+                    secondary: { pattern: 3, scale: 0.8, weight: 0.4 }, // VORONOI — organic breakup
                     blend: 'multiply',
                     travel: 'vertical',
-                    travelSpeed: 3.0,       // Fast vertical travel — matches the rising motion
+                    travelSpeed: 3.0, // Fast vertical travel — matches the rising motion
                     strengthCurve: 'fadeIn',
                     trailDissolve: {
                         enabled: true,
                         offset: -0.4,
-                        softness: 1.5
-                    }
+                        softness: 1.5,
+                    },
                 },
-                atmospherics: [{
-                    preset: 'darkness',
-                    targets: ['void-ring'],
-                    anchor: 'below',
-                    intensity: 0.8,
-                    sizeScale: 1.5,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'darkness',
+                        targets: ['void-ring'],
+                        anchor: 'below',
+                        intensity: 0.8,
+                        sizeScale: 1.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 2,
                 modelOverrides: {
                     'void-ring': {
                         shaderAnimation: {
-                            type: 1,            // ROTATING_ARC
-                            arcWidth: 0.5,      // Half-ring — a sweeping jaw
-                            arcSpeed: 2.0,      // Moderate rotation as it rises
-                            arcCount: 1
+                            type: 1, // ROTATING_ARC
+                            arcWidth: 0.5, // Half-ring — a sweeping jaw
+                            arcSpeed: 2.0, // Moderate rotation as it rises
+                            arcCount: 1,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -134,7 +136,7 @@ const VOIDCONSUME_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 1.2,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 3,
             scale: 0.5,
@@ -148,8 +150,8 @@ const VOIDCONSUME_CONFIG = {
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
                 cutout: {
                     strength: 0.55,
-                    primary: { pattern: 1, scale: 1.2, weight: 1.0 },    // STREAKS — shattered
-                    secondary: { pattern: 0, scale: 0.7, weight: 0.3 },  // CELLULAR
+                    primary: { pattern: 1, scale: 1.2, weight: 1.0 }, // STREAKS — shattered
+                    secondary: { pattern: 0, scale: 0.7, weight: 0.3 }, // CELLULAR
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 2.0,
@@ -157,13 +159,13 @@ const VOIDCONSUME_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.5,
-                        softness: 1.2
-                    }
+                        softness: 1.2,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.5, phase: 0 },
                     { axis: 'z', rotations: -0.4, phase: 120 },
-                    { axis: 'z', rotations: 0.6, phase: 240 }
+                    { axis: 'z', rotations: 0.6, phase: 240 },
                 ],
                 scaleVariance: 0.25,
                 lifetimeVariance: 0.15,
@@ -175,11 +177,11 @@ const VOIDCONSUME_CONFIG = {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 2.5,
-                            arcCount: 2
-                        }
-                    }
-                }
-            }
+                            arcCount: 2,
+                        },
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -217,10 +219,10 @@ const VOIDCONSUME_CONFIG = {
                             axes: {
                                 x: { expand: true, rate: 1.6 },
                                 y: { expand: true, rate: 1.4 },
-                                z: { expand: true, rate: 0.8 }
-                            }
+                                z: { expand: true, rate: 0.8 },
+                            },
                         },
-                        drift: { direction: 'inward', speed: 0.04, noise: 0.1 }
+                        drift: { direction: 'inward', speed: 0.04, noise: 0.1 },
                     },
                     'shadow-tendril': {
                         scaling: {
@@ -228,11 +230,12 @@ const VOIDCONSUME_CONFIG = {
                             axes: {
                                 x: { expand: false, rate: 0.7 },
                                 y: { expand: true, rate: 1.8 },
-                                z: { expand: false, rate: 0.7 }
+                                z: { expand: false, rate: 0.7 },
                             },
-                            wobbleFrequency: 3, wobbleAmplitude: 0.15
+                            wobbleFrequency: 3,
+                            wobbleAmplitude: 0.15,
                         },
-                        drift: { direction: 'inward', speed: 0.035 }
+                        drift: { direction: 'inward', speed: 0.035 },
                     },
                     'corruption-patch': {
                         scaling: {
@@ -240,19 +243,19 @@ const VOIDCONSUME_CONFIG = {
                             axes: {
                                 x: { expand: true, rate: 1.5 },
                                 y: { expand: false, rate: 0.5 },
-                                z: { expand: true, rate: 1.5 }
-                            }
+                                z: { expand: true, rate: 1.5 },
+                            },
                         },
                         drift: { direction: 'inward', speed: 0.03 },
-                        orientationOverride: 'flat'
+                        orientationOverride: 'flat',
                     },
                     'void-shard': {
                         drift: { direction: 'inward', speed: 0.045, noise: 0.08 },
-                        opacityLink: 'inverse-scale'
-                    }
-                }
-            }
-        }
+                        opacityLink: 'inverse-scale',
+                    },
+                },
+            },
+        },
     ],
 
     // Annihilation effects
@@ -272,7 +275,7 @@ const VOIDCONSUME_CONFIG = {
     fadeStartAt: 0.3,
     fadeEndAt: 0.85,
     fadeCurve: 'accelerating',
-    decayRate: 0.15
+    decayRate: 0.15,
 };
 
 export default buildVoidEffectGesture(VOIDCONSUME_CONFIG);

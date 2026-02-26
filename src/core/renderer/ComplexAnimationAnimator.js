@@ -25,7 +25,7 @@ export class ComplexAnimationAnimator {
             anim.flashWave = {
                 innerRadius: 0,
                 outerRadius: 0,
-                maxRadius: 3.0 // How far the wave travels (relative to core)
+                maxRadius: 3.0, // How far the wave travels (relative to core)
             };
         }
 
@@ -40,13 +40,13 @@ export class ComplexAnimationAnimator {
         anim.flashWaveData = {
             innerRadius: anim.flashWave.innerRadius,
             outerRadius: anim.flashWave.outerRadius,
-            intensity: waveIntensity
+            intensity: waveIntensity,
         };
 
         // Return a very subtle glow increase at the core
         return {
             glow: 1 + waveIntensity * 0.3, // Very subtle core glow
-            flashWave: anim.flashWaveData // Pass wave data to renderer
+            flashWave: anim.flashWaveData, // Pass wave data to renderer
         };
     }
 
@@ -65,7 +65,7 @@ export class ComplexAnimationAnimator {
         return {
             offsetX: 0,
             offsetY: 0,
-            particleEffect: 'rain'
+            particleEffect: 'rain',
         };
     }
 
@@ -97,7 +97,7 @@ export class ComplexAnimationAnimator {
             offsetX: grooveX,
             offsetY: grooveY,
             scale,
-            rotation
+            rotation,
         };
     }
 
@@ -128,7 +128,7 @@ export class ComplexAnimationAnimator {
 
         return {
             offsetY: bobY,
-            rotation
+            rotation,
         };
     }
 
@@ -147,7 +147,7 @@ export class ComplexAnimationAnimator {
             offsetX: slide,
             offsetY: step,
             rotation: slide * 0.3,
-            scaleY: 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.05
+            scaleY: 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.05,
         };
     }
 
@@ -166,7 +166,7 @@ export class ComplexAnimationAnimator {
             offsetX: kick,
             offsetY: hop,
             rotation: kick * 0.6,
-            scaleY: 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.06
+            scaleY: 1 - Math.abs(Math.sin(progress * Math.PI * 8)) * 0.06,
         };
     }
 }

@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Context-Aware Element Targeting
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Context-aware element targeting with scroll, physics, group, responsive, and accessibility features
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/ElementTargetingContext
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides context-aware element targeting that adapts to scroll position, physics  
- * ║ simulation, multiple elements, responsive breakpoints, and accessibility needs.   
+ * ║ Provides context-aware element targeting that adapts to scroll position, physics
+ * ║ simulation, multiple elements, responsive breakpoints, and accessibility needs.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -27,7 +27,7 @@ class ElementTargetingContext extends ElementTargeting {
         this.responsiveBreakpoints = {
             mobile: 768,
             tablet: 1024,
-            desktop: 1200
+            desktop: 1200,
         };
         this.currentBreakpoint = this.getCurrentBreakpoint();
         this.accessibilityEnabled = false;
@@ -40,7 +40,12 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithScroll(targetSelector, scrollOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithScroll(
+        targetSelector,
+        scrollOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -53,15 +58,18 @@ class ElementTargetingContext extends ElementTargeting {
             endScroll = 300,
             onProgress = null,
             onStart = null,
-            onComplete = null
+            onComplete = null,
         } = scrollOptions;
 
         let hasStarted = false;
         let hasCompleted = false;
 
         const handleScroll = () => {
-            const {scrollY} = window;
-            const progress = Math.min(Math.max((scrollY - startScroll) / (endScroll - startScroll), 0), 1);
+            const { scrollY } = window;
+            const progress = Math.min(
+                Math.max((scrollY - startScroll) / (endScroll - startScroll), 0),
+                1
+            );
 
             if (progress > 0 && !hasStarted) {
                 hasStarted = true;
@@ -81,8 +89,12 @@ class ElementTargetingContext extends ElementTargeting {
             // Get original position (when scroll is 0)
             const isDesktop = window.innerWidth > 1024;
             const mascotRadius = 50;
-            const originalX = isDesktop ? (window.innerWidth * 0.25) : (window.innerWidth * 0.33) - mascotRadius;
-            const originalY = isDesktop ? -(window.innerHeight * 0.25) - mascotRadius + (window.innerHeight * 0.15) : -(window.innerHeight * 0.35) - mascotRadius + (window.innerHeight * 0.08);
+            const originalX = isDesktop
+                ? window.innerWidth * 0.25
+                : window.innerWidth * 0.33 - mascotRadius;
+            const originalY = isDesktop
+                ? -(window.innerHeight * 0.25) - mascotRadius + window.innerHeight * 0.15
+                : -(window.innerHeight * 0.35) - mascotRadius + window.innerHeight * 0.08;
 
             // Interpolate between original and target positions
             const currentX = originalX + (targetX - originalX) * progress;
@@ -112,7 +124,12 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithPhysics(targetSelector, physicsOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithPhysics(
+        targetSelector,
+        physicsOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -125,7 +142,7 @@ class ElementTargetingContext extends ElementTargeting {
             damping = 0.98,
             springConstant = 0.1,
             maxVelocity = 10,
-            onUpdate = null
+            onUpdate = null,
         } = physicsOptions;
 
         const rect = element.getBoundingClientRect();
@@ -194,7 +211,10 @@ class ElementTargetingContext extends ElementTargeting {
             return;
         }
 
-        let groupX = 0, groupY = 0, groupWidth = 0, groupHeight = 0;
+        let groupX = 0,
+            groupY = 0,
+            groupWidth = 0,
+            groupHeight = 0;
         let validElements = 0;
 
         elementSelectors.forEach(selector => {
@@ -218,29 +238,29 @@ class ElementTargetingContext extends ElementTargeting {
         let targetX, targetY;
 
         switch (position) {
-        case 'center':
-            targetX = centerX + offset.x - window.innerWidth / 2;
-            targetY = centerY + offset.y - window.innerHeight / 2;
-            break;
-        case 'left':
-            targetX = groupX + offset.x - window.innerWidth / 2;
-            targetY = centerY + offset.y - window.innerHeight / 2;
-            break;
-        case 'right':
-            targetX = groupWidth + offset.x - window.innerWidth / 2;
-            targetY = centerY + offset.y - window.innerHeight / 2;
-            break;
-        case 'top':
-            targetX = centerX + offset.x - window.innerWidth / 2;
-            targetY = groupY + offset.y - window.innerHeight / 2;
-            break;
-        case 'bottom':
-            targetX = centerX + offset.x - window.innerWidth / 2;
-            targetY = groupHeight + offset.y - window.innerHeight / 2;
-            break;
-        default:
-            targetX = centerX + offset.x - window.innerWidth / 2;
-            targetY = centerY + offset.y - window.innerHeight / 2;
+            case 'center':
+                targetX = centerX + offset.x - window.innerWidth / 2;
+                targetY = centerY + offset.y - window.innerHeight / 2;
+                break;
+            case 'left':
+                targetX = groupX + offset.x - window.innerWidth / 2;
+                targetY = centerY + offset.y - window.innerHeight / 2;
+                break;
+            case 'right':
+                targetX = groupWidth + offset.x - window.innerWidth / 2;
+                targetY = centerY + offset.y - window.innerHeight / 2;
+                break;
+            case 'top':
+                targetX = centerX + offset.x - window.innerWidth / 2;
+                targetY = groupY + offset.y - window.innerHeight / 2;
+                break;
+            case 'bottom':
+                targetX = centerX + offset.x - window.innerWidth / 2;
+                targetY = groupHeight + offset.y - window.innerHeight / 2;
+                break;
+            default:
+                targetX = centerX + offset.x - window.innerWidth / 2;
+                targetY = centerY + offset.y - window.innerHeight / 2;
         }
 
         this.positionController.setOffset(targetX, targetY, 0);
@@ -253,7 +273,12 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithResponsive(targetSelector, responsiveOptions = {}, _position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithResponsive(
+        targetSelector,
+        responsiveOptions = {},
+        _position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -262,11 +287,20 @@ class ElementTargetingContext extends ElementTargeting {
 
         const updateResponsivePosition = () => {
             const currentBreakpoint = this.getCurrentBreakpoint();
-            const breakpointOptions = responsiveOptions[currentBreakpoint] || responsiveOptions.default || {};
-            
+            const breakpointOptions =
+                responsiveOptions[currentBreakpoint] || responsiveOptions.default || {};
+
             const rect = element.getBoundingClientRect();
-            const targetX = rect.left + rect.width / 2 + (breakpointOptions.offsetX || offset.x) - window.innerWidth / 2;
-            const targetY = rect.top + rect.height / 2 + (breakpointOptions.offsetY || offset.y) - window.innerHeight / 2;
+            const targetX =
+                rect.left +
+                rect.width / 2 +
+                (breakpointOptions.offsetX || offset.x) -
+                window.innerWidth / 2;
+            const targetY =
+                rect.top +
+                rect.height / 2 +
+                (breakpointOptions.offsetY || offset.y) -
+                window.innerHeight / 2;
 
             this.positionController.setOffset(targetX, targetY, 0);
         };
@@ -295,7 +329,12 @@ class ElementTargetingContext extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithAccessibility(targetSelector, accessibilityOptions = {}, _position = 'right', _offset = { x: 20, y: 0 }) {
+    moveToElementWithAccessibility(
+        targetSelector,
+        accessibilityOptions = {},
+        _position = 'right',
+        _offset = { x: 20, y: 0 }
+    ) {
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -305,32 +344,32 @@ class ElementTargetingContext extends ElementTargeting {
         const {
             announce = true,
             announcements = [],
-            screenReaderPosition = 'bottom-right'
+            screenReaderPosition = 'bottom-right',
         } = accessibilityOptions;
 
         // Position mascot in accessibility-friendly location
         let targetX, targetY;
 
         switch (screenReaderPosition) {
-        case 'bottom-right':
-            targetX = window.innerWidth - 100 - window.innerWidth / 2;
-            targetY = window.innerHeight - 100 - window.innerHeight / 2;
-            break;
-        case 'bottom-left':
-            targetX = 100 - window.innerWidth / 2;
-            targetY = window.innerHeight - 100 - window.innerHeight / 2;
-            break;
-        case 'top-right':
-            targetX = window.innerWidth - 100 - window.innerWidth / 2;
-            targetY = 100 - window.innerHeight / 2;
-            break;
-        case 'top-left':
-            targetX = 100 - window.innerWidth / 2;
-            targetY = 100 - window.innerHeight / 2;
-            break;
-        default:
-            targetX = window.innerWidth - 100 - window.innerWidth / 2;
-            targetY = window.innerHeight - 100 - window.innerHeight / 2;
+            case 'bottom-right':
+                targetX = window.innerWidth - 100 - window.innerWidth / 2;
+                targetY = window.innerHeight - 100 - window.innerHeight / 2;
+                break;
+            case 'bottom-left':
+                targetX = 100 - window.innerWidth / 2;
+                targetY = window.innerHeight - 100 - window.innerHeight / 2;
+                break;
+            case 'top-right':
+                targetX = window.innerWidth - 100 - window.innerWidth / 2;
+                targetY = 100 - window.innerHeight / 2;
+                break;
+            case 'top-left':
+                targetX = 100 - window.innerWidth / 2;
+                targetY = 100 - window.innerHeight / 2;
+                break;
+            default:
+                targetX = window.innerWidth - 100 - window.innerWidth / 2;
+                targetY = window.innerHeight - 100 - window.innerHeight / 2;
         }
 
         this.positionController.setOffset(targetX, targetY, 0);
@@ -391,12 +430,11 @@ class ElementTargetingContext extends ElementTargeting {
             window.removeEventListener('scroll', callback);
         });
         this.scrollCallbacks.clear();
-        
+
         this.physicsSimulations.clear();
-        
+
         super.destroy();
     }
 }
 
 export default ElementTargetingContext;
-

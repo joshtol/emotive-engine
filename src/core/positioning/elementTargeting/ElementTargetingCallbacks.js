@@ -2,19 +2,19 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Element Targeting with Callbacks
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Element targeting with callback functionality for mascot positioning
  * @author Emotive Engine Team
  * @module positioning/elementTargeting/ElementTargetingCallbacks
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides callback-based element targeting methods. Allows mascot to move to      
- * ║ elements and execute callbacks when reaching them. Supports sequences, delays,   
- * ║ conditions, and proximity-based triggers.                                        
+ * ║ Provides callback-based element targeting methods. Allows mascot to move to
+ * ║ elements and execute callbacks when reaching them. Supports sequences, delays,
+ * ║ conditions, and proximity-based triggers.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -35,9 +35,15 @@ class ElementTargetingCallbacks extends ElementTargeting {
      * @param {Object} offset - Pixel offset
      * @param {Object} options - Additional options
      */
-    moveToElementWithCallback(targetSelector, callback, position = 'right', offset = { x: 20, y: 0 }, options = {}) {
+    moveToElementWithCallback(
+        targetSelector,
+        callback,
+        position = 'right',
+        offset = { x: 20, y: 0 },
+        options = {}
+    ) {
         const callbackId = `callback-${Date.now()}-${Math.random()}`;
-        
+
         const element = document.querySelector(targetSelector);
         if (!element) {
             console.warn(`Element not found: ${targetSelector}`);
@@ -49,7 +55,7 @@ class ElementTargetingCallbacks extends ElementTargeting {
             executed: false,
             element,
             callback,
-            options
+            options,
         });
 
         // Move to element
@@ -62,14 +68,14 @@ class ElementTargetingCallbacks extends ElementTargeting {
                 if (state && !state.executed) {
                     state.executed = true;
                     callback();
-                    
+
                     // Clean up if not repeating
                     if (!options.repeat) {
                         this.callbackStates.delete(callbackId);
                     }
                 }
             }
-            
+
             if (this.callbackStates.has(callbackId)) {
                 requestAnimationFrame(checkProximity);
             }
@@ -130,7 +136,13 @@ class ElementTargetingCallbacks extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithDelay(targetSelector, callback, delay = 1000, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithDelay(
+        targetSelector,
+        callback,
+        delay = 1000,
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         return this.moveToElementWithCallback(
             targetSelector,
             () => {
@@ -149,7 +161,13 @@ class ElementTargetingCallbacks extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithCondition(targetSelector, condition, callback, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithCondition(
+        targetSelector,
+        condition,
+        callback,
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         return this.moveToElementWithCallback(
             targetSelector,
             () => {
@@ -170,7 +188,13 @@ class ElementTargetingCallbacks extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithRepeat(targetSelector, callback, interval = 1000, position = 'right', offset = { x: 20, y: 0 }) {
+    moveToElementWithRepeat(
+        targetSelector,
+        callback,
+        interval = 1000,
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
         return this.moveToElementWithCallback(
             targetSelector,
             () => {
@@ -190,14 +214,16 @@ class ElementTargetingCallbacks extends ElementTargeting {
      * @param {string} position - Position relative to element
      * @param {Object} offset - Pixel offset
      */
-    moveToElementWithProximity(targetSelector, callback, proximity = 100, position = 'right', offset = { x: 20, y: 0 }) {
-        return this.moveToElementWithCallback(
-            targetSelector,
-            callback,
-            position,
-            offset,
-            { proximity }
-        );
+    moveToElementWithProximity(
+        targetSelector,
+        callback,
+        proximity = 100,
+        position = 'right',
+        offset = { x: 20, y: 0 }
+    ) {
+        return this.moveToElementWithCallback(targetSelector, callback, position, offset, {
+            proximity,
+        });
     }
 
     /**
@@ -218,8 +244,7 @@ class ElementTargetingCallbacks extends ElementTargeting {
         const mascotY = mascotOffset.y + window.innerHeight / 2;
 
         const distance = Math.sqrt(
-            Math.pow(mascotX - elementCenterX, 2) + 
-            Math.pow(mascotY - elementCenterY, 2)
+            Math.pow(mascotX - elementCenterX, 2) + Math.pow(mascotY - elementCenterY, 2)
         );
 
         return distance <= threshold;
@@ -245,4 +270,3 @@ class ElementTargetingCallbacks extends ElementTargeting {
 }
 
 export default ElementTargetingCallbacks;
-

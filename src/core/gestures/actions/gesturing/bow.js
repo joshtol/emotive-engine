@@ -32,21 +32,21 @@ export default {
     config: {
         duration: 1200,
         musicalDuration: { musical: true, beats: 3 },
-        depth: 0.4,           // How deep to bow (rotation amount)
-        holdTime: 0.4,        // How long to hold the bow
-        graceful: true,       // Smooth, elegant motion
+        depth: 0.4, // How deep to bow (rotation amount)
+        holdTime: 0.4, // How long to hold the bow
+        graceful: true, // Smooth, elegant motion
         strength: 1.0,
         particleMotion: {
             type: 'bow',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'beats', beats: 3 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -64,14 +64,14 @@ export default {
             if (progress < downPhase) {
                 // Bowing down
                 bowAmount = progress / downPhase;
-                bowAmount = Math.sin(bowAmount * Math.PI / 2); // Smooth ease
+                bowAmount = Math.sin((bowAmount * Math.PI) / 2); // Smooth ease
             } else if (progress < upStart) {
                 // Holding bow
                 bowAmount = 1.0;
             } else {
                 // Rising up
-                bowAmount = 1 - ((progress - upStart) / (1 - upStart));
-                bowAmount = Math.sin(bowAmount * Math.PI / 2);
+                bowAmount = 1 - (progress - upStart) / (1 - upStart);
+                bowAmount = Math.sin((bowAmount * Math.PI) / 2);
             }
 
             // Forward tilt (bow rotation) - positive X tilts top toward camera
@@ -95,8 +95,8 @@ export default {
                 cameraRelativeRotation: [tiltX, 0, 0],
                 scale: 1.0,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

@@ -2,33 +2,33 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                      ◐ ◑ ◒ ◓  DEBUGGER  ◓ ◒ ◑ ◐                      
- *                                                                                    
+ *  └─○═╝
+ *                      ◐ ◑ ◒ ◓  DEBUGGER  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Debugger - Enhanced Logging & Performance Profiling
  * @author Emotive Engine Team
  * @version 2.0.0
  * @module Debugger
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The DIAGNOSTIC CENTER of the engine. Provides comprehensive debugging tools,      
- * ║ performance profiling, memory tracking, and runtime diagnostics to ensure         
- * ║ smooth operation and help developers optimize their implementations.              
+ * ║ The DIAGNOSTIC CENTER of the engine. Provides comprehensive debugging tools,
+ * ║ performance profiling, memory tracking, and runtime diagnostics to ensure
+ * ║ smooth operation and help developers optimize their implementations.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🐛 DEBUG FEATURES                                                                 
+ * │ 🐛 DEBUG FEATURES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Multi-level logging (NONE, ERROR, WARN, INFO, DEBUG, TRACE)                     
- * │ • Performance profiling with timing metrics                                       
- * │ • Memory usage tracking and leak detection                                        
- * │ • Error tracking and stack trace capture                                          
- * │ • Runtime capability detection                                                    
- * │ • Visual debugging overlays                                                       
+ * │ • Multi-level logging (NONE, ERROR, WARN, INFO, DEBUG, TRACE)
+ * │ • Performance profiling with timing metrics
+ * │ • Memory usage tracking and leak detection
+ * │ • Error tracking and stack trace capture
+ * │ • Runtime capability detection
+ * │ • Visual debugging overlays
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -43,7 +43,7 @@ export const DebugLevel = {
     WARN: 2,
     INFO: 3,
     DEBUG: 4,
-    TRACE: 5
+    TRACE: 5,
 };
 
 /**
@@ -59,7 +59,7 @@ export class EmotiveDebugger {
             enableMemoryTracking: config.enableMemoryTracking !== false,
             maxLogEntries: config.maxLogEntries || 1000,
             maxProfileEntries: config.maxProfileEntries || 500,
-            ...config
+            ...config,
         };
 
         // Log storage
@@ -67,31 +67,31 @@ export class EmotiveDebugger {
         this.errors = [];
         this.profiles = new Map();
         this.memorySnapshots = [];
-        
+
         // Performance tracking
         this.frameTimings = [];
         this.maxFrameTimings = 120; // 2 seconds at 60fps
-        
+
         // Error tracking
         this.errorCounts = new Map();
         this.lastErrors = new Map();
-        
+
         // Feature detection for debugging capabilities
         this.capabilities = {
             performance: typeof performance !== 'undefined' && performance.now,
             memory: typeof performance !== 'undefined' && performance.memory,
             console: typeof console !== 'undefined',
-            stackTrace: typeof Error !== 'undefined'
+            stackTrace: typeof Error !== 'undefined',
         };
 
         // Initialize
         this.startTime = this.now();
         this.setupErrorHandling();
-        
+
         if (this.config.enabled) {
             this.log('DEBUG', 'EmotiveDebugger initialized', {
                 config: this.config,
-                capabilities: this.capabilities
+                capabilities: this.capabilities,
             });
         }
     }
@@ -120,14 +120,14 @@ export class EmotiveDebugger {
             this.trackError('UNHANDLED_ERROR', event.error || new Error(event.message), {
                 filename: event.filename,
                 lineno: event.lineno,
-                colno: event.colno
+                colno: event.colno,
             });
         });
 
         // Capture unhandled promise rejections
         window.addEventListener('unhandledrejection', event => {
             this.trackError('UNHANDLED_REJECTION', event.reason, {
-                promise: event.promise
+                promise: event.promise,
             });
         });
     }
@@ -150,7 +150,7 @@ export class EmotiveDebugger {
             level,
             message,
             data,
-            stackTrace: this.getStackTrace()
+            stackTrace: this.getStackTrace(),
         };
 
         // Store log entry
@@ -163,7 +163,7 @@ export class EmotiveDebugger {
         if (this.capabilities.console) {
             const consoleMethod = this.getConsoleMethod(level);
             const timeStr = `[${(timestamp / 1000).toFixed(3)}s]`;
-            
+
             if (data) {
                 consoleMethod(`${timeStr} [${level}] ${message}`, data);
             } else {
@@ -179,11 +179,16 @@ export class EmotiveDebugger {
      */
     getConsoleMethod(level) {
         switch (level) {
-        case 'ERROR': return (() => {}).bind(console);
-        case 'WARN': return (() => {}).bind(console);
-        case 'DEBUG': return (() => {}).bind(console);
-        case 'TRACE': return (() => {}).bind(console);
-        default: return (() => {}).bind(console);
+            case 'ERROR':
+                return (() => {}).bind(console);
+            case 'WARN':
+                return (() => {}).bind(console);
+            case 'DEBUG':
+                return (() => {}).bind(console);
+            case 'TRACE':
+                return (() => {}).bind(console);
+            default:
+                return (() => {}).bind(console);
         }
     }
 
@@ -193,7 +198,7 @@ export class EmotiveDebugger {
      */
     getStackTrace() {
         if (!this.capabilities.stackTrace) return null;
-        
+
         try {
             throw new Error();
         } catch (e) {
@@ -217,7 +222,7 @@ export class EmotiveDebugger {
             message: error.message || String(error),
             stack: error.stack,
             context,
-            count: 1
+            count: 1,
         };
 
         // Update error counts
@@ -236,7 +241,7 @@ export class EmotiveDebugger {
         // Log error
         this.log('ERROR', `${type}: ${error.message}`, {
             error: errorEntry,
-            context
+            context,
         });
     }
 
@@ -253,7 +258,7 @@ export class EmotiveDebugger {
             startTime: this.now(),
             metadata,
             samples: [],
-            isActive: true
+            isActive: true,
         };
 
         this.profiles.set(name, profile);
@@ -276,7 +281,7 @@ export class EmotiveDebugger {
             timestamp: this.now(),
             label,
             data,
-            relativeTime: this.now() - profile.startTime
+            relativeTime: this.now() - profile.startTime,
         };
 
         profile.samples.push(sample);
@@ -303,7 +308,7 @@ export class EmotiveDebugger {
         this.log('TRACE', `Ended profiling: ${name}`, {
             duration: profile.duration,
             samples: profile.samples.length,
-            stats: profile.stats
+            stats: profile.stats,
         });
 
         // Limit stored profiles
@@ -344,7 +349,7 @@ export class EmotiveDebugger {
             avgSampleDuration: avg,
             minSampleDuration: min,
             maxSampleDuration: max,
-            totalDuration: profile.duration
+            totalDuration: profile.duration,
         };
     }
 
@@ -358,7 +363,7 @@ export class EmotiveDebugger {
         this.frameTimings.push({
             timestamp: this.now(),
             frameTime,
-            fps: 1000 / frameTime
+            fps: 1000 / frameTime,
         });
 
         if (this.frameTimings.length > this.maxFrameTimings) {
@@ -379,12 +384,12 @@ export class EmotiveDebugger {
             memory: {
                 usedJSHeapSize: performance.memory.usedJSHeapSize,
                 totalJSHeapSize: performance.memory.totalJSHeapSize,
-                jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
-            }
+                jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+            },
         };
 
         this.memorySnapshots.push(snapshot);
-        
+
         // Limit snapshots
         if (this.memorySnapshots.length > 100) {
             this.memorySnapshots.shift();
@@ -403,26 +408,26 @@ export class EmotiveDebugger {
             uptime: this.now() - 0,
             config: this.config,
             capabilities: this.capabilities,
-            
+
             // Logs
             logCount: this.logs.length,
             recentLogs: this.logs.slice(-10),
-            
+
             // Errors
             errorCount: this.errors.length,
             uniqueErrors: this.errorCounts.size,
             recentErrors: this.errors.slice(-5),
             errorCounts: Object.fromEntries(this.errorCounts),
-            
+
             // Profiles
             activeProfiles: Array.from(this.profiles.values()).filter(p => p.isActive).length,
             completedProfiles: Array.from(this.profiles.values()).filter(p => !p.isActive).length,
-            
+
             // Performance
             frameTimings: this.getFrameTimingStats(),
-            
+
             // Memory
-            memorySnapshots: this.memorySnapshots.slice(-5)
+            memorySnapshots: this.memorySnapshots.slice(-5),
         };
 
         return report;
@@ -447,7 +452,7 @@ export class EmotiveDebugger {
             maxFrameTime: Math.max(...frameTimes),
             avgFPS: fps.reduce((a, b) => a + b, 0) / fps.length,
             minFPS: Math.min(...fps),
-            maxFPS: Math.max(...fps)
+            maxFPS: Math.max(...fps),
         };
     }
 
@@ -461,14 +466,14 @@ export class EmotiveDebugger {
                 exportTime: Date.now(),
                 debuggerUptime: this.now(),
                 config: this.config,
-                capabilities: this.capabilities
+                capabilities: this.capabilities,
             },
             logs: [...this.logs],
             errors: [...this.errors],
             profiles: Object.fromEntries(this.profiles),
             frameTimings: [...this.frameTimings],
             memorySnapshots: [...this.memorySnapshots],
-            errorCounts: Object.fromEntries(this.errorCounts)
+            errorCounts: Object.fromEntries(this.errorCounts),
         };
     }
 
@@ -483,7 +488,7 @@ export class EmotiveDebugger {
         this.memorySnapshots = [];
         this.errorCounts.clear();
         this.lastErrors.clear();
-        
+
         this.log('INFO', 'Debug data cleared');
     }
 
@@ -493,7 +498,7 @@ export class EmotiveDebugger {
     destroy() {
         this.clear();
         this.config.enabled = false;
-        
+
         // Remove event listeners if we added them
         if (typeof window !== 'undefined') {
             // Note: In a real implementation, we'd need to store references to remove them
@@ -521,36 +526,36 @@ export class RuntimeCapabilities {
             es6: this.detectES6(),
             es2017: this.detectES2017(),
             modules: this.detectModules(),
-            
+
             // Browser APIs
             webGL: this.detectWebGL(),
             webGL2: this.detectWebGL2(),
             webWorkers: this.detectWebWorkers(),
             serviceWorkers: this.detectServiceWorkers(),
-            
+
             // Performance APIs
             performanceObserver: this.detectPerformanceObserver(),
             intersectionObserver: this.detectIntersectionObserver(),
             resizeObserver: this.detectResizeObserver(),
-            
+
             // Storage
             localStorage: this.detectLocalStorage(),
             sessionStorage: this.detectSessionStorage(),
             indexedDB: this.detectIndexedDB(),
-            
+
             // Network
             fetch: this.detectFetch(),
             webSockets: this.detectWebSockets(),
-            
+
             // Device capabilities
             touchEvents: this.detectTouchEvents(),
             pointerEvents: this.detectPointerEvents(),
             deviceOrientation: this.detectDeviceOrientation(),
-            
+
             // Graphics
             canvas2d: this.detectCanvas2D(),
             canvasFilters: this.detectCanvasFilters(),
-            offscreenCanvas: this.detectOffscreenCanvas()
+            offscreenCanvas: this.detectOffscreenCanvas(),
         };
 
         return caps;
@@ -559,10 +564,12 @@ export class RuntimeCapabilities {
     detectES6() {
         try {
             // Check for arrow functions and classes without eval
-            return typeof Symbol !== 'undefined' && 
-                   typeof Promise !== 'undefined' && 
-                   typeof Map !== 'undefined' && 
-                   typeof Set !== 'undefined';
+            return (
+                typeof Symbol !== 'undefined' &&
+                typeof Promise !== 'undefined' &&
+                typeof Map !== 'undefined' &&
+                typeof Set !== 'undefined'
+            );
         } catch {
             return false;
         }
@@ -571,15 +578,17 @@ export class RuntimeCapabilities {
     detectES2017() {
         try {
             // Check for async/await support
-            return typeof async !== 'undefined' || 
-                   (function() { 
-                       try { 
-                           // Check if async functions are supported without using Function constructor
-                           return typeof (async function(){}).constructor === 'function'; 
-                       } catch { 
-                           return false; 
-                       } 
-                   })();
+            return (
+                typeof async !== 'undefined' ||
+                (function () {
+                    try {
+                        // Check if async functions are supported without using Function constructor
+                        return typeof async function () {}.constructor === 'function';
+                    } catch {
+                        return false;
+                    }
+                })()
+            );
         } catch {
             return false;
         }
@@ -587,7 +596,9 @@ export class RuntimeCapabilities {
 
     detectModules() {
         try {
-            return typeof document !== 'undefined' && 'noModule' in document.createElement('script');
+            return (
+                typeof document !== 'undefined' && 'noModule' in document.createElement('script')
+            );
         } catch {
             return false;
         }
@@ -714,7 +725,7 @@ export class RuntimeCapabilities {
             canvas.width = 100;
             canvas.height = 100;
             const ctx = canvas.getContext('2d');
-            
+
             const canvasStart = performance.now();
             for (let i = 0; i < 1000; i++) {
                 ctx.fillRect(Math.random() * 100, Math.random() * 100, 10, 10);
@@ -756,7 +767,8 @@ export class RuntimeCapabilities {
             .filter(([, supported]) => !supported)
             .map(([feature]) => feature);
 
-        const supportPercentage = (supportedFeatures.length / Object.keys(this.capabilities).length) * 100;
+        const supportPercentage =
+            (supportedFeatures.length / Object.keys(this.capabilities).length) * 100;
 
         return {
             timestamp: Date.now(),
@@ -765,7 +777,7 @@ export class RuntimeCapabilities {
             unsupportedFeatures,
             supportPercentage: Math.round(supportPercentage),
             performance: this.performance,
-            recommendations: this.generateRecommendations(supportPercentage)
+            recommendations: this.generateRecommendations(supportPercentage),
         };
     }
 
@@ -790,15 +802,21 @@ export class RuntimeCapabilities {
         }
 
         if (!this.capabilities.fetch) {
-            recommendations.push('Fetch API not supported - consider using XMLHttpRequest polyfill');
+            recommendations.push(
+                'Fetch API not supported - consider using XMLHttpRequest polyfill'
+            );
         }
 
         if (this.performance.jsExecutionSpeed > 50) {
-            recommendations.push('Slow JavaScript execution detected - consider performance optimizations');
+            recommendations.push(
+                'Slow JavaScript execution detected - consider performance optimizations'
+            );
         }
 
         if (this.performance.canvasPerformance > 100) {
-            recommendations.push('Slow canvas performance detected - consider reducing visual complexity');
+            recommendations.push(
+                'Slow canvas performance detected - consider reducing visual complexity'
+            );
         }
 
         return recommendations;
@@ -807,8 +825,11 @@ export class RuntimeCapabilities {
 
 // Create singleton instances for convenience
 export const emotiveDebugger = new EmotiveDebugger({
-    enabled: typeof window !== 'undefined' && window.location && window.location.search.includes('debug=true'),
-    level: DebugLevel.INFO
+    enabled:
+        typeof window !== 'undefined' &&
+        window.location &&
+        window.location.search.includes('debug=true'),
+    level: DebugLevel.INFO,
 });
 
 export const runtimeCapabilities = new RuntimeCapabilities();

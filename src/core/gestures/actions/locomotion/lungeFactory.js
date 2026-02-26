@@ -35,7 +35,7 @@ export function createLungeGesture(direction) {
     const LUNGE_DIRECTIONS = {
         ...DIRECTIONS,
         forward: { x: 0, y: 0, z: -1 },
-        back: { x: 0, y: 0, z: 1 }
+        back: { x: 0, y: 0, z: 1 },
     };
 
     const dir = LUNGE_DIRECTIONS[direction];
@@ -47,7 +47,7 @@ export function createLungeGesture(direction) {
         left: '👈',
         right: '👉',
         up: '☝️',
-        down: '👇'
+        down: '👇',
     };
 
     return {
@@ -66,8 +66,8 @@ export function createLungeGesture(direction) {
             particleMotion: {
                 type: 'lunge',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -78,8 +78,8 @@ export function createLungeGesture(direction) {
 
             accentResponse: {
                 enabled: true,
-                multiplier: 1.5
-            }
+                multiplier: 1.5,
+            },
         },
 
         '3d': {
@@ -94,14 +94,14 @@ export function createLungeGesture(direction) {
                 let lungeAmount;
                 if (progress < 0.3) {
                     // Quick thrust
-                    lungeAmount = (progress / 0.3);
+                    lungeAmount = progress / 0.3;
                     lungeAmount = 1 - Math.pow(1 - lungeAmount, 3); // Ease out
                 } else if (progress < 0.6) {
                     // Hold
                     lungeAmount = 1.0;
                 } else if (recover) {
                     // Recover
-                    lungeAmount = 1 - ((progress - 0.6) / 0.4);
+                    lungeAmount = 1 - (progress - 0.6) / 0.4;
                     lungeAmount = Math.pow(lungeAmount, 2); // Ease in
                 } else {
                     lungeAmount = 1.0;
@@ -109,7 +109,9 @@ export function createLungeGesture(direction) {
 
                 // Calculate position based on direction
                 // ALL directions use camera-relative so they work regardless of model rotation
-                let xOffset = 0, yOffset = 0, zOffset = 0;
+                let xOffset = 0,
+                    yOffset = 0,
+                    zOffset = 0;
                 let rotX = 0;
                 const rotY = 0;
                 let rotZ = 0;
@@ -122,40 +124,40 @@ export function createLungeGesture(direction) {
                 // rotZ: positive = tilt top to viewer's left (CCW), negative = right (CW)
 
                 switch (moveDir) {
-                case 'forward':
-                    // Forward = towards camera = positive Z (camera faces -Z, so moving toward it = +Z in camera space)
-                    zOffset = lungeAmount * distance * strength;
-                    rotX = lungeAmount * 0.2 * strength; // Lean forward (tilt top toward camera)
-                    yOffset = -Math.sin(lungeAmount * Math.PI) * 0.05 * strength;
-                    break;
-                case 'back':
-                    // Back = away from camera = negative Z
-                    zOffset = -lungeAmount * distance * strength;
-                    rotX = -lungeAmount * 0.2 * strength; // Lean back (tilt top away)
-                    yOffset = -Math.sin(lungeAmount * Math.PI) * 0.05 * strength;
-                    break;
-                case 'left':
-                    // Left = negative X from camera's view
-                    xOffset = -lungeAmount * distance * strength;
-                    // Lead with TOP = tilt top to LEFT = negative rotZ (top goes left, body follows)
-                    rotZ = -lungeAmount * 0.2 * strength;
-                    yOffset = -Math.sin(lungeAmount * Math.PI) * 0.03 * strength;
-                    break;
-                case 'right':
-                    // Right = positive X from camera's view
-                    xOffset = lungeAmount * distance * strength;
-                    // Lead with TOP = tilt top to RIGHT = positive rotZ (top goes right, body follows)
-                    rotZ = lungeAmount * 0.2 * strength;
-                    yOffset = -Math.sin(lungeAmount * Math.PI) * 0.03 * strength;
-                    break;
-                case 'up':
-                    yOffset = lungeAmount * distance * strength;
-                    rotX = -lungeAmount * 0.15 * strength; // Tilt back for upward reach
-                    break;
-                case 'down':
-                    yOffset = -lungeAmount * distance * strength;
-                    rotX = lungeAmount * 0.25 * strength; // Bend forward
-                    break;
+                    case 'forward':
+                        // Forward = towards camera = positive Z (camera faces -Z, so moving toward it = +Z in camera space)
+                        zOffset = lungeAmount * distance * strength;
+                        rotX = lungeAmount * 0.2 * strength; // Lean forward (tilt top toward camera)
+                        yOffset = -Math.sin(lungeAmount * Math.PI) * 0.05 * strength;
+                        break;
+                    case 'back':
+                        // Back = away from camera = negative Z
+                        zOffset = -lungeAmount * distance * strength;
+                        rotX = -lungeAmount * 0.2 * strength; // Lean back (tilt top away)
+                        yOffset = -Math.sin(lungeAmount * Math.PI) * 0.05 * strength;
+                        break;
+                    case 'left':
+                        // Left = negative X from camera's view
+                        xOffset = -lungeAmount * distance * strength;
+                        // Lead with TOP = tilt top to LEFT = negative rotZ (top goes left, body follows)
+                        rotZ = -lungeAmount * 0.2 * strength;
+                        yOffset = -Math.sin(lungeAmount * Math.PI) * 0.03 * strength;
+                        break;
+                    case 'right':
+                        // Right = positive X from camera's view
+                        xOffset = lungeAmount * distance * strength;
+                        // Lead with TOP = tilt top to RIGHT = positive rotZ (top goes right, body follows)
+                        rotZ = lungeAmount * 0.2 * strength;
+                        yOffset = -Math.sin(lungeAmount * Math.PI) * 0.03 * strength;
+                        break;
+                    case 'up':
+                        yOffset = lungeAmount * distance * strength;
+                        rotX = -lungeAmount * 0.15 * strength; // Tilt back for upward reach
+                        break;
+                    case 'down':
+                        yOffset = -lungeAmount * distance * strength;
+                        rotX = lungeAmount * 0.25 * strength; // Bend forward
+                        break;
                 }
 
                 // Scale stretch in direction of lunge
@@ -171,10 +173,10 @@ export function createLungeGesture(direction) {
                     cameraRelativeRotation: [rotX, rotY, rotZ],
                     scale,
                     glowIntensity,
-                    glowBoost
+                    glowBoost,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

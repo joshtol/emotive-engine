@@ -46,8 +46,8 @@ export const SUN_PHOTOSPHERE_TEMP_K = 5772;
  * Defines base rotation speed that gets multiplied by emotional state modifiers
  */
 export const SUN_ROTATION_CONFIG = {
-    baseSpeed: 0.01,    // Base rotation speed (rad/sec) - very slow like real sun
-    axes: [0, 1.0, 0]   // Y-axis only rotation (normalized, scaled by baseSpeed)
+    baseSpeed: 0.01, // Base rotation speed (rad/sec) - very slow like real sun
+    axes: [0, 1.0, 0], // Y-axis only rotation (normalized, scaled by baseSpeed)
 };
 
 /**
@@ -77,11 +77,11 @@ export function createSunMaterial(textureLoader, options = {}) {
 
     // NASA-accurate base color: Brilliant white (5,772K black-body radiation)
     // Use HDR values for dramatic bloom
-    const brightness = 1.0 + (glowIntensity * 2.0);
+    const brightness = 1.0 + glowIntensity * 2.0;
     const baseColor = new THREE.Color(
         brightness * glowColor[0],
         brightness * glowColor[1],
-        brightness * glowColor[2] * 0.95  // Slight warm tint
+        brightness * glowColor[2] * 0.95 // Slight warm tint
     );
 
     // Initialize pending texture tracking for cleanup
@@ -107,7 +107,10 @@ export function createSunMaterial(textureLoader, options = {}) {
         },
         undefined,
         error => {
-            console.warn(`⚠️ Failed to load sun texture (${resolution}), using color fallback:`, error);
+            console.warn(
+                `⚠️ Failed to load sun texture (${resolution}), using color fallback:`,
+                error
+            );
             pendingTextures.delete(colorPath);
         }
     );
@@ -126,7 +129,10 @@ export function createSunMaterial(textureLoader, options = {}) {
         },
         undefined,
         error => {
-            console.warn(`⚠️ Sun normal map not found (${resolution}), continuing without surface detail:`, error);
+            console.warn(
+                `⚠️ Sun normal map not found (${resolution}), continuing without surface detail:`,
+                error
+            );
             pendingTextures.delete(normalPath);
         }
     );
@@ -153,13 +159,13 @@ export function createSunMaterial(textureLoader, options = {}) {
         additionalUniforms = {
             // Solar Eclipse (moon's shadow covering sun - complete occlusion)
             eclipseProgress: { value: 0.0 },
-            eclipseShadowPos: { value: [-2.0, 0.0] },  // Start off-screen
-            eclipseShadowRadius: { value: 0.882 },  // User-calibrated: Total eclipse size
-            shadowDarkness: { value: 1.00 },  // Always 1.0 - moon blocks 100% of sun's light
+            eclipseShadowPos: { value: [-2.0, 0.0] }, // Start off-screen
+            eclipseShadowRadius: { value: 0.882 }, // User-calibrated: Total eclipse size
+            shadowDarkness: { value: 1.0 }, // Always 1.0 - moon blocks 100% of sun's light
 
             // Blend Multiplexer Layer 1 - Multiply @ 0.230
-            layer1Mode: { value: 0.0 },  // 0 = Multiply
-            layer1Strength: { value: 0.230 },
+            layer1Mode: { value: 0.0 }, // 0 = Multiply
+            layer1Strength: { value: 0.23 },
             layer1Enabled: { value: 1.0 },
 
             // Blend Multiplexer Layer 2 - DISABLED
@@ -175,7 +181,7 @@ export function createSunMaterial(textureLoader, options = {}) {
             // Blend Multiplexer Layer 4 - DISABLED
             layer4Mode: { value: 0.0 },
             layer4Strength: { value: 0.0 },
-            layer4Enabled: { value: 0.0 }
+            layer4Enabled: { value: 0.0 },
         };
     } else {
         // Use standard sun shader (no eclipse support)
@@ -378,20 +384,20 @@ export function createSunMaterial(textureLoader, options = {}) {
             colorMap: { value: colorMap },
             normalMap: { value: normalMap },
             baseColor: { value: baseColor },
-            emissiveIntensity: { value: 1.2 },  // Moderate intensity to avoid blown-out bloom
-            glowColor: { value: new THREE.Color(1, 1, 1) },  // For ThreeRenderer compatibility
-            glowIntensity: { value: 1.0 },  // For ThreeRenderer compatibility
+            emissiveIntensity: { value: 1.2 }, // Moderate intensity to avoid blown-out bloom
+            glowColor: { value: new THREE.Color(1, 1, 1) }, // For ThreeRenderer compatibility
+            glowIntensity: { value: 1.0 }, // For ThreeRenderer compatibility
             // Shadow uniforms (same as moon crescent shader)
-            shadowOffset: { value: new THREE.Vector2(200.0, 0.0) },  // Start far away (no shadow)
-            shadowCoverage: { value: 0.5 },  // Shadow coverage (0.5 = half the sun radius)
-            shadowSoftness: { value: 0.1 },   // Edge softness for anti-aliasing
-            opacity: { value: 0.0 },  // Start invisible, fade in when texture loads
-            ...additionalUniforms  // Add eclipse/blend layer uniforms if using multiplexer variant
+            shadowOffset: { value: new THREE.Vector2(200.0, 0.0) }, // Start far away (no shadow)
+            shadowCoverage: { value: 0.5 }, // Shadow coverage (0.5 = half the sun radius)
+            shadowSoftness: { value: 0.1 }, // Edge softness for anti-aliasing
+            opacity: { value: 0.0 }, // Start invisible, fade in when texture loads
+            ...additionalUniforms, // Add eclipse/blend layer uniforms if using multiplexer variant
         },
         vertexShader,
         fragmentShader,
-        transparent: true,  // Enable opacity/alpha blending for fade-in
-        toneMapped: false
+        transparent: true, // Enable opacity/alpha blending for fade-in
+        toneMapped: false,
     });
 
     // Store uniforms reference for updates
@@ -427,9 +433,9 @@ export function createSunGeometry(textureLoader = null, options = {}) {
     // Create high-res sphere geometry for smooth bloom (no edge artifacts)
     // 128x128 = 16,384 quads = 32,768 triangles (smooth at any zoom)
     const geometry = new THREE.SphereGeometry(
-        0.5,  // radius 0.5 = 1.0 diameter (matches sphere geometry)
-        128,  // width segments (smooth edges, no bloom artifacts)
-        128   // height segments
+        0.5, // radius 0.5 = 1.0 diameter (matches sphere geometry)
+        128, // width segments (smooth edges, no bloom artifacts)
+        128 // height segments
     );
 
     // Track for disposal
@@ -439,24 +445,29 @@ export function createSunGeometry(textureLoader = null, options = {}) {
 
     // Use textured material if loader provided, otherwise fallback to color-only
     if (textureLoader) {
-        material = createSunMaterial(textureLoader, { glowColor, glowIntensity, resolution, materialVariant });
+        material = createSunMaterial(textureLoader, {
+            glowColor,
+            glowIntensity,
+            resolution,
+            materialVariant,
+        });
     } else {
         // Fallback: color-only material (no texture)
-        const brightness = 1.0 + (glowIntensity * 2.0);
+        const brightness = 1.0 + glowIntensity * 2.0;
         const baseColor = new THREE.Color(
             brightness * glowColor[0],
             brightness * glowColor[1],
-            brightness * glowColor[2] * 0.95  // Slight warm tint
+            brightness * glowColor[2] * 0.95 // Slight warm tint
         );
 
         material = new THREE.MeshBasicMaterial({
             color: baseColor,
-            toneMapped: false // Bypass tone mapping to preserve HDR brightness for bloom
+            toneMapped: false, // Bypass tone mapping to preserve HDR brightness for bloom
         });
     }
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = false;  // Sun doesn't cast shadows (it IS the light source)
+    mesh.castShadow = false; // Sun doesn't cast shadows (it IS the light source)
     mesh.receiveShadow = false; // Sun doesn't receive shadows
 
     return mesh;
@@ -477,12 +488,12 @@ export function createSunGeometry(textureLoader = null, options = {}) {
 export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, deltaTime = 0) {
     if (!sunMesh || !sunMesh.material) return;
 
-    const {material} = sunMesh;
+    const { material } = sunMesh;
 
     // Check if using custom shader material with uniforms
     if (material.uniforms && material.uniforms.baseColor) {
         // Direct access to ShaderMaterial uniforms
-        const {uniforms} = material;
+        const { uniforms } = material;
 
         // Update animation time with modulo to prevent unbounded growth
         // Reset every ~6.28 seconds (2π) to keep noise patterns seamless
@@ -492,17 +503,17 @@ export function updateSunMaterial(sunMesh, glowColor, glowIntensity = 1.0, delta
 
         // Sun is ALWAYS NASA-accurate brilliant white (5,772K photosphere)
         // Ignores emotion colors - calibrated for "joy" emotion
-        const brightness = 1.0 + (glowIntensity * 2.0);
+        const brightness = 1.0 + glowIntensity * 2.0;
 
         // DO NOT apply emotion tinting - sun stays white regardless of emotion
         // This preserves the NASA-accurate 5,772K color temperature
         // Reuse temp color to avoid per-frame allocations
         uniforms.baseColor.value.setRGB(brightness, brightness, brightness * 0.95);
-        uniforms.emissiveIntensity.value = 1.2;  // Moderate intensity to avoid blown-out bloom
+        uniforms.emissiveIntensity.value = 1.2; // Moderate intensity to avoid blown-out bloom
     } else if (material.color) {
         // Fallback for basic material (no shader uniforms)
         // Sun is ALWAYS NASA white - ignores emotion colors
-        const brightness = 1.0 + (glowIntensity * 2.0);
+        const brightness = 1.0 + glowIntensity * 2.0;
 
         // DO NOT apply emotion tinting - sun stays white regardless of emotion
         // Set color directly to avoid per-frame allocations
@@ -526,11 +537,11 @@ export function disposeSun(sunMesh) {
 
     // Dispose material and its textures
     if (sunMesh.material) {
-        const {material} = sunMesh;
+        const { material } = sunMesh;
 
         // Clean up pending texture loads
         if (material.userData && material.userData.pendingTextures) {
-            material.userData.pendingTextures.forEach(({texture}) => {
+            material.userData.pendingTextures.forEach(({ texture }) => {
                 if (texture) {
                     texture.dispose();
                 }

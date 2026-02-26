@@ -23,7 +23,7 @@ export class MovementGestureAnimator {
         const actualProgress = Math.min(progress * 1.05, 1.0); // Slight overshoot to ensure completion
         return {
             rotation: actualProgress * anim.params.rotations * 360,
-            scale: 1 + Math.sin(progress * Math.PI) * anim.params.scaleAmount
+            scale: 1 + Math.sin(progress * Math.PI) * anim.params.scaleAmount,
         };
     }
 
@@ -50,7 +50,7 @@ export class MovementGestureAnimator {
 
         return {
             offsetX: Math.cos(angle) * distance,
-            offsetY: Math.sin(angle) * distance
+            offsetY: Math.sin(angle) * distance,
         };
     }
 
@@ -92,7 +92,7 @@ export class MovementGestureAnimator {
             offsetY: infinityY,
             rotation: tilt,
             scale: scalePulse,
-            glow: glowPulse
+            glow: glowPulse,
         };
     }
 
@@ -119,7 +119,7 @@ export class MovementGestureAnimator {
         return {
             offsetX: swayX,
             offsetY: bobY,
-            rotation
+            rotation,
         };
     }
 
@@ -146,7 +146,7 @@ export class MovementGestureAnimator {
         return {
             offsetX: driftX,
             offsetY: floatY,
-            scale: scalePulse
+            scale: scalePulse,
         };
     }
 
@@ -162,7 +162,7 @@ export class MovementGestureAnimator {
         return {
             // No core movement - orbital is a particle-only effect
             offsetX: 0,
-            offsetY: 0
+            offsetY: 0,
         };
     }
 
@@ -183,7 +183,7 @@ export class MovementGestureAnimator {
 
         return {
             offsetX: x,
-            offsetY: y
+            offsetY: y,
         };
     }
 
@@ -205,7 +205,7 @@ export class MovementGestureAnimator {
 
         return {
             offsetX,
-            offsetY
+            offsetY,
         };
     }
 }

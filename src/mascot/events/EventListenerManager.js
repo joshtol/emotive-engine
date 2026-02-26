@@ -38,10 +38,14 @@ export class EventListenerManager {
      * });
      */
     on(event, callback) {
-        return this.errorBoundary.wrap(() => {
-            this.eventManager.on(event, callback);
-            return this._chainTarget;
-        }, 'event-listener-add', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                this.eventManager.on(event, callback);
+                return this._chainTarget;
+            },
+            'event-listener-add',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -51,10 +55,14 @@ export class EventListenerManager {
      * @returns {Object} Chain target for method chaining
      */
     off(event, callback) {
-        return this.errorBoundary.wrap(() => {
-            this.eventManager.off(event, callback);
-            return this._chainTarget;
-        }, 'event-listener-remove', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                this.eventManager.off(event, callback);
+                return this._chainTarget;
+            },
+            'event-listener-remove',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -64,10 +72,14 @@ export class EventListenerManager {
      * @returns {Object} Chain target for method chaining
      */
     once(event, callback) {
-        return this.errorBoundary.wrap(() => {
-            this.eventManager.once(event, callback);
-            return this._chainTarget;
-        }, 'event-listener-once', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                this.eventManager.once(event, callback);
+                return this._chainTarget;
+            },
+            'event-listener-once',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -76,10 +88,14 @@ export class EventListenerManager {
      * @returns {Object} Chain target for method chaining
      */
     removeAllListeners(event = null) {
-        return this.errorBoundary.wrap(() => {
-            this.eventManager.removeAllListeners(event);
-            return this._chainTarget;
-        }, 'event-listeners-clear', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                this.eventManager.removeAllListeners(event);
+                return this._chainTarget;
+            },
+            'event-listeners-clear',
+            this._chainTarget
+        )();
     }
 
     /**

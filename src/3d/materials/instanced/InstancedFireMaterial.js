@@ -22,7 +22,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // FIRE UTILITIES (inlined from FireShaderCore.js — single consumer)
@@ -81,14 +81,14 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // FIRE GLSL (inlined from FireShaderCore.js — single consumer)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 // Permutation polynomial hash
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -229,7 +229,7 @@ float layeredTurbulence(vec3 p, float time) {
 }
 `;
 
-const FIRE_COLOR_GLSL = /* glsl */`
+const FIRE_COLOR_GLSL = /* glsl */ `
 // Blackbody-inspired color ramp with ethereal outer wisps
 vec3 fireColor(float t, float temperature, float edgeFactor) {
     float heat = t * (0.5 + temperature * 0.5);
@@ -265,7 +265,7 @@ vec3 fireColor(float t, float temperature, float edgeFactor) {
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -487,7 +487,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uTemperature;
 uniform float uIntensity;
@@ -723,12 +723,17 @@ export function createInstancedFireMaterial(options = {}) {
         emberBrightness = null,
         velocityStretch = FIRE_DEFAULTS.velocityStretch,
         fadeInDuration = FIRE_DEFAULTS.fadeInDuration,
-        fadeOutDuration = FIRE_DEFAULTS.fadeOutDuration
+        fadeOutDuration = FIRE_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive temperature-dependent parameters from shared core
     const derived = deriveFireParameters(temperature, {
-        intensity, flickerSpeed, flickerAmount, edgeSoftness, emberDensity, emberBrightness
+        intensity,
+        flickerSpeed,
+        flickerAmount,
+        edgeSoftness,
+        emberDensity,
+        emberBrightness,
     });
     const finalIntensity = derived.intensity;
     const finalFlickerSpeed = derived.flickerSpeed;
@@ -764,14 +769,14 @@ export function createInstancedFireMaterial(options = {}) {
             uEdgeSoftness: { value: finalEdgeSoftness },
             uEmberDensity: { value: finalEmberDensity },
             uEmberBrightness: { value: finalEmberBrightness },
-            uVelocityStretch: { value: velocityStretch }
+            uVelocityStretch: { value: velocityStretch },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.FrontSide
+        side: THREE.FrontSide,
     });
 
     material.userData.temperature = temperature;
@@ -894,7 +899,22 @@ export function resetRelay(material) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation };
+export {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    resetCutout,
+    setGrain,
+    resetGrain,
+    resetAnimation,
+};
 
 export default {
     createInstancedFireMaterial,
@@ -914,5 +934,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

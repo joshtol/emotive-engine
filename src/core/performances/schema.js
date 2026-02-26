@@ -37,7 +37,7 @@ export const PERFORMANCE_SCHEMA = {
     categories: ['conversational', 'feedback', 'state', 'custom'],
     actionTypes: ['emotion', 'gesture', 'morph', 'chain', 'sound'],
     urgencyLevels: ['low', 'medium', 'high'],
-    magnitudes: ['small', 'moderate', 'major', 'epic']
+    magnitudes: ['small', 'moderate', 'major', 'epic'],
 };
 
 /**
@@ -94,5 +94,5 @@ export function validatePerformance(definition) {
 
 export default {
     PERFORMANCE_SCHEMA,
-    validatePerformance
+    validatePerformance,
 };

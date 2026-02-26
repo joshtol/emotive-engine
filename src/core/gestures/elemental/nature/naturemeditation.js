@@ -42,7 +42,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -55,24 +55,26 @@ const NATUREMEDITATION_CONFIG = {
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
                 rotate: [{ axis: 'z', rotations: -5, phase: 0 }],
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.7,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.3,
+                        sizeScale: 0.7,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {
                     'vine-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B — lower-right — relay 1, CCW
@@ -85,7 +87,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -104,10 +106,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C — upper-center — relay 0, CW
@@ -120,7 +122,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -139,10 +141,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══ Y-FLIPPED COPY (everything identical except offset.y negated) ═══
@@ -157,7 +159,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -176,10 +178,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 0.0,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B (flipped) — upper-left — relay 1, CW
@@ -192,7 +194,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -211,10 +213,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 3.14,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C (flipped) — lower-center — relay 0, CCW
@@ -227,7 +229,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -246,10 +248,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 4.71,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══ VERTICAL FLIP OF ENTIRE THING (Y negated, rotations reversed) ═══
@@ -264,7 +266,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -283,10 +285,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 1.05,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B (v-flip) — upper-right — relay 0, arc offset +π/3
@@ -299,7 +301,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -318,10 +320,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 4.19,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C (v-flip) — lower-center — relay 2, arc offset +π/3
@@ -334,7 +336,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -353,10 +355,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 2.62,
                         relayIndex: 2,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring A' (v-flip) — lower-right — relay 0, arc offset +π/3
@@ -369,7 +371,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -388,10 +390,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 1.05,
                         relayIndex: 0,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring B' (v-flip) — lower-left — relay 1, arc offset +π/3
@@ -404,7 +406,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -423,10 +425,10 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 4.19,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // Ring C' (v-flip) — upper-center — relay 1, arc offset +π/3
@@ -439,7 +441,7 @@ const NATUREMEDITATION_CONFIG = {
                 cameraOffset: 1.0,
                 relativeOffset: true,
                 startScale: 1.0,
-                endScale: 1.0
+                endScale: 1.0,
             },
             count: 1,
             scale: 3.0,
@@ -458,11 +460,11 @@ const NATUREMEDITATION_CONFIG = {
                     'vine-ring': {
                         arcPhase: 2.62,
                         relayIndex: 1,
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.2, 0.65, 0.25],
@@ -476,7 +478,7 @@ const NATUREMEDITATION_CONFIG = {
     tremorFrequency: 0,
     shakeAmount: 0,
     shakeFrequency: 0,
-    decayRate: 0.2
+    decayRate: 0.2,
 };
 
 export default buildNatureEffectGesture(NATUREMEDITATION_CONFIG);

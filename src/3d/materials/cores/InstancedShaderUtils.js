@@ -23,7 +23,7 @@
 /**
  * Vertex shader attribute declarations for instancing
  */
-export const INSTANCED_ATTRIBUTES_VERTEX = /* glsl */`
+export const INSTANCED_ATTRIBUTES_VERTEX = /* glsl */ `
 // Per-instance attributes from ElementInstancePool
 attribute float aSpawnTime;       // When this instance spawned (global time)
 attribute float aExitTime;        // When fade-out started (0 = not exiting)
@@ -45,7 +45,7 @@ varying vec4 vVelocity;           // For motion blur in fragment/post-process
 /**
  * Fragment shader varying declarations for instancing
  */
-export const INSTANCED_ATTRIBUTES_FRAGMENT = /* glsl */`
+export const INSTANCED_ATTRIBUTES_FRAGMENT = /* glsl */ `
 varying float vLocalTime;
 varying float vInstanceAlpha;
 varying float vTrailFade;
@@ -65,7 +65,7 @@ varying vec4 vVelocity;
  * - uFadeInDuration: How long fade-in takes (seconds)
  * - uFadeOutDuration: How long fade-out takes (seconds)
  */
-export const INSTANCED_TIME_CALC_VERTEX = /* glsl */`
+export const INSTANCED_TIME_CALC_VERTEX = /* glsl */ `
 // Calculate local time for this instance (time since spawn)
 vLocalTime = uGlobalTime - aSpawnTime;
 
@@ -99,7 +99,7 @@ vVelocity = aVelocity;
 export const INSTANCED_TIME_UNIFORMS = {
     uGlobalTime: { value: 0 },
     uFadeInDuration: { value: 0.3 },
-    uFadeOutDuration: { value: 0.5 }
+    uFadeOutDuration: { value: 0.5 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -113,7 +113,7 @@ export const INSTANCED_TIME_UNIFORMS = {
  * This scales vertices of non-selected models to zero, effectively hiding them.
  * More GPU-efficient than discard in fragment shader for merged geometry.
  */
-export const MODEL_SELECTION_VERTEX = /* glsl */`
+export const MODEL_SELECTION_VERTEX = /* glsl */ `
 // Hide vertices from non-selected models by scaling to zero
 float modelMatch = step(abs(aModelIndex - aSelectedModel), 0.5);
 vec3 selectedPosition = position * modelMatch;
@@ -124,7 +124,7 @@ vec3 selectedNormal = normal * modelMatch;
  * Alternative: Fragment shader discard for model selection
  * Use this if you need accurate geometry for non-visual purposes
  */
-export const MODEL_SELECTION_FRAGMENT = /* glsl */`
+export const MODEL_SELECTION_FRAGMENT = /* glsl */ `
 // Discard fragments from non-selected models
 // Note: This is less efficient than vertex-level culling
 // if (abs(aModelIndex - aSelectedModel) > 0.5) discard;
@@ -138,7 +138,7 @@ export const MODEL_SELECTION_FRAGMENT = /* glsl */`
  * Vertex shader code for trail position offset
  * Trails are positioned slightly behind the main instance based on velocity
  */
-export const TRAIL_OFFSET_VERTEX = /* glsl */`
+export const TRAIL_OFFSET_VERTEX = /* glsl */ `
 // Offset trail positions backward along velocity
 vec3 trailOffset = vec3(0.0);
 if (aTrailIndex >= 0.0 && length(aVelocity.xyz) > 0.001) {
@@ -156,7 +156,7 @@ if (aTrailIndex >= 0.0 && length(aVelocity.xyz) > 0.001) {
  * Fragment shader code to apply instance alpha
  * Place this near the end of fragment shader, before final gl_FragColor assignment
  */
-export const INSTANCED_ALPHA_FRAGMENT = /* glsl */`
+export const INSTANCED_ALPHA_FRAGMENT = /* glsl */ `
 // Apply per-instance alpha (spawn/exit fade + trail fade)
 float finalAlpha = alpha * vInstanceAlpha;
 
@@ -168,7 +168,6 @@ if (finalAlpha < 0.01) discard;
 // UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-
 /**
  * Creates the additional uniforms needed for instanced rendering.
  * Merge these with the material's existing uniforms.
@@ -178,7 +177,7 @@ export function createInstancedUniforms() {
     return {
         uGlobalTime: { value: 0 },
         uFadeInDuration: { value: 0.3 },
-        uFadeOutDuration: { value: 0.5 }
+        uFadeOutDuration: { value: 0.5 },
     };
 }
 
@@ -191,5 +190,5 @@ export default {
     MODEL_SELECTION_FRAGMENT,
     TRAIL_OFFSET_VERTEX,
     INSTANCED_ALPHA_FRAGMENT,
-    createInstancedUniforms
+    createInstancedUniforms,
 };

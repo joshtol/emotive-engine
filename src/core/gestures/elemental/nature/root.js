@@ -49,14 +49,14 @@ const NATUREROOT_CONFIG = {
                 endDiameter: 1.0,
                 diameterUnit: 'mascot',
                 holdAt: 0.75,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: {
                 type: 'spiral',
                 count: 5,
                 spacing: 0.12,
                 arcOffset: 72,
-                phaseOffset: 0.03
+                phaseOffset: 0.03,
             },
             count: 5,
             scale: 1.3,
@@ -68,35 +68,35 @@ const NATUREROOT_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.1,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.1,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.06,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.4,
                         peak: 0.75,
                         end: 0.5,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 pulse: {
                     amplitude: 0.04,
                     frequency: 2,
-                    easing: 'easeInOut'
+                    easing: 'easeInOut',
                 },
                 emissive: {
                     min: 0.4,
                     max: 0.8,
                     frequency: 2,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 cutout: {
                     strength: 0.55,
@@ -105,30 +105,32 @@ const NATUREROOT_CONFIG = {
                     blend: 'max',
                     travel: 'vertical',
                     travelSpeed: 1.5,
-                    strengthCurve: 'fadeIn'
+                    strengthCurve: 'fadeIn',
                 },
                 grain: {
                     type: 3,
                     strength: 0.15,
                     scale: 0.25,
                     speed: 0.5,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.35,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.2
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.35,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.2,
+                    },
+                ],
                 rotate: [
                     { axis: 'z', rotations: 0.5, phase: 0 },
                     { axis: 'z', rotations: -0.8, phase: 72 },
                     { axis: 'z', rotations: 0.6, phase: 144 },
                     { axis: 'z', rotations: -0.4, phase: 216 },
-                    { axis: 'z', rotations: 0.7, phase: 288 }
+                    { axis: 'z', rotations: 0.7, phase: 288 },
                 ],
                 scaleVariance: 0.1,
                 lifetimeVariance: 0.1,
@@ -140,12 +142,12 @@ const NATUREROOT_CONFIG = {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 1.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ── Layer 2: Surface root tendrils gripping mascot lower body ──
@@ -173,14 +175,14 @@ const NATUREROOT_CONFIG = {
                 renderOrder: 8,
                 modelOverrides: {
                     'vine-twist': {
-                        scaling: { mode: 'non-uniform', axes: { x: 1.1, y: 0.7, z: 1.1 } }
+                        scaling: { mode: 'non-uniform', axes: { x: 1.1, y: 0.7, z: 1.1 } },
                     },
                     's-vine': {
-                        scaling: { mode: 'non-uniform', axes: { x: 0.7, y: 1.4, z: 0.7 } }
-                    }
-                }
-            }
-        }
+                        scaling: { mode: 'non-uniform', axes: { x: 0.7, y: 1.4, z: 0.7 } },
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.35, 0.5, 0.2],
@@ -201,10 +203,10 @@ const NATUREROOT_CONFIG = {
                 { at: 0.3, value: 0.6 },
                 { at: 0.6, value: 0.75 },
                 { at: 0.85, value: 0.5 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
-    }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
+    },
 };
 
 export default buildNatureEffectGesture(NATUREROOT_CONFIG);

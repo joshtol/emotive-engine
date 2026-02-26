@@ -2,19 +2,19 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Math Cache Utilities
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Cached trigonometric calculations for performance
  * @author Emotive Engine Team
  * @module particles/utils/mathCache
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Trigonometric functions (sin, cos) are expensive to calculate 60 times per       
- * ║ second for hundreds of particles. This module pre-calculates common values        
- * ║ and stores them for instant lookup, trading memory for speed.                     
+ * ║ Trigonometric functions (sin, cos) are expensive to calculate 60 times per
+ * ║ second for hundreds of particles. This module pre-calculates common values
+ * ║ and stores them for instant lookup, trading memory for speed.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -22,7 +22,7 @@
 // │ CACHE CONFIGURATION
 // └─────────────────────────────────────────────────────────────────────────────────────
 const CACHE_PRECISION = 100; // Cache values at 0.01 radian intervals
-const CACHE_SIZE = 629;      // Covers 0 to 2π (6.28 radians)
+const CACHE_SIZE = 629; // Covers 0 to 2π (6.28 radians)
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
 // │ CACHE STORAGE - Pre-calculated values stored in typed arrays for performance
@@ -41,12 +41,12 @@ for (let i = 0; i < CACHE_SIZE; i++) {
  * Get cached sine value for an angle
  * @param {number} angle - Angle in radians
  * @returns {number} Sine value
- * 
+ *
  * PERFORMANCE: ~10x faster than Math.sin() for repeated calls
  */
 export function cachedSin(angle) {
     // Normalize angle to 0-2π range
-    const normalized = ((angle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+    const normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const index = Math.min(Math.round(normalized * CACHE_PRECISION), CACHE_SIZE - 1);
     return SIN_CACHE[index];
 }
@@ -55,17 +55,17 @@ export function cachedSin(angle) {
  * Get cached cosine value for an angle
  * @param {number} angle - Angle in radians
  * @returns {number} Cosine value
- * 
+ *
  * PERFORMANCE: ~10x faster than Math.cos() for repeated calls
  */
 export function cachedCos(angle) {
     // Normalize angle to 0-2π range
-    const normalized = ((angle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+    const normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const index = Math.min(Math.round(normalized * CACHE_PRECISION), CACHE_SIZE - 1);
     return COS_CACHE[index];
 }
 
 export default {
     cachedSin,
-    cachedCos
+    cachedCos,
 };

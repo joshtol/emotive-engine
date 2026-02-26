@@ -30,14 +30,14 @@ export default {
     config: {
         duration: 1000,
         musicalDuration: { musical: true, beats: 2 },
-        lubStrength: 0.8,     // First beat strength
-        dubStrength: 1.0,     // Second beat strength (slightly stronger)
-        lubDubGap: 0.15,      // Gap between lub and dub (0-1)
+        lubStrength: 0.8, // First beat strength
+        dubStrength: 1.0, // Second beat strength (slightly stronger)
+        lubDubGap: 0.15, // Gap between lub and dub (0-1)
         strength: 1.0,
         particleMotion: {
             type: 'heartbeat',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -47,8 +47,8 @@ export default {
         timingSync: 'onBeat',
         amplitudeSync: {
             onBeat: 1.2,
-            offBeat: 0.8
-        }
+            offBeat: 0.8,
+        },
     },
 
     apply(particle, progress, motion, dt, centerX, centerY) {
@@ -141,8 +141,8 @@ export default {
                 rotation: [0, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

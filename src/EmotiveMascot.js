@@ -15,27 +15,27 @@
  * @audience Most contributors won't need to modify this file. It coordinates all subsystems.
  * @see docs/ARCHITECTURE.md for system overview
  * @changelog 2.1.0 - Added resize handling with visual resampling for consistent quality
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The MAIN ORCHESTRATOR of the Emotive Engine. This is the primary API class        
- * ║ that developers interact with. It coordinates all subsystems, manages the         
- * ║ lifecycle, and provides the fluent API for emotional expression.                  
+ * ║ The MAIN ORCHESTRATOR of the Emotive Engine. This is the primary API class
+ * ║ that developers interact with. It coordinates all subsystems, manages the
+ * ║ lifecycle, and provides the fluent API for emotional expression.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎭 CORE FEATURES                                                                  
+ * │ 🎭 CORE FEATURES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Emotional state management with smooth transitions                              
- * │ • Gesture triggering and animation control                                        
- * │ • Particle system orchestration                                                   
- * │ • Dynamic visual resampling on resize                                             
- * │ • Plugin system for extensibility                                                 
- * │ • Event handling and listener management                                          
- * │ • Performance optimization and degradation                                        
- * │ • Accessibility features                                                          
- * │ • Mobile optimization                                                             
+ * │ • Emotional state management with smooth transitions
+ * │ • Gesture triggering and animation control
+ * │ • Particle system orchestration
+ * │ • Dynamic visual resampling on resize
+ * │ • Plugin system for extensibility
+ * │ • Event handling and listener management
+ * │ • Performance optimization and degradation
+ * │ • Accessibility features
+ * │ • Mobile optimization
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -74,13 +74,13 @@ class EmotiveMascot {
     constructor(config = {}) {
         // Initialize error boundary first
         this.errorBoundary = new ErrorBoundary();
-        
+
         // Initialize EventManager with simple event emitter functionality
         this.eventManager = new EventManager({
             maxListeners: config.maxEventListeners || 100,
             enableDebugging: config.enableEventDebugging || false,
             enableMonitoring: config.enableEventMonitoring || true,
-            memoryWarningThreshold: config.eventMemoryWarningThreshold || 50
+            memoryWarningThreshold: config.eventMemoryWarningThreshold || 50,
         });
 
         // Add simple event emitter methods if not present
@@ -108,7 +108,7 @@ class EmotiveMascot {
                 }
             };
         }
-        
+
         // Wrap initialization in error boundary
         this.errorBoundary.wrap(() => {
             this.initialize(config);
@@ -134,15 +134,15 @@ class EmotiveMascot {
         // Note: These pass minimal deps - full deps set by InitializationManager
         this.speechManager = new SpeechManager({
             errorBoundary: this.errorBoundary,
-            emit: (event, data) => this.emit(event, data)
+            emit: (event, data) => this.emit(event, data),
         });
         this.audioLevelCallbackManager = new AudioLevelCallbackManager({
-            emit: (event, data) => this.emit(event, data)
+            emit: (event, data) => this.emit(event, data),
         });
         this.orbScaleAnimator = new OrbScaleAnimator(this);
         this.recordingStateManager = new RecordingStateManager({
             errorBoundary: this.errorBoundary,
-            emit: (event, data) => this.emit(event, data)
+            emit: (event, data) => this.emit(event, data),
         });
         this.breathingPatternManager = new BreathingPatternManager(this);
 
@@ -159,9 +159,13 @@ class EmotiveMascot {
         this.gestureMotionProvider = new GestureMotionProvider({
             renderer: this.renderer,
             state: {
-                get currentModularGesture() { return mascot.currentModularGesture; },
-                set currentModularGesture(v) { mascot.currentModularGesture = v; }
-            }
+                get currentModularGesture() {
+                    return mascot.currentModularGesture;
+                },
+                set currentModularGesture(v) {
+                    mascot.currentModularGesture = v;
+                },
+            },
         });
         this.renderLayerOrchestrator = new RenderLayerOrchestrator(this);
         this.debugInfoRenderer = new DebugInfoRenderer(this);
@@ -181,13 +185,19 @@ class EmotiveMascot {
             audioAnalyzer: this.audioAnalyzer,
             shapeMorpher: this.shapeMorpher,
             state: {
-                get speaking() { return mascot.speaking; },
-                get llmHandler() { return mascot.llmHandler; },
-                set llmHandler(v) { mascot.llmHandler = v; }
+                get speaking() {
+                    return mascot.speaking;
+                },
+                get llmHandler() {
+                    return mascot.llmHandler;
+                },
+                set llmHandler(v) {
+                    mascot.llmHandler = v;
+                },
             },
             stop: () => this.stop(),
             stopSpeaking: () => this.stopSpeaking(),
-            disconnectAudio: () => this.disconnectAudio()
+            disconnectAudio: () => this.disconnectAudio(),
         });
         this.breathingAnimationController = new BreathingAnimationController(this);
         this.systemStatusReporter = new SystemStatusReporter({
@@ -199,10 +209,14 @@ class EmotiveMascot {
             renderer: this.renderer,
             config: this.config,
             state: {
-                get speaking() { return mascot.speaking; },
-                get audioLevel() { return mascot.audioLevel; }
+                get speaking() {
+                    return mascot.speaking;
+                },
+                get audioLevel() {
+                    return mascot.audioLevel;
+                },
             },
-            getEventNames: () => this.getEventNames()
+            getEventNames: () => this.getEventNames(),
         });
         this.sleepWakeManager = new SleepWakeManager({
             errorBoundary: this.errorBoundary,
@@ -210,17 +224,21 @@ class EmotiveMascot {
             idleBehavior: this.idleBehavior,
             renderer: this.renderer,
             state: {
-                get sleeping() { return mascot.sleeping; },
-                set sleeping(v) { mascot.sleeping = v; }
+                get sleeping() {
+                    return mascot.sleeping;
+                },
+                set sleeping(v) {
+                    mascot.sleeping = v;
+                },
             },
             emit: (event, data) => this.emit(event, data),
-            chainTarget: this
+            chainTarget: this,
         });
         this.degradationEventHandler = new DegradationEventHandler(
             () => ({
                 particleSystem: this.particleSystem,
                 soundSystem: this.soundSystem,
-                renderer: this.renderer
+                renderer: this.renderer,
             }),
             (event, data) => this.emit(event, data)
         );
@@ -259,28 +277,36 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setEmotion(emotion, options = null) {
-        return this.errorBoundary.wrap(() => {
-            return this.stateCoordinator.setEmotion(emotion, options);
-        }, 'emotion-setting', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.stateCoordinator.setEmotion(emotion, options);
+            },
+            'emotion-setting',
+            this
+        )();
     }
-    
+
     /**
      * Update the undertone without resetting emotion
      * @param {string|null} undertone - The undertone to apply (subdued, tired, nervous, energetic, confident, intense, or null)
      * @returns {EmotiveMascot} This instance for chaining
      */
     updateUndertone(undertone) {
-        return this.errorBoundary.wrap(() => {
-            // Update state machine's undertone
-            this.stateMachine.applyUndertoneModifier(undertone);
-            // Update renderer's undertone without resetting emotion
-            if (this.renderer && this.renderer.updateUndertone) {
-                this.renderer.updateUndertone(undertone);
-            }
-            return this;
-        }, 'undertone-update', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                // Update state machine's undertone
+                this.stateMachine.applyUndertoneModifier(undertone);
+                // Update renderer's undertone without resetting emotion
+                if (this.renderer && this.renderer.updateUndertone) {
+                    this.renderer.updateUndertone(undertone);
+                }
+                return this;
+            },
+            'undertone-update',
+            this
+        )();
     }
-    
+
     /**
      * Set BPM for rhythm-linked subsystems
      * @param {number} bpm - Beats per minute (forwarded to audio/rhythm helpers)
@@ -288,12 +314,16 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setBPM(bpm) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer?.setBPM) {
-                this.renderer.setBPM(bpm);
-            }
-            return this;
-        }, 'bpm-update', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer?.setBPM) {
+                    this.renderer.setBPM(bpm);
+                }
+                return this;
+            },
+            'bpm-update',
+            this
+        )();
     }
 
     /**
@@ -303,12 +333,16 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationSpeed(speed) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer?.setRotationSpeed) {
-                this.renderer.setRotationSpeed(speed);
-            }
-            return this;
-        }, 'rotation-speed-update', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer?.setRotationSpeed) {
+                    this.renderer.setRotationSpeed(speed);
+                }
+                return this;
+            },
+            'rotation-speed-update',
+            this
+        )();
     }
 
     /**
@@ -317,12 +351,16 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setRotationAngle(angle) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer?.setRotationAngle) {
-                this.renderer.setRotationAngle(angle);
-            }
-            return this;
-        }, 'rotation-angle-update', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer?.setRotationAngle) {
+                    this.renderer.setRotationAngle(angle);
+                }
+                return this;
+            },
+            'rotation-angle-update',
+            this
+        )();
     }
 
     /**
@@ -339,12 +377,16 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setGazeTracking(enabled) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.setGazeTracking) {
-                this.renderer.setGazeTracking(enabled);
-            }
-            return this;
-        }, 'gaze-tracking-update', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer && this.renderer.setGazeTracking) {
+                    this.renderer.setGazeTracking(enabled);
+                }
+                return this;
+            },
+            'gaze-tracking-update',
+            this
+        )();
     }
 
     /**
@@ -524,8 +566,6 @@ class EmotiveMascot {
         return this.speechManager ? this.speechManager.stopSpeaking() : this;
     }
 
-    
-    
     /**
      * Start recording state (listening/capturing mode)
      * @returns {EmotiveMascot} This instance for chaining
@@ -541,7 +581,7 @@ class EmotiveMascot {
     stopRecording() {
         return this.recordingStateManager ? this.recordingStateManager.stopRecording() : this;
     }
-    
+
     /**
      * Enter sleep state with animation sequence
      * @returns {EmotiveMascot} This instance for chaining
@@ -549,7 +589,7 @@ class EmotiveMascot {
     sleep() {
         return this.sleepWakeManager.sleep();
     }
-    
+
     /**
      * Wake up from sleep state with animation sequence
      * @returns {EmotiveMascot} This instance for chaining
@@ -557,7 +597,7 @@ class EmotiveMascot {
     wake() {
         return this.sleepWakeManager.wake();
     }
-    
+
     /**
      * Gets available TTS voices
      * @returns {Array} Array of available voice objects
@@ -590,8 +630,6 @@ class EmotiveMascot {
         return this.executionLifecycleManager.stop();
     }
 
-
-
     /**
      * Sets a breathing pattern for the orb
      * @param {number} inhale - Inhale duration in seconds
@@ -601,9 +639,11 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setBreathePattern(inhale, hold1, exhale, hold2) {
-        return this.breathingPatternManager ? this.breathingPatternManager.setBreathePattern(inhale, hold1, exhale, hold2) : this;
+        return this.breathingPatternManager
+            ? this.breathingPatternManager.setBreathePattern(inhale, hold1, exhale, hold2)
+            : this;
     }
-    
+
     /**
      * Directly sets the orb scale with animation
      * @param {number} scale - Target scale (1.0 = normal)
@@ -612,9 +652,11 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setOrbScale(scale, duration = 1000, easing = 'easeInOut') {
-        return this.orbScaleAnimator ? this.orbScaleAnimator.setOrbScale(scale, duration, easing) : this;
+        return this.orbScaleAnimator
+            ? this.orbScaleAnimator.setOrbScale(scale, duration, easing)
+            : this;
     }
-    
+
     /**
      * Applies a preset breathing pattern
      * @param {string} type - Preset type: 'calm', 'anxious', 'meditative', 'deep', 'sleep'
@@ -623,7 +665,7 @@ class EmotiveMascot {
     breathe(type = 'calm') {
         return this.breathingPatternManager ? this.breathingPatternManager.breathe(type) : this;
     }
-    
+
     /**
      * Starts the custom breathing animation
      * @private
@@ -631,7 +673,7 @@ class EmotiveMascot {
     startBreathingAnimation() {
         this.breathingAnimationController.startBreathingAnimation();
     }
-    
+
     /**
      * Stops any active breathing animation
      * @returns {EmotiveMascot} This instance for chaining
@@ -639,7 +681,7 @@ class EmotiveMascot {
     stopBreathing() {
         return this.breathingPatternManager ? this.breathingPatternManager.stopBreathing() : this;
     }
-    
+
     /**
      * Adds an event listener for external integration hooks
      * @param {string} event - Event name
@@ -754,7 +796,7 @@ class EmotiveMascot {
         if (!this.contextRecovery) {
             return false;
         }
-        
+
         return this.contextRecovery.recover();
     }
 
@@ -766,10 +808,9 @@ class EmotiveMascot {
         if (!this.contextRecovery) {
             return false;
         }
-        
+
         return this.contextRecovery.isLost();
     }
-
 
     /**
      * Get comprehensive debug report
@@ -847,17 +888,14 @@ class EmotiveMascot {
         }, 'audio-update')();
     }
 
-
-
-
-
     /**
      * Renders the current frame (called by AnimationController)
      */
     render() {
         try {
             // Build render state and timing (delegated to RenderStateBuilder)
-            const { renderStart, deltaTime, renderState } = this.renderStateBuilder.buildRenderState();
+            const { renderStart, deltaTime, renderState } =
+                this.renderStateBuilder.buildRenderState();
 
             // Track frame timing for debugging
             if (this.debugMode) {
@@ -879,11 +917,19 @@ class EmotiveMascot {
             const emotionParams = getEmotionVisualParams(renderState.emotion);
 
             // Set emotional state on renderer
-            this.renderer.setEmotionalState(renderState.emotion, emotionParams, renderState.undertone);
+            this.renderer.setEmotionalState(
+                renderState.emotion,
+                emotionParams,
+                renderState.undertone
+            );
 
             // Calculate particle configuration (delegated to ParticleConfigCalculator)
-            const particleConfig = this.particleConfigCalculator.calculateParticleConfig(renderState, emotionParams);
-            const { orbX, orbY, particleBehavior, particleRate, minParticles, maxParticles } = particleConfig;
+            const particleConfig = this.particleConfigCalculator.calculateParticleConfig(
+                renderState,
+                emotionParams
+            );
+            const { orbX, orbY, particleBehavior, particleRate, minParticles, maxParticles } =
+                particleConfig;
 
             // Spawn particles at orb position
             this.particleSystem.spawn(
@@ -893,7 +939,7 @@ class EmotiveMascot {
                 orbX,
                 orbY,
                 deltaTime,
-                null,  // no forced count
+                null, // no forced count
                 minParticles,
                 maxParticles,
                 this.renderer.particleScaleFactor || this.renderer.scaleFactor || 1,
@@ -906,17 +952,29 @@ class EmotiveMascot {
             const particleModifier = this.particleConfigCalculator.getParticleModifier(renderState);
 
             // Get gesture motion and progress (delegated to GestureMotionProvider)
-            const { gestureMotion, gestureProgress } = this.gestureMotionProvider.getGestureMotion();
+            const { gestureMotion, gestureProgress } =
+                this.gestureMotionProvider.getGestureMotion();
 
             // Update particles with orb position, gesture motion, and modifier
-            this.particleSystem.update(deltaTime, orbX, orbY, gestureMotion, gestureProgress, particleModifier);
+            this.particleSystem.update(
+                deltaTime,
+                orbX,
+                orbY,
+                gestureMotion,
+                gestureProgress,
+                particleModifier
+            );
 
             // Get gesture transform from renderer (delegated to GestureMotionProvider)
             const gestureTransform = this.gestureMotionProvider.getGestureTransform();
 
             // Render all layers in order (delegated to RenderLayerOrchestrator)
             this.renderLayerOrchestrator.renderAllLayers({
-                renderState, deltaTime, emotionParams, gestureTransform, renderStart
+                renderState,
+                deltaTime,
+                emotionParams,
+                gestureTransform,
+                renderStart,
             });
         } catch (error) {
             this.errorBoundary.logError(error, 'main-render');
@@ -964,7 +1022,6 @@ class EmotiveMascot {
         return this.emotionalStateQueryManager.getAvailableUndertones();
     }
 
-
     /**
      * Gets audio level processing statistics
      * @returns {Object} Audio processing statistics
@@ -1004,9 +1061,13 @@ class EmotiveMascot {
      * @returns {EmotiveMascot} This instance for chaining
      */
     setVolume(volume) {
-        return this.errorBoundary.wrap(() => {
-            return this.audioHandler.setVolume(volume);
-        }, 'volume-setting', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.audioHandler.setVolume(volume);
+            },
+            'volume-setting',
+            this
+        )();
     }
 
     /**
@@ -1196,7 +1257,7 @@ class EmotiveMascot {
     registerPlugin(plugin) {
         return this.pluginSystem.registerPlugin(plugin);
     }
-    
+
     /**
      * Set accessibility options
      * @param {Object} options - Accessibility options
@@ -1212,7 +1273,7 @@ class EmotiveMascot {
             this.accessibilityManager.highContrastEnabled = options.highContrast;
         }
     }
-    
+
     /**
      * Get mobile optimization status
      * @returns {Object} Mobile optimization status
@@ -1228,7 +1289,7 @@ class EmotiveMascot {
     getAccessibilityStatus() {
         return this.healthCheckManager.getAccessibilityStatus();
     }
-    
+
     /**
      * Set the emotional state (alias for setEmotion for compatibility)
      * @param {string} newState - The emotion/state to set
@@ -1237,7 +1298,7 @@ class EmotiveMascot {
     setState(newState) {
         return this.setEmotion(newState);
     }
-    
+
     /**
      * Speak text using TTS with synchronized animation
      * @param {string} text - The text to speak
@@ -1270,7 +1331,7 @@ class EmotiveMascot {
     stopTTS() {
         this.ttsManager.stopTTS();
     }
-    
+
     /**
      * Handle canvas resize events to trigger visual resampling
      * This ensures visuals look crisp at any size
@@ -1291,28 +1352,36 @@ class EmotiveMascot {
     morphTo(shape, config = {}) {
         return this.visualTransformationManager.morphTo(shape, config);
     }
-    
+
     /**
      * Connect audio element for vocal visualization
      * @param {HTMLAudioElement} audioElement - Audio element to analyze
      * @returns {EmotiveMascot} This instance for chaining
      */
     connectAudio(audioElement) {
-        return this.errorBoundary.wrap(() => {
-            return this.audioHandler.connectAudio(audioElement);
-        }, 'connectAudio', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.audioHandler.connectAudio(audioElement);
+            },
+            'connectAudio',
+            this
+        )();
     }
-    
+
     /**
      * Disconnect audio analysis
      * @returns {EmotiveMascot} This instance for chaining
      */
     disconnectAudio() {
-        return this.errorBoundary.wrap(() => {
-            return this.audioHandler.disconnectAudio();
-        }, 'disconnectAudio', this)();
+        return this.errorBoundary.wrap(
+            () => {
+                return this.audioHandler.disconnectAudio();
+            },
+            'disconnectAudio',
+            this
+        )();
     }
-    
+
     /**
      * Set offset values for eccentric positioning
      * @param {number} x - X offset
@@ -1369,7 +1438,7 @@ class EmotiveMascot {
     animateOffset(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
         return this.visualTransformationManager.animateOffset(x, y, z, duration, easing);
     }
-    
+
     /**
      * Get available shapes for morphing
      * @returns {Array} List of available shape names
@@ -1511,7 +1580,7 @@ class EmotiveMascot {
     destroy() {
         this.destructionManager.destroy();
     }
-    
+
     /**
      * Throttled warning to reduce console spam
      * @param {string} message - Warning message
@@ -1520,7 +1589,7 @@ class EmotiveMascot {
     throttledWarn(message, key) {
         const now = Date.now();
         const lastWarning = this.warningTimestamps[key] || 0;
-        
+
         if (now - lastWarning > this.warningThrottle) {
             // Warning message throttled
             this.warningTimestamps[key] = now;

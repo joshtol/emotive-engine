@@ -141,10 +141,10 @@ export class SmokeParticleSystem {
             uniforms: {
                 uTint: { value: new THREE.Vector3(this.tint[0], this.tint[1], this.tint[2]) },
                 uOpacity: { value: 0.6 },
-                uTime: { value: 0 } // Animation time
+                uTime: { value: 0 }, // Animation time
             },
 
-            vertexShader: /* glsl */`
+            vertexShader: /* glsl */ `
                 attribute float aSize;
                 attribute float aRotation;
                 attribute float aAlpha;
@@ -169,7 +169,7 @@ export class SmokeParticleSystem {
                 }
             `,
 
-            fragmentShader: /* glsl */`
+            fragmentShader: /* glsl */ `
                 uniform vec3 uTint;
                 uniform float uOpacity;
                 uniform float uTime;
@@ -235,7 +235,7 @@ export class SmokeParticleSystem {
             transparent: true,
             blending: THREE.NormalBlending,
             depthWrite: false,
-            depthTest: true
+            depthTest: true,
         });
     }
 
@@ -269,7 +269,7 @@ export class SmokeParticleSystem {
 
             particle.position.set(
                 Math.sin(phi) * Math.cos(theta) * spawnRadius,
-                -0.35 + Math.random() * 0.1,  // Start at base
+                -0.35 + Math.random() * 0.1, // Start at base
                 Math.sin(phi) * Math.sin(theta) * spawnRadius
             );
 
@@ -277,7 +277,7 @@ export class SmokeParticleSystem {
             const burstSpeed = 1.0 + Math.random() * 0.6;
             particle.velocity.set(
                 Math.cos(theta) * burstSpeed,
-                0.15 + Math.random() * 0.2,  // Gentle upward drift only
+                0.15 + Math.random() * 0.2, // Gentle upward drift only
                 Math.sin(theta) * burstSpeed
             );
 
@@ -288,7 +288,6 @@ export class SmokeParticleSystem {
             particle.alphaDecay = particle.alpha / particle.maxLife;
             // FAST spin
             particle.rotationSpeed = (Math.random() - 0.5) * 4.0;
-
         } else if (this.category === 'afflicted') {
             // ═══════════════════════════════════════════════════════════════
             // AFFLICTED: Ethereal swirling orbit - looser, less dense
@@ -298,11 +297,7 @@ export class SmokeParticleSystem {
             const radius = 0.35 + Math.random() * 0.2;
             const height = (Math.random() - 0.5) * 0.6;
 
-            particle.position.set(
-                Math.cos(angle) * radius,
-                height,
-                Math.sin(angle) * radius
-            );
+            particle.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
 
             // Visible orbital swirl with less inward pull
             const orbitSpeed = 0.5 + this.swirl * 0.4;
@@ -321,7 +316,6 @@ export class SmokeParticleSystem {
             particle.alpha = 0.25 + Math.random() * 0.15;
             particle.alphaDecay = particle.alpha / particle.maxLife;
             particle.rotationSpeed = (Math.random() - 0.5) * 2.5;
-
         } else {
             // ═══════════════════════════════════════════════════════════════
             // EMANATING: Rising wisps - stay closer to mascot
@@ -331,21 +325,13 @@ export class SmokeParticleSystem {
             // Start closer to mascot center
             const startHeight = -0.15 + Math.random() * 0.1;
 
-            particle.position.set(
-                Math.cos(angle) * radius,
-                startHeight,
-                Math.sin(angle) * radius
-            );
+            particle.position.set(Math.cos(angle) * radius, startHeight, Math.sin(angle) * radius);
 
             // Slower rise - stays in frame
             const driftX = (Math.random() - 0.5) * 0.2;
             const driftZ = (Math.random() - 0.5) * 0.2;
             const riseSpeed = 0.2 + Math.random() * 0.15; // Reduced from 0.4-0.7
-            particle.velocity.set(
-                driftX,
-                riseSpeed,
-                driftZ
-            );
+            particle.velocity.set(driftX, riseSpeed, driftZ);
 
             // Shorter life = stays closer
             particle.maxLife = 1.0 + Math.random() * 0.5;

@@ -44,7 +44,7 @@ const NATUREFLOURISH_CONFIG = {
                 endScale: 1.2,
                 startDiameter: 1.8,
                 endDiameter: 2.8,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: {
                 type: 'spiral',
@@ -52,7 +52,7 @@ const NATUREFLOURISH_CONFIG = {
                 spacing: 0,
                 arcOffset: 72,
                 phaseOffset: 0.05,
-                zOffset: 0
+                zOffset: 0,
             },
             count: 5,
             scale: 2.2,
@@ -64,24 +64,24 @@ const NATUREFLOURISH_CONFIG = {
                 enter: {
                     type: 'fade',
                     duration: 0.03,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.15,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.35,
                         peak: 0.7,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 cutout: {
                     strength: 0.6,
@@ -92,36 +92,38 @@ const NATUREFLOURISH_CONFIG = {
                     trailDissolve: {
                         enabled: true,
                         offset: -0.6,
-                        softness: 1.5
-                    }
+                        softness: 1.5,
+                    },
                 },
                 grain: {
                     type: 3,
                     strength: 0.2,
                     scale: 0.25,
                     speed: 2.5,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.9,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.4,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.9,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.4,
+                    },
+                ],
                 pulse: {
                     amplitude: 0.15,
                     frequency: 5,
                     easing: 'easeInOut',
-                    perElement: true
+                    perElement: true,
                 },
                 drift: {
                     speed: 0.3,
                     distance: 0.18,
                     pattern: 'radial',
-                    accelerate: true
+                    accelerate: true,
                 },
                 opacityGradient: [1.0, 0.9, 0.8, 0.7, 0.6],
                 rotate: [
@@ -129,20 +131,20 @@ const NATUREFLOURISH_CONFIG = {
                     { axis: 'z', rotations: -2.0, phase: 72 },
                     { axis: 'z', rotations: 1.8, phase: 144 },
                     { axis: 'z', rotations: -2.3, phase: 216 },
-                    { axis: 'z', rotations: 2.0, phase: 288 }
+                    { axis: 'z', rotations: 2.0, phase: 288 },
                 ],
                 tilt: {
                     axis: 'y',
                     oscillate: true,
                     range: 0.4,
-                    speed: 3.5
+                    speed: 3.5,
                 },
                 wobble: {
                     axis: 'x',
                     oscillate: true,
                     range: 0.15,
                     speed: 2.0,
-                    phase: 90
+                    phase: 90,
                 },
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.15,
@@ -155,12 +157,12 @@ const NATUREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.5,
                             arcSpeed: 1.0,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -174,7 +176,7 @@ const NATUREFLOURISH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.2,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.8,
@@ -185,24 +187,24 @@ const NATUREFLOURISH_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.06,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.15,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 cutout: {
                     strength: 0.5,
@@ -211,20 +213,22 @@ const NATUREFLOURISH_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply',
                 },
                 drift: {
                     speed: 0.9,
                     distance: 0.35,
                     direction: { x: 1.0, y: -0.7, z: -0.15 },
-                    easing: 'easeInOutCubic'
+                    easing: 'easeInOutCubic',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 1.0, phase: -45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 1.0, phase: -45 }],
                 blending: 'normal',
                 depthWrite: false,
                 renderOrder: -6,
@@ -234,12 +238,12 @@ const NATUREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 2.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
@@ -249,7 +253,7 @@ const NATUREFLOURISH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.2,
-                scaleEasing: 'easeOutCubic'
+                scaleEasing: 'easeOutCubic',
             },
             count: 1,
             scale: 1.8,
@@ -260,24 +264,24 @@ const NATUREFLOURISH_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.06,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.15,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.04,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.4,
                         peak: 0.6,
                         end: 0.2,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 cutout: {
                     strength: 0.5,
@@ -286,20 +290,22 @@ const NATUREFLOURISH_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 2.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.5,
+                    blend: 'multiply',
                 },
                 drift: {
                     speed: 0.9,
                     distance: 0.35,
                     direction: { x: -1.0, y: -0.7, z: -0.15 },
-                    easing: 'easeInOutCubic'
+                    easing: 'easeInOutCubic',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 1.0, phase: 45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 1.0, phase: 45 }],
                 blending: 'normal',
                 depthWrite: false,
                 renderOrder: -6,
@@ -309,12 +315,12 @@ const NATUREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.6,
                             arcSpeed: 2.0,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -328,35 +334,35 @@ const NATUREFLOURISH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 2.2,
             models: ['vine-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.60,
+                appearAt: 0.3,
+                disappearAt: 0.6,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.15,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 cutout: {
                     strength: 0.5,
@@ -365,14 +371,16 @@ const NATUREFLOURISH_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.0,
+                    blend: 'multiply',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 0.001, phase: 45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 0.001, phase: 45 }],
                 blending: 'normal',
                 depthWrite: false,
                 renderOrder: -10,
@@ -382,12 +390,12 @@ const NATUREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
@@ -397,35 +405,35 @@ const NATUREFLOURISH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.5,
                 endScale: 1.8,
-                scaleEasing: 'easeOutExpo'
+                scaleEasing: 'easeOutExpo',
             },
             count: 1,
             scale: 2.2,
             models: ['vine-ring'],
             animation: {
-                appearAt: 0.30,
-                disappearAt: 0.60,
+                appearAt: 0.3,
+                disappearAt: 0.6,
                 enter: {
                     type: 'fade',
                     duration: 0.06,
-                    easing: 'easeOut'
+                    easing: 'easeOut',
                 },
                 exit: {
                     type: 'fade',
                     duration: 0.15,
-                    easing: 'easeIn'
+                    easing: 'easeIn',
                 },
                 procedural: {
                     scaleSmoothing: 0.05,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 parameterAnimation: {
                     growth: {
                         start: 0.4,
                         peak: 0.7,
                         end: 0.25,
-                        curve: 'bell'
-                    }
+                        curve: 'bell',
+                    },
                 },
                 cutout: {
                     strength: 0.5,
@@ -434,14 +442,16 @@ const NATUREFLOURISH_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.25, speed: 2.0, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.25,
+                    speed: 2.0,
+                    blend: 'multiply',
                 },
-                rotate: [
-                    { axis: 'z', rotations: 0.001, phase: -45 }
-                ],
+                rotate: [{ axis: 'z', rotations: 0.001, phase: -45 }],
                 blending: 'normal',
                 depthWrite: false,
                 renderOrder: -10,
@@ -451,13 +461,13 @@ const NATUREFLOURISH_CONFIG = {
                             type: 1,
                             arcWidth: 0.35,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.4, 0.9, 0.3],
@@ -468,7 +478,7 @@ const NATUREFLOURISH_CONFIG = {
     scaleFrequency: 8,
     scaleGrowth: 0.015,
     tremor: 0.003,
-    tremorFrequency: 4
+    tremorFrequency: 4,
 };
 
 export default buildNatureEffectGesture(NATUREFLOURISH_CONFIG);

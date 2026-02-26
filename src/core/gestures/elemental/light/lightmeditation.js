@@ -29,7 +29,7 @@ const SHARED_ANCHOR = {
     cameraOffset: 1.0,
     relativeOffset: true,
     startScale: 1.0,
-    endScale: 1.0
+    endScale: 1.0,
 };
 
 const SHARED_ANIMATION = {
@@ -39,22 +39,30 @@ const SHARED_ANIMATION = {
     emissive: { min: 1.0, max: 1.0, frequency: 0, pattern: 'sine' },
     blending: 'normal',
     renderOrder: 10,
-    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 }
+    relay: { count: 3, arcWidth: Math.PI, floor: 0.5 },
 };
 
-function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayIndices, delay = 0, atmospherics = null) {
+function createHexLayer(
+    radius,
+    ringScale,
+    baseRotations,
+    arcPhaseOffset,
+    relayIndices,
+    delay = 0,
+    atmospherics = null
+) {
     const S = 0.866;
     const round = v => Math.round(v * 100) / 100;
 
     const rings = [
         // Triangle 1 (upright)
-        { x: 0,        y: radius,      relay: relayIndices[0], arc: 4.71, dir: -1 },
-        { x: S*radius, y: -0.5*radius, relay: relayIndices[1], arc: 3.14, dir:  1 },
-        { x:-S*radius, y: -0.5*radius, relay: relayIndices[2], arc: 0.0,  dir: -1 },
+        { x: 0, y: radius, relay: relayIndices[0], arc: 4.71, dir: -1 },
+        { x: S * radius, y: -0.5 * radius, relay: relayIndices[1], arc: 3.14, dir: 1 },
+        { x: -S * radius, y: -0.5 * radius, relay: relayIndices[2], arc: 0.0, dir: -1 },
         // Triangle 2 (inverted)
-        { x: 0,        y: -radius,     relay: relayIndices[0], arc: 4.71, dir:  1 },
-        { x:-S*radius, y:  0.5*radius, relay: relayIndices[1], arc: 3.14, dir: -1 },
-        { x: S*radius, y:  0.5*radius, relay: relayIndices[2], arc: 0.0,  dir:  1 },
+        { x: 0, y: -radius, relay: relayIndices[0], arc: 4.71, dir: 1 },
+        { x: -S * radius, y: 0.5 * radius, relay: relayIndices[1], arc: 3.14, dir: -1 },
+        { x: S * radius, y: 0.5 * radius, relay: relayIndices[2], arc: 0.0, dir: 1 },
     ];
 
     return rings.map((r, i) => ({
@@ -73,10 +81,10 @@ function createHexLayer(radius, ringScale, baseRotations, arcPhaseOffset, relayI
                 'sun-ring': {
                     arcPhase: (r.arc + arcPhaseOffset) % 6.28,
                     relayIndex: r.relay,
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     }));
 }
 
@@ -84,7 +92,8 @@ const LIGHTMEDITATION_CONFIG = {
     name: 'lightmeditation',
     emoji: '🧘',
     type: 'blending',
-    description: 'Triple light hexagon mandala — three concentric relay hexagons with differential rotation',
+    description:
+        'Triple light hexagon mandala — three concentric relay hexagons with differential rotation',
     duration: 3000,
     beats: 6,
     intensity: 1.5,
@@ -94,14 +103,16 @@ const LIGHTMEDITATION_CONFIG = {
 
     spawnMode: [
         // ═══ FORWARD SET (inner/outer CW, middle CCW) ═══
-        ...createHexLayer(0.28, 0.70,  2,    0.0,  [0, 1, 2], 0.0, [{ preset: 'firefly', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' }]),
+        ...createHexLayer(0.28, 0.7, 2, 0.0, [0, 1, 2], 0.0, [
+            { preset: 'firefly', intensity: 0.15, sizeScale: 0.5, progressCurve: 'sustain' },
+        ]),
         ...createHexLayer(0.52, 1.15, -1.5, 2.09, [1, 2, 0], 0.08),
-        ...createHexLayer(0.78, 1.55,  1,   4.19, [2, 0, 1], 0.16),
+        ...createHexLayer(0.78, 1.55, 1, 4.19, [2, 0, 1], 0.16),
 
         // ═══ COUNTER SET (opposite rotation, +180° arc offset) ═══
-        ...createHexLayer(0.28, 0.70, -2,    3.14, [0, 1, 2], 0.0),
-        ...createHexLayer(0.52, 1.15,  1.5,  5.23, [1, 2, 0], 0.08),
-        ...createHexLayer(0.78, 1.55, -1,    1.05, [2, 0, 1], 0.16),
+        ...createHexLayer(0.28, 0.7, -2, 3.14, [0, 1, 2], 0.0),
+        ...createHexLayer(0.52, 1.15, 1.5, 5.23, [1, 2, 0], 0.08),
+        ...createHexLayer(0.78, 1.55, -1, 1.05, [2, 0, 1], 0.16),
     ],
 
     glowColor: [1.0, 0.92, 0.65],
@@ -115,7 +126,7 @@ const LIGHTMEDITATION_CONFIG = {
     tremorFrequency: 3,
     shakeAmount: 0.003,
     shakeFrequency: 4,
-    decayRate: 0.1
+    decayRate: 0.1,
 };
 
 export default buildLightEffectGesture(LIGHTMEDITATION_CONFIG);

@@ -30,51 +30,122 @@ export const RESPONSE_SCHEMA = {
     message: {
         type: 'string',
         required: true,
-        description: 'The message content to display to the user'
+        description: 'The message content to display to the user',
     },
     emotion: {
         type: 'string',
         required: true,
-        enum: ['joy', 'empathy', 'calm', 'excitement', 'concern', 'neutral', 'triumph', 'love', 'curiosity'],
-        description: 'The emotion the mascot should express'
+        enum: [
+            'joy',
+            'empathy',
+            'calm',
+            'excitement',
+            'concern',
+            'neutral',
+            'triumph',
+            'love',
+            'curiosity',
+        ],
+        description: 'The emotion the mascot should express',
     },
     sentiment: {
         type: 'string',
         required: true,
         enum: ['positive', 'neutral', 'negative'],
-        description: 'Overall sentiment of the interaction'
+        description: 'Overall sentiment of the interaction',
     },
     action: {
         type: 'string',
         required: true,
-        enum: ['none', 'offer_help', 'celebrate', 'guide', 'reassure', 'greet', 'confirm', 'deny',
-               'emphasize', 'question', 'think', 'listen', 'respond'],
-        description: 'The action context for gesture selection'
+        enum: [
+            'none',
+            'offer_help',
+            'celebrate',
+            'guide',
+            'reassure',
+            'greet',
+            'confirm',
+            'deny',
+            'emphasize',
+            'question',
+            'think',
+            'listen',
+            'respond',
+        ],
+        description: 'The action context for gesture selection',
     },
     frustrationLevel: {
         type: 'number',
         required: true,
         min: 0,
         max: 100,
-        description: 'Estimated user frustration level (0 = calm, 100 = very frustrated)'
+        description: 'Estimated user frustration level (0 = calm, 100 = very frustrated)',
     },
     shape: {
         type: 'string',
         required: false,
-        enum: ['circle', 'heart', 'star', 'sun', 'moon', 'eclipse', 'solar', 'lunar',
-               'square', 'triangle', 'suspicion'],
-        description: 'Optional: Shape to morph the mascot into'
+        enum: [
+            'circle',
+            'heart',
+            'star',
+            'sun',
+            'moon',
+            'eclipse',
+            'solar',
+            'lunar',
+            'square',
+            'triangle',
+            'suspicion',
+        ],
+        description: 'Optional: Shape to morph the mascot into',
     },
     gesture: {
         type: 'string',
         required: false,
-        enum: ['bounce', 'pulse', 'shake', 'spin', 'drift', 'nod', 'tilt', 'expand', 'contract',
-               'flash', 'stretch', 'glow', 'flicker', 'vibrate', 'wave', 'jump', 'orbital',
-               'hula', 'scan', 'twist', 'burst', 'settle', 'fade', 'hold', 'breathe',
-               'peek', 'sparkle', 'shimmer', 'wiggle', 'groove', 'point', 'lean', 'reach',
-               'headBob', 'rain', 'twitch', 'sway', 'float', 'jitter', 'orbit'],
-        description: 'Optional: Specific gesture to perform'
-    }
+        enum: [
+            'bounce',
+            'pulse',
+            'shake',
+            'spin',
+            'drift',
+            'nod',
+            'tilt',
+            'expand',
+            'contract',
+            'flash',
+            'stretch',
+            'glow',
+            'flicker',
+            'vibrate',
+            'wave',
+            'jump',
+            'orbital',
+            'hula',
+            'scan',
+            'twist',
+            'burst',
+            'settle',
+            'fade',
+            'hold',
+            'breathe',
+            'peek',
+            'sparkle',
+            'shimmer',
+            'wiggle',
+            'groove',
+            'point',
+            'lean',
+            'reach',
+            'headBob',
+            'rain',
+            'twitch',
+            'sway',
+            'float',
+            'jitter',
+            'orbit',
+        ],
+        description: 'Optional: Specific gesture to perform',
+    },
 };
 
 /**
@@ -93,18 +164,36 @@ export function generateSystemPrompt(options = {}) {
         personality = 'friendly, empathetic, and helpful',
         brand = 'our service',
         customEmotions = [],
-        customActions = []
+        customActions = [],
     } = options;
 
     const emotions = [
-        'joy', 'empathy', 'calm', 'excitement', 'concern', 'neutral', 'triumph', 'love', 'curiosity',
-        ...customEmotions
+        'joy',
+        'empathy',
+        'calm',
+        'excitement',
+        'concern',
+        'neutral',
+        'triumph',
+        'love',
+        'curiosity',
+        ...customEmotions,
     ];
 
     const actions = [
-        'offer_help', 'celebrate', 'guide', 'reassure', 'greet', 'confirm', 'deny',
-        'emphasize', 'question', 'think', 'listen', 'respond',
-        ...customActions
+        'offer_help',
+        'celebrate',
+        'guide',
+        'reassure',
+        'greet',
+        'confirm',
+        'deny',
+        'emphasize',
+        'question',
+        'think',
+        'listen',
+        'respond',
+        ...customActions,
     ];
 
     return `You are a ${personality} AI assistant for ${brand}, providing ${domain}. You have an animated mascot companion that responds to the emotional tone and context of conversations.
@@ -219,15 +308,15 @@ Remember: Always respond with valid JSON only. No extra text, no markdown format
 export const CLAUDE_TEMPLATE = {
     provider: 'anthropic',
     models: {
-        haiku: 'claude-haiku-4-5',       // Fast, cost-effective
-        sonnet: 'claude-sonnet-4',       // Balanced
-        opus: 'claude-opus-4'            // Most capable
+        haiku: 'claude-haiku-4-5', // Fast, cost-effective
+        sonnet: 'claude-sonnet-4', // Balanced
+        opus: 'claude-opus-4', // Most capable
     },
     recommendedModel: 'claude-haiku-4-5',
     config: {
         max_tokens: 200,
         temperature: 0.7,
-        top_p: 1.0
+        top_p: 1.0,
     },
     notes: 'Claude excels at following JSON schemas and emotional intelligence. Haiku is recommended for real-time interactions.',
     exampleCode: `
@@ -247,7 +336,7 @@ const response = await anthropic.messages.create({
 
 const llmResponse = JSON.parse(response.content[0].text);
 await mascot.handleLLMResponse(llmResponse);
-    `.trim()
+    `.trim(),
 };
 
 /**
@@ -258,13 +347,13 @@ export const OPENAI_TEMPLATE = {
     models: {
         gpt4: 'gpt-4',
         gpt4Turbo: 'gpt-4-turbo-preview',
-        gpt35Turbo: 'gpt-3.5-turbo'
+        gpt35Turbo: 'gpt-3.5-turbo',
     },
     recommendedModel: 'gpt-4-turbo-preview',
     config: {
         max_tokens: 200,
         temperature: 0.7,
-        response_format: { type: 'json_object' } // Force JSON mode
+        response_format: { type: 'json_object' }, // Force JSON mode
     },
     notes: 'Use response_format json_object to ensure valid JSON. GPT-4 Turbo recommended for emotional intelligence.',
     exampleCode: `
@@ -287,7 +376,7 @@ const response = await openai.chat.completions.create({
 
 const llmResponse = JSON.parse(response.choices[0].message.content);
 await mascot.handleLLMResponse(llmResponse);
-    `.trim()
+    `.trim(),
 };
 
 /**
@@ -297,13 +386,13 @@ export const GEMINI_TEMPLATE = {
     provider: 'google',
     models: {
         pro: 'gemini-pro',
-        ultra: 'gemini-ultra'
+        ultra: 'gemini-ultra',
     },
     recommendedModel: 'gemini-pro',
     config: {
         maxOutputTokens: 200,
         temperature: 0.7,
-        topP: 1.0
+        topP: 1.0,
     },
     notes: 'Gemini Pro is free for many use cases. Supports JSON mode via response schema.',
     exampleCode: `
@@ -321,7 +410,7 @@ const result = await model.generateContent([
 
 const llmResponse = JSON.parse(result.response.text());
 await mascot.handleLLMResponse(llmResponse);
-    `.trim()
+    `.trim(),
 };
 
 /**
@@ -349,7 +438,7 @@ const response = await fetch('YOUR_LLM_ENDPOINT', {
 const data = await response.json();
 const llmResponse = JSON.parse(data.response);
 await mascot.handleLLMResponse(llmResponse);
-    `.trim()
+    `.trim(),
 };
 
 /**
@@ -362,8 +451,8 @@ export const LLM_TEMPLATES = {
         claude: CLAUDE_TEMPLATE,
         openai: OPENAI_TEMPLATE,
         gemini: GEMINI_TEMPLATE,
-        generic: GENERIC_TEMPLATE
-    }
+        generic: GENERIC_TEMPLATE,
+    },
 };
 
 export default LLM_TEMPLATES;

@@ -26,8 +26,8 @@ export class DistortionManager {
         this.renderer = renderer;
         this.camera = camera;
         this.distortionScene = new THREE.Scene();
-        this.elementMeshes = new Map();  // elementType → Mesh
-        this.configs = new Map();        // elementType → config
+        this.elementMeshes = new Map(); // elementType → Mesh
+        this.configs = new Map(); // elementType → config
 
         // Cached temporaries for syncInstances (avoid per-frame allocation)
         this._tmpMatrix = new THREE.Matrix4();
@@ -71,9 +71,9 @@ export class DistortionManager {
         // Single Mesh (not InstancedMesh) — distortion uses exactly 1 plane per element type.
         // Avoids instanceMatrix in the vertex shader which simplifies GLSL compilation.
         const mesh = new THREE.Mesh(config.geometry, config.material);
-        mesh.visible = false;  // Don't render (or compile shader) until sources are active
+        mesh.visible = false; // Don't render (or compile shader) until sources are active
         mesh.frustumCulled = false;
-        mesh.matrixAutoUpdate = false;  // We set matrix manually in syncInstances
+        mesh.matrixAutoUpdate = false; // We set matrix manually in syncInstances
 
         this.distortionScene.add(mesh);
         this.elementMeshes.set(elementType, mesh);
@@ -133,8 +133,12 @@ export class DistortionManager {
             scl.copy(stored.size);
         } else {
             // Growing or stable — compute fresh AABB
-            let minX = Infinity, minY = Infinity, minZ = Infinity;
-            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            let minX = Infinity,
+                minY = Infinity,
+                minZ = Infinity;
+            let maxX = -Infinity,
+                maxY = -Infinity,
+                maxZ = -Infinity;
             for (let i = 0; i < count; i++) {
                 elementMesh.getMatrixAt(i, mat);
                 const x = mat.elements[12];
@@ -149,12 +153,8 @@ export class DistortionManager {
             }
 
             // Center of bounding box (shifted by optional centerOffset for asymmetric effects)
-            pos.set(
-                (minX + maxX) * 0.5,
-                (minY + maxY) * 0.5,
-                (minZ + maxZ) * 0.5
-            );
-            const {centerOffset} = config.transform;
+            pos.set((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
+            const { centerOffset } = config.transform;
             if (centerOffset) {
                 pos.x += centerOffset.x;
                 pos.y += centerOffset.y;
@@ -162,17 +162,13 @@ export class DistortionManager {
             }
 
             // Size of bounding box + padding
-            const {padding} = config.transform;
-            const sizeX = (maxX - minX) + padding.x * 2;
-            const sizeY = (maxY - minY) + padding.y * 2;
+            const { padding } = config.transform;
+            const sizeX = maxX - minX + padding.x * 2;
+            const sizeY = maxY - minY + padding.y * 2;
 
             // Plane scale = bounding box size (geometry is 1×1 unit plane)
             // Minimum size prevents zero-area when all instances are at same position
-            scl.set(
-                Math.max(sizeX, padding.x),
-                Math.max(sizeY, padding.y),
-                1.0
-            );
+            scl.set(Math.max(sizeX, padding.x), Math.max(sizeY, padding.y), 1.0);
 
             // Store peak AABB for freeze during exit
             this._peakAABB.set(elementType, {
@@ -261,9 +257,8 @@ export class DistortionManager {
         const mesh = this.elementMeshes.get(elementType);
         if (!mesh?.material?.uniforms?.uStrength) return;
         const config = this.configs.get(elementType);
-        mesh.material.uniforms.uStrength.value = (strength !== null && strength !== undefined)
-            ? strength
-            : (config?.strength ?? 0.018);
+        mesh.material.uniforms.uStrength.value =
+            strength !== null && strength !== undefined ? strength : (config?.strength ?? 0.018);
     }
 
     /**

@@ -21,7 +21,7 @@ const getPresets = d => ({
     top: { x: 0, y: d, z: 0 },
     angle: { x: d * 0.67, y: d * 0.5, z: d * 0.67 },
     back: { x: 0, y: 0, z: -d },
-    bottom: { x: 0, y: -d, z: 0 }
+    bottom: { x: 0, y: -d, z: 0 },
 });
 
 export class CameraPresetManager {

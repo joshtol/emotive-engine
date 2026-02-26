@@ -69,7 +69,9 @@ export const ElementTypeRegistry = {
         const required = ['basePath', 'models', 'createMaterial', 'updateMaterial'];
         for (const field of required) {
             if (!config[field]) {
-                throw new Error(`[ElementTypeRegistry] Missing required field '${field}' for type '${type}'`);
+                throw new Error(
+                    `[ElementTypeRegistry] Missing required field '${field}' for type '${type}'`
+                );
             }
         }
 
@@ -77,9 +79,8 @@ export const ElementTypeRegistry = {
         _registry.set(type, {
             scaleMultiplier: 1.5,
             setShaderAnimation: null,
-            ...config
+            ...config,
         });
-
     },
 
     /**
@@ -122,7 +123,7 @@ export const ElementTypeRegistry = {
      */
     clear() {
         _registry.clear();
-    }
+    },
 };
 
 export default ElementTypeRegistry;

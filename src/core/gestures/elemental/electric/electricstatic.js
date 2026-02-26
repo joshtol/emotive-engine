@@ -49,7 +49,7 @@ const ELECTRICSTATIC_CONFIG = {
             fadeOut: 30,
             respawn: true,
             stagger: 200,
-            respawnDelay: { min: 250, max: 600 }
+            respawnDelay: { min: 250, max: 600 },
         },
         animation: {
             appearAt: 0.05,
@@ -65,24 +65,26 @@ const ELECTRICSTATIC_CONFIG = {
                 blend: 'multiply',
                 travel: 'oscillate',
                 travelSpeed: 0.8,
-                strengthCurve: 'bell'
+                strengthCurve: 'bell',
             },
             grain: { type: 3, strength: 0.1, scale: 0.45, speed: 1.5, blend: 'multiply' },
             // Per-gesture atmospheric particles: static ionized air
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.08,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.08,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.3,
             lifetimeVariance: 0.4,
             blending: 'additive',
             renderOrder: 10,
-            intensityScaling: { scale: 1.0, emissiveMax: 1.2 }
-        }
+            intensityScaling: { scale: 1.0, emissiveMax: 1.2 },
+        },
     },
 
     // Very minimal jitter - occasional twitch
@@ -99,7 +101,7 @@ const ELECTRICSTATIC_CONFIG = {
     scaleFrequency: 8,
     scalePulse: false,
     sparkBursts: true,
-    sparkProbability: 0.1
+    sparkProbability: 0.1,
 };
 
 export default buildElectricEffectGesture(ELECTRICSTATIC_CONFIG);

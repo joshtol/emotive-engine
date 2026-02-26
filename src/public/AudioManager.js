@@ -141,7 +141,7 @@ export class AudioManager {
             bpm: engine.rhythmIntegration?.getBPM() || 0,
             beats: engine.rhythmIntegration?.getBeatMarkers() || [],
             energy: engine.audioAnalyzer?.getEnergyLevel() || 0,
-            frequencies: engine.audioAnalyzer?.getFrequencyData() || []
+            frequencies: engine.audioAnalyzer?.getFrequencyData() || [],
         };
     }
 

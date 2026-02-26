@@ -45,18 +45,18 @@ export class GestureController {
 
         // Chain combo definitions
         this._chainDefinitions = {
-            'rise': 'breathe > sway+lean+tilt',
-            'flow': 'sway > lean+tilt > spin > bounce',
-            'burst': 'jump > nod > shake > flash',
-            'drift': 'sway+breathe+float+drift',
-            'chaos': 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
-            'morph': 'expand > contract > morph+glow > expand+flash',
-            'rhythm': 'pulse > pulse+sparkle > pulse+flicker',
-            'spiral': 'spin > orbital > twist > orbital+sparkle',
-            'routine': 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
-            'radiance': 'sparkle > pulse+flicker > shimmer',
-            'twinkle': 'sparkle > flash > pulse+sparkle > shimmer+flicker',
-            'stream': 'wave > nod+pulse > sparkle > flash'
+            rise: 'breathe > sway+lean+tilt',
+            flow: 'sway > lean+tilt > spin > bounce',
+            burst: 'jump > nod > shake > flash',
+            drift: 'sway+breathe+float+drift',
+            chaos: 'shake+shake > spin+flash > bounce+pulse > twist+sparkle',
+            morph: 'expand > contract > morph+glow > expand+flash',
+            rhythm: 'pulse > pulse+sparkle > pulse+flicker',
+            spiral: 'spin > orbital > twist > orbital+sparkle',
+            routine: 'nod > bounce > spin+sparkle > sway+pulse > nod+flash',
+            radiance: 'sparkle > pulse+flicker > shimmer',
+            twinkle: 'sparkle > flash > pulse+sparkle > shimmer+flicker',
+            stream: 'wave > nod+pulse > sparkle > flash',
         };
     }
 
@@ -79,11 +79,11 @@ export class GestureController {
 
         // Record if in recording mode
         if (this._recording.isRecording()) {
-            const time = timestamp || (Date.now() - this._recording.startTime());
+            const time = timestamp || Date.now() - this._recording.startTime();
             this._recording.timeline().push({
                 type: 'gesture',
                 name: gestureName,
-                time
+                time,
             });
         }
 
@@ -133,18 +133,27 @@ export class GestureController {
         // Parse and execute chain
         if (!chainDefinition.includes('>')) {
             // Simultaneous gestures (e.g., 'sway+breathe+float+drift')
-            const gestures = chainDefinition.split('+').map(g => g.trim()).filter(g => g.length > 0);
+            const gestures = chainDefinition
+                .split('+')
+                .map(g => g.trim())
+                .filter(g => g.length > 0);
             gestures.forEach(gesture => {
                 engine.express(gesture);
             });
         } else {
             // Sequential groups (e.g., 'jump > nod > shake > flash')
-            const gestureGroups = chainDefinition.split('>').map(g => g.trim()).filter(g => g.length > 0);
+            const gestureGroups = chainDefinition
+                .split('>')
+                .map(g => g.trim())
+                .filter(g => g.length > 0);
 
             gestureGroups.forEach((group, groupIndex) => {
                 setTimeout(() => {
                     // Each group can have simultaneous gestures (e.g., 'sway+pulse')
-                    const simultaneousGestures = group.split('+').map(g => g.trim()).filter(g => g.length > 0);
+                    const simultaneousGestures = group
+                        .split('+')
+                        .map(g => g.trim())
+                        .filter(g => g.length > 0);
                     simultaneousGestures.forEach(gesture => {
                         engine.express(gesture);
                     });

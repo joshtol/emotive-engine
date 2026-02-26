@@ -35,12 +35,19 @@ export function createDriftGesture(direction) {
 
     return {
         name: `drift${capitalize(direction)}`,
-        emoji: direction === 'up' ? '☁️' : direction === 'down' ? '🍃' : direction === 'left' ? '🌫️' : '💭',
+        emoji:
+            direction === 'up'
+                ? '☁️'
+                : direction === 'down'
+                  ? '🍃'
+                  : direction === 'left'
+                    ? '🌫️'
+                    : '💭',
         type: 'override',
         description: `Gentle drifting ${direction}`,
 
         config: {
-            duration: 800,  // Legacy fallback
+            duration: 800, // Legacy fallback
             musicalDuration: { musical: true, beats: 2 }, // 2 beats
             distance: 50,
             returnToOrigin: true,
@@ -53,8 +60,8 @@ export function createDriftGesture(direction) {
             particleMotion: {
                 type: 'drift',
                 strength: 1.0,
-                distance: 60
-            }
+                distance: 60,
+            },
         },
 
         rhythm: {
@@ -66,20 +73,20 @@ export function createDriftGesture(direction) {
                 quiet: 30,
                 loud: 80,
                 crescendo: 'expand',
-                diminuendo: 'contract'
+                diminuendo: 'contract',
             },
 
             holdSync: {
                 shortPhrase: 0.1,
                 longPhrase: 0.4,
-                fermata: 'sustain'
+                fermata: 'sustain',
             },
 
             accentResponse: {
                 enabled: true,
                 multiplier: 1.3,
-                type: 'distance'
-            }
+                type: 'distance',
+            },
         },
 
         initialize(particle, _motion, _centerX, _centerY) {
@@ -99,7 +106,7 @@ export function createDriftGesture(direction) {
                 homeRadius,
                 role: Math.random(),
                 turbulencePhase: Math.random() * Math.PI * 2,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -142,10 +149,10 @@ export function createDriftGesture(direction) {
 
             // Apply directional drift
             if (isVertical) {
-                targetY = data.startY + (dir.y * driftDistance) + turbulenceX;
+                targetY = data.startY + dir.y * driftDistance + turbulenceX;
                 targetX = data.startX + turbulenceY * 0.5;
             } else {
-                targetX = data.startX + (dir.x * driftDistance) + turbulenceY;
+                targetX = data.startX + dir.x * driftDistance + turbulenceY;
                 targetY = data.startY + turbulenceX * 0.5;
             }
 
@@ -164,7 +171,7 @@ export function createDriftGesture(direction) {
                 if (progress < 0.25) {
                     fadeFactor = 0.3 + (progress / 0.25) * 0.7;
                 } else if (progress < 0.75) {
-                    fadeFactor = 0.7 + Math.sin((progress - 0.25) * Math.PI / 0.5) * 0.3;
+                    fadeFactor = 0.7 + Math.sin(((progress - 0.25) * Math.PI) / 0.5) * 0.3;
                 } else {
                     fadeFactor = (1 - progress) * 4;
                 }
@@ -192,9 +199,7 @@ export function createDriftGesture(direction) {
         },
 
         easeInOutCubic(t) {
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         },
 
         '3d': {
@@ -207,9 +212,7 @@ export function createDriftGesture(direction) {
 
                 // Drift curve - out and back
                 const returnToOrigin = config.returnToOrigin !== false;
-                const driftProgress = returnToOrigin
-                    ? Math.sin(progress * Math.PI)
-                    : progress;
+                const driftProgress = returnToOrigin ? Math.sin(progress * Math.PI) : progress;
 
                 const driftAmount = distance * PIXEL_TO_3D * strength * driftProgress;
 
@@ -218,7 +221,8 @@ export function createDriftGesture(direction) {
                 const posY = dir.y * driftAmount;
 
                 // Subtle rotation following drift direction
-                let rotX = 0, rotY = 0;
+                let rotX = 0,
+                    rotY = 0;
                 if (isVertical) {
                     rotX = dir.y * driftProgress * 0.1;
                 } else {
@@ -232,9 +236,9 @@ export function createDriftGesture(direction) {
                     cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, rotY, 0],
                     scale,
-                    glowIntensity: 1.0 - driftProgress * 0.1
+                    glowIntensity: 1.0 - driftProgress * 0.1,
                 };
-            }
-        }
+            },
+        },
     };
 }

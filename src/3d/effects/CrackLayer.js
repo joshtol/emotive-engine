@@ -91,7 +91,7 @@ export class CrackLayer {
                 depthTexture: { value: null },
                 cameraNear: { value: 0.1 },
                 cameraFar: { value: 100.0 },
-                hasDepth: { value: 0.0 }
+                hasDepth: { value: 0.0 },
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -343,7 +343,7 @@ export class CrackLayer {
             transparent: true,
             blending: THREE.NormalBlending,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
         });
 
         this.crackMesh = new THREE.Mesh(geometry, material);
@@ -367,7 +367,7 @@ export class CrackLayer {
             direction: impact.direction ? impact.direction.clone() : new THREE.Vector2(0, 0),
             propagation: impact.propagation ?? 0.8,
             amount: impact.amount ?? 1.0,
-            seed
+            seed,
         };
 
         // Add to impacts array, enforce max
@@ -413,7 +413,7 @@ export class CrackLayer {
      * @private
      */
     _updateUniforms() {
-        const {uniforms} = this.crackMesh.material;
+        const { uniforms } = this.crackMesh.material;
         uniforms.numImpacts.value = this.impacts.length;
 
         // Update each impact slot
@@ -497,7 +497,7 @@ export class CrackLayer {
 
             // Smooth fade curve (ease-out for natural healing feel)
             const t = this.healProgress;
-            const fadeAmount = 1.0 - (t * t * (3 - 2 * t)); // smoothstep
+            const fadeAmount = 1.0 - t * t * (3 - 2 * t); // smoothstep
 
             // Fade out all impacts - both amount (opacity) AND propagation (spread)
             for (const impact of this.impacts) {
@@ -521,7 +521,7 @@ export class CrackLayer {
         }
 
         // Update time and aspect ratio
-        const {uniforms} = this.crackMesh.material;
+        const { uniforms } = this.crackMesh.material;
         uniforms.time.value = this.time;
         uniforms.glowStrength.value = this.glowStrength;
 

@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -46,7 +46,7 @@ export function buildVoidEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -55,14 +55,14 @@ export function buildVoidEffectGesture(config) {
             amplitudeSync: {
                 onBeat: config.category === 'annihilation' ? 1.5 : 1.2,
                 offBeat: 1.0,
-                curve: config.category === 'manifestation' ? 'smooth' : 'sharp'
-            }
+                curve: config.category === 'manifestation' ? 'smooth' : 'sharp',
+            },
         },
 
         '3d': {
             evaluate(progress, motion) {
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const { category } = cfg;
                 const isManifestation = category === 'manifestation';
 
@@ -87,7 +87,7 @@ export function buildVoidEffectGesture(config) {
                         effectStrength = progress / 0.3;
                     }
                     if (cfg.spreadPulse) {
-                        effectStrength *= (1 + Math.sin(time * Math.PI * 3) * 0.15);
+                        effectStrength *= 1 + Math.sin(time * Math.PI * 3) * 0.15;
                     }
                 }
 
@@ -100,15 +100,17 @@ export function buildVoidEffectGesture(config) {
 
                 // Decay in final phase
                 const decayRate = cfg.decayRate || 0.2;
-                if (progress > (1 - decayRate)) {
+                if (progress > 1 - decayRate) {
                     const decayProgress = (progress - (1 - decayRate)) / decayRate;
-                    effectStrength *= (1 - decayProgress);
+                    effectStrength *= 1 - decayProgress;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 // Pull toward center (absorption/annihilation)
                 if (cfg.pullStrength > 0) {
@@ -122,8 +124,16 @@ export function buildVoidEffectGesture(config) {
                 if (cfg.jitterAmount > 0) {
                     const jitterTime = time * cfg.jitterFrequency;
                     posX += (noise1D(jitterTime * 3) - 0.5) * cfg.jitterAmount * effectStrength;
-                    posY += (noise1D(jitterTime * 3 + 33) - 0.5) * cfg.jitterAmount * effectStrength * 0.5;
-                    posZ += (noise1D(jitterTime * 3 + 66) - 0.5) * cfg.jitterAmount * effectStrength * 0.3;
+                    posY +=
+                        (noise1D(jitterTime * 3 + 33) - 0.5) *
+                        cfg.jitterAmount *
+                        effectStrength *
+                        0.5;
+                    posZ +=
+                        (noise1D(jitterTime * 3 + 66) - 0.5) *
+                        cfg.jitterAmount *
+                        effectStrength *
+                        0.3;
                 }
 
                 // Tremor (hollow)
@@ -137,12 +147,20 @@ export function buildVoidEffectGesture(config) {
                 if (cfg.driftAmount > 0) {
                     const driftTime = time * cfg.driftSpeed;
                     posX += Math.sin(driftTime * Math.PI) * cfg.driftAmount * effectStrength;
-                    posZ += Math.cos(driftTime * Math.PI * 0.7) * cfg.driftAmount * effectStrength * 0.5;
+                    posZ +=
+                        Math.cos(driftTime * Math.PI * 0.7) *
+                        cfg.driftAmount *
+                        effectStrength *
+                        0.5;
                 }
 
                 // Droop (wither — sinking down)
                 if (cfg.droopAmount > 0) {
-                    posY -= cfg.droopAmount * progress * (1 + cfg.droopAcceleration * progress) * effectStrength;
+                    posY -=
+                        cfg.droopAmount *
+                        progress *
+                        (1 + cfg.droopAcceleration * progress) *
+                        effectStrength;
                 }
 
                 // Rise (erase — floating away)
@@ -165,15 +183,15 @@ export function buildVoidEffectGesture(config) {
                     const breathe = Math.sin(scaleTime * Math.PI * 2) * 0.5 + 0.5;
                     scale = 1.0 + (breathe - 0.5) * (cfg.scaleVibration || 0.01) * effectStrength;
                 } else {
-                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.5 +
-                                      Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
+                    const scaleNoise =
+                        Math.sin(scaleTime * Math.PI * 2) * 0.5 +
+                        Math.sin(scaleTime * Math.PI * 3.7) * 0.3;
                     scale = 1.0 + scaleNoise * (cfg.scaleVibration || 0.01) * effectStrength;
                 }
 
                 if (cfg.scaleShrink > 0) {
-                    const shrinkProgress = category === 'annihilation'
-                        ? Math.pow(progress, 1.5)
-                        : progress;
+                    const shrinkProgress =
+                        category === 'annihilation' ? Math.pow(progress, 1.5) : progress;
                     scale -= cfg.scaleShrink * shrinkProgress * effectStrength;
                     scale = Math.max(0.01, scale);
                 }
@@ -185,19 +203,25 @@ export function buildVoidEffectGesture(config) {
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION
                 // ═══════════════════════════════════════════════════════════════
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 if (cfg.rotationSpeed > 0) {
                     rotY = time * cfg.rotationSpeed * Math.PI * 2 * effectStrength;
                     if (category === 'annihilation') {
-                        rotY *= (1 + progress);
+                        rotY *= 1 + progress;
                     }
                 }
 
                 if (cfg.rotationWobble > 0) {
                     const wobbleTime = time * cfg.rotationWobbleSpeed;
                     rotX = Math.sin(wobbleTime * Math.PI * 2) * cfg.rotationWobble * effectStrength;
-                    rotZ = Math.sin(wobbleTime * Math.PI * 1.7 + 0.5) * cfg.rotationWobble * 0.7 * effectStrength;
+                    rotZ =
+                        Math.sin(wobbleTime * Math.PI * 1.7 + 0.5) *
+                        cfg.rotationWobble *
+                        0.7 *
+                        effectStrength;
                 }
 
                 if (cfg.rotationDrift) {
@@ -214,9 +238,10 @@ export function buildVoidEffectGesture(config) {
                     const endAt = cfg.fadeEndAt || 0.9;
                     if (progress >= startAt) {
                         const fadeProgress = Math.min(1, (progress - startAt) / (endAt - startAt));
-                        meshOpacity = cfg.fadeCurve === 'accelerating'
-                            ? Math.max(0, 1 - Math.pow(fadeProgress, 2))
-                            : Math.max(0, 1 - fadeProgress);
+                        meshOpacity =
+                            cfg.fadeCurve === 'accelerating'
+                                ? Math.max(0, 1 - Math.pow(fadeProgress, 2))
+                                : Math.max(0, 1 - fadeProgress);
                     }
                 }
 
@@ -238,7 +263,7 @@ export function buildVoidEffectGesture(config) {
                 } else {
                     // Annihilation: rapid desperate flicker
                     flickerValue = Math.sin(flickerTime * Math.PI * 2) * 0.4 + 0.6;
-                    flickerValue *= (1 - progress * 0.5);
+                    flickerValue *= 1 - progress * 0.5;
                 }
 
                 // Glow intensity: lerp from 1.0 (neutral) toward dimmed range based on effectStrength.
@@ -250,8 +275,9 @@ export function buildVoidEffectGesture(config) {
                 const glowIntensity = 1.0 + (glowRange - 1.0) * effectStrength;
 
                 // Negative glow boost — void DIMS
-                const glowBoost = -(cfg.dimStrength || 0.3) * effectStrength * cfg.intensity
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    -(cfg.dimStrength || 0.3) * effectStrength * cfg.intensity +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
@@ -279,10 +305,10 @@ export function buildVoidEffectGesture(config) {
                         scale: config.spawnMode?.scale,
                         embedDepth: config.spawnMode?.embedDepth,
                         distortionStrength: config.distortionStrength,
-                    }
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 

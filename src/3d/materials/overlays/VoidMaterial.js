@@ -50,10 +50,7 @@ function lerp(a, b, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createVoidMaterial(options = {}) {
-    const {
-        depth = 0.5,
-        opacity = 0.9
-    } = options;
+    const { depth = 0.5, opacity = 0.9 } = options;
 
     const pulseSpeed = lerp(0.5, 1.5, depth);
 
@@ -63,10 +60,10 @@ export function createVoidMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -82,7 +79,7 @@ export function createVoidMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uDepth;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -204,7 +201,7 @@ export function createVoidMaterial(options = {}) {
         blendSrcAlpha: THREE.OneFactor,
         blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     // Store parameters for external access
@@ -244,7 +241,7 @@ export function getVoidPhysics(depth = 0.5) {
         disperseOverTime: depth < 0.3,
         lifetime: lerp(2.0, 999.0, depth),
         absorbLight: true,
-        corruptNearby: depth > 0.6
+        corruptNearby: depth > 0.6,
     };
 }
 
@@ -262,7 +259,7 @@ export function getVoidCrackStyle(depth = 0.5) {
         animated: true,
         pattern: 'veins',
         spreadOverTime: depth > 0.5,
-        corruptNearby: depth > 0.7
+        corruptNearby: depth > 0.7,
     };
 }
 
@@ -270,5 +267,5 @@ export default {
     createVoidMaterial,
     updateVoidMaterial,
     getVoidPhysics,
-    getVoidCrackStyle
+    getVoidCrackStyle,
 };

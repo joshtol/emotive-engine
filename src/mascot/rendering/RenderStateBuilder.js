@@ -50,9 +50,7 @@ export class RenderStateBuilder {
      * @returns {number} Delta time in milliseconds
      */
     getDeltaTime() {
-        return this.animationController ?
-            this.animationController.deltaTime :
-            16.67; // Default fallback value
+        return this.animationController ? this.animationController.deltaTime : 16.67; // Default fallback value
     }
 
     /**
@@ -67,7 +65,7 @@ export class RenderStateBuilder {
             particleSystem: this.particleSystem,
             speaking: this._state.speaking,
             audioLevel: this.audioLevelProcessor ? this.audioLevelProcessor.getCurrentLevel() : 0,
-            gazeOffset: this.getGazeOffset()
+            gazeOffset: this.getGazeOffset(),
         };
     }
 
@@ -76,8 +74,6 @@ export class RenderStateBuilder {
      * @returns {Object} Gaze offset with x and y coordinates
      */
     getGazeOffset() {
-        return this.gazeTracker ?
-            this.gazeTracker.currentGaze :
-            { x: 0, y: 0 };
+        return this.gazeTracker ? this.gazeTracker.currentGaze : { x: 0, y: 0 };
     }
 }

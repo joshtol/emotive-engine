@@ -43,11 +43,11 @@ const FIREDRILL_CONFIG = {
     emoji: '🔩',
     type: 'blending',
     description: 'Fast tight ascending flame helix',
-    duration: 1200,         // Quick intense burst
+    duration: 1200, // Quick intense burst
     beats: 2,
-    intensity: 1.5,         // High intensity
+    intensity: 1.5, // High intensity
     category: 'radiating',
-    temperature: 0.8,       // Hot intense fire
+    temperature: 0.8, // Hot intense fire
 
     // 3D Element spawning - tight spiral helix
     spawnMode: {
@@ -56,106 +56,108 @@ const FIREDRILL_CONFIG = {
             axis: 'y',
             start: 'feet',
             end: 'below',
-            easing: 'easeIn',       // Accelerating downward
+            easing: 'easeIn', // Accelerating downward
             startScale: 1.0,
             endScale: 0.8,
-            startDiameter: 1.8,     // Wide at top
-            endDiameter: 1.4,       // Narrower at drill point
-            orientation: 'vertical'
+            startDiameter: 1.8, // Wide at top
+            endDiameter: 1.4, // Narrower at drill point
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 6,
-            spacing: 0.1,           // Tight spacing
-            arcOffset: 60,          // 60° between each (6 * 60 = 360)
-            phaseOffset: 0
+            spacing: 0.1, // Tight spacing
+            arcOffset: 60, // 60° between each (6 * 60 = 360)
+            phaseOffset: 0,
         },
         count: 6,
-        scale: 0.8,                 // Slightly larger elements
+        scale: 0.8, // Slightly larger elements
         models: ['flame-ring'],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.6,
-            stagger: 0.03,          // Fast sequential spawn
+            stagger: 0.03, // Fast sequential spawn
             enter: {
                 type: 'fade',
                 duration: 0.05,
-                easing: 'linear'
+                easing: 'linear',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.05,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 temperature: {
                     start: 0.6,
                     peak: 0.9,
                     end: 0.7,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             flicker: {
-                intensity: 0.4,     // High flicker for intensity
+                intensity: 0.4, // High flicker for intensity
                 rate: 25,
-                pattern: 'random'
+                pattern: 'random',
             },
             pulse: {
                 amplitude: 0.08,
-                frequency: 10,      // Fast pulse
-                easing: 'linear'
+                frequency: 10, // Fast pulse
+                easing: 'linear',
             },
             emissive: {
                 min: 1.5,
                 max: 3.5,
                 frequency: 12,
-                pattern: 'random'
+                pattern: 'random',
             },
             // Two-layer: CRACKS + VORONOI for drilling/breaking effect
             cutout: {
                 strength: 0.85,
-                primary: { pattern: 8, scale: 2.5, weight: 1.0 },    // CRACKS - fracture lines
-                secondary: { pattern: 3, scale: 3.0, weight: 0.7 },  // VORONOI - shattered cells
-                blend: 'multiply',        // More holes where patterns overlap
+                primary: { pattern: 8, scale: 2.5, weight: 1.0 }, // CRACKS - fracture lines
+                secondary: { pattern: 3, scale: 3.0, weight: 0.7 }, // VORONOI - shattered cells
+                blend: 'multiply', // More holes where patterns overlap
                 travel: 'oscillate',
-                travelSpeed: 5.0,         // Fast pulsing
+                travelSpeed: 5.0, // Fast pulsing
                 // Geometric mask: focus at ring edges
                 geometricMask: {
                     type: 'distance',
                     core: 0.08,
-                    tip: 0.2
+                    tip: 0.2,
                 },
                 // Trail dissolve: leading edge dissolves as drill advances
                 trailDissolve: {
-                    offset: 0.1,          // Positive - dissolve at leading edge
-                    softness: 0.25
-                }
+                    offset: 0.1, // Positive - dissolve at leading edge
+                    softness: 0.25,
+                },
             },
             // Grain: white noise for sharp drilling texture
             grain: {
-                type: 2,              // WHITE - sharp granular
+                type: 2, // WHITE - sharp granular
                 strength: 0.1,
                 scale: 0.1,
-                speed: 3.0,           // Fast for intense drilling
-                blend: 'multiply'
+                speed: 3.0, // Fast for intense drilling
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: smoke from drilling
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 1.0, tangentialBias: 0.3 },
+                },
+            ],
             // Fast unified rotation for drill effect
-            rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations
+            rotate: { axis: 'y', rotations: 4, phase: 0 }, // 4 full rotations
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
             blending: 'additive',
@@ -164,21 +166,21 @@ const FIREDRILL_CONFIG = {
                 'flame-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.5,    // Narrow arcs for drill bits
-                        arcSpeed: 3.0,    // Fast internal animation
-                        arcCount: 1
+                        arcWidth: 0.5, // Narrow arcs for drill bits
+                        arcSpeed: 3.0, // Fast internal animation
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     // Mesh effects - intense hot fire
     flickerFrequency: 20,
     flickerAmplitude: 0.015,
     flickerDecay: 0.1,
-    glowColor: [1.0, 0.4, 0.1],     // Hot orange-red
+    glowColor: [1.0, 0.4, 0.1], // Hot orange-red
     glowIntensityMin: 1.3,
     glowIntensityMax: 2.8,
     glowFlickerRate: 18,
@@ -186,7 +188,7 @@ const FIREDRILL_CONFIG = {
     scaleFrequency: 8,
     scaleGrowth: 0.03,
     rotationEffect: true,
-    rotationSpeed: 0.8
+    rotationSpeed: 0.8,
 };
 
 /**

@@ -25,12 +25,12 @@ export class BlinkAnimator {
 
         // Timing (modulated by emotion)
         this.baseDuration = this.blinkConfig.duration || 150;
-        this.baseMinInterval = 3000;  // 3 seconds
-        this.baseMaxInterval = 7000;  // 7 seconds
+        this.baseMinInterval = 3000; // 3 seconds
+        this.baseMaxInterval = 7000; // 7 seconds
 
         // Current emotion modifiers
-        this.emotionBlinkRate = 1.0;   // Affects interval between blinks
-        this.emotionBlinkSpeed = 1.0;  // Affects blink animation speed
+        this.emotionBlinkRate = 1.0; // Affects interval between blinks
+        this.emotionBlinkSpeed = 1.0; // Affects blink animation speed
 
         // State
         this.isBlinking = false;
@@ -39,7 +39,7 @@ export class BlinkAnimator {
         this.enabled = true;
 
         // Animation state
-        this.blinkProgress = 0;  // 0→1 (linear progress through blink)
+        this.blinkProgress = 0; // 0→1 (linear progress through blink)
     }
 
     /**
@@ -158,7 +158,7 @@ export class BlinkAnimator {
         const scale = [
             1.0 - (1.0 - config.scaleAxis[0]) * blinkAmount,
             1.0 - (1.0 - config.scaleAxis[1]) * blinkAmount,
-            1.0 - (1.0 - config.scaleAxis[2]) * blinkAmount
+            1.0 - (1.0 - config.scaleAxis[2]) * blinkAmount,
         ];
 
         // Optional rotation
@@ -167,7 +167,7 @@ export class BlinkAnimator {
             rotation = [
                 config.rotation[0] * blinkAmount,
                 config.rotation[1] * blinkAmount,
-                config.rotation[2] * blinkAmount
+                config.rotation[2] * blinkAmount,
             ];
         }
 
@@ -182,7 +182,7 @@ export class BlinkAnimator {
             progress: this.blinkProgress,
             scale,
             rotation,
-            glowBoost
+            glowBoost,
         };
     }
 
@@ -196,7 +196,7 @@ export class BlinkAnimator {
             progress: 0,
             scale: [1, 1, 1],
             rotation: null,
-            glowBoost: 0
+            glowBoost: 0,
         };
     }
 
@@ -209,7 +209,7 @@ export class BlinkAnimator {
             type: 'vertical-squish',
             duration: 150,
             scaleAxis: [1.0, 0.3, 1.0],
-            curve: 'sine'
+            curve: 'sine',
         };
     }
 
@@ -242,7 +242,7 @@ export class BlinkAnimator {
             blinkProgress: this.blinkProgress,
             emotionBlinkRate: this.emotionBlinkRate,
             emotionBlinkSpeed: this.emotionBlinkSpeed,
-            nextBlinkTime: this.nextBlinkTime
+            nextBlinkTime: this.nextBlinkTime,
         };
     }
 

@@ -6,11 +6,11 @@
 export class BreathingAnimator {
     constructor(renderer) {
         this.renderer = renderer;
-        
+
         // Breathing configuration
         this.breathingSpeed = 0.42; // 16 breaths/min (0.42 rad/s = 4 sec/cycle = 15-16 bpm)
         this.breathingDepth = 0.08; // 8% size variation for visible breathing
-        
+
         // Breathing state
         this.breathingPhase = 0;
         this.breathRate = 1.0;
@@ -18,10 +18,10 @@ export class BreathingAnimator {
         this.breathRateMult = 1.0;
         this.breathDepthMult = 1.0;
         this.breathIrregular = false;
-        
+
         // Custom scale override
         this.customScale = null;
-        
+
         // Emotion-specific breathing patterns
         this.emotionBreathPatterns = {
             happy: { rate: 1.1, depth: 1.2 },
@@ -48,7 +48,7 @@ export class BreathingAnimator {
             grateful: { rate: 0.9, depth: 1.1 },
             inspired: { rate: 1.0, depth: 1.3 },
             silly: { rate: 1.4, depth: 1.2 },
-            sleepy: { rate: 0.3, depth: 1.4 }
+            sleepy: { rate: 0.3, depth: 1.4 },
         };
     }
 
@@ -61,24 +61,25 @@ export class BreathingAnimator {
     update(deltaTime, emotion, undertone = {}) {
         // Ensure undertone is not null
         undertone = undertone || {};
-        
+
         // Apply emotion-specific breathing pattern
         const pattern = this.emotionBreathPatterns[emotion] || { rate: 1.0, depth: 1.0 };
-        
+
         // Apply undertone modifiers (safe access with null check)
         const undertoneRateMult = undertone?.breathRateMult || 1.0;
         const undertoneDepthMult = undertone?.breathDepthMult || 1.0;
-        
+
         // Calculate final breathing parameters
         this.breathRate = pattern.rate * this.breathRateMult * undertoneRateMult;
-        this.breathDepth = this.breathingDepth * pattern.depth * this.breathDepthMult * undertoneDepthMult;
-        
+        this.breathDepth =
+            this.breathingDepth * pattern.depth * this.breathDepthMult * undertoneDepthMult;
+
         // Add irregularity if needed
         let phaseIncrement = this.breathingSpeed * this.breathRate * (deltaTime / 1000);
         if (this.breathIrregular && undertone?.breathIrregular) {
             phaseIncrement *= 0.8 + Math.sin(Date.now() * 0.0003) * 0.4;
         }
-        
+
         // Update breathing phase
         this.breathingPhase += phaseIncrement;
         if (this.breathingPhase > Math.PI * 2) {
@@ -95,7 +96,7 @@ export class BreathingAnimator {
         if (this.customScale !== null) {
             return this.customScale;
         }
-        
+
         // Calculate breathing scale
         const breathAmount = Math.sin(this.breathingPhase);
         return 1 + breathAmount * this.breathDepth;
@@ -189,7 +190,7 @@ export class BreathingAnimator {
             depth: this.breathDepth,
             scale: this.getBreathingScale(),
             isCustom: this.customScale !== null,
-            isIrregular: this.breathIrregular
+            isIrregular: this.breathIrregular,
         };
     }
 }

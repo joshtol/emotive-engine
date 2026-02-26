@@ -58,50 +58,50 @@ const NATUREBLOOM_CONFIG = {
                 endDiameter: 0.3,
                 diameterUnit: 'mascot',
                 holdAt: 0.4,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: {
                 type: 'stack',
                 count: 3,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 3,
             scale: 2.0,
             models: ['vine-ring'],
             animation: {
                 appearAt: 0.0,
-                disappearAt: 0.80,
+                disappearAt: 0.8,
                 stagger: 0.06,
                 enter: {
                     type: 'scale',
                     duration: 0.1,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.06,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 pulse: {
                     amplitude: 0.03,
                     frequency: 2,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: {
                     min: 0.6,
                     max: 1.2,
                     frequency: 2,
-                    pattern: 'sine'
+                    pattern: 'sine',
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.2, phase: 0 },
                     { axis: 'z', rotations: -0.25, phase: 60 },
-                    { axis: 'z', rotations: 0.15, phase: 120 }
+                    { axis: 'z', rotations: 0.15, phase: 120 },
                 ],
                 cutout: {
                     strength: 0.5,
@@ -110,14 +110,14 @@ const NATUREBLOOM_CONFIG = {
                     blend: 'add',
                     travel: 'vertical',
                     travelSpeed: 1.5,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: {
                     type: 3,
                     strength: 0.05,
                     scale: 0.3,
                     speed: 0.4,
-                    blend: 'multiply'
+                    blend: 'multiply',
                 },
                 blending: 'normal',
                 renderOrder: 6,
@@ -127,12 +127,12 @@ const NATUREBLOOM_CONFIG = {
                             type: 1,
                             arcWidth: 0.85,
                             arcSpeed: 1.5,
-                            arcCount: 1
+                            arcCount: 1,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ═════════════════════════════════════════════════════════════════════
@@ -149,7 +149,7 @@ const NATUREBLOOM_CONFIG = {
                 startScale: 0.2,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.01, frequency: 0.3 }
+                bob: { amplitude: 0.01, frequency: 0.3 },
             },
             count: 1,
             scale: 4.5,
@@ -160,22 +160,22 @@ const NATUREBLOOM_CONFIG = {
                 enter: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeOutBack'
+                    easing: 'easeOutBack',
                 },
                 exit: {
                     type: 'scale',
                     duration: 0.2,
-                    easing: 'easeInCubic'
+                    easing: 'easeInCubic',
                 },
                 procedural: {
                     scaleSmoothing: 0.08,
-                    geometryStability: true
+                    geometryStability: true,
                 },
                 pulse: {
                     amplitude: 0.04,
                     frequency: 1.5,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'x', rotations: 0.4, phase: 0 },
@@ -187,27 +187,29 @@ const NATUREBLOOM_CONFIG = {
                     travel: 'spiral',
                     travelSpeed: 0.5,
                     strengthCurve: 'bell',
-                    bellPeakAt: 0.5
+                    bellPeakAt: 0.5,
                 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.5,
-                    sizeScale: 0.9,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.3,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.5,
+                        sizeScale: 0.9,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.3,
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 10,
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.35, arcCount: 2 },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ── Branch 2: tilted at 0° (radial) ──
@@ -220,13 +222,13 @@ const NATUREBLOOM_CONFIG = {
                 startScale: 0.2,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.008, frequency: 0.35 }
+                bob: { amplitude: 0.008, frequency: 0.35 },
             },
             count: 1,
             scale: 4.5,
             models: ['vine-ring'],
             animation: {
-                appearAt: 0.30,
+                appearAt: 0.3,
                 disappearAt: 0.85,
                 enter: { type: 'scale', duration: 0.2, easing: 'easeOutBack' },
                 exit: { type: 'scale', duration: 0.2, easing: 'easeInCubic' },
@@ -235,24 +237,26 @@ const NATUREBLOOM_CONFIG = {
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'y', rotations: -0.35, phase: 0 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.25,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.3,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.25,
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 12,
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'radial'
-                    }
-                }
-            }
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
         },
 
         // ── Branch 3: tilted at 90° ──
@@ -265,7 +269,7 @@ const NATUREBLOOM_CONFIG = {
                 startScale: 0.2,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.008, frequency: 0.4 }
+                bob: { amplitude: 0.008, frequency: 0.4 },
             },
             count: 1,
             scale: 4.5,
@@ -280,24 +284,26 @@ const NATUREBLOOM_CONFIG = {
                 emissive: { min: 0.5, max: 1.0, frequency: 1.5, pattern: 'sine' },
                 rotate: { axis: 'x', rotations: 0.35, phase: 90 },
                 grain: { type: 3, strength: 0.08, scale: 0.3, speed: 0.3, blend: 'multiply' },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: ['vine-ring'],
-                    anchor: 'around',
-                    intensity: 0.3,
-                    sizeScale: 0.8,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.25,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: ['vine-ring'],
+                        anchor: 'around',
+                        intensity: 0.3,
+                        sizeScale: 0.8,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.25,
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 14,
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'radial'
-                    }
-                }
-            }
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
         },
 
         // ── Branch 4: tilted at 180° ──
@@ -310,13 +316,13 @@ const NATUREBLOOM_CONFIG = {
                 startScale: 0.2,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.008, frequency: 0.45 }
+                bob: { amplitude: 0.008, frequency: 0.45 },
             },
             count: 1,
             scale: 4.5,
             models: ['vine-ring'],
             animation: {
-                appearAt: 0.40,
+                appearAt: 0.4,
                 disappearAt: 0.85,
                 enter: { type: 'scale', duration: 0.2, easing: 'easeOutBack' },
                 exit: { type: 'scale', duration: 0.2, easing: 'easeInCubic' },
@@ -330,10 +336,10 @@ const NATUREBLOOM_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'radial'
-                    }
-                }
-            }
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
         },
 
         // ── Branch 5: tilted at 270° ──
@@ -346,7 +352,7 @@ const NATUREBLOOM_CONFIG = {
                 startScale: 0.2,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.008, frequency: 0.38 }
+                bob: { amplitude: 0.008, frequency: 0.38 },
             },
             count: 1,
             scale: 4.5,
@@ -366,11 +372,11 @@ const NATUREBLOOM_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'radial'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'radial',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.3, 0.8, 0.25],
@@ -392,8 +398,8 @@ const NATUREBLOOM_CONFIG = {
                 { at: 0.35, value: 0.75 },
                 { at: 0.6, value: 0.95 },
                 { at: 0.8, value: 0.7 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         scaleVibration: {
             keyframes: [
@@ -401,10 +407,10 @@ const NATUREBLOOM_CONFIG = {
                 { at: 0.5, value: 0.01 },
                 { at: 0.7, value: 0.02 },
                 { at: 0.85, value: 0.03 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
-    }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
+    },
 };
 
 export default buildNatureEffectGesture(NATUREBLOOM_CONFIG);

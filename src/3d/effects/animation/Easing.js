@@ -56,9 +56,7 @@ export function easeOut(t) {
  * @returns {number} Eased value
  */
 export function easeInOut(t) {
-    return t < 0.5
-        ? 2 * t * t
-        : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -89,9 +87,7 @@ export function easeOutQuad(t) {
  * @returns {number} Eased value
  */
 export function easeInOutQuad(t) {
-    return t < 0.5
-        ? 2 * t * t
-        : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -122,9 +118,7 @@ export function easeOutCubic(t) {
  * @returns {number} Eased value
  */
 export function easeInOutCubic(t) {
-    return t < 0.5
-        ? 4 * t * t * t
-        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -158,9 +152,7 @@ export function easeOutExpo(t) {
 export function easeInOutExpo(t) {
     if (t === 0) return 0;
     if (t === 1) return 1;
-    return t < 0.5
-        ? Math.pow(2, 20 * t - 10) / 2
-        : (2 - Math.pow(2, -20 * t + 10)) / 2;
+    return t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -253,9 +245,7 @@ export function bounceOut(t) {
  * @returns {number} Eased value
  */
 export function bounceInOut(t) {
-    return t < 0.5
-        ? (1 - bounceOutHelper(1 - 2 * t)) / 2
-        : (1 + bounceOutHelper(2 * t - 1)) / 2;
+    return t < 0.5 ? (1 - bounceOutHelper(1 - 2 * t)) / 2 : (1 + bounceOutHelper(2 * t - 1)) / 2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -422,7 +412,7 @@ export const Easing = {
     easeInOutElastic: elasticInOut,
     easeInBounce: bounce,
     easeOutBounce: bounceOut,
-    easeInOutBounce: bounceInOut
+    easeInOutBounce: bounceInOut,
 };
 
 /**
@@ -454,47 +444,47 @@ export function getEasing(easing) {
  */
 export function createCustomEasing(type, params = {}) {
     switch (type) {
-    case 'elastic': {
-        const amplitude = params.amplitude ?? 1;
-        const period = params.period ?? 0.3;
-        const c4 = (2 * Math.PI) / period;
-        return t => {
-            if (t === 0) return 0;
-            if (t === 1) return 1;
-            return amplitude * Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
-        };
-    }
+        case 'elastic': {
+            const amplitude = params.amplitude ?? 1;
+            const period = params.period ?? 0.3;
+            const c4 = (2 * Math.PI) / period;
+            return t => {
+                if (t === 0) return 0;
+                if (t === 1) return 1;
+                return amplitude * Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+            };
+        }
 
-    case 'bounce': {
-        const bounces = params.bounces ?? 4;
-        const decay = params.decay ?? 0.5;
-        return t => {
-            let value = 0;
-            let bounceScale = 1;
-            for (let i = 0; i < bounces; i++) {
-                const start = i === 0 ? 0 : (1 - Math.pow(decay, i)) / (1 - decay) / bounces;
-                const end = (1 - Math.pow(decay, i + 1)) / (1 - decay) / bounces;
-                if (t >= start && t < end) {
-                    const localT = (t - start) / (end - start);
-                    value = 4 * localT * (1 - localT) * bounceScale;
-                    break;
+        case 'bounce': {
+            const bounces = params.bounces ?? 4;
+            const decay = params.decay ?? 0.5;
+            return t => {
+                let value = 0;
+                let bounceScale = 1;
+                for (let i = 0; i < bounces; i++) {
+                    const start = i === 0 ? 0 : (1 - Math.pow(decay, i)) / (1 - decay) / bounces;
+                    const end = (1 - Math.pow(decay, i + 1)) / (1 - decay) / bounces;
+                    if (t >= start && t < end) {
+                        const localT = (t - start) / (end - start);
+                        value = 4 * localT * (1 - localT) * bounceScale;
+                        break;
+                    }
+                    bounceScale *= decay;
                 }
-                bounceScale *= decay;
-            }
-            if (t >= 1) return 1;
-            return Math.min(1, value);
-        };
-    }
+                if (t >= 1) return 1;
+                return Math.min(1, value);
+            };
+        }
 
-    case 'back': {
-        const overshoot = params.overshoot ?? 1.70158;
-        return t => {
-            return 1 + (overshoot + 1) * Math.pow(t - 1, 3) + overshoot * Math.pow(t - 1, 2);
-        };
-    }
+        case 'back': {
+            const overshoot = params.overshoot ?? 1.70158;
+            return t => {
+                return 1 + (overshoot + 1) * Math.pow(t - 1, 3) + overshoot * Math.pow(t - 1, 2);
+            };
+        }
 
-    default:
-        return linear;
+        default:
+            return linear;
     }
 }
 

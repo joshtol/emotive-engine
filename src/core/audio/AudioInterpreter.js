@@ -28,33 +28,95 @@ const ENGINE_VOCABULARY = {
     geometries: ['crystal', 'rough', 'heart', 'star', 'moon', 'sun'],
     sssPresets: ['quartz', 'emerald', 'ruby', 'sapphire', 'amethyst'],
     emotions: [
-        'neutral', 'joy', 'sadness', 'anger', 'fear', 'surprise',
-        'disgust', 'love', 'suspicion', 'excited', 'resting',
-        'euphoria', 'focused', 'glitch', 'calm'
+        'neutral',
+        'joy',
+        'sadness',
+        'anger',
+        'fear',
+        'surprise',
+        'disgust',
+        'love',
+        'suspicion',
+        'excited',
+        'resting',
+        'euphoria',
+        'focused',
+        'glitch',
+        'calm',
     ],
     motionGestures: [
-        'bounce', 'pulse', 'shake', 'nod', 'vibrate', 'orbit',
-        'twitch', 'sway', 'float', 'jitter', 'wiggle', 'sparkle',
-        'shimmer', 'pop', 'bob', 'swell', 'swagger', 'dip', 'flare',
-        'headBob', 'lean', 'point', 'reach',
+        'bounce',
+        'pulse',
+        'shake',
+        'nod',
+        'vibrate',
+        'orbit',
+        'twitch',
+        'sway',
+        'float',
+        'jitter',
+        'wiggle',
+        'sparkle',
+        'shimmer',
+        'pop',
+        'bob',
+        'swell',
+        'swagger',
+        'dip',
+        'flare',
+        'headBob',
+        'lean',
+        'point',
+        'reach',
         // Directional dance gestures (beat-synced)
-        'stepLeft', 'stepRight', 'stepUp', 'stepDown',
-        'slideLeft', 'slideRight',
+        'stepLeft',
+        'stepRight',
+        'stepUp',
+        'stepDown',
+        'slideLeft',
+        'slideRight',
         // Directional lean/kick gestures
-        'leanLeft', 'leanRight', 'kickLeft', 'kickRight',
+        'leanLeft',
+        'leanRight',
+        'kickLeft',
+        'kickRight',
         // Directional float gestures (storytelling)
-        'floatUp', 'floatDown', 'floatLeft', 'floatRight',
+        'floatUp',
+        'floatDown',
+        'floatLeft',
+        'floatRight',
         // Directional point gestures (storytelling)
-        'pointUp', 'pointDown', 'pointLeft', 'pointRight'
+        'pointUp',
+        'pointDown',
+        'pointLeft',
+        'pointRight',
     ],
     transformGestures: [
-        'spin', 'spinLeft', 'spinRight',
-        'jump', 'morph', 'stretch', 'tilt', 'orbital', 'hula', 'twist'
+        'spin',
+        'spinLeft',
+        'spinRight',
+        'jump',
+        'morph',
+        'stretch',
+        'tilt',
+        'orbital',
+        'hula',
+        'twist',
     ],
     effectGestures: [
-        'wave', 'drift', 'flicker', 'burst', 'fade', 'breathe',
-        'expand', 'contract', 'flash', 'glow', 'settle', 'hold'
-    ]
+        'wave',
+        'drift',
+        'flicker',
+        'burst',
+        'fade',
+        'breathe',
+        'expand',
+        'contract',
+        'flash',
+        'glow',
+        'settle',
+        'hold',
+    ],
 };
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -200,7 +262,7 @@ export class AudioInterpreter {
         this.currentState = {
             geometry: null,
             sss: null,
-            emotion: null
+            emotion: null,
         };
 
         this.textBuffer = [];
@@ -321,16 +383,14 @@ export class AudioInterpreter {
                     'Content-Type': 'application/json',
                     'x-api-key': this.apiKey,
                     'anthropic-version': '2023-06-01',
-                    'anthropic-dangerous-direct-browser-access': 'true'
+                    'anthropic-dangerous-direct-browser-access': 'true',
                 },
                 body: JSON.stringify({
                     model: this.model || 'claude-3-haiku-20240307',
                     max_tokens: 100,
                     system: SYSTEM_PROMPT,
-                    messages: [
-                        { role: 'user', content: `Audio context: "${text}"` }
-                    ]
-                })
+                    messages: [{ role: 'user', content: `Audio context: "${text}"` }],
+                }),
             });
         } else {
             // OpenAI-compatible API format (OpenAI, Grok, local models, etc.)
@@ -338,17 +398,17 @@ export class AudioInterpreter {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
+                    Authorization: `Bearer ${this.apiKey}`,
                 },
                 body: JSON.stringify({
                     model: this.model || 'gpt-4o-mini',
                     messages: [
                         { role: 'system', content: SYSTEM_PROMPT },
-                        { role: 'user', content: `Audio context: "${text}"` }
+                        { role: 'user', content: `Audio context: "${text}"` },
                     ],
                     max_tokens: 100,
-                    temperature: 0.3
-                })
+                    temperature: 0.3,
+                }),
             });
         }
 
@@ -430,14 +490,15 @@ export class AudioInterpreter {
             const allGestures = [
                 ...ENGINE_VOCABULARY.motionGestures,
                 ...ENGINE_VOCABULARY.transformGestures,
-                ...ENGINE_VOCABULARY.effectGestures
+                ...ENGINE_VOCABULARY.effectGestures,
             ];
 
             if (Array.isArray(action.gesture)) {
                 // Filter to only valid gestures
                 const validGestures = action.gesture.filter(g => allGestures.includes(g));
                 if (validGestures.length > 0) {
-                    validated.gesture = validGestures.length === 1 ? validGestures[0] : validGestures;
+                    validated.gesture =
+                        validGestures.length === 1 ? validGestures[0] : validGestures;
                 }
             } else if (allGestures.includes(action.gesture)) {
                 validated.gesture = action.gesture;
@@ -449,7 +510,7 @@ export class AudioInterpreter {
             const allGestures = [
                 ...ENGINE_VOCABULARY.motionGestures,
                 ...ENGINE_VOCABULARY.transformGestures,
-                ...ENGINE_VOCABULARY.effectGestures
+                ...ENGINE_VOCABULARY.effectGestures,
             ];
 
             if (Array.isArray(action.then)) {
@@ -488,7 +549,7 @@ export class AudioInterpreter {
 export const LLM_ENDPOINTS = {
     anthropic: 'https://api.anthropic.com/v1/messages',
     openai: 'https://api.openai.com/v1/chat/completions',
-    grok: 'https://api.x.ai/v1/chat/completions'
+    grok: 'https://api.x.ai/v1/chat/completions',
 };
 
 const audioInterpreter = new AudioInterpreter();

@@ -2,9 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE
- *  └─○═╝                                                                             
- *                       ◐ ◑ ◒ ◓  EASING  ◓ ◒ ◑ ◐                       
- *                                                                                    
+ *  └─○═╝
+ *                       ◐ ◑ ◒ ◓  EASING  ◓ ◒ ◑ ◐
+ *
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Easing Functions - Smooth Animation Transitions
@@ -13,24 +13,24 @@
  * @module Easing
  * @complexity ⭐ Beginner-friendly
  * @audience Standard easing functions (easeInOut, easeElastic, etc.). Well-tested.
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ The MOTION MATHEMATICS of the engine. Provides easing functions that create       
- * ║ natural, organic movement patterns for emotional transitions and gestures,         
- * ║ making the mascot feel alive and responsive rather than mechanical.               
+ * ║ The MOTION MATHEMATICS of the engine. Provides easing functions that create
+ * ║ natural, organic movement patterns for emotional transitions and gestures,
+ * ║ making the mascot feel alive and responsive rather than mechanical.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
- * │ 🎢 EASING CURVES                                                                  
+ * │ 🎢 EASING CURVES
  * ├───────────────────────────────────────────────────────────────────────────────────
- * │ • Linear: Constant speed, no acceleration                                         
- * │ • Quadratic: Gentle acceleration/deceleration                                     
- * │ • Cubic: Moderate acceleration/deceleration                                       
- * │ • Elastic: Spring-like overshoot and bounce                                       
- * │ • Bounce: Realistic bouncing effect                                               
- * │ • Custom: Apply any easing by name                                                
+ * │ • Linear: Constant speed, no acceleration
+ * │ • Quadratic: Gentle acceleration/deceleration
+ * │ • Cubic: Moderate acceleration/deceleration
+ * │ • Elastic: Spring-like overshoot and bounce
+ * │ • Bounce: Realistic bouncing effect
+ * │ • Custom: Apply any easing by name
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ════════════════════════════════════════════════════════════════════════════════════
@@ -179,7 +179,7 @@ export function getEasingFunction(name) {
         easeOutBounce,
         easeInOutBack,
         easeOutSine,
-        easeInOutSine
+        easeInOutSine,
     };
 
     return easingFunctions[name] || linear;

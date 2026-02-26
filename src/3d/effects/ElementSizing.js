@@ -30,11 +30,11 @@ export const PHI = 1.6180339887;
 
 /** Size class definitions as fractions of mascot radius */
 export const SIZE_CLASSES = {
-    tiny:      1 / Math.pow(PHI, 4),    // ~0.069 (6.9% of R)
-    small:     1 / Math.pow(PHI, 3),    // ~0.111 (11.1% of R)
-    medium:    1 / Math.pow(PHI, 2),    // ~0.180 (18.0% of R)
-    large:     1 / PHI,                 // ~0.292 (29.2% of R)
-    prominent: 1 / Math.pow(PHI, 0.5)   // ~0.382 (38.2% of R)
+    tiny: 1 / Math.pow(PHI, 4), // ~0.069 (6.9% of R)
+    small: 1 / Math.pow(PHI, 3), // ~0.111 (11.1% of R)
+    medium: 1 / Math.pow(PHI, 2), // ~0.180 (18.0% of R)
+    large: 1 / PHI, // ~0.292 (29.2% of R)
+    prominent: 1 / Math.pow(PHI, 0.5), // ~0.382 (38.2% of R)
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -47,73 +47,73 @@ export const SIZE_CLASSES = {
  */
 export const MODEL_SIZES = {
     // Ice models - smaller than earth for delicate crystalline feel
-    'crystal-small':   { class: 'tiny',   variance: 0.25 },
-    'crystal-medium':  { class: 'small',  variance: 0.2 },
+    'crystal-small': { class: 'tiny', variance: 0.25 },
+    'crystal-medium': { class: 'small', variance: 0.2 },
     'crystal-cluster': { class: 'medium', variance: 0.2 },
-    'ice-spike':       { class: 'small',  variance: 0.25 },
-    'ice-crown':       { class: 'large',  variance: 0.15 },  // Crown ring GLB
+    'ice-spike': { class: 'small', variance: 0.25 },
+    'ice-crown': { class: 'large', variance: 0.15 }, // Crown ring GLB
 
     // Earth models - chunky, substantial feel
-    'rock-chunk-small':  { class: 'small',  variance: 0.25 },
+    'rock-chunk-small': { class: 'small', variance: 0.25 },
     'rock-chunk-medium': { class: 'medium', variance: 0.2 },
-    'rock-cluster':      { class: 'large',  variance: 0.2 },
-    'stone-slab':        { class: 'medium', variance: 0.25 },
-    'earth-ring':        { class: 'large',  variance: 0.15 },  // Ring GLB — horizontal crown/helix
-    'stone-ring':        { class: 'large',  variance: 0.15 },  // Stone ring GLB — secondary ring
-    'boulder':           { class: 'large',  variance: 0.2 },   // Large rock chunk
-    'stone-spike':       { class: 'small',  variance: 0.25 },  // Pointed stone spike
+    'rock-cluster': { class: 'large', variance: 0.2 },
+    'stone-slab': { class: 'medium', variance: 0.25 },
+    'earth-ring': { class: 'large', variance: 0.15 }, // Ring GLB — horizontal crown/helix
+    'stone-ring': { class: 'large', variance: 0.15 }, // Stone ring GLB — secondary ring
+    boulder: { class: 'large', variance: 0.2 }, // Large rock chunk
+    'stone-spike': { class: 'small', variance: 0.25 }, // Pointed stone spike
 
     // Nature models - organic, varied sizes
-    'vine-ring':       { class: 'small',  variance: 0 },     // Ring GLB — relay rings must be identical
-    'vine-cluster':    { class: 'small',  variance: 0.25 },
-    's-vine':          { class: 'medium', variance: 0.25 },
-    'leaf-bunch':      { class: 'small',  variance: 0.3 },
-    'vine-twist':      { class: 'medium', variance: 0.25 },
-    'u-vine':          { class: 'medium', variance: 0.25 },
-    'thorn-curl':      { class: 'small',  variance: 0.3 },
+    'vine-ring': { class: 'small', variance: 0 }, // Ring GLB — relay rings must be identical
+    'vine-cluster': { class: 'small', variance: 0.25 },
+    's-vine': { class: 'medium', variance: 0.25 },
+    'leaf-bunch': { class: 'small', variance: 0.3 },
+    'vine-twist': { class: 'medium', variance: 0.25 },
+    'u-vine': { class: 'medium', variance: 0.25 },
+    'thorn-curl': { class: 'small', variance: 0.3 },
 
     // Fire models - dynamic, rising flames
-    'ember-cluster':   { class: 'tiny',   variance: 0.3 },
-    'flame-wisp':      { class: 'small',  variance: 0.25 },
-    'flame-tongue':    { class: 'medium', variance: 0.25 },
-    'fire-burst':      { class: 'large',  variance: 0.2 },
-    'flame-ring':      { class: 'large',  variance: 0.15 },  // Vortex ring
+    'ember-cluster': { class: 'tiny', variance: 0.3 },
+    'flame-wisp': { class: 'small', variance: 0.25 },
+    'flame-tongue': { class: 'medium', variance: 0.25 },
+    'fire-burst': { class: 'large', variance: 0.2 },
+    'flame-ring': { class: 'large', variance: 0.15 }, // Vortex ring
 
     // Electricity models - angular, energetic
-    'arc-small':       { class: 'small',  variance: 0.25 },
-    'arc-medium':      { class: 'medium', variance: 0.2 },
-    'arc-cluster':     { class: 'large',  variance: 0.2 },
-    'spark-node':      { class: 'tiny',   variance: 0.3 },
-    'lightning-ring':  { class: 'large',  variance: 0.15 },
+    'arc-small': { class: 'small', variance: 0.25 },
+    'arc-medium': { class: 'medium', variance: 0.2 },
+    'arc-cluster': { class: 'large', variance: 0.2 },
+    'spark-node': { class: 'tiny', variance: 0.3 },
+    'lightning-ring': { class: 'large', variance: 0.15 },
 
     // Water models - flowing, organic
-    'droplet-small':   { class: 'tiny',   variance: 0.25 },
-    'droplet-large':   { class: 'small',  variance: 0.2 },
-    'splash-ring':     { class: 'medium', variance: 0.25 },
-    'bubble-cluster':  { class: 'small',  variance: 0.3 },
-    'wave-curl':       { class: 'medium', variance: 0.25 },
+    'droplet-small': { class: 'tiny', variance: 0.25 },
+    'droplet-large': { class: 'small', variance: 0.2 },
+    'splash-ring': { class: 'medium', variance: 0.25 },
+    'bubble-cluster': { class: 'small', variance: 0.3 },
+    'wave-curl': { class: 'medium', variance: 0.25 },
 
     // Void models - dark, corrupting
-    'void-crack':        { class: 'small',  variance: 0.3 },
-    'shadow-tendril':    { class: 'medium', variance: 0.25 },
-    'corruption-patch':  { class: 'small',  variance: 0.3 },
-    'void-shard':        { class: 'tiny',   variance: 0.25 },
-    'void-ring':         { class: 'large',  variance: 0.15 },  // Vortex ring (matches flame-ring)
-    'void-orb':          { class: 'medium', variance: 0.2 },
+    'void-crack': { class: 'small', variance: 0.3 },
+    'shadow-tendril': { class: 'medium', variance: 0.25 },
+    'corruption-patch': { class: 'small', variance: 0.3 },
+    'void-shard': { class: 'tiny', variance: 0.25 },
+    'void-ring': { class: 'large', variance: 0.15 }, // Vortex ring (matches flame-ring)
+    'void-orb': { class: 'medium', variance: 0.2 },
     'void-tendril-large': { class: 'large', variance: 0.2 },
-    'void-wrap':         { class: 'medium', variance: 0.25 },
-    'void-disk':         { class: 'large',  variance: 0.1 },   // Procedural dark disk (singularity/hollow)
-    'void-crown':        { class: 'large',  variance: 0.15 },  // Crown ring GLB
+    'void-wrap': { class: 'medium', variance: 0.25 },
+    'void-disk': { class: 'large', variance: 0.1 }, // Procedural dark disk (singularity/hollow)
+    'void-crown': { class: 'large', variance: 0.15 }, // Crown ring GLB
 
     // Light models - radiant, geometric
-    'light-ray':       { class: 'medium', variance: 0.25 },  // Procedural elongated diamond
-    'light-orb':       { class: 'small',  variance: 0.2 },   // Procedural glowing sphere
-    'prism-shard':     { class: 'small',  variance: 0.2 },
-    'light-ring':       { class: 'large',  variance: 0.2 },
-    'sparkle-star':    { class: 'tiny',   variance: 0.3 },
-    'sun-ring':        { class: 'large',  variance: 0.15 },  // Ornate secondary ring
-    'light-burst':     { class: 'medium', variance: 0.2 },   // Radial starburst
-    'light-crown':     { class: 'large',  variance: 0.15 }   // Crown-specific ring
+    'light-ray': { class: 'medium', variance: 0.25 }, // Procedural elongated diamond
+    'light-orb': { class: 'small', variance: 0.2 }, // Procedural glowing sphere
+    'prism-shard': { class: 'small', variance: 0.2 },
+    'light-ring': { class: 'large', variance: 0.2 },
+    'sparkle-star': { class: 'tiny', variance: 0.3 },
+    'sun-ring': { class: 'large', variance: 0.15 }, // Ornate secondary ring
+    'light-burst': { class: 'medium', variance: 0.2 }, // Radial starburst
+    'light-crown': { class: 'large', variance: 0.15 }, // Crown-specific ring
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -136,73 +136,73 @@ export const MODEL_SIZES = {
  */
 export const MODEL_ORIENTATIONS = {
     // Ice
-    'crystal-small':   { mode: 'outward', tiltAngle: 0.15 },
-    'crystal-medium':  { mode: 'outward', tiltAngle: 0.2 },
+    'crystal-small': { mode: 'outward', tiltAngle: 0.15 },
+    'crystal-medium': { mode: 'outward', tiltAngle: 0.2 },
     'crystal-cluster': { mode: 'outward', tiltAngle: 0.25 },
-    'ice-spike':       { mode: 'outward', tiltAngle: 0.05 },
-    'ice-crown':       { mode: 'flat',    tiltAngle: 0 },    // Crown ring GLB — horizontal above head
+    'ice-spike': { mode: 'outward', tiltAngle: 0.05 },
+    'ice-crown': { mode: 'flat', tiltAngle: 0 }, // Crown ring GLB — horizontal above head
 
     // Earth
-    'rock-chunk-small':  { mode: 'outward', tiltAngle: 0.35 },
+    'rock-chunk-small': { mode: 'outward', tiltAngle: 0.35 },
     'rock-chunk-medium': { mode: 'outward', tiltAngle: 0.3 },
-    'rock-cluster':      { mode: 'outward', tiltAngle: 0.15 },
-    'stone-slab':        { mode: 'flat',    tiltAngle: 0.1 },
-    'earth-ring':        { mode: 'flat',    tiltAngle: 0 },    // Ring GLB — XY plane, rotate to horizontal
-    'stone-ring':        { mode: 'flat',    tiltAngle: 0 },    // Ring GLB — XY plane, rotate to horizontal
-    'boulder':           { mode: 'outward', tiltAngle: 0.2 },  // Outward from surface
-    'stone-spike':       { mode: 'outward', tiltAngle: 0.05 }, // Points outward like ice-spike
+    'rock-cluster': { mode: 'outward', tiltAngle: 0.15 },
+    'stone-slab': { mode: 'flat', tiltAngle: 0.1 },
+    'earth-ring': { mode: 'flat', tiltAngle: 0 }, // Ring GLB — XY plane, rotate to horizontal
+    'stone-ring': { mode: 'flat', tiltAngle: 0 }, // Ring GLB — XY plane, rotate to horizontal
+    boulder: { mode: 'outward', tiltAngle: 0.2 }, // Outward from surface
+    'stone-spike': { mode: 'outward', tiltAngle: 0.05 }, // Points outward like ice-spike
 
     // Nature
-    'vine-ring':       { mode: 'flat',    tiltAngle: 0 },    // Ring GLB — XY plane, camera-overridden per gesture
-    'vine-cluster':    { mode: 'outward', tiltAngle: 0.3 },
-    's-vine':          { mode: 'tangent', tiltAngle: 0.2 },
-    'leaf-bunch':      { mode: 'outward', tiltAngle: 0.4 },
-    'vine-twist':      { mode: 'tangent', tiltAngle: 0.15 },
-    'u-vine':          { mode: 'tangent', tiltAngle: 0.2 },
-    'thorn-curl':      { mode: 'tangent', tiltAngle: 0.25 },
+    'vine-ring': { mode: 'flat', tiltAngle: 0 }, // Ring GLB — XY plane, camera-overridden per gesture
+    'vine-cluster': { mode: 'outward', tiltAngle: 0.3 },
+    's-vine': { mode: 'tangent', tiltAngle: 0.2 },
+    'leaf-bunch': { mode: 'outward', tiltAngle: 0.4 },
+    'vine-twist': { mode: 'tangent', tiltAngle: 0.15 },
+    'u-vine': { mode: 'tangent', tiltAngle: 0.2 },
+    'thorn-curl': { mode: 'tangent', tiltAngle: 0.25 },
 
     // Fire - rising mode biases toward world-up
-    'ember-cluster':   { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.6 },
-    'flame-wisp':      { mode: 'rising',  tiltAngle: 0.15, riseFactor: 0.8 },
-    'flame-tongue':    { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.75 },
-    'fire-burst':      { mode: 'rising',  tiltAngle: 0.25, riseFactor: 0.5 },
-    'flame-ring':      { mode: 'flat',    tiltAngle: 0 },  // Horizontal vortex ring
+    'ember-cluster': { mode: 'rising', tiltAngle: 0.2, riseFactor: 0.6 },
+    'flame-wisp': { mode: 'rising', tiltAngle: 0.15, riseFactor: 0.8 },
+    'flame-tongue': { mode: 'rising', tiltAngle: 0.2, riseFactor: 0.75 },
+    'fire-burst': { mode: 'rising', tiltAngle: 0.25, riseFactor: 0.5 },
+    'flame-ring': { mode: 'flat', tiltAngle: 0 }, // Horizontal vortex ring
 
     // Electricity
-    'arc-small':       { mode: 'tangent', tiltAngle: 0.1 },
-    'arc-medium':      { mode: 'tangent', tiltAngle: 0.15 },
-    'arc-cluster':     { mode: 'outward', tiltAngle: 0.3 },
-    'spark-node':      { mode: 'outward', tiltAngle: 0.4 },
-    'lightning-ring':  { mode: 'flat',    tiltAngle: 0 },
+    'arc-small': { mode: 'tangent', tiltAngle: 0.1 },
+    'arc-medium': { mode: 'tangent', tiltAngle: 0.15 },
+    'arc-cluster': { mode: 'outward', tiltAngle: 0.3 },
+    'spark-node': { mode: 'outward', tiltAngle: 0.4 },
+    'lightning-ring': { mode: 'flat', tiltAngle: 0 },
 
     // Water - falling mode for droplets
-    'droplet-small':   { mode: 'falling', tiltAngle: 0.1, fallFactor: 0.7 },
-    'droplet-large':   { mode: 'falling', tiltAngle: 0.05, fallFactor: 0.8 },
-    'splash-ring':     { mode: 'flat',    tiltAngle: 0.05 },
-    'bubble-cluster':  { mode: 'rising',  tiltAngle: 0.2, riseFactor: 0.5 },
-    'wave-curl':       { mode: 'vertical', tiltAngle: 0 },
+    'droplet-small': { mode: 'falling', tiltAngle: 0.1, fallFactor: 0.7 },
+    'droplet-large': { mode: 'falling', tiltAngle: 0.05, fallFactor: 0.8 },
+    'splash-ring': { mode: 'flat', tiltAngle: 0.05 },
+    'bubble-cluster': { mode: 'rising', tiltAngle: 0.2, riseFactor: 0.5 },
+    'wave-curl': { mode: 'vertical', tiltAngle: 0 },
 
     // Void
-    'void-crack':        { mode: 'outward-flat', tiltAngle: 0.05 },
-    'shadow-tendril':    { mode: 'tangent',      tiltAngle: 0.3 },
-    'corruption-patch':  { mode: 'flat',         tiltAngle: 0 },
-    'void-shard':        { mode: 'outward',      tiltAngle: 0.35 },
-    'void-ring':         { mode: 'flat',         tiltAngle: 0 },  // XY plane in Three.js — 'flat' rotates to horizontal
-    'void-orb':          { mode: 'outward',      tiltAngle: 0 },
-    'void-tendril-large': { mode: 'tangent',     tiltAngle: 0.2 },
-    'void-wrap':         { mode: 'flat',         tiltAngle: 0.1 },
-    'void-disk':         { mode: 'flat',         tiltAngle: 0 },   // Procedural dark disk — always flat
-    'void-crown':        { mode: 'flat',         tiltAngle: 0 },   // Crown ring GLB — horizontal above head
+    'void-crack': { mode: 'outward-flat', tiltAngle: 0.05 },
+    'shadow-tendril': { mode: 'tangent', tiltAngle: 0.3 },
+    'corruption-patch': { mode: 'flat', tiltAngle: 0 },
+    'void-shard': { mode: 'outward', tiltAngle: 0.35 },
+    'void-ring': { mode: 'flat', tiltAngle: 0 }, // XY plane in Three.js — 'flat' rotates to horizontal
+    'void-orb': { mode: 'outward', tiltAngle: 0 },
+    'void-tendril-large': { mode: 'tangent', tiltAngle: 0.2 },
+    'void-wrap': { mode: 'flat', tiltAngle: 0.1 },
+    'void-disk': { mode: 'flat', tiltAngle: 0 }, // Procedural dark disk — always flat
+    'void-crown': { mode: 'flat', tiltAngle: 0 }, // Crown ring GLB — horizontal above head
 
     // Light
-    'light-ray':       { mode: 'outward', tiltAngle: 0.1 },  // Procedural elongated diamond
-    'light-orb':       { mode: 'outward', tiltAngle: 0 },    // Procedural glowing sphere
-    'prism-shard':     { mode: 'outward', tiltAngle: 0.2 },
-    'light-ring':       { mode: 'flat',         tiltAngle: 0 },
-    'sparkle-star':    { mode: 'outward', tiltAngle: 0.3 },
-    'sun-ring':        { mode: 'flat',    tiltAngle: 0 },    // XY plane ring — horizontal
-    'light-burst':     { mode: 'outward', tiltAngle: 0.15 }, // Radial starburst
-    'light-crown':     { mode: 'flat',    tiltAngle: 0 }     // Crown ring GLB — horizontal above head
+    'light-ray': { mode: 'outward', tiltAngle: 0.1 }, // Procedural elongated diamond
+    'light-orb': { mode: 'outward', tiltAngle: 0 }, // Procedural glowing sphere
+    'prism-shard': { mode: 'outward', tiltAngle: 0.2 },
+    'light-ring': { mode: 'flat', tiltAngle: 0 },
+    'sparkle-star': { mode: 'outward', tiltAngle: 0.3 },
+    'sun-ring': { mode: 'flat', tiltAngle: 0 }, // XY plane ring — horizontal
+    'light-burst': { mode: 'outward', tiltAngle: 0.15 }, // Radial starburst
+    'light-crown': { mode: 'flat', tiltAngle: 0 }, // Crown ring GLB — horizontal above head
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -229,7 +229,7 @@ export function getModelSizeFraction(modelName, overrideVariance) {
     return {
         base,
         min: base * (1 - variance),
-        max: base * (1 + variance)
+        max: base * (1 + variance),
     };
 }
 
@@ -293,7 +293,12 @@ export function calculateMascotRadius(mesh) {
  * @param {number} [scaleMultiplier=1.0] - Additional scale multiplier
  * @returns {number} Final scale value
  */
-export function calculateElementScale(modelName, mascotRadius, scaleMultiplier = 1.0, overrideVariance) {
+export function calculateElementScale(
+    modelName,
+    mascotRadius,
+    scaleMultiplier = 1.0,
+    overrideVariance
+) {
     const sizeFraction = getModelSizeFraction(modelName, overrideVariance);
     const baseScale = sizeFraction.min + Math.random() * (sizeFraction.max - sizeFraction.min);
     return baseScale * mascotRadius * scaleMultiplier;
@@ -307,5 +312,5 @@ export default {
     getModelSizeFraction,
     getModelOrientation,
     calculateMascotRadius,
-    calculateElementScale
+    calculateElementScale,
 };

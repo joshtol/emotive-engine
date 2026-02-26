@@ -45,7 +45,8 @@ export class DestructionManager {
     constructor(deps) {
         // Required dependency validation
         if (!deps.errorBoundary) throw new Error('DestructionManager: errorBoundary required');
-        if (!deps.animationController) throw new Error('DestructionManager: animationController required');
+        if (!deps.animationController)
+            throw new Error('DestructionManager: animationController required');
         if (!deps.state) throw new Error('DestructionManager: state required');
         if (!deps.stop) throw new Error('DestructionManager: stop required');
         if (!deps.stopSpeaking) throw new Error('DestructionManager: stopSpeaking required');

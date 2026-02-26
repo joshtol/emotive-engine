@@ -25,19 +25,19 @@ export const SOUL_BEHAVIORS = {
 export const SOUL_BEHAVIOR_COUNT = 6;
 
 export const SOUL_BEHAVIOR_NAMES = {
-    'nebula':   SOUL_BEHAVIORS.NEBULA_DRIFT,
-    'spiral':   SOUL_BEHAVIORS.SPIRAL_FLOW,
-    'tidal':    SOUL_BEHAVIORS.TIDAL_BREATHING,
-    'orbital':  SOUL_BEHAVIORS.ORBITAL_RINGS,
-    'radial':   SOUL_BEHAVIORS.RADIAL_PULSE,
-    'hotspot':  SOUL_BEHAVIORS.WANDERING_HOTSPOT,
+    nebula: SOUL_BEHAVIORS.NEBULA_DRIFT,
+    spiral: SOUL_BEHAVIORS.SPIRAL_FLOW,
+    tidal: SOUL_BEHAVIORS.TIDAL_BREATHING,
+    orbital: SOUL_BEHAVIORS.ORBITAL_RINGS,
+    radial: SOUL_BEHAVIORS.RADIAL_PULSE,
+    hotspot: SOUL_BEHAVIORS.WANDERING_HOTSPOT,
 };
 
 // ─────────────────────────────────────────────────────────────────────
 // GLSL Uniform Declarations
 // ─────────────────────────────────────────────────────────────────────
 
-export const SOUL_BEHAVIOR_UNIFORMS_GLSL = /* glsl */`
+export const SOUL_BEHAVIOR_UNIFORMS_GLSL = /* glsl */ `
     // Soul behavior system (soulBehaviors.js)
     // Current mix pair (AB)
     uniform int uBehaviorMode;
@@ -56,7 +56,7 @@ export const SOUL_BEHAVIOR_UNIFORMS_GLSL = /* glsl */`
 // GLSL Behavior Functions + Dispatch
 // ─────────────────────────────────────────────────────────────────────
 
-export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
+export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */ `
     // ═══════════════════════════════════════════════════════════════════
     // SOUL BEHAVIOR SYSTEM — Pluggable energy patterns
     //
@@ -301,7 +301,7 @@ export const SOUL_BEHAVIOR_FUNC_GLSL = /* glsl */`
 export const SOUL_BEHAVIOR_DEFAULTS = {
     behaviorMode: SOUL_BEHAVIORS.NEBULA_DRIFT,
     behaviorSpeed: 1.0,
-    baselineStrength: 0.5,  // Nebula floor at half-strength by default
+    baselineStrength: 0.5, // Nebula floor at half-strength by default
 };
 
 export function createSoulBehaviorUniforms(defaults = {}) {
@@ -315,7 +315,9 @@ export function createSoulBehaviorUniforms(defaults = {}) {
         uBehaviorBlendCD: { value: 0.0 },
         uBehaviorCrossfade: { value: 0.0 },
         uBehaviorSpeed: { value: defaults.behaviorSpeed ?? SOUL_BEHAVIOR_DEFAULTS.behaviorSpeed },
-        uBaselineStrength: { value: defaults.baselineStrength ?? SOUL_BEHAVIOR_DEFAULTS.baselineStrength },
+        uBaselineStrength: {
+            value: defaults.baselineStrength ?? SOUL_BEHAVIOR_DEFAULTS.baselineStrength,
+        },
     };
 }
 

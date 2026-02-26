@@ -39,7 +39,7 @@ import { extractMaterialProperties, createShardBaseMaterial } from './MaterialAn
 import {
     createElementalMaterial,
     getElementalPhysics,
-    isElementSupported
+    isElementSupported,
 } from '../../materials/ElementalMaterialFactory.js';
 import { easeInOutCubic } from '../animation/Easing.js';
 
@@ -50,13 +50,13 @@ const ShatterState = {
     IDLE: 'idle',
     GENERATING: 'generating',
     SHATTERING: 'shattering',
-    FROZEN: 'frozen',           // Shards frozen mid-air awaiting manual reassembly
+    FROZEN: 'frozen', // Shards frozen mid-air awaiting manual reassembly
     REASSEMBLING: 'reassembling',
     // Dual-mode states: applied to frozen shards OR triggered fresh from IDLE
-    IMPLODING: 'imploding',     // Shards fly inward to center
-    DISSOLVING: 'dissolving',   // Shards blow away like dust in wind
-    FALLING: 'falling',         // Shards fall with gravity and bounce
-    ORBITING: 'orbiting'        // Shards orbit around soul
+    IMPLODING: 'imploding', // Shards fly inward to center
+    DISSOLVING: 'dissolving', // Shards blow away like dust in wind
+    FALLING: 'falling', // Shards fall with gravity and bounce
+    ORBITING: 'orbiting', // Shards orbit around soul
 };
 
 class ShatterSystem {
@@ -70,7 +70,8 @@ class ShatterSystem {
      */
     constructor(options = {}) {
         // Detect mobile for performance scaling
-        const isMobile = typeof navigator !== 'undefined' &&
+        const isMobile =
+            typeof navigator !== 'undefined' &&
             /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
         const {
@@ -78,7 +79,7 @@ class ShatterSystem {
             maxShards = isMobile ? 25 : 50,
             shardLifetime = isMobile ? 1500 : 2000,
             enableReassembly = true,
-            autoRestore = true
+            autoRestore = true,
         } = options;
 
         this.scene = scene;
@@ -96,16 +97,16 @@ class ShatterSystem {
         // LRU geometry cache - evicts oldest entries when full
         // Map maintains insertion order; we delete+reinsert on access to update order
         this.geometryCache = new Map();
-        this.geometryCacheMaxSize = 5;  // Max different geometries to cache
-        this.geometryCacheRefs = new Map();  // Ref counts - don't evict while shards active
-        this._activeGeometryId = null;  // Currently shattering geometry ID
+        this.geometryCacheMaxSize = 5; // Max different geometries to cache
+        this.geometryCacheRefs = new Map(); // Ref counts - don't evict while shards active
+        this._activeGeometryId = null; // Currently shattering geometry ID
 
         // ═══════════════════════════════════════════════════════════════════
         // DYNAMIC SHARD MATERIAL CACHE
         // Single geometry cached at a time - invalidated on morphTo()
         // Stores pre-computed shard geometries and extracted base material
         // ═══════════════════════════════════════════════════════════════════
-        this.shardMaterialCache = null;  // { geometryType, baseMaterial, geometries }
+        this.shardMaterialCache = null; // { geometryType, baseMaterial, geometries }
 
         // Mesh references
         this.targetMesh = null;
@@ -148,15 +149,15 @@ class ShatterSystem {
         this._isFreezeMode = false;
 
         // Elemental material state
-        this._currentElementalMaterial = null;  // Current elemental material (for disposal)
-        this._currentElemental = null;          // Current element type
-        this._currentElementalParam = 0.5;      // Current elemental parameter
+        this._currentElementalMaterial = null; // Current elemental material (for disposal)
+        this._currentElemental = null; // Current element type
+        this._currentElementalParam = 0.5; // Current elemental parameter
 
         // Dual-mode behavior state (for gestures that work on frozen shards)
-        this._dualModeType = null;          // 'implode', 'dissolve', 'ripple', 'gravity', 'orbit'
-        this._dualModeConfig = {};          // Config for the dual-mode behavior
-        this._dualModeStartTime = 0;        // When dual-mode animation started
-        this._dualModeDuration = 2000;      // Duration of dual-mode animation
+        this._dualModeType = null; // 'implode', 'dissolve', 'ripple', 'gravity', 'orbit'
+        this._dualModeConfig = {}; // Config for the dual-mode behavior
+        this._dualModeStartTime = 0; // When dual-mode animation started
+        this._dualModeDuration = 2000; // Duration of dual-mode animation
     }
 
     /**
@@ -179,7 +180,7 @@ class ShatterSystem {
         // Generate shards (synchronous - could use Web Worker for heavy meshes in future)
         const shards = ShardGenerator.generate(geometry, {
             shardCount: this.maxShards,
-            seed: this._hashString(id)
+            seed: this._hashString(id),
         });
 
         // LRU eviction: remove oldest entries if cache is full
@@ -238,7 +239,7 @@ class ShatterSystem {
         if (!shardGeometries) {
             shardGeometries = ShardGenerator.generate(mesh.geometry, {
                 shardCount: this.maxShards,
-                seed: this._hashString(geometryId)
+                seed: this._hashString(geometryId),
             });
             this.geometryCache.set(geometryId, shardGeometries);
         }
@@ -248,7 +249,7 @@ class ShatterSystem {
             geometryType,
             baseMaterial,
             geometries: shardGeometries,
-            geometryId
+            geometryId,
         };
     }
 
@@ -269,7 +270,7 @@ class ShatterSystem {
         return {
             geometryType: this.shardMaterialCache.geometryType,
             shardCount: this.shardMaterialCache.geometries?.length || 0,
-            hasMaterial: !!this.shardMaterialCache.baseMaterial
+            hasMaterial: !!this.shardMaterialCache.baseMaterial,
         };
     }
 
@@ -303,17 +304,17 @@ class ShatterSystem {
             dualModeType = null,
             dualModeConfig = {},
             // Physics overrides (for crumble, etc.)
-            gravity,           // undefined = use default
-            explosionForce,    // undefined = use default
-            rotationForce,     // undefined = use default
+            gravity, // undefined = use default
+            explosionForce, // undefined = use default
+            rotationForce, // undefined = use default
             // ═══════════════════════════════════════════════════════════════
             // ELEMENTAL MATERIAL SYSTEM
             // Use elemental materials for specialized shard appearance/physics
             // ═══════════════════════════════════════════════════════════════
-            elemental = null,         // Element type: 'fire', 'water', 'smoke', 'ice', 'electric', 'void'
-            elementalParam = 0.5,     // Master parameter (0-1) for elemental behavior
-            overlay = null,           // Optional overlay element (e.g., 'smoke' on fire shatter)
-            overlayParam = 0.5        // Master parameter for overlay element
+            elemental = null, // Element type: 'fire', 'water', 'smoke', 'ice', 'electric', 'void'
+            elementalParam = 0.5, // Master parameter (0-1) for elemental behavior
+            overlay = null, // Optional overlay element (e.g., 'smoke' on fire shatter)
+            overlayParam = 0.5, // Master parameter for overlay element
         } = config;
 
         this.state = ShatterState.GENERATING;
@@ -443,7 +444,6 @@ class ShatterSystem {
         let baseMaterial = null;
         let elementalPhysics = null;
 
-
         // Check for elemental material first
         // CACHE: Reuse existing material if same element type (avoid rapid create/dispose)
         if (elemental && isElementSupported(elemental)) {
@@ -453,7 +453,6 @@ class ShatterSystem {
                 baseMaterial = this._currentElementalMaterial;
                 elementalPhysics = getElementalPhysics(elemental, elementalParam);
                 this._currentElementalParam = elementalParam;
-
             } else {
                 // Different element - dispose old and create new
                 if (this._currentElementalMaterial) {
@@ -463,7 +462,6 @@ class ShatterSystem {
 
                 baseMaterial = createElementalMaterial(elemental, elementalParam);
                 elementalPhysics = getElementalPhysics(elemental, elementalParam);
-
 
                 // Store for reuse
                 this._currentElementalMaterial = baseMaterial;
@@ -482,7 +480,10 @@ class ShatterSystem {
 
             // Defensive re-extraction: if cache has no texture but mesh now does, re-extract
             if (this.shardMaterialCache && baseMaterial && !baseMaterial.map && mesh.material) {
-                const materialProps = extractMaterialProperties(mesh.material, this.shardMaterialCache.geometryType);
+                const materialProps = extractMaterialProperties(
+                    mesh.material,
+                    this.shardMaterialCache.geometryType
+                );
                 if (materialProps.map) {
                     // Texture loaded since precompute - recreate base material
                     baseMaterial.dispose();
@@ -504,18 +505,26 @@ class ShatterSystem {
 
         if (elementalPhysics) {
             // Use elemental physics as base, allow explicit overrides
-            effectiveGravity = gravity !== undefined ? gravity :
-                (isSuspendMode ? -3.0 : -elementalPhysics.gravity * 9.8);
-            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
-            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
+            effectiveGravity =
+                gravity !== undefined
+                    ? gravity
+                    : isSuspendMode
+                      ? -3.0
+                      : -elementalPhysics.gravity * 9.8;
+            effectiveExplosionForce =
+                (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+            effectiveRotationForce =
+                (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
 
             // Apply elemental drag/bounce modifiers
             this._elementalDrag = elementalPhysics.drag;
             this._elementalBounce = elementalPhysics.bounce;
         } else {
-            effectiveExplosionForce = (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
-            effectiveRotationForce = (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
-            effectiveGravity = gravity !== undefined ? gravity : (isSuspendMode ? -3.0 : -9.8);
+            effectiveExplosionForce =
+                (explosionForce !== undefined ? explosionForce : 2.0) * intensity;
+            effectiveRotationForce =
+                (rotationForce !== undefined ? rotationForce : 5.0) * intensity;
+            effectiveGravity = gravity !== undefined ? gravity : isSuspendMode ? -3.0 : -9.8;
             this._elementalDrag = null;
             this._elementalBounce = null;
         }
@@ -523,7 +532,6 @@ class ShatterSystem {
         // Store overlay for potential particle effects
         this._currentOverlay = overlay;
         this._currentOverlayParam = overlayParam;
-
 
         const activatedCount = this.shardPool.activate(shards, worldImpact, worldDirection, {
             explosionForce: effectiveExplosionForce,
@@ -540,7 +548,7 @@ class ShatterSystem {
             baseMaterial,
             // Elemental physics for specialized shard behavior
             elementalPhysics,
-            elementalType: elemental
+            elementalType: elemental,
         });
 
         // Only sync material colors if we didn't use cached material
@@ -579,7 +587,7 @@ class ShatterSystem {
         this.shardPool.updateMaterial({
             color,
             emissive,
-            emissiveIntensity: 0.4
+            emissiveIntensity: 0.4,
         });
     }
 
@@ -596,10 +604,7 @@ class ShatterSystem {
             return false;
         }
 
-        const {
-            delay = 150,
-            propagationDir = null
-        } = chainConfig;
+        const { delay = 150, propagationDir = null } = chainConfig;
 
         this._chainedDelay = delay;
 
@@ -623,7 +628,7 @@ class ShatterSystem {
         this._shatterQueue = sortedTargets.map((target, index) => ({
             mesh: target.mesh,
             config: target.config || {},
-            triggerTime: performance.now() + (index * delay)
+            triggerTime: performance.now() + index * delay,
         }));
 
         // Trigger first immediately if idle
@@ -685,7 +690,10 @@ class ShatterSystem {
      */
     triggerReassembly(duration = 1500) {
         if (this.state !== ShatterState.FROZEN) {
-            console.warn('ShatterSystem.triggerReassembly: Can only trigger from FROZEN state, current state:', this.state);
+            console.warn(
+                'ShatterSystem.triggerReassembly: Can only trigger from FROZEN state, current state:',
+                this.state
+            );
             return false;
         }
 
@@ -753,8 +761,14 @@ class ShatterSystem {
         }
 
         // If already in a dual-mode state, ignore
-        if ([ShatterState.IMPLODING, ShatterState.DISSOLVING,
-            ShatterState.FALLING, ShatterState.ORBITING].includes(this.state)) {
+        if (
+            [
+                ShatterState.IMPLODING,
+                ShatterState.DISSOLVING,
+                ShatterState.FALLING,
+                ShatterState.ORBITING,
+            ].includes(this.state)
+        ) {
             console.warn('ShatterSystem.triggerDualMode: Already in dual-mode state:', this.state);
             return false;
         }
@@ -786,22 +800,22 @@ class ShatterSystem {
 
         // Initialize mode-specific shard physics
         switch (mode) {
-        case 'implode':
-            this.state = ShatterState.IMPLODING;
-            this.shardPool.initImplodeMode(config);
-            break;
-        case 'dissolve':
-            this.state = ShatterState.DISSOLVING;
-            this.shardPool.initDissolveMode(config);
-            break;
-        case 'gravity':
-            this.state = ShatterState.FALLING;
-            this.shardPool.initGravityMode(config);
-            break;
-        case 'orbit':
-            this.state = ShatterState.ORBITING;
-            this.shardPool.initOrbitMode(config);
-            break;
+            case 'implode':
+                this.state = ShatterState.IMPLODING;
+                this.shardPool.initImplodeMode(config);
+                break;
+            case 'dissolve':
+                this.state = ShatterState.DISSOLVING;
+                this.shardPool.initDissolveMode(config);
+                break;
+            case 'gravity':
+                this.state = ShatterState.FALLING;
+                this.shardPool.initGravityMode(config);
+                break;
+            case 'orbit':
+                this.state = ShatterState.ORBITING;
+                this.shardPool.initOrbitMode(config);
+                break;
         }
     }
 
@@ -864,7 +878,8 @@ class ShatterSystem {
                     // Animate glow: bright flash fades to normal energy
                     if (uniforms) {
                         if (uniforms.energyIntensity) {
-                            uniforms.energyIntensity.value = 2.0 - eased * (2.0 - this._soulOriginalEmissive);
+                            uniforms.energyIntensity.value =
+                                2.0 - eased * (2.0 - this._soulOriginalEmissive);
                         }
                         // KEEP ghostMode at 0 (fully visible) - don't animate to ghostly
                         if (uniforms.ghostMode) {
@@ -874,7 +889,6 @@ class ShatterSystem {
                         const emissive = 2.0 - eased * (2.0 - this._soulOriginalEmissive);
                         this.innerMesh.material.emissiveIntensity = emissive;
                     }
-
                 } else {
                     // After reveal animation completes, MAINTAIN soul at fully visible state
                     // This prevents ghostMode from drifting during the gap before reassembly
@@ -897,7 +911,7 @@ class ShatterSystem {
             if (this._isFreezeMode && this._isSuspendMode) {
                 const elapsed = performance.now() - this._shatterStartTime;
                 const animProgress = Math.min(1, elapsed / this._gestureDuration);
-                const suspendComplete = animProgress >= (this._suspendAt + this._suspendDuration);
+                const suspendComplete = animProgress >= this._suspendAt + this._suspendDuration;
 
                 if (suspendComplete) {
                     // Check if dual-mode is pending (e.g., shatterOrbit, shatterImplode)
@@ -909,7 +923,10 @@ class ShatterSystem {
                         this._dualModeDuration = this._pendingDualModeConfig.duration || 2000;
 
                         // Auto-trigger dual-mode behavior instead of staying frozen
-                        this._startDualModeFromFrozen(this._pendingDualMode, this._pendingDualModeConfig);
+                        this._startDualModeFromFrozen(
+                            this._pendingDualMode,
+                            this._pendingDualModeConfig
+                        );
                         this._pendingDualMode = null;
                         this._pendingDualModeConfig = {};
                     } else {
@@ -938,7 +955,10 @@ class ShatterSystem {
 
                     // Capture current shard positions and start dual-mode
                     this.shardPool.captureCurrentPositions();
-                    this._startDualModeFromFrozen(this._pendingDualMode, this._pendingDualModeConfig);
+                    this._startDualModeFromFrozen(
+                        this._pendingDualMode,
+                        this._pendingDualModeConfig
+                    );
                     this._pendingDualMode = null;
                     this._pendingDualModeConfig = {};
                 }
@@ -1016,7 +1036,8 @@ class ShatterSystem {
                     if (uniforms) {
                         // CrystalSoul shader - fade energy and increase ghostMode
                         if (uniforms.energyIntensity) {
-                            uniforms.energyIntensity.value = this._soulOriginalEmissive * (1 - fadeEased);
+                            uniforms.energyIntensity.value =
+                                this._soulOriginalEmissive * (1 - fadeEased);
                         }
                         if (uniforms.ghostMode && this._soulOriginalGhostMode !== undefined) {
                             // IMPORTANT: Fade ghostMode from 0 (where MAINTAIN left it) to original value
@@ -1052,9 +1073,7 @@ class ShatterSystem {
         const progress = Math.min(1, elapsed / this._dualModeDuration);
 
         // Get center point for implosion (soul position or origin)
-        const centerPoint = this.innerMesh
-            ? this.innerMesh.position.clone()
-            : new THREE.Vector3();
+        const centerPoint = this.innerMesh ? this.innerMesh.position.clone() : new THREE.Vector3();
 
         this.shardPool.updateImplode(deltaTime, progress, centerPoint);
 
@@ -1092,7 +1111,8 @@ class ShatterSystem {
             if (uniforms) {
                 // Fade energy as shards blow away
                 if (uniforms.energyIntensity) {
-                    uniforms.energyIntensity.value = this._soulOriginalEmissive * (1 - progress * 0.5);
+                    uniforms.energyIntensity.value =
+                        this._soulOriginalEmissive * (1 - progress * 0.5);
                 }
             }
         }
@@ -1129,9 +1149,7 @@ class ShatterSystem {
         const progress = Math.min(1, elapsed / this._dualModeDuration);
 
         // Get center point for orbit (soul position)
-        const centerPoint = this.innerMesh
-            ? this.innerMesh.position.clone()
-            : new THREE.Vector3();
+        const centerPoint = this.innerMesh ? this.innerMesh.position.clone() : new THREE.Vector3();
 
         this.shardPool.updateOrbit(deltaTime, progress, centerPoint, this._dualModeConfig);
 
@@ -1408,9 +1426,8 @@ class ShatterSystem {
             availableShards: this.shardPool.availableCount,
             cachedGeometries: this.geometryCache.size,
             chainQueueLength: this._shatterQueue.length,
-            reassemblyProgress: this.state === ShatterState.REASSEMBLING
-                ? this._reassemblyProgress
-                : null
+            reassemblyProgress:
+                this.state === ShatterState.REASSEMBLING ? this._reassemblyProgress : null,
         };
     }
 
@@ -1460,7 +1477,7 @@ class ShatterSystem {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
+            hash = (hash << 5) - hash + char;
             hash = hash & hash;
         }
         return Math.abs(hash);

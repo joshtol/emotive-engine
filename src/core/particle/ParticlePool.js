@@ -59,7 +59,16 @@ class ParticlePool {
      * @param {string|null} gestureBehavior - Gesture behavior to apply
      * @returns {Particle} Particle instance
      */
-    getParticle(x, y, behavior, scaleFactor, particleSizeMultiplier, emotionColors, emotion, gestureBehavior = null) {
+    getParticle(
+        x,
+        y,
+        behavior,
+        scaleFactor,
+        particleSizeMultiplier,
+        emotionColors,
+        emotion,
+        gestureBehavior = null
+    ) {
         let particle;
 
         if (this.pool.length > 0) {
@@ -69,7 +78,14 @@ class ParticlePool {
             this.poolHits++;
         } else {
             // Create new particle
-            particle = new Particle(x, y, behavior, scaleFactor, particleSizeMultiplier, emotionColors);
+            particle = new Particle(
+                x,
+                y,
+                behavior,
+                scaleFactor,
+                particleSizeMultiplier,
+                emotionColors
+            );
             this.poolMisses++;
             this.totalParticlesCreated++;
         }
@@ -131,7 +147,7 @@ class ParticlePool {
             poolHits: this.poolHits,
             poolMisses: this.poolMisses,
             totalCreated: this.totalParticlesCreated,
-            totalDestroyed: this.totalParticlesDestroyed
+            totalDestroyed: this.totalParticlesDestroyed,
         };
     }
 

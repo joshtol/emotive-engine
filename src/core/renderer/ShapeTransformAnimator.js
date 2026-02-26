@@ -22,7 +22,7 @@ export class ShapeTransformAnimator {
         const pulse = Math.sin(progress * Math.PI * anim.params.frequency);
         return {
             scale: 1 + pulse * anim.params.scaleAmount,
-            glow: 1 + pulse * anim.params.glowAmount
+            glow: 1 + pulse * anim.params.glowAmount,
         };
     }
 
@@ -35,12 +35,15 @@ export class ShapeTransformAnimator {
     applyExpand(anim, progress) {
         // Use scaleAmount or scaleTarget (handle both config formats)
         // Make sure we're expanding, not contracting
-        const targetScale = Math.max(anim.params.scaleAmount || anim.params.scaleTarget || 1.5, 1.0);
-        const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
+        const targetScale = Math.max(
+            anim.params.scaleAmount || anim.params.scaleTarget || 1.5,
+            1.0
+        );
+        const easedProgress = Math.sin((progress * Math.PI) / 2); // Smooth ease-out
         const scale = 1 + (targetScale - 1) * easedProgress;
         return {
             scale,
-            glow: 1 + Math.abs(anim.params.glowAmount || 0.2) * easedProgress
+            glow: 1 + Math.abs(anim.params.glowAmount || 0.2) * easedProgress,
         };
     }
 
@@ -53,11 +56,11 @@ export class ShapeTransformAnimator {
     applyContract(anim, progress) {
         // Use scaleAmount or scaleTarget (handle both config formats)
         const targetScale = anim.params.scaleAmount || anim.params.scaleTarget || 0.7;
-        const easedProgress = Math.sin(progress * Math.PI / 2); // Smooth ease-out
+        const easedProgress = Math.sin((progress * Math.PI) / 2); // Smooth ease-out
         const scale = 1 + (targetScale - 1) * easedProgress;
         return {
             scale,
-            glow: 1 + (anim.params.glowAmount || -0.2) * easedProgress
+            glow: 1 + (anim.params.glowAmount || -0.2) * easedProgress,
         };
     }
 
@@ -86,7 +89,7 @@ export class ShapeTransformAnimator {
         const morph = Math.sin(progress * Math.PI * 2);
         return {
             scale: 1 + morph * 0.1,
-            rotation: morph * 10
+            rotation: morph * 10,
         };
     }
 }

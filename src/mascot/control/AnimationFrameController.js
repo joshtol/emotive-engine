@@ -47,8 +47,10 @@ export class AnimationFrameController {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.errorBoundary) throw new Error('AnimationFrameController: errorBoundary required');
-        if (!deps.animationController) throw new Error('AnimationFrameController: animationController required');
+        if (!deps.errorBoundary)
+            throw new Error('AnimationFrameController: errorBoundary required');
+        if (!deps.animationController)
+            throw new Error('AnimationFrameController: animationController required');
         if (!deps.config) throw new Error('AnimationFrameController: config required');
         if (!deps.emit) throw new Error('AnimationFrameController: emit required');
 
@@ -127,16 +129,23 @@ export class AnimationFrameController {
      * @returns {Object|null} Current position metadata or null if not available
      */
     getPosition() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.positionController || typeof this.positionController.getPosition !== 'function') {
-                return null;
-            }
+        return this.errorBoundary.wrap(
+            () => {
+                if (
+                    !this.positionController ||
+                    typeof this.positionController.getPosition !== 'function'
+                ) {
+                    return null;
+                }
 
-            const hasWindow = typeof window !== 'undefined';
-            const centerX = hasWindow ? window.innerWidth / 2 : 0;
-            const centerY = hasWindow ? window.innerHeight / 2 : 0;
+                const hasWindow = typeof window !== 'undefined';
+                const centerX = hasWindow ? window.innerWidth / 2 : 0;
+                const centerY = hasWindow ? window.innerHeight / 2 : 0;
 
-            return this.positionController.getPosition(centerX, centerY);
-        }, 'get-position', this._chainTarget)();
+                return this.positionController.getPosition(centerX, centerY);
+            },
+            'get-position',
+            this._chainTarget
+        )();
     }
 }

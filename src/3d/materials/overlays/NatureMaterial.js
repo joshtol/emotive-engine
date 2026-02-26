@@ -39,10 +39,7 @@ function lerp(a, b, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createNatureMaterial(options = {}) {
-    const {
-        growth = 0.5,
-        opacity = 0.7
-    } = options;
+    const { growth = 0.5, opacity = 0.7 } = options;
 
     const pulseSpeed = lerp(1.2, 0.5, growth);
 
@@ -52,10 +49,10 @@ export function createNatureMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -73,7 +70,7 @@ export function createNatureMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uGrowth;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -219,7 +216,7 @@ export function createNatureMaterial(options = {}) {
         transparent: true,
         blending: THREE.NormalBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.growth = growth;
@@ -249,7 +246,7 @@ export function getNaturePhysics(growth = 0.5) {
         entangles: growth > 0.5,
         spreadRate: lerp(0.0, 0.2, growth),
         lifetime: lerp(2.0, 5.0, growth),
-        healsOverTime: growth > 0.6
+        healsOverTime: growth > 0.6,
     };
 }
 
@@ -264,7 +261,7 @@ export function getNatureCrackStyle(growth = 0.5) {
         emissive: lerp(0.3, 1.2, growth),
         animated: true,
         pattern: 'vine',
-        flickerSpeed: lerp(0.3, 0.8, growth)
+        flickerSpeed: lerp(0.3, 0.8, growth),
     };
 }
 
@@ -272,5 +269,5 @@ export default {
     createNatureMaterial,
     updateNatureMaterial,
     getNaturePhysics,
-    getNatureCrackStyle
+    getNatureCrackStyle,
 };

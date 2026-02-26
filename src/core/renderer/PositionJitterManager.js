@@ -60,17 +60,26 @@ export class PositionJitterManager {
      * @returns {Object} Jitter offsets and modified radii
      */
     calculateJitter(coreRadius, glowRadius) {
-        let jitterX = 0, jitterY = 0;
+        let jitterX = 0,
+            jitterY = 0;
         const jitterAmount = this.renderer.state.jitterAmount || 0;
 
         // Handle episodic effects for undertones
         if (this.renderer.currentUndertone) {
-            ({ jitterX, jitterY, coreRadius, glowRadius } = this.renderer.episodicEffectController.updateEpisodicEffects(
-                this.renderer.currentUndertone, jitterX, jitterY, coreRadius, glowRadius
-            ));
+            ({ jitterX, jitterY, coreRadius, glowRadius } =
+                this.renderer.episodicEffectController.updateEpisodicEffects(
+                    this.renderer.currentUndertone,
+                    jitterX,
+                    jitterY,
+                    coreRadius,
+                    glowRadius
+                ));
         } else if (this.renderer.state.coreJitter || jitterAmount > 0) {
             // Regular jitter for other emotions
-            const jitterStrength = Math.max(jitterAmount, this.renderer.state.coreJitter ? this.renderer.scaleValue(2) : 0);
+            const jitterStrength = Math.max(
+                jitterAmount,
+                this.renderer.state.coreJitter ? this.renderer.scaleValue(2) : 0
+            );
             jitterX = (Math.random() - 0.5) * jitterStrength;
             jitterY = (Math.random() - 0.5) * jitterStrength;
         }
@@ -105,14 +114,21 @@ export class PositionJitterManager {
      */
     applyAllModifications(centerX, centerY, rotationAngle, coreRadius, glowRadius) {
         // Apply zen levitation
-        ({ centerX, centerY, rotationAngle } = this.applyZenLevitation(centerX, centerY, rotationAngle));
+        ({ centerX, centerY, rotationAngle } = this.applyZenLevitation(
+            centerX,
+            centerY,
+            rotationAngle
+        ));
 
         // Apply blink squish
         coreRadius = this.applyBlinkSquish(coreRadius);
 
         // Calculate jitter
         let jitterX, jitterY;
-        ({ jitterX, jitterY, coreRadius, glowRadius } = this.calculateJitter(coreRadius, glowRadius));
+        ({ jitterX, jitterY, coreRadius, glowRadius } = this.calculateJitter(
+            coreRadius,
+            glowRadius
+        ));
 
         // Calculate final position
         const { coreX, coreY } = this.calculateFinalPosition(centerX, centerY, jitterX, jitterY);

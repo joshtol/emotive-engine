@@ -7,18 +7,18 @@ import { selectWeightedColor } from '../utils/colorUtils.js';
 
 // Behavior configuration
 const config = {
-    baseSpeed: 0.08,           // Very slow base movement
-    driftSpeed: 0.02,          // Minimal drift speed
-    fadeSpeed: 0.0008,         // Very slow fade
-    sizeChange: 0.0002,        // Minimal size variation
-    swayAmplitude: 3,          // Gentle horizontal sway
-    floatAmplitude: 2,         // Minimal vertical float
-    rotationSpeed: 0.0001,     // Barely perceptible rotation
-    minOpacity: 0.15,          // Minimum visibility
-    maxOpacity: 0.35,          // Maximum visibility (subtle)
-    breathingPeriod: 8000,     // 8 second breathing cycle
-    connectionDistance: 0,      // No connections between particles
-    centerAttraction: 0.00005  // Very slight pull to center
+    baseSpeed: 0.08, // Very slow base movement
+    driftSpeed: 0.02, // Minimal drift speed
+    fadeSpeed: 0.0008, // Very slow fade
+    sizeChange: 0.0002, // Minimal size variation
+    swayAmplitude: 3, // Gentle horizontal sway
+    floatAmplitude: 2, // Minimal vertical float
+    rotationSpeed: 0.0001, // Barely perceptible rotation
+    minOpacity: 0.15, // Minimum visibility
+    maxOpacity: 0.35, // Maximum visibility (subtle)
+    breathingPeriod: 8000, // 8 second breathing cycle
+    connectionDistance: 0, // No connections between particles
+    centerAttraction: 0.00005, // Very slight pull to center
 };
 
 /**
@@ -27,9 +27,9 @@ const config = {
  */
 export function initializeCalm(particle) {
     // Start with faster initial burst movement
-    particle.vx = (Math.random() - 0.5) * 0.5;  // Increased 5x from 0.1
-    particle.vy = (Math.random() - 0.5) * 0.5;  // Increased 5x from 0.1
-    particle.lifeDecay = 0.003;  // Moderate fade (particles last ~5-6 seconds)
+    particle.vx = (Math.random() - 0.5) * 0.5; // Increased 5x from 0.1
+    particle.vy = (Math.random() - 0.5) * 0.5; // Increased 5x from 0.1
+    particle.lifeDecay = 0.003; // Moderate fade (particles last ~5-6 seconds)
 
     // Use emotion colors if provided
     if (particle.emotionColors && particle.emotionColors.length > 0) {
@@ -38,12 +38,12 @@ export function initializeCalm(particle) {
 
     // Calm-specific behavior data
     particle.behaviorData = {
-        orbitAngle: Math.random() * Math.PI * 2,  // Starting angle around center
-        orbitRadius: 40 + Math.random() * 60,      // Distance from center (40-100 pixels)
+        orbitAngle: Math.random() * Math.PI * 2, // Starting angle around center
+        orbitRadius: 40 + Math.random() * 60, // Distance from center (40-100 pixels)
         orbitSpeed: 0.0008 + Math.random() * 0.0006, // Faster orbit speed (4x)
         floatOffset: Math.random() * Math.PI * 2,
         breathingOffset: Math.random() * Math.PI * 2,
-        lifetime: 0
+        lifetime: 0,
     };
 }
 
@@ -61,7 +61,8 @@ export function updateCalm(particle, dt, centerX, centerY) {
     data.lifetime += dt;
 
     // Breathing effect (very subtle size change)
-    const breathPhase = (data.lifetime + data.breathingOffset * config.breathingPeriod) / config.breathingPeriod;
+    const breathPhase =
+        (data.lifetime + data.breathingOffset * config.breathingPeriod) / config.breathingPeriod;
     const breathIntensity = Math.sin(breathPhase * Math.PI * 2) * 0.5 + 0.5;
 
     // Apply subtle size pulsing
@@ -83,15 +84,15 @@ export function updateCalm(particle, dt, centerX, centerY) {
 
     // Smoothly move toward orbital position
     const dx = targetX - particle.x;
-    const dy = (targetY + floatY) - particle.y;
+    const dy = targetY + floatY - particle.y;
 
     // Faster movement toward target position
-    particle.vx = dx * 0.03;  // Faster following (3x)
-    particle.vy = dy * 0.03;  // Faster following (3x)
+    particle.vx = dx * 0.03; // Faster following (3x)
+    particle.vy = dy * 0.03; // Faster following (3x)
 
     // Add more random drift for organic feel
-    particle.vx += (Math.random() - 0.5) * 0.02;  // More drift
-    particle.vy += (Math.random() - 0.5) * 0.02;  // More drift
+    particle.vx += (Math.random() - 0.5) * 0.02; // More drift
+    particle.vy += (Math.random() - 0.5) * 0.02; // More drift
 
     // Apply very light friction
     particle.vx *= 0.98;
@@ -104,5 +105,5 @@ export default {
     emoji: '☯️',
     description: 'Peaceful orbital movement like a hovering aura',
     initialize: initializeCalm,
-    update: updateCalm
+    update: updateCalm,
 };

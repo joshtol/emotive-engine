@@ -45,7 +45,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 function hash(n) {
-    return ((Math.sin(n) * 43758.5453) % 1 + 1) % 1;
+    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
 }
 
 function noise1D(x) {
@@ -76,7 +76,7 @@ export function buildFireEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -86,8 +86,8 @@ export function buildFireEffectGesture(config) {
             amplitudeSync: {
                 onBeat: 1.8,
                 offBeat: 1.0,
-                curve: config.category === 'radiating' ? 'smooth' : 'sharp'
-            }
+                curve: config.category === 'radiating' ? 'smooth' : 'sharp',
+            },
         },
 
         /**
@@ -101,7 +101,7 @@ export function buildFireEffectGesture(config) {
                 const customEval = config['3d']?.evaluate;
                 const customResult = customEval ? customEval(progress, motion) : null;
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000;
+                const time = (progress * cfg.duration) / 1000;
                 const isRadiating = cfg.category === 'radiating';
 
                 // ═══════════════════════════════════════════════════════════════
@@ -120,46 +120,56 @@ export function buildFireEffectGesture(config) {
                 if (cfg.burstPhase && progress >= cfg.buildupPhase) {
                     const burstProgress = (progress - cfg.buildupPhase) / cfg.burstPhase;
                     // Quick peak then decay
-                    effectStrength = burstProgress < 0.3
-                        ? 1.0 + burstProgress * 3.33  // Ramp to 2.0
-                        : 2.0 * (1 - (burstProgress - 0.3) / 0.7);  // Decay from 2.0
+                    effectStrength =
+                        burstProgress < 0.3
+                            ? 1.0 + burstProgress * 3.33 // Ramp to 2.0
+                            : 2.0 * (1 - (burstProgress - 0.3) / 0.7); // Decay from 2.0
                 }
 
                 // Decay in final phase
-                if (progress > (1 - cfg.flickerDecay)) {
+                if (progress > 1 - cfg.flickerDecay) {
                     const decayProgress = (progress - (1 - cfg.flickerDecay)) / cfg.flickerDecay;
-                    effectStrength *= (1 - decayProgress);
+                    effectStrength *= 1 - decayProgress;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION - Flicker (burning) or stable (radiating)
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 if (cfg.flickerAmplitude > 0) {
                     const flickerTime = time * cfg.flickerFrequency;
 
                     // Multi-frequency noise for organic flame flicker
-                    posX = (
-                        noise1D(flickerTime) - 0.5 +
-                        (noise1D(flickerTime * 2.1 + 50) - 0.5) * 0.4
-                    ) * cfg.flickerAmplitude * effectStrength;
+                    posX =
+                        (noise1D(flickerTime) -
+                            0.5 +
+                            (noise1D(flickerTime * 2.1 + 50) - 0.5) * 0.4) *
+                        cfg.flickerAmplitude *
+                        effectStrength;
 
-                    posY = (
-                        noise1D(flickerTime + 33) - 0.5 +
-                        (noise1D(flickerTime * 1.8 + 83) - 0.5) * 0.5
-                    ) * cfg.flickerAmplitude * effectStrength;
+                    posY =
+                        (noise1D(flickerTime + 33) -
+                            0.5 +
+                            (noise1D(flickerTime * 1.8 + 83) - 0.5) * 0.5) *
+                        cfg.flickerAmplitude *
+                        effectStrength;
 
-                    posZ = (
-                        noise1D(flickerTime + 66) - 0.5
-                    ) * cfg.flickerAmplitude * effectStrength * 0.5;
+                    posZ =
+                        (noise1D(flickerTime + 66) - 0.5) *
+                        cfg.flickerAmplitude *
+                        effectStrength *
+                        0.5;
 
                     // Burst jitter for combust
                     if (cfg.burstJitter && progress >= cfg.buildupPhase) {
                         const burstMult = effectStrength > 1.0 ? effectStrength : 0;
                         posX += (noise1D(time * 50) - 0.5) * cfg.burstJitter * burstMult;
                         posY += (noise1D(time * 50 + 100) - 0.5) * cfg.burstJitter * burstMult;
-                        posZ += (noise1D(time * 50 + 200) - 0.5) * cfg.burstJitter * burstMult * 0.5;
+                        posZ +=
+                            (noise1D(time * 50 + 200) - 0.5) * cfg.burstJitter * burstMult * 0.5;
                     }
                 }
 
@@ -190,8 +200,9 @@ export function buildFireEffectGesture(config) {
                     }
                 } else {
                     // Burning: erratic vibration
-                    const scaleNoise = Math.sin(scaleTime * Math.PI * 2) * 0.5 +
-                                      Math.sin(scaleTime * Math.PI * 3.3) * 0.3;
+                    const scaleNoise =
+                        Math.sin(scaleTime * Math.PI * 2) * 0.5 +
+                        Math.sin(scaleTime * Math.PI * 3.3) * 0.3;
                     scale = 1.0 + scaleNoise * cfg.scaleVibration * effectStrength;
                 }
 
@@ -202,7 +213,7 @@ export function buildFireEffectGesture(config) {
 
                 // Burst expansion for combust
                 if (cfg.scaleBurst && progress >= cfg.buildupPhase) {
-                    const burstMult = effectStrength > 1.0 ? (effectStrength - 1.0) : 0;
+                    const burstMult = effectStrength > 1.0 ? effectStrength - 1.0 : 0;
                     scale += cfg.scaleBurst * burstMult;
                 }
 
@@ -220,14 +231,16 @@ export function buildFireEffectGesture(config) {
                     const flicker1 = Math.sin(flickerTime * Math.PI * 2);
                     const flicker2 = Math.sin(flickerTime * Math.PI * 4.7 + 1.3);
                     const flicker3 = hash(Math.floor(flickerTime * 3)) > 0.6 ? 1 : 0;
-                    flickerValue = (flicker1 * 0.3 + flicker2 * 0.2 + flicker3 * 0.4 + 0.5);
+                    flickerValue = flicker1 * 0.3 + flicker2 * 0.2 + flicker3 * 0.4 + 0.5;
                 }
 
-                const glowIntensity = cfg.glowIntensityMin +
+                const glowIntensity =
+                    cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * flickerValue * effectStrength;
 
-                const glowBoost = (flickerValue * 0.7 + 0.3) * effectStrength * cfg.intensity
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    (flickerValue * 0.7 + 0.3) * effectStrength * cfg.intensity +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // ROTATION - Use custom rotation if provided
@@ -263,14 +276,14 @@ export function buildFireEffectGesture(config) {
                         models: config.spawnMode?.models,
                         count: config.spawnMode?.count,
                         scale: config.spawnMode?.scale,
-                        embedDepth: config.spawnMode?.embedDepth
-                    }
+                        embedDepth: config.spawnMode?.embedDepth,
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 
 export default {
-    buildFireEffectGesture
+    buildFireEffectGesture,
 };

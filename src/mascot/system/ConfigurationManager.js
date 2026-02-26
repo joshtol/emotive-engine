@@ -32,7 +32,7 @@ export class ConfigurationManager {
             debugMode: config.debugMode ?? false,
             renderMode: config.renderMode || 'default',
             maxParticles: config.maxParticles || 100,
-            ...config
+            ...config,
         };
     }
 

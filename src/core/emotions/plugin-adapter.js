@@ -2,22 +2,22 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE v4.0 - Emotion Plugin Adapter
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Bridge between plugin system and emotion registry
  * @author Emotive Engine Team
  * @version 4.0.0
  * @module emotions/plugin-adapter
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Adapter for dynamic emotion registration from plugins.                            
- * ║ • Maintains separate registry for plugin emotions                                 
- * ║ • Validates emotion definitions for required properties                           
- * ║ • Provides legacy format conversion for older plugins                             
- * ║ • Enables runtime registration and unregistration                                 
+ * ║ Adapter for dynamic emotion registration from plugins.
+ * ║ • Maintains separate registry for plugin emotions
+ * ║ • Validates emotion definitions for required properties
+ * ║ • Provides legacy format conversion for older plugins
+ * ║ • Enables runtime registration and unregistration
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -36,35 +36,35 @@ export function registerPluginEmotion(name, emotionDef) {
     if (!emotionDef.color) {
         return false;
     }
-    
+
     // Add name if not present
     if (!emotionDef.name) {
         emotionDef.name = name;
     }
-    
+
     // Ensure visual and modifiers exist
     if (!emotionDef.visual) {
         emotionDef.visual = {
             primaryColor: emotionDef.color,
             particleCount: emotionDef.particleCount || 15,
-            particleSize: emotionDef.particleSize || { min: 2, max: 6 }
+            particleSize: emotionDef.particleSize || { min: 2, max: 6 },
         };
     }
-    
+
     if (!emotionDef.modifiers) {
         emotionDef.modifiers = {
             speed: 1.0,
             amplitude: 1.0,
-            intensity: 1.0
+            intensity: 1.0,
         };
     }
-    
+
     pluginEmotions.set(name, emotionDef);
-    
+
     if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
         // Debug logging would go here
     }
-    
+
     return true;
 }
 
@@ -75,11 +75,11 @@ export function registerPluginEmotion(name, emotionDef) {
 export function unregisterPluginEmotion(name) {
     if (pluginEmotions.has(name)) {
         pluginEmotions.delete(name);
-        
+
         if (typeof window !== 'undefined' && window.DEBUG_EMOTIONS) {
             // Debug logging would go here
         }
-        
+
         return true;
     }
     return false;
@@ -120,7 +120,7 @@ export function createLegacyAdapter(legacyEmotion) {
         emoji: legacyEmotion.emoji || '🔌',
         color: legacyEmotion.primaryColor || legacyEmotion.color || '#7B68EE',
         energy: legacyEmotion.energy || 'medium',
-        
+
         visual: {
             primaryColor: legacyEmotion.primaryColor || legacyEmotion.color || '#7B68EE',
             secondaryColor: legacyEmotion.secondaryColor,
@@ -128,24 +128,24 @@ export function createLegacyAdapter(legacyEmotion) {
             particleSize: legacyEmotion.particleSize || { min: 2, max: 6 },
             glowIntensity: legacyEmotion.glowIntensity || 0.5,
             trailLength: legacyEmotion.trailLength || 5,
-            pulseRate: legacyEmotion.pulseRate || legacyEmotion.breathRate || 1.0
+            pulseRate: legacyEmotion.pulseRate || legacyEmotion.breathRate || 1.0,
         },
-        
+
         particles: {
             behavior: legacyEmotion.particleBehavior || 'ambient',
             density: legacyEmotion.particleDensity || 'medium',
-            speed: legacyEmotion.particleSpeed || 'normal'
+            speed: legacyEmotion.particleSpeed || 'normal',
         },
-        
+
         modifiers: {
             speed: legacyEmotion.speedMultiplier || 1.0,
             amplitude: legacyEmotion.amplitudeMultiplier || 1.0,
             intensity: legacyEmotion.intensityMultiplier || 1.0,
-            smoothness: legacyEmotion.smoothnessMultiplier || 1.0
+            smoothness: legacyEmotion.smoothnessMultiplier || 1.0,
         },
-        
+
         gestures: legacyEmotion.gestures || [],
-        transitions: legacyEmotion.transitions || {}
+        transitions: legacyEmotion.transitions || {},
     };
 }
 
@@ -156,5 +156,5 @@ export default {
     getPluginEmotion,
     getAllPluginEmotions,
     clearPluginEmotions,
-    createLegacyAdapter
+    createLegacyAdapter,
 };

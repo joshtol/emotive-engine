@@ -14,7 +14,11 @@ export { default as CanvasManager } from './core/canvas/CanvasManager.js';
 export { default as AnimationController } from './core/AnimationController.js';
 
 // Performance Optimization
-export { AnimationLoopManager, animationLoopManager, AnimationPriority } from './core/AnimationLoopManager.js';
+export {
+    AnimationLoopManager,
+    animationLoopManager,
+    AnimationPriority,
+} from './core/AnimationLoopManager.js';
 export { GradientCache, gradientCache } from './core/renderer/GradientCache.js';
 export { ContextStateManager } from './core/renderer/ContextStateManager.js';
 

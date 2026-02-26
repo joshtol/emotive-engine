@@ -14,7 +14,7 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.7,
         emotionDuration: 500,
-        description: 'Small success (item scanned, form field validated)'
+        description: 'Small success (item scanned, form field validated)',
     },
 
     success_moderate: {
@@ -27,8 +27,8 @@ export const FEEDBACK_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'joy', intensity: 0.8 },
             { at: 200, action: 'gesture', value: 'bounce' },
-            { at: 600, action: 'gesture', value: 'wiggle' }
-        ]
+            { at: 600, action: 'gesture', value: 'wiggle' },
+        ],
     },
 
     success_major: {
@@ -42,8 +42,8 @@ export const FEEDBACK_PERFORMANCES = {
             { at: 0, action: 'emotion', value: 'joy', intensity: 0.85 },
             { at: 150, action: 'gesture', value: 'bounce' },
             { at: 500, action: 'emotion', value: 'triumph', intensity: 0.9 },
-            { at: 600, action: 'gesture', value: 'glow' }
-        ]
+            { at: 600, action: 'gesture', value: 'glow' },
+        ],
     },
 
     success_epic: {
@@ -57,8 +57,8 @@ export const FEEDBACK_PERFORMANCES = {
             { at: 0, action: 'emotion', value: 'triumph', intensity: 1.0 },
             { at: 200, action: 'gesture', value: 'glow' },
             { at: 700, action: 'morph', value: 'sun' },
-            { at: 700, action: 'chain', value: 'radiance' }
-        ]
+            { at: 700, action: 'chain', value: 'radiance' },
+        ],
     },
 
     // Error feedback
@@ -70,7 +70,7 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.6,
         emotionDuration: 500,
-        description: 'Minor error, easily recoverable'
+        description: 'Minor error, easily recoverable',
     },
 
     error_moderate: {
@@ -83,8 +83,8 @@ export const FEEDBACK_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'empathy', intensity: 0.75 },
             { at: 200, action: 'gesture', value: 'shake' },
-            { at: 600, action: 'gesture', value: 'nod' }
-        ]
+            { at: 600, action: 'gesture', value: 'nod' },
+        ],
     },
 
     error_major: {
@@ -98,8 +98,8 @@ export const FEEDBACK_PERFORMANCES = {
             { at: 0, action: 'emotion', value: 'empathy', intensity: 0.9 },
             { at: 150, action: 'gesture', value: 'shake' },
             { at: 500, action: 'gesture', value: 'nod' },
-            { at: 800, action: 'gesture', value: 'point' }
-        ]
+            { at: 800, action: 'gesture', value: 'point' },
+        ],
     },
 
     error_critical: {
@@ -112,8 +112,8 @@ export const FEEDBACK_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'empathy', intensity: 1.0 },
             { at: 100, action: 'gesture', value: 'shake' },
-            { at: 400, action: 'gesture', value: 'point' }
-        ]
+            { at: 400, action: 'gesture', value: 'point' },
+        ],
     },
 
     // Warning feedback
@@ -125,7 +125,7 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.7,
         emotionDuration: 500,
-        description: 'Warning, needs attention'
+        description: 'Warning, needs attention',
     },
 
     // Info feedback
@@ -137,7 +137,7 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 100,
         baseIntensity: 0.5,
         emotionDuration: 400,
-        description: 'Informational, passive notification'
+        description: 'Informational, passive notification',
     },
 
     // Progress feedback
@@ -149,7 +149,7 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 100,
         baseIntensity: 0.6,
         emotionDuration: 500,
-        description: 'Starting a process'
+        description: 'Starting a process',
     },
 
     progress_ongoing: {
@@ -160,7 +160,7 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 0,
         baseIntensity: 0.7,
         emotionDuration: 600,
-        description: 'Process ongoing, working'
+        description: 'Process ongoing, working',
     },
 
     progress_complete: {
@@ -171,8 +171,8 @@ export const FEEDBACK_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.8,
         emotionDuration: 500,
-        description: 'Process completed successfully'
-    }
+        description: 'Process completed successfully',
+    },
 };
 
 export default FEEDBACK_PERFORMANCES;

@@ -36,8 +36,8 @@ export default {
         strength: 1.0,
         particleMotion: {
             type: 'rage',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.6
-        }
+            multiplier: 1.6,
+        },
     },
 
     '3d': {
@@ -63,7 +63,8 @@ export default {
             // Phase 3 (0.6-0.8): Peak rage - explosive expansion
             // Phase 4 (0.8-1.0): Release - settle down
 
-            let posX = 0, posY = 0;
+            let posX = 0,
+                posY = 0;
             const posZ = 0;
             let rotX = 0;
             const rotY = 0;
@@ -90,7 +91,6 @@ export default {
 
                 // Beginning glow
                 glowIntensity = 1.0 + tensionEase * 0.3;
-
             } else if (progress < 0.6) {
                 // Phase 2: Building rage - intensifying
                 const buildT = (progress - 0.2) / 0.4;
@@ -115,7 +115,6 @@ export default {
                 // Building glow
                 glowIntensity = 1.3 + buildEase * 0.7;
                 glowBoost = buildEase * 0.5;
-
             } else if (progress < 0.8) {
                 // Phase 3: Peak rage - EXPLOSION
                 const peakT = (progress - 0.6) / 0.2;
@@ -137,13 +136,13 @@ export default {
                 // INTENSE glow
                 glowIntensity = 2.0 - peakT * 0.3;
                 glowBoost = 0.5 + Math.sin(peakT * Math.PI) * 0.3;
-
             } else {
                 // Phase 4: Release - settling
                 const releaseT = (progress - 0.8) / 0.2;
-                const releaseEase = releaseT < 0.5
-                    ? 4 * releaseT * releaseT * releaseT
-                    : 1 - Math.pow(-2 * releaseT + 2, 3) / 2;
+                const releaseEase =
+                    releaseT < 0.5
+                        ? 4 * releaseT * releaseT * releaseT
+                        : 1 - Math.pow(-2 * releaseT + 2, 3) / 2;
 
                 // Return to normal
                 posY = (0.07 - releaseEase * 0.07) * strength;
@@ -166,8 +165,8 @@ export default {
                 rotation: [rotX, rotY, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

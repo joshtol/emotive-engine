@@ -24,7 +24,7 @@ export const FRAME_TIMING = {
     RENDER_DELTA_CAP: 100,
 
     /** Frame budget for performance monitoring (ms) */
-    FRAME_BUDGET: 16.67
+    FRAME_BUDGET: 16.67,
 };
 
 /**
@@ -41,7 +41,7 @@ export const VISIBILITY = {
     PARTICLE_REDUCTION_FACTOR: 0.5,
 
     /** Minimum particles to keep after reduction */
-    MIN_PARTICLES_AFTER_REDUCTION: 10
+    MIN_PARTICLES_AFTER_REDUCTION: 10,
 };
 
 /**
@@ -55,7 +55,7 @@ export const AUDIO = {
     SMOOTHING_TIME_CONSTANT: 0.8,
 
     /** BPM lock timeout before retry (ms) */
-    BPM_LOCK_TIMEOUT: 10000
+    BPM_LOCK_TIMEOUT: 10000,
 };
 
 /**
@@ -72,7 +72,7 @@ export const MONITORING = {
     CONTEXT_DECAY_INTERVAL: 10000,
 
     /** Frustration decay interval (ms) */
-    FRUSTRATION_DECAY_INTERVAL: 10000
+    FRUSTRATION_DECAY_INTERVAL: 10000,
 };
 
 /**
@@ -95,7 +95,7 @@ export const ACCESSIBILITY = {
     REDUCED_MOTION_DISABLE_PARTICLES: false,
 
     /** Whether to disable auto-rotate in reduced motion mode */
-    REDUCED_MOTION_DISABLE_AUTO_ROTATE: true
+    REDUCED_MOTION_DISABLE_AUTO_ROTATE: true,
 };
 
 /**
@@ -118,31 +118,31 @@ export const DEFAULT_CONFIG = {
         deltaTimeCap: FRAME_TIMING.DELTA_TIME_CAP,
         particleDeltaCap: FRAME_TIMING.PARTICLE_DELTA_CAP,
         renderDeltaCap: FRAME_TIMING.RENDER_DELTA_CAP,
-        frameBudget: FRAME_TIMING.FRAME_BUDGET
+        frameBudget: FRAME_TIMING.FRAME_BUDGET,
     },
     visibility: {
         longPauseThreshold: VISIBILITY.LONG_PAUSE_THRESHOLD,
         mediumPauseThreshold: VISIBILITY.MEDIUM_PAUSE_THRESHOLD,
         particleReductionFactor: VISIBILITY.PARTICLE_REDUCTION_FACTOR,
-        minParticlesAfterReduction: VISIBILITY.MIN_PARTICLES_AFTER_REDUCTION
+        minParticlesAfterReduction: VISIBILITY.MIN_PARTICLES_AFTER_REDUCTION,
     },
     audio: {
         fftSize: AUDIO.FFT_SIZE,
         smoothingTimeConstant: AUDIO.SMOOTHING_TIME_CONSTANT,
-        bpmLockTimeout: AUDIO.BPM_LOCK_TIMEOUT
+        bpmLockTimeout: AUDIO.BPM_LOCK_TIMEOUT,
     },
     monitoring: {
         healthCheckInterval: MONITORING.HEALTH_CHECK_INTERVAL,
         featureFlagsRefresh: MONITORING.FEATURE_FLAGS_REFRESH,
         contextDecayInterval: MONITORING.CONTEXT_DECAY_INTERVAL,
-        frustrationDecayInterval: MONITORING.FRUSTRATION_DECAY_INTERVAL
+        frustrationDecayInterval: MONITORING.FRUSTRATION_DECAY_INTERVAL,
     },
     accessibility: {
         reducedMotionDurationMultiplier: ACCESSIBILITY.REDUCED_MOTION_DURATION_MULTIPLIER,
         reducedMotionParticleMultiplier: ACCESSIBILITY.REDUCED_MOTION_PARTICLE_MULTIPLIER,
         reducedMotionDisableParticles: ACCESSIBILITY.REDUCED_MOTION_DISABLE_PARTICLES,
-        reducedMotionDisableAutoRotate: ACCESSIBILITY.REDUCED_MOTION_DISABLE_AUTO_ROTATE
-    }
+        reducedMotionDisableAutoRotate: ACCESSIBILITY.REDUCED_MOTION_DISABLE_AUTO_ROTATE,
+    },
 };
 
 export default DEFAULT_CONFIG;

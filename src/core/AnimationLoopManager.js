@@ -11,11 +11,11 @@
  * @enum {number}
  */
 export const AnimationPriority = {
-    CRITICAL: 0,    // Must run every frame (e.g., main render)
-    HIGH: 1,        // Should run every frame if possible
-    MEDIUM: 2,      // Can skip frames if needed
-    LOW: 3,         // Background tasks, can be throttled
-    IDLE: 4         // Only run when idle
+    CRITICAL: 0, // Must run every frame (e.g., main render)
+    HIGH: 1, // Should run every frame if possible
+    MEDIUM: 2, // Can skip frames if needed
+    LOW: 3, // Background tasks, can be throttled
+    IDLE: 4, // Only run when idle
 };
 
 /**
@@ -45,7 +45,7 @@ export class AnimationLoopManager {
         this.prioritySkipCounters = {
             [AnimationPriority.MEDIUM]: 0,
             [AnimationPriority.LOW]: 0,
-            [AnimationPriority.IDLE]: 0
+            [AnimationPriority.IDLE]: 0,
         };
 
         // Performance monitoring
@@ -79,7 +79,7 @@ export class AnimationLoopManager {
             lastRun: 0,
             runCount: 0,
             totalTime: 0,
-            enabled: true
+            enabled: true,
         });
 
         // Auto-start if this is the first callback
@@ -173,7 +173,7 @@ export class AnimationLoopManager {
             AnimationPriority.HIGH,
             AnimationPriority.MEDIUM,
             AnimationPriority.LOW,
-            AnimationPriority.IDLE
+            AnimationPriority.IDLE,
         ]) {
             // Check frame budget (except for CRITICAL)
             if (priority > AnimationPriority.CRITICAL && timeSpent > this.frameBudget * 0.8) {
@@ -207,11 +207,13 @@ export class AnimationLoopManager {
                     callbackData.runCount++;
                     callbackData.lastRun = timestamp;
                     timeSpent += callbackTime;
-
                 } catch (error) {
                     console.error('Animation callback error:', error);
                     // Disable problematic callbacks
-                    if (callbackData.runCount > 0 && callbackData.totalTime / callbackData.runCount > 10) {
+                    if (
+                        callbackData.runCount > 0 &&
+                        callbackData.totalTime / callbackData.runCount > 10
+                    ) {
                         console.warn('Disabling slow callback');
                         callbackData.enabled = false;
                     }
@@ -236,7 +238,7 @@ export class AnimationLoopManager {
         const groups = new Map();
 
         for (const [, callbackData] of this.callbacks) {
-            const {priority} = callbackData;
+            const { priority } = callbackData;
 
             if (!groups.has(priority)) {
                 groups.set(priority, []);
@@ -294,7 +296,7 @@ export class AnimationLoopManager {
             callbackCount: this.callbacks.size,
             averageFrameTime: 0,
             maxFrameTime: 0,
-            minFrameTime: Infinity
+            minFrameTime: Infinity,
         };
 
         // Calculate frame time stats
@@ -311,12 +313,12 @@ export class AnimationLoopManager {
         // Get callback stats by priority
         stats.callbacksByPriority = {};
         for (const [, callback] of this.callbacks) {
-            const {priority} = callback;
+            const { priority } = callback;
             if (!stats.callbacksByPriority[priority]) {
                 stats.callbacksByPriority[priority] = {
                     count: 0,
                     totalTime: 0,
-                    enabled: 0
+                    enabled: 0,
                 };
             }
             stats.callbacksByPriority[priority].count++;

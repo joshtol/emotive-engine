@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Configuration Index
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Central export for all particle configuration
@@ -20,5 +20,5 @@ import { PLAYGROUND } from './playground.js';
 export default {
     PHYSICS,
     LIFECYCLE,
-    PLAYGROUND
+    PLAYGROUND,
 };

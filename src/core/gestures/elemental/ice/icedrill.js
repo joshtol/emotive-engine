@@ -44,9 +44,9 @@ const ICEDRILL_CONFIG = {
     emoji: '🔩',
     type: 'blending',
     description: 'Fast tight descending ice helix',
-    duration: 1200,         // Quick intense burst
+    duration: 1200, // Quick intense burst
     beats: 2,
-    intensity: 1.5,         // High intensity
+    intensity: 1.5, // High intensity
     category: 'transform',
     frost: 0.7,
 
@@ -57,19 +57,19 @@ const ICEDRILL_CONFIG = {
             axis: 'y',
             start: 'feet',
             end: 'below',
-            easing: 'easeIn',       // Accelerating downward
+            easing: 'easeIn', // Accelerating downward
             startScale: 1.0,
             endScale: 0.8,
-            startDiameter: 1.8,     // Wide at top
-            endDiameter: 1.4,       // Narrower at drill point
-            orientation: 'vertical'
+            startDiameter: 1.8, // Wide at top
+            endDiameter: 1.4, // Narrower at drill point
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 6,
-            spacing: 0.1,           // Tight spacing
-            arcOffset: 60,          // 60° between each (6 * 60 = 360)
-            phaseOffset: 0
+            spacing: 0.1, // Tight spacing
+            arcOffset: 60, // 60° between each (6 * 60 = 360)
+            phaseOffset: 0,
         },
         count: 6,
         scale: 1.4,
@@ -77,65 +77,67 @@ const ICEDRILL_CONFIG = {
         animation: {
             appearAt: 0.0,
             disappearAt: 0.6,
-            stagger: 0.03,          // Fast sequential spawn
+            stagger: 0.03, // Fast sequential spawn
             enter: {
                 type: 'fade',
                 duration: 0.05,
-                easing: 'linear'
+                easing: 'linear',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.05,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 frost: {
                     start: 0.4,
                     peak: 0.8,
                     end: 0.5,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             // VORONOI cutout for crystalline drilling
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 3, scale: 1.5, weight: 1.0 },    // VORONOI - crystalline
+                primary: { pattern: 3, scale: 1.5, weight: 1.0 }, // VORONOI - crystalline
                 secondary: { pattern: 8, scale: 0.8, weight: 0.35 }, // CRACKS - fracture lines
                 blend: 'add',
                 travel: 'vertical',
-                travelSpeed: 3.0,           // Fast drilling travel
-                strengthCurve: 'constant'
+                travelSpeed: 3.0, // Fast drilling travel
+                strengthCurve: 'constant',
             },
             // Grain: film grain for drilling ice spray
             grain: {
-                type: 3,              // FILM
-                strength: 0.3,        // Stronger for intense effect
+                type: 3, // FILM
+                strength: 0.3, // Stronger for intense effect
                 scale: 0.2,
-                speed: 4.0,           // Fast for drilling energy
-                blend: 'multiply'
+                speed: 4.0, // Fast for drilling energy
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: cold mist from drilling
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 1.0, tangentialBias: 0.3 },
+                },
+            ],
             pulse: {
                 amplitude: 0.08,
-                frequency: 10,      // Fast pulse
-                easing: 'linear'
+                frequency: 10, // Fast pulse
+                easing: 'linear',
             },
             // Fast unified rotation for drill effect
-            rotate: { axis: 'y', rotations: 4, phase: 0 },  // 4 full rotations
+            rotate: { axis: 'y', rotations: 4, phase: 0 }, // 4 full rotations
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
             blending: 'normal',
@@ -144,14 +146,14 @@ const ICEDRILL_CONFIG = {
                 'ice-ring': {
                     shaderAnimation: {
                         type: 1,
-                        arcWidth: 0.5,    // Narrow arcs for drill bits
-                        arcSpeed: 3.0,    // Fast internal animation
-                        arcCount: 1
+                        arcWidth: 0.5, // Narrow arcs for drill bits
+                        arcSpeed: 3.0, // Fast internal animation
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
     // Glow - intense ice blue
@@ -165,7 +167,7 @@ const ICEDRILL_CONFIG = {
     scaleGrowth: 0.03,
     // Tremor - drilling energy
     tremor: 0.006,
-    tremorFrequency: 8
+    tremorFrequency: 8,
 };
 
 /**

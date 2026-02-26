@@ -41,20 +41,34 @@ export function createSharedState(initial = {}) {
         recording: false,
         audioLevel: 0,
         currentModularGesture: null,
-        ...initial
+        ...initial,
     };
 
     const listeners = new Map();
 
     return {
         // Getters
-        get speaking() { return state.speaking; },
-        get isRunning() { return state.isRunning; },
-        get debugMode() { return state.debugMode; },
-        get sleeping() { return state.sleeping; },
-        get recording() { return state.recording; },
-        get audioLevel() { return state.audioLevel; },
-        get currentModularGesture() { return state.currentModularGesture; },
+        get speaking() {
+            return state.speaking;
+        },
+        get isRunning() {
+            return state.isRunning;
+        },
+        get debugMode() {
+            return state.debugMode;
+        },
+        get sleeping() {
+            return state.sleeping;
+        },
+        get recording() {
+            return state.recording;
+        },
+        get audioLevel() {
+            return state.audioLevel;
+        },
+        get currentModularGesture() {
+            return state.currentModularGesture;
+        },
 
         // Setters with optional change notification
         setSpeaking(value) {
@@ -113,7 +127,7 @@ export function createSharedState(initial = {}) {
         // Get raw state object (for debugging)
         toJSON() {
             return { ...state };
-        }
+        },
     };
 }
 
@@ -133,7 +147,7 @@ export function createSharedStateFromMascot(mascot) {
         sleeping: mascot.sleeping || false,
         recording: mascot.recording || false,
         audioLevel: mascot.audioLevel || 0,
-        currentModularGesture: mascot.currentModularGesture || null
+        currentModularGesture: mascot.currentModularGesture || null,
     });
 
     // Sync writes back to mascot (during migration)

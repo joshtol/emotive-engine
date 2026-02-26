@@ -19,19 +19,19 @@
 export class BreathingAnimator {
     constructor() {
         // Base breathing configuration
-        this.breathingSpeed = 1.0;      // Base breathing speed
-        this.breathingDepth = 0.03;     // Base breathing depth (3% scale oscillation)
+        this.breathingSpeed = 1.0; // Base breathing speed
+        this.breathingDepth = 0.03; // Base breathing depth (3% scale oscillation)
 
         // Breathing state
-        this.breathingPhase = 0;        // Current phase in breathing cycle [0, 2π]
-        this.breathRate = 1.0;          // Emotion-specific rate multiplier
-        this.breathDepth = 0.03;        // Emotion-specific depth
-        this.breathRateMult = 1.0;      // Undertone rate multiplier
-        this.breathDepthMult = 1.0;     // Undertone depth multiplier
+        this.breathingPhase = 0; // Current phase in breathing cycle [0, 2π]
+        this.breathRate = 1.0; // Emotion-specific rate multiplier
+        this.breathDepth = 0.03; // Emotion-specific depth
+        this.breathRateMult = 1.0; // Undertone rate multiplier
+        this.breathDepthMult = 1.0; // Undertone depth multiplier
 
         // Rhythm coordination
-        this.rhythmAdapter = null;      // Optional Rhythm3DAdapter reference
-        this.grooveBlendFactor = 0.4;   // Reduce breathing to 40% during groove
+        this.rhythmAdapter = null; // Optional Rhythm3DAdapter reference
+        this.grooveBlendFactor = 0.4; // Reduce breathing to 40% during groove
 
         // Emotion-specific breathing patterns (matches 2D BreathingAnimator)
         this.emotionBreathPatterns = {
@@ -59,7 +59,7 @@ export class BreathingAnimator {
             grateful: { rate: 0.9, depth: 1.1 },
             inspired: { rate: 1.0, depth: 1.3 },
             silly: { rate: 1.4, depth: 1.2 },
-            sleepy: { rate: 0.3, depth: 1.4 }
+            sleepy: { rate: 0.3, depth: 1.4 },
         };
     }
 
@@ -164,7 +164,7 @@ export class BreathingAnimator {
             depth: this.breathDepth,
             scale: this.getBreathingScale(),
             rateMult: this.breathRateMult,
-            depthMult: this.breathDepthMult
+            depthMult: this.breathDepthMult,
         };
     }
 

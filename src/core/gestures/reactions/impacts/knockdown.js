@@ -31,13 +31,13 @@ export default {
     description: 'Quick knockdown with fast recovery',
 
     config: {
-        duration: 1500,  // Shorter than knockout
+        duration: 1500, // Shorter than knockout
         musicalDuration: { musical: true, bars: 1 },
         strength: 1.0,
         particleMotion: {
             type: 'knockdown',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -48,8 +48,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.4
-        }
+            multiplier: 1.4,
+        },
     },
 
     '3d': {
@@ -64,7 +64,8 @@ export default {
             // Phase 4 (0.6-1.0): Recovery - get back up
 
             const posX = 0;
-            let posY = 0, posZ = 0;
+            let posY = 0,
+                posZ = 0;
             let rotX = 0;
             const rotY = 0;
             let rotZ = 0;
@@ -84,7 +85,6 @@ export default {
                 // Flash
                 glowIntensity = 1.0 + hitEase * 0.6;
                 glowBoost = hitEase * 0.5;
-
             } else if (progress < 0.4) {
                 // Phase 2: Fall down - faster than knockout
                 const fallT = (progress - 0.15) / 0.25;
@@ -103,7 +103,6 @@ export default {
 
                 glowIntensity = 1.6 - fallT * 0.5;
                 glowBoost = 0.5 - fallT * 0.4;
-
             } else if (progress < 0.6) {
                 // Phase 3: Brief down time
                 const downT = (progress - 0.4) / 0.2;
@@ -119,13 +118,13 @@ export default {
 
                 scale = 0.9;
                 glowIntensity = 0.8;
-
             } else {
                 // Phase 4: Recovery - get back up
                 const recoverT = (progress - 0.6) / 0.4;
-                const recoverEase = recoverT < 0.5
-                    ? 4 * recoverT * recoverT * recoverT
-                    : 1 - Math.pow(-2 * recoverT + 2, 3) / 2;
+                const recoverEase =
+                    recoverT < 0.5
+                        ? 4 * recoverT * recoverT * recoverT
+                        : 1 - Math.pow(-2 * recoverT + 2, 3) / 2;
 
                 // Rise up
                 posY = (-0.2 + recoverEase * 0.2) * strength;
@@ -145,7 +144,7 @@ export default {
 
                 // Final pulse
                 if (recoverT > 0.9) {
-                    glowBoost = (recoverT - 0.9) / 0.1 * 0.2;
+                    glowBoost = ((recoverT - 0.9) / 0.1) * 0.2;
                 }
             }
 
@@ -154,8 +153,8 @@ export default {
                 rotation: [rotX, rotY, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

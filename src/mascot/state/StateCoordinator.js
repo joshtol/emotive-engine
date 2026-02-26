@@ -72,10 +72,10 @@ export class StateCoordinator {
     setEmotion(emotion, options = null) {
         // Map common aliases to actual emotion states
         const emotionMapping = {
-            'happy': 'joy',
-            'curious': 'surprise',
-            'frustrated': 'anger',
-            'sad': 'sadness'
+            happy: 'joy',
+            curious: 'surprise',
+            frustrated: 'anger',
+            sad: 'sadness',
         };
 
         // Use mapped emotion or original if not an alias
@@ -97,7 +97,11 @@ export class StateCoordinator {
         this.emotionIntensity = intensity;
 
         // Set emotional state in state machine
-        const success = this.stateMachine.setEmotion(mappedEmotion, { undertone, duration, intensity });
+        const success = this.stateMachine.setEmotion(mappedEmotion, {
+            undertone,
+            duration,
+            intensity,
+        });
 
         if (success) {
             // Register emotion's rhythm configuration
@@ -118,9 +122,9 @@ export class StateCoordinator {
                 // DECIMATED neutral
                 let initialCount;
                 if (mappedEmotion === 'neutral') {
-                    initialCount = 1;  // DECIMATED to 1 particle
+                    initialCount = 1; // DECIMATED to 1 particle
                 } else if (mappedEmotion === 'resting') {
-                    initialCount = 4;  // Keep resting at 4
+                    initialCount = 4; // Keep resting at 4
                 } else {
                     initialCount = Math.min(3, Math.floor(emotionalProps.particleRate / 4));
                 }
@@ -160,7 +164,6 @@ export class StateCoordinator {
 
             // Emit emotion change event
             this._emit('emotionChanged', { emotion: mappedEmotion, undertone, duration });
-
         }
 
         this.currentEmotion = mappedEmotion;
@@ -178,12 +181,20 @@ export class StateCoordinator {
      * @returns {Object} Chain target
      */
     pushEmotion(emotion, intensity = 0.5) {
-        const emotionMapping = { 'happy': 'joy', 'curious': 'surprise', 'frustrated': 'anger', 'sad': 'sadness' };
+        const emotionMapping = {
+            happy: 'joy',
+            curious: 'surprise',
+            frustrated: 'anger',
+            sad: 'sadness',
+        };
         const mapped = emotionMapping[emotion] || emotion;
         this.stateMachine.pushEmotion(mapped, intensity);
         const dom = this.stateMachine.getDominant();
         if (dom) this.currentEmotion = dom.emotion;
-        this._emit('emotionChanged', { emotion: this.currentEmotion, slots: this.stateMachine.getSlots() });
+        this._emit('emotionChanged', {
+            emotion: this.currentEmotion,
+            slots: this.stateMachine.getSlots(),
+        });
         return this._chainTarget;
     }
 
@@ -195,7 +206,12 @@ export class StateCoordinator {
      * @returns {Object} Chain target
      */
     nudgeEmotion(emotion, delta, cap = 1.0) {
-        const emotionMapping = { 'happy': 'joy', 'curious': 'surprise', 'frustrated': 'anger', 'sad': 'sadness' };
+        const emotionMapping = {
+            happy: 'joy',
+            curious: 'surprise',
+            frustrated: 'anger',
+            sad: 'sadness',
+        };
         const mapped = emotionMapping[emotion] || emotion;
         this.stateMachine.nudgeEmotion(mapped, delta, cap);
         const dom = this.stateMachine.getDominant();
@@ -260,7 +276,9 @@ export class StateCoordinator {
     // ═══════════════════════════════════════════════════════════════════
 
     /** @returns {ModifierManager} */
-    get modifiers() { return this._modifierManager; }
+    get modifiers() {
+        return this._modifierManager;
+    }
 
     /**
      * Cleanup

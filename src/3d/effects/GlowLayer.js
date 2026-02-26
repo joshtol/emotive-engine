@@ -68,7 +68,7 @@ export class GlowLayer {
                 centerUV: { value: new THREE.Vector2(0.5, 0.5) },
                 time: { value: 0.0 },
                 ringPhase: { value: 0.0 }, // 0 = tight ring, 1 = expanded
-                aspectRatio: { value: 1.0 }
+                aspectRatio: { value: 1.0 },
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -134,7 +134,7 @@ export class GlowLayer {
             transparent: true,
             blending: THREE.AdditiveBlending,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
         });
 
         this.glowMesh = new THREE.Mesh(geometry, material);
@@ -174,7 +174,8 @@ export class GlowLayer {
 
         // Smooth lerp to target glow amount
         const lerpSpeed = 8.0; // Fast response for gestures
-        this.glowAmount += (this.targetGlowAmount - this.glowAmount) * Math.min(1.0, lerpSpeed * dt);
+        this.glowAmount +=
+            (this.targetGlowAmount - this.glowAmount) * Math.min(1.0, lerpSpeed * dt);
 
         // Smooth lerp color
         this.glowColor.lerp(this.targetGlowColor, Math.min(1.0, lerpSpeed * dt));
@@ -219,7 +220,7 @@ export class GlowLayer {
         }
 
         // Save renderer state
-        const {autoClear} = renderer;
+        const { autoClear } = renderer;
         renderer.autoClear = false;
 
         // Render glow layer on top of existing frame

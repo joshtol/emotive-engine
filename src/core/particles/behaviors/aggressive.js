@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Aggressive Behavior
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Sharp, chaotic movement for angry emotional states
  * @author Emotive Engine Team
  * @module particles/behaviors/aggressive
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates an intense, volatile atmosphere with particles moving erratically.        
- * ║ Sharp jitters and sudden bursts of movement convey anger and frustration.         
+ * ║ Creates an intense, volatile atmosphere with particles moving erratically.
+ * ║ Sharp jitters and sudden bursts of movement convey anger and frustration.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
  * VISUAL DIAGRAM:
@@ -22,12 +22,12 @@
  *    ⚡← ⭐ →⚡      ← orb center (shaking)
  *        ↗  ↖
  *      ⚡←    →⚡
- * 
+ *
  * USED BY EMOTIONS:
  * - anger (rage, fury)
  * - frustration
  * - irritation
- * 
+ *
  * RECIPE TO MODIFY:
  * - Increase jitter for more chaotic movement
  * - Increase acceleration for more violent bursts
@@ -40,7 +40,7 @@ import { PHYSICS } from '../config/physics.js';
 /**
  * Initialize aggressive behavior for a particle
  * Sets up chaotic, sharp movement patterns
- * 
+ *
  * @param {Particle} particle - The particle to initialize
  */
 export function initializeAggressive(particle) {
@@ -49,23 +49,23 @@ export function initializeAggressive(particle) {
     particle.vx = Math.cos(angle) * speed;
     particle.vy = Math.sin(angle) * speed;
     particle.lifeDecay = 0.015;
-    
+
     // Use emotion colors if provided
     if (particle.emotionColors && particle.emotionColors.length > 0) {
         particle.color = selectWeightedColor(particle.emotionColors);
     }
-    
+
     particle.behaviorData = {
         acceleration: 0.05,
         jitter: 0.3,
-        speedDecay: 0.95
+        speedDecay: 0.95,
     };
 }
 
 /**
  * Update aggressive behavior each frame
  * Applies jitter and random acceleration bursts
- * 
+ *
  * @param {Particle} particle - The particle to update
  * @param {number} dt - Delta time (frame time)
  * @param {number} centerX - Orb center X (unused)
@@ -73,15 +73,15 @@ export function initializeAggressive(particle) {
  */
 export function updateAggressive(particle, dt, _centerX, _centerY) {
     const data = particle.behaviorData;
-    
+
     // Add jitter to movement
     particle.vx += (Math.random() - 0.5) * data.jitter * dt;
     particle.vy += (Math.random() - 0.5) * data.jitter * dt;
-    
+
     // Apply speed decay (frame-independent)
     particle.vx *= Math.pow(data.speedDecay, dt);
     particle.vy *= Math.pow(data.speedDecay, dt);
-    
+
     // Occasionally add burst of acceleration
     // Scale probability with frame time
     if (Math.random() < Math.min(0.05 * dt, 0.5)) {
@@ -97,5 +97,5 @@ export default {
     emoji: '⚡',
     description: 'Sharp, chaotic movement with violent bursts',
     initialize: initializeAggressive,
-    update: updateAggressive
+    update: updateAggressive,
 };

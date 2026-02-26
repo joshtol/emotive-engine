@@ -35,8 +35,8 @@ export default {
         strength: 1.0,
         particleMotion: {
             type: 'backflip',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -47,8 +47,8 @@ export default {
 
         accentResponse: {
             enabled: true,
-            multiplier: 1.4
-        }
+            multiplier: 1.4,
+        },
     },
 
     '3d': {
@@ -61,9 +61,10 @@ export default {
             // Backflip: rotate backward (top of head goes back first, away from camera)
             // This is POSITIVE X rotation in standard 3D (right-hand rule)
             // Use smooth cubic ease that guarantees exact completion
-            const easeProgress = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            const easeProgress =
+                progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
             // Ensure we hit exactly 0 at start and exactly 2π at end
             const targetAngle = Math.PI * 2 * rotations; // Positive for backflip
@@ -102,8 +103,8 @@ export default {
                 rotation: [flipAngle, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

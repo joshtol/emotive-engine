@@ -47,12 +47,18 @@ const EARTHBARRAGE_CONFIG = {
             easing: 'easeIn',
             startScale: 1.0,
             endScale: 0.7,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: { type: 'ring', count: 5 },
         count: 5,
         scale: 1.2,
-        models: ['rock-chunk-medium', 'boulder', 'rock-chunk-medium', 'boulder', 'rock-chunk-medium'],
+        models: [
+            'rock-chunk-medium',
+            'boulder',
+            'rock-chunk-medium',
+            'boulder',
+            'rock-chunk-medium',
+        ],
         animation: {
             appearAt: 0.0,
             disappearAt: 0.65,
@@ -67,32 +73,35 @@ const EARTHBARRAGE_CONFIG = {
                 { axis: 'y', rotations: -2, phase: 40 },
                 { axis: 'z', rotations: 1.5, phase: 100 },
                 { axis: 'x', rotations: -1.5, phase: 180 },
-                { axis: 'y', rotations: 2, phase: 250 }
+                { axis: 'y', rotations: 2, phase: 250 },
             ],
-            atmospherics: [{
-                preset: 'earth-gravel',
-                targets: ['rock-chunk-medium', 'boulder'],
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 0.6,
-                progressCurve: 'sustain',
-            }, {
-                preset: 'earth-dust',
-                targets: ['rock-chunk-medium'],
-                anchor: 'around',
-                intensity: 0.2,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-gravel',
+                    targets: ['rock-chunk-medium', 'boulder'],
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 0.6,
+                    progressCurve: 'sustain',
+                },
+                {
+                    preset: 'earth-dust',
+                    targets: ['rock-chunk-medium'],
+                    anchor: 'around',
+                    intensity: 0.2,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.25,
             lifetimeVariance: 0.1,
             blending: 'normal',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.9,
     glowFlickerRate: 3,
@@ -100,7 +109,7 @@ const EARTHBARRAGE_CONFIG = {
     scaleFrequency: 3,
     scalePulse: true,
     tremor: 0.005,
-    tremorFrequency: 4
+    tremorFrequency: 4,
 };
 
 export default buildEarthEffectGesture(EARTHBARRAGE_CONFIG);

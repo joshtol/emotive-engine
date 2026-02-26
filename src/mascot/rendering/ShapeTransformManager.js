@@ -61,26 +61,33 @@ export class ShapeTransformManager {
      * @returns {EmotiveMascot} Parent mascot instance for chaining
      */
     morphTo(shape, config = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (!this.shapeMorpher) {
-                // ShapeMorpher not initialized
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.shapeMorpher) {
+                    // ShapeMorpher not initialized
+                    return this._chainTarget;
+                }
+
+                // Start the morph
+                this.shapeMorpher.morphTo(shape, config);
+
+                // Pass shape morpher to renderer
+                if (this.renderer) {
+                    this.renderer.shapeMorpher = this.shapeMorpher;
+                }
+
+                // Emit event
+                this._emit('shapeMorphStarted', {
+                    from: this.shapeMorpher.currentShape,
+                    to: shape,
+                });
+
+                // Morphing to new shape
                 return this._chainTarget;
-            }
-
-            // Start the morph
-            this.shapeMorpher.morphTo(shape, config);
-
-            // Pass shape morpher to renderer
-            if (this.renderer) {
-                this.renderer.shapeMorpher = this.shapeMorpher;
-            }
-
-            // Emit event
-            this._emit('shapeMorphStarted', { from: this.shapeMorpher.currentShape, to: shape });
-
-            // Morphing to new shape
-            return this._chainTarget;
-        }, 'morphTo', this._chainTarget)();
+            },
+            'morphTo',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -97,12 +104,16 @@ export class ShapeTransformManager {
      * mascot.setBackdrop({ enabled: true, intensity: 0.8, radius: 2 });
      */
     setBackdrop(options = {}) {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.backdropRenderer) {
-                this.renderer.backdropRenderer.setConfig(options);
-            }
-            return this._chainTarget;
-        }, 'setBackdrop', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer && this.renderer.backdropRenderer) {
+                    this.renderer.backdropRenderer.setConfig(options);
+                }
+                return this._chainTarget;
+            },
+            'setBackdrop',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -110,11 +121,15 @@ export class ShapeTransformManager {
      * @returns {Object} Current backdrop config
      */
     getBackdrop() {
-        return this.errorBoundary.wrap(() => {
-            if (this.renderer && this.renderer.backdropRenderer) {
-                return this.renderer.backdropRenderer.getConfig();
-            }
-            return null;
-        }, 'getBackdrop', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (this.renderer && this.renderer.backdropRenderer) {
+                    return this.renderer.backdropRenderer.getConfig();
+                }
+                return null;
+            },
+            'getBackdrop',
+            this._chainTarget
+        )();
     }
 }

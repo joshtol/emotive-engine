@@ -64,7 +64,7 @@ const ICEMIST_CONFIG = {
             endScale: 2.2,
             startDiameter: 0.5,
             endDiameter: 2.5,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: { type: 'stack', count: 1, spacing: 0 },
         count: 1,
@@ -81,13 +81,13 @@ const ICEMIST_CONFIG = {
                     start: 0.2,
                     peak: 0.5,
                     end: 0.3,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 3, scale: 1.2, weight: 1.0 },    // VORONOI - crystalline fracture
-                secondary: { pattern: 8, scale: 1.5, weight: 0.4 },  // CRACKS - frost fractures
+                primary: { pattern: 3, scale: 1.2, weight: 1.0 }, // VORONOI - crystalline fracture
+                secondary: { pattern: 8, scale: 1.5, weight: 0.4 }, // CRACKS - frost fractures
                 blend: 'multiply',
                 travel: 'radial',
                 travelSpeed: 0.8,
@@ -95,39 +95,41 @@ const ICEMIST_CONFIG = {
                 trailDissolve: {
                     enabled: true,
                     offset: -0.3,
-                    softness: 1.5
-                }
+                    softness: 1.5,
+                },
             },
             grain: { type: 3, strength: 0.2, scale: 0.35, speed: 0.6, blend: 'multiply' },
             // Per-gesture atmospheric particles: ground-level cold mist
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.4,
-                sizeScale: 1.5,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.4,
+                    sizeScale: 1.5,
+                    progressCurve: 'sustain',
+                },
+            ],
             pulse: {
                 amplitude: 0.08,
                 frequency: 2,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.8,
                 max: 1.8,
                 frequency: 3,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             blending: 'normal',
             renderOrder: 8,
             modelOverrides: {
                 'ice-ring': {
                     shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0.2, arcCount: 1 },
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     },
 
     // Glow - soft icy blue
@@ -138,7 +140,7 @@ const ICEMIST_CONFIG = {
     // Scale - gentle breathing
     scaleVibration: 0.008,
     scaleFrequency: 2,
-    scaleGrowth: 0.01
+    scaleGrowth: 0.01,
 };
 
 /**

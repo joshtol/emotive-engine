@@ -65,7 +65,7 @@ export {
     smootherstep,
     backIn,
     backOut,
-    backInOut
+    backInOut,
 } from './Easing.js';
 
 // Animation configuration
@@ -77,14 +77,11 @@ export {
     FLICKER_DEFAULTS,
     DRIFT_DEFAULTS,
     ROTATE_DEFAULTS,
-    EMISSIVE_DEFAULTS
+    EMISSIVE_DEFAULTS,
 } from './AnimationConfig.js';
 
 // Animation state machine
-export {
-    AnimationState,
-    AnimationStates
-} from './AnimationState.js';
+export { AnimationState, AnimationStates } from './AnimationState.js';
 
 // Hold animation functions
 export {
@@ -96,11 +93,8 @@ export {
     calculateRotation,
     calculateEmissive,
     calculateBreathingEmissive,
-    calculateHoldAnimations
+    calculateHoldAnimations,
 } from './HoldAnimations.js';
 
 // Trail effect
-export {
-    TrailState,
-    createTrailState
-} from './Trail.js';
+export { TrailState, createTrailState } from './Trail.js';

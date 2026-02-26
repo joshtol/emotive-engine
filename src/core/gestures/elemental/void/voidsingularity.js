@@ -37,19 +37,19 @@ const VOIDSINGULARITY_CONFIG = {
     intensity: 1.5,
     category: 'annihilation',
     depth: 0.8,
-    distortionStrength: 0,   // ZERO — disk must be perfectly round, distortion warps its pixels
+    distortionStrength: 0, // ZERO — disk must be perfectly round, distortion warps its pixels
 
     spawnMode: {
         type: 'anchor',
         anchor: {
             landmark: 'center',
             offset: { x: 0, y: 0, z: 0 },
-            cameraOffset: 2.5,       // Push toward camera by 2.5× mascotRadius — prevents clipping into mascot
-            orientation: 'camera',   // Billboard — always faces camera for perfect circle
+            cameraOffset: 2.5, // Push toward camera by 2.5× mascotRadius — prevents clipping into mascot
+            orientation: 'camera', // Billboard — always faces camera for perfect circle
             wander: {
-                radius: 0.12,        // Subtle drift — black hole meanders
-                speedX: 0.25,        // Slow, incommensurate frequencies
-                speedZ: 0.18,        // for natural Lissajous path
+                radius: 0.12, // Subtle drift — black hole meanders
+                speedX: 0.25, // Slow, incommensurate frequencies
+                speedZ: 0.18, // for natural Lissajous path
             },
         },
         count: 1,
@@ -65,37 +65,40 @@ const VOIDSINGULARITY_CONFIG = {
             pulse: { amplitude: 0.08, frequency: 1.0, easing: 'easeInOut' },
             // No cutout — binary discard doesn't work with cutout patterns
             // No grain — same reason
-            atmospherics: [{
-                preset: 'shadow',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.25,
-                sizeScale: 1.2,
-                progressCurve: 'rampUp',
-            }, {
-                preset: 'darkness',
-                targets: ['void-disk'],
-                anchor: 'around',
-                intensity: 0.7,
-                sizeScale: 0.6,
-                speedScale: 0.1,
-                lifetimeScale: 0.4,
-                progressCurve: 'sustain',
-                gravity: {
-                    strength: 1.8,       // Strong pull — singularity consumes
-                    spawnRadius: 0.4,    // Spawn in ring around disk
+            atmospherics: [
+                {
+                    preset: 'shadow',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.25,
+                    sizeScale: 1.2,
+                    progressCurve: 'rampUp',
                 },
-            }],
+                {
+                    preset: 'darkness',
+                    targets: ['void-disk'],
+                    anchor: 'around',
+                    intensity: 0.7,
+                    sizeScale: 0.6,
+                    speedScale: 0.1,
+                    lifetimeScale: 0.4,
+                    progressCurve: 'sustain',
+                    gravity: {
+                        strength: 1.8, // Strong pull — singularity consumes
+                        spawnRadius: 0.4, // Spawn in ring around disk
+                    },
+                },
+            ],
             scaleVariance: 0,
             lifetimeVariance: 0,
             blending: 'normal',
             renderOrder: 3,
             modelOverrides: {
                 'void-disk': {
-                    diskMode: true
-                }
-            }
-        }
+                    diskMode: true,
+                },
+            },
+        },
     },
 
     jitterAmount: 0,
@@ -109,7 +112,7 @@ const VOIDSINGULARITY_CONFIG = {
     scaleVibration: 0.01,
     scaleFrequency: 1,
     scalePulse: true,
-    rotationDrift: 0.003
+    rotationDrift: 0.003,
 };
 
 export default buildVoidEffectGesture(VOIDSINGULARITY_CONFIG);

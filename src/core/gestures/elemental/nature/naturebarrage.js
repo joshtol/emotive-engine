@@ -62,11 +62,11 @@ const NATUREBARRAGE_CONFIG = {
             easing: 'easeIn',
             startScale: 1.0,
             endScale: 0.6,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'ring',
-            count: 5
+            count: 5,
         },
         count: 5,
         scale: 1.3,
@@ -78,24 +78,24 @@ const NATUREBARRAGE_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.08,
-                easing: 'easeOutBack'
+                easing: 'easeOutBack',
             },
             exit: {
                 type: 'burst-fade',
                 duration: 0.15,
                 easing: 'easeIn',
-                burstScale: 1.3
+                burstScale: 1.3,
             },
             pulse: {
                 amplitude: 0.1,
                 frequency: 5,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.8,
                 max: 2.0,
                 frequency: 5,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Per-element tumbling - each spins on different axes for chaotic motion
             rotate: [
@@ -103,21 +103,23 @@ const NATUREBARRAGE_CONFIG = {
                 { axis: 'y', rotations: -3, phase: 40 },
                 { axis: 'z', rotations: 2.5, phase: 100 },
                 { axis: 'x', rotations: -2, phase: 180 },
-                { axis: 'y', rotations: 3, phase: 250 }
+                { axis: 'y', rotations: 3, phase: 250 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'normal',
             renderOrder: 12,
-            atmospherics: [{
-                preset: 'falling-leaves',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.3,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-            }]
-        }
+            atmospherics: [
+                {
+                    preset: 'falling-leaves',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                },
+            ],
+        },
     },
 
     // Glow - deep green for attack
@@ -132,7 +134,7 @@ const NATUREBARRAGE_CONFIG = {
     // Tremor - aggressive energy
     tremor: 0.006,
     tremorFrequency: 5,
-    decayRate: 0.15
+    decayRate: 0.15,
     // NOTE: No cutout or grain for orbit gestures - tumbling provides visual variety
 };
 

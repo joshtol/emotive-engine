@@ -45,7 +45,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -67,14 +67,14 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 import {
     WETNESS_UNIFORMS_GLSL,
     WETNESS_FUNC_GLSL,
     createWetnessUniforms,
     setWetness,
-    resetWetness
+    resetWetness,
 } from '../cores/WetnessCore.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -84,12 +84,12 @@ import {
 const EARTH_DEFAULTS = {
     petrification: 0.5,
     intensity: 1.2,
-    opacity: 1.0,          // Opaque stone — no transparency
-    pulseSpeed: 0.5,        // Slow geological pulse
+    opacity: 1.0, // Opaque stone — no transparency
+    pulseSpeed: 0.5, // Slow geological pulse
     veinIntensity: 0.6,
-    wetSpeed: 0.3,          // Slow geological moisture drift
+    wetSpeed: 0.3, // Slow geological moisture drift
     fadeInDuration: 0.15,
-    fadeOutDuration: 0.3
+    fadeOutDuration: 0.3,
 };
 
 function lerp(a, b, t) {
@@ -106,10 +106,10 @@ function lerp(a, b, t) {
  */
 function deriveEarthParameters(petrification, overrides = {}) {
     return {
-        intensity: overrides.intensity ?? lerp(0.85, 1.1, petrification),  // Matte stone — never bright
+        intensity: overrides.intensity ?? lerp(0.85, 1.1, petrification), // Matte stone — never bright
         pulseSpeed: overrides.pulseSpeed ?? lerp(0.3, 0.8, petrification),
-        veinIntensity: overrides.veinIntensity ?? lerp(0.2, 0.6, petrification),  // Subtle mica
-        wetness: overrides.wetness ?? lerp(0.55, 0.25, petrification)  // Loose earth wetter, petrified stone drier
+        veinIntensity: overrides.veinIntensity ?? lerp(0.2, 0.6, petrification), // Subtle mica
+        wetness: overrides.wetness ?? lerp(0.55, 0.25, petrification), // Loose earth wetter, petrified stone drier
     };
 }
 
@@ -117,7 +117,7 @@ function deriveEarthParameters(petrification, overrides = {}) {
 // NOISE GLSL (required by cutout system — snoise must exist)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 float noiseHash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
     p *= 17.0;
@@ -190,7 +190,7 @@ float voronoiEdge(vec2 p) {
 // INSTANCED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -345,7 +345,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uPetrification;
 uniform float uIntensity;
@@ -839,12 +839,14 @@ export function createInstancedEarthMaterial(options = {}) {
         pulseSpeed = null,
         veinIntensity = null,
         fadeInDuration = EARTH_DEFAULTS.fadeInDuration,
-        fadeOutDuration = EARTH_DEFAULTS.fadeOutDuration
+        fadeOutDuration = EARTH_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Derive petrification-dependent parameters
     const derived = deriveEarthParameters(petrification, {
-        intensity, pulseSpeed, veinIntensity
+        intensity,
+        pulseSpeed,
+        veinIntensity,
     });
 
     const material = new THREE.ShaderMaterial({
@@ -860,21 +862,24 @@ export function createInstancedEarthMaterial(options = {}) {
             uRelayArcWidth: { value: 3.14159 },
             uRelayFloor: { value: 0.0 },
             // Shared wetness system
-            ...createWetnessUniforms({ wetness: derived.wetness, wetSpeed: EARTH_DEFAULTS.wetSpeed }),
+            ...createWetnessUniforms({
+                wetness: derived.wetness,
+                wetSpeed: EARTH_DEFAULTS.wetSpeed,
+            }),
             // Earth uniforms
             uPetrification: { value: petrification },
             uIntensity: { value: derived.intensity },
             uOpacity: { value: opacity },
             uPulseSpeed: { value: derived.pulseSpeed },
             uVeinIntensity: { value: derived.veinIntensity },
-            uBloomThreshold: { value: 0.75 }
+            uBloomThreshold: { value: 0.75 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
-        transparent: true,         // Needed for spawn/exit fades and cutout
+        transparent: true, // Needed for spawn/exit fades and cutout
         blending: THREE.NormalBlending,
         depthWrite: true,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.petrification = petrification;
@@ -990,7 +995,24 @@ export function resetRelay(material) {
 }
 
 // Re-export animation types and shared functions for convenience
-export { ANIMATION_TYPES, CUTOUT_PATTERNS, CUTOUT_BLEND, CUTOUT_TRAVEL, GRAIN_TYPES, GRAIN_BLEND, setShaderAnimation, setGestureGlow, setGlowScale, setCutout, resetCutout, setGrain, resetGrain, resetAnimation, setWetness, resetWetness };
+export {
+    ANIMATION_TYPES,
+    CUTOUT_PATTERNS,
+    CUTOUT_BLEND,
+    CUTOUT_TRAVEL,
+    GRAIN_TYPES,
+    GRAIN_BLEND,
+    setShaderAnimation,
+    setGestureGlow,
+    setGlowScale,
+    setCutout,
+    resetCutout,
+    setGrain,
+    resetGrain,
+    resetAnimation,
+    setWetness,
+    resetWetness,
+};
 
 export default {
     createInstancedEarthMaterial,
@@ -1013,5 +1035,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

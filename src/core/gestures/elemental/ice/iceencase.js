@@ -53,74 +53,76 @@ const ICEENCASE_CONFIG = {
     // 3D Element spawning - crystals growing on mascot surface
     spawnMode: {
         type: 'surface',
-        pattern: 'shell',               // Even coverage for full encasement
-        embedDepth: 0.2,                // Slightly embedded into surface
-        cameraFacing: 0.4,              // Mostly surface-normal aligned, some camera bias
-        clustering: 0.1,                // Even distribution
-        count: 10,                      // Dense crystal coverage
+        pattern: 'shell', // Even coverage for full encasement
+        embedDepth: 0.2, // Slightly embedded into surface
+        cameraFacing: 0.4, // Mostly surface-normal aligned, some camera bias
+        clustering: 0.1, // Even distribution
+        count: 10, // Dense crystal coverage
         scale: 1.8,
-        minDistance: 0.1,               // Dense for encasement
+        minDistance: 0.1, // Dense for encasement
         models: ['crystal-cluster', 'crystal-medium', 'crystal-small', 'ice-spike'],
         animation: {
             appearAt: 0.05,
             disappearAt: 0.9,
-            stagger: 0.04,              // Progressive spread across surface
+            stagger: 0.04, // Progressive spread across surface
             enter: {
-                type: 'grow',           // Crystals grow outward from surface
+                type: 'grow', // Crystals grow outward from surface
                 duration: 0.12,
-                easing: 'easeOutQuad'
+                easing: 'easeOutQuad',
             },
             exit: {
                 type: 'shrink',
                 duration: 0.15,
-                easing: 'easeInQuad'
+                easing: 'easeInQuad',
             },
             procedural: {
                 scaleSmoothing: 0.1,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 frost: {
                     start: 0.5,
                     peak: 0.9,
                     end: 0.7,
-                    curve: 'fadeIn'
-                }
+                    curve: 'fadeIn',
+                },
             },
             // Frozen shimmer - slow crystalline pulse
             pulse: {
                 amplitude: 0.05,
                 frequency: 1.2,
                 easing: 'easeInOut',
-                sync: 'global'
+                sync: 'global',
             },
             emissive: {
                 min: 0.5,
                 max: 0.9,
                 frequency: 1.5,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Per-gesture atmospheric particles: cold mist as ice encases
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                },
+            ],
             // Edge breakup: ice shader's own Voronoi cracks become actual geometry
             // holes at silhouette edges, creating jagged crystalline outlines.
             // Only edgeMask needed — the ice shader uses its own crack computation.
             cutout: {
-                edgeMask: 0.3
+                edgeMask: 0.3,
             },
             // Very slow oscillating rotation
             rotate: {
                 axis: 'y',
                 speed: 0.008,
                 oscillate: true,
-                range: Math.PI / 16
+                range: Math.PI / 16,
             },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
@@ -128,7 +130,7 @@ const ICEENCASE_CONFIG = {
             renderOrder: 6,
             intensityScaling: {
                 scale: 1.25,
-                emissiveMax: 1.2
+                emissiveMax: 1.2,
             },
             // Model-specific behavior overrides
             modelOverrides: {
@@ -138,10 +140,10 @@ const ICEENCASE_CONFIG = {
                         axes: {
                             x: { expand: true, rate: 1.0 },
                             y: { expand: true, rate: 1.4 },
-                            z: { expand: true, rate: 1.0 }
+                            z: { expand: true, rate: 1.0 },
                         },
-                        easing: 'easeOutQuad'
-                    }
+                        easing: 'easeOutQuad',
+                    },
                 },
                 'crystal-medium': {
                     scaling: {
@@ -149,9 +151,9 @@ const ICEENCASE_CONFIG = {
                         axes: {
                             x: { expand: true, rate: 1.1 },
                             y: { expand: true, rate: 1.5 },
-                            z: { expand: true, rate: 1.1 }
-                        }
-                    }
+                            z: { expand: true, rate: 1.1 },
+                        },
+                    },
                 },
                 'crystal-cluster': {
                     scaling: {
@@ -159,9 +161,9 @@ const ICEENCASE_CONFIG = {
                         axes: {
                             x: { expand: true, rate: 1.3 },
                             y: { expand: true, rate: 1.2 },
-                            z: { expand: true, rate: 1.3 }
-                        }
-                    }
+                            z: { expand: true, rate: 1.3 },
+                        },
+                    },
                 },
                 'ice-spike': {
                     scaling: {
@@ -169,12 +171,12 @@ const ICEENCASE_CONFIG = {
                         axes: {
                             x: { expand: false, rate: 0.85 },
                             y: { expand: true, rate: 1.8 },
-                            z: { expand: false, rate: 0.85 }
-                        }
-                    }
-                }
-            }
-        }
+                            z: { expand: false, rate: 0.85 },
+                        },
+                    },
+                },
+            },
+        },
     },
 
     // Glow - solid ice blue
@@ -191,7 +193,7 @@ const ICEENCASE_CONFIG = {
     tremorFrequency: 6,
     tremorDecay: 0.8,
     // Decay
-    decayRate: 0.15
+    decayRate: 0.15,
 };
 
 /**

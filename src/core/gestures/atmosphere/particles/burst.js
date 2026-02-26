@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Burst Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Burst gesture - explosive outward motion
@@ -17,98 +17,98 @@ export default {
     emoji: '💥',
     type: 'blending',
     description: 'Explosive outward burst from center',
-    
+
     // Default configuration
     config: {
-        decay: 0.5,      // Force reduction over time
-        strength: 2.0    // Initial explosion intensity
+        decay: 0.5, // Force reduction over time
+        strength: 2.0, // Initial explosion intensity
     },
-    
+
     // Rhythm configuration - explosive bursts on strong beats
     rhythm: {
         enabled: true,
-        syncMode: 'beat',  // Burst on strong beats and accents
-        
+        syncMode: 'beat', // Burst on strong beats and accents
+
         // Strength syncs to beat intensity
         strengthSync: {
-            onBeat: 3.5,          // Powerful burst on beats
-            offBeat: 1.0,         // Gentle burst off-beat
-            curve: 'explosion'    // Sharp attack, rapid decay
+            onBeat: 3.5, // Powerful burst on beats
+            offBeat: 1.0, // Gentle burst off-beat
+            curve: 'explosion', // Sharp attack, rapid decay
         },
-        
+
         // Decay rate responds to tempo
         decaySync: {
             mode: 'tempo',
-            fast: 0.8,            // Quick decay for fast songs
-            slow: 0.3,            // Slow decay for slow songs
-            curve: 'exponential'
+            fast: 0.8, // Quick decay for fast songs
+            slow: 0.3, // Slow decay for slow songs
+            curve: 'exponential',
         },
-        
+
         // Duration matches beat timing
         durationSync: {
             mode: 'beats',
-            beats: 0.5,           // Half-beat burst duration
-            sustain: false        // No sustain, pure burst
+            beats: 0.5, // Half-beat burst duration
+            sustain: false, // No sustain, pure burst
         },
-        
+
         // Strong response to accents
         accentResponse: {
             enabled: true,
-            multiplier: 2.5,      // Massive burst on accents
-            type: 'strength'      // Accent affects burst power
+            multiplier: 2.5, // Massive burst on accents
+            type: 'strength', // Accent affects burst power
         },
-        
+
         // Pattern-specific burst styles
         patternOverrides: {
-            'rock': {
+            rock: {
                 // Heavy, aggressive bursts
                 strengthSync: { onBeat: 4.0, offBeat: 1.5 },
-                decaySync: { fast: 0.6, slow: 0.4 }
+                decaySync: { fast: 0.6, slow: 0.4 },
             },
-            'electronic': {
+            electronic: {
                 // Sharp, precise bursts
                 strengthSync: { onBeat: 3.8, offBeat: 0.8, curve: 'sharp' },
-                decaySync: { fast: 0.9, slow: 0.7 }
+                decaySync: { fast: 0.9, slow: 0.7 },
             },
-            'jazz': {
+            jazz: {
                 // Syncopated, varied bursts
-                strengthSync: { 
-                    onBeat: 2.8, 
-                    offBeat: 1.8,  // Strong off-beat emphasis
-                    swing: true 
+                strengthSync: {
+                    onBeat: 2.8,
+                    offBeat: 1.8, // Strong off-beat emphasis
+                    swing: true,
                 },
-                decaySync: { fast: 0.5, slow: 0.2 }
+                decaySync: { fast: 0.5, slow: 0.2 },
             },
-            'orchestral': {
+            orchestral: {
                 // Dynamic, expressive bursts
                 strengthSync: { onBeat: 3.2, offBeat: 0.5 },
-                accentResponse: { multiplier: 3.0 }  // Very responsive to dynamics
-            }
+                accentResponse: { multiplier: 3.0 }, // Very responsive to dynamics
+            },
         },
-        
+
         // Musical dynamics variations
         dynamics: {
             forte: {
                 // Explosive, powerful bursts
-                strengthSync: { 
+                strengthSync: {
                     onBeat: { multiplier: 2.0 },
-                    offBeat: { multiplier: 1.5 }
+                    offBeat: { multiplier: 1.5 },
                 },
-                decaySync: { multiplier: 0.7 },  // Slower decay for impact
-                accentResponse: { multiplier: 3.5 }
+                decaySync: { multiplier: 0.7 }, // Slower decay for impact
+                accentResponse: { multiplier: 3.5 },
             },
             piano: {
                 // Subtle, gentle bursts
-                strengthSync: { 
+                strengthSync: {
                     onBeat: { multiplier: 0.6 },
-                    offBeat: { multiplier: 0.3 }
+                    offBeat: { multiplier: 0.3 },
                 },
-                decaySync: { multiplier: 1.3 },  // Faster decay for gentleness
-                accentResponse: { multiplier: 1.8 }
-            }
-        }
+                decaySync: { multiplier: 1.3 }, // Faster decay for gentleness
+                accentResponse: { multiplier: 1.8 },
+            },
+        },
     },
-    
+
     /**
      * Apply explosive burst motion to particle
      * Pushes particles radially outward with decaying force
@@ -145,16 +145,19 @@ export default {
             // Phase 1: Explosive forward burst (0-0.15)
             // Phase 2: Overshoot recoil back (0.15-0.35)
             // Phase 3: Settle with damped oscillation (0.35-1.0)
-            let forward = 0, scale = 1.0, glow = 1.0, glowBoost = 0;
+            let forward = 0,
+                scale = 1.0,
+                glow = 1.0,
+                glowBoost = 0;
 
             if (progress < 0.15) {
                 // Explosive forward burst toward camera
                 const attack = progress / 0.15;
                 const eased = 1 - Math.pow(1 - attack, 3); // Ease-out
-                forward = eased * 0.15 * strength;  // Surge toward camera
+                forward = eased * 0.15 * strength; // Surge toward camera
                 scale = 1.0 + eased * 0.2 * strength;
                 glow = 1.0 + eased * 0.5;
-                glowBoost = eased * 0.4;  // Strong initial flash
+                glowBoost = eased * 0.4; // Strong initial flash
             } else if (progress < 0.35) {
                 // Recoil back past origin
                 const recoilT = (progress - 0.15) / 0.2;
@@ -180,8 +183,8 @@ export default {
                 rotation: [0, 0, 0],
                 scale,
                 glowIntensity: glow,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

@@ -105,10 +105,12 @@ export class Timeline {
         this.play(startMs);
         // Schedule stop at section end
         const dur = endMs - startMs;
-        this._timers.push(setTimeout(() => {
-            this._fireSectionCallbacks(sectionName, 'exit');
-            if (!this._loopState) this.stop();
-        }, dur));
+        this._timers.push(
+            setTimeout(() => {
+                this._fireSectionCallbacks(sectionName, 'exit');
+                if (!this._loopState) this.stop();
+            }, dur)
+        );
     }
 
     /**
@@ -141,9 +143,11 @@ export class Timeline {
         this._scheduleEvents(startMs, endMs);
         this._startBeatLoop();
 
-        this._timers.push(setTimeout(() => {
-            this._playLoopIteration();
-        }, dur));
+        this._timers.push(
+            setTimeout(() => {
+                this._playLoopIteration();
+            }, dur)
+        );
     }
 
     /**
@@ -186,7 +190,9 @@ export class Timeline {
     onBeat(everyNBeats, callback) {
         const entry = { every: everyNBeats, callback, lastBeat: -1 };
         this._onBeatCallbacks.push(entry);
-        return () => { this._onBeatCallbacks = this._onBeatCallbacks.filter(e => e !== entry); };
+        return () => {
+            this._onBeatCallbacks = this._onBeatCallbacks.filter(e => e !== entry);
+        };
     }
 
     /**
@@ -199,7 +205,9 @@ export class Timeline {
     onSection(sectionName, event, callback) {
         const entry = { section: sectionName, event, callback };
         this._onSectionCallbacks.push(entry);
-        return () => { this._onSectionCallbacks = this._onSectionCallbacks.filter(e => e !== entry); };
+        return () => {
+            this._onSectionCallbacks = this._onSectionCallbacks.filter(e => e !== entry);
+        };
     }
 
     /**
@@ -237,39 +245,45 @@ export class Timeline {
         for (const event of sorted) {
             if (event.time < fromMs || event.time >= untilMs) continue;
             const delay = event.time - fromMs;
-            this._timers.push(setTimeout(() => {
-                if (this._isPlaying) this._executeEvent(event);
-            }, Math.max(0, delay)));
+            this._timers.push(
+                setTimeout(
+                    () => {
+                        if (this._isPlaying) this._executeEvent(event);
+                    },
+                    Math.max(0, delay)
+                )
+            );
         }
     }
 
     /** @private */
     _executeEvent(event) {
         switch (event.action) {
-        case 'emotion':
-            if (this._mascot.setEmotion) {
-                this._mascot.setEmotion(event.value, event.options || undefined);
-            }
-            break;
-        case 'gesture':
-            if (this._mascot.express) this._mascot.express(event.value);
-            else if (this._mascot.triggerGesture) this._mascot.triggerGesture(event.value);
-            break;
-        case 'morph':
-            if (this._mascot.morphTo) this._mascot.morphTo(event.value, event.options || undefined);
-            break;
-        case 'audioLayer':
-            // event.value is a mix object like { combat: 1.0 }
-            // Consumer must wire this to AudioLayerManager
-            break;
-        case 'nudge':
-            if (this._mascot.nudgeEmotion && event.value) {
-                this._mascot.nudgeEmotion(event.value.emotion, event.value.delta);
-            }
-            break;
-        case 'callback':
-            if (typeof event.value === 'function') event.value();
-            break;
+            case 'emotion':
+                if (this._mascot.setEmotion) {
+                    this._mascot.setEmotion(event.value, event.options || undefined);
+                }
+                break;
+            case 'gesture':
+                if (this._mascot.express) this._mascot.express(event.value);
+                else if (this._mascot.triggerGesture) this._mascot.triggerGesture(event.value);
+                break;
+            case 'morph':
+                if (this._mascot.morphTo)
+                    this._mascot.morphTo(event.value, event.options || undefined);
+                break;
+            case 'audioLayer':
+                // event.value is a mix object like { combat: 1.0 }
+                // Consumer must wire this to AudioLayerManager
+                break;
+            case 'nudge':
+                if (this._mascot.nudgeEmotion && event.value) {
+                    this._mascot.nudgeEmotion(event.value.emotion, event.value.delta);
+                }
+                break;
+            case 'callback':
+                if (typeof event.value === 'function') event.value();
+                break;
         }
     }
 

@@ -44,18 +44,22 @@ export class SystemStatusReporter {
      * @returns {Object} System status with all subsystem metrics
      */
     getSystemStatus() {
-        return this.errorBoundary.wrap(() => {
-            return {
-                ...this.getCoreStatus(),
-                ...this.getEmotionalStatus(),
-                ...this.getGestureStatus(),
-                particles: this.getParticleStatus(),
-                ...this.getAudioStatus(),
-                renderer: this.getRendererStatus(),
-                eventListeners: this.getEventListenerCount(),
-                errorStats: this.getErrorStats()
-            };
-        }, 'system-status', {})();
+        return this.errorBoundary.wrap(
+            () => {
+                return {
+                    ...this.getCoreStatus(),
+                    ...this.getEmotionalStatus(),
+                    ...this.getGestureStatus(),
+                    particles: this.getParticleStatus(),
+                    ...this.getAudioStatus(),
+                    renderer: this.getRendererStatus(),
+                    eventListeners: this.getEventListenerCount(),
+                    errorStats: this.getErrorStats(),
+                };
+            },
+            'system-status',
+            {}
+        )();
     }
 
     /**
@@ -69,7 +73,7 @@ export class SystemStatusReporter {
             isRunning: animationMetrics.isRunning,
             fps: animationMetrics.fps,
             targetFPS: animationMetrics.targetFPS,
-            performanceDegradation: animationMetrics.performanceDegradation
+            performanceDegradation: animationMetrics.performanceDegradation,
         };
     }
 
@@ -84,7 +88,7 @@ export class SystemStatusReporter {
             emotion: state.emotion,
             undertone: state.undertone,
             isTransitioning: state.isTransitioning,
-            transitionProgress: state.transitionProgress
+            transitionProgress: state.transitionProgress,
         };
     }
 
@@ -95,7 +99,7 @@ export class SystemStatusReporter {
     getGestureStatus() {
         return {
             currentGesture: this.renderer?.currentGesture || null,
-            gestureActive: this.renderer?.isGestureActive() || false
+            gestureActive: this.renderer?.isGestureActive() || false,
         };
     }
 
@@ -109,7 +113,7 @@ export class SystemStatusReporter {
         return {
             active: particleStats.activeParticles,
             max: particleStats.maxParticles,
-            poolEfficiency: particleStats.poolEfficiency
+            poolEfficiency: particleStats.poolEfficiency,
         };
     }
 
@@ -123,7 +127,7 @@ export class SystemStatusReporter {
             soundSystemAvailable: this.soundSystem.isAvailable(),
             speaking: this._state.speaking,
             audioLevel: this._state.audioLevel,
-            masterVolume: this.config.masterVolume
+            masterVolume: this.config.masterVolume,
         };
     }
 
@@ -137,7 +141,7 @@ export class SystemStatusReporter {
         return {
             gradientCacheSize: rendererStats.gradientCacheSize,
             breathingPhase: rendererStats.breathingPhase,
-            layers: rendererStats.layers
+            layers: rendererStats.layers,
         };
     }
 

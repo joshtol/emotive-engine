@@ -23,49 +23,49 @@ export default {
 
     // Visual properties
     visual: {
-        glowColor: '#00BCD4',        // Cyan baseline (more modern)
-        particleRate: 2,              // Minimal particle generation
-        minParticles: 8,             // Baseline particle presence
-        maxParticles: 10,            // Limited particle count
+        glowColor: '#00BCD4', // Cyan baseline (more modern)
+        particleRate: 2, // Minimal particle generation
+        minParticles: 8, // Baseline particle presence
+        maxParticles: 10, // Limited particle count
         particleBehavior: 'ambient', // Gentle floating behavior
-        breathRate: 1.0,             // Normal, relaxed breathing
-        breathDepth: 0.08,           // Subtle breath variation
-        coreJitter: false,           // Stable, still core
-        blinkRate: 1.0,              // Baseline blink frequency
-        blinkSpeed: 1.0,             // Baseline blink animation speed
+        breathRate: 1.0, // Normal, relaxed breathing
+        breathDepth: 0.08, // Subtle breath variation
+        coreJitter: false, // Stable, still core
+        blinkRate: 1.0, // Baseline blink frequency
+        blinkSpeed: 1.0, // Baseline blink animation speed
         particleColors: [
-            { color: '#00BCD4', weight: 25 },  // Primary cyan
-            { color: '#00ACC1', weight: 20 },  // Darker cyan
-            { color: '#26C6DA', weight: 15 },  // Light cyan
-            { color: '#B2EBF2', weight: 15 },  // Pale cyan highlight
-            { color: '#0097A7', weight: 10 },  // Deep cyan shadow
-            { color: '#80DEEA', weight: 10 },  // Cyan light
-            { color: '#E0F7FA', weight: 5 }    // Very pale cyan
-        ]
+            { color: '#00BCD4', weight: 25 }, // Primary cyan
+            { color: '#00ACC1', weight: 20 }, // Darker cyan
+            { color: '#26C6DA', weight: 15 }, // Light cyan
+            { color: '#B2EBF2', weight: 15 }, // Pale cyan highlight
+            { color: '#0097A7', weight: 10 }, // Deep cyan shadow
+            { color: '#80DEEA', weight: 10 }, // Cyan light
+            { color: '#E0F7FA', weight: 5 }, // Very pale cyan
+        ],
     },
 
     // Gesture modifiers
     modifiers: {
-        speed: 1.0,        // Baseline movement speed
-        amplitude: 1.0,    // Standard motion range
-        intensity: 1.0,    // Default force level
-        smoothness: 1.0,   // Natural motion flow
-        regularity: 1.0    // Consistent patterns
+        speed: 1.0, // Baseline movement speed
+        amplitude: 1.0, // Standard motion range
+        intensity: 1.0, // Default force level
+        smoothness: 1.0, // Natural motion flow
+        regularity: 1.0, // Consistent patterns
     },
 
     // Typical gestures for this emotion
     typicalGestures: [
-        'breathe',   // Calm breathing
-        'float',     // Gentle floating
-        'idle',      // Idle animation
-        'blink'      // Occasional blinks
+        'breathe', // Calm breathing
+        'float', // Gentle floating
+        'idle', // Idle animation
+        'blink', // Occasional blinks
     ],
 
     // Transition hints
     transitions: {
-        duration: 500,      // Standard transition duration
+        duration: 500, // Standard transition duration
         easing: 'easeInOut', // Balanced transition curve
-        priority: 0         // Baseline priority level
+        priority: 0, // Baseline priority level
     },
 
     /**
@@ -79,7 +79,7 @@ export default {
             scaleY: 1.0,
             eyeOpenness: 1.0,
             eyeExpression: 'neutral', // neutral, happy, sad, focused
-            pupilOffset: { x: 0, y: 0 }
+            pupilOffset: { x: 0, y: 0 },
         };
     },
 
@@ -99,35 +99,35 @@ export default {
     // 3D rotation behavior and effects
     '3d': {
         rotation: {
-            type: 'gentle',             // Smooth slow spin
-            speed: 1.0,                 // 1.0x baseline rotation speed
-            axes: [0, 0.3, 0],          // Rotation rates [X, Y, Z] - 0.3 rad/sec (~10 sec per rotation)
-            musicSync: false            // Neutral doesn't sync to music
+            type: 'gentle', // Smooth slow spin
+            speed: 1.0, // 1.0x baseline rotation speed
+            axes: [0, 0.3, 0], // Rotation rates [X, Y, Z] - 0.3 rad/sec (~10 sec per rotation)
+            musicSync: false, // Neutral doesn't sync to music
         },
         glow: {
-            color: '#00BCD4',           // Cyan baseline
-            intensity: 0.9,             // Slightly softer glow
+            color: '#00BCD4', // Cyan baseline
+            intensity: 0.9, // Slightly softer glow
             pulse: {
-                speed: 1.0,             // Normal pulsing (matches breathRate)
-                range: [0.8, 1.0]       // Subtle pulse between 80% and 100%
-            }
+                speed: 1.0, // Normal pulsing (matches breathRate)
+                range: [0.8, 1.0], // Subtle pulse between 80% and 100%
+            },
         },
         scale: {
             base: 1.0,
             breathe: {
                 enabled: true,
-                depth: 0.08,            // 8% size variation (matches breathDepth)
-                rate: 1.0               // Normal breathing (matches breathRate)
-            }
-        }
+                depth: 0.08, // 8% size variation (matches breathDepth)
+                rate: 1.0, // Normal breathing (matches breathRate)
+            },
+        },
     },
 
     // Soul/energy animation parameters (geometry-agnostic)
     // Used by: Crystal (inner core), Sun (plasma flow), Moon (subtle glow pulse)
     soulAnimation: {
-        driftSpeed: 0.5,        // Energy movement speed - calm, steady baseline
-        shimmerSpeed: 0.5,      // Vertical pulse speed - gentle
-        turbulence: 0.2         // Chaos/randomness factor - minimal
+        driftSpeed: 0.5, // Energy movement speed - calm, steady baseline
+        shimmerSpeed: 0.5, // Vertical pulse speed - gentle
+        turbulence: 0.2, // Chaos/randomness factor - minimal
     },
 
     // Rhythm game modifiers
@@ -135,8 +135,8 @@ export default {
         windowMultiplier: 1.0,
         visualNoise: 0,
         inputDelay: 0,
-        tempoShift: 0
-    }
+        tempoShift: 0,
+    },
 
     // Note: Black hole behavior auto-derives from modifiers (speed: 1.0, intensity: 1.0, smoothness: 1.0)
     // Results in: baseline disk rotation, balanced turbulence, moderate doppler, neutral shadow glow

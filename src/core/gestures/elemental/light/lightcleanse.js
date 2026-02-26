@@ -48,18 +48,18 @@ const LIGHTCLEANSE_CONFIG = {
             axis: 'y',
             start: 'below',
             end: 'above',
-            easing: 'linear',              // Steady, methodical sweep
+            easing: 'linear', // Steady, methodical sweep
             startScale: 1.0,
             endScale: 1.0,
             startDiameter: 1.6,
-            endDiameter: 1.6,              // Uniform width — flat scanner
-            orientation: 'flat'
+            endDiameter: 1.6, // Uniform width — flat scanner
+            orientation: 'flat',
         },
         formation: {
             type: 'stack',
             count: 4,
             spacing: 0.08,
-            phaseOffset: 0.03
+            phaseOffset: 0.03,
         },
         count: 4,
         scale: 1.0,
@@ -67,22 +67,24 @@ const LIGHTCLEANSE_CONFIG = {
         animation: {
             appearAt: 0.0,
             disappearAt: 0.65,
-            stagger: 0.08,                 // Sequential upward sweep
+            stagger: 0.08, // Sequential upward sweep
             enter: { type: 'fade', duration: 0.1, easing: 'easeOut' },
             exit: { type: 'fade', duration: 0.3, easing: 'easeIn' },
             procedural: { scaleSmoothing: 0.1, geometryStability: true },
             pulse: { amplitude: 0.06, frequency: 2, easing: 'easeInOut', sync: 'global' },
             emissive: { min: 1.0, max: 2.0, frequency: 2.5, pattern: 'sine' },
             rotate: { axis: 'z', rotations: 0.3, phase: 0 },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.35,
-                sizeScale: 0.8,
-                progressCurve: 'rampUp',    // More particles as cleanse builds
-                velocityInheritance: 0.3,
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.35,
+                    sizeScale: 0.8,
+                    progressCurve: 'rampUp', // More particles as cleanse builds
+                    velocityInheritance: 0.3,
+                },
+            ],
             scaleVariance: 0.05,
             lifetimeVariance: 0.05,
             blending: 'additive',
@@ -90,14 +92,14 @@ const LIGHTCLEANSE_CONFIG = {
             modelOverrides: {
                 'sun-ring': {
                     shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0.5, arcCount: 2 },
-                    orientationOverride: 'flat'
-                }
-            }
-        }
+                    orientationOverride: 'flat',
+                },
+            },
+        },
     },
 
     decayRate: 0.2,
-    glowColor: [1.0, 0.95, 0.80],      // Warm cleansing white
+    glowColor: [1.0, 0.95, 0.8], // Warm cleansing white
     glowIntensityMin: 0.6,
     glowIntensityMax: 1.1,
     glowFlickerRate: 3,
@@ -105,7 +107,7 @@ const LIGHTCLEANSE_CONFIG = {
     scaleFrequency: 2,
     scalePulse: true,
     riseAmount: 0.006,
-    riseSpeed: 0.5
+    riseSpeed: 0.5,
 };
 
 export default buildLightEffectGesture(LIGHTCLEANSE_CONFIG);

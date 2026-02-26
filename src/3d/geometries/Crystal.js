@@ -55,26 +55,18 @@ export function createCrystal(segments = 6) {
     // Top pyramid (top point to mid ring)
     for (let i = 0; i < segments; i++) {
         const next = (i + 1) % segments;
-        indices.push(
-            topIndex,
-            midIndices[i],
-            midIndices[next]
-        );
+        indices.push(topIndex, midIndices[i], midIndices[next]);
     }
 
     // Bottom pyramid (mid ring to bottom point)
     for (let i = 0; i < segments; i++) {
         const next = (i + 1) % segments;
-        indices.push(
-            midIndices[i],
-            bottomIndex,
-            midIndices[next]
-        );
+        indices.push(midIndices[i], bottomIndex, midIndices[next]);
     }
 
     return {
         vertices: new Float32Array(vertices),
         normals: new Float32Array(normals),
-        indices: new Uint16Array(indices)
+        indices: new Uint16Array(indices),
     };
 }

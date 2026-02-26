@@ -47,7 +47,7 @@ const VOIDBARRAGE_CONFIG = {
             easing: 'easeIn',
             startScale: 1.0,
             endScale: 0.6,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: { type: 'ring', count: 5 },
         count: 5,
@@ -62,27 +62,29 @@ const VOIDBARRAGE_CONFIG = {
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
             pulse: { amplitude: 0.1, frequency: 5, easing: 'easeInOut' },
             emissive: { min: 0.2, max: 0.7, frequency: 4, pattern: 'sine' },
-            atmospherics: [{
-                preset: 'darkness',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.5,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.6,
-            }],
+            atmospherics: [
+                {
+                    preset: 'darkness',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.5,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.6,
+                },
+            ],
             rotate: [
                 { axis: 'x', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -3, phase: 40 },
                 { axis: 'z', rotations: 2.5, phase: 100 },
                 { axis: 'x', rotations: -2, phase: 180 },
-                { axis: 'y', rotations: 3, phase: 250 }
+                { axis: 'y', rotations: 3, phase: 250 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'normal',
-            renderOrder: 3
-        }
+            renderOrder: 3,
+        },
     },
 
     jitterAmount: 0,
@@ -95,7 +97,7 @@ const VOIDBARRAGE_CONFIG = {
     dimStrength: 0.35,
     scaleVibration: 0.012,
     scaleFrequency: 4,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildVoidEffectGesture(VOIDBARRAGE_CONFIG);

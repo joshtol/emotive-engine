@@ -48,7 +48,7 @@ const ELECTRICGLITCH_CONFIG = {
             flashIn: 8,
             fadeOut: 15,
             respawn: true,
-            respawnDelay: { min: 80, max: 400 }
+            respawnDelay: { min: 80, max: 400 },
         },
         animation: {
             appearAt: 0.05,
@@ -65,25 +65,27 @@ const ELECTRICGLITCH_CONFIG = {
                 blend: 'multiply',
                 travel: 'oscillate',
                 travelSpeed: 1.5,
-                strengthCurve: 'bell'
+                strengthCurve: 'bell',
             },
             grain: { type: 3, strength: 0.2, scale: 0.35, speed: 2.0, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from glitch
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.1,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.1,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.5,
             lifetimeVariance: 0.6,
             delayVariance: 0.4,
             blending: 'additive',
             renderOrder: 15,
-            intensityScaling: { scale: 1.1, flickerIntensity: 1.3, emissiveMax: 1.5 }
-        }
+            intensityScaling: { scale: 1.1, flickerIntensity: 1.3, emissiveMax: 1.5 },
+        },
     },
 
     // Jitter - big irregular jumps
@@ -101,7 +103,7 @@ const ELECTRICGLITCH_CONFIG = {
     // Glitch-specific
     holdFrames: true,
     holdProbability: 0.15,
-    holdDuration: 0.05
+    holdDuration: 0.05,
 };
 
 export default buildElectricEffectGesture(ELECTRICGLITCH_CONFIG);

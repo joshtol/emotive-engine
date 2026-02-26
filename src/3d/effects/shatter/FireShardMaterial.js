@@ -33,26 +33,22 @@ import * as THREE from 'three';
  * @returns {THREE.ShaderMaterial}
  */
 export function createFireShardMaterial(options = {}) {
-    const {
-        color = new THREE.Color(0xffaa00),
-        intensity = 3.0,
-        opacity = 0.6
-    } = options;
+    const { color = new THREE.Color(0xffaa00), intensity = 3.0, opacity = 0.6 } = options;
 
     const material = new THREE.ShaderMaterial({
         uniforms: {
             uColor: { value: color.clone() },
             uIntensity: { value: intensity },
-            uOpacity: { value: opacity }
+            uOpacity: { value: opacity },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             void main() {
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform vec3 uColor;
             uniform float uIntensity;
             uniform float uOpacity;
@@ -67,7 +63,7 @@ export function createFireShardMaterial(options = {}) {
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     return material;

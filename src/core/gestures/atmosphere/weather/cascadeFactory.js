@@ -36,7 +36,14 @@ export function createCascadeGesture(direction) {
 
     return {
         name: `cascade${capitalize(direction)}`,
-        emoji: direction === 'down' ? '🌊' : direction === 'up' ? '✨' : direction === 'left' ? '🍂' : '🌬️',
+        emoji:
+            direction === 'down'
+                ? '🌊'
+                : direction === 'up'
+                  ? '✨'
+                  : direction === 'left'
+                    ? '🍂'
+                    : '🌬️',
         type: 'override',
         description: `Sequential cascade ${direction}`,
 
@@ -44,16 +51,16 @@ export function createCascadeGesture(direction) {
             duration: 2000,
             musicalDuration: { musical: true, bars: 1 },
             distance: 200,
-            waveCount: 4,         // Number of wave groups
-            staggerDelay: 0.15,   // Delay between waves
-            wobble: 1.0,          // Cross-axis wobble
+            waveCount: 4, // Number of wave groups
+            staggerDelay: 0.15, // Delay between waves
+            wobble: 1.0, // Cross-axis wobble
             strength: 1.0,
             direction,
             particleMotion: {
                 type: 'cascade',
                 strength: 1.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -66,8 +73,8 @@ export function createCascadeGesture(direction) {
                 quiet: 100,
                 loud: 300,
                 crescendo: 'expand',
-                diminuendo: 'contract'
-            }
+                diminuendo: 'contract',
+            },
         },
 
         initialize(particle, motion) {
@@ -92,7 +99,7 @@ export function createCascadeGesture(direction) {
                 waveGroup,
                 wobblePhase: Math.random() * Math.PI * 2,
                 wobbleSpeed: 0.3 + Math.random() * 0.4,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -104,14 +111,17 @@ export function createCascadeGesture(direction) {
             const config = { ...this.config, ...motion };
             const strength = config.strength || 1.0;
             const data = particle.gestureData.cascade;
-            const safeDt = (typeof dt === 'number') ? dt : 1;
+            const safeDt = typeof dt === 'number' ? dt : 1;
 
             const waveCount = config.waveCount || 4;
             const staggerDelay = config.staggerDelay || 0.15;
 
             // Calculate this particle's delayed progress
             const delayedStart = data.waveGroup * staggerDelay;
-            const effectiveProgress = Math.max(0, (progress - delayedStart) / (1 - delayedStart * (waveCount - 1) / waveCount));
+            const effectiveProgress = Math.max(
+                0,
+                (progress - delayedStart) / (1 - (delayedStart * (waveCount - 1)) / waveCount)
+            );
 
             if (effectiveProgress <= 0) return;
 
@@ -162,14 +172,23 @@ export function createCascadeGesture(direction) {
                 const easedProgress = 1 - Math.pow(1 - progress, 2);
 
                 // Direction vectors
-                let posX = 0, posY = 0;
+                let posX = 0,
+                    posY = 0;
                 const moveAmount = easedProgress * 0.3 * strength;
 
                 switch (cascadeDirection) {
-                case 'down': posY = -moveAmount; break;
-                case 'up': posY = moveAmount; break;
-                case 'left': posX = -moveAmount; break;
-                case 'right': posX = moveAmount; break;
+                    case 'down':
+                        posY = -moveAmount;
+                        break;
+                    case 'up':
+                        posY = moveAmount;
+                        break;
+                    case 'left':
+                        posX = -moveAmount;
+                        break;
+                    case 'right':
+                        posX = moveAmount;
+                        break;
                 }
 
                 // Wobble perpendicular to direction
@@ -181,8 +200,10 @@ export function createCascadeGesture(direction) {
                 }
 
                 // Slight tilt in direction of movement
-                const rotZ = cascadeDirection === 'left' ? 0.1 : cascadeDirection === 'right' ? -0.1 : 0;
-                const rotX = cascadeDirection === 'down' ? 0.05 : cascadeDirection === 'up' ? -0.05 : 0;
+                const rotZ =
+                    cascadeDirection === 'left' ? 0.1 : cascadeDirection === 'right' ? -0.1 : 0;
+                const rotX =
+                    cascadeDirection === 'down' ? 0.05 : cascadeDirection === 'up' ? -0.05 : 0;
 
                 // Fade envelope
                 const fadeEnvelope = progress > 0.85 ? (1 - progress) / 0.15 : 1.0;
@@ -191,10 +212,10 @@ export function createCascadeGesture(direction) {
                     cameraRelativePosition: [posX * fadeEnvelope, posY * fadeEnvelope, 0],
                     rotation: [rotX * strength * fadeEnvelope, 0, rotZ * strength * fadeEnvelope],
                     scale: 1.0 - easedProgress * 0.1,
-                    glowIntensity: 1.0 + (1 - easedProgress) * 0.2
+                    glowIntensity: 1.0 + (1 - easedProgress) * 0.2,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

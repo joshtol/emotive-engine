@@ -17,33 +17,33 @@ class ArrayPool {
      */
     acquire(size, type = 'array') {
         const key = `${type}_${size}`;
-        
+
         if (!this.pools.has(key)) {
             this.pools.set(key, []);
         }
-        
+
         const pool = this.pools.get(key);
-        
+
         // Try to get from pool
         if (pool.length > 0) {
             const array = pool.pop();
             this.inUse.add(array);
             return array;
         }
-        
+
         // Create new array if pool is empty
         let newArray;
         switch (type) {
-        case 'float32':
-            newArray = new Float32Array(size);
-            break;
-        case 'uint8':
-            newArray = new Uint8Array(size);
-            break;
-        default:
-            newArray = new Array(size).fill(0);
+            case 'float32':
+                newArray = new Float32Array(size);
+                break;
+            case 'uint8':
+                newArray = new Uint8Array(size);
+                break;
+            default:
+                newArray = new Array(size).fill(0);
         }
-        
+
         this.inUse.add(newArray);
         return newArray;
     }
@@ -56,31 +56,32 @@ class ArrayPool {
         if (!this.inUse.has(array)) {
             return; // Not from this pool
         }
-        
+
         this.inUse.delete(array);
-        
+
         // Determine type and size
         let type = 'array';
         if (array instanceof Float32Array) type = 'float32';
         else if (array instanceof Uint8Array) type = 'uint8';
-        
+
         const size = array.length;
         const key = `${type}_${size}`;
-        
+
         // Clear the array
         if (type === 'array') {
             array.fill(0);
         } else {
             array.fill(0);
         }
-        
+
         // Return to pool
         if (!this.pools.has(key)) {
             this.pools.set(key, []);
         }
-        
+
         const pool = this.pools.get(key);
-        if (pool.length < 10) { // Keep max 10 arrays of each size
+        if (pool.length < 10) {
+            // Keep max 10 arrays of each size
             pool.push(array);
         }
     }

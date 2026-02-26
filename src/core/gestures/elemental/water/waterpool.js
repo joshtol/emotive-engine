@@ -68,7 +68,7 @@ const WATERPOOL_CONFIG = {
                 endScale: 0.5,
                 startDiameter: 3.2,
                 endDiameter: 0.6,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: { type: 'ring', count: 1 },
             count: 1,
@@ -87,7 +87,7 @@ const WATERPOOL_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: -0.8,
-                    strengthCurve: 'fadeIn'
+                    strengthCurve: 'fadeIn',
                 },
                 grain: { type: 3, strength: 0.25, scale: 0.3, speed: 0.8, blend: 'multiply' },
                 rotate: { axis: 'y', rotations: 0.15, phase: 0 },
@@ -96,11 +96,11 @@ const WATERPOOL_CONFIG = {
                 renderOrder: 5,
                 modelOverrides: {
                     'splash-ring': {
-                        shaderAnimation: { type: 5, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 }
-                    }
+                        shaderAnimation: { type: 5, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 },
+                    },
                 },
                 // No atmospherics — pooling water, no violent splash
-            }
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: Center contracting ring (main)
@@ -118,7 +118,7 @@ const WATERPOOL_CONFIG = {
                 endScale: 0.4,
                 startDiameter: 3.5,
                 endDiameter: 0.5,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: { type: 'ring', count: 1 },
             count: 1,
@@ -137,7 +137,7 @@ const WATERPOOL_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: -1.0,
-                    strengthCurve: 'fadeIn'
+                    strengthCurve: 'fadeIn',
                 },
                 grain: { type: 3, strength: 0.25, scale: 0.3, speed: 1.0, blend: 'multiply' },
                 rotate: { axis: 'y', rotations: -0.12, phase: 45 },
@@ -146,10 +146,10 @@ const WATERPOOL_CONFIG = {
                 renderOrder: 6,
                 modelOverrides: {
                     'splash-ring': {
-                        shaderAnimation: { type: 5, arcWidth: 0.9, arcSpeed: 0.5, arcCount: 2 }
-                    }
-                }
-            }
+                        shaderAnimation: { type: 5, arcWidth: 0.9, arcSpeed: 0.5, arcCount: 2 },
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 3: Lower contracting ring
@@ -167,7 +167,7 @@ const WATERPOOL_CONFIG = {
                 endScale: 0.5,
                 startDiameter: 3.0,
                 endDiameter: 0.7,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: { type: 'ring', count: 1 },
             count: 1,
@@ -186,7 +186,7 @@ const WATERPOOL_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: -0.9,
-                    strengthCurve: 'fadeIn'
+                    strengthCurve: 'fadeIn',
                 },
                 grain: { type: 3, strength: 0.25, scale: 0.3, speed: 0.8, blend: 'multiply' },
                 rotate: { axis: 'y', rotations: 0.18, phase: 90 },
@@ -195,10 +195,10 @@ const WATERPOOL_CONFIG = {
                 renderOrder: 4,
                 modelOverrides: {
                     'splash-ring': {
-                        shaderAnimation: { type: 5, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 }
-                    }
-                }
-            }
+                        shaderAnimation: { type: 5, arcWidth: 0.85, arcSpeed: 0.4, arcCount: 2 },
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 4: Rising bubbles (contrast with sinking)
@@ -216,7 +216,7 @@ const WATERPOOL_CONFIG = {
                 endScale: 0.8,
                 startDiameter: 0.8,
                 endDiameter: 1.2,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             formation: { type: 'ring', count: 4, phaseOffset: 0.15 },
             count: 4,
@@ -235,7 +235,7 @@ const WATERPOOL_CONFIG = {
                     blend: 'multiply',
                     travel: 'angular',
                     travelSpeed: 0.8,
-                    strengthCurve: 'constant'
+                    strengthCurve: 'constant',
                 },
                 grain: { type: 3, strength: 0.15, scale: 0.25, speed: 1.5, blend: 'multiply' },
                 pulse: { amplitude: 0.1, frequency: 3, easing: 'easeInOut' },
@@ -244,11 +244,11 @@ const WATERPOOL_CONFIG = {
                 modelOverrides: {
                     'bubble-cluster': {
                         shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0.6, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Wobble - gentle underwater motion
@@ -262,7 +262,7 @@ const WATERPOOL_CONFIG = {
     glowColor: [0.2, 0.45, 0.8],
     glowIntensityMin: 0.7,
     glowIntensityMax: 1.3,
-    glowPulseRate: 1.5
+    glowPulseRate: 1.5,
 };
 
 /**

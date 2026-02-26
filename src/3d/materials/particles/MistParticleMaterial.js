@@ -23,7 +23,7 @@ import * as THREE from 'three';
 // SHARED VERTEX SHADER (identical to smoke — GPU-deterministic billboard)
 // =================================================================================================
 
-const PARTICLE_VERTEX_GLSL = /* glsl */`
+const PARTICLE_VERTEX_GLSL = /* glsl */ `
 attribute vec3 aSpawnPos;
 attribute vec3 aSpawnVelocity;
 attribute float aSpawnTime;
@@ -86,7 +86,7 @@ void main() {
 // MIST FRAGMENT SHADER
 // =================================================================================================
 
-const MIST_FRAGMENT_GLSL = /* glsl */`
+const MIST_FRAGMENT_GLSL = /* glsl */ `
 uniform float uOpacity;
 uniform vec3 uColor;
 
@@ -149,14 +149,14 @@ export function createMistParticleMaterial(config) {
     return new THREE.ShaderMaterial({
         name: 'MistParticle',
         uniforms: {
-            uTime:               { value: 0.0 },
-            uOpacity:            { value: config.opacity ?? 0.10 },
-            uColor:              { value: new THREE.Color(...(config.color ?? [0.75, 0.85, 0.95])) },
-            uBuoyancy:           { value: config.buoyancy ?? -0.02 },
-            uDrag:               { value: config.drag ?? 0.8 },
+            uTime: { value: 0.0 },
+            uOpacity: { value: config.opacity ?? 0.1 },
+            uColor: { value: new THREE.Color(...(config.color ?? [0.75, 0.85, 0.95])) },
+            uBuoyancy: { value: config.buoyancy ?? -0.02 },
+            uDrag: { value: config.drag ?? 0.8 },
             uTurbulenceStrength: { value: config.turbulence ?? 0.08 },
-            uEndSizeMultiplier:  { value: config.endSizeMultiplier ?? 1.5 },
-            uRotationSpeedMax:   { value: config.rotationSpeedMax ?? 0.4 },
+            uEndSizeMultiplier: { value: config.endSizeMultiplier ?? 1.5 },
+            uRotationSpeedMax: { value: config.rotationSpeedMax ?? 0.4 },
         },
         vertexShader: PARTICLE_VERTEX_GLSL,
         fragmentShader: MIST_FRAGMENT_GLSL,

@@ -42,20 +42,20 @@ export default {
 
     // Default configuration
     config: {
-        duration: 1200,      // Legacy fallback
+        duration: 1200, // Legacy fallback
         musicalDuration: { musical: true, beats: 3 }, // 3 beats (~1200ms @ 150 BPM)
-        rotationAngle: 45,   // Max rotation angle in degrees
+        rotationAngle: 45, // Max rotation angle in degrees
         contractionFactor: 0.8, // How much to contract during twist
-        twistFrequency: 2,   // Number of twist cycles
-        easing: 'smooth',    // Animation curve type
-        strength: 0.8,       // Overall motion intensity
+        twistFrequency: 2, // Number of twist cycles
+        easing: 'smooth', // Animation curve type
+        strength: 0.8, // Overall motion intensity
         // Particle motion configuration
         particleMotion: {
             type: 'twist',
             rotationAngle: 45,
             contractionFactor: 0.8,
-            twistFrequency: 2
-        }
+            twistFrequency: 2,
+        },
     },
 
     // Rhythm configuration - twist syncs to beat
@@ -66,35 +66,35 @@ export default {
         timingSync: 'nextBeat',
         interruptible: true,
         priority: 4,
-        blendable: false,  // Override gesture, no blending
+        blendable: false, // Override gesture, no blending
         crossfadePoint: 'anyBeat',
 
         // Twist intensity syncs to beat
         amplitudeSync: {
-            onBeat: 1.5,      // Stronger twist on beat
-            offBeat: 0.7,     // Lighter between beats
-            curve: 'elastic'  // Bouncy twist motion
+            onBeat: 1.5, // Stronger twist on beat
+            offBeat: 0.7, // Lighter between beats
+            curve: 'elastic', // Bouncy twist motion
         },
 
         // Pattern-specific twisting styles
         patternOverrides: {
-            'funk': {
+            funk: {
                 // Funky twist with more rotation
                 rotationAngle: 60,
-                contractionFactor: 0.7
+                contractionFactor: 0.7,
             },
-            'disco': {
+            disco: {
                 // Classic disco twist
                 twistFrequency: 3,
-                rotationAngle: 50
+                rotationAngle: 50,
             },
-            'latin': {
+            latin: {
                 // Latin-style hip twist
                 rotationAngle: 35,
                 contractionFactor: 0.85,
-                twistFrequency: 2.5
-            }
-        }
+                twistFrequency: 2.5,
+            },
+        },
     },
 
     /**
@@ -110,10 +110,9 @@ export default {
             startY: particle.y,
             startAngle: Math.atan2(particle.y - motion.centerY, particle.x - motion.centerX),
             startDistance: Math.sqrt(
-                Math.pow(particle.x - motion.centerX, 2) +
-                Math.pow(particle.y - motion.centerY, 2)
+                Math.pow(particle.x - motion.centerX, 2) + Math.pow(particle.y - motion.centerY, 2)
             ),
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -141,19 +140,20 @@ export default {
         const twistAmount = Math.sin(twistProgress) * strength;
 
         // Apply rhythm modulation if present
-        let {rotationAngle} = config;
-        let {contractionFactor} = config;
+        let { rotationAngle } = config;
+        let { contractionFactor } = config;
 
         if (motion.rhythmModulation) {
-            rotationAngle *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-            contractionFactor = 1 - ((1 - contractionFactor) * (motion.rhythmModulation.amplitudeMultiplier || 1));
+            rotationAngle *= motion.rhythmModulation.amplitudeMultiplier || 1;
+            contractionFactor =
+                1 - (1 - contractionFactor) * (motion.rhythmModulation.amplitudeMultiplier || 1);
         }
 
         // Convert rotation to radians
-        const rotationRad = (rotationAngle * Math.PI / 180) * twistAmount;
+        const rotationRad = ((rotationAngle * Math.PI) / 180) * twistAmount;
 
         // Calculate contraction (pull particles closer during twist)
-        const currentContraction = 1 - ((1 - contractionFactor) * Math.abs(twistAmount));
+        const currentContraction = 1 - (1 - contractionFactor) * Math.abs(twistAmount);
 
         // Apply twist transformation
         const newAngle = data.startAngle + rotationRad;
@@ -178,11 +178,10 @@ export default {
 
         // Smooth ending
         if (progress > 0.9) {
-            const endFactor = 1 - ((progress - 0.9) * 10);
+            const endFactor = 1 - (progress - 0.9) * 10;
             particle.vx *= endFactor;
             particle.vy *= endFactor;
         }
-
     },
 
     /**
@@ -219,14 +218,15 @@ export default {
 
             // Y-axis rotation (primary twist axis) - convert degrees to radians
             const rotationAngleDeg = config.rotationAngle || 45;
-            const rotationAngleRad = rotationAngleDeg * Math.PI / 180;
+            const rotationAngleRad = (rotationAngleDeg * Math.PI) / 180;
             const yRotation = twistAmount * rotationAngleRad;
 
             // Small X position offset for side-to-side sway during twist
             const xOffset = Math.sin(twistProgress) * 0.05 * strength * returnEnvelope;
 
             // Slight bounce on Y during twist
-            const yOffset = Math.abs(Math.sin(twistProgress * 2)) * 0.02 * strength * returnEnvelope;
+            const yOffset =
+                Math.abs(Math.sin(twistProgress * 2)) * 0.02 * strength * returnEnvelope;
 
             // X and Z rotation for additional twist dynamics
             const xRotation = Math.cos(twistProgress) * 0.08 * strength * returnEnvelope;
@@ -234,7 +234,7 @@ export default {
 
             // Scale contracts during twist peaks
             const contractionFactor = config.contractionFactor || 0.8;
-            const currentContraction = 1 - ((1 - contractionFactor) * Math.abs(twistAmount));
+            const currentContraction = 1 - (1 - contractionFactor) * Math.abs(twistAmount);
 
             // Glow pulses with twist
             const glowIntensity = 1.0 + Math.abs(twistAmount) * 0.3;
@@ -243,8 +243,8 @@ export default {
                 position: [xOffset, yOffset, 0],
                 rotation: [xRotation, yRotation, zRotation],
                 scale: currentContraction,
-                glowIntensity
+                glowIntensity,
             };
-        }
-    }
+        },
+    },
 };

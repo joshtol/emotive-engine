@@ -7,128 +7,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.3.8] - 2025-01-14
-
-### 🎭 Dance Choreographer Gesture Registration
-
-- **ADDED** Accent gestures to core gesture registry for DanceChoreographer
-  support
-    - `pop` - Quick scale pulse accent for beat hits
-    - `bob` - Forward tilt accent (head nod feel) for groove emphasis
-    - `swell` - Glow build with scale for transitions and builds
-    - `swagger` - Side lean with drift for confident movement feel
-    - `dip` - Downward bob with squish for rhythmic drops
-    - `flare` - Scale + glow burst for drops and big accents
-
-- **DESIGN** Accent gestures use boost multipliers (`scaleBoost`,
-  `rotationBoost`, `positionBoost`, `glowBoost`) instead of absolute values
-    - Works WITH existing groove animation instead of fighting it
-    - All marked with `isAccent: true` in 3D config
-    - Resolves "Unknown gesture" warnings when dance mode enabled
-
-## [3.3.7] - 2025-01-14
-
-### 🐛 Bug Fixes
-
-- **FIXED** `setBPMMultiplier()` not actually affecting animation speed
-    - Was incorrectly scaling the progress value instead of the frequency
-    - Now correctly applies multiplier to phase calculation so 0.5 = half speed
-    - Accent response still syncs to actual beats for proper feel
-
-## [3.3.6] - 2025-01-14
-
-### 🎵 Groove Animation Speed Control
-
-- **ADDED** `setBPMMultiplier(multiplier)` API for controlling groove animation
-  speed
-    - Scales effective BPM used for animations without affecting BPM detection
-    - Set to 0.5 to halve animation speed (useful for high BPM songs > 90)
-    - Set to 2.0 to double animation speed (useful for very slow songs)
-    - Range: 0.25 to 4.0, default 1.0
-    - Available on both `EmotiveMascot3D` and `Rhythm3DAdapter`
-
-- **ADDED** `getBPMMultiplier()` API to retrieve current multiplier value
-
-## [3.3.5] - 2025-01-14
-
-### ⚡ Performance Optimizations (Render Loop)
-
-- **OPTIMIZED** Soul mesh caching in ThreeRenderer
-    - Soul mesh reference now cached instead of traversing scene every frame
-    - Eliminates `scene.traverse()` overhead during soul render pass
-
-- **OPTIMIZED** Vector3 pooling in soul pass
-    - Reuses pre-allocated `_soulPosTemp` vector for position projection
-    - Eliminates `position.clone()` allocation every frame
-
-- **OPTIMIZED** CrystalSoul uniform updates
-    - `energyIntensity` now set once in constructor (was setting 0.8 every
-      frame)
-    - `emotionColor` only updates when RGB values actually change
-    - Reduces unnecessary GPU uniform syncs
-
-- **OPTIMIZED** Core3DManager normalized color caching
-    - `normalizeRGBLuminance()` now computed once when emotion changes
-    - Was being called twice per frame in render loop
-    - Eliminates redundant color calculations and array allocations
-
-## [3.3.4] - 2025-01-14
-
-### ⚡ Performance Optimizations
-
-- **OPTIMIZED** Render pass skipping for non-crystal geometries
-    - Soul render pass (layer 2) now skipped when geometry doesn't have a soul
-    - Particle passes (depth + render + bloom) skipped when particles disabled
-    - Added `hasSoul` and `hasParticles` flags to render() method
-    - Expected savings: 15-25ms per frame for moon/sun/sphere geometries
-
-- **OPTIMIZED** CrystalSoul shader noise calculations
-    - Reduced noise function calls from 4 to 2 per fragment
-    - Adjusted threshold values to maintain visual quality
-    - Expected savings: 8-12ms per frame when crystal active
-
-- **OPTIMIZED** Core3DManager now passes optimization flags to renderer
-    - Automatically detects when soul and particles are active
-    - No API changes required - optimizations are automatic
-
-## [3.3.3] - 2025-01-14
-
-### 🐛 Shader Fixes
-
-- **FIXED** WebGL shader warnings for division by zero in blend modes
-    - RGB to HSL conversion now uses safe division with epsilon guard
-    - Color Burn, Color Dodge, and Vivid Light blend modes use
-      `max(divisor, 0.0001)`
-    - Eliminates GPU driver warnings about floating-point division by zero
-
-## [3.3.2] - 2025-01-14
-
-### 📦 Build Changes
-
-- **FIXED** Three.js was still being bundled into dist files despite
-  peerDependencies change
-    - Added `external: ['three']` to rollup config for 3D build
-    - 3D bundle size reduced from ~1.3MB to ~615KB
-    - Eliminates "Multiple instances of Three.js" warning for consumers
-
-## [3.3.1] - 2025-01-14
-
-### 📦 Dependency Changes
-
-- **CHANGED** Three.js moved from `dependencies` to `peerDependencies`
-    - Prevents duplicate Three.js instances when consumers have their own
-      version
-    - Consumers using 3D mode must now install `three` separately:
-      `npm install three`
-    - Supports Three.js versions `^0.181.0 || ^0.182.0`
-
-### 🐛 Bug Fixes
-
-- **FIXED** Race condition in 3D demo toggle handlers (wobble, particles, visual
-  controls)
-    - Toggle setup functions now support deferred mascot initialization
-    - Handlers check mascot availability at click time instead of setup time
-
 ## [Unreleased]
 
 ### 🎵 Groove Preset System
@@ -158,6 +36,128 @@ and this project uses
 - **ADDED** `mascot.getGroovePresets()` - Returns available preset names
 - **ADDED** `mascot.getCurrentGroove()` - Returns active preset name
 - **EXPORTED** `GROOVE_PRESETS` constant for preset inspection
+
+## [3.3.8] - 2026-01-14
+
+### 🎭 Dance Choreographer Gesture Registration
+
+- **ADDED** Accent gestures to core gesture registry for DanceChoreographer
+  support
+    - `pop` - Quick scale pulse accent for beat hits
+    - `bob` - Forward tilt accent (head nod feel) for groove emphasis
+    - `swell` - Glow build with scale for transitions and builds
+    - `swagger` - Side lean with drift for confident movement feel
+    - `dip` - Downward bob with squish for rhythmic drops
+    - `flare` - Scale + glow burst for drops and big accents
+
+- **DESIGN** Accent gestures use boost multipliers (`scaleBoost`,
+  `rotationBoost`, `positionBoost`, `glowBoost`) instead of absolute values
+    - Works WITH existing groove animation instead of fighting it
+    - All marked with `isAccent: true` in 3D config
+    - Resolves "Unknown gesture" warnings when dance mode enabled
+
+## [3.3.7] - 2026-01-14
+
+### 🐛 Bug Fixes
+
+- **FIXED** `setBPMMultiplier()` not actually affecting animation speed
+    - Was incorrectly scaling the progress value instead of the frequency
+    - Now correctly applies multiplier to phase calculation so 0.5 = half speed
+    - Accent response still syncs to actual beats for proper feel
+
+## [3.3.6] - 2026-01-14
+
+### 🎵 Groove Animation Speed Control
+
+- **ADDED** `setBPMMultiplier(multiplier)` API for controlling groove animation
+  speed
+    - Scales effective BPM used for animations without affecting BPM detection
+    - Set to 0.5 to halve animation speed (useful for high BPM songs > 90)
+    - Set to 2.0 to double animation speed (useful for very slow songs)
+    - Range: 0.25 to 4.0, default 1.0
+    - Available on both `EmotiveMascot3D` and `Rhythm3DAdapter`
+
+- **ADDED** `getBPMMultiplier()` API to retrieve current multiplier value
+
+## [3.3.5] - 2026-01-14
+
+### ⚡ Performance Optimizations (Render Loop)
+
+- **OPTIMIZED** Soul mesh caching in ThreeRenderer
+    - Soul mesh reference now cached instead of traversing scene every frame
+    - Eliminates `scene.traverse()` overhead during soul render pass
+
+- **OPTIMIZED** Vector3 pooling in soul pass
+    - Reuses pre-allocated `_soulPosTemp` vector for position projection
+    - Eliminates `position.clone()` allocation every frame
+
+- **OPTIMIZED** CrystalSoul uniform updates
+    - `energyIntensity` now set once in constructor (was setting 0.8 every
+      frame)
+    - `emotionColor` only updates when RGB values actually change
+    - Reduces unnecessary GPU uniform syncs
+
+- **OPTIMIZED** Core3DManager normalized color caching
+    - `normalizeRGBLuminance()` now computed once when emotion changes
+    - Was being called twice per frame in render loop
+    - Eliminates redundant color calculations and array allocations
+
+## [3.3.4] - 2026-01-14
+
+### ⚡ Performance Optimizations
+
+- **OPTIMIZED** Render pass skipping for non-crystal geometries
+    - Soul render pass (layer 2) now skipped when geometry doesn't have a soul
+    - Particle passes (depth + render + bloom) skipped when particles disabled
+    - Added `hasSoul` and `hasParticles` flags to render() method
+    - Expected savings: 15-25ms per frame for moon/sun/sphere geometries
+
+- **OPTIMIZED** CrystalSoul shader noise calculations
+    - Reduced noise function calls from 4 to 2 per fragment
+    - Adjusted threshold values to maintain visual quality
+    - Expected savings: 8-12ms per frame when crystal active
+
+- **OPTIMIZED** Core3DManager now passes optimization flags to renderer
+    - Automatically detects when soul and particles are active
+    - No API changes required - optimizations are automatic
+
+## [3.3.3] - 2026-01-14
+
+### 🐛 Shader Fixes
+
+- **FIXED** WebGL shader warnings for division by zero in blend modes
+    - RGB to HSL conversion now uses safe division with epsilon guard
+    - Color Burn, Color Dodge, and Vivid Light blend modes use
+      `max(divisor, 0.0001)`
+    - Eliminates GPU driver warnings about floating-point division by zero
+
+## [3.3.2] - 2026-01-14
+
+### 📦 Build Changes
+
+- **FIXED** Three.js was still being bundled into dist files despite
+  peerDependencies change
+    - Added `external: ['three']` to rollup config for 3D build
+    - 3D bundle size reduced from ~1.3MB to ~615KB
+    - Eliminates "Multiple instances of Three.js" warning for consumers
+
+## [3.3.1] - 2026-01-14
+
+### 📦 Dependency Changes
+
+- **CHANGED** Three.js moved from `dependencies` to `peerDependencies`
+    - Prevents duplicate Three.js instances when consumers have their own
+      version
+    - Consumers using 3D mode must now install `three` separately:
+      `npm install three`
+    - Supports Three.js versions `^0.181.0 || ^0.182.0`
+
+### 🐛 Bug Fixes
+
+- **FIXED** Race condition in 3D demo toggle handlers (wobble, particles, visual
+  controls)
+    - Toggle setup functions now support deferred mascot initialization
+    - Handlers check mascot availability at click time instead of setup time
 
 ## [3.2.0] - 2025-12-12 - 3D Engine & Audio Sync
 
@@ -1098,7 +1098,7 @@ framework that guided this transformation.
 - **Added** examples for all parameter formats
 - **Documented** use case for instant transitions to prevent particle artifacts
 
-## [2.6.0] - 2025-01-14
+## [2.6.0] - 2026-01-14
 
 ### 🎯 Rotation & Braking System Overhaul
 

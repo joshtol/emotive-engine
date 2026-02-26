@@ -39,14 +39,14 @@ const EARTHDRILL_CONFIG = {
             endScale: 0.8,
             startDiameter: 1.8,
             endDiameter: 1.4,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: {
             type: 'spiral',
             count: 6,
             spacing: 0.1,
             arcOffset: 60,
-            phaseOffset: 0
+            phaseOffset: 0,
         },
         count: 6,
         scale: 1.4,
@@ -58,24 +58,24 @@ const EARTHDRILL_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.05,
-                easing: 'linear'
+                easing: 'linear',
             },
             exit: {
                 type: 'fade',
                 duration: 0.4,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.05,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 petrification: {
                     start: 0.4,
                     peak: 0.8,
                     end: 0.5,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             cutout: {
                 strength: 0.55,
@@ -84,29 +84,31 @@ const EARTHDRILL_CONFIG = {
                 blend: 'add',
                 travel: 'vertical',
                 travelSpeed: 3.0,
-                strengthCurve: 'constant'
+                strengthCurve: 'constant',
             },
             grain: {
                 type: 3,
                 strength: 0.3,
                 scale: 0.2,
                 speed: 4.0,
-                blend: 'multiply'
+                blend: 'multiply',
             },
-            atmospherics: [{
-                preset: 'earth-dust',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 0.8,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.5,
-                centrifugal: { speed: 1.0, tangentialBias: 0.3 },
-            }],
+            atmospherics: [
+                {
+                    preset: 'earth-dust',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 0.8,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.5,
+                    centrifugal: { speed: 1.0, tangentialBias: 0.3 },
+                },
+            ],
             pulse: {
                 amplitude: 0.08,
                 frequency: 10,
-                easing: 'linear'
+                easing: 'linear',
             },
             rotate: { axis: 'y', rotations: 4, phase: 0 },
             scaleVariance: 0.15,
@@ -119,15 +121,15 @@ const EARTHDRILL_CONFIG = {
                         type: 1,
                         arcWidth: 0.5,
                         arcSpeed: 3.0,
-                        arcCount: 1
+                        arcCount: 1,
                     },
-                    orientationOverride: 'vertical'
-                }
-            }
-        }
+                    orientationOverride: 'vertical',
+                },
+            },
+        },
     },
 
-    glowColor: [0.85, 0.60, 0.25],
+    glowColor: [0.85, 0.6, 0.25],
     glowIntensityMin: 1.3,
     glowIntensityMax: 2.8,
     glowFlickerRate: 10,
@@ -135,7 +137,7 @@ const EARTHDRILL_CONFIG = {
     scaleFrequency: 8,
     scaleGrowth: 0.03,
     tremor: 0.006,
-    tremorFrequency: 8
+    tremorFrequency: 8,
 };
 
 export default buildEarthEffectGesture(EARTHDRILL_CONFIG);

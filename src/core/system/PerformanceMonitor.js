@@ -19,7 +19,7 @@ export class PerformanceMonitor {
             updateTime: { samples: [], current: 0, avg: 0, min: Infinity, max: 0 },
             particleCount: { samples: [], current: 0, avg: 0, min: Infinity, max: 0 },
             drawCalls: { samples: [], current: 0, avg: 0, min: Infinity, max: 0 },
-            canvasOperations: { samples: [], current: 0, avg: 0, min: Infinity, max: 0 }
+            canvasOperations: { samples: [], current: 0, avg: 0, min: Infinity, max: 0 },
         };
 
         this.frameCount = 0;
@@ -33,13 +33,13 @@ export class PerformanceMonitor {
             frameTime: { warning: 20, critical: 33 },
             memory: { warning: 100, critical: 200 }, // MB
             renderTime: { warning: 10, critical: 16 },
-            ...options.thresholds
+            ...options.thresholds,
         };
 
         this.callbacks = {
             onWarning: options.onWarning || null,
             onCritical: options.onCritical || null,
-            onSample: options.onSample || null
+            onSample: options.onSample || null,
         };
 
         if (this.enabled) {
@@ -224,7 +224,7 @@ export class PerformanceMonitor {
                 average: metric.avg,
                 min: metric.min === Infinity ? 0 : metric.min,
                 max: metric.max,
-                samples: metric.samples.length
+                samples: metric.samples.length,
             };
         }
 
@@ -293,9 +293,9 @@ export class PerformanceMonitor {
                 values,
                 average: values.reduce((a, b) => a + b, 0) / values.length,
                 min: Math.min(...values),
-                max: Math.max(...values)
+                max: Math.max(...values),
             })),
-            thresholds: this.thresholds
+            thresholds: this.thresholds,
         };
     }
 
@@ -326,8 +326,8 @@ export const performanceMonitor = new PerformanceMonitor({
         frameTime: { warning: 20, critical: 33 },
         memory: { warning: 150, critical: 300 },
         renderTime: { warning: 10, critical: 16 },
-        updateTime: { warning: 5, critical: 10 }
-    }
+        updateTime: { warning: 5, critical: 10 },
+    },
 });
 
 // Export default

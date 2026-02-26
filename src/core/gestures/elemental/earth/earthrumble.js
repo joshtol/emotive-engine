@@ -41,7 +41,7 @@ const EARTHRUMBLE_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.5,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 2.0,
@@ -55,18 +55,20 @@ const EARTHRUMBLE_CONFIG = {
                     amplitude: 0.2,
                     frequency: 2,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: { min: 0.6, max: 1.2, frequency: 2, pattern: 'sine' },
                 rotate: { axis: 'z', rotations: 1.5, phase: 0 },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['earth-ring'],
-                    anchor: 'above',
-                    intensity: 0.5,
-                    sizeScale: 1.5,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['earth-ring'],
+                        anchor: 'above',
+                        intensity: 0.5,
+                        sizeScale: 1.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 8,
                 modelOverrides: {
@@ -75,12 +77,12 @@ const EARTHRUMBLE_CONFIG = {
                             type: 1,
                             arcWidth: 0.7,
                             arcSpeed: 1.5,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ── Layer 2: 4 orbiting rock-chunks (mandala satellites) ──────────
@@ -95,7 +97,7 @@ const EARTHRUMBLE_CONFIG = {
                 easing: 'linear',
                 startScale: 0.6,
                 endScale: 0.9,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             count: 4,
             scale: 0.8,
@@ -110,41 +112,43 @@ const EARTHRUMBLE_CONFIG = {
                     amplitude: 0.15,
                     frequency: 2,
                     easing: 'easeInOut',
-                    sync: 'global'
+                    sync: 'global',
                 },
                 emissive: { min: 0.5, max: 1.0, frequency: 2, pattern: 'sine' },
                 rotate: [
                     { axis: 'x', rotations: -1.2, phase: 0 },
                     { axis: 'z', rotations: 1.4, phase: 90 },
                     { axis: 'y', rotations: -1.0, phase: 180 },
-                    { axis: 'x', rotations: 1.6, phase: 270 }
+                    { axis: 'x', rotations: 1.6, phase: 270 },
                 ],
-                atmospherics: [{
-                    preset: 'earth-gravel',
-                    targets: null,
-                    anchor: 'below',
-                    intensity: 0.3,
-                    sizeScale: 0.5,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-gravel',
+                        targets: null,
+                        anchor: 'below',
+                        intensity: 0.3,
+                        sizeScale: 0.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 scaleVariance: 0.2,
                 blending: 'normal',
-                renderOrder: 9
-            }
-        }
+                renderOrder: 9,
+            },
+        },
     ],
 
     shakeAmount: 0.025,
     shakeFrequency: 10,
     decayRate: 0.2,
-    glowColor: [0.80, 0.55, 0.25],
+    glowColor: [0.8, 0.55, 0.25],
     glowIntensityMin: 0.5,
     glowIntensityMax: 0.9,
     glowFlickerRate: 2,
     scaleVibration: 0.012,
     scaleFrequency: 2,
     tremor: 0.015,
-    tremorFrequency: 8
+    tremorFrequency: 8,
 };
 
 export default buildEarthEffectGesture(EARTHRUMBLE_CONFIG);

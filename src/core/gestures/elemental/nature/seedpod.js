@@ -57,12 +57,12 @@ const SEEDPOD_CONFIG = {
                 endDiameter: 1.6,
                 diameterUnit: 'mascot',
                 holdAt: 0.65,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: {
                 type: 'stack',
                 count: 3,
-                spacing: 0.15
+                spacing: 0.15,
             },
             count: 3,
             scale: 2.0,
@@ -79,7 +79,7 @@ const SEEDPOD_CONFIG = {
                 rotate: [
                     { axis: 'z', rotations: 0.4, phase: 0 },
                     { axis: 'z', rotations: -0.3, phase: 60 },
-                    { axis: 'z', rotations: 0.35, phase: 120 }
+                    { axis: 'z', rotations: 0.35, phase: 120 },
                 ],
                 cutout: {
                     strength: 0.45,
@@ -88,7 +88,7 @@ const SEEDPOD_CONFIG = {
                     blend: 'multiply',
                     travel: 'vertical',
                     travelSpeed: 0.8,
-                    strengthCurve: 'rampUp'
+                    strengthCurve: 'rampUp',
                 },
                 grain: { type: 3, strength: 0.05, scale: 0.3, speed: 0.4, blend: 'multiply' },
                 blending: 'normal',
@@ -96,10 +96,10 @@ const SEEDPOD_CONFIG = {
                 modelOverrides: {
                     'u-vine': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.6, arcCount: 2 },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // =================================================================
@@ -118,12 +118,12 @@ const SEEDPOD_CONFIG = {
                 endDiameter: 1.6,
                 diameterUnit: 'mascot',
                 holdAt: 0.65,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: {
                 type: 'stack',
                 count: 3,
-                spacing: 0.15
+                spacing: 0.15,
             },
             count: 3,
             scale: 2.0,
@@ -140,7 +140,7 @@ const SEEDPOD_CONFIG = {
                 rotate: [
                     { axis: 'z', rotations: -0.35, phase: 30 },
                     { axis: 'z', rotations: 0.4, phase: 90 },
-                    { axis: 'z', rotations: -0.3, phase: 150 }
+                    { axis: 'z', rotations: -0.3, phase: 150 },
                 ],
                 cutout: {
                     strength: 0.45,
@@ -149,7 +149,7 @@ const SEEDPOD_CONFIG = {
                     blend: 'multiply',
                     travel: 'vertical',
                     travelSpeed: 0.8,
-                    strengthCurve: 'rampUp'
+                    strengthCurve: 'rampUp',
                 },
                 grain: { type: 3, strength: 0.05, scale: 0.3, speed: 0.4, blend: 'multiply' },
                 blending: 'normal',
@@ -157,10 +157,10 @@ const SEEDPOD_CONFIG = {
                 modelOverrides: {
                     'u-vine': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.6, arcCount: 2 },
-                        orientationOverride: 'vertical'
-                    }
-                }
-            }
+                        orientationOverride: 'vertical',
+                    },
+                },
+            },
         },
 
         // =================================================================
@@ -175,7 +175,7 @@ const SEEDPOD_CONFIG = {
                 startScale: 0.0,
                 endScale: 1.0,
                 scaleEasing: 'easeOutCubic',
-                bob: { amplitude: 0.008, frequency: 0.4 }
+                bob: { amplitude: 0.008, frequency: 0.4 },
             },
             count: 1,
             scale: 2.5,
@@ -196,27 +196,29 @@ const SEEDPOD_CONFIG = {
                     travel: 'radial',
                     travelSpeed: 0.4,
                     strengthCurve: 'bell',
-                    bellPeakAt: 0.6
+                    bellPeakAt: 0.6,
                 },
                 grain: { type: 3, strength: 0.05, scale: 0.3, speed: 0.3, blend: 'multiply' },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.8,
-                    progressCurve: 'rampUp',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.8,
+                        progressCurve: 'rampUp',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 6,
                 modelOverrides: {
                     'vine-cluster': {
                         shaderAnimation: { type: 1, arcWidth: 0.8, arcSpeed: 0.3, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     glowColor: [0.35, 0.75, 0.25],
@@ -238,8 +240,8 @@ const SEEDPOD_CONFIG = {
                 { at: 0.55, value: 0.8 },
                 { at: 0.7, value: 0.9 },
                 { at: 0.85, value: 0.6 },
-                { at: 1.0, value: 0.0 }
-            ]
+                { at: 1.0, value: 0.0 },
+            ],
         },
         tremor: {
             keyframes: [
@@ -247,10 +249,10 @@ const SEEDPOD_CONFIG = {
                 { at: 0.5, value: 0.003 },
                 { at: 0.62, value: 0.015 },
                 { at: 0.72, value: 0.005 },
-                { at: 1.0, value: 0.0 }
-            ]
-        }
-    }
+                { at: 1.0, value: 0.0 },
+            ],
+        },
+    },
 };
 
 export default buildNatureEffectGesture(SEEDPOD_CONFIG);

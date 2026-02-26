@@ -55,16 +55,18 @@ const LIGHTRADIATE_CONFIG = {
                 endScale: 1.6,
                 startDiameter: 1.0,
                 endDiameter: 1.8,
-                orientation: 'flat'
+                orientation: 'flat',
             },
             formation: {
                 type: 'spiral',
                 count: 4,
                 spacing: 0.05,
                 arcOffset: 90,
-                phaseOffset: 0
+                phaseOffset: 0,
             },
-            count: 4, scale: 1.1, models: ['sun-ring'],
+            count: 4,
+            scale: 1.1,
+            models: ['sun-ring'],
             animation: {
                 appearAt: 0.0,
                 disappearAt: 0.5,
@@ -74,25 +76,27 @@ const LIGHTRADIATE_CONFIG = {
                 procedural: { scaleSmoothing: 0.08, geometryStability: true },
                 pulse: { amplitude: 0.12, frequency: 4, easing: 'easeInOut' },
                 emissive: { min: 1.2, max: 2.8, frequency: 5, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'firefly',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 0.5,
-                    sizeScale: 1.2,
-                    progressCurve: 'sustain',
-                    velocityInheritance: 0.4,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'firefly',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 0.5,
+                        sizeScale: 1.2,
+                        progressCurve: 'sustain',
+                        velocityInheritance: 0.4,
+                    },
+                ],
                 rotate: { axis: 'z', rotations: 0.6, phase: 0 },
                 blending: 'additive',
                 renderOrder: 15,
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.75, arcSpeed: 1.0, arcCount: 2 },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -105,13 +109,15 @@ const LIGHTRADIATE_CONFIG = {
                 radius: 0.15,
                 endRadius: 1.2,
                 angleSpread: 360,
-                startAngle: 45,             // Offset so rays sit between rings
+                startAngle: 45, // Offset so rays sit between rings
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 1.5,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 4, scale: 1.3, models: ['light-ray'],
+            count: 4,
+            scale: 1.3,
+            models: ['light-ray'],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.55,
@@ -123,24 +129,24 @@ const LIGHTRADIATE_CONFIG = {
                     { axis: 'z', rotations: 0.5, phase: 0 },
                     { axis: 'z', rotations: -0.5, phase: 90 },
                     { axis: 'z', rotations: 0.5, phase: 180 },
-                    { axis: 'z', rotations: -0.5, phase: 270 }
+                    { axis: 'z', rotations: -0.5, phase: 270 },
                 ],
                 scaleVariance: 0.2,
                 blending: 'additive',
                 renderOrder: 17,
-            }
-        }
+            },
+        },
     ],
 
     decayRate: 0.15,
-    glowColor: [1.0, 0.88, 0.50],      // Brilliant gold
+    glowColor: [1.0, 0.88, 0.5], // Brilliant gold
     glowIntensityMin: 0.8,
     glowIntensityMax: 1.6,
     glowFlickerRate: 5,
     scaleVibration: 0.025,
     scaleFrequency: 4,
     scalePulse: true,
-    scaleExpand: 0.02
+    scaleExpand: 0.02,
 };
 
 export default buildLightEffectGesture(LIGHTRADIATE_CONFIG);

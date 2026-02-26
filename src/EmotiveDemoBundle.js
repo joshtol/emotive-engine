@@ -15,13 +15,13 @@ const protectedRhythmIntegration = {
     start: (bpm, pattern) => rhythmIntegration.start(bpm, pattern),
     stop: () => rhythmIntegration.stop(),
     setBPM: bpm => rhythmIntegration.setBPM(bpm),
-    getBPM: () => rhythmIntegration.getBPM()
+    getBPM: () => rhythmIntegration.getBPM(),
 };
 
 const protectedRhythmEngine = {
     on: (event, callback) => rhythmEngine.on(event, callback),
     off: (event, callback) => rhythmEngine.off(event, callback),
-    bpm: rhythmEngine.bpm
+    bpm: rhythmEngine.bpm,
 };
 
 // Make EmotiveMascotPublic the default export (it's the constructor)

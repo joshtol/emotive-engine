@@ -43,9 +43,9 @@ export function parseRadialBurstConfig(config, resolveLandmark) {
         },
 
         // Burst behavior
-        startRadius: burst.startRadius || 0.05,      // Start slightly off center
-        endRadius: burst.endRadius || 0.5,           // How far to travel outward
-        plane: burst.plane || 'xz',                  // 'xz' = horizontal, 'xyz' = spherical
+        startRadius: burst.startRadius || 0.05, // Start slightly off center
+        endRadius: burst.endRadius || 0.5, // How far to travel outward
+        plane: burst.plane || 'xz', // 'xz' = horizontal, 'xyz' = spherical
         easing: burst.easing || 'easeOutQuad',
 
         // Scale animation during burst
@@ -78,7 +78,7 @@ export function calculateRadialDirection(index, count, plane = 'xz') {
         };
     } else {
         // Spherical burst - fibonacci sphere distribution for even coverage
-        const phi = Math.acos(1 - 2 * (index + 0.5) / count);
+        const phi = Math.acos(1 - (2 * (index + 0.5)) / count);
         const theta = Math.PI * (1 + Math.sqrt(5)) * index;
         return {
             x: Math.sin(phi) * Math.cos(theta),
@@ -101,7 +101,8 @@ export function calculateRadialBurstPosition(burstConfig, direction, progress) {
     const easedProgress = easingFn(progress);
 
     // Interpolate radius
-    const radius = burstConfig.startRadius + (burstConfig.endRadius - burstConfig.startRadius) * easedProgress;
+    const radius =
+        burstConfig.startRadius + (burstConfig.endRadius - burstConfig.startRadius) * easedProgress;
 
     // Calculate position along radial direction
     const x = burstConfig.offset.x + direction.x * radius;
@@ -109,7 +110,8 @@ export function calculateRadialBurstPosition(burstConfig, direction, progress) {
     const z = burstConfig.offset.z + direction.z * radius;
 
     // Interpolate scale
-    const scale = burstConfig.startScale + (burstConfig.endScale - burstConfig.startScale) * easedProgress;
+    const scale =
+        burstConfig.startScale + (burstConfig.endScale - burstConfig.startScale) * easedProgress;
 
     return { x, y, z, scale };
 }
@@ -135,8 +137,8 @@ export function calculateInitialState(config, index, mascotRadius) {
             radialBurst: {
                 config,
                 direction,
-            }
-        }
+            },
+        },
     };
 }
 

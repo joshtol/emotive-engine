@@ -47,7 +47,6 @@ export class AudioHandler {
         // Will contain initialization logic
     }
 
-
     /**
      * Disconnect audio analysis
      * @returns {Object} The mascot instance for chaining
@@ -63,7 +62,6 @@ export class AudioHandler {
             clearInterval(this.vocalUpdateInterval);
             this.vocalUpdateInterval = null;
         }
-
 
         // Clear vocal data and analyzer reference
         if (this.shapeMorpher) {
@@ -103,7 +101,10 @@ export class AudioHandler {
         }
 
         // Resume AudioContext if it's suspended (common after user interaction)
-        if (this.audioAnalyzer.audioContext && this.audioAnalyzer.audioContext.state === 'suspended') {
+        if (
+            this.audioAnalyzer.audioContext &&
+            this.audioAnalyzer.audioContext.state === 'suspended'
+        ) {
             try {
                 await this.audioAnalyzer.audioContext.resume();
             } catch (error) {
@@ -192,7 +193,7 @@ export class AudioHandler {
         // Emit speech stop event
         this._emit('speechStopped', {
             previousAudioLevel,
-            returnToBaseTime: 500
+            returnToBaseTime: 500,
         });
 
         return this._chainTarget;

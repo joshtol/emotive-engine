@@ -19,51 +19,51 @@ export default {
 
         // Particle emission drifts peacefully with rhythm
         particleEmission: {
-            syncMode: 'zen',        // Zen peaceful sync
-            burstSize: 3,           // Small peaceful bursts
-            offBeatRate: 0.9,       // Steady peaceful flow
-            zenSync: true           // Mindful zen rhythm
+            syncMode: 'zen', // Zen peaceful sync
+            burstSize: 3, // Small peaceful bursts
+            offBeatRate: 0.9, // Steady peaceful flow
+            zenSync: true, // Mindful zen rhythm
         },
 
         // Breathing syncs to very slow, deep rhythm
         breathSync: {
             mode: 'beats',
-            beatsPerBreath: 8,      // Very slow breathing (2 bars)
-            intensity: 1.2          // Deep, relaxing breaths
+            beatsPerBreath: 8, // Very slow breathing (2 bars)
+            intensity: 1.2, // Deep, relaxing breaths
         },
 
         // Glow pulses gently
         glowSync: {
             intensityRange: [0.55, 0.65],
             syncTo: 'zen',
-            attack: 0.6,            // Very gradual rise
-            decay: 0.8              // Long gentle fade
+            attack: 0.6, // Very gradual rise
+            decay: 0.8, // Long gentle fade
         },
 
         // Pattern-specific calm expressions
         patternBehaviors: {
-            'meditation': {
+            meditation: {
                 // Meditation/spa music
                 particleEmission: {
                     syncMode: 'drift',
-                    burstSize: 2
+                    burstSize: 2,
                 },
-                glowSync: { intensityRange: [0.5, 0.6] }
+                glowSync: { intensityRange: [0.5, 0.6] },
             },
-            'ambient': {
+            ambient: {
                 // Atmospheric calm
                 particleEmission: {
                     syncMode: 'flow',
-                    burstSize: 3
-                }
+                    burstSize: 3,
+                },
             },
-            'nature': {
+            nature: {
                 // Natural sounds (rain, ocean)
                 particleEmission: {
                     syncMode: 'organic',
-                    burstSize: 4
-                }
-            }
-        }
-    }
+                    burstSize: 4,
+                },
+            },
+        },
+    },
 };

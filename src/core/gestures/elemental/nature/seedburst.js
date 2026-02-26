@@ -47,7 +47,7 @@ const SEEDBURST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 2.5,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 2.0,
@@ -65,7 +65,7 @@ const SEEDBURST_CONFIG = {
                     travel: 'radial',
                     travelSpeed: 1.2,
                     strengthCurve: 'fadeOut',
-                    trailDissolve: { enabled: true, offset: -0.25, softness: 1.2 }
+                    trailDissolve: { enabled: true, offset: -0.25, softness: 1.2 },
                 },
                 grain: { type: 3, strength: 0.4, scale: 0.3, speed: 1.5, blend: 'multiply' },
                 blending: 'normal',
@@ -74,10 +74,10 @@ const SEEDBURST_CONFIG = {
                 modelOverrides: {
                     'vine-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // =================================================================
@@ -94,12 +94,22 @@ const SEEDBURST_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.3,
                 endScale: 1.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 10,
             scale: 0.8,
-            models: ['thorn-curl', 'leaf-bunch', 's-vine', 'vine-twist', 'thorn-curl',
-                'leaf-bunch', 's-vine', 'vine-twist', 'thorn-curl', 'leaf-bunch'],
+            models: [
+                'thorn-curl',
+                'leaf-bunch',
+                's-vine',
+                'vine-twist',
+                'thorn-curl',
+                'leaf-bunch',
+                's-vine',
+                'vine-twist',
+                'thorn-curl',
+                'leaf-bunch',
+            ],
             animation: {
                 appearAt: 0.02,
                 disappearAt: 0.5,
@@ -114,16 +124,18 @@ const SEEDBURST_CONFIG = {
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.0,
-                    strengthCurve: 'fadeOut'
+                    strengthCurve: 'fadeOut',
                 },
-                atmospherics: [{
-                    preset: 'falling-leaves',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.5,
-                    sizeScale: 0.6,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'falling-leaves',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.5,
+                        sizeScale: 0.6,
+                        progressCurve: 'burst',
+                    },
+                ],
                 rotate: [
                     { axis: 'x', rotations: 3, phase: 0 },
                     { axis: 'z', rotations: -2.5, phase: 36 },
@@ -134,14 +146,14 @@ const SEEDBURST_CONFIG = {
                     { axis: 'x', rotations: 2.5, phase: 216 },
                     { axis: 'z', rotations: -4, phase: 252 },
                     { axis: 'y', rotations: 3, phase: 288 },
-                    { axis: 'x', rotations: -2, phase: 324 }
+                    { axis: 'x', rotations: -2, phase: 324 },
                 ],
                 scaleVariance: 0.35,
                 lifetimeVariance: 0.1,
                 blending: 'normal',
-                renderOrder: 14
-            }
-        }
+                renderOrder: 14,
+            },
+        },
     ],
 
     shakeAmount: 0.03,
@@ -154,7 +166,7 @@ const SEEDBURST_CONFIG = {
     scaleVibration: 0.025,
     scaleFrequency: 6,
     tremor: 0.015,
-    tremorFrequency: 8
+    tremorFrequency: 8,
 };
 
 export default buildNatureEffectGesture(SEEDBURST_CONFIG);

@@ -24,21 +24,37 @@ export class RadiusCalculator {
         let sleepScaleMod = 1;
         let glowOpacityMod = 1;
 
-        if (this.renderer.state.sleeping || this.renderer.state.emotion === 'resting' || isEffectActive('sleeping', this.renderer.state)) {
+        if (
+            this.renderer.state.sleeping ||
+            this.renderer.state.emotion === 'resting' ||
+            isEffectActive('sleeping', this.renderer.state)
+        ) {
             const sleepEffect = getEffect('sleeping');
             if (sleepEffect) {
                 const dimming = sleepEffect.getDimmingValues();
                 // Use effect's dimming values
-                sleepOpacityMod = this.renderer.state.sleepDimness !== undefined ? this.renderer.state.sleepDimness : dimming.orbDimming;
+                sleepOpacityMod =
+                    this.renderer.state.sleepDimness !== undefined
+                        ? this.renderer.state.sleepDimness
+                        : dimming.orbDimming;
                 glowOpacityMod = dimming.glowDimming; // Dim glow even more
-                sleepScaleMod = this.renderer.state.sleepScale !== undefined ? this.renderer.state.sleepScale : 0.9;
+                sleepScaleMod =
+                    this.renderer.state.sleepScale !== undefined
+                        ? this.renderer.state.sleepScale
+                        : 0.9;
             } else {
                 // Fallback values
-                sleepOpacityMod = this.renderer.state.sleepDimness !== undefined ? this.renderer.state.sleepDimness : 0.3;
+                sleepOpacityMod =
+                    this.renderer.state.sleepDimness !== undefined
+                        ? this.renderer.state.sleepDimness
+                        : 0.3;
                 glowOpacityMod = 0.2;
-                sleepScaleMod = this.renderer.state.sleepScale !== undefined ? this.renderer.state.sleepScale : 0.9;
+                sleepScaleMod =
+                    this.renderer.state.sleepScale !== undefined
+                        ? this.renderer.state.sleepScale
+                        : 0.9;
             }
-            this.renderer.state.breathRate = 0.5;  // Slower breathing
+            this.renderer.state.breathRate = 0.5; // Slower breathing
             this.renderer.state.breathDepth = 0.15; // Deeper breaths
         }
 
@@ -65,9 +81,13 @@ export class RadiusCalculator {
         }
 
         // Add nervous glow pulse if needed
-        if (this.renderer.state.undertone === 'nervous' && this.renderer.undertoneModifiers.nervous.glowPulse) {
-            const nervousPulse = Math.sin(Date.now() / 200) * this.renderer.undertoneModifiers.nervous.glowPulse; // Fast subtle pulse
-            glowBreathFactor *= (1 + nervousPulse);
+        if (
+            this.renderer.state.undertone === 'nervous' &&
+            this.renderer.undertoneModifiers.nervous.glowPulse
+        ) {
+            const nervousPulse =
+                Math.sin(Date.now() / 200) * this.renderer.undertoneModifiers.nervous.glowPulse; // Fast subtle pulse
+            glowBreathFactor *= 1 + nervousPulse;
         }
 
         return { coreBreathFactor, glowBreathFactor };
@@ -88,16 +108,33 @@ export class RadiusCalculator {
         const { coreBreathFactor, glowBreathFactor } = this.calculateBreathingFactors();
 
         // Calculate core dimensions - using unified scale factor
-        const baseRadius = (this.renderer.config.referenceSize / this.renderer.config.coreSizeDivisor) * this.renderer.scaleFactor;
+        const baseRadius =
+            (this.renderer.config.referenceSize / this.renderer.config.coreSizeDivisor) *
+            this.renderer.scaleFactor;
 
         // Apply emotion core size from state properties
-        const emotionSizeMult = (state.properties && state.properties.coreSize) ? state.properties.coreSize : 1.0;
+        const emotionSizeMult =
+            state.properties && state.properties.coreSize ? state.properties.coreSize : 1.0;
 
         // Apply undertone size multiplier
         const undertoneSizeMult = this.renderer.state.sizeMultiplier || 1.0;
 
-        const coreRadius = baseRadius * emotionSizeMult * coreBreathFactor * scaleMultiplier * sleepScaleMod * undertoneSizeMult;
-        const glowRadius = baseRadius * this.renderer.config.glowMultiplier * glowBreathFactor * this.renderer.state.glowIntensity * scaleMultiplier * sleepScaleMod * undertoneSizeMult * glowMultiplier;  // Apply gesture glow multiplier
+        const coreRadius =
+            baseRadius *
+            emotionSizeMult *
+            coreBreathFactor *
+            scaleMultiplier *
+            sleepScaleMod *
+            undertoneSizeMult;
+        const glowRadius =
+            baseRadius *
+            this.renderer.config.glowMultiplier *
+            glowBreathFactor *
+            this.renderer.state.glowIntensity *
+            scaleMultiplier *
+            sleepScaleMod *
+            undertoneSizeMult *
+            glowMultiplier; // Apply gesture glow multiplier
 
         // Use state glow intensity directly multiplied by gesture glow
         const effectiveGlowIntensity = this.renderer.state.glowIntensity * glowMultiplier;
@@ -107,7 +144,7 @@ export class RadiusCalculator {
             glowRadius,
             effectiveGlowIntensity,
             sleepOpacityMod,
-            glowOpacityMod
+            glowOpacityMod,
         };
     }
 }

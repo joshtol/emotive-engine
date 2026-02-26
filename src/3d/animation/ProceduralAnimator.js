@@ -71,15 +71,15 @@ export class ProceduralAnimator {
                 duration: 0.6,
                 evaluate: t => ({
                     scale: 1.0 + Math.sin(t * Math.PI) * 0.15,
-                    glowIntensity: 1.0 + Math.sin(t * Math.PI) * 0.15  // Gentle pulse ±15%
-                })
+                    glowIntensity: 1.0 + Math.sin(t * Math.PI) * 0.15, // Gentle pulse ±15%
+                }),
             },
             love: {
                 duration: 1.2,
                 evaluate: t => ({
                     scale: 1.0 + Math.sin(t * Math.PI * 2) * 0.08,
-                    glowIntensity: 1.0 + Math.sin(t * Math.PI * 2) * 0.1  // Gentle pulse ±10%
-                })
+                    glowIntensity: 1.0 + Math.sin(t * Math.PI * 2) * 0.1, // Gentle pulse ±10%
+                }),
             },
             curiosity: {
                 duration: 0.8,
@@ -88,16 +88,16 @@ export class ProceduralAnimator {
                     return {
                         rotation: [0, wiggle, 0],
                         scale: 1.0 + Math.sin(t * Math.PI) * 0.05,
-                        glowIntensity: 1.0  // Steady glow
+                        glowIntensity: 1.0, // Steady glow
                     };
-                }
+                },
             },
             sadness: {
                 duration: 1.5,
                 evaluate: t => ({
                     scale: 1.0 - t * 0.1,
-                    glowIntensity: 1.0 - Math.sin(t * Math.PI) * 0.15  // Gentle fade ±15%
-                })
+                    glowIntensity: 1.0 - Math.sin(t * Math.PI) * 0.15, // Gentle fade ±15%
+                }),
             },
             anger: {
                 duration: 0.4,
@@ -106,9 +106,9 @@ export class ProceduralAnimator {
                     return {
                         rotation: [shake, shake, 0],
                         scale: 1.1 + Math.sin(t * Math.PI) * 0.1,
-                        glowIntensity: 1.0 + Math.sin(t * Math.PI * 8) * 0.15  // Rapid flicker ±15%
+                        glowIntensity: 1.0 + Math.sin(t * Math.PI * 8) * 0.15, // Rapid flicker ±15%
                     };
-                }
+                },
             },
             fear: {
                 duration: 0.5,
@@ -117,24 +117,24 @@ export class ProceduralAnimator {
                     return {
                         scale: 0.9 + tremble,
                         rotation: [tremble, 0, tremble],
-                        glowIntensity: 1.0 + Math.sin(t * Math.PI * 10) * 0.1  // Nervous flicker ±10%
+                        glowIntensity: 1.0 + Math.sin(t * Math.PI * 10) * 0.1, // Nervous flicker ±10%
                     };
-                }
+                },
             },
             surprise: {
                 duration: 0.4,
                 evaluate: t => ({
                     scale: 1.0 + (1.0 - Math.cos(t * Math.PI)) * 0.25,
-                    glowIntensity: 1.0 + (1.0 - Math.cos(t * Math.PI)) * 0.2  // Quick burst +20%
-                })
+                    glowIntensity: 1.0 + (1.0 - Math.cos(t * Math.PI)) * 0.2, // Quick burst +20%
+                }),
             },
             neutral: {
                 duration: 0.5,
                 evaluate: _t => ({
                     scale: 1.0,
-                    glowIntensity: 1.0  // Steady baseline
-                })
-            }
+                    glowIntensity: 1.0, // Steady baseline
+                }),
+            },
         };
 
         return animations[emotion] || animations.neutral;
@@ -166,9 +166,9 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     const envelope = Math.sin(t * Math.PI);
                     return {
-                        scaleBoost: 1.0 + envelope * 0.025  // 2.5% scale only
+                        scaleBoost: 1.0 + envelope * 0.025, // 2.5% scale only
                     };
-                }
+                },
             },
 
             // ───────────────────────────────────────────────────────────────
@@ -181,9 +181,9 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     const envelope = Math.sin(t * Math.PI);
                     return {
-                        rotationBoost: [envelope * 0.025, 0, 0]  // Forward tilt only
+                        rotationBoost: [envelope * 0.025, 0, 0], // Forward tilt only
                     };
-                }
+                },
             },
 
             // ───────────────────────────────────────────────────────────────
@@ -199,10 +199,10 @@ export class ProceduralAnimator {
                     // Slight ease-out for organic feel
                     const eased = 1 - Math.pow(1 - envelope, 2);
                     return {
-                        scaleBoost: 1.0 + eased * 0.04,  // 4% scale growth (visible)
-                        glowBoost: eased * 0.3           // 30% glow boost (noticeable)
+                        scaleBoost: 1.0 + eased * 0.04, // 4% scale growth (visible)
+                        glowBoost: eased * 0.3, // 30% glow boost (noticeable)
                     };
-                }
+                },
             },
 
             // ───────────────────────────────────────────────────────────────
@@ -215,10 +215,10 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     const envelope = Math.sin(t * Math.PI);
                     return {
-                        rotationBoost: [0, 0, envelope * 0.04],  // Side lean
-                        positionBoost: [envelope * 0.01, 0, 0]   // Slight drift
+                        rotationBoost: [0, 0, envelope * 0.04], // Side lean
+                        positionBoost: [envelope * 0.01, 0, 0], // Slight drift
                     };
-                }
+                },
             },
 
             // ───────────────────────────────────────────────────────────────
@@ -231,10 +231,10 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     const envelope = Math.sin(t * Math.PI);
                     return {
-                        positionBoost: [0, -envelope * 0.015, 0],  // Down dip
-                        scaleBoost: 1.0 - envelope * 0.015         // Tiny squish
+                        positionBoost: [0, -envelope * 0.015, 0], // Down dip
+                        scaleBoost: 1.0 - envelope * 0.015, // Tiny squish
                     };
-                }
+                },
             },
 
             // ───────────────────────────────────────────────────────────────
@@ -248,9 +248,9 @@ export class ProceduralAnimator {
                     const envelope = Math.sin(t * Math.PI);
                     return {
                         scaleBoost: 1.0 + envelope * 0.03,
-                        glowBoost: envelope * 0.25
+                        glowBoost: envelope * 0.25,
                     };
-                }
+                },
             },
 
             // ═══════════════════════════════════════════════════════════════════════════
@@ -275,9 +275,9 @@ export class ProceduralAnimator {
 
                     return {
                         position: [0, bounce * 0.35, 0],
-                        scale: bounce > 0.5 ? stretch : squash
+                        scale: bounce > 0.5 ? stretch : squash,
                     };
-                }
+                },
             },
             pulse: {
                 duration: 0.6,
@@ -285,33 +285,33 @@ export class ProceduralAnimator {
                     const pulse = Math.sin(t * Math.PI);
                     return {
                         scale: 1.0 + pulse * 0.2,
-                        glowIntensity: 1.0 + pulse * 0.5
+                        glowIntensity: 1.0 + pulse * 0.5,
                     };
-                }
+                },
             },
             spin: {
                 duration: 1.0,
                 evaluate: t => ({
-                    rotation: [0, t * Math.PI * 2, 0]
-                })
+                    rotation: [0, t * Math.PI * 2, 0],
+                }),
             },
             wobble: {
                 duration: 1.0,
                 evaluate: t => {
                     const wobble = Math.sin(t * Math.PI * 3);
                     return {
-                        rotation: [wobble * 0.3, 0, wobble * 0.2]
+                        rotation: [wobble * 0.3, 0, wobble * 0.2],
                     };
-                }
+                },
             },
             float: {
                 duration: 2.0,
                 evaluate: t => {
                     const float = Math.sin(t * Math.PI);
                     return {
-                        position: [0, float * 0.3, 0]
+                        position: [0, float * 0.3, 0],
                     };
-                }
+                },
             },
             shake: {
                 duration: 0.5,
@@ -319,9 +319,9 @@ export class ProceduralAnimator {
                     const shake = Math.sin(t * Math.PI * 6) * (1.0 - t);
                     return {
                         position: [shake * 0.2, 0, 0],
-                        rotation: [0, 0, shake * 0.1]
+                        rotation: [0, 0, shake * 0.1],
                     };
-                }
+                },
             },
             // Nod: Tidally locked double-nod toward camera
             // Uses cameraRelativePosition so Z moves toward camera regardless of angle
@@ -347,9 +347,9 @@ export class ProceduralAnimator {
                         cameraRelativePosition: [0, 0, forward],
                         // Subtle scale accompaniment
                         scale: 1.0 - Math.abs(forward) * 0.3,
-                        glowIntensity: 1.0 + Math.abs(forward) * 0.5
+                        glowIntensity: 1.0 + Math.abs(forward) * 0.5,
                     };
-                }
+                },
             },
 
             // Wiggle: Rapid horizontal shimmy in camera-relative space
@@ -367,9 +367,9 @@ export class ProceduralAnimator {
                         cameraRelativePosition: [osc * 0.04, 0, 0],
                         // Slight scale pulse
                         scale: 1.0 + Math.abs(osc) * 0.03,
-                        glowIntensity: 1.0 + Math.abs(osc) * 0.1
+                        glowIntensity: 1.0 + Math.abs(osc) * 0.1,
                     };
-                }
+                },
             },
 
             // HeadBob: Tidally locked forward bob toward camera
@@ -378,11 +378,12 @@ export class ProceduralAnimator {
                 duration: 0.3,
                 evaluate: t => {
                     // Sharp attack, smooth decay (like head bob on beat)
-                    const envelope = t < 0.15
-                        ? t / 0.15  // Quick attack
-                        : Math.pow(1 - (t - 0.15) / 0.85, 2);  // Smooth return
+                    const envelope =
+                        t < 0.15
+                            ? t / 0.15 // Quick attack
+                            : Math.pow(1 - (t - 0.15) / 0.85, 2); // Smooth return
 
-                    const forward = envelope * 0.08;  // Move toward camera
+                    const forward = envelope * 0.08; // Move toward camera
 
                     return {
                         // Z in camera-relative = toward camera (tidally locked!)
@@ -391,9 +392,9 @@ export class ProceduralAnimator {
                         position: [0, -envelope * 0.015, 0],
                         // Scale accompaniment
                         scale: 1.0 - envelope * 0.05,
-                        glowIntensity: 1.0 + envelope * 0.15
+                        glowIntensity: 1.0 + envelope * 0.15,
                     };
-                }
+                },
             },
 
             // Sway: Gentle side-to-side lean with smooth onset
@@ -401,20 +402,21 @@ export class ProceduralAnimator {
                 duration: 1.2,
                 evaluate: t => {
                     // Ease-in-out envelope for smooth entry and exit
-                    const envelope = t < 0.15
-                        ? t / 0.15 * t / 0.15  // Quadratic ease-in at start
-                        : t > 0.85
-                            ? Math.pow((1 - t) / 0.15, 2) // Quadratic ease-out at end
-                            : 1.0;
+                    const envelope =
+                        t < 0.15
+                            ? ((t / 0.15) * t) / 0.15 // Quadratic ease-in at start
+                            : t > 0.85
+                              ? Math.pow((1 - t) / 0.15, 2) // Quadratic ease-out at end
+                              : 1.0;
 
                     // Smooth sine sway motion
                     const sway = Math.sin(t * Math.PI * 2) * envelope;
 
                     return {
                         rotation: [0, 0, sway * 0.12],
-                        position: [sway * 0.06, 0, 0]
+                        position: [sway * 0.06, 0, 0],
                     };
-                }
+                },
             },
 
             // Jump: Quick up movement
@@ -423,12 +425,12 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     // Parabolic jump (up fast, down slow)
                     const jumpHeight = Math.sin(t * Math.PI);
-                    const squash = t < 0.1 ? 1.0 - t * 3 : (t > 0.9 ? 1.0 - (1 - t) * 3 : 1.0);
+                    const squash = t < 0.1 ? 1.0 - t * 3 : t > 0.9 ? 1.0 - (1 - t) * 3 : 1.0;
                     return {
                         position: [0, jumpHeight * 0.4, 0],
-                        scale: squash
+                        scale: squash,
                     };
-                }
+                },
             },
 
             // Twist: Quick Y rotation
@@ -437,9 +439,9 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     const twist = Math.sin(t * Math.PI * 2) * (1 - t * 0.5);
                     return {
-                        rotation: [0, twist * 0.3, 0]
+                        rotation: [0, twist * 0.3, 0],
                     };
-                }
+                },
             },
 
             // Hula: Circular hip motion
@@ -449,9 +451,9 @@ export class ProceduralAnimator {
                     const phase = t * Math.PI * 2;
                     return {
                         position: [Math.sin(phase) * 0.05, 0, Math.cos(phase) * 0.03],
-                        rotation: [0, 0, Math.sin(phase) * 0.05]
+                        rotation: [0, 0, Math.sin(phase) * 0.05],
                     };
-                }
+                },
             },
 
             // Lean: Side-to-side tilt (Z-rotation = always perpendicular to camera view)
@@ -467,9 +469,9 @@ export class ProceduralAnimator {
                         // Z-rotation is perpendicular to camera (side tilt)
                         rotation: [0, 0, lean * 0.15],
                         // Drift in direction of lean for weight shift feel
-                        position: [lean * 0.04, -Math.abs(lean) * 0.01, 0]
+                        position: [lean * 0.04, -Math.abs(lean) * 0.01, 0],
                     };
-                }
+                },
             },
 
             // Tilt: Forward nod toward camera (X-rotation + Z-position)
@@ -484,9 +486,9 @@ export class ProceduralAnimator {
                         // Primary: Z-position toward camera (forward motion)
                         position: [0, 0, tilt * 0.05],
                         // Secondary: Subtle X-rotation for tilt feel
-                        rotation: [tilt * 0.08, 0, 0]
+                        rotation: [tilt * 0.08, 0, 0],
                     };
-                }
+                },
             },
 
             // Twitch: Quick small jerk
@@ -495,9 +497,9 @@ export class ProceduralAnimator {
                 evaluate: t => {
                     const twitch = (1 - t) * Math.sin(t * Math.PI * 6);
                     return {
-                        rotation: [twitch * 0.03, twitch * 0.03, 0]
+                        rotation: [twitch * 0.03, twitch * 0.03, 0],
                     };
-                }
+                },
             },
 
             // ═══════════════════════════════════════════════════════════════════════════
@@ -510,15 +512,16 @@ export class ProceduralAnimator {
                 duration: 0.3,
                 evaluate: t => {
                     // Quick attack, slower decay (like real flash)
-                    const flash = t < 0.2
-                        ? t / 0.2  // Fast attack
-                        : 1 - (t - 0.2) / 0.8;  // Slow decay
+                    const flash =
+                        t < 0.2
+                            ? t / 0.2 // Fast attack
+                            : 1 - (t - 0.2) / 0.8; // Slow decay
 
                     return {
-                        glowIntensity: 1.0 + flash * 0.4,  // +40% brightness
-                        scale: 1.0 + flash * 0.03          // Tiny scale pop
+                        glowIntensity: 1.0 + flash * 0.4, // +40% brightness
+                        scale: 1.0 + flash * 0.03, // Tiny scale pop
                     };
-                }
+                },
             },
 
             // Glow: Gentle sustained brightness increase
@@ -530,10 +533,10 @@ export class ProceduralAnimator {
                     const glow = Math.sin(t * Math.PI);
 
                     return {
-                        glowIntensity: 1.0 + glow * 0.25,  // +25% brightness
-                        scale: 1.0 + glow * 0.02           // Very subtle scale
+                        glowIntensity: 1.0 + glow * 0.25, // +25% brightness
+                        scale: 1.0 + glow * 0.02, // Very subtle scale
                     };
-                }
+                },
             },
 
             // Burst: Explosive "toward camera" burst with scale and glow
@@ -544,13 +547,15 @@ export class ProceduralAnimator {
                     // Phase 1: Explosive forward burst (0-0.15)
                     // Phase 2: Overshoot recoil back (0.15-0.35)
                     // Phase 3: Settle with damped oscillation (0.35-1.0)
-                    let forward = 0, scale = 1.0, glow = 1.0;
+                    let forward = 0,
+                        scale = 1.0,
+                        glow = 1.0;
 
                     if (t < 0.15) {
                         // Explosive forward burst toward camera
                         const attack = t / 0.15;
                         const eased = 1 - Math.pow(1 - attack, 3); // Ease-out
-                        forward = eased * 0.15;  // Surge toward camera
+                        forward = eased * 0.15; // Surge toward camera
                         scale = 1.0 + eased * 0.2;
                         glow = 1.0 + eased * 0.5;
                     } else if (t < 0.35) {
@@ -574,9 +579,9 @@ export class ProceduralAnimator {
                         // Dramatic forward/back motion in camera-relative space
                         cameraRelativePosition: [0, 0, forward],
                         scale,
-                        glowIntensity: glow
+                        glowIntensity: glow,
                     };
-                }
+                },
             },
 
             // Flicker: Subtle rapid shimmer - like candlelight
@@ -590,11 +595,11 @@ export class ProceduralAnimator {
                     const flicker = Math.sin(t * Math.PI * 4) * envelope;
 
                     return {
-                        glowIntensity: 1.0 + flicker * 0.15,  // ±15% flicker
-                        scale: 1.0 + flicker * 0.01           // Barely perceptible scale
+                        glowIntensity: 1.0 + flicker * 0.15, // ±15% flicker
+                        scale: 1.0 + flicker * 0.01, // Barely perceptible scale
                     };
-                }
-            }
+                },
+            },
         };
 
         return gestures[gestureName] || gestures.pulse;
@@ -611,8 +616,8 @@ export class ProceduralAnimator {
             evaluate: t => ({
                 morphProgress: t,
                 scale: 1.0 + Math.sin(t * Math.PI) * 0.1,
-                rotation: [0, t * Math.PI * 0.5, 0]
-            })
+                rotation: [0, t * Math.PI * 0.5, 0],
+            }),
         };
     }
 
@@ -623,7 +628,7 @@ export class ProceduralAnimator {
         this.animations.push({
             ...animation,
             startTime: this.time,
-            callbacks: callbacks || {}
+            callbacks: callbacks || {},
         });
 
         this.currentAnimation = animation;
@@ -661,9 +666,7 @@ export class ProceduralAnimator {
      * Easing function (smooth in-out)
      */
     easeInOutCubic(t) {
-        return t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**
@@ -680,9 +683,9 @@ export class ProceduralAnimator {
                     scale: 1.0 + breathe * 0.02,
                     position: [drift * 0.05, breathe * 0.03, 0],
                     rotation: [0, drift * 0.05, 0],
-                    glowIntensity: 1.0 + breathe * 0.1
+                    glowIntensity: 1.0 + breathe * 0.1,
                 };
-            }
+            },
         };
     }
 

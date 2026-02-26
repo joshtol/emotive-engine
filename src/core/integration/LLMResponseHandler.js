@@ -83,23 +83,97 @@ export default class LLMResponseHandler {
             actionToGestureMap: {},
 
             // Merge user config
-            ...config
+            ...config,
         };
 
         // Response validation schema
         this.schema = {
             message: 'string',
-            emotion: ['joy', 'empathy', 'calm', 'excitement', 'concern', 'neutral', 'triumph', 'love', 'curiosity'],
+            emotion: [
+                'joy',
+                'empathy',
+                'calm',
+                'excitement',
+                'concern',
+                'neutral',
+                'triumph',
+                'love',
+                'curiosity',
+            ],
             sentiment: ['positive', 'neutral', 'negative'],
-            action: ['none', 'offer_help', 'celebrate', 'guide', 'reassure', 'greet', 'confirm', 'deny', 'emphasize',
-                'question', 'think', 'listen', 'respond'],
+            action: [
+                'none',
+                'offer_help',
+                'celebrate',
+                'guide',
+                'reassure',
+                'greet',
+                'confirm',
+                'deny',
+                'emphasize',
+                'question',
+                'think',
+                'listen',
+                'respond',
+            ],
             frustrationLevel: 'number', // 0-100
-            shape: ['circle', 'heart', 'star', 'sun', 'moon', 'eclipse', 'solar', 'lunar', 'square', 'triangle', 'suspicion'],
-            gesture: ['bounce', 'pulse', 'shake', 'spin', 'drift', 'nod', 'tilt', 'expand', 'contract', 'flash',
-                'stretch', 'glow', 'flicker', 'vibrate', 'wave', 'morph', 'jump', 'orbital', 'hula', 'scan',
-                'twist', 'burst', 'directional', 'settle', 'fade', 'hold', 'breathe', 'peek', 'sparkle',
-                'shimmer', 'wiggle', 'groove', 'point', 'lean', 'reach', 'headBob', 'rain', 'twitch', 'sway',
-                'float', 'jitter', 'orbit']
+            shape: [
+                'circle',
+                'heart',
+                'star',
+                'sun',
+                'moon',
+                'eclipse',
+                'solar',
+                'lunar',
+                'square',
+                'triangle',
+                'suspicion',
+            ],
+            gesture: [
+                'bounce',
+                'pulse',
+                'shake',
+                'spin',
+                'drift',
+                'nod',
+                'tilt',
+                'expand',
+                'contract',
+                'flash',
+                'stretch',
+                'glow',
+                'flicker',
+                'vibrate',
+                'wave',
+                'morph',
+                'jump',
+                'orbital',
+                'hula',
+                'scan',
+                'twist',
+                'burst',
+                'directional',
+                'settle',
+                'fade',
+                'hold',
+                'breathe',
+                'peek',
+                'sparkle',
+                'shimmer',
+                'wiggle',
+                'groove',
+                'point',
+                'lean',
+                'reach',
+                'headBob',
+                'rain',
+                'twitch',
+                'sway',
+                'float',
+                'jitter',
+                'orbit',
+            ],
         };
 
         // Default emotion to shape mappings
@@ -112,7 +186,7 @@ export default class LLMResponseHandler {
             concern: 'circle',
             triumph: 'star',
             curiosity: 'circle',
-            neutral: 'circle'
+            neutral: 'circle',
         };
 
         // Default action to gesture mappings
@@ -128,7 +202,7 @@ export default class LLMResponseHandler {
             question: 'tilt',
             think: 'orbit',
             listen: 'settle',
-            respond: 'bounce'
+            respond: 'bounce',
         };
 
         // Semantic action to performance mappings (if performance system is available)
@@ -144,7 +218,7 @@ export default class LLMResponseHandler {
             question: 'questioning',
             think: 'thinking',
             listen: 'listening',
-            respond: 'responding'
+            respond: 'responding',
         };
     }
 
@@ -176,27 +250,29 @@ export default class LLMResponseHandler {
                 action = 'none',
                 shape,
                 gesture,
-                frustrationLevel = 0
+                frustrationLevel = 0,
             } = response;
 
             // Calculate performance intensity from context
-            const intensity = options.intensity !== undefined
-                ? options.intensity
-                : this.calculateIntensity(frustrationLevel, sentiment);
+            const intensity =
+                options.intensity !== undefined
+                    ? options.intensity
+                    : this.calculateIntensity(frustrationLevel, sentiment);
 
             // Update mascot context if tracking enabled
             if (this.config.enableContextTracking && this.mascot.updateContext) {
                 this.mascot.updateContext({
                     frustration: frustrationLevel,
-                    sentiment
+                    sentiment,
                 });
             }
 
             // Try to use semantic performance system first (more sophisticated)
-            if (this.config.useSemanticPerformances &&
+            if (
+                this.config.useSemanticPerformances &&
                 this.mascot.perform &&
-                this.semanticActionMap[action]) {
-
+                this.semanticActionMap[action]
+            ) {
                 const performanceName = this.semanticActionMap[action];
 
                 try {
@@ -204,9 +280,14 @@ export default class LLMResponseHandler {
                         context: {
                             frustration: frustrationLevel,
                             sentiment,
-                            urgency: frustrationLevel > 60 ? 'high' : frustrationLevel > 30 ? 'medium' : 'low'
+                            urgency:
+                                frustrationLevel > 60
+                                    ? 'high'
+                                    : frustrationLevel > 30
+                                      ? 'medium'
+                                      : 'low',
                         },
-                        intensity
+                        intensity,
                     });
 
                     // If shape specified, morph after performance
@@ -217,7 +298,9 @@ export default class LLMResponseHandler {
                     return this.mascot;
                 } catch {
                     // Performance not available, fall back to manual choreography
-                    console.warn(`Semantic performance '${performanceName}' not available, using manual choreography`);
+                    console.warn(
+                        `Semantic performance '${performanceName}' not available, using manual choreography`
+                    );
                 }
             }
 
@@ -225,7 +308,6 @@ export default class LLMResponseHandler {
             await this.choreographResponse(emotion, action, shape, gesture, intensity);
 
             return this.mascot;
-
         } catch (error) {
             console.error('Error handling LLM response:', error);
             // Don't break the user experience - just log the error
@@ -255,7 +337,7 @@ export default class LLMResponseHandler {
             if (targetGesture) {
                 await this.delay(this.config.gestureTiming);
                 this.mascot.express(targetGesture, {
-                    intensity: this.config.gestureIntensity
+                    intensity: this.config.gestureIntensity,
                 });
             }
         }
@@ -330,7 +412,7 @@ export default class LLMResponseHandler {
     morphToShape(targetShape) {
         if (targetShape && targetShape !== 'circle' && this.mascot.morphTo) {
             this.mascot.morphTo(targetShape, {
-                duration: this.config.morphDuration
+                duration: this.config.morphDuration,
             });
         }
     }
@@ -410,7 +492,17 @@ export default class LLMResponseHandler {
      * @returns {Array<string>} List of valid emotion names
      */
     static getAvailableEmotions() {
-        return ['joy', 'empathy', 'calm', 'excitement', 'concern', 'neutral', 'triumph', 'love', 'curiosity'];
+        return [
+            'joy',
+            'empathy',
+            'calm',
+            'excitement',
+            'concern',
+            'neutral',
+            'triumph',
+            'love',
+            'curiosity',
+        ];
     }
 
     /**
@@ -418,8 +510,21 @@ export default class LLMResponseHandler {
      * @returns {Array<string>} List of valid action names
      */
     static getAvailableActions() {
-        return ['none', 'offer_help', 'celebrate', 'guide', 'reassure', 'greet', 'confirm', 'deny',
-            'emphasize', 'question', 'think', 'listen', 'respond'];
+        return [
+            'none',
+            'offer_help',
+            'celebrate',
+            'guide',
+            'reassure',
+            'greet',
+            'confirm',
+            'deny',
+            'emphasize',
+            'question',
+            'think',
+            'listen',
+            'respond',
+        ];
     }
 
     /**
@@ -427,8 +532,19 @@ export default class LLMResponseHandler {
      * @returns {Array<string>} List of valid shape names
      */
     static getAvailableShapes() {
-        return ['circle', 'heart', 'star', 'sun', 'moon', 'eclipse', 'solar', 'lunar',
-            'square', 'triangle', 'suspicion'];
+        return [
+            'circle',
+            'heart',
+            'star',
+            'sun',
+            'moon',
+            'eclipse',
+            'solar',
+            'lunar',
+            'square',
+            'triangle',
+            'suspicion',
+        ];
     }
 
     /**
@@ -436,10 +552,49 @@ export default class LLMResponseHandler {
      * @returns {Array<string>} List of valid gesture names
      */
     static getAvailableGestures() {
-        return ['bounce', 'pulse', 'shake', 'spin', 'drift', 'nod', 'tilt', 'expand', 'contract',
-            'flash', 'stretch', 'glow', 'flicker', 'vibrate', 'wave', 'morph', 'jump', 'orbital',
-            'hula', 'scan', 'twist', 'burst', 'directional', 'settle', 'fade', 'hold', 'breathe',
-            'peek', 'sparkle', 'shimmer', 'wiggle', 'groove', 'point', 'lean', 'reach', 'headBob',
-            'rain', 'twitch', 'sway', 'float', 'jitter', 'orbit'];
+        return [
+            'bounce',
+            'pulse',
+            'shake',
+            'spin',
+            'drift',
+            'nod',
+            'tilt',
+            'expand',
+            'contract',
+            'flash',
+            'stretch',
+            'glow',
+            'flicker',
+            'vibrate',
+            'wave',
+            'morph',
+            'jump',
+            'orbital',
+            'hula',
+            'scan',
+            'twist',
+            'burst',
+            'directional',
+            'settle',
+            'fade',
+            'hold',
+            'breathe',
+            'peek',
+            'sparkle',
+            'shimmer',
+            'wiggle',
+            'groove',
+            'point',
+            'lean',
+            'reach',
+            'headBob',
+            'rain',
+            'twitch',
+            'sway',
+            'float',
+            'jitter',
+            'orbit',
+        ];
     }
 }

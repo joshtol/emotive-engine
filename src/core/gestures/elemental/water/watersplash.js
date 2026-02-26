@@ -63,7 +63,7 @@ const WATERSPLASH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 2.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.5,
@@ -76,123 +76,265 @@ const WATERSPLASH_CONFIG = {
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
                 cutout: {
                     strength: 0.6,
-                    primary: { pattern: 2, scale: 1.8, weight: 1.0 },    // RADIAL - burst lines
+                    primary: { pattern: 2, scale: 1.8, weight: 1.0 }, // RADIAL - burst lines
                     blend: 'multiply',
                     travel: 'radial',
-                    travelSpeed: 1.0,           // Slow radial expansion
-                    strengthCurve: 'fadeOut'
+                    travelSpeed: 1.0, // Slow radial expansion
+                    strengthCurve: 'fadeOut',
                 },
                 // Grain: cinematic film grain for realistic water
                 grain: {
-                    type: 3,              // FILM - perlin + white hybrid
-                    strength: 0.5,        // STRONG for testing
-                    scale: 0.3,           // Coarser texture
-                    speed: 1.5,           // Faster animation
-                    blend: 'multiply'     // Darkens for depth
+                    type: 3, // FILM - perlin + white hybrid
+                    strength: 0.5, // STRONG for testing
+                    scale: 0.3, // Coarser texture
+                    speed: 1.5, // Faster animation
+                    blend: 'multiply', // Darkens for depth
                 },
                 blending: 'additive',
                 renderOrder: 8,
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
                 modelOverrides: {
                     'splash-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
-                        orientationOverride: 'camera'
-                    }
+                        orientationOverride: 'camera',
+                    },
                 },
                 // Burst spray on impact — one-time event, not sustained
-                atmospherics: [{
-                    preset: 'spray',
-                    targets: null,
-                    anchor: 'above',
-                    intensity: 1.0,
-                    sizeScale: 1.2,
-                    burstCount: 25,
-                    progressCurve: 'burst',
-                }]
-            }
+                atmospherics: [
+                    {
+                        preset: 'spray',
+                        targets: null,
+                        anchor: 'above',
+                        intensity: 1.0,
+                        sizeScale: 1.2,
+                        burstCount: 25,
+                        progressCurve: 'burst',
+                    },
+                ],
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 2: BIG droplets shooting UP and OUT - the main splash arms (5 directions)
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.3, endScale: 1.6, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 1.2, models: ['droplet-large'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.3,
+                endScale: 1.6,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 1.2,
+            models: ['droplet-large'],
             animation: {
-                appearAt: 0.0, disappearAt: 0.5,
+                appearAt: 0.0,
+                disappearAt: 0.5,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 4, scale: 1.0, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.4, distance: 0.8, direction: { x: 0, y: 1.0, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 4, scale: 1.0, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.4,
+                    distance: 0.8,
+                    direction: { x: 0, y: 1.0, z: 0 },
+                    easing: 'easeOutQuad',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'droplet-large': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.25, endScale: 1.3, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 1.0, models: ['droplet-large'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.25,
+                endScale: 1.3,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 1.0,
+            models: ['droplet-large'],
             animation: {
-                appearAt: 0.02, disappearAt: 0.5,
+                appearAt: 0.02,
+                disappearAt: 0.5,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.45, primary: { pattern: 0, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.6, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.3, distance: 0.75, direction: { x: -0.7, y: 0.85, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.45,
+                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.6,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.3,
+                    distance: 0.75,
+                    direction: { x: -0.7, y: 0.85, z: 0 },
+                    easing: 'easeOutQuad',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'droplet-large': {
+                        shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.25, endScale: 1.3, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 1.0, models: ['droplet-large'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.25,
+                endScale: 1.3,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 1.0,
+            models: ['droplet-large'],
             animation: {
-                appearAt: 0.02, disappearAt: 0.5,
+                appearAt: 0.02,
+                disappearAt: 0.5,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.45, primary: { pattern: 0, scale: 0.8, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.6, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.3, distance: 0.75, direction: { x: 0.7, y: 0.85, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                blending: 'additive', renderOrder: 12,
-                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.45,
+                    primary: { pattern: 0, scale: 0.8, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.6,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.3,
+                    distance: 0.75,
+                    direction: { x: 0.7, y: 0.85, z: 0 },
+                    easing: 'easeOutQuad',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                blending: 'additive',
+                renderOrder: 12,
+                modelOverrides: {
+                    'droplet-large': {
+                        shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.2, endScale: 1.1, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 0.85, models: ['droplet-large'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 1.1,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 0.85,
+            models: ['droplet-large'],
             animation: {
-                appearAt: 0.03, disappearAt: 0.45,
+                appearAt: 0.03,
+                disappearAt: 0.45,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.18, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 4, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.1, distance: 0.6, direction: { x: -0.95, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                blending: 'additive', renderOrder: 11,
-                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 4, scale: 1.2, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.1,
+                    distance: 0.6,
+                    direction: { x: -0.95, y: 0.5, z: 0 },
+                    easing: 'easeOutQuad',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                blending: 'additive',
+                renderOrder: 11,
+                modelOverrides: {
+                    'droplet-large': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: 0, z: 0.05 }, orientation: 'camera', startScale: 0.2, endScale: 1.1, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 0.85, models: ['droplet-large'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: 0, z: 0.05 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 1.1,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 0.85,
+            models: ['droplet-large'],
             animation: {
-                appearAt: 0.03, disappearAt: 0.45,
+                appearAt: 0.03,
+                disappearAt: 0.45,
                 enter: { type: 'scale', duration: 0.04, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.18, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.03, geometryStability: true },
-                cutout: { strength: 0.4, primary: { pattern: 4, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'vertical', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                drift: { speed: 1.1, distance: 0.6, direction: { x: 0.95, y: 0.5, z: 0 }, easing: 'easeOutQuad' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                blending: 'additive', renderOrder: 11,
-                modelOverrides: { 'droplet-large': { shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.4,
+                    primary: { pattern: 4, scale: 1.2, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'vertical',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                drift: {
+                    speed: 1.1,
+                    distance: 0.6,
+                    direction: { x: 0.95, y: 0.5, z: 0 },
+                    easing: 'easeOutQuad',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                blending: 'additive',
+                renderOrder: 11,
+                modelOverrides: {
+                    'droplet-large': {
+                        shaderAnimation: { type: 1, arcWidth: 0.85, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 3: MEDIUM droplets - secondary splash (radial burst, 8 directions)
@@ -204,24 +346,42 @@ const WATERSPLASH_CONFIG = {
                 radius: 0.05,
                 endRadius: 0.65,
                 angleSpread: 360,
-                startAngle: 22,               // Offset to not align with big droplets
+                startAngle: 22, // Offset to not align with big droplets
                 orientation: 'camera',
                 startScale: 0.2,
                 endScale: 0.9,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 8, scale: 0.6, models: ['droplet-small'],
+            count: 8,
+            scale: 0.6,
+            models: ['droplet-small'],
             animation: {
-                appearAt: 0.02, disappearAt: 0.4, stagger: 0.008,
+                appearAt: 0.02,
+                disappearAt: 0.4,
+                stagger: 0.008,
                 enter: { type: 'scale', duration: 0.03, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.15, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.02, geometryStability: true },
-                cutout: { strength: 0.35, primary: { pattern: 0, scale: 0.7, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.8, strengthCurve: 'fadeOut' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                scaleVariance: 0.3, lifetimeVariance: 0.15,
-                blending: 'additive', renderOrder: 14,
-                modelOverrides: { 'droplet-small': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.35,
+                    primary: { pattern: 0, scale: 0.7, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.8,
+                    strengthCurve: 'fadeOut',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                scaleVariance: 0.3,
+                lifetimeVariance: 0.15,
+                blending: 'additive',
+                renderOrder: 14,
+                modelOverrides: {
+                    'droplet-small': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 4: TINY spray particles - fine mist (radial burst, 12 particles)
@@ -237,40 +397,81 @@ const WATERSPLASH_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.1,
                 endScale: 0.35,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 12, scale: 0.2, models: ['droplet-small'],
+            count: 12,
+            scale: 0.2,
+            models: ['droplet-small'],
             animation: {
-                appearAt: 0.01, disappearAt: 0.3, stagger: 0.005,
+                appearAt: 0.01,
+                disappearAt: 0.3,
+                stagger: 0.005,
                 enter: { type: 'scale', duration: 0.02, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.1, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.02, geometryStability: true },
-                cutout: { strength: 0.25, primary: { pattern: 7, scale: 0.5, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 1.0, strengthCurve: 'fadeOut' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                scaleVariance: 0.5, lifetimeVariance: 0.25,
-                blending: 'additive', renderOrder: 16,
-                modelOverrides: { 'droplet-small': { shaderAnimation: { type: 1, arcWidth: 0.98, arcSpeed: 0, arcCount: 1 }, orientationOverride: 'camera' } }
-            }
+                cutout: {
+                    strength: 0.25,
+                    primary: { pattern: 7, scale: 0.5, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 1.0,
+                    strengthCurve: 'fadeOut',
+                },
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                scaleVariance: 0.5,
+                lifetimeVariance: 0.25,
+                blending: 'additive',
+                renderOrder: 16,
+                modelOverrides: {
+                    'droplet-small': {
+                        shaderAnimation: { type: 1, arcWidth: 0.98, arcSpeed: 0, arcCount: 1 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
         // ═══════════════════════════════════════════════════════════════════════════════════
         // LAYER 5: Bubble foam at base - impact foam
         // ═══════════════════════════════════════════════════════════════════════════════════
         {
             type: 'anchor',
-            anchor: { landmark: 'center', offset: { x: 0, y: -0.1, z: 0.12 }, orientation: 'camera', startScale: 0.2, endScale: 0.9, scaleEasing: 'easeOutQuad' },
-            count: 1, scale: 0.7, models: ['bubble-cluster'],
+            anchor: {
+                landmark: 'center',
+                offset: { x: 0, y: -0.1, z: 0.12 },
+                orientation: 'camera',
+                startScale: 0.2,
+                endScale: 0.9,
+                scaleEasing: 'easeOutQuad',
+            },
+            count: 1,
+            scale: 0.7,
+            models: ['bubble-cluster'],
             animation: {
-                appearAt: 0.05, disappearAt: 0.6,
+                appearAt: 0.05,
+                disappearAt: 0.6,
                 enter: { type: 'scale', duration: 0.08, easing: 'easeOut' },
                 exit: { type: 'fade', duration: 0.25, easing: 'easeIn' },
                 procedural: { scaleSmoothing: 0.05, geometryStability: true },
-                cutout: { strength: 0.5, primary: { pattern: 0, scale: 1.2, weight: 1.0 }, blend: 'multiply', travel: 'radial', travelSpeed: 0.5, strengthCurve: 'constant' },
+                cutout: {
+                    strength: 0.5,
+                    primary: { pattern: 0, scale: 1.2, weight: 1.0 },
+                    blend: 'multiply',
+                    travel: 'radial',
+                    travelSpeed: 0.5,
+                    strengthCurve: 'constant',
+                },
                 pulse: { amplitude: 0.1, frequency: 8, easing: 'easeInOut' },
-                rotate: { axis: 'z', rotations: 0, phase: 0 },  // Tidally locked
-                blending: 'additive', renderOrder: 6,
-                modelOverrides: { 'bubble-cluster': { shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 2 }, orientationOverride: 'camera' } }
-            }
-        }
+                rotate: { axis: 'z', rotations: 0, phase: 0 }, // Tidally locked
+                blending: 'additive',
+                renderOrder: 6,
+                modelOverrides: {
+                    'bubble-cluster': {
+                        shaderAnimation: { type: 1, arcWidth: 0.95, arcSpeed: 0, arcCount: 2 },
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
+        },
     ],
 
     // Wobble - punchy impact
@@ -285,7 +486,7 @@ const WATERSPLASH_CONFIG = {
     glowColor: [0.35, 0.65, 1.0],
     glowIntensityMin: 1.2,
     glowIntensityMax: 2.2,
-    glowPulseRate: 6
+    glowPulseRate: 6,
 };
 
 /**

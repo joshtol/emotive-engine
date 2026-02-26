@@ -46,10 +46,7 @@ function lerp(a, b, t) {
  * @returns {THREE.ShaderMaterial}
  */
 export function createEarthMaterial(options = {}) {
-    const {
-        petrification = 0.5,
-        opacity = 0.9
-    } = options;
+    const { petrification = 0.5, opacity = 0.9 } = options;
 
     const pulseSpeed = lerp(0.5, 1.5, petrification);
 
@@ -59,10 +56,10 @@ export function createEarthMaterial(options = {}) {
             uProgress: { value: 0 },
             uPulseSpeed: { value: pulseSpeed },
             uOpacity: { value: opacity },
-            uTime: { value: 0 }
+            uTime: { value: 0 },
         },
 
-        vertexShader: /* glsl */`
+        vertexShader: /* glsl */ `
             varying vec3 vPosition;
             varying vec3 vNormal;
             varying vec3 vWorldNormal;
@@ -84,7 +81,7 @@ export function createEarthMaterial(options = {}) {
             }
         `,
 
-        fragmentShader: /* glsl */`
+        fragmentShader: /* glsl */ `
             uniform float uPetrification;
             uniform float uProgress;
             uniform float uPulseSpeed;
@@ -416,7 +413,7 @@ export function createEarthMaterial(options = {}) {
         transparent: true,
         blending: THREE.NormalBlending,
         depthWrite: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
     });
 
     material.userData.petrification = petrification;
@@ -446,7 +443,7 @@ export function getEarthPhysics(petrification = 0.5) {
         canShatter: petrification > 0.7,
         crumblesOnImpact: petrification < 0.4,
         weight: lerp(1.0, 2.0, petrification),
-        rootsTarget: petrification < 0.3
+        rootsTarget: petrification < 0.3,
     };
 }
 
@@ -461,7 +458,7 @@ export function getEarthCrackStyle(petrification = 0.5) {
         emissive: lerp(0.2, 0.8, petrification),
         animated: false,
         pattern: 'fracture',
-        flickerSpeed: 0
+        flickerSpeed: 0,
     };
 }
 
@@ -469,5 +466,5 @@ export default {
     createEarthMaterial,
     updateEarthMaterial,
     getEarthPhysics,
-    getEarthCrackStyle
+    getEarthCrackStyle,
 };

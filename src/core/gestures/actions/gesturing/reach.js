@@ -44,60 +44,60 @@ export default {
 
     // Default configuration
     config: {
-        duration: 1400,     // Legacy fallback
+        duration: 1400, // Legacy fallback
         musicalDuration: { musical: true, beats: 2 }, // 2 beats
-        amplitude: 25,      // Reach distance (pixels)
-        strength: 0.9,      // Overall motion intensity
-        scaleMax: 1.05,     // Maximum scale multiplier
+        amplitude: 25, // Reach distance (pixels)
+        strength: 0.9, // Overall motion intensity
+        scaleMax: 1.05, // Maximum scale multiplier
         // Particle motion configuration for AnimationController
         particleMotion: {
             type: 'reach',
             strength: 0.9,
-            scaleMax: 1.05
-        }
+            scaleMax: 1.05,
+        },
     },
 
     // Rhythm configuration - reach syncs to musical timing
     rhythm: {
         enabled: true,
-        syncMode: 'beat',         // Reach on beat
-        timingSync: 'nextBeat',   // Start on next beat
-        interruptible: true,      // Can interrupt mid-reach
-        priority: 4,              // Medium priority
-        blendable: true,          // Can blend with other effects
+        syncMode: 'beat', // Reach on beat
+        timingSync: 'nextBeat', // Start on next beat
+        interruptible: true, // Can interrupt mid-reach
+        priority: 4, // Medium priority
+        blendable: true, // Can blend with other effects
         crossfadePoint: 'anyBeat', // Can transition out on any beat
 
         // Reach intensity syncs to beat
         amplitudeSync: {
-            onBeat: 1.4,      // Stronger reach on beat
-            offBeat: 0.9,     // Gentler between beats
-            curve: 'ease'     // Smooth curve
+            onBeat: 1.4, // Stronger reach on beat
+            offBeat: 0.9, // Gentler between beats
+            curve: 'ease', // Smooth curve
         },
 
         // Duration syncs to musical time
         durationSync: {
             mode: 'beats',
-            beats: 2          // Reach for 2 beats
+            beats: 2, // Reach for 2 beats
         },
 
         // Accent response for emphasis
         accentResponse: {
             enabled: true,
-            multiplier: 1.5   // 50% stronger on accented beats
+            multiplier: 1.5, // 50% stronger on accented beats
         },
 
         // Pattern-specific reaching styles
         patternOverrides: {
-            'uplifting': {
+            uplifting: {
                 // Inspiring upward reach
                 amplitudeSync: { onBeat: 1.8, offBeat: 0.7, curve: 'ease' },
-                durationSync: { beats: 3 }
+                durationSync: { beats: 3 },
             },
-            'ambient': {
+            ambient: {
                 // Gentle sustained reach
-                amplitudeSync: { onBeat: 1.2, offBeat: 1.0, curve: 'linear' }
-            }
-        }
+                amplitudeSync: { onBeat: 1.2, offBeat: 1.0, curve: 'linear' },
+            },
+        },
     },
 
     /**
@@ -115,7 +115,7 @@ export default {
             startY: particle.y,
             startVy: particle.vy,
             originalSize: particle.size,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -144,8 +144,8 @@ export default {
         // Apply rhythm modulation if present
         let amplitude = config.amplitude * strength * particle.scaleFactor;
         if (motion.rhythmModulation) {
-            amplitude *= (motion.rhythmModulation.amplitudeMultiplier || 1);
-            amplitude *= (motion.rhythmModulation.accentMultiplier || 1);
+            amplitude *= motion.rhythmModulation.amplitudeMultiplier || 1;
+            amplitude *= motion.rhythmModulation.accentMultiplier || 1;
         }
 
         // Reach curve - extends upward and returns (sine wave)
@@ -155,12 +155,12 @@ export default {
         particle.vy -= reachCurve * amplitude * 0.015 * dt;
 
         // Scale increases as reach extends
-        const scaleMultiplier = 1.0 + (reachCurve * (scaleMax - 1.0));
+        const scaleMultiplier = 1.0 + reachCurve * (scaleMax - 1.0);
         particle.size = particle.baseSize * scaleMultiplier;
 
         // Smooth ending - gradually reduce velocity modifications
         if (progress > 0.9) {
-            const endFactor = 1 - ((progress - 0.9) * 10);
+            const endFactor = 1 - (progress - 0.9) * 10;
             particle.vy = particle.vy * (0.95 + endFactor * 0.05);
         }
     },
@@ -187,9 +187,7 @@ export default {
      * @returns {number} Eased value
      */
     easeInOutCubic(t) {
-        return t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     },
 
     /**
@@ -214,9 +212,10 @@ export default {
             const amplitude = amplitudePixels * PIXEL_TO_3D * strength;
 
             // Apply easing
-            const easeProgress = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            const easeProgress =
+                progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
             // Reach curve - sine wave that returns to 0
             const reachCurve = Math.sin(easeProgress * Math.PI);
@@ -225,7 +224,7 @@ export default {
             const yPosition = reachCurve * amplitude;
 
             // Scale increases with reach, returns to 1.0
-            const scale = 1.0 + (reachCurve * (scaleMax - 1.0));
+            const scale = 1.0 + reachCurve * (scaleMax - 1.0);
 
             // Slight forward tilt as reaching up (natural body motion)
             const tiltX = reachCurve * 0.1; // ~5 degrees
@@ -233,8 +232,8 @@ export default {
             return {
                 position: [0, yPosition, 0],
                 rotation: [tiltX, 0, 0],
-                scale
+                scale,
             };
-        }
-    }
+        },
+    },
 };

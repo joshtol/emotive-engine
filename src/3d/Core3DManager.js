@@ -32,7 +32,11 @@ import { Particle3DTranslator } from './particles/Particle3DTranslator.js';
 import { CrystalSoul } from './effects/CrystalSoul.js';
 import { Particle3DRenderer } from './particles/Particle3DRenderer.js';
 import { Particle3DOrchestrator } from './particles/Particle3DOrchestrator.js';
-import { updateMoonGlow, MOON_CALIBRATION_ROTATION, MOON_FACING_CONFIG } from './geometries/Moon.js';
+import {
+    updateMoonGlow,
+    MOON_CALIBRATION_ROTATION,
+    MOON_FACING_CONFIG,
+} from './geometries/Moon.js';
 import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
 import { resetGeometryState } from './GeometryStateManager.js';
 import * as GeometryCache from './utils/GeometryCache.js';
@@ -58,13 +62,22 @@ import { profiler } from './debug/PerformanceProfiler.js';
 // Hexagonal crystal has vertices at 0°, 60°, 120°, etc.
 // Rotating 30° around Y puts a flat face toward the camera (default -Z view direction)
 const CRYSTAL_CALIBRATION_ROTATION = {
-    x: 0,    // No X rotation
-    y: 30,   // 30° Y rotation to show flat facet
-    z: 0     // No Z rotation
+    x: 0, // No X rotation
+    y: 30, // 30° Y rotation to show flat facet
+    z: 0, // No Z rotation
 };
 
 // All available element types for preloading
-const ALL_ELEMENT_TYPES = ['fire', 'ice', 'water', 'earth', 'nature', 'electricity', 'void', 'light'];
+const ALL_ELEMENT_TYPES = [
+    'fire',
+    'ice',
+    'water',
+    'earth',
+    'nature',
+    'electricity',
+    'void',
+    'light',
+];
 
 // Delay before background pre-warm starts (ms)
 const BACKGROUND_PREWARM_DELAY = 2000;
@@ -104,7 +117,9 @@ export class Core3DManager {
             throw new Error('Core3DManager: canvas must be an HTMLCanvasElement');
         }
         if (typeof THREE === 'undefined') {
-            throw new Error('Core3DManager: Three.js library is not loaded. Import three.js before using Core3DManager');
+            throw new Error(
+                'Core3DManager: Three.js library is not loaded. Import three.js before using Core3DManager'
+            );
         }
 
         this._instanceId = Math.random().toString(36).substr(2, 6);
@@ -112,8 +127,8 @@ export class Core3DManager {
         this.canvas = canvas;
         this.options = options;
         this._destroyed = false;
-        this._ready = false;  // Flag indicating all async loading is complete
-        this._readyPromise = null;  // Promise that resolves when ready
+        this._ready = false; // Flag indicating all async loading is complete
+        this._readyPromise = null; // Promise that resolves when ready
 
         // Asset base path for textures and models (configurable for GitHub Pages, etc.)
         // Empty string triggers auto-detection in ThreeRenderer
@@ -139,13 +154,13 @@ export class Core3DManager {
             enablePostProcessing: options.enablePostProcessing !== false,
             enableShadows: options.enableShadows || false,
             enableControls: options.enableControls !== false, // Camera controls (mouse/touch)
-            autoRotate: isMoon ? false : (options.autoRotate !== false), // Moon is tidally locked
+            autoRotate: isMoon ? false : options.autoRotate !== false, // Moon is tidally locked
             autoRotateSpeed: options.autoRotateSpeed, // Auto-rotate speed (undefined = default 0.5)
             cameraDistance: options.cameraDistance, // Camera Z distance (undefined = default 3)
             fov: options.fov, // Field of view (undefined = default 45)
             minZoom: options.minZoom, // Minimum zoom distance
             maxZoom: options.maxZoom, // Maximum zoom distance
-            assetBasePath: this.assetBasePath // Base path for HDRI and other assets
+            assetBasePath: this.assetBasePath, // Base path for HDRI and other assets
         });
 
         // Pass WebGL context and renderer to profiler for diagnostics
@@ -202,7 +217,7 @@ export class Core3DManager {
             materialVariant: this.materialVariant,
             emotionData, // Pass emotion data for auto-deriving geometry params
             assetBasePath: this.assetBasePath,
-            onTextureReady
+            onTextureReady,
         });
 
         if (materialResult) {
@@ -249,20 +264,25 @@ export class Core3DManager {
         if (this.geometryType === 'moon') {
             const degToRad = Math.PI / 180;
             this.calibrationRotation = [
-                MOON_CALIBRATION_ROTATION.x * degToRad,  // X: world-space rotation
-                MOON_CALIBRATION_ROTATION.y * degToRad,  // Y: world-space rotation
-                MOON_CALIBRATION_ROTATION.z * degToRad   // Z: camera-space roll (spins face CW/CCW)
+                MOON_CALIBRATION_ROTATION.x * degToRad, // X: world-space rotation
+                MOON_CALIBRATION_ROTATION.y * degToRad, // Y: world-space rotation
+                MOON_CALIBRATION_ROTATION.z * degToRad, // Z: camera-space roll (spins face CW/CCW)
             ];
             this.cameraRoll = 0; // Camera-space roll (spin the face)
         }
 
         // Set initial calibration rotation for crystal/rough/heart/star to show flat facet facing camera
-        if (this.geometryType === 'crystal' || this.geometryType === 'rough' || this.geometryType === 'heart' || this.geometryType === 'star') {
+        if (
+            this.geometryType === 'crystal' ||
+            this.geometryType === 'rough' ||
+            this.geometryType === 'heart' ||
+            this.geometryType === 'star'
+        ) {
             const degToRad = Math.PI / 180;
             this.calibrationRotation = [
                 CRYSTAL_CALIBRATION_ROTATION.x * degToRad,
                 CRYSTAL_CALIBRATION_ROTATION.y * degToRad,
-                CRYSTAL_CALIBRATION_ROTATION.z * degToRad
+                CRYSTAL_CALIBRATION_ROTATION.z * degToRad,
             ];
         }
 
@@ -284,7 +304,7 @@ export class Core3DManager {
             rotationDisabled: options.autoRotate === false,
             wobbleEnabled: true,
             rhythmEngine: options.rhythmEngine || null,
-            camera: this.renderer.camera
+            camera: this.renderer.camera,
         });
 
         // Breathing phase manager (imperative meditation-style breathing control)
@@ -299,9 +319,9 @@ export class Core3DManager {
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
-        this._postSwapHold = false;     // Hold morph at scale=0 after geometry swap
-        this._postSwapHoldTime = 0;     // Timestamp when post-swap hold started
-        this._postSwapFrameCount = 0;   // Frames elapsed since swap (min 2 for stability)
+        this._postSwapHold = false; // Hold morph at scale=0 after geometry swap
+        this._postSwapHoldTime = 0; // Timestamp when post-swap hold started
+        this._postSwapFrameCount = 0; // Frames elapsed since swap (min 2 for stability)
 
         // Blink animator (emotion-aware)
         this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
@@ -332,9 +352,9 @@ export class Core3DManager {
                     calibrationRotation: [
                         MOON_CALIBRATION_ROTATION.x * degToRad,
                         MOON_CALIBRATION_ROTATION.y * degToRad,
-                        MOON_CALIBRATION_ROTATION.z * degToRad
-                    ]
-                }
+                        MOON_CALIBRATION_ROTATION.z * degToRad,
+                    ],
+                },
             });
         }
 
@@ -395,10 +415,10 @@ export class Core3DManager {
         // to ensure particles orbit at correct distance regardless of screen size
         const particleTranslator = new Particle3DTranslator({
             worldScale: 2.0,
-            baseRadius: 1.5,      // Legacy fallback (coreRadius3D takes precedence)
+            baseRadius: 1.5, // Legacy fallback (coreRadius3D takes precedence)
             depthScale: 0.75,
             verticalScale: 1.0,
-            coreRadius3D: 2.0     // Initial value, updated each frame
+            coreRadius3D: 2.0, // Initial value, updated each frame
         });
 
         // Create 3D renderer (Three.js points system)
@@ -432,7 +452,7 @@ export class Core3DManager {
         this.effectManager.initializeForGeometry(this.geometryType, {
             coreMesh: this.coreMesh,
             customMaterial: this.customMaterial,
-            sunRadius
+            sunRadius,
         });
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -449,7 +469,7 @@ export class Core3DManager {
                 maxShards: 50,
                 shardLifetime: 2000,
                 enableReassembly: true,
-                autoRestore: true
+                autoRestore: true,
             });
 
             // Wire up shatter callbacks for visual effects
@@ -480,10 +500,7 @@ export class Core3DManager {
             // first-shatter lag. This is repeated on morphTo() for new geometries.
             // ═══════════════════════════════════════════════════════════════════════════
             if (this.renderer?.coreMesh) {
-                this.shatterSystem.precomputeShards(
-                    this.renderer.coreMesh,
-                    this.geometryType
-                );
+                this.shatterSystem.precomputeShards(this.renderer.coreMesh, this.geometryType);
             }
         }
 
@@ -501,7 +518,7 @@ export class Core3DManager {
         this.elementSpawner = new ElementInstancedSpawner({
             scene: this.renderer.scene,
             assetsBasePath: this.assetBasePath,
-            renderer: this.renderer
+            renderer: this.renderer,
         });
 
         // Wire distortion manager from ThreeRenderer to spawner
@@ -562,7 +579,7 @@ export class Core3DManager {
                 this.glowColorHex = emotionData.visual.glowColor;
 
                 // Compute TARGET normalized color for smooth transition
-                const normalized = normalizeRGBLuminance(rgb, 0.30);
+                const normalized = normalizeRGBLuminance(rgb, 0.3);
                 this._targetGlowColor = [normalized.r, normalized.g, normalized.b];
 
                 // Initialize current color if not set (first emotion)
@@ -589,7 +606,11 @@ export class Core3DManager {
 
             // Update custom material with emotion glow color
             if (this.customMaterial && this.customMaterialType === 'moon') {
-                const glowColorThree = new THREE.Color(this.glowColor[0], this.glowColor[1], this.glowColor[2]);
+                const glowColorThree = new THREE.Color(
+                    this.glowColor[0],
+                    this.glowColor[1],
+                    this.glowColor[2]
+                );
                 updateMoonGlow(this.customMaterial, glowColorThree, this.glowIntensity);
             } else if (this.customMaterial && this.customMaterialType === 'sun') {
                 // Update sun material colors (no time delta needed here - just color update)
@@ -615,8 +636,8 @@ export class Core3DManager {
                 calibrationRotation: [
                     MOON_CALIBRATION_ROTATION.x * degToRad,
                     MOON_CALIBRATION_ROTATION.y * degToRad,
-                    MOON_CALIBRATION_ROTATION.z * degToRad
-                ]
+                    MOON_CALIBRATION_ROTATION.z * degToRad,
+                ],
             };
         }
 
@@ -625,7 +646,7 @@ export class Core3DManager {
             geometryType: this.geometryType,
             emotionData,
             facingConfig,
-            geometryRotation
+            geometryRotation,
         });
 
         // Reset Euler angles to upright [pitch=0, yaw=current, roll=0]
@@ -655,7 +676,6 @@ export class Core3DManager {
             this.intensityCalibrationOffset,
             materialMode
         );
-
 
         // Apply undertone glow multiplier to base intensity
         if (undertoneModifier && undertoneModifier['3d'] && undertoneModifier['3d'].glow) {
@@ -703,7 +723,7 @@ export class Core3DManager {
                 driftEnabled: true,
                 driftSpeed: soul.driftSpeed || 0.5,
                 shimmerEnabled: true,
-                shimmerSpeed: soul.shimmerSpeed || 0.5
+                shimmerSpeed: soul.shimmerSpeed || 0.5,
                 // Note: turbulence will be used for future geometries (Sun plasma chaos)
             });
         }
@@ -795,7 +815,12 @@ export class Core3DManager {
                 if (props.position) this.position = props.position;
                 if (props.rotation) {
                     // Convert gesture Euler rotation to quaternion
-                    this.tempEuler.set(props.rotation[0], props.rotation[1], props.rotation[2], 'XYZ');
+                    this.tempEuler.set(
+                        props.rotation[0],
+                        props.rotation[1],
+                        props.rotation[2],
+                        'XYZ'
+                    );
                     this.gestureQuaternion.setFromEuler(this.tempEuler);
                 }
                 if (props.scale !== undefined) this.scale = this.baseScale * props.scale;
@@ -810,7 +835,7 @@ export class Core3DManager {
                 // NOTE: Don't reset rotation - it's computed from quaternions in render()
                 // gestureQuaternion will be reset to identity in render() when no gestures active
                 this.scale = this.baseScale;
-            }
+            },
         });
     }
 
@@ -964,11 +989,16 @@ export class Core3DManager {
         if (params.mode !== undefined && this.customMaterial.uniforms[`${layerPrefix}Mode`]) {
             this.customMaterial.uniforms[`${layerPrefix}Mode`].value = params.mode;
         }
-        if (params.strength !== undefined && this.customMaterial.uniforms[`${layerPrefix}Strength`]) {
+        if (
+            params.strength !== undefined &&
+            this.customMaterial.uniforms[`${layerPrefix}Strength`]
+        ) {
             this.customMaterial.uniforms[`${layerPrefix}Strength`].value = params.strength;
         }
         if (params.enabled !== undefined && this.customMaterial.uniforms[`${layerPrefix}Enabled`]) {
-            this.customMaterial.uniforms[`${layerPrefix}Enabled`].value = params.enabled ? 1.0 : 0.0;
+            this.customMaterial.uniforms[`${layerPrefix}Enabled`].value = params.enabled
+                ? 1.0
+                : 0.0;
         }
     }
 
@@ -994,8 +1024,11 @@ export class Core3DManager {
      * @param {Object} params - { mode, strength, enabled }
      */
     setCrystalBlendLayer(component, blendIndex, params = {}) {
-        if ((this.geometryType !== 'crystal' && this.geometryType !== 'rough') ||
-            !this.customMaterial || this.customMaterialType !== 'crystal') {
+        if (
+            (this.geometryType !== 'crystal' && this.geometryType !== 'rough') ||
+            !this.customMaterial ||
+            this.customMaterialType !== 'crystal'
+        ) {
             return;
         }
 
@@ -1017,13 +1050,16 @@ export class Core3DManager {
      * @param {Object} params - Crystal uniform values
      */
     setCrystalUniforms(params = {}) {
-        if ((this.geometryType !== 'crystal' && this.geometryType !== 'rough') ||
-            !this.customMaterial || this.customMaterialType !== 'crystal') {
+        if (
+            (this.geometryType !== 'crystal' && this.geometryType !== 'rough') ||
+            !this.customMaterial ||
+            this.customMaterialType !== 'crystal'
+        ) {
             console.warn('⚠️ Crystal uniforms only available with crystal blend-layers material');
             return;
         }
 
-        const {uniforms} = this.customMaterial;
+        const { uniforms } = this.customMaterial;
 
         // Helper to safely set uniform value (protect against NaN)
         const safeSet = (uniform, value, min = 0, max = 10) => {
@@ -1081,24 +1117,30 @@ export class Core3DManager {
         // Pass renderer for scene locking during async geometry swaps
         // Use _targetGeometryType during morph, fall back to geometryType for initial load
         const effectiveGeometryType = this._targetGeometryType || this.geometryType;
-        this.crystalSoul = new CrystalSoul({ radius: 0.35, detail: 1, geometryType: effectiveGeometryType, renderer: this.renderer, assetBasePath: this.assetBasePath });
+        this.crystalSoul = new CrystalSoul({
+            radius: 0.35,
+            detail: 1,
+            geometryType: effectiveGeometryType,
+            renderer: this.renderer,
+            assetBasePath: this.assetBasePath,
+        });
         this.crystalSoul.attachTo(this.coreMesh, this.renderer?.scene);
 
         // Geometry-specific shell and soul sizes (permanent values)
         // Use effectiveGeometryType to get correct scale during morph transitions
-        let soulScale = 1.0;  // Default: full size (HUGE)
+        let soulScale = 1.0; // Default: full size (HUGE)
         if (effectiveGeometryType === 'heart') {
             this.crystalShellBaseScale = 2.4;
-            soulScale = 1.0;  // Full size for heart
+            soulScale = 1.0; // Full size for heart
         } else if (effectiveGeometryType === 'rough') {
             this.crystalShellBaseScale = 1.6;
-            soulScale = 1.0;  // Full size for rough
+            soulScale = 1.0; // Full size for rough
         } else if (effectiveGeometryType === 'star') {
             this.crystalShellBaseScale = 2.0;
-            soulScale = 1.4;  // Larger soul for star to fill the shape
+            soulScale = 1.4; // Larger soul for star to fill the shape
         } else if (effectiveGeometryType === 'crystal') {
-            this.crystalShellBaseScale = 2.0;  // Default crystal shell size
-            soulScale = 1.0;  // Full size for crystal
+            this.crystalShellBaseScale = 2.0; // Default crystal shell size
+            soulScale = 1.0; // Full size for crystal
         }
 
         this.crystalSoul.baseScale = soulScale;
@@ -1124,9 +1166,10 @@ export class Core3DManager {
         }
 
         // Get breathing scale if enabled
-        const breathScale = (this.breathingAnimator && this.breathingEnabled)
-            ? this.breathingAnimator.getBreathingScale()
-            : 1.0;
+        const breathScale =
+            this.breathingAnimator && this.breathingEnabled
+                ? this.breathingAnimator.getBreathingScale()
+                : 1.0;
 
         // Update the soul
         this.crystalSoul.update(deltaTime, glowColor, breathScale);
@@ -1163,7 +1206,13 @@ export class Core3DManager {
      * @param {number} size - Size value 0.5-2.0, where 1.0 is default
      */
     setCrystalShellSize(size) {
-        if (!this.coreMesh || (this.geometryType !== 'crystal' && this.geometryType !== 'rough' && this.geometryType !== 'heart')) return;
+        if (
+            !this.coreMesh ||
+            (this.geometryType !== 'crystal' &&
+                this.geometryType !== 'rough' &&
+                this.geometryType !== 'heart')
+        )
+            return;
 
         // Store base shell scale for use during rendering
         this.crystalShellBaseScale = size;
@@ -1403,11 +1452,7 @@ export class Core3DManager {
         }
 
         // Start smooth morph transition (handles interruptions internally)
-        const started = this.geometryMorpher.startMorph(
-            this.geometryType,
-            shapeName,
-            duration
-        );
+        const started = this.geometryMorpher.startMorph(this.geometryType, shapeName, duration);
 
         // If morph didn't start (already at target), skip
         if (!started) {
@@ -1429,12 +1474,14 @@ export class Core3DManager {
         if (targetGeometryConfig.geometryLoader && !targetGeometryConfig.geometry) {
             // Start loading during shrink phase so it's ready for swap
             this._targetGeometry = null; // Will be set when loaded
-            this._pendingGeometryLoad = targetGeometryConfig.geometryLoader(this.assetBasePath).then(geometry => {
-                this._targetGeometry = geometry;
-                // Also update the registry so subsequent morphs don't need to reload
-                targetGeometryConfig.geometry = geometry;
-                this._pendingGeometryLoad = null;
-            });
+            this._pendingGeometryLoad = targetGeometryConfig
+                .geometryLoader(this.assetBasePath)
+                .then(geometry => {
+                    this._targetGeometry = geometry;
+                    // Also update the registry so subsequent morphs don't need to reload
+                    targetGeometryConfig.geometry = geometry;
+                    this._pendingGeometryLoad = null;
+                });
         } else {
             this._targetGeometry = targetGeometryConfig.geometry;
             this._pendingGeometryLoad = null;
@@ -1457,7 +1504,7 @@ export class Core3DManager {
      */
     _isMaterialTextureReady() {
         if (!this.customMaterial) return true;
-        const {uniforms} = this.customMaterial;
+        const { uniforms } = this.customMaterial;
         for (const key of Object.keys(uniforms)) {
             const val = uniforms[key].value;
             if (val && val.isTexture && !val.image) {
@@ -1490,9 +1537,7 @@ export class Core3DManager {
      * @returns {number} - Eased progress
      */
     easeInOutCubic(t) {
-        return t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     /**
@@ -1533,7 +1578,12 @@ export class Core3DManager {
         }
 
         // Check if async geometry finished loading while paused (pre-swap hold only)
-        if (morphState.waitingForGeometry && this._targetGeometry && !this._pendingGeometryLoad && !this._postSwapHold) {
+        if (
+            morphState.waitingForGeometry &&
+            this._targetGeometry &&
+            !this._pendingGeometryLoad &&
+            !this._postSwapHold
+        ) {
             this.geometryMorpher.resumeFromSwap();
             // Re-trigger swap by setting hasSwappedGeometry back to false
             this.geometryMorpher.hasSwappedGeometry = false;
@@ -1585,14 +1635,18 @@ export class Core3DManager {
                 }
             };
 
-            const materialResult = createCustomMaterial(this._targetGeometryType, this._targetGeometryConfig, {
-                glowColor: this.glowColor || [1.0, 1.0, 0.95],
-                glowIntensity: this.glowIntensity || 1.0,
-                materialVariant: this.materialVariant,
-                emotionData, // Pass emotion data for auto-deriving geometry params
-                assetBasePath: this.assetBasePath,
-                onTextureReady
-            });
+            const materialResult = createCustomMaterial(
+                this._targetGeometryType,
+                this._targetGeometryConfig,
+                {
+                    glowColor: this.glowColor || [1.0, 1.0, 0.95],
+                    glowIntensity: this.glowIntensity || 1.0,
+                    materialVariant: this.materialVariant,
+                    emotionData, // Pass emotion data for auto-deriving geometry params
+                    assetBasePath: this.assetBasePath,
+                    onTextureReady,
+                }
+            );
 
             if (materialResult) {
                 customMaterial = materialResult.material;
@@ -1619,7 +1673,7 @@ export class Core3DManager {
                 this.onMaterialSwap({
                     geometryType: this._targetGeometryType,
                     material: this.customMaterial,
-                    materialType: this.customMaterialType
+                    materialType: this.customMaterialType,
                 });
             }
 
@@ -1635,7 +1689,7 @@ export class Core3DManager {
             this.effectManager.initializeForGeometry(this._targetGeometryType, {
                 coreMesh: this.renderer.coreMesh,
                 customMaterial: this.customMaterial,
-                sunRadius
+                sunRadius,
             });
 
             // ═══════════════════════════════════════════════════════════════════
@@ -1650,7 +1704,12 @@ export class Core3DManager {
             }
 
             // Create or dispose crystal inner core (still uses createCrystalInnerCore for now)
-            if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart' || this._targetGeometryType === 'star') {
+            if (
+                this._targetGeometryType === 'crystal' ||
+                this._targetGeometryType === 'rough' ||
+                this._targetGeometryType === 'heart' ||
+                this._targetGeometryType === 'star'
+            ) {
                 // Create inner core if morphing to crystal/rough/heart/star
                 if (this.customMaterialType === 'crystal') {
                     this.createCrystalInnerCore();
@@ -1679,8 +1738,8 @@ export class Core3DManager {
                     calibrationRotation: [
                         MOON_CALIBRATION_ROTATION.x * degToRad,
                         MOON_CALIBRATION_ROTATION.y * degToRad,
-                        MOON_CALIBRATION_ROTATION.z * degToRad
-                    ]
+                        MOON_CALIBRATION_ROTATION.z * degToRad,
+                    ],
                 };
             }
 
@@ -1690,7 +1749,7 @@ export class Core3DManager {
                 targetGeometryType: this._targetGeometryType,
                 emotionData,
                 facingConfig,
-                geometryRotation: null // No geometry-specific rotation during morph
+                geometryRotation: null, // No geometry-specific rotation during morph
             });
 
             // Handle moon-specific camera and controls
@@ -1720,7 +1779,11 @@ export class Core3DManager {
                 }
 
                 // Set calibration rotation for crystal/rough/heart, clear for others
-                if (this._targetGeometryType === 'crystal' || this._targetGeometryType === 'rough' || this._targetGeometryType === 'heart') {
+                if (
+                    this._targetGeometryType === 'crystal' ||
+                    this._targetGeometryType === 'rough' ||
+                    this._targetGeometryType === 'heart'
+                ) {
                     const degToRad = Math.PI / 180;
                     this.calibrationRotation[0] = CRYSTAL_CALIBRATION_ROTATION.x * degToRad;
                     this.calibrationRotation[1] = CRYSTAL_CALIBRATION_ROTATION.y * degToRad;
@@ -1769,7 +1832,11 @@ export class Core3DManager {
 
         // Update breathing animation
         profiler.start('breathing');
-        this.breathingAnimator.update(deltaTime, this.emotion, getUndertoneModifier(this.undertone));
+        this.breathingAnimator.update(
+            deltaTime,
+            this.emotion,
+            getUndertoneModifier(this.undertone)
+        );
         profiler.end('breathing');
 
         // Update imperative breathing phase (for meditation)
@@ -1778,9 +1845,12 @@ export class Core3DManager {
         // Get breathing scale multiplier
         // If imperative breathing is active (scale != 1.0), use it exclusively
         // Otherwise fall back to ambient breathing if enabled
-        const breathScale = (imperativeBreathScale !== 1.0)
-            ? imperativeBreathScale
-            : (this.breathingEnabled ? this.breathingAnimator.getBreathingScale() : 1.0);
+        const breathScale =
+            imperativeBreathScale !== 1.0
+                ? imperativeBreathScale
+                : this.breathingEnabled
+                  ? this.breathingAnimator.getBreathingScale()
+                  : 1.0;
 
         // Get morph scale multiplier (for shrink/grow effect)
         const morphScale = morphState.scaleMultiplier;
@@ -1840,7 +1910,7 @@ export class Core3DManager {
         // ═══════════════════════════════════════════════════════════════════════════
         profiler.start('gestureBlend');
         const blended = this.animationManager.blend(
-            this.baseEuler,  // Pass raw Euler angles to avoid gimbal lock
+            this.baseEuler, // Pass raw Euler angles to avoid gimbal lock
             this.baseScale,
             this.baseGlowIntensity
         );
@@ -1878,7 +1948,7 @@ export class Core3DManager {
             this._smoothedBoost = {
                 position: [0, 0, 0],
                 rotation: [0, 0, 0],
-                scale: 1.0
+                scale: 1.0,
             };
         }
 
@@ -1903,8 +1973,10 @@ export class Core3DManager {
         const targetScaleBoost = blended.scaleBoost || 1.0;
 
         for (let i = 0; i < 3; i++) {
-            this._smoothedBoost.position[i] += (targetPosBoost[i] - this._smoothedBoost.position[i]) * t;
-            this._smoothedBoost.rotation[i] += (targetRotBoost[i] - this._smoothedBoost.rotation[i]) * t;
+            this._smoothedBoost.position[i] +=
+                (targetPosBoost[i] - this._smoothedBoost.position[i]) * t;
+            this._smoothedBoost.rotation[i] +=
+                (targetRotBoost[i] - this._smoothedBoost.rotation[i]) * t;
         }
         this._smoothedBoost.scale += (targetScaleBoost - this._smoothedBoost.scale) * t;
 
@@ -1918,8 +1990,10 @@ export class Core3DManager {
         // ═══════════════════════════════════════════════════════════════════════════
         // This enables "tidally locked" gestures that move toward/away from camera
         // regardless of camera angle. View-space: Z = toward camera, Y = up, X = right
-        let camRelWorldX = 0, camRelWorldY = 0, camRelWorldZ = 0;
-        this._cameraRoll = 0;  // Reset camera roll each frame
+        let camRelWorldX = 0,
+            camRelWorldY = 0,
+            camRelWorldZ = 0;
+        this._cameraRoll = 0; // Reset camera roll each frame
 
         if (blended.hasCameraRelativeGestures && this.renderer.camera) {
             const cam = this.renderer.camera;
@@ -1951,9 +2025,18 @@ export class Core3DManager {
             // X (right in view) -> camera right
             // Y (up in view) -> camera up
             // Z (toward camera in view) -> negative camera forward
-            camRelWorldX = this._camRight.x * camRelPos[0] + this._camUp.x * camRelPos[1] - this._camForward.x * camRelPos[2];
-            camRelWorldY = this._camRight.y * camRelPos[0] + this._camUp.y * camRelPos[1] - this._camForward.y * camRelPos[2];
-            camRelWorldZ = this._camRight.z * camRelPos[0] + this._camUp.z * camRelPos[1] - this._camForward.z * camRelPos[2];
+            camRelWorldX =
+                this._camRight.x * camRelPos[0] +
+                this._camUp.x * camRelPos[1] -
+                this._camForward.x * camRelPos[2];
+            camRelWorldY =
+                this._camRight.y * camRelPos[0] +
+                this._camUp.y * camRelPos[1] -
+                this._camForward.y * camRelPos[2];
+            camRelWorldZ =
+                this._camRight.z * camRelPos[0] +
+                this._camUp.z * camRelPos[1] -
+                this._camForward.z * camRelPos[2];
 
             // Camera-relative rotation: use the cameraRoll parameter in renderer
             // This rotates around the camera's forward vector, giving true "lean left/right as seen"
@@ -1982,7 +2065,7 @@ export class Core3DManager {
             this.position = [
                 blended.position[0] * posMult + camRelWorldX + grooveOffsetX + posBoost[0],
                 blended.position[1] * posMult + camRelWorldY + grooveOffsetY + posBoost[1],
-                blended.position[2] * posMult + camRelWorldZ + grooveOffsetZ + posBoost[2]
+                blended.position[2] * posMult + camRelWorldZ + grooveOffsetZ + posBoost[2],
             ];
 
             // ═══════════════════════════════════════════════════════════════════════
@@ -1992,7 +2075,7 @@ export class Core3DManager {
             this.rotation = [
                 blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend + rotBoost[0],
                 blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend + rotBoost[1],
-                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend + rotBoost[2]
+                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend + rotBoost[2],
             ];
 
             // ═══════════════════════════════════════════════════════════════════════
@@ -2009,7 +2092,7 @@ export class Core3DManager {
                 this.nonUniformScale = [
                     blended.nonUniformScale[0] * totalMult,
                     blended.nonUniformScale[1] * totalMult,
-                    blended.nonUniformScale[2] * totalMult
+                    blended.nonUniformScale[2] * totalMult,
                 ];
             } else {
                 this.nonUniformScale = null;
@@ -2020,12 +2103,12 @@ export class Core3DManager {
             this.position = [
                 blended.position[0] + camRelWorldX + posBoost[0],
                 blended.position[1] + camRelWorldY + posBoost[1],
-                blended.position[2] + camRelWorldZ + posBoost[2]
+                blended.position[2] + camRelWorldZ + posBoost[2],
             ];
             this.rotation = [
                 blended.rotation[0] + rotBoost[0],
                 blended.rotation[1] + rotBoost[1],
-                blended.rotation[2] + rotBoost[2]
+                blended.rotation[2] + rotBoost[2],
             ];
             this.scale = blended.scale * scaleBoost;
             // Non-uniform scale (squash/stretch) - apply scale boost
@@ -2033,7 +2116,7 @@ export class Core3DManager {
                 this.nonUniformScale = [
                     blended.nonUniformScale[0] * scaleBoost,
                     blended.nonUniformScale[1] * scaleBoost,
-                    blended.nonUniformScale[2] * scaleBoost
+                    blended.nonUniformScale[2] * scaleBoost,
                 ];
             } else {
                 this.nonUniformScale = null;
@@ -2075,9 +2158,10 @@ export class Core3DManager {
             this.glowColor[1] += (this._originalGlowColor[1] - this.glowColor[1]) * lerpRate;
             this.glowColor[2] += (this._originalGlowColor[2] - this.glowColor[2]) * lerpRate;
             // Check if close enough to snap to final value
-            const diff = Math.abs(this.glowColor[0] - this._originalGlowColor[0]) +
-                         Math.abs(this.glowColor[1] - this._originalGlowColor[1]) +
-                         Math.abs(this.glowColor[2] - this._originalGlowColor[2]);
+            const diff =
+                Math.abs(this.glowColor[0] - this._originalGlowColor[0]) +
+                Math.abs(this.glowColor[1] - this._originalGlowColor[1]) +
+                Math.abs(this.glowColor[2] - this._originalGlowColor[2]);
             if (diff < 0.01) {
                 this.glowColor = [...this._originalGlowColor];
                 this._originalGlowColor = null;
@@ -2098,7 +2182,7 @@ export class Core3DManager {
                     // Create electric material with additive blending
                     this._electricMaterial = createElectricMaterial({
                         charge: Math.min(1.0, blended.electricOverlay.charge),
-                        opacity: 0.7  // Semi-transparent for overlay
+                        opacity: 0.7, // Semi-transparent for overlay
                     });
 
                     // Clone the mesh geometry for the overlay
@@ -2121,7 +2205,7 @@ export class Core3DManager {
                 this._spawnElement('electricity', blended.electricOverlay, {
                     signatureSet: '_electricSpawnedSignatures',
                     signatureKey: '_electricSpawnSignature',
-                    exitScope: 'electricity'
+                    exitScope: 'electricity',
                 });
 
                 // Update electric material each frame
@@ -2130,7 +2214,10 @@ export class Core3DManager {
                 }
                 // Update charge dynamically
                 if (this._electricMaterial?.uniforms?.uCharge) {
-                    this._electricMaterial.uniforms.uCharge.value = Math.min(1.0, blended.electricOverlay.charge);
+                    this._electricMaterial.uniforms.uCharge.value = Math.min(
+                        1.0,
+                        blended.electricOverlay.charge
+                    );
                 }
 
                 // Store gesture progress for element spawner animation
@@ -2174,7 +2261,7 @@ export class Core3DManager {
                 if (!this._waterOverlayMesh) {
                     this._waterMaterial = createWaterMaterial({
                         viscosity: blended.waterOverlay.viscosity || 0.3,
-                        opacity: 0.7
+                        opacity: 0.7,
                     });
                     this._waterOverlayMesh = new THREE.Mesh(mesh.geometry, this._waterMaterial);
                     this._waterOverlayMesh.scale.setScalar(1.03);
@@ -2190,13 +2277,18 @@ export class Core3DManager {
                     this._waterMaterial.uniforms.uTime.value = blended.waterOverlay.time;
                 }
                 if (this._waterMaterial?.uniforms?.uViscosity) {
-                    this._waterMaterial.uniforms.uViscosity.value = blended.waterOverlay.viscosity || 0.3;
+                    this._waterMaterial.uniforms.uViscosity.value =
+                        blended.waterOverlay.viscosity || 0.3;
                 }
                 if (this._waterMaterial?.uniforms?.uOpacity) {
-                    this._waterMaterial.uniforms.uOpacity.value = Math.min(0.7, blended.waterOverlay.wetness || blended.waterOverlay.strength || 0.7);
+                    this._waterMaterial.uniforms.uOpacity.value = Math.min(
+                        0.7,
+                        blended.waterOverlay.wetness || blended.waterOverlay.strength || 0.7
+                    );
                 }
                 if (this._waterMaterial?.uniforms?.uProgress) {
-                    this._waterMaterial.uniforms.uProgress.value = blended.waterOverlay.progress ?? 0;
+                    this._waterMaterial.uniforms.uProgress.value =
+                        blended.waterOverlay.progress ?? 0;
                 }
 
                 this._currentWaterProgress = blended.waterOverlay.progress ?? null;
@@ -2257,7 +2349,7 @@ export class Core3DManager {
                 if (!this._fireOverlayMesh) {
                     this._fireMaterial = createFireMaterial({
                         temperature: blended.fireOverlay.temperature || 0.5,
-                        opacity: 0.4
+                        opacity: 0.4,
                     });
                     this._fireOverlayMesh = new THREE.Mesh(mesh.geometry, this._fireMaterial);
                     this._fireOverlayMesh.scale.setScalar(1.04);
@@ -2273,10 +2365,14 @@ export class Core3DManager {
                     this._fireMaterial.uniforms.uTime.value = blended.fireOverlay.time;
                 }
                 if (this._fireMaterial?.uniforms?.uTemperature) {
-                    this._fireMaterial.uniforms.uTemperature.value = blended.fireOverlay.temperature || 0.5;
+                    this._fireMaterial.uniforms.uTemperature.value =
+                        blended.fireOverlay.temperature || 0.5;
                 }
                 if (this._fireMaterial?.uniforms?.uOpacity) {
-                    this._fireMaterial.uniforms.uOpacity.value = Math.min(0.4, blended.fireOverlay.strength);
+                    this._fireMaterial.uniforms.uOpacity.value = Math.min(
+                        0.4,
+                        blended.fireOverlay.strength
+                    );
                 }
                 if (this._fireMaterial?.uniforms?.uProgress) {
                     this._fireMaterial.uniforms.uProgress.value = blended.fireOverlay.progress ?? 0;
@@ -2353,7 +2449,7 @@ export class Core3DManager {
                         category: smokeCategory,
                         tint: blended.smokeOverlay.tint || [1.0, 1.0, 1.0],
                         density: blended.smokeOverlay.density || 0.5,
-                        swirl: blended.smokeOverlay.swirl || 0.0
+                        swirl: blended.smokeOverlay.swirl || 0.0,
                     });
 
                     this._smokeMaterialCategory = smokeCategory;
@@ -2369,7 +2465,7 @@ export class Core3DManager {
                     category: smokeCategory,
                     tint: blended.smokeOverlay.tint,
                     density: blended.smokeOverlay.density,
-                    swirl: blended.smokeOverlay.swirl
+                    swirl: blended.smokeOverlay.swirl,
                 });
             }
         } else if (this._smokeParticleSystem) {
@@ -2394,13 +2490,10 @@ export class Core3DManager {
                 if (!this._voidOverlayMesh) {
                     this._voidMaterial = createVoidMaterial({
                         depth: blended.voidOverlay.depth || 0.7,
-                        opacity: 0.95
+                        opacity: 0.95,
                     });
 
-                    this._voidOverlayMesh = new THREE.Mesh(
-                        mesh.geometry,
-                        this._voidMaterial
-                    );
+                    this._voidOverlayMesh = new THREE.Mesh(mesh.geometry, this._voidMaterial);
 
                     this._voidOverlayMesh.scale.setScalar(1.06);
                     mesh.add(this._voidOverlayMesh);
@@ -2416,10 +2509,11 @@ export class Core3DManager {
                         if (this.elementSpawner._distortionManager) {
                             const ds = blended.voidOverlay.distortionStrength;
                             this.elementSpawner._distortionManager.setDistortionStrength(
-                                'void', ds !== undefined ? ds : null
+                                'void',
+                                ds !== undefined ? ds : null
                             );
                         }
-                    }
+                    },
                 });
                 // Apply distortion override AFTER spawn too — on first fire, the distortion
                 // mesh doesn't exist during onBeforeSpawn (registered during spawn), so the
@@ -2427,7 +2521,8 @@ export class Core3DManager {
                 if (this.elementSpawner._distortionManager) {
                     const ds = blended.voidOverlay.distortionStrength;
                     this.elementSpawner._distortionManager.setDistortionStrength(
-                        'void', ds !== undefined ? ds : null
+                        'void',
+                        ds !== undefined ? ds : null
                     );
                 }
 
@@ -2440,7 +2535,10 @@ export class Core3DManager {
                     this._voidMaterial.uniforms.uDepth.value = boostedDepth;
                 }
                 if (this._voidMaterial?.uniforms?.uOpacity) {
-                    this._voidMaterial.uniforms.uOpacity.value = Math.min(0.95, blended.voidOverlay.strength);
+                    this._voidMaterial.uniforms.uOpacity.value = Math.min(
+                        0.95,
+                        blended.voidOverlay.strength
+                    );
                 }
                 if (this._voidMaterial?.uniforms?.uProgress) {
                     this._voidMaterial.uniforms.uProgress.value = blended.voidOverlay.progress ?? 0;
@@ -2516,7 +2614,7 @@ export class Core3DManager {
                 if (!this._iceOverlayMesh) {
                     this._iceMaterial = createIceMaterial({
                         melt: blended.iceOverlay.melt || 0.0,
-                        opacity: 0.7
+                        opacity: 0.7,
                     });
                     this._iceOverlayMesh = new THREE.Mesh(mesh.geometry, this._iceMaterial);
                     this._iceOverlayMesh.scale.setScalar(1.03);
@@ -2533,7 +2631,7 @@ export class Core3DManager {
                 this._spawnElement('ice', blended.iceOverlay, {
                     signatureSet: '_iceSpawnedSignatures',
                     signatureKey: '_iceSpawnSignature',
-                    exitScope: 'ice'
+                    exitScope: 'ice',
                 });
 
                 // Update ice material uniforms
@@ -2544,7 +2642,10 @@ export class Core3DManager {
                     this._iceMaterial.uniforms.uMelt.value = blended.iceOverlay.melt || 0.0;
                 }
                 if (this._iceMaterial?.uniforms?.uOpacity) {
-                    this._iceMaterial.uniforms.uOpacity.value = Math.min(0.7, blended.iceOverlay.strength || 0.7);
+                    this._iceMaterial.uniforms.uOpacity.value = Math.min(
+                        0.7,
+                        blended.iceOverlay.strength || 0.7
+                    );
                 }
                 if (this._iceMaterial?.uniforms?.uProgress) {
                     this._iceMaterial.uniforms.uProgress.value = blended.iceOverlay.progress ?? 0;
@@ -2560,38 +2661,50 @@ export class Core3DManager {
                         this._iceOriginalMaterial = {};
                         if (mascotMat.uniforms) {
                             if (mascotMat.uniforms.glowColor) {
-                                this._iceOriginalMaterial.glowColor = mascotMat.uniforms.glowColor.value.clone();
+                                this._iceOriginalMaterial.glowColor =
+                                    mascotMat.uniforms.glowColor.value.clone();
                             }
                             if (mascotMat.uniforms.coreColor) {
-                                this._iceOriginalMaterial.coreColor = mascotMat.uniforms.coreColor.value.clone();
+                                this._iceOriginalMaterial.coreColor =
+                                    mascotMat.uniforms.coreColor.value.clone();
                             }
                             if (mascotMat.uniforms.glowIntensity) {
-                                this._iceOriginalMaterial.glowIntensity = mascotMat.uniforms.glowIntensity.value;
+                                this._iceOriginalMaterial.glowIntensity =
+                                    mascotMat.uniforms.glowIntensity.value;
                             }
                         }
                         if (mascotMat.emissive) {
                             this._iceOriginalMaterial.emissive = mascotMat.emissive.clone();
-                            this._iceOriginalMaterial.emissiveIntensity = mascotMat.emissiveIntensity;
+                            this._iceOriginalMaterial.emissiveIntensity =
+                                mascotMat.emissiveIntensity;
                         }
                         if (mascotMat.color) {
                             this._iceOriginalMaterial.color = mascotMat.color.clone();
                         }
                     }
 
-                    const iceBlue = this._iceTintColor || (this._iceTintColor = new THREE.Color(0.3, 0.5, 0.8));
+                    const iceBlue =
+                        this._iceTintColor || (this._iceTintColor = new THREE.Color(0.3, 0.5, 0.8));
                     const orig = this._iceOriginalMaterial;
 
                     if (mascotMat.uniforms) {
                         if (mascotMat.uniforms.glowColor && orig.glowColor) {
-                            mascotMat.uniforms.glowColor.value.copy(orig.glowColor).lerp(iceBlue, 0.3 * iceStrength);
+                            mascotMat.uniforms.glowColor.value
+                                .copy(orig.glowColor)
+                                .lerp(iceBlue, 0.3 * iceStrength);
                         }
                         if (mascotMat.uniforms.coreColor && orig.coreColor) {
-                            mascotMat.uniforms.coreColor.value.copy(orig.coreColor).lerp(iceBlue, 0.4 * iceStrength);
+                            mascotMat.uniforms.coreColor.value
+                                .copy(orig.coreColor)
+                                .lerp(iceBlue, 0.4 * iceStrength);
                         }
                     }
                     if (mascotMat.emissive && orig.emissive) {
                         mascotMat.emissive.copy(orig.emissive).lerp(iceBlue, 0.3 * iceStrength);
-                        mascotMat.emissiveIntensity = Math.max(orig.emissiveIntensity, 0.3 * iceStrength);
+                        mascotMat.emissiveIntensity = Math.max(
+                            orig.emissiveIntensity,
+                            0.3 * iceStrength
+                        );
                     }
                     if (mascotMat.color && !mascotMat.uniforms && orig.color) {
                         mascotMat.color.copy(orig.color).lerp(iceBlue, 0.2 * iceStrength);
@@ -2604,7 +2717,7 @@ export class Core3DManager {
             // Fade out overlay smoothly — frost retreats before disappearing
             if (!this._iceOverlayFadingOut) {
                 this._iceOverlayFadingOut = true;
-                this._iceFadeStrength = 1.0;  // Track fading tint strength
+                this._iceFadeStrength = 1.0; // Track fading tint strength
                 if (this.elementSpawner) {
                     this.elementSpawner.triggerExit('ice');
                 }
@@ -2628,15 +2741,21 @@ export class Core3DManager {
 
                     if (mascotMat.uniforms) {
                         if (mascotMat.uniforms.glowColor && orig.glowColor) {
-                            mascotMat.uniforms.glowColor.value.copy(orig.glowColor).lerp(iceBlue, 0.3 * s);
+                            mascotMat.uniforms.glowColor.value
+                                .copy(orig.glowColor)
+                                .lerp(iceBlue, 0.3 * s);
                         }
                         if (mascotMat.uniforms.coreColor && orig.coreColor) {
-                            mascotMat.uniforms.coreColor.value.copy(orig.coreColor).lerp(iceBlue, 0.4 * s);
+                            mascotMat.uniforms.coreColor.value
+                                .copy(orig.coreColor)
+                                .lerp(iceBlue, 0.4 * s);
                         }
                     }
                     if (mascotMat.emissive && orig.emissive) {
                         mascotMat.emissive.copy(orig.emissive).lerp(iceBlue, 0.3 * s);
-                        mascotMat.emissiveIntensity = orig.emissiveIntensity + (Math.max(orig.emissiveIntensity, 0.3) - orig.emissiveIntensity) * s;
+                        mascotMat.emissiveIntensity =
+                            orig.emissiveIntensity +
+                            (Math.max(orig.emissiveIntensity, 0.3) - orig.emissiveIntensity) * s;
                     }
                     if (mascotMat.color && !mascotMat.uniforms && orig.color) {
                         mascotMat.color.copy(orig.color).lerp(iceBlue, 0.2 * s);
@@ -2674,7 +2793,10 @@ export class Core3DManager {
                             if (orig.coreColor && mascotMat.uniforms.coreColor) {
                                 mascotMat.uniforms.coreColor.value.copy(orig.coreColor);
                             }
-                            if (orig.glowIntensity !== undefined && mascotMat.uniforms.glowIntensity) {
+                            if (
+                                orig.glowIntensity !== undefined &&
+                                mascotMat.uniforms.glowIntensity
+                            ) {
                                 mascotMat.uniforms.glowIntensity.value = orig.glowIntensity;
                             }
                         }
@@ -2709,15 +2831,19 @@ export class Core3DManager {
                     const mascotMat = mesh.material;
                     const orig = this._iceOriginalMaterial;
                     if (mascotMat.uniforms) {
-                        if (orig.glowColor && mascotMat.uniforms.glowColor) mascotMat.uniforms.glowColor.value.copy(orig.glowColor);
-                        if (orig.coreColor && mascotMat.uniforms.coreColor) mascotMat.uniforms.coreColor.value.copy(orig.coreColor);
-                        if (orig.glowIntensity !== undefined && mascotMat.uniforms.glowIntensity) mascotMat.uniforms.glowIntensity.value = orig.glowIntensity;
+                        if (orig.glowColor && mascotMat.uniforms.glowColor)
+                            mascotMat.uniforms.glowColor.value.copy(orig.glowColor);
+                        if (orig.coreColor && mascotMat.uniforms.coreColor)
+                            mascotMat.uniforms.coreColor.value.copy(orig.coreColor);
+                        if (orig.glowIntensity !== undefined && mascotMat.uniforms.glowIntensity)
+                            mascotMat.uniforms.glowIntensity.value = orig.glowIntensity;
                     }
                     if (orig.emissive && mascotMat.emissive) {
                         mascotMat.emissive.copy(orig.emissive);
                         mascotMat.emissiveIntensity = orig.emissiveIntensity;
                     }
-                    if (orig.color && mascotMat.color && !mascotMat.uniforms) mascotMat.color.copy(orig.color);
+                    if (orig.color && mascotMat.color && !mascotMat.uniforms)
+                        mascotMat.color.copy(orig.color);
                 }
                 this._iceOriginalMaterial = null;
                 this._currentIceProgress = null;
@@ -2736,7 +2862,7 @@ export class Core3DManager {
                 if (!this._lightOverlayMesh) {
                     this._lightMaterial = createLightMaterial({
                         radiance: blended.lightOverlay.radiance || 0.7,
-                        opacity: 0.35
+                        opacity: 0.35,
                     });
                     this._lightOverlayMesh = new THREE.Mesh(mesh.geometry, this._lightMaterial);
                     this._lightOverlayMesh.scale.setScalar(1.04);
@@ -2748,7 +2874,7 @@ export class Core3DManager {
                 this._spawnElement('light', blended.lightOverlay, {
                     signatureSet: '_lightSpawnedSignatures',
                     signatureKey: '_lightSpawnSignature',
-                    exitScope: 'light'
+                    exitScope: 'light',
                 });
 
                 // Update light overlay material each frame
@@ -2756,13 +2882,18 @@ export class Core3DManager {
                     this._lightMaterial.uniforms.uTime.value = blended.lightOverlay.time;
                 }
                 if (this._lightMaterial?.uniforms?.uRadiance) {
-                    this._lightMaterial.uniforms.uRadiance.value = blended.lightOverlay.radiance || 0.7;
+                    this._lightMaterial.uniforms.uRadiance.value =
+                        blended.lightOverlay.radiance || 0.7;
                 }
                 if (this._lightMaterial?.uniforms?.uOpacity) {
-                    this._lightMaterial.uniforms.uOpacity.value = Math.min(0.35, blended.lightOverlay.strength);
+                    this._lightMaterial.uniforms.uOpacity.value = Math.min(
+                        0.35,
+                        blended.lightOverlay.strength
+                    );
                 }
                 if (this._lightMaterial?.uniforms?.uProgress) {
-                    this._lightMaterial.uniforms.uProgress.value = blended.lightOverlay.progress ?? 0;
+                    this._lightMaterial.uniforms.uProgress.value =
+                        blended.lightOverlay.progress ?? 0;
                 }
 
                 // Track progress for exit detection
@@ -2830,7 +2961,7 @@ export class Core3DManager {
                 if (!this._earthOverlayMesh) {
                     this._earthMaterial = createEarthMaterial({
                         petrification: blended.earthOverlay.petrification || 0.7,
-                        opacity: 0.9
+                        opacity: 0.9,
                     });
                     this._earthOverlayMesh = new THREE.Mesh(mesh.geometry, this._earthMaterial);
                     this._earthOverlayMesh.scale.setScalar(1.03);
@@ -2847,7 +2978,7 @@ export class Core3DManager {
                 this._spawnElement('earth', blended.earthOverlay, {
                     signatureSet: '_earthSpawnedSignatures',
                     signatureKey: '_earthSpawnSignature',
-                    exitScope: 'earth'
+                    exitScope: 'earth',
                 });
 
                 // Update earth overlay material each frame
@@ -2855,13 +2986,18 @@ export class Core3DManager {
                     this._earthMaterial.uniforms.uTime.value = blended.earthOverlay.time;
                 }
                 if (this._earthMaterial?.uniforms?.uPetrification) {
-                    this._earthMaterial.uniforms.uPetrification.value = blended.earthOverlay.petrification || 0.7;
+                    this._earthMaterial.uniforms.uPetrification.value =
+                        blended.earthOverlay.petrification || 0.7;
                 }
                 if (this._earthMaterial?.uniforms?.uOpacity) {
-                    this._earthMaterial.uniforms.uOpacity.value = Math.min(0.9, blended.earthOverlay.strength);
+                    this._earthMaterial.uniforms.uOpacity.value = Math.min(
+                        0.9,
+                        blended.earthOverlay.strength
+                    );
                 }
                 if (this._earthMaterial?.uniforms?.uProgress) {
-                    this._earthMaterial.uniforms.uProgress.value = blended.earthOverlay.progress ?? 0;
+                    this._earthMaterial.uniforms.uProgress.value =
+                        blended.earthOverlay.progress ?? 0;
                 }
 
                 // Track progress for exit detection
@@ -2937,7 +3073,7 @@ export class Core3DManager {
                 if (!this._natureOverlayMesh) {
                     this._natureMaterial = createNatureMaterial({
                         growth: blended.natureOverlay.growth || 0.5,
-                        opacity: 0.7
+                        opacity: 0.7,
                     });
                     this._natureOverlayMesh = new THREE.Mesh(mesh.geometry, this._natureMaterial);
                     this._natureOverlayMesh.scale.setScalar(1.03);
@@ -2953,13 +3089,18 @@ export class Core3DManager {
                     this._natureMaterial.uniforms.uTime.value = blended.natureOverlay.time;
                 }
                 if (this._natureMaterial?.uniforms?.uGrowth) {
-                    this._natureMaterial.uniforms.uGrowth.value = blended.natureOverlay.growth || 0.5;
+                    this._natureMaterial.uniforms.uGrowth.value =
+                        blended.natureOverlay.growth || 0.5;
                 }
                 if (this._natureMaterial?.uniforms?.uOpacity) {
-                    this._natureMaterial.uniforms.uOpacity.value = Math.min(0.7, blended.natureOverlay.strength);
+                    this._natureMaterial.uniforms.uOpacity.value = Math.min(
+                        0.7,
+                        blended.natureOverlay.strength
+                    );
                 }
                 if (this._natureMaterial?.uniforms?.uProgress) {
-                    this._natureMaterial.uniforms.uProgress.value = blended.natureOverlay.progress ?? 0;
+                    this._natureMaterial.uniforms.uProgress.value =
+                        blended.natureOverlay.progress ?? 0;
                 }
                 this._currentNatureProgress = blended.natureOverlay.progress ?? null;
             }
@@ -3065,7 +3206,11 @@ export class Core3DManager {
         // Transform: Camera-relative (from gesture) → World → Mesh-local
 
         // Handle new crack impacts
-        if (blended.crackTriggers && blended.crackTriggers.length > 0 && this.objectSpaceCrackManager) {
+        if (
+            blended.crackTriggers &&
+            blended.crackTriggers.length > 0 &&
+            this.objectSpaceCrackManager
+        ) {
             const cam = this.renderer?.camera;
             const mesh = this.renderer?.coreMesh;
 
@@ -3086,7 +3231,9 @@ export class Core3DManager {
 
                 cam.getWorldDirection(this._crackCamForward);
                 this._crackCamRight.crossVectors(this._crackCamForward, cam.up).normalize();
-                this._crackCamUp.crossVectors(this._crackCamRight, this._crackCamForward).normalize();
+                this._crackCamUp
+                    .crossVectors(this._crackCamRight, this._crackCamForward)
+                    .normalize();
 
                 // Get inverse mesh rotation for world→local transform
                 mesh.getWorldQuaternion(this._crackInvQuat);
@@ -3105,15 +3252,16 @@ export class Core3DManager {
                     //               [0, 0.1] = slightly up
 
                     // Start with direction toward camera (this is the front surface)
-                    const meshRadius = 0.35;  // Approximate mesh surface radius
+                    const meshRadius = 0.35; // Approximate mesh surface radius
 
                     // Offset from center: tilt the surface point based on screenOffset
                     // Small offsets (0.1) = ~5-10 degree tilt from center
-                    const tiltScale = 1.0;  // How much screenOffset affects position
-                    this._crackWorldPos.set(0, 0, 0)
+                    const tiltScale = 1.0; // How much screenOffset affects position
+                    this._crackWorldPos
+                        .set(0, 0, 0)
                         .addScaledVector(this._crackCamRight, screenOffset[0] * tiltScale)
                         .addScaledVector(this._crackCamUp, screenOffset[1] * tiltScale)
-                        .addScaledVector(this._crackCamForward, -1.0);  // Toward camera
+                        .addScaledVector(this._crackCamForward, -1.0); // Toward camera
 
                     // Normalize to get direction, then scale to mesh surface
                     this._crackWorldPos.normalize().multiplyScalar(meshRadius);
@@ -3138,7 +3286,7 @@ export class Core3DManager {
                         position: this._crackWorldPos.clone(),
                         direction: this._crackWorldDir.clone(),
                         propagation: trigger.propagation || 0.8,
-                        amount: trigger.amount || 1.0
+                        amount: trigger.amount || 1.0,
                     });
                 }
             }
@@ -3150,7 +3298,11 @@ export class Core3DManager {
         }
 
         // Pass through glow settings
-        if (blended.crack && blended.crack.glowStrength !== undefined && this.objectSpaceCrackManager) {
+        if (
+            blended.crack &&
+            blended.crack.glowStrength !== undefined &&
+            this.objectSpaceCrackManager
+        ) {
             this.objectSpaceCrackManager.glowStrength = blended.crack.glowStrength;
         }
 
@@ -3178,7 +3330,12 @@ export class Core3DManager {
         // - Using inverse quaternion gives us pure rotational transformation
         //
         // See: deformation.js for shader code, oofFactory.js for gesture definitions
-        if (blended.deformation && blended.deformation.enabled && this.renderer?.camera && this.renderer?.coreMesh) {
+        if (
+            blended.deformation &&
+            blended.deformation.enabled &&
+            this.renderer?.camera &&
+            this.renderer?.coreMesh
+        ) {
             const d = blended.deformation;
             const ip = d.impactPoint;
             const cam = this.renderer.camera;
@@ -3208,9 +3365,15 @@ export class Core3DManager {
             // Y (up) -> camera up
             // Z (toward camera) -> negative camera forward
             this._deformWorldDir.set(
-                this._deformCamRight.x * ip[0] + this._deformCamUp.x * ip[1] - this._deformCamForward.x * ip[2],
-                this._deformCamRight.y * ip[0] + this._deformCamUp.y * ip[1] - this._deformCamForward.y * ip[2],
-                this._deformCamRight.z * ip[0] + this._deformCamUp.z * ip[1] - this._deformCamForward.z * ip[2]
+                this._deformCamRight.x * ip[0] +
+                    this._deformCamUp.x * ip[1] -
+                    this._deformCamForward.x * ip[2],
+                this._deformCamRight.y * ip[0] +
+                    this._deformCamUp.y * ip[1] -
+                    this._deformCamForward.y * ip[2],
+                this._deformCamRight.z * ip[0] +
+                    this._deformCamUp.z * ip[1] -
+                    this._deformCamForward.z * ip[2]
             );
 
             // Transform DIRECTION from world space to mesh-local space
@@ -3225,7 +3388,11 @@ export class Core3DManager {
 
             this._deformation = {
                 ...d,
-                impactPoint: [this._deformLocalDir.x, this._deformLocalDir.y, this._deformLocalDir.z]
+                impactPoint: [
+                    this._deformLocalDir.x,
+                    this._deformLocalDir.y,
+                    this._deformLocalDir.z,
+                ],
             };
         } else if (blended.deformation && blended.deformation.enabled) {
             // Fallback if no camera/mesh available - use raw values
@@ -3255,27 +3422,35 @@ export class Core3DManager {
                 // If shards are frozen and this is a dual-mode gesture, apply behavior directly
                 // ═══════════════════════════════════════════════════════════════
                 if (s.isDualMode && this.shatterSystem.isFrozen()) {
-                // Apply dual-mode behavior to existing frozen shards
+                    // Apply dual-mode behavior to existing frozen shards
                     this.shatterSystem.triggerDualMode(s.dualModeType, s.dualModeConfig || {});
                 }
                 // ═══════════════════════════════════════════════════════════════
                 // SHATTER REFORM ON FROZEN SHARDS - Trigger reassembly
                 // ═══════════════════════════════════════════════════════════════
                 else if (s.variant === 'reform' && this.shatterSystem.isFrozen()) {
-                // Reform on frozen shards = reassemble them
+                    // Reform on frozen shards = reassemble them
                     this.shatterSystem.triggerReassembly(s.reassembleDuration || 1500);
                 }
                 // ═══════════════════════════════════════════════════════════════
                 // ALL OTHER SHATTER GESTURES WHEN FROZEN - Move shards in impact direction
                 // Shatter/punch/crumble/etc on frozen shards = scatter them
                 // ═══════════════════════════════════════════════════════════════
-                else if (!s.isDualMode && this.shatterSystem.isFrozen() && !this._frozenShardsMovedThisGesture) {
-                // Move frozen shards in the gesture's impact direction
+                else if (
+                    !s.isDualMode &&
+                    this.shatterSystem.isFrozen() &&
+                    !this._frozenShardsMovedThisGesture
+                ) {
+                    // Move frozen shards in the gesture's impact direction
                     const moveDir = s.impactDirection || [0, 0, -1];
                     // Use different force based on gesture type
-                    const force = s.variant?.startsWith('punch') ? 3.5 :
-                        s.variant === 'explosive' ? 4.0 :
-                            s.variant === 'crumble' ? 1.5 : 2.5;
+                    const force = s.variant?.startsWith('punch')
+                        ? 3.5
+                        : s.variant === 'explosive'
+                          ? 4.0
+                          : s.variant === 'crumble'
+                            ? 1.5
+                            : 2.5;
                     this.shatterSystem.moveFrozenShards(moveDir, force);
                     this._frozenShardsMovedThisGesture = true;
                 }
@@ -3355,7 +3530,7 @@ export class Core3DManager {
                         dualModeType: s.dualModeType,
                         dualModeConfig: s.dualModeConfig || {},
                         // Physics overrides (for crumble, etc.)
-                        gravity: s.gravity,           // undefined = use default
+                        gravity: s.gravity, // undefined = use default
                         explosionForce: s.explosionForce,
                         rotationForce: s.rotationForce,
                         // Gesture duration for suspend timing calculation
@@ -3367,7 +3542,7 @@ export class Core3DManager {
                         elemental: s.elemental || null,
                         elementalParam: s.elementalParam ?? 0.5,
                         overlay: s.overlay || null,
-                        overlayParam: s.overlayParam ?? 0.5
+                        overlayParam: s.overlayParam ?? 0.5,
                     });
 
                     // Clear all cracks when shattering (geometry is destroyed)
@@ -3381,9 +3556,13 @@ export class Core3DManager {
             }
 
             // Handle reassembly trigger from gesture
-            if (blended.shatter && blended.shatter.reassemble && this.shatterSystem.isShattering()) {
+            if (
+                blended.shatter &&
+                blended.shatter.reassemble &&
+                this.shatterSystem.isShattering()
+            ) {
                 this.shatterSystem.reassemble({
-                    duration: blended.shatter.reassembleDuration || 1000
+                    duration: blended.shatter.reassembleDuration || 1000,
                 });
             }
 
@@ -3398,16 +3577,17 @@ export class Core3DManager {
         if (this.elementSpawner) {
             // Pass gesture progress for element animations (fire temperature, water flow, etc.)
             // Use first available progress from any active elemental effect
-            const gestureProgress = this._currentFireProgress
-                ?? this._currentWaterProgress
-                ?? this._currentIceProgress
-                ?? this._currentElectricProgress
-                ?? this._currentVoidProgress
-                ?? this._currentLightProgress
-                ?? this._currentEarthProgress
-                ?? this._currentNatureProgress
-                ?? null;
-            this.elementSpawner.update(deltaTime / 1000, gestureProgress);  // Convert ms to seconds
+            const gestureProgress =
+                this._currentFireProgress ??
+                this._currentWaterProgress ??
+                this._currentIceProgress ??
+                this._currentElectricProgress ??
+                this._currentVoidProgress ??
+                this._currentLightProgress ??
+                this._currentEarthProgress ??
+                this._currentNatureProgress ??
+                null;
+            this.elementSpawner.update(deltaTime / 1000, gestureProgress); // Convert ms to seconds
         }
         profiler.end('elementSpawner');
 
@@ -3424,19 +3604,23 @@ export class Core3DManager {
         // Calculate final scale: gesture * morph * breathing * BLINK * crystal shell scale
         // Crystal/diamond don't squish on blink - they use energy pulse instead
         // Use Y-axis blink scale (primary squish axis) for uniform application
-        const shouldApplyBlinkScale = this.geometryType !== 'crystal' && this.geometryType !== 'rough';
-        const blinkScale = (blinkState.isBlinking && shouldApplyBlinkScale) ? blinkState.scale[1] : 1.0;
-        const crystalShellScale = this.crystalShellBaseScale || 2.0;  // Default shell size
+        const shouldApplyBlinkScale =
+            this.geometryType !== 'crystal' && this.geometryType !== 'rough';
+        const blinkScale =
+            blinkState.isBlinking && shouldApplyBlinkScale ? blinkState.scale[1] : 1.0;
+        const crystalShellScale = this.crystalShellBaseScale || 2.0; // Default shell size
         const scaleMultipliers = morphScale * breathScale * blinkScale * crystalShellScale;
         const finalScale = this.scale * scaleMultipliers;
 
         // Calculate final non-uniform scale (for squash/stretch effects)
         // Applies same multipliers to each axis of the non-uniform scale
-        const finalNonUniformScale = this.nonUniformScale ? [
-            this.nonUniformScale[0] * scaleMultipliers,
-            this.nonUniformScale[1] * scaleMultipliers,
-            this.nonUniformScale[2] * scaleMultipliers
-        ] : null;
+        const finalNonUniformScale = this.nonUniformScale
+            ? [
+                  this.nonUniformScale[0] * scaleMultipliers,
+                  this.nonUniformScale[1] * scaleMultipliers,
+                  this.nonUniformScale[2] * scaleMultipliers,
+              ]
+            : null;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // PARTICLE SYSTEM UPDATE & RENDERING (Orchestrated)
@@ -3449,7 +3633,11 @@ export class Core3DManager {
             // Crystal shell scale is the main factor (default 2.0)
             // particleRadiusMultiplier adjusts for different geometry shapes/sizes
             const particleRadiusMultiplier = this.geometryConfig?.particleRadiusMultiplier || 1.0;
-            const coreRadius3D = (this.crystalShellBaseScale || 2.0) * this.scale * breathScale * particleRadiusMultiplier;
+            const coreRadius3D =
+                (this.crystalShellBaseScale || 2.0) *
+                this.scale *
+                breathScale *
+                particleRadiusMultiplier;
 
             // Delegate all particle logic to orchestrator
             this.particleOrchestrator.update(
@@ -3457,24 +3645,25 @@ export class Core3DManager {
                 this.emotion,
                 this.undertone,
                 this.animationManager.getActiveAnimations(), // Active gestures
-                this.animationManager.getTime(),             // Current animation time
+                this.animationManager.getTime(), // Current animation time
                 { x: this.position[0], y: this.position[1], z: this.position[2] }, // Core position
                 { width: this.canvas.width, height: this.canvas.height }, // Canvas size
                 // Rotation state for orbital physics
                 {
                     euler: this.baseEuler,
                     quaternion: this.baseQuaternion,
-                    angularVelocity: this.behaviorController.getAngularVelocity()
+                    angularVelocity: this.behaviorController.getAngularVelocity(),
                 },
                 this.baseScale, // Pass base scale only (shader handles perspective)
-                coreRadius3D    // Pass actual 3D core radius for particle orbit distance
+                coreRadius3D // Pass actual 3D core radius for particle orbit distance
             );
         }
         profiler.end('particleOrchestrator');
 
         // Calculate effective glow intensity (blink boost applied at render time, non-mutating)
         // Use multiplicative blending (1.0 + boost) so fade can still reach 0
-        const blinkBoostMultiplier = blinkState.isBlinking && blinkState.glowBoost ? (1.0 + blinkState.glowBoost) : 1.0;
+        const blinkBoostMultiplier =
+            blinkState.isBlinking && blinkState.glowBoost ? 1.0 + blinkState.glowBoost : 1.0;
 
         // Respect coreGlowEnabled toggle for both glass and glow modes
         // When disabled, set intensity to 0 which hides inner core and emissive glow
@@ -3495,10 +3684,14 @@ export class Core3DManager {
         // Update element material bloom thresholds to match mascot's bloom settings
         // This prevents water/fire etc from blowing out on low-threshold geometries (crystal/heart)
         if (this.elementSpawner) {
-            let elementBloomThreshold = 0.85;  // Default for moon/star/sphere
+            let elementBloomThreshold = 0.85; // Default for moon/star/sphere
             if (this.geometryType === 'sun') {
                 elementBloomThreshold = 0.3;
-            } else if (this.geometryType === 'crystal' || this.geometryType === 'rough' || this.geometryType === 'heart') {
+            } else if (
+                this.geometryType === 'crystal' ||
+                this.geometryType === 'rough' ||
+                this.geometryType === 'heart'
+            ) {
                 elementBloomThreshold = 0.35;
             }
             this.elementSpawner.setElementBloomThreshold('water', elementBloomThreshold);
@@ -3539,7 +3732,11 @@ export class Core3DManager {
 
         // Moon: glowIntensity affects subtle emotion-colored glow (very subtle effect, * 0.02 in shader)
         // Unlike crystals, moon doesn't have a "core" that glows - it's a textured lit sphere
-        if ((this.customMaterialType === 'moon' || this.customMaterialType === 'moon-multiplexer') && this.customMaterial) {
+        if (
+            (this.customMaterialType === 'moon' ||
+                this.customMaterialType === 'moon-multiplexer') &&
+            this.customMaterial
+        ) {
             if (this.customMaterial.uniforms && this.customMaterial.uniforms.glowIntensity) {
                 this.customMaterial.uniforms.glowIntensity.value = effectiveGlowIntensity;
             }
@@ -3568,12 +3765,13 @@ export class Core3DManager {
                     const tColor = 1 - Math.pow(1 - this._colorTransitionProgress, 2);
 
                     // Lerp each channel
-                    const start = this._colorTransitionStart || this._normalizedGlowColor || [1, 1, 1];
+                    const start = this._colorTransitionStart ||
+                        this._normalizedGlowColor || [1, 1, 1];
                     const target = this._targetGlowColor;
                     this._normalizedGlowColor = [
                         start[0] + (target[0] - start[0]) * tColor,
                         start[1] + (target[1] - start[1]) * tColor,
-                        start[2] + (target[2] - start[2]) * tColor
+                        start[2] + (target[2] - start[2]) * tColor,
                     ];
                 }
 
@@ -3593,49 +3791,72 @@ export class Core3DManager {
 
                     // Lerp scalar values
                     if (u.sssStrength && start.sssStrength !== undefined) {
-                        u.sssStrength.value = start.sssStrength + (target.sssStrength - start.sssStrength) * sssT;
+                        u.sssStrength.value =
+                            start.sssStrength + (target.sssStrength - start.sssStrength) * sssT;
                     }
                     if (u.sssThicknessBias && start.sssThicknessBias !== undefined) {
-                        u.sssThicknessBias.value = start.sssThicknessBias + (target.sssThicknessBias - start.sssThicknessBias) * sssT;
+                        u.sssThicknessBias.value =
+                            start.sssThicknessBias +
+                            (target.sssThicknessBias - start.sssThicknessBias) * sssT;
                     }
                     if (u.sssThicknessScale && start.sssThicknessScale !== undefined) {
-                        u.sssThicknessScale.value = start.sssThicknessScale + (target.sssThicknessScale - start.sssThicknessScale) * sssT;
+                        u.sssThicknessScale.value =
+                            start.sssThicknessScale +
+                            (target.sssThicknessScale - start.sssThicknessScale) * sssT;
                     }
                     if (u.sssCurvatureScale && start.sssCurvatureScale !== undefined) {
-                        u.sssCurvatureScale.value = start.sssCurvatureScale + (target.sssCurvatureScale - start.sssCurvatureScale) * sssT;
+                        u.sssCurvatureScale.value =
+                            start.sssCurvatureScale +
+                            (target.sssCurvatureScale - start.sssCurvatureScale) * sssT;
                     }
                     if (u.sssAmbient && start.sssAmbient !== undefined) {
-                        u.sssAmbient.value = start.sssAmbient + (target.sssAmbient - start.sssAmbient) * sssT;
+                        u.sssAmbient.value =
+                            start.sssAmbient + (target.sssAmbient - start.sssAmbient) * sssT;
                     }
                     if (u.frostiness && start.frostiness !== undefined) {
-                        u.frostiness.value = start.frostiness + (target.frostiness - start.frostiness) * sssT;
+                        u.frostiness.value =
+                            start.frostiness + (target.frostiness - start.frostiness) * sssT;
                     }
                     if (u.innerGlowStrength && start.innerGlowStrength !== undefined) {
-                        u.innerGlowStrength.value = start.innerGlowStrength + (target.innerGlowStrength - start.innerGlowStrength) * sssT;
+                        u.innerGlowStrength.value =
+                            start.innerGlowStrength +
+                            (target.innerGlowStrength - start.innerGlowStrength) * sssT;
                     }
                     if (u.fresnelIntensity && start.fresnelIntensity !== undefined) {
-                        u.fresnelIntensity.value = start.fresnelIntensity + (target.fresnelIntensity - start.fresnelIntensity) * sssT;
+                        u.fresnelIntensity.value =
+                            start.fresnelIntensity +
+                            (target.fresnelIntensity - start.fresnelIntensity) * sssT;
                     }
                     if (u.causticIntensity && start.causticIntensity !== undefined) {
-                        u.causticIntensity.value = start.causticIntensity + (target.causticIntensity - start.causticIntensity) * sssT;
+                        u.causticIntensity.value =
+                            start.causticIntensity +
+                            (target.causticIntensity - start.causticIntensity) * sssT;
                     }
                     if (u.emotionColorBleed && start.emotionColorBleed !== undefined) {
-                        u.emotionColorBleed.value = start.emotionColorBleed + (target.emotionColorBleed - start.emotionColorBleed) * sssT;
+                        u.emotionColorBleed.value =
+                            start.emotionColorBleed +
+                            (target.emotionColorBleed - start.emotionColorBleed) * sssT;
                     }
 
                     // Lerp vector values (absorption, scatter distance)
                     if (u.sssAbsorption && start.sssAbsorption) {
                         u.sssAbsorption.value.set(
-                            start.sssAbsorption[0] + (target.sssAbsorption[0] - start.sssAbsorption[0]) * sssT,
-                            start.sssAbsorption[1] + (target.sssAbsorption[1] - start.sssAbsorption[1]) * sssT,
-                            start.sssAbsorption[2] + (target.sssAbsorption[2] - start.sssAbsorption[2]) * sssT
+                            start.sssAbsorption[0] +
+                                (target.sssAbsorption[0] - start.sssAbsorption[0]) * sssT,
+                            start.sssAbsorption[1] +
+                                (target.sssAbsorption[1] - start.sssAbsorption[1]) * sssT,
+                            start.sssAbsorption[2] +
+                                (target.sssAbsorption[2] - start.sssAbsorption[2]) * sssT
                         );
                     }
                     if (u.sssScatterDistance && start.sssScatterDistance) {
                         u.sssScatterDistance.value.set(
-                            start.sssScatterDistance[0] + (target.sssScatterDistance[0] - start.sssScatterDistance[0]) * sssT,
-                            start.sssScatterDistance[1] + (target.sssScatterDistance[1] - start.sssScatterDistance[1]) * sssT,
-                            start.sssScatterDistance[2] + (target.sssScatterDistance[2] - start.sssScatterDistance[2]) * sssT
+                            start.sssScatterDistance[0] +
+                                (target.sssScatterDistance[0] - start.sssScatterDistance[0]) * sssT,
+                            start.sssScatterDistance[1] +
+                                (target.sssScatterDistance[1] - start.sssScatterDistance[1]) * sssT,
+                            start.sssScatterDistance[2] +
+                                (target.sssScatterDistance[2] - start.sssScatterDistance[2]) * sssT
                         );
                     }
                 }
@@ -3646,11 +3867,15 @@ export class Core3DManager {
 
                 // Update emotion color on outer shell (luminance-normalized)
                 this.customMaterial.uniforms.emotionColor.value.setRGB(
-                    normalizedColor[0], normalizedColor[1], normalizedColor[2]
+                    normalizedColor[0],
+                    normalizedColor[1],
+                    normalizedColor[2]
                 );
                 // Update blink intensity for energy pulse (smooth sine curve during blink)
                 if (this.customMaterial.uniforms.blinkIntensity) {
-                    const blinkPulse = blinkState.isBlinking ? Math.sin(blinkState.progress * Math.PI) : 0;
+                    const blinkPulse = blinkState.isBlinking
+                        ? Math.sin(blinkState.progress * Math.PI)
+                        : 0;
                     this.customMaterial.uniforms.blinkIntensity.value = blinkPulse;
                 }
             }
@@ -3670,24 +3895,26 @@ export class Core3DManager {
             position: this.position,
             rotation: this.rotation,
             scale: finalScale,
-            nonUniformScale: finalNonUniformScale,  // [x, y, z] for squash/stretch, null for uniform
+            nonUniformScale: finalNonUniformScale, // [x, y, z] for squash/stretch, null for uniform
             glowColor: this.glowColor,
-            glowColorHex: this.glowColorHex,  // For bloom luminance normalization
+            glowColorHex: this.glowColorHex, // For bloom luminance normalization
             glowIntensity: effectiveGlowIntensity,
-            hasActiveGesture: this.animationManager.hasActiveAnimations(),  // Faster lerp during gestures
-            calibrationRotation: this.calibrationRotation,  // Applied on top of animated rotation
-            cameraRoll: this._cameraRoll || 0,  // Camera-relative roll for tidal-locked lean gestures
-            solarEclipse: this.effectManager.getSolarEclipse(),  // Pass eclipse manager for synchronized updates
-            deltaTime,  // Pass deltaTime for eclipse animation
-            morphProgress: morphState.isTransitioning ? morphState.visualProgress : null,  // For corona fade-in
+            hasActiveGesture: this.animationManager.hasActiveAnimations(), // Faster lerp during gestures
+            calibrationRotation: this.calibrationRotation, // Applied on top of animated rotation
+            cameraRoll: this._cameraRoll || 0, // Camera-relative roll for tidal-locked lean gestures
+            solarEclipse: this.effectManager.getSolarEclipse(), // Pass eclipse manager for synchronized updates
+            deltaTime, // Pass deltaTime for eclipse animation
+            morphProgress: morphState.isTransitioning ? morphState.visualProgress : null, // For corona fade-in
             // OPTIMIZATION FLAGS: Skip render passes when not needed
             hasSoul: this.customMaterialType === 'crystal' && this.crystalSoul !== null,
             // PERFORMANCE: Only run particle bloom if there are actual visible particles
             // This skips 13+ render passes when particles are enabled but idle
-            hasParticles: this.particleVisibility && this.particleOrchestrator !== null &&
+            hasParticles:
+                this.particleVisibility &&
+                this.particleOrchestrator !== null &&
                 this.particleOrchestrator.getParticleCount() > 0,
             // Shader-based localized vertex deformation for impacts
-            deformation: this._deformation
+            deformation: this._deformation,
         });
         profiler.end('threeRenderer');
 
@@ -3717,9 +3944,8 @@ export class Core3DManager {
                 glowIntensity: this.glowIntensity || 1.0,
                 materialVariant: this.materialVariant,
                 emotionData: getEmotion(this.emotion),
-                assetBasePath: this.assetBasePath
+                assetBasePath: this.assetBasePath,
             });
-
 
             // CRITICAL: Check if destroyed during async load (React Strict Mode can unmount during load)
             if (this._destroyed) {
@@ -3821,11 +4047,19 @@ export class Core3DManager {
             return;
         }
         scene.children.forEach((child, i) => {
-            const status = child === null ? 'NULL!' :
-                child === undefined ? 'UNDEFINED!' :
-                    child.visible === null ? 'visible=NULL!' :
-                        child.visible === undefined ? 'visible=UNDEF!' : 'OK';
-            console.warn(`  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0,8) || 'N/A'}`);
+            const status =
+                child === null
+                    ? 'NULL!'
+                    : child === undefined
+                      ? 'UNDEFINED!'
+                      : child.visible === null
+                        ? 'visible=NULL!'
+                        : child.visible === undefined
+                          ? 'visible=UNDEF!'
+                          : 'OK';
+            console.warn(
+                `  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0, 8) || 'N/A'}`
+            );
         });
     }
 
@@ -3835,7 +4069,6 @@ export class Core3DManager {
      * @returns {Promise<void>}
      */
     async _createCrystalInnerCoreAsync() {
-
         // Dispose existing soul if present
         if (this.crystalSoul) {
             this.crystalSoul.dispose();
@@ -3864,22 +4097,22 @@ export class Core3DManager {
             detail: 1,
             geometryType: this.geometryType,
             renderer: this.renderer,
-            assetBasePath: this.assetBasePath
+            assetBasePath: this.assetBasePath,
         });
 
         // Attach to coreMesh - this adds soul to the scene
         this.crystalSoul.attachTo(this.coreMesh, this.renderer?.scene);
 
         // Geometry-specific shell and soul sizes (permanent values)
-        let soulScale = 1.0;  // Default: full size (HUGE)
+        let soulScale = 1.0; // Default: full size (HUGE)
         if (this.geometryType === 'heart') {
             this.crystalShellBaseScale = 2.4;
-            soulScale = 1.0;  // Full size for heart
+            soulScale = 1.0; // Full size for heart
         } else if (this.geometryType === 'rough') {
             this.crystalShellBaseScale = 1.6;
-            soulScale = 1.0;  // Full size for rough
+            soulScale = 1.0; // Full size for rough
         } else if (this.geometryType === 'crystal') {
-            soulScale = 1.0;  // Full size for crystal
+            soulScale = 1.0; // Full size for crystal
         }
 
         this.crystalSoul.baseScale = soulScale;
@@ -3900,7 +4133,6 @@ export class Core3DManager {
      * @private
      */
     async _handleContextRestored() {
-
         if (this._destroyed || !this.coreMesh) {
             return;
         }
@@ -3913,7 +4145,7 @@ export class Core3DManager {
                 glowIntensity: this.glowIntensity || 1.0,
                 materialVariant: this.materialVariant,
                 emotionData,
-                assetBasePath: this.assetBasePath
+                assetBasePath: this.assetBasePath,
             });
 
             if (materialResult) {
@@ -4203,7 +4435,7 @@ export class Core3DManager {
             // Intense emotions → groove2 with strong beats
             angry: 'groove2',
             anxious: 'groove2',
-            determined: 'groove2'
+            determined: 'groove2',
         };
 
         return emotionGrooveMap[emotion] || 'groove1';
@@ -4229,7 +4461,9 @@ export class Core3DManager {
 
         const modeSignature = Array.isArray(spawnMode)
             ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`
-            : (typeof spawnMode === 'object' ? spawnMode.type : String(spawnMode));
+            : typeof spawnMode === 'object'
+              ? spawnMode.type
+              : String(spawnMode);
         const effectiveDuration = duration || overlay.duration;
         const spawnSignature = `${elementType}:${modeSignature}:${effectiveDuration}:${animation?.type || 'default'}`;
 
@@ -4248,7 +4482,7 @@ export class Core3DManager {
             count,
             scale,
             embedDepth,
-            gestureDuration: effectiveDuration || options.defaultDuration || 2000
+            gestureDuration: effectiveDuration || options.defaultDuration || 2000,
         });
         if (result?.catch) {
             result.catch(err => console.error(`[Core3DManager] ${elementType} spawn error:`, err));
@@ -4269,7 +4503,7 @@ export class Core3DManager {
             glowColor: this.glowColor || [1.0, 1.0, 0.95],
             glowIntensity: this.glowIntensity || 1.0,
             materialVariant: this.materialVariant,
-            emotionData: getEmotion(this.emotion)
+            emotionData: getEmotion(this.emotion),
         };
 
         await GeometryCache.preloadAll(options);

@@ -42,13 +42,13 @@ export function createBurstGesture(direction) {
             musicalDuration: { musical: true, beats: 1 },
             decay: 0.5,
             strength: 2.0,
-            spread: 0.3,      // How much spread perpendicular to direction
+            spread: 0.3, // How much spread perpendicular to direction
             direction,
             particleMotion: {
                 type: 'burst',
                 strength: 2.0,
-                direction
-            }
+                direction,
+            },
         },
 
         rhythm: {
@@ -60,14 +60,14 @@ export function createBurstGesture(direction) {
             strengthSync: {
                 onBeat: 3.5,
                 offBeat: 1.0,
-                curve: 'explosion'
+                curve: 'explosion',
             },
 
             accentResponse: {
                 enabled: true,
                 multiplier: 2.5,
-                type: 'strength'
-            }
+                type: 'strength',
+            },
         },
 
         apply(particle, progress, motion, dt, _centerX, _centerY) {
@@ -101,8 +101,12 @@ export function createBurstGesture(direction) {
                 // Phase 1: Explosive burst (0-0.15)
                 // Phase 2: Recoil (0.15-0.35)
                 // Phase 3: Settle (0.35-1.0)
-                let posX = 0, posY = 0, posZ = 0;
-                let scale = 1.0, glow = 1.0, glowBoost = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
+                let scale = 1.0,
+                    glow = 1.0,
+                    glowBoost = 0;
 
                 // Direction vectors for 3D
                 const dirVec = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] };
@@ -145,10 +149,10 @@ export function createBurstGesture(direction) {
                     rotation: [0, 0, 0],
                     scale,
                     glowIntensity: glow,
-                    glowBoost
+                    glowBoost,
                 };
-            }
-        }
+            },
+        },
     };
 }
 

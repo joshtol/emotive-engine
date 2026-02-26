@@ -8,18 +8,18 @@ export class EyeRenderer {
         this.renderer = renderer;
         this.ctx = renderer.ctx;
         this.canvas = renderer.canvas;
-        
+
         // Eye state
         this.blinking = false;
         this.blinkingEnabled = true;
         this.blinkTimer = 0;
         this.nextBlinkTime = this.getRandomBlinkTime();
-        
+
         // Eye parameters
         this.squintAmount = 0;
         this.eyeClose = null;
         this.eyeOpen = null;
-        
+
         // Helper method references
         this.scaleValue = value => renderer.scaleValue(value);
         this.hexToRgba = (hex, alpha) => renderer.hexToRgba(hex, alpha);
@@ -39,7 +39,7 @@ export class EyeRenderer {
                 this.nextBlinkTime = Date.now() + this.getRandomBlinkTime();
             }
         }
-        
+
         // Check for natural blink
         if (this.blinkingEnabled && !this.blinking && Date.now() >= this.nextBlinkTime) {
             this.startBlink();
@@ -69,7 +69,7 @@ export class EyeRenderer {
      */
     getBlinkScale() {
         if (!this.blinking) return 1;
-        
+
         const blinkProgress = Math.min(this.blinkTimer / 150, 1);
         const blinkCurve = Math.sin(blinkProgress * Math.PI);
         return 1 - blinkCurve * 0.7; // Squish vertically by 70%
@@ -84,57 +84,57 @@ export class EyeRenderer {
      * @param {Object} params - Eye parameters
      */
     drawEyes(x, y, radius, emotion, params = {}) {
-        const {ctx} = this;
-        
+        const { ctx } = this;
+
         // Get eye parameters
         const eyeOpenness = params.eyeOpenness || 1;
         const eyeExpression = params.eyeExpression || 'neutral';
-        
+
         // Don't draw eyes for certain states
         if (emotion === 'zen' || emotion === 'neutral' || eyeOpenness <= 0) {
             return;
         }
-        
+
         ctx.save();
-        
+
         // Eye color (slightly darker than core)
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.lineWidth = this.scaleValue(2);
         ctx.lineCap = 'round';
-        
+
         // Calculate eye positions
         const eyeSpacing = radius * 0.4;
         const eyeY = y - radius * 0.1;
         const eyeSize = radius * 0.25;
-        
+
         // Draw based on expression
         switch (eyeExpression) {
-        case 'happy':
-            this.drawHappyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        case 'sad':
-            this.drawSadEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        case 'angry':
-            this.drawAngryEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        case 'surprised':
-            this.drawSurprisedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        case 'focused':
-            this.drawFocusedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        case 'sleepy':
-            this.drawSleepyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        case 'suspicious':
-            this.drawSuspiciousEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
-            break;
-        default:
-            // No eyes for neutral
-            break;
+            case 'happy':
+                this.drawHappyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            case 'sad':
+                this.drawSadEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            case 'angry':
+                this.drawAngryEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            case 'surprised':
+                this.drawSurprisedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            case 'focused':
+                this.drawFocusedEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            case 'sleepy':
+                this.drawSleepyEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            case 'suspicious':
+                this.drawSuspiciousEyes(ctx, x, eyeY, eyeSpacing, eyeSize, eyeOpenness);
+                break;
+            default:
+                // No eyes for neutral
+                break;
         }
-        
+
         ctx.restore();
     }
 
@@ -146,7 +146,7 @@ export class EyeRenderer {
         ctx.beginPath();
         ctx.arc(x - spacing, y, size, Math.PI * 0.2, Math.PI * 0.8, false);
         ctx.stroke();
-        
+
         // Right eye
         ctx.beginPath();
         ctx.arc(x + spacing, y, size, Math.PI * 0.2, Math.PI * 0.8, false);
@@ -161,7 +161,7 @@ export class EyeRenderer {
         ctx.beginPath();
         ctx.arc(x - spacing, y + size * 0.5, size, Math.PI * 1.2, Math.PI * 1.8, false);
         ctx.stroke();
-        
+
         // Right eye
         ctx.beginPath();
         ctx.arc(x + spacing, y + size * 0.5, size, Math.PI * 1.2, Math.PI * 1.8, false);
@@ -177,7 +177,7 @@ export class EyeRenderer {
         ctx.moveTo(x - spacing - size, y - size * 0.3);
         ctx.lineTo(x - spacing + size * 0.5, y + size * 0.3);
         ctx.stroke();
-        
+
         // Right eye
         ctx.beginPath();
         ctx.moveTo(x + spacing + size, y - size * 0.3);
@@ -193,7 +193,7 @@ export class EyeRenderer {
         ctx.beginPath();
         ctx.arc(x - spacing, y, size * 1.2, 0, Math.PI * 2);
         ctx.stroke();
-        
+
         // Right eye
         ctx.beginPath();
         ctx.arc(x + spacing, y, size * 1.2, 0, Math.PI * 2);
@@ -205,12 +205,12 @@ export class EyeRenderer {
      */
     drawFocusedEyes(ctx, x, y, spacing, size, _openness) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        
+
         // Left eye
         ctx.beginPath();
         ctx.arc(x - spacing, y, size * 0.3, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Right eye
         ctx.beginPath();
         ctx.arc(x + spacing, y, size * 0.3, 0, Math.PI * 2);
@@ -226,7 +226,7 @@ export class EyeRenderer {
         ctx.moveTo(x - spacing - size, y);
         ctx.lineTo(x - spacing + size, y);
         ctx.stroke();
-        
+
         // Right eye
         ctx.beginPath();
         ctx.moveTo(x + spacing - size, y);
@@ -243,7 +243,7 @@ export class EyeRenderer {
         ctx.moveTo(x - spacing - size, y);
         ctx.lineTo(x - spacing + size * 0.7, y);
         ctx.stroke();
-        
+
         // Right eye - more open
         ctx.beginPath();
         ctx.arc(x + spacing, y, size * 0.8, Math.PI * 0.1, Math.PI * 0.9, false);

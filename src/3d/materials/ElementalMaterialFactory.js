@@ -45,35 +45,35 @@ import {
     createFireMaterial,
     updateFireMaterial,
     getFirePhysics,
-    getFireCrackStyle
+    getFireCrackStyle,
 } from './overlays/FireMaterial.js';
 
 import {
     createWaterMaterial,
     updateWaterMaterial,
     getWaterPhysics,
-    getWaterCrackStyle
+    getWaterCrackStyle,
 } from './overlays/WaterMaterial.js';
 
 import {
     createIceMaterial,
     updateIceMaterial,
     getIcePhysics,
-    getIceCrackStyle
+    getIceCrackStyle,
 } from './overlays/IceMaterial.js';
 
 import {
     createElectricMaterial,
     updateElectricMaterial,
     getElectricPhysics,
-    getElectricCrackStyle
+    getElectricCrackStyle,
 } from './overlays/ElectricMaterial.js';
 
 import {
     createVoidMaterial,
     updateVoidMaterial,
     getVoidPhysics,
-    getVoidCrackStyle
+    getVoidCrackStyle,
 } from './overlays/VoidMaterial.js';
 
 /**
@@ -86,36 +86,36 @@ const ELEMENTAL_REGISTRY = {
         update: updateFireMaterial,
         physics: getFirePhysics,
         crack: getFireCrackStyle,
-        masterParam: 'temperature'
+        masterParam: 'temperature',
     },
     water: {
         create: createWaterMaterial,
         update: updateWaterMaterial,
         physics: getWaterPhysics,
         crack: getWaterCrackStyle,
-        masterParam: 'viscosity'
+        masterParam: 'viscosity',
     },
     ice: {
         create: createIceMaterial,
         update: updateIceMaterial,
         physics: getIcePhysics,
         crack: getIceCrackStyle,
-        masterParam: 'melt'
+        masterParam: 'melt',
     },
     electric: {
         create: createElectricMaterial,
         update: updateElectricMaterial,
         physics: getElectricPhysics,
         crack: getElectricCrackStyle,
-        masterParam: 'charge'
+        masterParam: 'charge',
     },
     void: {
         create: createVoidMaterial,
         update: updateVoidMaterial,
         physics: getVoidPhysics,
         crack: getVoidCrackStyle,
-        masterParam: 'depth'
-    }
+        masterParam: 'depth',
+    },
 };
 
 /**
@@ -126,7 +126,7 @@ const DEFAULT_CRACK_STYLE = {
     color: 0x442211,
     emissive: 0.3,
     animated: false,
-    pattern: 'organic'
+    pattern: 'organic',
 };
 
 /**
@@ -137,7 +137,7 @@ const DEFAULT_PHYSICS = {
     gravity: 1.0,
     bounce: 0.3,
     drag: 0.02,
-    lifetime: 3.0
+    lifetime: 3.0,
 };
 
 /**
@@ -149,7 +149,6 @@ const DEFAULT_PHYSICS = {
  * @returns {THREE.ShaderMaterial|null} The created material, or null if element unknown
  */
 export function createElementalMaterial(element, masterParam = 0.5, options = {}) {
-
     const registry = ELEMENTAL_REGISTRY[element];
     if (!registry) {
         console.warn(`ElementalMaterialFactory: Unknown element type '${element}'`);
@@ -159,12 +158,10 @@ export function createElementalMaterial(element, masterParam = 0.5, options = {}
     // Build options with master parameter
     const materialOptions = {
         [registry.masterParam]: masterParam,
-        ...options
+        ...options,
     };
 
-
     const material = registry.create(materialOptions);
-
 
     return material;
 }
@@ -262,7 +259,7 @@ export function getElementalConfig(element, masterParam = 0.5, materialOptions =
         masterParam,
         material: createElementalMaterial(element, masterParam, materialOptions),
         physics: getElementalPhysics(element, masterParam),
-        crackStyle: getElementalCrackStyle(element, masterParam)
+        crackStyle: getElementalCrackStyle(element, masterParam),
     };
 }
 
@@ -318,5 +315,5 @@ export default {
     getSupportedElements,
     isElementSupported,
     getElementalConfig,
-    applyCrackStyleToManager
+    applyCrackStyleToManager,
 };

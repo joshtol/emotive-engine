@@ -29,7 +29,11 @@ export class TimerCoordinator {
      */
     updateBreathing(deltaTime) {
         // Update breathing animation via BreathingAnimator
-        this.renderer.breathingAnimator.update(deltaTime, this.renderer.state.emotion, this.renderer.currentUndertone);
+        this.renderer.breathingAnimator.update(
+            deltaTime,
+            this.renderer.state.emotion,
+            this.renderer.currentUndertone
+        );
 
         // Apply special breathing modifiers based on emotion
         if (this.renderer.state.emotion === 'zen') {
@@ -74,9 +78,10 @@ export class TimerCoordinator {
      */
     updateBlinking(deltaTime) {
         // Update blinking via EyeRenderer
-        const blinkingEnabled = this.renderer.state.blinkingEnabled &&
-                               !this.renderer.state.sleeping &&
-                               this.renderer.state.emotion !== 'zen';
+        const blinkingEnabled =
+            this.renderer.state.blinkingEnabled &&
+            !this.renderer.state.sleeping &&
+            this.renderer.state.emotion !== 'zen';
 
         this.renderer.eyeRenderer.setBlinkingEnabled(blinkingEnabled);
         this.renderer.eyeRenderer.update(deltaTime);

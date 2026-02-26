@@ -48,7 +48,7 @@ import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js'
 // SHARED VERTEX SHADER
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const FULLSCREEN_VERTEX = /* glsl */`
+const FULLSCREEN_VERTEX = /* glsl */ `
 varying vec2 vUv;
 void main() {
     vUv = uv;
@@ -60,7 +60,7 @@ void main() {
 // COPY SHADER — simple blit from readBuffer to writeBuffer
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const COPY_FRAGMENT = /* glsl */`
+const COPY_FRAGMENT = /* glsl */ `
 uniform sampler2D tDiffuse;
 varying vec2 vUv;
 void main() {
@@ -72,7 +72,7 @@ void main() {
 // AO SHADER — multi-scale depth comparison with normal-aware hemisphere
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const AO_FRAGMENT = /* glsl */`
+const AO_FRAGMENT = /* glsl */ `
 #define GOLDEN_ANGLE 2.39996323
 
 uniform sampler2D tDepth;
@@ -242,7 +242,7 @@ void main() {
 // BILATERAL BLUR — edge-preserving smooth using depth comparison
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const BLUR_FRAGMENT = /* glsl */`
+const BLUR_FRAGMENT = /* glsl */ `
 uniform sampler2D tAO;
 uniform sampler2D tDepth;
 uniform vec2 aoResolution;
@@ -293,7 +293,7 @@ void main() {
 // COMPOSITE — samples blurred AO, multiply-blended onto scene
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const COMPOSITE_FRAGMENT = /* glsl */`
+const COMPOSITE_FRAGMENT = /* glsl */ `
 uniform sampler2D tAO;
 varying vec2 vUv;
 void main() {
@@ -311,7 +311,6 @@ void main() {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 class AmbientOcclusionPass extends Pass {
-
     constructor(camera, width, height) {
         super();
         this.camera = camera;
@@ -349,9 +348,9 @@ class AmbientOcclusionPass extends Pass {
         // ── Internal half-resolution render targets ──
         const halfOpts = {
             format: THREE.RGBAFormat,
-            type: THREE.HalfFloatType,     // 16-bit — eliminates shadow banding from 8-bit quantization
+            type: THREE.HalfFloatType, // 16-bit — eliminates shadow banding from 8-bit quantization
             minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter
+            magFilter: THREE.LinearFilter,
         };
         this.aoTarget = new THREE.WebGLRenderTarget(this._halfWidth, this._halfHeight, halfOpts);
         this.blurTarget = new THREE.WebGLRenderTarget(this._halfWidth, this._halfHeight, halfOpts);
@@ -368,8 +367,11 @@ class AmbientOcclusionPass extends Pass {
             noiseData[stride + 3] = 1;
         }
         this.noiseTexture = new THREE.DataTexture(
-            noiseData, noiseSize, noiseSize,
-            THREE.RGBAFormat, THREE.FloatType
+            noiseData,
+            noiseSize,
+            noiseSize,
+            THREE.RGBAFormat,
+            THREE.FloatType
         );
         this.noiseTexture.minFilter = THREE.NearestFilter;
         this.noiseTexture.magFilter = THREE.NearestFilter;
@@ -380,13 +382,13 @@ class AmbientOcclusionPass extends Pass {
         // ── Copy material (simple blit) ──
         this.copyMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                tDiffuse: { value: null }
+                tDiffuse: { value: null },
             },
             vertexShader: FULLSCREEN_VERTEX,
             fragmentShader: COPY_FRAGMENT,
             blending: THREE.NoBlending,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
         });
 
         // ── AO material (renders to internal half-res target, NoBlending) ──
@@ -405,13 +407,13 @@ class AmbientOcclusionPass extends Pass {
                 uFineFalloff: { value: this.fineFalloff },
                 uCoarseFalloff: { value: this.coarseFalloff },
                 uLightDirView: { value: new THREE.Vector3() },
-                uShadowIntensity: { value: this.shadowIntensity }
+                uShadowIntensity: { value: this.shadowIntensity },
             },
             vertexShader: FULLSCREEN_VERTEX,
             fragmentShader: AO_FRAGMENT,
             blending: THREE.NoBlending,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
         });
 
         // ── Blur material (bilateral edge-preserving) ──
@@ -421,19 +423,19 @@ class AmbientOcclusionPass extends Pass {
                 tDepth: { value: null },
                 aoResolution: { value: new THREE.Vector2(this._halfWidth, this._halfHeight) },
                 cameraNear: { value: camera.near },
-                cameraFar: { value: camera.far }
+                cameraFar: { value: camera.far },
             },
             vertexShader: FULLSCREEN_VERTEX,
             fragmentShader: BLUR_FRAGMENT,
             blending: THREE.NoBlending,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
         });
 
         // ── Composite material (multiply blurred AO onto scene) ──
         this.compositeMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                tAO: { value: null }
+                tAO: { value: null },
             },
             vertexShader: FULLSCREEN_VERTEX,
             fragmentShader: COMPOSITE_FRAGMENT,
@@ -443,7 +445,7 @@ class AmbientOcclusionPass extends Pass {
             blendSrcAlpha: THREE.ZeroFactor,
             blendDstAlpha: THREE.OneFactor,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
         });
 
         this._fsQuad = new FullScreenQuad(null);
@@ -451,7 +453,7 @@ class AmbientOcclusionPass extends Pass {
     }
 
     render(renderer, writeBuffer, readBuffer) {
-        const {depthTexture} = readBuffer;
+        const { depthTexture } = readBuffer;
         if (!depthTexture) {
             console.warn('[AO] No depth texture on readBuffer — skipping');
             return;
@@ -459,7 +461,7 @@ class AmbientOcclusionPass extends Pass {
 
         // Update camera-dependent uniforms
         const cam = this.camera;
-        const fovY = cam.fov * Math.PI / 180;
+        const fovY = (cam.fov * Math.PI) / 180;
         const tanHalfFov = Math.tan(fovY * 0.5);
 
         const aoU = this.aoMaterial.uniforms;

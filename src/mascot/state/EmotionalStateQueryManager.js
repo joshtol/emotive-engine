@@ -48,8 +48,10 @@ export class EmotionalStateQueryManager {
      */
     constructor(deps) {
         // Required dependency validation
-        if (!deps.errorBoundary) throw new Error('EmotionalStateQueryManager: errorBoundary required');
-        if (!deps.stateMachine) throw new Error('EmotionalStateQueryManager: stateMachine required');
+        if (!deps.errorBoundary)
+            throw new Error('EmotionalStateQueryManager: errorBoundary required');
+        if (!deps.stateMachine)
+            throw new Error('EmotionalStateQueryManager: stateMachine required');
 
         this.errorBoundary = deps.errorBoundary;
         this.stateMachine = deps.stateMachine;
@@ -119,11 +121,30 @@ export class EmotionalStateQueryManager {
      */
     getAvailableGestures() {
         return [
-            'bounce', 'pulse', 'shake', 'spin', 'drift',
-            'nod', 'tilt', 'expand', 'contract', 'flash',
-            'stretch', 'glow', 'flicker', 'vibrate', 'wave',
-            'morph', 'slowBlink', 'look', 'settle',
-            'breathIn', 'breathOut', 'breathHold', 'breathHoldEmpty', 'jump'
+            'bounce',
+            'pulse',
+            'shake',
+            'spin',
+            'drift',
+            'nod',
+            'tilt',
+            'expand',
+            'contract',
+            'flash',
+            'stretch',
+            'glow',
+            'flicker',
+            'vibrate',
+            'wave',
+            'morph',
+            'slowBlink',
+            'look',
+            'settle',
+            'breathIn',
+            'breathOut',
+            'breathHold',
+            'breathHoldEmpty',
+            'jump',
         ];
     }
 
@@ -136,12 +157,16 @@ export class EmotionalStateQueryManager {
      * console.log('Available:', performances); // ['celebration', 'thinking', ...]
      */
     getAvailablePerformances() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.performanceSystem) {
-                return [];
-            }
-            return this.performanceSystem.getAllPerformanceNames();
-        }, 'available-performances', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.performanceSystem) {
+                    return [];
+                }
+                return this.performanceSystem.getAllPerformanceNames();
+            },
+            'available-performances',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -166,12 +191,16 @@ export class EmotionalStateQueryManager {
      * console.log('Urgency:', context.urgency);
      */
     getContext() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                return null;
-            }
-            return this.contextManager.getContext();
-        }, 'context-get', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.contextManager) {
+                    return null;
+                }
+                return this.contextManager.getContext();
+            },
+            'context-get',
+            this._chainTarget
+        )();
     }
 
     /**
@@ -184,11 +213,15 @@ export class EmotionalStateQueryManager {
      * console.log('Peak urgency:', analytics.peakUrgency);
      */
     getContextAnalytics() {
-        return this.errorBoundary.wrap(() => {
-            if (!this.contextManager) {
-                return null;
-            }
-            return this.contextManager.getAnalytics();
-        }, 'context-analytics', this._chainTarget)();
+        return this.errorBoundary.wrap(
+            () => {
+                if (!this.contextManager) {
+                    return null;
+                }
+                return this.contextManager.getAnalytics();
+            },
+            'context-analytics',
+            this._chainTarget
+        )();
     }
 }

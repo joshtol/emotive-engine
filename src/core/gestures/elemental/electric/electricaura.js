@@ -37,7 +37,7 @@ const ELECTRICAURA_CONFIG = {
             endScale: 1.3,
             startDiameter: 1.6,
             endDiameter: 2.2,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: {
             type: 'spiral',
@@ -45,7 +45,7 @@ const ELECTRICAURA_CONFIG = {
             strands: 1,
             spacing: 0.15,
             arcOffset: 120,
-            phaseOffset: 0.05
+            phaseOffset: 0.05,
         },
         count: 3,
         scale: 2.0,
@@ -66,10 +66,12 @@ const ELECTRICAURA_CONFIG = {
                 blend: 'multiply',
                 travel: 'angular',
                 travelSpeed: 0.6,
-                strengthCurve: 'constant'
+                strengthCurve: 'constant',
             },
             grain: { type: 3, strength: 0.08, scale: 0.4, speed: 1.0, blend: 'multiply' },
-            atmospherics: [{ preset: 'ozone', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' }],
+            atmospherics: [
+                { preset: 'ozone', intensity: 0.2, sizeScale: 0.6, progressCurve: 'sustain' },
+            ],
             rotate: { axis: 'y', rotations: 0.5, phase: 0 },
             scaleVariance: 0.15,
             lifetimeVariance: 0.1,
@@ -79,15 +81,15 @@ const ELECTRICAURA_CONFIG = {
                 'plasma-ring': {
                     scaleMultiplier: 1.1,
                     shaderAnimation: { type: 1, arcWidth: 0.7, arcSpeed: 0.5, arcCount: 1 },
-                    orientationOverride: 'camera'
+                    orientationOverride: 'camera',
                 },
                 'arc-ring-small': {
                     scaleMultiplier: 0.9,
                     shaderAnimation: { type: 1, arcWidth: 0.6, arcSpeed: 0.8, arcCount: 2 },
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     },
 
     jitterFrequency: 0,
@@ -102,7 +104,7 @@ const ELECTRICAURA_CONFIG = {
     scalePulse: true,
     rotationDrift: 0.02,
     hover: true,
-    hoverAmount: 0.01
+    hoverAmount: 0.01,
 };
 
 export default buildElectricEffectGesture(ELECTRICAURA_CONFIG);

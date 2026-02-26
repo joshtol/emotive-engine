@@ -45,7 +45,7 @@ const ELECTRICSURGE_CONFIG = {
             endScale: 2.5,
             startDiameter: 0.5,
             endDiameter: 3.0,
-            orientation: 'camera'
+            orientation: 'camera',
         },
         formation: { type: 'stack', count: 1, spacing: 0 },
         count: 1,
@@ -68,19 +68,21 @@ const ELECTRICSURGE_CONFIG = {
                 trailDissolve: {
                     enabled: true,
                     offset: -0.3,
-                    softness: 1.5
-                }
+                    softness: 1.5,
+                },
             },
             grain: { type: 3, strength: 0.15, scale: 0.35, speed: 2.0, blend: 'multiply' },
             // Per-gesture atmospheric particles: ionized air from surge
-            atmospherics: [{
-                preset: 'ozone',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.2,
-                sizeScale: 1.2,
-                progressCurve: 'rampUp',
-            }],
+            atmospherics: [
+                {
+                    preset: 'ozone',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.2,
+                    sizeScale: 1.2,
+                    progressCurve: 'rampUp',
+                },
+            ],
             pulse: { amplitude: 0.08, frequency: 3, easing: 'easeInOut' },
             emissive: { min: 0.8, max: 2.0, frequency: 4, pattern: 'sine' },
             blending: 'additive',
@@ -88,10 +90,10 @@ const ELECTRICSURGE_CONFIG = {
             modelOverrides: {
                 'plasma-ring': {
                     shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0.3, arcCount: 1 },
-                    orientationOverride: 'camera'
-                }
-            }
-        }
+                    orientationOverride: 'camera',
+                },
+            },
+        },
     },
 
     jitterFrequency: 0,
@@ -104,7 +106,7 @@ const ELECTRICSURGE_CONFIG = {
     scaleVibration: 0.01,
     scaleFrequency: 2,
     scalePulse: true,
-    rotationDrift: 0.01
+    rotationDrift: 0.01,
 };
 
 export default buildElectricEffectGesture(ELECTRICSURGE_CONFIG);

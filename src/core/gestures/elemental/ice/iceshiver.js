@@ -64,51 +64,53 @@ const ICESHIVER_CONFIG = {
             enter: {
                 type: 'scale',
                 duration: 0.12,
-                easing: 'easeOutBack'
+                easing: 'easeOutBack',
             },
             exit: {
                 type: 'fade',
                 duration: 0.2,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 frost: {
                     start: 0.2,
                     peak: 0.6,
                     end: 0.3,
-                    curve: 'bell'
-                }
+                    curve: 'bell',
+                },
             },
             pulse: {
                 amplitude: 0.12,
                 frequency: 6,
-                easing: 'easeInOut'
+                easing: 'easeInOut',
             },
             emissive: {
                 min: 0.8,
                 max: 1.8,
                 frequency: 8,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             // Per-gesture atmospheric particles: cold mist from shivering
-            atmospherics: [{
-                preset: 'mist',
-                targets: null,
-                anchor: 'below',
-                intensity: 0.3,
-                sizeScale: 1.0,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'mist',
+                    targets: null,
+                    anchor: 'below',
+                    intensity: 0.3,
+                    sizeScale: 1.0,
+                    progressCurve: 'sustain',
+                },
+            ],
             scaleVariance: 0.35,
             lifetimeVariance: 0.25,
             delayVariance: 0.1,
             blending: 'normal',
-            renderOrder: 10
-        }
+            renderOrder: 10,
+        },
     },
 
     // Shiver - rapid tremor
@@ -125,7 +127,7 @@ const ICESHIVER_CONFIG = {
     scaleContract: 0.02,
     // Tremor
     tremor: 0.012,
-    tremorFrequency: 14
+    tremorFrequency: 14,
 };
 
 /**

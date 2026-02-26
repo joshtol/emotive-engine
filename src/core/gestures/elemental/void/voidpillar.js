@@ -34,37 +34,39 @@ const SHARED_ANIMATION = {
     enter: {
         type: 'scale',
         duration: 0.2,
-        easing: 'easeOut'
+        easing: 'easeOut',
     },
     exit: {
         type: 'fade',
         duration: 0.3,
-        easing: 'easeIn'
+        easing: 'easeIn',
     },
     procedural: {
         scaleSmoothing: 0.1,
-        geometryStability: true
+        geometryStability: true,
     },
     pulse: {
         amplitude: 0.05,
         frequency: 3,
-        easing: 'easeInOut'
+        easing: 'easeInOut',
     },
     emissive: {
         min: 0.3,
         max: 0.7,
         frequency: 4,
-        pattern: 'sine'
+        pattern: 'sine',
     },
-    atmospherics: [{
-        preset: 'darkness',
-        targets: ['void-wrap'],
-        anchor: 'above',
-        intensity: 0.6,
-        sizeScale: 1.4,
-        progressCurve: 'sustain',
-        velocityInheritance: 0.5,
-    }],
+    atmospherics: [
+        {
+            preset: 'darkness',
+            targets: ['void-wrap'],
+            anchor: 'above',
+            intensity: 0.6,
+            sizeScale: 1.4,
+            progressCurve: 'sustain',
+            velocityInheritance: 0.5,
+        },
+    ],
     scaleVariance: 0.03,
     lifetimeVariance: 0.02,
     blending: 'normal',
@@ -72,14 +74,14 @@ const SHARED_ANIMATION = {
     modelOverrides: {
         'void-wrap': {
             shaderAnimation: {
-                type: 1,            // ROTATING_ARC
+                type: 1, // ROTATING_ARC
                 arcWidth: 0.5,
-                arcSpeed: 1.0,      // Stately column
-                arcCount: 2
+                arcSpeed: 1.0, // Stately column
+                arcCount: 2,
             },
-            orientationOverride: 'flat'
-        }
-    }
+            orientationOverride: 'flat',
+        },
+    },
 };
 
 const VOIDPILLAR_CONFIG = {
@@ -111,13 +113,13 @@ const VOIDPILLAR_CONFIG = {
                 endScale: 1.3,
                 startDiameter: 1.2,
                 endDiameter: 2.2,
-                orientation: 'flat',    // void-wrap XY plane → 'flat' rotates to horizontal
-                startOffset: 0
+                orientation: 'flat', // void-wrap XY plane → 'flat' rotates to horizontal
+                startOffset: 0,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 2.2,
@@ -127,8 +129,8 @@ const VOIDPILLAR_CONFIG = {
                 stagger: 0.03,
                 cutout: {
                     strength: 0.4,
-                    primary: { pattern: 4, scale: 2.0, weight: 1.0 },    // WAVES
-                    secondary: { pattern: 7, scale: 1.5, weight: 0.4 },  // DISSOLVE
+                    primary: { pattern: 4, scale: 2.0, weight: 1.0 }, // WAVES
+                    secondary: { pattern: 7, scale: 1.5, weight: 0.4 }, // DISSOLVE
                     blend: 'add',
                     travel: 'angular',
                     travelSpeed: 1.2,
@@ -137,19 +139,19 @@ const VOIDPILLAR_CONFIG = {
                     geometricMask: {
                         type: 'distance',
                         core: 0.1,
-                        tip: 0.25
+                        tip: 0.25,
                     },
                     trailDissolve: {
                         enabled: true,
                         offset: -0.5,
-                        softness: 1.2
-                    }
+                        softness: 1.2,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.3, phase: 0 },
-                    { axis: 'z', rotations: 0.3, phase: 180 }
-                ]
-            }
+                    { axis: 'z', rotations: 0.3, phase: 180 },
+                ],
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -166,13 +168,13 @@ const VOIDPILLAR_CONFIG = {
                 endScale: 1.3,
                 startDiameter: 1.2,
                 endDiameter: 2.2,
-                orientation: 'flat',    // void-wrap XY plane → 'flat' rotates to horizontal
-                startOffset: 0.5
+                orientation: 'flat', // void-wrap XY plane → 'flat' rotates to horizontal
+                startOffset: 0.5,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 2.2,
@@ -182,8 +184,8 @@ const VOIDPILLAR_CONFIG = {
                 stagger: 0.05,
                 cutout: {
                     strength: 0.45,
-                    primary: { pattern: 7, scale: 1.8, weight: 1.0 },    // DISSOLVE
-                    secondary: { pattern: 3, scale: 1.5, weight: 0.5 },  // VORONOI
+                    primary: { pattern: 7, scale: 1.8, weight: 1.0 }, // DISSOLVE
+                    secondary: { pattern: 3, scale: 1.5, weight: 0.5 }, // VORONOI
                     blend: 'multiply',
                     travel: 'radial',
                     travelSpeed: 1.8,
@@ -193,19 +195,19 @@ const VOIDPILLAR_CONFIG = {
                     geometricMask: {
                         type: 'tip-boost',
                         core: 0.0,
-                        tip: 0.2
+                        tip: 0.2,
                     },
                     trailDissolve: {
                         enabled: true,
                         offset: -0.4,
-                        softness: 1.5
-                    }
+                        softness: 1.5,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: -0.6, phase: 60 },
-                    { axis: 'z', rotations: -0.6, phase: 240 }
-                ]
-            }
+                    { axis: 'z', rotations: -0.6, phase: 240 },
+                ],
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════════════
@@ -222,13 +224,13 @@ const VOIDPILLAR_CONFIG = {
                 endScale: 1.3,
                 startDiameter: 1.2,
                 endDiameter: 2.2,
-                orientation: 'flat',    // void-wrap XY plane → 'flat' rotates to horizontal
-                startOffset: 1.0
+                orientation: 'flat', // void-wrap XY plane → 'flat' rotates to horizontal
+                startOffset: 1.0,
             },
             formation: {
                 type: 'stack',
                 count: 2,
-                spacing: 0.25
+                spacing: 0.25,
             },
             count: 2,
             scale: 2.2,
@@ -238,8 +240,8 @@ const VOIDPILLAR_CONFIG = {
                 stagger: 0.07,
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 6, scale: 1.5, weight: 1.0 },    // SPIRAL
-                    secondary: { pattern: 3, scale: 2.0, weight: 0.4 },  // VORONOI
+                    primary: { pattern: 6, scale: 1.5, weight: 1.0 }, // SPIRAL
+                    secondary: { pattern: 3, scale: 2.0, weight: 0.4 }, // VORONOI
                     blend: 'add',
                     travel: 'oscillate',
                     travelSpeed: 2.5,
@@ -248,20 +250,20 @@ const VOIDPILLAR_CONFIG = {
                     geometricMask: {
                         type: 'distance',
                         core: 0.15,
-                        tip: 0.3
+                        tip: 0.3,
                     },
                     trailDissolve: {
                         enabled: true,
                         offset: -0.3,
-                        softness: 1.8
-                    }
+                        softness: 1.8,
+                    },
                 },
                 rotate: [
                     { axis: 'z', rotations: 0.9, phase: 90 },
-                    { axis: 'z', rotations: 0.9, phase: 270 }
-                ]
-            }
-        }
+                    { axis: 'z', rotations: 0.9, phase: 270 },
+                ],
+            },
+        },
     ],
 
     jitterAmount: 0,
@@ -275,7 +277,7 @@ const VOIDPILLAR_CONFIG = {
     scaleVibration: 0.008,
     scaleFrequency: 2,
     scalePulse: true,
-    rotationDrift: 0.005
+    rotationDrift: 0.005,
 };
 
 export default buildVoidEffectGesture(VOIDPILLAR_CONFIG);

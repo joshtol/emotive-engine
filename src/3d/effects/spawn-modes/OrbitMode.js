@@ -60,8 +60,8 @@ export function parseOrbitConfig(config, resolveLandmark) {
         plane: orbit.plane || 'horizontal',
 
         // Dynamic orbital motion
-        speed: orbit.speed ?? 0,             // Revolutions during gesture (0 = static)
-        easing: orbit.easing || 'linear',    // Easing for orbital travel
+        speed: orbit.speed ?? 0, // Revolutions during gesture (0 = static)
+        easing: orbit.easing || 'linear', // Easing for orbital travel
 
         // Scale interpolation over lifetime
         startScale: orbit.startScale ?? config.scale ?? 1.0,
@@ -91,8 +91,8 @@ export function parseOrbitFormation(formation) {
     return {
         type: formation.type || 'ring',
         count: formation.count || 4,
-        pairSpacing: (formation.pairSpacing || 180) * Math.PI / 180, // Convert to radians
-        startAngle: (formation.startAngle || 0) * Math.PI / 180,
+        pairSpacing: ((formation.pairSpacing || 180) * Math.PI) / 180, // Convert to radians
+        startAngle: ((formation.startAngle || 0) * Math.PI) / 180,
     };
 }
 
@@ -109,38 +109,40 @@ export function expandOrbitFormation(parsedConfig) {
     for (let i = 0; i < actualCount; i++) {
         const elem = {
             index: i,
-            angle: 0,           // Angle around orbit circle
-            heightOffset: 0,    // Additional height offset
-            rotationOffset: 0,  // Per-element rotation (for counter-rotating pairs)
+            angle: 0, // Angle around orbit circle
+            heightOffset: 0, // Additional height offset
+            rotationOffset: 0, // Per-element rotation (for counter-rotating pairs)
         };
 
         const formationType = formation?.type || 'ring';
 
         switch (formationType) {
-        case 'ring':
-            // Even distribution around circle
-            elem.angle = (i / actualCount) * Math.PI * 2 + (formation?.startAngle || 0);
-            break;
+            case 'ring':
+                // Even distribution around circle
+                elem.angle = (i / actualCount) * Math.PI * 2 + (formation?.startAngle || 0);
+                break;
 
-        case 'pairs': {
-            // Pairs positioned opposite each other
-            // Elements 0,2 on one side, 1,3 on opposite
-            const pairIndex = Math.floor(i / 2);
-            const isSecondInPair = i % 2 === 1;
-            const baseAngle = (pairIndex / Math.ceil(actualCount / 2)) * Math.PI * 2;
-            elem.angle = isSecondInPair ? baseAngle + (formation?.pairSpacing || Math.PI) : baseAngle;
-            break;
-        }
+            case 'pairs': {
+                // Pairs positioned opposite each other
+                // Elements 0,2 on one side, 1,3 on opposite
+                const pairIndex = Math.floor(i / 2);
+                const isSecondInPair = i % 2 === 1;
+                const baseAngle = (pairIndex / Math.ceil(actualCount / 2)) * Math.PI * 2;
+                elem.angle = isSecondInPair
+                    ? baseAngle + (formation?.pairSpacing || Math.PI)
+                    : baseAngle;
+                break;
+            }
 
-        case 'cluster': {
-            // Clustered within a portion of the circle
-            const clusterArc = Math.PI / 2; // 90 degree cluster
-            elem.angle = (i / actualCount) * clusterArc + (formation?.startAngle || 0);
-            break;
-        }
+            case 'cluster': {
+                // Clustered within a portion of the circle
+                const clusterArc = Math.PI / 2; // 90 degree cluster
+                elem.angle = (i / actualCount) * clusterArc + (formation?.startAngle || 0);
+                break;
+            }
 
-        default:
-            elem.angle = (i / actualCount) * Math.PI * 2;
+            default:
+                elem.angle = (i / actualCount) * Math.PI * 2;
         }
 
         elements.push(elem);
@@ -158,14 +160,21 @@ export function expandOrbitFormation(parsedConfig) {
  * @param {Function} [easingFn] - Optional easing function for progress
  * @returns {{ x: number, y: number, z: number, angle: number, scale: number }}
  */
-export function calculateOrbitPosition(orbitConfig, formationData, gestureProgress, mascotRadius = 1, easingFn = null) {
-    const {angle} = formationData;
+export function calculateOrbitPosition(
+    orbitConfig,
+    formationData,
+    gestureProgress,
+    mascotRadius = 1,
+    easingFn = null
+) {
+    const { angle } = formationData;
 
     // Apply easing to progress for radius/height interpolation
     const t = easingFn ? easingFn(gestureProgress) : gestureProgress;
 
     // Interpolate radius and height over gesture lifetime
-    const radius = (orbitConfig.radius + (orbitConfig.endRadius - orbitConfig.radius) * t) * mascotRadius;
+    const radius =
+        (orbitConfig.radius + (orbitConfig.endRadius - orbitConfig.radius) * t) * mascotRadius;
     const startH = orbitConfig.height * mascotRadius;
     const endH = orbitConfig.endHeight * mascotRadius;
     const height = startH + (endH - startH) * t;
@@ -206,7 +215,7 @@ export class OrbitMode extends BaseSpawnMode {
             heightOffset: config.heightOffset || { min: -0.3, max: 0.5 },
             rotationSpeed: config.rotationSpeed || { min: 0.02, max: 0.08 },
             count: config.count || { min: 3, max: 8 },
-            scale: config.scale || { min: 0.08, max: 0.15 }
+            scale: config.scale || { min: 0.08, max: 0.15 },
         };
     }
 
@@ -222,19 +231,17 @@ export class OrbitMode extends BaseSpawnMode {
         const angle = (index / totalCount) * Math.PI * 2 + Math.random() * 0.5;
 
         // Random radius within range
-        const radius = config.orbitRadius.min +
+        const radius =
+            config.orbitRadius.min +
             Math.random() * (config.orbitRadius.max - config.orbitRadius.min);
 
         // Random height within range
-        const height = config.heightOffset.min +
+        const height =
+            config.heightOffset.min +
             Math.random() * (config.heightOffset.max - config.heightOffset.min);
 
         // Set position
-        mesh.position.set(
-            Math.cos(angle) * radius,
-            height,
-            Math.sin(angle) * radius
-        );
+        mesh.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
 
         // Random rotation
         mesh.rotation.set(
@@ -247,7 +254,8 @@ export class OrbitMode extends BaseSpawnMode {
         mesh.userData.orbitAngle = angle;
         mesh.userData.orbitRadius = radius;
         mesh.userData.heightOffset = height;
-        mesh.userData.rotationSpeed = config.rotationSpeed.min +
+        mesh.userData.rotationSpeed =
+            config.rotationSpeed.min +
             Math.random() * (config.rotationSpeed.max - config.rotationSpeed.min);
 
         // Mark spawn mode

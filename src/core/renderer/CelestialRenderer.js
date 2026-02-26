@@ -45,12 +45,14 @@ export class CelestialRenderer {
             ctx.globalCompositeOperation = 'screen';
             ctx.globalAlpha = shadow.textureOpacity !== undefined ? shadow.textureOpacity : 1;
 
-            const offset = time * 0.05 * (shadow.turbulence || 0.3) / 0.3;
+            const offset = (time * 0.05 * (shadow.turbulence || 0.3)) / 0.3;
             const textureGradient = ctx.createRadialGradient(
                 Math.sin(offset) * radius * 0.15,
                 Math.cos(offset * 0.7) * radius * 0.15,
                 radius * 0.2,
-                0, 0, radius
+                0,
+                0,
+                radius
             );
             textureGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
             textureGradient.addColorStop(0.4, 'rgba(255, 200, 100, 0.1)');
@@ -91,8 +93,12 @@ export class CelestialRenderer {
                 const wobble = Math.sin(time * 0.1 + i) * 0.05;
 
                 const coronaGradient = ctx.createRadialGradient(
-                    0, 0, radius * (0.9 + wobble),
-                    0, 0, radius * (scale + wobble)
+                    0,
+                    0,
+                    radius * (0.9 + wobble),
+                    0,
+                    0,
+                    radius * (scale + wobble)
                 );
                 coronaGradient.addColorStop(0, 'rgba(255, 255, 200, 0)');
                 coronaGradient.addColorStop(0.4, `rgba(255, 200, 100, ${opacity * 0.5})`);
@@ -149,12 +155,14 @@ export class CelestialRenderer {
                 ctx.quadraticCurveTo(
                     (baseX + tipX) * 0.5 + perpX * waveOffset,
                     (baseY + tipY) * 0.5 + perpY * waveOffset,
-                    tipX, tipY
+                    tipX,
+                    tipY
                 );
                 ctx.quadraticCurveTo(
                     (baseX + tipX) * 0.5 - perpX * waveOffset,
                     (baseY + tipY) * 0.5 - perpY * waveOffset,
-                    baseX + perpX, baseY + perpY
+                    baseX + perpX,
+                    baseY + perpY
                 );
             };
 
@@ -238,7 +246,18 @@ export class CelestialRenderer {
      * @param {boolean} hasSunRays - Whether sun rays are visible
      * @param {Function} scaleValue - Scale value function
      */
-    renderBaileysBeads(ctx, x, y, radius, shadowOffsetX, shadowOffsetY, morphProgress, isTransitioningToSolar, hasSunRays, scaleValue = v => v) {
+    renderBaileysBeads(
+        ctx,
+        x,
+        y,
+        radius,
+        shadowOffsetX,
+        shadowOffsetY,
+        morphProgress,
+        isTransitioningToSolar,
+        hasSunRays,
+        scaleValue = v => v
+    ) {
         // NEVER show beads if there are no sun rays visible
         if (!hasSunRays) {
             this._beadStartTime = null;
@@ -251,7 +270,8 @@ export class CelestialRenderer {
         // Show beads when shadow is approaching center OR for lunar-solar transitions
         // Different thresholds for entering vs leaving
         const threshold = isTransitioningToSolar ? 30 : 15; // Disappear faster when leaving
-        const shadowNearCenter = Math.abs(shadowOffsetX) < threshold && Math.abs(shadowOffsetY) < threshold;
+        const shadowNearCenter =
+            Math.abs(shadowOffsetX) < threshold && Math.abs(shadowOffsetY) < threshold;
 
         if (!shadowNearCenter && !isLunarSolarTransition) {
             // Reset when not near center (unless it's lunar-solar)
@@ -272,7 +292,7 @@ export class CelestialRenderer {
             }
 
             // Shuffle the order they'll appear
-            const order = Array.from({length: beadCount}, (_, i) => i);
+            const order = Array.from({ length: beadCount }, (_, i) => i);
             for (let i = order.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [order[i], order[j]] = [order[j], order[i]];
@@ -283,7 +303,7 @@ export class CelestialRenderer {
                     angle: angles[i],
                     size: 3 + Math.random() * 5, // Random size 3-8
                     order: order[i], // Order in sequence
-                    delay: order[i] * 200 // 200ms between each bead
+                    delay: order[i] * 200, // 200ms between each bead
                 });
             }
 
@@ -317,9 +337,9 @@ export class CelestialRenderer {
 
             // Chromatic layers - RGB separated for aberration effect
             const colors = [
-                { color: `rgba(255, 100, 100, ${0.6 * opacity})`, offset: -2 },  // Red
-                { color: `rgba(100, 255, 100, ${0.6 * opacity})`, offset: 0 },   // Green
-                { color: `rgba(100, 100, 255, ${0.6 * opacity})`, offset: 2 }    // Blue
+                { color: `rgba(255, 100, 100, ${0.6 * opacity})`, offset: -2 }, // Red
+                { color: `rgba(100, 255, 100, ${0.6 * opacity})`, offset: 0 }, // Green
+                { color: `rgba(100, 100, 255, ${0.6 * opacity})`, offset: 2 }, // Blue
             ];
 
             ctx.globalCompositeOperation = 'screen';
@@ -327,8 +347,12 @@ export class CelestialRenderer {
             colors.forEach(({ color, offset }) => {
                 // Create radial gradient for each color channel
                 const gradient = ctx.createRadialGradient(
-                    offset, offset, 0,
-                    offset, offset, size * 2
+                    offset,
+                    offset,
+                    0,
+                    offset,
+                    offset,
+                    size * 2
                 );
 
                 gradient.addColorStop(0, color);
@@ -370,7 +394,17 @@ export class CelestialRenderer {
      * @param {number} _rotation - Rotation angle to apply (unused but kept for API consistency)
      * @param {Object} shapeMorpher - Optional shape morpher reference
      */
-    renderMoonShadow(ctx, x, y, radius, shadow, shapePoints, isSolarOverlay = false, _rotation = 0, shapeMorpher = null) {
+    renderMoonShadow(
+        ctx,
+        x,
+        y,
+        radius,
+        shadow,
+        shapePoints,
+        isSolarOverlay = false,
+        _rotation = 0,
+        shapeMorpher = null
+    ) {
         ctx.save();
         ctx.globalAlpha = 1; // Always render shadow at full opacity, even in resting state
         ctx.translate(x, y);
@@ -384,10 +418,15 @@ export class CelestialRenderer {
 
             if (shapeMorpher) {
                 const morphProgress = shapeMorpher.getProgress();
-                const {targetShape} = shapeMorpher;
+                const { targetShape } = shapeMorpher;
 
                 // Animate shadow sliding in when morphing TO moon (and shadow.offset is not being controlled)
-                if (targetShape === 'moon' && morphProgress !== undefined && morphProgress < 1 && !shadow.shadowX) {
+                if (
+                    targetShape === 'moon' &&
+                    morphProgress !== undefined &&
+                    morphProgress < 1 &&
+                    !shadow.shadowX
+                ) {
                     // Shadow slides in from the left
                     shadowProgress = morphProgress;
                     const baseOffset = 0.7;
@@ -396,7 +435,7 @@ export class CelestialRenderer {
                 }
             }
             // Calculate shadow offset - shadow rotates with the moon
-            const angleRad = (shadow.angle || -30) * Math.PI / 180;
+            const angleRad = ((shadow.angle || -30) * Math.PI) / 180;
             const offsetX = Math.cos(angleRad) * radius * animatedOffset;
             const offsetY = Math.sin(angleRad) * radius * animatedOffset;
 
@@ -419,15 +458,19 @@ export class CelestialRenderer {
 
             // Use a single smooth gradient for the entire shadow
             const shadowGradient = ctx.createRadialGradient(
-                offsetX, offsetY, radius * 0.9,
-                offsetX, offsetY, radius * 1.1
+                offsetX,
+                offsetY,
+                radius * 0.9,
+                offsetX,
+                offsetY,
+                radius * 1.1
             );
 
             // More gradient stops for smoother transition
             const baseCoverage = shadow.coverage !== undefined ? shadow.coverage : 0.85;
             const shadowOpacity = Math.min(1, shadowProgress * 1.2) * (baseCoverage / 0.85);
             shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
-            shadowGradient.addColorStop(0.80, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
+            shadowGradient.addColorStop(0.8, `rgba(0, 0, 0, ${1 * shadowOpacity})`);
             shadowGradient.addColorStop(0.88, `rgba(0, 0, 0, ${0.98 * shadowOpacity})`);
             shadowGradient.addColorStop(0.91, `rgba(0, 0, 0, ${0.95 * shadowOpacity})`);
             shadowGradient.addColorStop(0.93, `rgba(0, 0, 0, ${0.9 * shadowOpacity})`);
@@ -443,7 +486,6 @@ export class CelestialRenderer {
             // Always use a circular shadow - crescent effect only works with circles
             ctx.arc(offsetX, offsetY, radius * 1.1, 0, Math.PI * 2);
             ctx.fill();
-
         } else if (shadow.type === 'lunar') {
             // Lunar eclipse - diffuse reddish shadow
             const diffusion = shadow.diffusion !== undefined ? shadow.diffusion : 1;
@@ -455,10 +497,15 @@ export class CelestialRenderer {
 
             if (shapeMorpher) {
                 const morphProgress = shapeMorpher.getProgress();
-                const {currentShape, targetShape} = shapeMorpher;
+                const { currentShape, targetShape } = shapeMorpher;
 
                 // Animate shadow sliding in when morphing TO solar (for solar overlay)
-                if (isSolarOverlay && targetShape === 'solar' && morphProgress !== undefined && morphProgress < 1) {
+                if (
+                    isSolarOverlay &&
+                    targetShape === 'solar' &&
+                    morphProgress !== undefined &&
+                    morphProgress < 1
+                ) {
                     // Shadow slides in from bottom-left
                     const slideDistance = radius * 2.5;
                     // Start from bottom-left, move to center
@@ -466,7 +513,14 @@ export class CelestialRenderer {
                     shadowOffsetY = slideDistance * (1 - morphProgress);
                 }
                 // Animate shadow sliding out when morphing FROM solar
-                else if (isSolarOverlay && currentShape === 'solar' && targetShape !== 'solar' && targetShape !== null && morphProgress !== undefined && morphProgress < 1) {
+                else if (
+                    isSolarOverlay &&
+                    currentShape === 'solar' &&
+                    targetShape !== 'solar' &&
+                    targetShape !== null &&
+                    morphProgress !== undefined &&
+                    morphProgress < 1
+                ) {
                     // Shadow slides out to top-right
                     const slideDistance = radius * 2.5;
                     // Move from center to top-right
@@ -496,8 +550,12 @@ export class CelestialRenderer {
             // Penumbra (diffuse outer shadow) - MUCH DARKER
             const penumbraRadius = radius * (1.8 - sharpness * 0.5);
             const penumbraGradient = ctx.createRadialGradient(
-                0, 0, radius * 0.2,
-                0, 0, penumbraRadius
+                0,
+                0,
+                radius * 0.2,
+                0,
+                0,
+                penumbraRadius
             );
 
             const baseOpacity = shadow.coverage || 0.9;
@@ -506,15 +564,27 @@ export class CelestialRenderer {
             if (shadow.color && shadow.color.includes('0, 0, 0')) {
                 // Black shadow for solar eclipse
                 penumbraGradient.addColorStop(0, `rgba(0, 0, 0, ${baseOpacity})`);
-                penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(0, 0, 0, ${baseOpacity * 0.95})`);
-                penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(0, 0, 0, ${baseOpacity * 0.8})`);
+                penumbraGradient.addColorStop(
+                    0.3 + sharpness * 0.2,
+                    `rgba(0, 0, 0, ${baseOpacity * 0.95})`
+                );
+                penumbraGradient.addColorStop(
+                    0.6 + sharpness * 0.2,
+                    `rgba(0, 0, 0, ${baseOpacity * 0.8})`
+                );
                 penumbraGradient.addColorStop(0.85, `rgba(0, 0, 0, ${baseOpacity * 0.4})`);
                 penumbraGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
             } else {
                 // Default reddish lunar eclipse colors
                 penumbraGradient.addColorStop(0, `rgba(10, 2, 0, ${baseOpacity})`);
-                penumbraGradient.addColorStop(0.3 + sharpness * 0.2, `rgba(20, 5, 0, ${baseOpacity * 0.95})`);
-                penumbraGradient.addColorStop(0.6 + sharpness * 0.2, `rgba(40, 10, 5, ${baseOpacity * 0.8})`);
+                penumbraGradient.addColorStop(
+                    0.3 + sharpness * 0.2,
+                    `rgba(20, 5, 0, ${baseOpacity * 0.95})`
+                );
+                penumbraGradient.addColorStop(
+                    0.6 + sharpness * 0.2,
+                    `rgba(40, 10, 5, ${baseOpacity * 0.8})`
+                );
                 penumbraGradient.addColorStop(0.85, `rgba(60, 15, 10, ${baseOpacity * 0.4})`);
                 penumbraGradient.addColorStop(1, 'rgba(80, 20, 15, 0)');
             }
@@ -527,10 +597,7 @@ export class CelestialRenderer {
             // Umbra (sharp inner shadow) - only when sharp
             if (sharpness > 0.3) {
                 const umbraRadius = radius * (0.8 + sharpness * 0.3);
-                const umbraGradient = ctx.createRadialGradient(
-                    0, 0, 0,
-                    0, 0, umbraRadius
-                );
+                const umbraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, umbraRadius);
 
                 // Use black for solar eclipse, reddish for lunar
                 if (shadow.color && shadow.color.includes('0, 0, 0')) {

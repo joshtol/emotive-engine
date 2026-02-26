@@ -58,13 +58,13 @@ const LIGHTPURIFY_CONFIG = {
             orbit: {
                 height: 'center',
                 endHeight: 'center',
-                radius: 2.2,                    // Start wide
-                endRadius: 0.3,                 // Converge tight
-                speed: 2,                       // 2 full orbits during convergence
-                easing: 'easeOut',              // Fast approach, lingering arrival
+                radius: 2.2, // Start wide
+                endRadius: 0.3, // Converge tight
+                speed: 2, // 2 full orbits during convergence
+                easing: 'easeOut', // Fast approach, lingering arrival
                 startScale: 0.5,
-                endScale: 1.3,                  // Grow as they converge
-                orientation: 'camera'
+                endScale: 1.3, // Grow as they converge
+                orientation: 'camera',
             },
             formation: { type: 'ring', count: 5 },
             count: 5,
@@ -79,27 +79,29 @@ const LIGHTPURIFY_CONFIG = {
                 procedural: { scaleSmoothing: 0.08, geometryStability: true },
                 emissive: { min: 0.8, max: 2.5, frequency: 3, pattern: 'sine' },
                 pulse: { amplitude: 0.1, frequency: 3, easing: 'easeInOut' },
-                atmospherics: [{
-                    preset: 'firefly',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.4,
-                    sizeScale: 0.8,
-                    progressCurve: 'rampUp',
-                    velocityInheritance: 0.5,
-                }],
+                atmospherics: [
+                    {
+                        preset: 'firefly',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.4,
+                        sizeScale: 0.8,
+                        progressCurve: 'rampUp',
+                        velocityInheritance: 0.5,
+                    },
+                ],
                 rotate: [
                     { axis: 'y', rotations: 1.5, phase: 0 },
                     { axis: 'x', rotations: -2, phase: 72 },
                     { axis: 'z', rotations: 1.5, phase: 144 },
                     { axis: 'y', rotations: -2, phase: 216 },
-                    { axis: 'x', rotations: 1.5, phase: 288 }
+                    { axis: 'x', rotations: 1.5, phase: 288 },
                 ],
                 scaleVariance: 0.2,
                 lifetimeVariance: 0.1,
                 blending: 'additive',
-                renderOrder: 16
-            }
+                renderOrder: 16,
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -114,11 +116,13 @@ const LIGHTPURIFY_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.1,
                 endScale: 1.5,
-                scaleEasing: 'easeOutBack'
+                scaleEasing: 'easeOutBack',
             },
-            count: 1, scale: 1.3, models: ['sun-ring'],
+            count: 1,
+            scale: 1.3,
+            models: ['sun-ring'],
             animation: {
-                appearAt: 0.25,                 // Appears as fragments converge
+                appearAt: 0.25, // Appears as fragments converge
                 disappearAt: 0.7,
                 enter: { type: 'scale', duration: 0.12, easing: 'easeOutBack' },
                 exit: { type: 'fade', duration: 0.2, easing: 'easeIn' },
@@ -128,28 +132,32 @@ const LIGHTPURIFY_CONFIG = {
                 rotate: { axis: 'z', rotations: 0.5, phase: 0 },
                 cutout: {
                     strength: 0.5,
-                    primary: { pattern: 6, scale: 1.5, weight: 1.0 },     // SPIRAL — healing vortex
-                    secondary: { pattern: 4, scale: 2.0, weight: 0.5 },   // WAVES
+                    primary: { pattern: 6, scale: 1.5, weight: 1.0 }, // SPIRAL — healing vortex
+                    secondary: { pattern: 4, scale: 2.0, weight: 0.5 }, // WAVES
                     blend: 'add',
                     travel: 'angular',
                     travelSpeed: 0.8,
                     strengthCurve: 'bell',
                     bellPeakAt: 0.5,
                     bellWidth: 1.0,
-                    geometricMask: { type: 'distance', core: 0.1, tip: 0.3 }
+                    geometricMask: { type: 'distance', core: 0.1, tip: 0.3 },
                 },
                 grain: {
-                    type: 3, strength: 0.2, scale: 0.4, speed: 0.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.2,
+                    scale: 0.4,
+                    speed: 0.5,
+                    blend: 'multiply',
                 },
                 blending: 'additive',
                 renderOrder: 14,
                 modelOverrides: {
                     'sun-ring': {
                         shaderAnimation: { type: 1, arcWidth: 0.9, arcSpeed: 0.8, arcCount: 2 },
-                        orientationOverride: 'camera'
-                    }
-                }
-            }
+                        orientationOverride: 'camera',
+                    },
+                },
+            },
         },
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -167,11 +175,13 @@ const LIGHTPURIFY_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.4,
                 endScale: 0.8,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
-            count: 3, scale: 0.8, models: ['sparkle-star'],
+            count: 3,
+            scale: 0.8,
+            models: ['sparkle-star'],
             animation: {
-                appearAt: 0.4,                  // After seal forms — the purification release
+                appearAt: 0.4, // After seal forms — the purification release
                 disappearAt: 0.7,
                 stagger: 0.02,
                 enter: { type: 'scale', duration: 0.06, easing: 'easeOutBack' },
@@ -180,23 +190,23 @@ const LIGHTPURIFY_CONFIG = {
                 rotate: [
                     { axis: 'z', rotations: 1.0, phase: 0 },
                     { axis: 'z', rotations: -1.5, phase: 120 },
-                    { axis: 'z', rotations: 1.0, phase: 240 }
+                    { axis: 'z', rotations: 1.0, phase: 240 },
                 ],
                 scaleVariance: 0.25,
                 blending: 'additive',
                 renderOrder: 18,
-            }
-        }
+            },
+        },
     ],
 
     decayRate: 0.18,
-    glowColor: [1.0, 0.92, 0.65],      // Golden healing warmth
+    glowColor: [1.0, 0.92, 0.65], // Golden healing warmth
     glowIntensityMin: 0.6,
     glowIntensityMax: 1.3,
     glowFlickerRate: 4,
     scaleVibration: 0.015,
     scaleFrequency: 3,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTPURIFY_CONFIG);

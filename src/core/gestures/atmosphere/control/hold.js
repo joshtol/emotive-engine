@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Hold Gesture
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Hold gesture - freeze particles in place
@@ -17,88 +17,88 @@ export default {
     emoji: '⏸️',
     type: 'override',
     description: 'Hold particles in current position',
-    
+
     // Default configuration
     config: {
-        duration: 2000,                                    // Legacy fallback (2 seconds)
-        musicalDuration: { musical: true, bars: 1 },       // 1 bar (4 beats)
-        holdStrength: 0.95,                                // Position retention strength
-        allowDrift: false,                                 // Enable slight movement
-        strength: 1.0                                      // Freeze strength (1 = full freeze)
+        duration: 2000, // Legacy fallback (2 seconds)
+        musicalDuration: { musical: true, bars: 1 }, // 1 bar (4 beats)
+        holdStrength: 0.95, // Position retention strength
+        allowDrift: false, // Enable slight movement
+        strength: 1.0, // Freeze strength (1 = full freeze)
     },
-    
+
     // Rhythm configuration - synchronized pause effects following musical structure
     rhythm: {
         enabled: true,
-        syncMode: 'rest',    // Hold particles during musical rests and pauses
-        
+        syncMode: 'rest', // Hold particles during musical rests and pauses
+
         // Hold strength responds to musical silence
         holdSync: {
-            onRest: 0.98,         // Very strong hold during rests
-            onSound: 0.80,        // Looser hold when music plays
-            curve: 'immediate'    // Instant response to silence/sound
+            onRest: 0.98, // Very strong hold during rests
+            onSound: 0.8, // Looser hold when music plays
+            curve: 'immediate', // Instant response to silence/sound
         },
-        
+
         // Duration matches rest length
         durationSync: {
             mode: 'rests',
-            minBeats: 0.5,        // Minimum half-beat hold
-            maxBeats: 8,          // Maximum 8-beat hold
-            sustain: true         // Maintain hold through entire rest
+            minBeats: 0.5, // Minimum half-beat hold
+            maxBeats: 8, // Maximum 8-beat hold
+            sustain: true, // Maintain hold through entire rest
         },
-        
+
         // Response to fermatas and caesuras
         pauseResponse: {
             enabled: true,
-            multiplier: 1.5,      // Stronger hold during marked pauses
-            type: 'strength'      // Affects hold strength
+            multiplier: 1.5, // Stronger hold during marked pauses
+            type: 'strength', // Affects hold strength
         },
-        
+
         // Style variations for different music types
         patternOverrides: {
-            'classical': {
+            classical: {
                 // Expressive holds for dramatic pauses
                 holdSync: { onRest: 0.99, onSound: 0.75, curve: 'dramatic' },
-                pauseResponse: { multiplier: 2.0 }
+                pauseResponse: { multiplier: 2.0 },
             },
-            'minimal': {
+            minimal: {
                 // Extended, meditative holds
                 holdSync: { onRest: 0.95, onSound: 0.85 },
-                durationSync: { minBeats: 2, maxBeats: 16 }
+                durationSync: { minBeats: 2, maxBeats: 16 },
             },
-            'jazz': {
+            jazz: {
                 // Subtle holds that allow for swing
-                holdSync: { onRest: 0.90, onSound: 0.70 },
-                allowDrift: true  // Enable slight movement for swing feel
+                holdSync: { onRest: 0.9, onSound: 0.7 },
+                allowDrift: true, // Enable slight movement for swing feel
             },
-            'electronic': {
+            electronic: {
                 // Precise, digital-style holds
-                holdSync: { onRest: 0.99, onSound: 0.60, curve: 'digital' },
-                pauseResponse: { multiplier: 1.2 }
-            }
+                holdSync: { onRest: 0.99, onSound: 0.6, curve: 'digital' },
+                pauseResponse: { multiplier: 1.2 },
+            },
         },
-        
+
         // Musical dynamics
         dynamics: {
             forte: {
                 // Strong, definitive holds
-                holdSync: { 
+                holdSync: {
                     onRest: { multiplier: 1.02 },
-                    onSound: { multiplier: 0.9 }
+                    onSound: { multiplier: 0.9 },
                 },
-                pauseResponse: { multiplier: 2.2 }
+                pauseResponse: { multiplier: 2.2 },
             },
             piano: {
                 // Gentle, floating holds
-                holdSync: { 
+                holdSync: {
                     onRest: { multiplier: 0.97 },
-                    onSound: { multiplier: 0.85 }
+                    onSound: { multiplier: 0.85 },
                 },
-                pauseResponse: { multiplier: 1.3 }
-            }
-        }
+                pauseResponse: { multiplier: 1.3 },
+            },
+        },
     },
-    
+
     initialize(particle) {
         if (!particle.gestureData) {
             particle.gestureData = {};
@@ -107,10 +107,10 @@ export default {
             holdX: particle.x,
             holdY: particle.y,
             originalVx: particle.vx,
-            originalVy: particle.vy
+            originalVy: particle.vy,
         };
     },
-    
+
     /**
      * Apply hold effect to particle
      * Freezes or slows particle movement based on configuration
@@ -119,10 +119,10 @@ export default {
         if (!particle.gestureData?.hold) {
             this.initialize(particle);
         }
-        
+
         const data = particle.gestureData.hold;
         const holdStrength = motion.holdStrength || this.config.holdStrength;
-        
+
         if (motion.allowDrift) {
             // Allow slight drift with velocity damping
             particle.vx *= holdStrength;
@@ -134,7 +134,7 @@ export default {
             particle.vx = 0;
             particle.vy = 0;
         }
-        
+
         // Gradually restore velocity near end
         if (progress > 0.9) {
             const restoreFactor = (progress - 0.9) * 10;
@@ -142,7 +142,7 @@ export default {
             particle.vy = particle.vy * (1 - restoreFactor) + data.originalVy * restoreFactor;
         }
     },
-    
+
     cleanup(particle) {
         if (particle.gestureData?.hold) {
             const data = particle.gestureData.hold;
@@ -200,11 +200,11 @@ export default {
                 scale: 1.0,
                 glowIntensity: glowDim,
                 // New freeze signals - 0 = normal animation, 1 = fully frozen
-                freezeRotation: freezeAmount,      // Stops rotation behavior
-                freezeWobble: freezeAmount,        // Stops episodic wobble
-                freezeGroove: freezeAmount,        // Stops rhythm groove
-                freezeParticles: freezeAmount      // Stops particle motion
+                freezeRotation: freezeAmount, // Stops rotation behavior
+                freezeWobble: freezeAmount, // Stops episodic wobble
+                freezeGroove: freezeAmount, // Stops rhythm groove
+                freezeParticles: freezeAmount, // Stops particle motion
             };
-        }
-    }
+        },
+    },
 };

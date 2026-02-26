@@ -253,6 +253,6 @@ void main() {
 export function getMoonCrescentShaders() {
     return {
         vertexShader: moonCrescentVertexShader,
-        fragmentShader: moonCrescentFragmentShader
+        fragmentShader: moonCrescentFragmentShader,
     };
 }

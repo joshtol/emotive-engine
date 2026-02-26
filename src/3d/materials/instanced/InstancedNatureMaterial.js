@@ -44,7 +44,7 @@
 import * as THREE from 'three';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
-    INSTANCED_ATTRIBUTES_FRAGMENT
+    INSTANCED_ATTRIBUTES_FRAGMENT,
 } from '../cores/InstancedShaderUtils.js';
 import {
     ANIMATION_TYPES,
@@ -66,7 +66,7 @@ import {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 } from '../cores/InstancedAnimationCore.js';
 
 // ===========================================================================================
@@ -79,14 +79,14 @@ const NATURE_DEFAULTS = {
     opacity: 0.85,
     glowScale: 0.1,
     fadeInDuration: 0.2,
-    fadeOutDuration: 0.4
+    fadeOutDuration: 0.4,
 };
 
 // ===========================================================================================
 // NOISE GLSL (shared noise functions -- hash, noise, snoise, fbm4, hash2, voronoi2D)
 // ===========================================================================================
 
-const NOISE_GLSL = /* glsl */`
+const NOISE_GLSL = /* glsl */ `
 // Hash function for noise
 float hash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
@@ -170,7 +170,7 @@ float voronoi2D(vec2 p) {
 // NATURE GLSL (nature-specific shader functions)
 // ===========================================================================================
 
-const NATURE_GLSL = /* glsl */`
+const NATURE_GLSL = /* glsl */ `
 // Branching vein pattern using FBM-derivative approach.
 // Forward differences (3 fbm3) instead of central differences (4 fbm4).
 // fbm3 sufficient — 4th octave at 6% weight contributes negligibly to gradient.
@@ -215,7 +215,7 @@ float bioluminescence(vec3 p) {
 // INSTANCED VERTEX SHADER
 // ===========================================================================================
 
-const VERTEX_SHADER = /* glsl */`
+const VERTEX_SHADER = /* glsl */ `
 // Standard uniforms
 uniform float uGlobalTime;
 uniform float uFadeInDuration;
@@ -411,7 +411,7 @@ void main() {
 // INSTANCED FRAGMENT SHADER
 // ===========================================================================================
 
-const FRAGMENT_SHADER = /* glsl */`
+const FRAGMENT_SHADER = /* glsl */ `
 uniform float uGlobalTime;
 uniform float uGrowth;
 uniform float uIntensity;
@@ -751,7 +751,7 @@ export function createInstancedNatureMaterial(options = {}) {
         glowScale = NATURE_DEFAULTS.glowScale,
         tint = 0xffffff,
         fadeInDuration = NATURE_DEFAULTS.fadeInDuration,
-        fadeOutDuration = NATURE_DEFAULTS.fadeOutDuration
+        fadeOutDuration = NATURE_DEFAULTS.fadeOutDuration,
     } = options;
 
     // Convert tint to THREE.Color
@@ -776,14 +776,14 @@ export function createInstancedNatureMaterial(options = {}) {
             uBloomThreshold: { value: 0.65 },
             uRelayCount: { value: 3 },
             uRelayArcWidth: { value: 3.14159 },
-            uRelayFloor: { value: 0.0 }
+            uRelayFloor: { value: 0.0 },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
         depthWrite: true,
         side: THREE.DoubleSide,
-        blending: THREE.NormalBlending
+        blending: THREE.NormalBlending,
     });
 
     material.userData.growth = growth;
@@ -906,7 +906,7 @@ export {
     resetCutout,
     setGrain,
     resetGrain,
-    resetAnimation
+    resetAnimation,
 };
 
 export default {
@@ -928,5 +928,5 @@ export default {
     CUTOUT_BLEND,
     CUTOUT_TRAVEL,
     GRAIN_TYPES,
-    GRAIN_BLEND
+    GRAIN_BLEND,
 };

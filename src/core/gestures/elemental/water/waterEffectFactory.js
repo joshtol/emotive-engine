@@ -48,11 +48,7 @@
 
 function smoothNoise(x) {
     // Combination of sine waves at different frequencies for organic motion
-    return (
-        Math.sin(x * 1.0) * 0.5 +
-        Math.sin(x * 2.3 + 1.3) * 0.3 +
-        Math.sin(x * 4.1 + 2.7) * 0.2
-    );
+    return Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.3 + 1.3) * 0.3 + Math.sin(x * 4.1 + 2.7) * 0.2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -76,7 +72,7 @@ export function buildWaterEffectGesture(config) {
             duration: config.duration,
             beats: config.beats,
             intensity: config.intensity,
-            ...config
+            ...config,
         },
 
         rhythm: {
@@ -85,8 +81,8 @@ export function buildWaterEffectGesture(config) {
             amplitudeSync: {
                 onBeat: 1.3,
                 offBeat: 1.0,
-                curve: 'smooth'        // Smooth for water, not sharp
-            }
+                curve: 'smooth', // Smooth for water, not sharp
+            },
         },
 
         /**
@@ -100,8 +96,8 @@ export function buildWaterEffectGesture(config) {
                 const customEval = config['3d']?.evaluate;
                 const customResult = customEval ? customEval(progress, motion) : null;
                 const cfg = { ...config, ...motion };
-                const time = progress * cfg.duration / 1000; // Convert to seconds
-                const {category} = cfg;
+                const time = (progress * cfg.duration) / 1000; // Convert to seconds
+                const { category } = cfg;
 
                 // ═══════════════════════════════════════════════════════════════
                 // EFFECT STRENGTH - Varies by category
@@ -147,13 +143,15 @@ export function buildWaterEffectGesture(config) {
                 // Fade out in final phase
                 if (progress > 0.85) {
                     const fadeProgress = (progress - 0.85) / 0.15;
-                    effectStrength *= (1 - fadeProgress);
+                    effectStrength *= 1 - fadeProgress;
                 }
 
                 // ═══════════════════════════════════════════════════════════════
                 // POSITION - Flowing/wobbling motion
                 // ═══════════════════════════════════════════════════════════════
-                let posX = 0, posY = 0, posZ = 0;
+                let posX = 0,
+                    posY = 0,
+                    posZ = 0;
 
                 if (cfg.flowFrequency) {
                     // Flow motion - smooth S-curve
@@ -162,8 +160,11 @@ export function buildWaterEffectGesture(config) {
 
                     if (cfg.flowPhaseOffset) {
                         // S-curve: Y moves opposite to create wave
-                        posY = Math.sin(flowTime + Math.PI * cfg.flowPhaseOffset) *
-                               cfg.flowAmplitude * 0.5 * effectStrength;
+                        posY =
+                            Math.sin(flowTime + Math.PI * cfg.flowPhaseOffset) *
+                            cfg.flowAmplitude *
+                            0.5 *
+                            effectStrength;
                     }
 
                     if (cfg.verticalBob) {
@@ -178,7 +179,7 @@ export function buildWaterEffectGesture(config) {
 
                     // Negative decay = increasing wobble (liquefy)
                     if (cfg.wobbleDecay < 0) {
-                        wobbleStrength *= (1 + progress * Math.abs(cfg.wobbleDecay) * 2);
+                        wobbleStrength *= 1 + progress * Math.abs(cfg.wobbleDecay) * 2;
                     }
 
                     posX += smoothNoise(wobbleTime) * wobbleStrength;
@@ -228,7 +229,9 @@ export function buildWaterEffectGesture(config) {
                 // SCALE - Wobble, breathing, squash/stretch
                 // ═══════════════════════════════════════════════════════════════
                 let scale = 1.0;
-                let scaleX = 1.0, scaleY = 1.0, scaleZ = 1.0;
+                let scaleX = 1.0,
+                    scaleY = 1.0,
+                    scaleZ = 1.0;
 
                 // Base scale wobble
                 if (cfg.scaleWobble) {
@@ -257,7 +260,9 @@ export function buildWaterEffectGesture(config) {
                 // Squash and stretch (pool settling)
                 if (cfg.scaleSquash) {
                     scaleY = scale - cfg.scaleSquash * progress * effectStrength;
-                    scaleX = scale + (cfg.scaleStretch || cfg.scaleSquash * 0.5) * progress * effectStrength;
+                    scaleX =
+                        scale +
+                        (cfg.scaleStretch || cfg.scaleSquash * 0.5) * progress * effectStrength;
                     scaleZ = scaleX;
                 } else if (cfg.stretchVertical) {
                     // Liquefy drip stretch
@@ -284,11 +289,13 @@ export function buildWaterEffectGesture(config) {
                     glowPulse = Math.max(glowPulse, progress);
                 }
 
-                const glowIntensity = cfg.glowIntensityMin +
+                const glowIntensity =
+                    cfg.glowIntensityMin +
                     (cfg.glowIntensityMax - cfg.glowIntensityMin) * glowPulse * effectStrength;
 
-                const glowBoost = glowPulse * 0.6 * effectStrength * cfg.intensity
-                    + (cfg.mascotGlow || 0) * effectStrength;
+                const glowBoost =
+                    glowPulse * 0.6 * effectStrength * cfg.intensity +
+                    (cfg.mascotGlow || 0) * effectStrength;
 
                 // ═══════════════════════════════════════════════════════════════
                 // RETURN TRANSFORMATION
@@ -297,7 +304,7 @@ export function buildWaterEffectGesture(config) {
                     position: [posX, posY, posZ],
                     rotation: [rotX, rotY, rotZ],
                     scale: (scaleX + scaleY + scaleZ) / 3, // Average for uniform
-                    scaleXYZ: [scaleX, scaleY, scaleZ],    // Non-uniform if needed
+                    scaleXYZ: [scaleX, scaleY, scaleZ], // Non-uniform if needed
                     glowIntensity,
                     glowBoost,
                     glowColorOverride: cfg.glowColor,
@@ -317,14 +324,14 @@ export function buildWaterEffectGesture(config) {
                         models: config.spawnMode?.models,
                         count: config.spawnMode?.count,
                         scale: config.spawnMode?.scale,
-                        embedDepth: config.spawnMode?.embedDepth
-                    }
+                        embedDepth: config.spawnMode?.embedDepth,
+                    },
                 };
-            }
-        }
+            },
+        },
     };
 }
 
 export default {
-    buildWaterEffectGesture
+    buildWaterEffectGesture,
 };

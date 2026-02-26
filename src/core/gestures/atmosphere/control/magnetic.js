@@ -31,14 +31,14 @@ export default {
     config: {
         duration: 1200,
         musicalDuration: { musical: true, beats: 3 },
-        mode: 'attract',      // 'attract' or 'repel'
-        pullStrength: 1.0,    // Force strength
+        mode: 'attract', // 'attract' or 'repel'
+        pullStrength: 1.0, // Force strength
         returnToOrigin: true, // Whether to return at end
         strength: 1.0,
         particleMotion: {
             type: 'magnetic',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
@@ -49,8 +49,8 @@ export default {
 
         strengthSync: {
             onBeat: 1.5,
-            offBeat: 0.7
-        }
+            offBeat: 0.7,
+        },
     },
 
     initialize(particle, _motion, _centerX, _centerY) {
@@ -60,7 +60,7 @@ export default {
             originalX: particle.x,
             originalY: particle.y,
             originalOpacity: particle.opacity ?? 1,
-            initialized: true
+            initialized: true,
         };
     },
 
@@ -139,15 +139,18 @@ export default {
             const glowBoost = effectStrength * 0.3;
 
             // Slight vibration at peak magnetism
-            const vibration = effectStrength > 0.5 ? Math.sin(progress * Math.PI * 20) * 0.01 * (effectStrength - 0.5) * 2 : 0;
+            const vibration =
+                effectStrength > 0.5
+                    ? Math.sin(progress * Math.PI * 20) * 0.01 * (effectStrength - 0.5) * 2
+                    : 0;
 
             return {
                 position: [vibration, 0, zOffset],
                 rotation: [0, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

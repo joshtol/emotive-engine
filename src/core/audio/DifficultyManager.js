@@ -6,9 +6,9 @@
  */
 
 const PRESETS = {
-    easy:   { windowMultiplier: 1.5, label: 'Easy' },
+    easy: { windowMultiplier: 1.5, label: 'Easy' },
     normal: { windowMultiplier: 1.0, label: 'Normal' },
-    hard:   { windowMultiplier: 0.7, label: 'Hard' },
+    hard: { windowMultiplier: 0.7, label: 'Hard' },
 };
 
 export class DifficultyManager {
@@ -32,10 +32,14 @@ export class DifficultyManager {
     }
 
     /** @returns {string} Current preset name */
-    getDifficulty() { return this._preset; }
+    getDifficulty() {
+        return this._preset;
+    }
 
     /** @returns {number} Window multiplier for current preset */
-    getWindowMultiplier() { return PRESETS[this._preset].windowMultiplier; }
+    getWindowMultiplier() {
+        return PRESETS[this._preset].windowMultiplier;
+    }
 
     /**
      * Set assist options.
@@ -47,20 +51,29 @@ export class DifficultyManager {
     setAssist(opts) {
         if (opts.autoRhythm !== undefined) this._assist.autoRhythm = !!opts.autoRhythm;
         if (opts.slowMode !== undefined) this._assist.slowMode = !!opts.slowMode;
-        if (opts.visualMetronome !== undefined) this._assist.visualMetronome = !!opts.visualMetronome;
+        if (opts.visualMetronome !== undefined)
+            this._assist.visualMetronome = !!opts.visualMetronome;
     }
 
     /** @returns {Object} Current assist flags */
-    getAssist() { return { ...this._assist }; }
+    getAssist() {
+        return { ...this._assist };
+    }
 
     /** @returns {boolean} Whether autoRhythm is active */
-    get autoRhythm() { return this._assist.autoRhythm; }
+    get autoRhythm() {
+        return this._assist.autoRhythm;
+    }
 
     /** @returns {number} BPM multiplier (1.0 or 0.75 if slowMode) */
-    getBPMMultiplier() { return this._assist.slowMode ? this._slowModeMult : 1.0; }
+    getBPMMultiplier() {
+        return this._assist.slowMode ? this._slowModeMult : 1.0;
+    }
 
     /** @returns {boolean} Whether visual metronome should show */
-    get visualMetronome() { return this._assist.visualMetronome; }
+    get visualMetronome() {
+        return this._assist.visualMetronome;
+    }
 
     // Serialization
     serialize() {

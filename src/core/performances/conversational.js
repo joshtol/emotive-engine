@@ -14,7 +14,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 0,
         baseIntensity: 0.6,
         emotionDuration: 400,
-        description: 'User is speaking, AI is listening attentively'
+        description: 'User is speaking, AI is listening attentively',
     },
 
     thinking: {
@@ -25,7 +25,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 100,
         baseIntensity: 0.7,
         emotionDuration: 500,
-        description: 'AI is processing and thinking'
+        description: 'AI is processing and thinking',
     },
 
     acknowledging: {
@@ -36,7 +36,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.7,
         emotionDuration: 400,
-        description: 'AI acknowledges understanding'
+        description: 'AI acknowledges understanding',
     },
 
     // Guiding & instructing
@@ -48,7 +48,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.7,
         emotionDuration: 500,
-        description: 'AI provides guidance or instructions'
+        description: 'AI provides guidance or instructions',
     },
 
     // Emotional responses
@@ -62,8 +62,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'empathy', intensity: 0.8 },
             { at: 200, action: 'gesture', value: 'shake' },
-            { at: 700, action: 'gesture', value: 'nod' }
-        ]
+            { at: 700, action: 'gesture', value: 'nod' },
+        ],
     },
 
     celebrating: {
@@ -77,8 +77,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
             { at: 0, action: 'emotion', value: 'joy', intensity: 0.9 },
             { at: 200, action: 'gesture', value: 'bounce' },
             { at: 800, action: 'emotion', value: 'triumph', intensity: 1.0 },
-            { at: 900, action: 'gesture', value: 'glow' }
-        ]
+            { at: 900, action: 'gesture', value: 'glow' },
+        ],
     },
 
     celebrating_epic: {
@@ -94,8 +94,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
             { at: 700, action: 'emotion', value: 'triumph', intensity: 1.0 },
             { at: 800, action: 'gesture', value: 'glow' },
             { at: 1000, action: 'morph', value: 'sun' },
-            { at: 1000, action: 'chain', value: 'radiance' }
-        ]
+            { at: 1000, action: 'chain', value: 'radiance' },
+        ],
     },
 
     reassuring: {
@@ -108,8 +108,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'calm', intensity: 0.8 },
             { at: 200, action: 'gesture', value: 'breathe' },
-            { at: 800, action: 'gesture', value: 'wave' }
-        ]
+            { at: 800, action: 'gesture', value: 'wave' },
+        ],
     },
 
     // Offering help
@@ -123,8 +123,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'empathy', intensity: 0.8 },
             { at: 200, action: 'gesture', value: 'nod' },
-            { at: 600, action: 'gesture', value: 'point' }
-        ]
+            { at: 600, action: 'gesture', value: 'point' },
+        ],
     },
 
     offering_urgent_help: {
@@ -138,8 +138,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
             { at: 0, action: 'emotion', value: 'empathy', intensity: 1.0 },
             { at: 150, action: 'gesture', value: 'shake' },
             { at: 400, action: 'gesture', value: 'nod' },
-            { at: 700, action: 'gesture', value: 'point' }
-        ]
+            { at: 700, action: 'gesture', value: 'point' },
+        ],
     },
 
     // Apologizing
@@ -153,8 +153,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
         sequence: [
             { at: 0, action: 'emotion', value: 'empathy', intensity: 0.85 },
             { at: 200, action: 'gesture', value: 'shake' },
-            { at: 600, action: 'gesture', value: 'breathe' }
-        ]
+            { at: 600, action: 'gesture', value: 'breathe' },
+        ],
     },
 
     // Encouraging
@@ -166,7 +166,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.75,
         emotionDuration: 500,
-        description: 'AI encourages user to continue'
+        description: 'AI encourages user to continue',
     },
 
     // Greeting
@@ -178,7 +178,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 200,
         baseIntensity: 0.7,
         emotionDuration: 500,
-        description: 'AI greets user warmly'
+        description: 'AI greets user warmly',
     },
 
     // Responding
@@ -190,7 +190,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.75,
         emotionDuration: 500,
-        description: 'AI responds with positive sentiment'
+        description: 'AI responds with positive sentiment',
     },
 
     responding_neutral: {
@@ -201,7 +201,7 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.6,
         emotionDuration: 500,
-        description: 'AI responds with neutral sentiment'
+        description: 'AI responds with neutral sentiment',
     },
 
     responding_negative: {
@@ -212,8 +212,8 @@ export const CONVERSATIONAL_PERFORMANCES = {
         delay: 150,
         baseIntensity: 0.8,
         emotionDuration: 600,
-        description: 'AI responds to negative situation'
-    }
+        description: 'AI responds to negative situation',
+    },
 };
 
 export default CONVERSATIONAL_PERFORMANCES;

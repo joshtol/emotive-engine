@@ -47,7 +47,7 @@ const LIGHTBARRAGE_CONFIG = {
             easing: 'easeIn',
             startScale: 1.0,
             endScale: 0.6,
-            orientation: 'vertical'
+            orientation: 'vertical',
         },
         formation: { type: 'ring', count: 5 },
         count: 5,
@@ -62,27 +62,29 @@ const LIGHTBARRAGE_CONFIG = {
             procedural: { scaleSmoothing: 0.08, geometryStability: true },
             pulse: { amplitude: 0.1, frequency: 5, easing: 'easeInOut' },
             emissive: { min: 1.0, max: 2.5, frequency: 4, pattern: 'sine' },
-            atmospherics: [{
-                preset: 'firefly',
-                targets: null,
-                anchor: 'around',
-                intensity: 0.4,
-                sizeScale: 1.2,
-                progressCurve: 'sustain',
-                velocityInheritance: 0.6,
-            }],
+            atmospherics: [
+                {
+                    preset: 'firefly',
+                    targets: null,
+                    anchor: 'around',
+                    intensity: 0.4,
+                    sizeScale: 1.2,
+                    progressCurve: 'sustain',
+                    velocityInheritance: 0.6,
+                },
+            ],
             rotate: [
                 { axis: 'x', rotations: 2, phase: 0 },
                 { axis: 'y', rotations: -3, phase: 40 },
                 { axis: 'z', rotations: 2.5, phase: 100 },
                 { axis: 'x', rotations: -2, phase: 180 },
-                { axis: 'y', rotations: 3, phase: 250 }
+                { axis: 'y', rotations: 3, phase: 250 },
             ],
             scaleVariance: 0.2,
             lifetimeVariance: 0.1,
             blending: 'additive',
-            renderOrder: 18
-        }
+            renderOrder: 18,
+        },
     },
 
     decayRate: 0.2,
@@ -92,7 +94,7 @@ const LIGHTBARRAGE_CONFIG = {
     glowFlickerRate: 6,
     scaleVibration: 0.012,
     scaleFrequency: 4,
-    scalePulse: true
+    scalePulse: true,
 };
 
 export default buildLightEffectGesture(LIGHTBARRAGE_CONFIG);

@@ -31,21 +31,21 @@ export default {
     config: {
         duration: 2000,
         musicalDuration: { musical: true, bars: 1 },
-        rockAngle: 0.15,      // Rocking angle
-        rockCycles: 2,        // Number of rock cycles
-        smooth: true,         // Extra smooth motion
+        rockAngle: 0.15, // Rocking angle
+        rockCycles: 2, // Number of rock cycles
+        smooth: true, // Extra smooth motion
         strength: 1.0,
         particleMotion: {
             type: 'rock',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'bars', bars: 1 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -80,8 +80,8 @@ export default {
                 rotation: [rotX, 0, 0],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };

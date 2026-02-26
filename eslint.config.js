@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
 
 export default [
     // Base recommended configuration
@@ -144,6 +145,9 @@ export default [
             'no-console': 'off'
         }
     },
+
+    // Disable ESLint formatting rules that conflict with Prettier
+    prettier,
 
     // Ignore patterns
     {

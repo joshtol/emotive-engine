@@ -19,7 +19,10 @@ export class PhysicalGestureAnimator {
      * @returns {Object} Transform with offsetY
      */
     applyBounce(anim, progress) {
-        const bounce = Math.abs(Math.sin(progress * Math.PI * anim.params.frequency)) * anim.params.amplitude * this.scaleFactor;
+        const bounce =
+            Math.abs(Math.sin(progress * Math.PI * anim.params.frequency)) *
+            anim.params.amplitude *
+            this.scaleFactor;
         // Apply effects
         const multiplier = anim.params.effects && anim.params.effects.includes('gravity') ? 0.6 : 1;
         return { offsetY: -bounce * multiplier };
@@ -36,11 +39,15 @@ export class PhysicalGestureAnimator {
         if (!anim.randomAngle) {
             anim.randomAngle = Math.random() * Math.PI * 2; // Random angle in radians
         }
-        const decay = anim.params.decay ? (1 - progress) : 1;
-        const shake = Math.sin(progress * Math.PI * anim.params.frequency) * anim.params.amplitude * decay * this.scaleFactor;
+        const decay = anim.params.decay ? 1 - progress : 1;
+        const shake =
+            Math.sin(progress * Math.PI * anim.params.frequency) *
+            anim.params.amplitude *
+            decay *
+            this.scaleFactor;
         return {
             offsetX: shake * Math.cos(anim.randomAngle),
-            offsetY: shake * Math.sin(anim.randomAngle)
+            offsetY: shake * Math.sin(anim.randomAngle),
         };
     }
 
@@ -64,13 +71,13 @@ export class PhysicalGestureAnimator {
             const jumpProgress = (progress - 0.2) / 0.5;
             const jumpCurve = Math.sin(jumpProgress * Math.PI);
             yOffset = -anim.params.jumpHeight * jumpCurve * this.scaleFactor;
-            scale = anim.params.squashAmount +
-                   (anim.params.stretchAmount - anim.params.squashAmount) * jumpCurve;
+            scale =
+                anim.params.squashAmount +
+                (anim.params.stretchAmount - anim.params.squashAmount) * jumpCurve;
         } else {
             // Landing phase
             const landProgress = (progress - 0.7) / 0.3;
-            scale = anim.params.stretchAmount -
-                   (anim.params.stretchAmount - 1) * landProgress;
+            scale = anim.params.stretchAmount - (anim.params.stretchAmount - 1) * landProgress;
         }
 
         // Apply gravity effect with squash and stretch if enabled
@@ -84,7 +91,7 @@ export class PhysicalGestureAnimator {
 
         const result = {
             offsetY: yOffset,
-            scale
+            scale,
         };
 
         if (scaleX !== undefined) result.scaleX = scaleX;
@@ -104,7 +111,7 @@ export class PhysicalGestureAnimator {
         if (!anim.vibrateAngles) {
             anim.vibrateAngles = {
                 x: Math.random() * 2 - 1, // Random factor between -1 and 1
-                y: Math.random() * 2 - 1
+                y: Math.random() * 2 - 1,
             };
             // Normalize to unit vector
             const mag = Math.sqrt(anim.vibrateAngles.x ** 2 + anim.vibrateAngles.y ** 2);
@@ -115,11 +122,12 @@ export class PhysicalGestureAnimator {
         const amplitude = anim.params.amplitude || 5;
         const frequency = anim.params.frequency || 20;
 
-        const vibration = Math.sin(progress * Math.PI * 2 * frequency) * amplitude * this.scaleFactor;
+        const vibration =
+            Math.sin(progress * Math.PI * 2 * frequency) * amplitude * this.scaleFactor;
 
         return {
             offsetX: vibration * anim.vibrateAngles.x,
-            offsetY: vibration * anim.vibrateAngles.y
+            offsetY: vibration * anim.vibrateAngles.y,
         };
     }
 
@@ -171,7 +179,7 @@ export class PhysicalGestureAnimator {
         return {
             offsetX: wiggleX,
             offsetY: -bounceY,
-            rotation
+            rotation,
         };
     }
 }

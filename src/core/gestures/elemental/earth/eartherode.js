@@ -45,7 +45,7 @@ const EARTHERODE_CONFIG = {
                 easing: 'easeOutQuad',
                 startScale: 1.0,
                 endScale: 0.3,
-                orientation: 'camera'
+                orientation: 'camera',
             },
             count: 5,
             scale: 0.7,
@@ -58,20 +58,20 @@ const EARTHERODE_CONFIG = {
                 exit: {
                     type: 'shrink',
                     duration: 0.25,
-                    easing: 'easeInQuad'
+                    easing: 'easeInQuad',
                 },
                 parameterAnimation: {
                     petrification: {
                         start: 0.9,
                         peak: 0.6,
                         end: 0.15,
-                        curve: 'fadeOut'
-                    }
+                        curve: 'fadeOut',
+                    },
                 },
                 pulse: {
                     amplitude: 0.04,
                     frequency: 2,
-                    easing: 'easeInOut'
+                    easing: 'easeInOut',
                 },
                 emissive: { min: 0.3, max: 0.6, frequency: 1.5, pattern: 'sine' },
                 rotate: [
@@ -79,7 +79,7 @@ const EARTHERODE_CONFIG = {
                     { axis: 'z', rotations: -0.8, phase: 72 },
                     { axis: 'y', rotations: 1.0, phase: 144 },
                     { axis: 'x', rotations: -0.9, phase: 216 },
-                    { axis: 'z', rotations: 0.7, phase: 288 }
+                    { axis: 'z', rotations: 0.7, phase: 288 },
                 ],
                 cutout: {
                     strength: 0.5,
@@ -89,21 +89,23 @@ const EARTHERODE_CONFIG = {
                     travel: 'angular',
                     travelSpeed: 1.5,
                     strengthCurve: 'fadeOut',
-                    fadeOutDuration: 0.5
+                    fadeOutDuration: 0.5,
                 },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: null,
-                    anchor: 'around',
-                    intensity: 0.5,
-                    sizeScale: 1.2,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: null,
+                        anchor: 'around',
+                        intensity: 0.5,
+                        sizeScale: 1.2,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.15,
                 blending: 'normal',
-                renderOrder: 6
-            }
+                renderOrder: 6,
+            },
         },
 
         // ── Layer 2: Debris scattering outward — chunks breaking free ─────
@@ -118,12 +120,18 @@ const EARTHERODE_CONFIG = {
                 orientation: 'camera',
                 startScale: 0.5,
                 endScale: 0.1,
-                scaleEasing: 'easeInQuad'
+                scaleEasing: 'easeInQuad',
             },
             count: 6,
             scale: 0.5,
-            models: ['rock-chunk-small', 'rock-chunk-medium', 'rock-chunk-small',
-                'rock-chunk-small', 'rock-cluster', 'rock-chunk-small'],
+            models: [
+                'rock-chunk-small',
+                'rock-chunk-medium',
+                'rock-chunk-small',
+                'rock-chunk-small',
+                'rock-cluster',
+                'rock-chunk-small',
+            ],
             animation: {
                 appearAt: 0.15,
                 disappearAt: 0.8,
@@ -137,21 +145,23 @@ const EARTHERODE_CONFIG = {
                     { axis: 'y', rotations: 1.8, phase: 120 },
                     { axis: 'z', rotations: -1.0, phase: 180 },
                     { axis: 'x', rotations: 1.3, phase: 240 },
-                    { axis: 'y', rotations: -1.5, phase: 300 }
+                    { axis: 'y', rotations: -1.5, phase: 300 },
                 ],
-                atmospherics: [{
-                    preset: 'earth-gravel',
-                    targets: null,
-                    anchor: 'below',
-                    intensity: 0.4,
-                    sizeScale: 0.6,
-                    progressCurve: 'burst',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-gravel',
+                        targets: null,
+                        anchor: 'below',
+                        intensity: 0.4,
+                        sizeScale: 0.6,
+                        progressCurve: 'burst',
+                    },
+                ],
                 scaleVariance: 0.3,
                 lifetimeVariance: 0.2,
                 blending: 'normal',
-                renderOrder: 10
-            }
+                renderOrder: 10,
+            },
         },
 
         // ── Layer 3: Ground dust ring — fallen debris spreading ───────────
@@ -163,7 +173,7 @@ const EARTHERODE_CONFIG = {
                 orientation: 'flat',
                 startScale: 0.4,
                 endScale: 2.0,
-                scaleEasing: 'easeOutQuad'
+                scaleEasing: 'easeOutQuad',
             },
             count: 1,
             scale: 1.0,
@@ -181,20 +191,26 @@ const EARTHERODE_CONFIG = {
                     travel: 'radial',
                     travelSpeed: 2.0,
                     strengthCurve: 'fadeOut',
-                    fadeOutDuration: 0.5
+                    fadeOutDuration: 0.5,
                 },
                 grain: {
-                    type: 3, strength: 0.25, scale: 0.25, speed: 1.5, blend: 'multiply'
+                    type: 3,
+                    strength: 0.25,
+                    scale: 0.25,
+                    speed: 1.5,
+                    blend: 'multiply',
                 },
                 emissive: { min: 0.5, max: 1.0, frequency: 2, pattern: 'sine' },
-                atmospherics: [{
-                    preset: 'earth-dust',
-                    targets: ['earth-ring'],
-                    anchor: 'above',
-                    intensity: 0.4,
-                    sizeScale: 1.5,
-                    progressCurve: 'sustain',
-                }],
+                atmospherics: [
+                    {
+                        preset: 'earth-dust',
+                        targets: ['earth-ring'],
+                        anchor: 'above',
+                        intensity: 0.4,
+                        sizeScale: 1.5,
+                        progressCurve: 'sustain',
+                    },
+                ],
                 blending: 'normal',
                 renderOrder: 4,
                 modelOverrides: {
@@ -203,13 +219,13 @@ const EARTHERODE_CONFIG = {
                             type: 1,
                             arcWidth: 0.8,
                             arcSpeed: 1.0,
-                            arcCount: 2
+                            arcCount: 2,
                         },
-                        orientationOverride: 'flat'
-                    }
-                }
-            }
-        }
+                        orientationOverride: 'flat',
+                    },
+                },
+            },
+        },
     ],
 
     fadeOut: true,
@@ -218,13 +234,13 @@ const EARTHERODE_CONFIG = {
     fadeCurve: 'accelerating',
     scaleShrink: 0.08,
     decayRate: 0.25,
-    glowColor: [0.70, 0.50, 0.25],
+    glowColor: [0.7, 0.5, 0.25],
     glowIntensityMin: 0.3,
     glowIntensityMax: 0.6,
     glowFlickerRate: 1.5,
     tremor: 0.006,
     tremorFrequency: 3,
-    tremorDecay: 0.7
+    tremorDecay: 0.7,
 };
 
 export default buildEarthEffectGesture(EARTHERODE_CONFIG);

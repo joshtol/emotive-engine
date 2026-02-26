@@ -20,7 +20,7 @@ export const PERFORMANCES = {
     ...FEEDBACK_PERFORMANCES,
 
     // State (15 performances)
-    ...STATE_PERFORMANCES
+    ...STATE_PERFORMANCES,
 };
 
 /**
@@ -29,7 +29,7 @@ export const PERFORMANCES = {
 export const PERFORMANCE_CATEGORIES = {
     conversational: Object.keys(CONVERSATIONAL_PERFORMANCES),
     feedback: Object.keys(FEEDBACK_PERFORMANCES),
-    state: Object.keys(STATE_PERFORMANCES)
+    state: Object.keys(STATE_PERFORMANCES),
 };
 
 /**
@@ -65,7 +65,7 @@ export function getPerformanceCount() {
         conversational: Object.keys(CONVERSATIONAL_PERFORMANCES).length,
         feedback: Object.keys(FEEDBACK_PERFORMANCES).length,
         state: Object.keys(STATE_PERFORMANCES).length,
-        total: Object.keys(PERFORMANCES).length
+        total: Object.keys(PERFORMANCES).length,
     };
 }
 
@@ -77,7 +77,7 @@ export function validateAllPerformances() {
     const results = {
         valid: [],
         invalid: [],
-        total: 0
+        total: 0,
     };
 
     Object.entries(PERFORMANCES).forEach(([name, definition]) => {
@@ -98,7 +98,7 @@ export {
     FEEDBACK_PERFORMANCES,
     STATE_PERFORMANCES,
     PERFORMANCE_SCHEMA,
-    validatePerformance
+    validatePerformance,
 };
 
 export default PERFORMANCES;

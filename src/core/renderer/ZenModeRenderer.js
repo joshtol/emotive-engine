@@ -53,7 +53,7 @@ export class ZenModeRenderer {
 
         // Apply gesture rotation if present (for spin gesture)
         if (gestureTransform && gestureTransform.rotation !== undefined) {
-            ctx.rotate(gestureTransform.rotation * Math.PI / 180);
+            ctx.rotate((gestureTransform.rotation * Math.PI) / 180);
         }
 
         // Calculate zen energy pulsation (slow breathing effect)
@@ -126,52 +126,73 @@ export class ZenModeRenderer {
                 const centerPetalBase = radius * (0.05 + 0.15 * morph);
                 ctx.moveTo(0, centerPetalBase); // Start at base center
                 ctx.bezierCurveTo(
-                    -radius * (0.05 + 0.25 * morph * spread), radius * 0.1,    // Left control
-                    -radius * (0.05 + 0.3 * morph * spread), -radius * (0.1 + 0.4 * morph),  // Left control up
-                    0, -radius * (0.2 + 0.65 * morph)                // Top point
+                    -radius * (0.05 + 0.25 * morph * spread),
+                    radius * 0.1, // Left control
+                    -radius * (0.05 + 0.3 * morph * spread),
+                    -radius * (0.1 + 0.4 * morph), // Left control up
+                    0,
+                    -radius * (0.2 + 0.65 * morph) // Top point
                 );
                 ctx.bezierCurveTo(
-                    radius * (0.05 + 0.3 * morph * spread), -radius * (0.1 + 0.4 * morph),   // Right control up
-                    radius * (0.05 + 0.25 * morph * spread), radius * 0.1,     // Right control
-                    0, centerPetalBase                 // Back to base
+                    radius * (0.05 + 0.3 * morph * spread),
+                    -radius * (0.1 + 0.4 * morph), // Right control up
+                    radius * (0.05 + 0.25 * morph * spread),
+                    radius * 0.1, // Right control
+                    0,
+                    centerPetalBase // Back to base
                 );
 
-                if (morph > 0.3) { // Only show side petals after some morphing
+                if (morph > 0.3) {
+                    // Only show side petals after some morphing
                     const sidePetalAlpha = (morph - 0.3) / 0.7; // Fade in from 30% to 100%
 
                     // Left petal - fades in and spreads
                     ctx.moveTo(-radius * 0.1 * sidePetalAlpha, radius * 0.2);
                     ctx.bezierCurveTo(
-                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,
-                        -radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),
-                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)
+                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread),
+                        radius * 0.1,
+                        -radius * (0.2 + 0.5 * sidePetalAlpha * spread),
+                        -radius * (0.1 + 0.2 * sidePetalAlpha),
+                        -radius * (0.1 + 0.4 * sidePetalAlpha * spread),
+                        -radius * (0.2 + 0.45 * sidePetalAlpha)
                     );
                     ctx.bezierCurveTo(
-                        -radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),
-                        -radius * 0.05 * sidePetalAlpha, radius * 0.1,
-                        -radius * 0.1 * sidePetalAlpha, radius * 0.2
+                        -radius * (0.05 + 0.15 * sidePetalAlpha),
+                        -radius * (0.1 + 0.4 * sidePetalAlpha),
+                        -radius * 0.05 * sidePetalAlpha,
+                        radius * 0.1,
+                        -radius * 0.1 * sidePetalAlpha,
+                        radius * 0.2
                     );
 
                     // Right petal - fades in and spreads
                     ctx.moveTo(radius * 0.1 * sidePetalAlpha, radius * 0.2);
                     ctx.bezierCurveTo(
-                        radius * (0.1 + 0.4 * sidePetalAlpha * spread), radius * 0.1,
-                        radius * (0.2 + 0.5 * sidePetalAlpha * spread), -radius * (0.1 + 0.2 * sidePetalAlpha),
-                        radius * (0.1 + 0.4 * sidePetalAlpha * spread), -radius * (0.2 + 0.45 * sidePetalAlpha)
+                        radius * (0.1 + 0.4 * sidePetalAlpha * spread),
+                        radius * 0.1,
+                        radius * (0.2 + 0.5 * sidePetalAlpha * spread),
+                        -radius * (0.1 + 0.2 * sidePetalAlpha),
+                        radius * (0.1 + 0.4 * sidePetalAlpha * spread),
+                        -radius * (0.2 + 0.45 * sidePetalAlpha)
                     );
                     ctx.bezierCurveTo(
-                        radius * (0.05 + 0.15 * sidePetalAlpha), -radius * (0.1 + 0.4 * sidePetalAlpha),
-                        radius * 0.05 * sidePetalAlpha, radius * 0.1,
-                        radius * 0.1 * sidePetalAlpha, radius * 0.2
+                        radius * (0.05 + 0.15 * sidePetalAlpha),
+                        -radius * (0.1 + 0.4 * sidePetalAlpha),
+                        radius * 0.05 * sidePetalAlpha,
+                        radius * 0.1,
+                        radius * 0.1 * sidePetalAlpha,
+                        radius * 0.2
                     );
                 }
 
                 // Bottom smile - morphs from straight to curved smile
                 if (smile > 0) {
-                    ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile));   // Corners rise with smile
+                    ctx.moveTo(-radius * 0.6, radius * (0.5 - 0.1 * smile)); // Corners rise with smile
                     ctx.quadraticCurveTo(
-                        0, radius * (0.5 + 0.1 * smile),     // Center dips for smile
-                        radius * 0.6, radius * (0.5 - 0.1 * smile)  // Right corner rises
+                        0,
+                        radius * (0.5 + 0.1 * smile), // Center dips for smile
+                        radius * 0.6,
+                        radius * (0.5 - 0.1 * smile) // Right corner rises
                     );
                 }
             }
@@ -192,7 +213,14 @@ export class ZenModeRenderer {
                 const lotusRadius = radius * 2.0; // Larger radius for more expansion
                 const arcHeight = zenTransition.arcHeight * radius; // Get arc height from transition state
                 const glowOriginY = radius * 0.5; // Lower quarter origin
-                const lotusGlow = ctx.createRadialGradient(0, glowOriginY, 0, 0, glowOriginY, lotusRadius * 1.2);
+                const lotusGlow = ctx.createRadialGradient(
+                    0,
+                    glowOriginY,
+                    0,
+                    0,
+                    glowOriginY,
+                    lotusRadius * 1.2
+                );
                 lotusGlow.addColorStop(0, `rgba(255, 255, 255, ${1.0 * zenPulse})`);
                 lotusGlow.addColorStop(0.25, `rgba(255, 252, 240, ${0.8 * zenPulse})`);
                 lotusGlow.addColorStop(0.5, `rgba(255, 245, 200, ${0.6 * zenPulse})`);
@@ -202,7 +230,14 @@ export class ZenModeRenderer {
                 ctx.fill();
 
                 // Layer 2: GAUSSIAN outer halo for smooth falloff
-                const outerHalo = ctx.createRadialGradient(0, -arcHeight/2, radius * 0.5, 0, -arcHeight/2, radius * 5);
+                const outerHalo = ctx.createRadialGradient(
+                    0,
+                    -arcHeight / 2,
+                    radius * 0.5,
+                    0,
+                    -arcHeight / 2,
+                    radius * 5
+                );
                 outerHalo.addColorStop(0, 'rgba(255, 223, 0, 0)');
                 outerHalo.addColorStop(0.1, `rgba(255, 223, 0, ${0.25 * zenPulse})`);
                 outerHalo.addColorStop(0.2, `rgba(255, 220, 0, ${0.2 * zenPulse})`);

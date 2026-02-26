@@ -110,15 +110,15 @@ export class TimelineRecorder {
                 if (!engine) return;
 
                 switch (event.type) {
-                case 'gesture':
-                    engine.express(event.name);
-                    break;
-                case 'emotion':
-                    engine.setEmotion(event.name);
-                    break;
-                case 'shape':
-                    engine.morphTo(event.name);
-                    break;
+                    case 'gesture':
+                        engine.express(event.name);
+                        break;
+                    case 'emotion':
+                        engine.setEmotion(event.name);
+                        break;
+                    case 'shape':
+                        engine.morphTo(event.name);
+                        break;
                 }
             }, event.time);
             this._activeTimeouts.add(timeoutId);
@@ -185,7 +185,7 @@ export class TimelineRecorder {
         return JSON.stringify({
             version: '1.0',
             duration: this._audioManager.getAudioDuration() || 0,
-            events: this._state.timeline
+            events: this._state.timeline,
         });
     }
 
@@ -266,7 +266,7 @@ export class TimelineRecorder {
             duration: this._audioManager.getAudioDuration() || 0,
             currentTime: this.getCurrentTime(),
             emotion: engine?.state?.emotion || 'neutral',
-            shape: engine?.state?.currentShape || 'circle'
+            shape: engine?.state?.currentShape || 'circle',
         };
     }
 

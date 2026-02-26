@@ -64,82 +64,84 @@ const SCORCH_CONFIG = {
             enter: {
                 type: 'fade',
                 duration: 0.12,
-                easing: 'easeOut'
+                easing: 'easeOut',
             },
             exit: {
                 type: 'fade',
                 duration: 0.15,
-                easing: 'easeIn'
+                easing: 'easeIn',
             },
             procedural: {
                 scaleSmoothing: 0.08,
-                geometryStability: true
+                geometryStability: true,
             },
             parameterAnimation: {
                 temperature: {
                     start: 0.5,
                     peak: 0.8,
                     end: 0.4,
-                    curve: 'sustained'
-                }
+                    curve: 'sustained',
+                },
             },
             flicker: {
                 intensity: 0.3,
                 rate: 12,
-                pattern: 'random'
+                pattern: 'random',
             },
             emissive: {
                 min: 1.5,
                 max: 3.0,
                 frequency: 6,
-                pattern: 'sine'
+                pattern: 'sine',
             },
             cutout: {
                 strength: 0.55,
-                primary: { pattern: 7, scale: 1.5, weight: 1.0 },    // DISSOLVE
-                secondary: { pattern: 5, scale: 1.2, weight: 0.4 },  // EMBERS
+                primary: { pattern: 7, scale: 1.5, weight: 1.0 }, // DISSOLVE
+                secondary: { pattern: 5, scale: 1.2, weight: 0.4 }, // EMBERS
                 blend: 'multiply',
                 travel: 'angular',
                 travelSpeed: 2.0,
                 trailDissolve: {
                     offset: -0.1,
-                    softness: 0.25
-                }
+                    softness: 0.25,
+                },
             },
             grain: {
                 type: 3,
                 strength: 0.08,
                 scale: 0.2,
                 speed: 0.8,
-                blend: 'multiply'
+                blend: 'multiply',
             },
             // Per-gesture atmospheric particles: smoke from scorched surface
-            atmospherics: [{
-                preset: 'smoke',
-                targets: null,
-                anchor: 'above',
-                intensity: 0.3,
-                sizeScale: 0.7,
-                progressCurve: 'sustain',
-            }],
+            atmospherics: [
+                {
+                    preset: 'smoke',
+                    targets: null,
+                    anchor: 'above',
+                    intensity: 0.3,
+                    sizeScale: 0.7,
+                    progressCurve: 'sustain',
+                },
+            ],
             drift: {
                 speed: 0.3,
                 distance: 0.3,
                 direction: { x: 0, y: 1, z: 0 },
-                easing: 'easeOutCubic'
+                easing: 'easeOutCubic',
             },
             scaleVariance: 0.25,
             lifetimeVariance: 0.2,
             blending: 'additive',
-            renderOrder: 12
-        }
+            renderOrder: 12,
+        },
     },
 
     // Mesh effects - intense yellow/white heat
     flickerFrequency: 6,
     flickerAmplitude: 0.008,
     flickerDecay: 0.25,
-    glowColor: [1.0, 0.8, 0.3],     // Yellow-white
+    glowColor: [1.0, 0.8, 0.3], // Yellow-white
     glowIntensityMin: 1.5,
     glowIntensityMax: 3.5,
     glowFlickerRate: 8,
@@ -147,7 +149,7 @@ const SCORCH_CONFIG = {
     scaleFrequency: 3,
     heatExpansion: 0.03,
     shimmerEffect: true,
-    shimmerIntensity: 0.02
+    shimmerIntensity: 0.02,
 };
 
 /**

@@ -35,12 +35,19 @@ export function createJumpGesture(direction) {
 
     return {
         name: `jump${capitalize(direction)}`,
-        emoji: direction === 'up' ? '🦘' : direction === 'down' ? '💥' : direction === 'left' ? '⬅️' : '➡️',
+        emoji:
+            direction === 'up'
+                ? '🦘'
+                : direction === 'down'
+                  ? '💥'
+                  : direction === 'left'
+                    ? '⬅️'
+                    : '➡️',
         type: 'override',
         description: `Jump ${direction} with squash & stretch`,
 
         config: {
-            duration: 800,  // Legacy fallback
+            duration: 800, // Legacy fallback
             musicalDuration: { musical: true, beats: 2 }, // 2 beats
             jumpDistance: 60,
             squashAmount: 0.8,
@@ -56,8 +63,8 @@ export function createJumpGesture(direction) {
                 strength: 0.9,
                 jumpDistance: 60,
                 squash: 0.8,
-                stretch: 1.2
-            }
+                stretch: 1.2,
+            },
         },
 
         rhythm: {
@@ -68,26 +75,26 @@ export function createJumpGesture(direction) {
             phaseSync: {
                 anticipation: 'eighth',
                 jump: 'beat',
-                landing: 'sixteenth'
+                landing: 'sixteenth',
             },
 
             distanceSync: {
                 onBeat: 1.5,
                 offBeat: 0.8,
                 accent: 2.0,
-                curve: 'exponential'
+                curve: 'exponential',
             },
 
             deformationSync: {
                 squashOnBeat: 0.6,
                 stretchOnBeat: 1.4,
-                timing: 'anticipatory'
+                timing: 'anticipatory',
             },
 
             dynamics: {
                 forte: { jumpDistance: 80, stretch: 1.3 },
-                piano: { jumpDistance: 30, stretch: 1.1 }
-            }
+                piano: { jumpDistance: 30, stretch: 1.1 },
+            },
         },
 
         initialize(particle, _motion, _centerX, _centerY) {
@@ -101,7 +108,7 @@ export function createJumpGesture(direction) {
                 startSize: particle.size,
                 originalVx: particle.vx,
                 originalVy: particle.vy,
-                initialized: true
+                initialized: true,
             };
         },
 
@@ -138,7 +145,6 @@ export function createJumpGesture(direction) {
 
                 particle.vx = 0;
                 particle.vy = 0;
-
             } else if (progress < jumpEnd) {
                 // PHASE 2: Jump (arc motion with stretch)
                 const jumpProgress = (progress - anticipationEnd) / (jumpEnd - anticipationEnd);
@@ -161,13 +167,15 @@ export function createJumpGesture(direction) {
                 } else {
                     particle.x = data.startX + dir.x * jumpCurve * jumpDistance;
                     // Slight vertical arc
-                    particle.y = data.startY - Math.sin(jumpProgress * Math.PI) * jumpDistance * 0.3;
+                    particle.y =
+                        data.startY - Math.sin(jumpProgress * Math.PI) * jumpDistance * 0.3;
                 }
 
                 // Stretch/squash based on phase
                 if (jumpProgress < 0.5) {
                     const stretchProgress = jumpProgress * 2;
-                    particle.size = data.startSize * (squash + (stretch - squash) * stretchProgress);
+                    particle.size =
+                        data.startSize * (squash + (stretch - squash) * stretchProgress);
                 } else {
                     const fallProgress = (jumpProgress - 0.5) * 2;
                     particle.size = data.startSize * (stretch - (stretch - 1) * fallProgress * 0.8);
@@ -181,7 +189,6 @@ export function createJumpGesture(direction) {
                     particle.vx = dir.x * Math.cos(jumpProgress * Math.PI) * jumpDistance * 0.1;
                     particle.vy = -Math.cos(jumpProgress * Math.PI) * jumpDistance * 0.05;
                 }
-
             } else {
                 // PHASE 3: Landing (impact squash)
                 const landProgress = (progress - jumpEnd) / (1 - jumpEnd);
@@ -194,10 +201,12 @@ export function createJumpGesture(direction) {
                 if (config.landingImpact) {
                     if (landProgress < 0.3) {
                         const impactProgress = landProgress / 0.3;
-                        particle.size = data.startSize * (1 - (1 - squash * 0.8) * (1 - impactProgress));
+                        particle.size =
+                            data.startSize * (1 - (1 - squash * 0.8) * (1 - impactProgress));
                     } else {
                         const recoverProgress = (landProgress - 0.3) / 0.7;
-                        particle.size = data.startSize * (squash * 0.8 + (1 - squash * 0.8) * recoverProgress);
+                        particle.size =
+                            data.startSize * (squash * 0.8 + (1 - squash * 0.8) * recoverProgress);
                     }
                 } else {
                     particle.size = data.startSize * (squash + (1 - squash) * easedLand);
@@ -223,9 +232,7 @@ export function createJumpGesture(direction) {
         },
 
         easeInOutCubic(t) {
-            return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         },
 
         easeOutBounce(t) {
@@ -257,9 +264,12 @@ export function createJumpGesture(direction) {
                 const anticipationEnd = config.anticipation || 0.2;
                 const jumpEnd = 1 - anticipationEnd * 0.5;
 
-                let posX = 0, posY = 0;
+                let posX = 0,
+                    posY = 0;
                 let scale = 1.0;
-                let rotX = 0, rotY = 0, rotZ = 0;
+                let rotX = 0,
+                    rotY = 0,
+                    rotZ = 0;
 
                 if (progress < anticipationEnd) {
                     // PHASE 1: Anticipation
@@ -274,7 +284,6 @@ export function createJumpGesture(direction) {
                     } else {
                         posX = -dir.x * easedSquash * 0.02;
                     }
-
                 } else if (progress < jumpEnd) {
                     // PHASE 2: Jump
                     const jumpProgress = (progress - anticipationEnd) / (jumpEnd - anticipationEnd);
@@ -304,7 +313,6 @@ export function createJumpGesture(direction) {
                         rotY = dir.x * Math.sin(jumpProgress * Math.PI) * 0.15;
                         rotZ = -dir.x * Math.sin(jumpProgress * Math.PI) * 0.05;
                     }
-
                 } else {
                     // PHASE 3: Landing
                     const landProgress = (progress - jumpEnd) / (1 - jumpEnd);
@@ -313,7 +321,8 @@ export function createJumpGesture(direction) {
                     if (landProgress < 0.5) {
                         const bounceProgress = landProgress * 2;
                         if (isVertical) {
-                            posY = -dir.y * Math.sin(bounceProgress * Math.PI) * jumpDistance * 0.15;
+                            posY =
+                                -dir.y * Math.sin(bounceProgress * Math.PI) * jumpDistance * 0.15;
                         } else {
                             posX = -dir.x * Math.sin(bounceProgress * Math.PI) * jumpDistance * 0.1;
                         }
@@ -336,9 +345,9 @@ export function createJumpGesture(direction) {
                 return {
                     cameraRelativePosition: [posX, posY, 0],
                     rotation: [rotX, rotY, rotZ],
-                    scale
+                    scale,
                 };
-            }
-        }
+            },
+        },
     };
 }

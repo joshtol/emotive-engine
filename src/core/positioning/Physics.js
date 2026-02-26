@@ -2,18 +2,18 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *  ╔═○─┐ emotive
  *    ●●  ENGINE - Physics-Based Positioning
- *  └─○═╝                                                                             
+ *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * @fileoverview Physics-based positioning methods for natural mascot movement
  * @author Emotive Engine Team
  * @module positioning/Physics
- * 
+ *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
- * ║                                   PURPOSE                                         
+ * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Provides physics-based positioning methods like gravity, magnetism, and avoidance. 
- * ║ Creates natural, organic movement patterns for the mascot.                         
+ * ║ Provides physics-based positioning methods like gravity, magnetism, and avoidance.
+ * ║ Creates natural, organic movement patterns for the mascot.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  */
 
@@ -36,15 +36,21 @@ class Physics {
      */
     moveToGrid(x, y, offset = { x: 0, y: 0 }, options = {}) {
         const gridSize = options.gridSize || 100;
-        const targetX = (x * gridSize) + offset.x;
-        const targetY = (y * gridSize) + offset.y;
-        
+        const targetX = x * gridSize + offset.x;
+        const targetY = y * gridSize + offset.y;
+
         // Convert to mascot coordinate system
         const mascotX = targetX - window.innerWidth / 2;
         const mascotY = targetY - window.innerHeight / 2;
-        
+
         if (options.animate !== false) {
-            this.positionController.animateOffset(mascotX, mascotY, 0, options.duration || 1000, options.easing || 'easeOutCubic');
+            this.positionController.animateOffset(
+                mascotX,
+                mascotY,
+                0,
+                options.duration || 1000,
+                options.easing || 'easeOutCubic'
+            );
         } else {
             this.positionController.setOffset(mascotX, mascotY, 0);
         }
@@ -58,57 +64,57 @@ class Physics {
      */
     moveToGravity(center = { x: 0, y: 0 }, strength = 0.1, options = {}) {
         const callbackId = 'gravity';
-        
+
         const applyGravity = currentTime => {
             if (!this.isRunning) return;
-            
+
             const deltaTime = currentTime - this.lastTime;
             this.lastTime = currentTime;
-            
+
             if (deltaTime > 0) {
                 // Get current position
                 const currentOffset = this.positionController.getOffset();
                 const currentX = currentOffset.x;
                 const currentY = currentOffset.y;
-                
+
                 // Calculate distance to gravity center
                 const dx = center.x - currentX;
                 const dy = center.y - currentY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                
+
                 if (distance > 0) {
                     // Apply gravity force
                     const force = strength / (distance * distance);
                     this.acceleration.x = (dx / distance) * force;
                     this.acceleration.y = (dy / distance) * force;
-                    
+
                     // Update velocity
                     this.velocity.x += this.acceleration.x * deltaTime;
                     this.velocity.y += this.acceleration.y * deltaTime;
-                    
+
                     // Apply damping
                     const damping = options.damping || 0.98;
                     this.velocity.x *= damping;
                     this.velocity.y *= damping;
-                    
+
                     // Update position
                     const newX = currentX + this.velocity.x * deltaTime;
                     const newY = currentY + this.velocity.y * deltaTime;
-                    
+
                     this.positionController.setOffset(newX, newY, 0);
                 }
             }
-            
+
             if (this.isRunning) {
                 requestAnimationFrame(applyGravity);
             }
         };
-        
+
         this.physicsCallbacks.set(callbackId, applyGravity);
         this.isRunning = true;
         this.lastTime = performance.now();
         applyGravity(this.lastTime);
-        
+
         return () => {
             this.isRunning = false;
             this.physicsCallbacks.delete(callbackId);
@@ -123,26 +129,26 @@ class Physics {
      */
     moveToMagnetic(targets = [], strength = 0.05, options = {}) {
         const callbackId = 'magnetic';
-        
+
         const applyMagnetism = currentTime => {
             if (!this.isRunning) return;
-            
+
             const deltaTime = currentTime - this.lastTime;
             this.lastTime = currentTime;
-            
+
             if (deltaTime > 0) {
                 // Get current position
                 const currentOffset = this.positionController.getOffset();
                 const currentX = currentOffset.x;
                 const currentY = currentOffset.y;
-                
+
                 let totalForceX = 0;
                 let totalForceY = 0;
-                
+
                 // Calculate forces from all targets
                 targets.forEach(target => {
                     let targetX, targetY;
-                    
+
                     if (typeof target === 'string') {
                         // CSS selector
                         const element = document.querySelector(target);
@@ -160,49 +166,49 @@ class Physics {
                     } else {
                         return;
                     }
-                    
+
                     // Calculate distance and force
                     const dx = targetX - currentX;
                     const dy = targetY - currentY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    
+
                     if (distance > 0) {
                         const force = strength / (distance * distance);
                         totalForceX += (dx / distance) * force;
                         totalForceY += (dy / distance) * force;
                     }
                 });
-                
+
                 // Apply magnetic force
                 this.acceleration.x = totalForceX;
                 this.acceleration.y = totalForceY;
-                
+
                 // Update velocity
                 this.velocity.x += this.acceleration.x * deltaTime;
                 this.velocity.y += this.acceleration.y * deltaTime;
-                
+
                 // Apply damping
                 const damping = options.damping || 0.95;
                 this.velocity.x *= damping;
                 this.velocity.y *= damping;
-                
+
                 // Update position
                 const newX = currentX + this.velocity.x * deltaTime;
                 const newY = currentY + this.velocity.y * deltaTime;
-                
+
                 this.positionController.setOffset(newX, newY, 0);
             }
-            
+
             if (this.isRunning) {
                 requestAnimationFrame(applyMagnetism);
             }
         };
-        
+
         this.physicsCallbacks.set(callbackId, applyMagnetism);
         this.isRunning = true;
         this.lastTime = performance.now();
         applyMagnetism(this.lastTime);
-        
+
         return () => {
             this.isRunning = false;
             this.physicsCallbacks.delete(callbackId);
@@ -217,26 +223,26 @@ class Physics {
      */
     moveToAvoid(obstacles = [], distance = 100, options = {}) {
         const callbackId = 'avoid';
-        
+
         const applyAvoidance = currentTime => {
             if (!this.isRunning) return;
-            
+
             const deltaTime = currentTime - this.lastTime;
             this.lastTime = currentTime;
-            
+
             if (deltaTime > 0) {
                 // Get current position
                 const currentOffset = this.positionController.getOffset();
                 const currentX = currentOffset.x;
                 const currentY = currentOffset.y;
-                
+
                 let totalForceX = 0;
                 let totalForceY = 0;
-                
+
                 // Calculate avoidance forces from all obstacles
                 obstacles.forEach(obstacle => {
                     let obstacleX, obstacleY;
-                    
+
                     if (typeof obstacle === 'string') {
                         // CSS selector
                         const element = document.querySelector(obstacle);
@@ -254,12 +260,12 @@ class Physics {
                     } else {
                         return;
                     }
-                    
+
                     // Calculate distance to obstacle
                     const dx = currentX - obstacleX;
                     const dy = currentY - obstacleY;
                     const obstacleDistance = Math.sqrt(dx * dx + dy * dy);
-                    
+
                     if (obstacleDistance < distance && obstacleDistance > 0) {
                         // Apply repulsion force
                         const force = (distance - obstacleDistance) / distance;
@@ -267,37 +273,37 @@ class Physics {
                         totalForceY += (dy / obstacleDistance) * force;
                     }
                 });
-                
+
                 // Apply avoidance force
                 this.acceleration.x = totalForceX;
                 this.acceleration.y = totalForceY;
-                
+
                 // Update velocity
                 this.velocity.x += this.acceleration.x * deltaTime;
                 this.velocity.y += this.acceleration.y * deltaTime;
-                
+
                 // Apply damping
                 const damping = options.damping || 0.9;
                 this.velocity.x *= damping;
                 this.velocity.y *= damping;
-                
+
                 // Update position
                 const newX = currentX + this.velocity.x * deltaTime;
                 const newY = currentY + this.velocity.y * deltaTime;
-                
+
                 this.positionController.setOffset(newX, newY, 0);
             }
-            
+
             if (this.isRunning) {
                 requestAnimationFrame(applyAvoidance);
             }
         };
-        
+
         this.physicsCallbacks.set(callbackId, applyAvoidance);
         this.isRunning = true;
         this.lastTime = performance.now();
         applyAvoidance(this.lastTime);
-        
+
         return () => {
             this.isRunning = false;
             this.physicsCallbacks.delete(callbackId);
@@ -312,32 +318,38 @@ class Physics {
      */
     moveToRandom(bounds = { x: 0, y: 0, width: 400, height: 400 }, frequency = 3000, options = {}) {
         const callbackId = 'random';
-        
+
         const randomizePosition = () => {
             if (!this.isRunning) return;
-            
+
             const randomX = bounds.x + Math.random() * bounds.width;
             const randomY = bounds.y + Math.random() * bounds.height;
-            
+
             // Convert to mascot coordinate system
             const mascotX = randomX - window.innerWidth / 2;
             const mascotY = randomY - window.innerHeight / 2;
-            
+
             if (options.animate !== false) {
-                this.positionController.animateOffset(mascotX, mascotY, 0, options.duration || 1000, options.easing || 'easeOutCubic');
+                this.positionController.animateOffset(
+                    mascotX,
+                    mascotY,
+                    0,
+                    options.duration || 1000,
+                    options.easing || 'easeOutCubic'
+                );
             } else {
                 this.positionController.setOffset(mascotX, mascotY, 0);
             }
-            
+
             if (this.isRunning) {
                 setTimeout(randomizePosition, frequency);
             }
         };
-        
+
         this.physicsCallbacks.set(callbackId, randomizePosition);
         this.isRunning = true;
         randomizePosition();
-        
+
         return () => {
             this.isRunning = false;
             this.physicsCallbacks.delete(callbackId);
@@ -364,4 +376,3 @@ class Physics {
 }
 
 export default Physics;
-

@@ -20,48 +20,48 @@ export default {
         // Particle emission syncs to slow, melancholic beats
         particleEmission: {
             syncMode: 'beat',
-            burstSize: 3,           // Small, subdued bursts
-            offBeatRate: 0.8,       // Steady tears between beats
-            fallingSync: true       // Tears fall on beat
+            burstSize: 3, // Small, subdued bursts
+            offBeatRate: 0.8, // Steady tears between beats
+            fallingSync: true, // Tears fall on beat
         },
 
         // Breathing syncs to slow, heavy rhythm
         breathSync: {
             mode: 'beats',
-            beatsPerBreath: 8,      // Very slow breathing (2 bars)
-            intensity: 0.7          // Shallow, weary breaths
+            beatsPerBreath: 8, // Very slow breathing (2 bars)
+            intensity: 0.7, // Shallow, weary breaths
         },
 
         // Glow pulses weakly with sadness
         glowSync: {
             intensityRange: [0.5, 0.8],
             syncTo: 'beat',
-            attack: 0.2,            // Slow fade in
-            decay: 0.8              // Long, lingering fade
+            attack: 0.2, // Slow fade in
+            decay: 0.8, // Long, lingering fade
         },
 
         // Pattern-specific sadness expressions
         patternBehaviors: {
-            'waltz': {
+            waltz: {
                 // Melancholic waltz
                 particleEmission: { burstSize: 2 },
-                breathSync: { beatsPerBreath: 6 }
+                breathSync: { beatsPerBreath: 6 },
             },
-            'ballad': {
+            ballad: {
                 // Deep emotional ballad
                 particleEmission: {
                     syncMode: 'slow',
-                    burstSize: 4
+                    burstSize: 4,
                 },
-                glowSync: { intensityRange: [0.4, 0.7] }
+                glowSync: { intensityRange: [0.4, 0.7] },
             },
-            'ambient': {
+            ambient: {
                 // Atmospheric sadness
                 particleEmission: {
                     syncMode: 'drift',
-                    burstSize: 2
-                }
-            }
-        }
-    }
+                    burstSize: 2,
+                },
+            },
+        },
+    },
 };

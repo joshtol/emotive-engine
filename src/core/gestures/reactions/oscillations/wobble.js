@@ -31,22 +31,22 @@ export default {
     config: {
         duration: 1500,
         musicalDuration: { musical: true, beats: 4 },
-        wobbleRadius: 0.08,   // Circular wobble radius
-        wobbleAngle: 0.2,     // Tilt angle during wobble
-        rotations: 2,         // Wobble rotations
-        decay: 0.5,           // How much wobble reduces
+        wobbleRadius: 0.08, // Circular wobble radius
+        wobbleAngle: 0.2, // Tilt angle during wobble
+        rotations: 2, // Wobble rotations
+        decay: 0.5, // How much wobble reduces
         strength: 1.0,
         particleMotion: {
             type: 'wobble',
-            strength: 1.0
-        }
+            strength: 1.0,
+        },
     },
 
     rhythm: {
         enabled: true,
         syncMode: 'beat',
         durationSync: { mode: 'beats', beats: 4 },
-        timingSync: 'onBeat'
+        timingSync: 'onBeat',
     },
 
     '3d': {
@@ -85,8 +85,8 @@ export default {
                 rotation: [rotX, 0, rotZ],
                 scale,
                 glowIntensity,
-                glowBoost
+                glowBoost,
             };
-        }
-    }
+        },
+    },
 };
