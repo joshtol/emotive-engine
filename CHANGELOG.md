@@ -79,6 +79,9 @@ and this project uses
 - **REFACTORED** gestures reorganized into 6 semantic categories and per-element
   subdirectories
 - **REMOVED** poison/smoke elements and all hardcoded factory gestures
+- **ADDED** accent gestures for DanceChoreographer support — pop, bob, swell,
+  swagger, dip, flare — using boost multipliers (`scaleBoost`, `rotationBoost`,
+  `positionBoost`, `glowBoost`) that layer WITH existing groove animation
 
 ### 🎵 Audio & LLM Integration
 
@@ -145,25 +148,6 @@ and this project uses
 - **ADDED** elemental gestures demo page with mobile responsive 2-col grid
 - **FIXED** GitHub Pages deployment with relative paths and bundled Three.js
 - **FIXED** 3D canvas clipping and mobile panel readability
-
-## [3.3.8] - 2026-01-14
-
-### 🎭 Dance Choreographer Gesture Registration
-
-- **ADDED** Accent gestures to core gesture registry for DanceChoreographer
-  support
-    - `pop` - Quick scale pulse accent for beat hits
-    - `bob` - Forward tilt accent (head nod feel) for groove emphasis
-    - `swell` - Glow build with scale for transitions and builds
-    - `swagger` - Side lean with drift for confident movement feel
-    - `dip` - Downward bob with squish for rhythmic drops
-    - `flare` - Scale + glow burst for drops and big accents
-
-- **DESIGN** Accent gestures use boost multipliers (`scaleBoost`,
-  `rotationBoost`, `positionBoost`, `glowBoost`) instead of absolute values
-    - Works WITH existing groove animation instead of fighting it
-    - All marked with `isAccent: true` in 3D config
-    - Resolves "Unknown gesture" warnings when dance mode enabled
 
 ## [3.3.7] - 2026-01-14
 

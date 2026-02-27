@@ -16,7 +16,7 @@ import { createLayerCard, setupDragAndDrop } from '/examples/3d/layer-utils.js';
 // Runs automatically when this module is imported
 // ═══════════════════════════════════════════════════════════════════════════════
 
-document.addEventListener('DOMContentLoaded', () => {
+function initSectionToggles() {
     document.querySelectorAll('.section h2').forEach(h2 => {
         h2.addEventListener('click', e => {
             // Don't collapse if clicking on a toggle switch inside the header
@@ -29,7 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-});
+}
+
+// Run immediately if DOM is already parsed (e.g. dynamically imported from a module
+// with top-level await), otherwise wait for DOMContentLoaded.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSectionToggles);
+} else {
+    initSectionToggles();
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TOGGLE HANDLERS
@@ -716,8 +724,8 @@ function openPrecisionPopup(valueElement, slider, title) {
     });
 }
 
-// Auto-initialize precision mode for all sliders on DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
+// Auto-initialize precision mode for all sliders
+function initPrecisionSliders() {
     document.querySelectorAll('.slider-value').forEach(valueEl => {
         const sliderControl = valueEl.closest('.slider-control');
         if (!sliderControl) return;
@@ -736,7 +744,13 @@ document.addEventListener('DOMContentLoaded', () => {
             openPrecisionPopup(valueEl, slider, title);
         });
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPrecisionSliders);
+} else {
+    initPrecisionSliders();
+}
 
 // Export for manual use if needed
 export { openPrecisionPopup, closePrecisionPopup };
