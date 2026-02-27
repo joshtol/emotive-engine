@@ -17,6 +17,11 @@
       "import": "./dist/emotive-mascot-3d.js",
       "require": "./dist/emotive-mascot-3d.umd.js"
     },
+    "./3d-elementals": {
+      "types": "./types/3d-elementals.d.ts",
+      "import": "./dist/emotive-mascot-3d-elementals.js",
+      "require": "./dist/emotive-mascot-3d-elementals.umd.js"
+    },
     "./package.json": "./package.json"
   },
   "private": false,
@@ -29,6 +34,8 @@
     "dist/emotive-mascot.umd.js",
     "dist/emotive-mascot-3d.js",
     "dist/emotive-mascot-3d.umd.js",
+    "dist/emotive-mascot-3d-elementals.js",
+    "dist/emotive-mascot-3d-elementals.umd.js",
     "src",
     "types",
     "assets/emotive-engine-icon.svg",

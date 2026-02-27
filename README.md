@@ -199,6 +199,10 @@ Or via CDN:
 <!-- 3D Engine (requires Three.js to be loaded first) -->
 <script src="https://unpkg.com/three/build/three.min.js"></script>
 <script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d.umd.js"></script>
+
+<!-- 3D Engine with Elementals (requires Three.js to be loaded first) -->
+<script src="https://unpkg.com/three/build/three.min.js"></script>
+<script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d-elementals.umd.js"></script>
 ```
 
 ---
@@ -398,14 +402,12 @@ GLSL shaders, instanced GPU models, and per-element bloom thresholds:
 | **Void**        | 17       | Singularity, drain, corruption             |
 
 ```javascript
-// Use the elementals bundle for 3D elemental gestures
-import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
-import '@joshtol/emotive-engine/src/core/gestures/elemental-gestures.js';
-import '@joshtol/emotive-engine/src/3d/effects/ElementRegistrations.js';
+// Import from the elementals bundle — includes all 8 elements + 160+ gestures
+import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d-elementals';
 
 mascot.express('firecrown');
 mascot.express('icevortex');
-mascot.express('electricZap');
+mascot.express('zap');
 ```
 
 > Elemental gestures require the 3D assets to be self-hosted — see
