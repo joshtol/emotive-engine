@@ -4,7 +4,7 @@
  * Supports: emotions, 2D gestures, shape morphing, particles.
  *
  * @module emotive-engine/minimal
- * @version 3.3.8
+ * @version 3.4.0
  */
 
 // ============================================================================
@@ -44,7 +44,7 @@ export { EventManager } from './core/events/EventManager.js';
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '3.3.8-minimal';
+export const VERSION = '3.4.0-minimal';
 export const ENGINE_NAME = 'Emotive Engine Minimal';
 export const BUILD_TYPE = 'minimal';
 

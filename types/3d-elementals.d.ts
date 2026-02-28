@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine/3d-elementals v3.3.8
+// Type definitions for @joshtol/emotive-engine/3d-elementals v3.4.0
 // Project: https://github.com/joshtol/emotive-engine
 // Definitions by: Emotive Engine Team
 

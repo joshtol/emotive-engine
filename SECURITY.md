@@ -314,7 +314,7 @@ We thank the following security researchers for responsible disclosure:
 
 ---
 
-**Last Updated**: 2026-02-26 **Version**: 3.3.8
+**Last Updated**: 2026-02-27 **Version**: 3.4.0
 
 ---
 

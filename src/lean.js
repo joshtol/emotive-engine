@@ -5,7 +5,7 @@
  * Keeps: All emotions, gestures, color interpolation, particle system
  *
  * @module emotive-engine/lean
- * @version 3.3.8
+ * @version 3.4.0
  */
 
 // ============================================================================
@@ -64,7 +64,7 @@ export { easeInOutQuad, easeOutCubic, easeInOutSine, applyEasing } from './utils
 // VERSION INFO
 // ============================================================================
 
-export const VERSION = '3.3.8-lean';
+export const VERSION = '3.4.0-lean';
 export const ENGINE_NAME = 'Emotive Engine Lean';
 export const BUILD_TYPE = 'lean';
 

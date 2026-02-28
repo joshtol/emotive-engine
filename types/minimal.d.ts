@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine/minimal v3.3.8
+// Type definitions for @joshtol/emotive-engine/minimal v3.4.0
 // Ultra-light loading screen build — no audio, plugins, or manager overhead
 
 export interface MinimalMascotConfig {
