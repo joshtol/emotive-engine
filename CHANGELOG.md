@@ -9,6 +9,31 @@ and this project uses
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-02-27
+
+### Optimized
+
+- **Minimal bundle reduced 45%** — from 577 KB / 141 KB gz to 317 KB / 79 KB gz
+  via gesture pruning (134 → 25 gestures) and audio/effects module stripping
+- **npm tarball reduced 42%** — from 3.3 MB to 1.9 MB by excluding src/ from
+  package files
+
+### Removed
+
+- **Zen mode** — removed entirely from codebase (ZenModeController,
+  ZenModeOverlay, all zen references across mascot/renderer/config)
+- **Dead code** — removed 4,236 lines across 14 unused files: GestureScheduler,
+  HarmonicSystem, MusicTheory, apiValidation, validation, FPSCounter,
+  GPUMemoryMonitor, ThemeManager, ConfigurationManager, EmotiveDemoBundle,
+  orphaned audio entry point, and demo build config
+
+### Fixed
+
+- **Calm particles in 3D** — ascending behavior had no spawn position case (all
+  particles spawned at center) and 3D translator used uninitialized helix
+  parameters (all particles mapped to same point). Now uses uniform sphere
+  distribution with age-based upward rise.
+
 ## [3.3.8] - 2026-02-26
 
 ### 🌊 Elemental Effects System
