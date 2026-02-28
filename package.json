@@ -144,7 +144,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@vitest/coverage-v8": "^3.2.4",
     "canvas": "^3.2.0",
-    "eslint": "^9.35.0",
+    "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "gif.js": "^0.2.0",
     "html-minifier-terser": "^7.2.0",
