@@ -7,7 +7,7 @@
  *
  * @fileoverview Emotive Engine 3D - Experimental WebGL Rendering
  * @author Emotive Engine Team
- * @version 3.3.0
+ * @version 3.4.0
  * @module EmotiveEngine3D
  *
  * EXPERIMENTAL: 3D rendering variant with WebGL core + Canvas2D particles
