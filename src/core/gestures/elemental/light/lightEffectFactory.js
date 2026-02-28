@@ -33,20 +33,7 @@
  * and imports buildLightEffectGesture from this factory.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// PSEUDO-RANDOM HASH FOR DETERMINISTIC ANIMATION
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-function hash(n) {
-    return (((Math.sin(n) * 43758.5453) % 1) + 1) % 1;
-}
-
-function noise1D(x) {
-    const i = Math.floor(x);
-    const f = x - i;
-    const u = f * f * (3 - 2 * f);
-    return hash(i) * (1 - u) + hash(i + 1) * u;
-}
+import { hash, noise1D } from '../../../../utils/noise.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GESTURE FACTORY — buildLightEffectGesture(config)

@@ -79,7 +79,7 @@ export function updateAmbient(particle, dt, _centerX, _centerY) {
     // Add continuous upward drift
     particle.vy -= data.upwardSpeed * dt;
 
-    // NO horizontal movement or waviness (zen-like straight up)
+    // NO horizontal movement or waviness (straight up)
     particle.vx = 0;
 }
 

@@ -3,7 +3,7 @@
  *
  * Manages rendering of visual effects.
  * Handles:
- * - Glow rendering (recording, zen-vortex, normal, sleep-dimmed)
+ * - Glow rendering (recording, normal, sleep-dimmed)
  * - Flash wave effect rendering
  * - Speaking pulse effect rendering
  */
@@ -34,9 +34,6 @@ export class EffectsRenderManager {
                 radius: glowRadius,
                 deltaTime,
             });
-        } else if (isEffectActive('zen-vortex', this.renderer.state)) {
-            // Zen vortex handles its own visuals
-            // Skip normal glow to prevent flash
         } else {
             // Normal glow with sleep dimming
             if (

@@ -118,7 +118,7 @@ export class Particle3DTranslator {
             spaz: this._translateSpaz.bind(this),
             directed: this._translateDirected.bind(this),
             fizzy: this._translateFizzy.bind(this),
-            zen: this._translateZen.bind(this),
+
             gravitationalAccretion: this._translateGravitationalAccretion.bind(this),
         };
     }
@@ -812,7 +812,7 @@ export class Particle3DTranslator {
     /**
      * SURVEILLANCE: Tracking/scanning motion in full 3D sphere
      * Particles orbit and scan like searchlights covering all angles
-     * Uses same technique as zen/ambient for consistent 3D distribution
+     * Uses same technique as ambient for consistent 3D distribution
      */
     _translateSurveillance(particle, corePosition, _canvasSize) {
         // Get uniform 3D direction (uses x,y as seeds but results in sphere distribution)
@@ -822,7 +822,7 @@ export class Particle3DTranslator {
         const orbitAngle = particle.age * 0.5;
         const radius = this.coreRadius3D * 1.2;
 
-        // Create perpendicular vector for rotation plane (same as zen)
+        // Create perpendicular vector for rotation plane
         const up = { x: 0, y: 1, z: 0 };
         const perp = {
             x: dir.y * up.z - dir.z * up.y,
@@ -976,46 +976,6 @@ export class Particle3DTranslator {
         pos.y += particle.age * 0.5;
 
         return pos;
-    }
-
-    /**
-     * ZEN: Meditative slow drift
-     */
-    _translateZen(particle, corePosition, _canvasSize) {
-        // Get uniform 3D direction for orbital plane
-        const dir = this._getUniformDirection3D(particle);
-
-        // Zen particles orbit slowly in their own plane
-        const zenAngle = particle.age * 0.2;
-        const zenRadius = this.coreRadius3D * 1.4;
-
-        // Create perpendicular vector for rotation plane
-        // Use cross product to get perpendicular direction
-        const up = { x: 0, y: 1, z: 0 };
-        const perp = {
-            x: dir.y * up.z - dir.z * up.y,
-            y: dir.z * up.x - dir.x * up.z,
-            z: dir.x * up.y - dir.y * up.x,
-        };
-
-        // Normalize perpendicular vector
-        const perpMag = Math.sqrt(perp.x * perp.x + perp.y * perp.y + perp.z * perp.z);
-        if (perpMag > 0) {
-            perp.x /= perpMag;
-            perp.y /= perpMag;
-            perp.z /= perpMag;
-        }
-
-        // Orbit in 3D plane defined by dir and perp
-        const orbitX = Math.cos(zenAngle) * dir.x + Math.sin(zenAngle) * perp.x;
-        const orbitY = Math.cos(zenAngle) * dir.y + Math.sin(zenAngle) * perp.y;
-        const orbitZ = Math.cos(zenAngle) * dir.z + Math.sin(zenAngle) * perp.z;
-
-        return this.tempVec3.set(
-            corePosition.x + orbitX * zenRadius,
-            corePosition.y + orbitY * zenRadius * this.verticalScale,
-            corePosition.z + orbitZ * zenRadius
-        );
     }
 
     /**

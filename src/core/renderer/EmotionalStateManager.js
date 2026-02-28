@@ -31,7 +31,7 @@
  * │ • Update undertones without changing emotion
  * │ • Handle weighted undertone modifiers for smooth blending
  * │ • Coordinate color transitions with emotion changes
- * │ • Manage suspicion state and zen mode transitions
+ * │ • Manage suspicion state
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ export class EmotionalStateManager {
 
     /**
      * Set emotional state
-     * @param {string} emotion - Emotion name (joy, sadness, anger, fear, zen, suspicion, etc.)
+     * @param {string} emotion - Emotion name (joy, sadness, anger, fear, suspicion, etc.)
      * @param {Object} properties - Emotion properties (glowColor, glowIntensity, breathRate, eyeOpenness, etc.)
      * @param {string|Object|null} undertone - Optional undertone modifier
      */
@@ -262,8 +262,6 @@ export class EmotionalStateManager {
             duration = 800; // Quick transitions for urgent emotions
         } else if (emotion === 'sadness' || emotion === 'resting') {
             duration = 2000; // Slower for calming emotions
-        } else if (emotion === 'zen') {
-            duration = 2000; // Zen gets special timing during lotus bloom
         }
 
         // Update emotion state BEFORE handling transitions to avoid timing issues
@@ -289,17 +287,8 @@ export class EmotionalStateManager {
             }
         }
 
-        // Handle zen state transitions specially
-        if (emotion === 'zen' && previousEmotion !== 'zen') {
-            // Entering zen - will handle its own color transition during lotus bloom
-            this.renderer.enterZenMode(targetColor, targetIntensity);
-        } else if (previousEmotion === 'zen' && emotion !== 'zen') {
-            // Exiting zen - will handle its own color transition during lotus close
-            this.renderer.exitZenMode(emotion, targetColor, targetIntensity);
-        } else {
-            // Standard color transition for all other state changes
-            this.renderer.startColorTransition(targetColor, targetIntensity, duration);
-        }
+        // Standard color transition for state changes
+        this.renderer.startColorTransition(targetColor, targetIntensity, duration);
 
         // Apply breathing with undertone modifiers
         const baseBreathRate = properties.breathRate || 1.0;

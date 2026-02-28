@@ -46,7 +46,7 @@
  * ├───────────────────────────────────────────────────────────────────────────────────
  * │ VALID EMOTIONS:
  * │   neutral, joy, sadness, anger, fear, surprise, disgust, love,
- * │   suspicion, resting, connecting, thinking, speaking, zen, focused
+ * │   suspicion, resting, connecting, thinking, speaking, focused
  * │
  * │ VALID UNDERTONES:
  * │   nervous, confident, tired, intense, subdued

@@ -37,6 +37,7 @@
  */
 
 import * as THREE from 'three';
+import { CORE_NOISE_GLSL } from '../../shaders/noise.glsl.js';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
     INSTANCED_ATTRIBUTES_FRAGMENT,
@@ -104,30 +105,7 @@ function deriveLightParameters(radiance, overrides = {}) {
 // NOISE GLSL (required by cutout system — snoise must exist)
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const NOISE_GLSL = /* glsl */ `
-float noiseHash(vec3 p) {
-    p = fract(p * 0.3183099 + 0.1);
-    p *= 17.0;
-    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-}
-
-float noise(vec3 p) {
-    vec3 i = floor(p);
-    vec3 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return mix(
-        mix(mix(noiseHash(i), noiseHash(i + vec3(1,0,0)), f.x),
-            mix(noiseHash(i + vec3(0,1,0)), noiseHash(i + vec3(1,1,0)), f.x), f.y),
-        mix(mix(noiseHash(i + vec3(0,0,1)), noiseHash(i + vec3(1,0,1)), f.x),
-            mix(noiseHash(i + vec3(0,1,1)), noiseHash(i + vec3(1,1,1)), f.x), f.y),
-        f.z
-    );
-}
-
-float snoise(vec3 p) {
-    return noise(p) * 2.0 - 1.0;
-}
-`;
+const NOISE_GLSL = CORE_NOISE_GLSL;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // INSTANCED VERTEX SHADER

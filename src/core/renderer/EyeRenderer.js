@@ -91,7 +91,7 @@ export class EyeRenderer {
         const eyeExpression = params.eyeExpression || 'neutral';
 
         // Don't draw eyes for certain states
-        if (emotion === 'zen' || emotion === 'neutral' || eyeOpenness <= 0) {
+        if (emotion === 'neutral' || eyeOpenness <= 0) {
             return;
         }
 

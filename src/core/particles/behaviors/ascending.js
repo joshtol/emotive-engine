@@ -5,14 +5,14 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Slow, steady upward float for zen and meditative states
+ * @fileoverview Slow, steady upward float for calm and meditative states
  * @author Emotive Engine Team
  * @module particles/behaviors/ascending
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════
  * ║                                   PURPOSE
  * ╠═══════════════════════════════════════════════════════════════════════════════════
- * ║ Creates a zen atmosphere with particles rising like incense smoke. Slow, steady,
+ * ║ Creates a calm atmosphere with particles rising like incense smoke. Slow, steady,
  * ║ and ethereal movement that gradually fades as particles ascend.
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
@@ -26,7 +26,7 @@
  *
  *
  * USED BY EMOTIONS:
- * - zen (deep meditation)
+ * - calm (deep meditation)
  * - contemplative
  * - spiritual
  *
@@ -50,12 +50,12 @@ export function initializeAscending(particle) {
     particle.vy = -0.03 - Math.random() * 0.02; // Slow upward movement (0.03-0.05)
     particle.lifeDecay = 0.0008; // Very long-lived particles (30+ seconds)
 
-    // Larger, more ethereal particles for zen
+    // Larger, more ethereal particles for calm
     particle.size =
         (6 + Math.random() * 6) *
         (particle.scaleFactor || 1) *
         (particle.particleSizeMultiplier || 1) *
-        1.33; // 1.33x larger for zen (reduced from 2x)
+        1.33; // 1.33x larger for calm (reduced from 2x)
     particle.baseSize = particle.size;
     particle.baseOpacity = 0.2 + Math.random() * 0.2; // Very translucent (20-40%)
 
@@ -77,7 +77,7 @@ export function initializeAscending(particle) {
 /**
  * Update ascending behavior - slow upward float like incense
  *
- * Used for: ZEN/CONTEMPLATIVE emotions (meditation, spirituality)
+ * Used for: CALM/CONTEMPLATIVE emotions (meditation, spirituality)
  * Visual effect: Particles rise slowly and steadily with subtle wave motion,
  *                gradually fading as they ascend like incense smoke
  *

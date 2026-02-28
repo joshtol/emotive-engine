@@ -5,7 +5,7 @@
  * Handles:
  * - Breathing animation updates with emotion-specific modifiers
  * - Blinking animation updates with state-based enabling
- * - Special breathing patterns (zen, sleeping)
+ * - Special breathing patterns (sleeping)
  * - Irregular breathing for nervous/tired states
  */
 export class TimerCoordinator {
@@ -36,9 +36,7 @@ export class TimerCoordinator {
         );
 
         // Apply special breathing modifiers based on emotion
-        if (this.renderer.state.emotion === 'zen') {
-            this.applyZenBreathing();
-        } else if (this.renderer.state.sleeping) {
+        if (this.renderer.state.sleeping) {
             this.applySleepBreathing();
         } else {
             this.applyNormalBreathing();
@@ -46,14 +44,6 @@ export class TimerCoordinator {
 
         // Apply irregular breathing for nervous/tired
         this.renderer.breathingAnimator.setIrregularBreathing(this.renderer.state.breathIrregular);
-    }
-
-    /**
-     * Apply zen meditation breathing pattern
-     */
-    applyZenBreathing() {
-        this.renderer.breathingAnimator.setBreathRateMultiplier(0.15);
-        this.renderer.breathingAnimator.setBreathDepthMultiplier(2.5);
     }
 
     /**
@@ -80,8 +70,7 @@ export class TimerCoordinator {
         // Update blinking via EyeRenderer
         const blinkingEnabled =
             this.renderer.state.blinkingEnabled &&
-            !this.renderer.state.sleeping &&
-            this.renderer.state.emotion !== 'zen';
+            !this.renderer.state.sleeping;
 
         this.renderer.eyeRenderer.setBlinkingEnabled(blinkingEnabled);
         this.renderer.eyeRenderer.update(deltaTime);

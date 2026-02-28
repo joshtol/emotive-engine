@@ -44,7 +44,6 @@ import glitchy from './glitchy.js';
 import spaz from './spaz.js';
 import directed from './directed.js';
 import fizzy from './fizzy.js';
-import zen from './zen.js';
 import pluginAdapter from './plugin-adapter.js';
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────
@@ -71,7 +70,6 @@ const BEHAVIORS = [
     surveillance,
     glitchy,
     spaz,
-    zen,
 ];
 
 // ┌─────────────────────────────────────────────────────────────────────────────────────

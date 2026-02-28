@@ -44,7 +44,6 @@
  *
  * ════════════════════════════════════════════════════════════════════════════════════
  */
-import HarmonicSystem from './HarmonicSystem.js';
 import { GestureSoundLibrary } from './GestureSoundLibrary.js';
 import { AudioLayerManager } from './AudioLayerManager.js';
 
@@ -60,10 +59,6 @@ export class SoundSystem {
             ambient: null, // Ambient oscillator for emotional tones
             effects: null, // Effects gain node for gesture sounds
         };
-
-        // Harmonic system for musical intelligence
-        this.harmonicSystem = null;
-        this.useHarmonicSystem = false; // Toggle between old and new system
 
         // Track warning frequency to reduce spam
         this.warningTimestamps = {};
@@ -119,9 +114,6 @@ export class SoundSystem {
 
             // Create audio context
             this.context = new AudioContextClass();
-
-            // Initialize harmonic system
-            this.harmonicSystem = new HarmonicSystem(this.context);
 
             // Handle suspended context (required by browser autoplay policies)
             if (this.context.state === 'suspended') {
@@ -200,63 +192,6 @@ export class SoundSystem {
     }
 
     /**
-     * Enable or disable the harmonic music system
-     * @param {boolean} enabled - Whether to enable harmonic system
-     */
-    setHarmonicMode(enabled) {
-        this.useHarmonicSystem = enabled;
-
-        if (enabled && this.harmonicSystem) {
-            // Stop simple ambient tone when switching to harmonic mode
-            this.stopAmbientTone();
-            // SoundSystem: Switched to harmonic music mode
-        } else if (!enabled && this.harmonicSystem) {
-            // Stop harmonic system when switching back
-            this.harmonicSystem.stopHarmony();
-            // SoundSystem: Switched to simple sound mode
-        }
-    }
-
-    /**
-     * Start harmonic background music
-     */
-    startHarmony() {
-        if (this.harmonicSystem && this.useHarmonicSystem && this.isAvailable()) {
-            this.harmonicSystem.startHarmony();
-        }
-    }
-
-    /**
-     * Stop harmonic background music
-     */
-    stopHarmony() {
-        if (this.harmonicSystem) {
-            this.harmonicSystem.stopHarmony();
-        }
-    }
-
-    /**
-     * Set harmonic layer active state
-     * @param {string} layer - Layer name (bass, chord, melody, pad)
-     * @param {boolean} active - Whether layer should be active
-     */
-    setHarmonicLayer(layer, active) {
-        if (this.harmonicSystem) {
-            this.harmonicSystem.setLayerActive(layer, active);
-        }
-    }
-
-    /**
-     * Set harmonic effects mix
-     * @param {number} wetness - Wet/dry mix (0-1)
-     */
-    setHarmonicEffects(wetness) {
-        if (this.harmonicSystem) {
-            this.harmonicSystem.setEffectsMix(wetness);
-        }
-    }
-
-    /**
      * Get (or lazily create) the AudioLayerManager for stem-based adaptive music.
      * @returns {AudioLayerManager|null}
      */
@@ -323,12 +258,6 @@ export class SoundSystem {
      */
     setAmbientTone(emotion, transitionDuration = 500) {
         if (!this.isAvailable()) {
-            return;
-        }
-
-        // Use harmonic system if enabled
-        if (this.useHarmonicSystem && this.harmonicSystem) {
-            this.harmonicSystem.setEmotion(emotion);
             return;
         }
 
@@ -446,12 +375,6 @@ export class SoundSystem {
      */
     playGestureSound(gestureId, emotionalContext = 'neutral') {
         if (!this.isAvailable()) {
-            return;
-        }
-
-        // Use harmonic system if enabled
-        if (this.useHarmonicSystem && this.harmonicSystem) {
-            this.harmonicSystem.playGestureSound(gestureId);
             return;
         }
 

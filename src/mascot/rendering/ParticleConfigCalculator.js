@@ -7,7 +7,6 @@
  * - Particle behavior selection based on emotion
  * - Particle rate and count limits
  * - Undertone modifier overrides
- * - Special emotion behaviors (zen mixing)
  *
  * @module ParticleConfigCalculator
  */
@@ -99,11 +98,6 @@ export class ParticleConfigCalculator {
                 ? emotionParams.maxParticles
                 : stateProps.maxParticles || 10;
 
-        // Special case for zen: mix falling and orbiting behaviors
-        if (renderState.emotion === 'zen') {
-            particleBehavior = this.selectZenBehavior();
-        }
-
         // Apply renderer undertone overrides
         ({ particleBehavior, particleRate, maxParticles } = this.applyRendererOverrides(
             particleBehavior,
@@ -112,15 +106,6 @@ export class ParticleConfigCalculator {
         ));
 
         return { particleBehavior, particleRate, minParticles, maxParticles };
-    }
-
-    /**
-     * Select random behavior for zen emotion
-     * @returns {string} Particle behavior ('falling' or 'orbiting')
-     */
-    selectZenBehavior() {
-        // Randomly choose between falling (sad) and orbiting (love) for each spawn
-        return Math.random() < 0.6 ? 'falling' : 'orbiting';
     }
 
     /**
@@ -147,21 +132,13 @@ export class ParticleConfigCalculator {
     /**
      * Get particle modifier for update
      * @param {Object} renderState - Current render state
-     * @returns {Object|null} Particle modifier with undertone and zen vortex data
+     * @returns {Object|null} Particle modifier with undertone data
      */
-    getParticleModifier(renderState) {
+    getParticleModifier(_renderState) {
         // Get undertone modifier from renderer if present
         const undertoneModifier = this.renderer.getUndertoneModifier
             ? this.renderer.getUndertoneModifier()
             : null;
-
-        // Add zen vortex intensity to undertone modifier if in zen state
-        if (renderState.emotion === 'zen' && this.renderer.state.zenVortexIntensity) {
-            return {
-                ...(undertoneModifier || {}),
-                zenVortexIntensity: this.renderer.state.zenVortexIntensity,
-            };
-        }
 
         return undertoneModifier;
     }

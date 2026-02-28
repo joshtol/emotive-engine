@@ -5,13 +5,12 @@
  *  └─○═╝
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * @fileoverview Central registry for visual effects like zen vortex, recording glow, etc.
+ * @fileoverview Central registry for visual effects like recording glow, speaking pulse, etc.
  * @author Emotive Engine Team
  * @module effects
  */
 
 // Import all effect modules
-import zenVortex from './zen-vortex.js';
 import recordingGlow from './recording-glow.js';
 import speakingPulse from './speaking-pulse.js';
 import sleepingEffect from './sleeping-effect.js';
@@ -86,7 +85,6 @@ export function getAllEffects() {
 }
 
 // Register all built-in effects
-registerEffect(zenVortex);
 registerEffect(recordingGlow);
 registerEffect(speakingPulse);
 registerEffect(sleepingEffect);

@@ -3,7 +3,6 @@
  *
  * Manages position modifications and jitter effects for rendering.
  * Handles:
- * - Zen levitation (floating animation)
  * - Blink squish effect on core radius
  * - Jitter effects (episodic and regular)
  * - Final position calculation with gaze offset
@@ -14,39 +13,13 @@ export class PositionJitterManager {
     }
 
     /**
-     * Apply zen levitation effect to position and rotation
-     * @param {number} centerX - Current center X
-     * @param {number} centerY - Current center Y
-     * @param {number} rotationAngle - Current rotation angle
-     * @returns {Object} Modified position and rotation
-     */
-    applyZenLevitation(centerX, centerY, rotationAngle) {
-        // Apply zen levitation - lazy floating when in zen state
-        if (this.renderer.state.emotion === 'zen' && this.renderer.zenTransition.phase === 'in') {
-            const time = Date.now() / 1000;
-            // Lazy vertical float - slow sine wave
-            const floatY = Math.sin(time * 0.3) * 15 * this.renderer.scaleFactor; // Very slow, 15px amplitude
-            // Gentle horizontal sway - even slower
-            const swayX = Math.sin(time * 0.2) * 8 * this.renderer.scaleFactor; // Subtle 8px sway
-            // Small rotation for ethereal effect
-            const floatRotation = Math.sin(time * 0.25) * 0.05; // ±3 degrees
-
-            centerY += floatY;
-            centerX += swayX;
-            rotationAngle += floatRotation;
-        }
-
-        return { centerX, centerY, rotationAngle };
-    }
-
-    /**
      * Apply blink squish effect to core radius
      * @param {number} coreRadius - Current core radius
      * @returns {number} Modified core radius
      */
     applyBlinkSquish(coreRadius) {
-        // Apply blinking (only when not sleeping or zen)
-        if (!this.renderer.state.sleeping && this.renderer.state.emotion !== 'zen') {
+        // Apply blinking (only when not sleeping)
+        if (!this.renderer.state.sleeping) {
             const blinkScale = this.renderer.eyeRenderer.getBlinkScale();
             coreRadius *= blinkScale; // Apply blink squish
         }
@@ -113,13 +86,6 @@ export class PositionJitterManager {
      * @returns {Object} All modified values
      */
     applyAllModifications(centerX, centerY, rotationAngle, coreRadius, glowRadius) {
-        // Apply zen levitation
-        ({ centerX, centerY, rotationAngle } = this.applyZenLevitation(
-            centerX,
-            centerY,
-            rotationAngle
-        ));
-
         // Apply blink squish
         coreRadius = this.applyBlinkSquish(coreRadius);
 

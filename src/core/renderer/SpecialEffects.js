@@ -13,7 +13,6 @@ export class SpecialEffects {
         this.recordingActive = false;
         this.sleepMode = false;
         this.speakingActive = false;
-        this.zenModeActive = false;
 
         // Speaking rings
         this.speakingRings = [];
@@ -209,29 +208,6 @@ export class SpecialEffects {
             }
             return false;
         });
-    }
-
-    /**
-     * Render zen core effect
-     */
-    renderZenCore(x, y, radius, time) {
-        const { ctx } = this;
-        const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
-        const zenRadius = radius * (0.9 + breathPhase * 0.1);
-
-        // Inner glow
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, zenRadius);
-        gradient.addColorStop(0, 'rgba(147, 112, 219, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(147, 112, 219, 0.3)');
-        gradient.addColorStop(1, 'rgba(147, 112, 219, 0)');
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, zenRadius * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
     }
 
     /**
@@ -529,7 +505,6 @@ export class SpecialEffects {
         this.recordingActive = false;
         this.sleepMode = false;
         this.speakingActive = false;
-        this.zenModeActive = false;
 
         // Reset chromatic aberration
         this.chromaticAberration.active = false;

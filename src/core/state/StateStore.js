@@ -450,7 +450,6 @@ export const engineState = new StateStore({
         breathRate: 1.0,
         breathDepth: 1.0,
         sleeping: false,
-        zenMode: false,
     },
 
     // Animation state

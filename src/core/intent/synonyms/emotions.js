@@ -180,7 +180,6 @@ export const emotions = {
 
         // Meditative
         'meditative',
-        'zen',
         'mindful',
         'contemplative',
         'reflective',

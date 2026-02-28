@@ -689,7 +689,7 @@ export class Core3DManager {
         this.blinkAnimator.setEmotion(emotion);
 
         // Update groove preset based on emotion (if rhythm is playing)
-        // Energetic emotions → bounce groove, calm emotions → subtle groove, flowing → zen groove
+        // Energetic emotions → bounce groove, calm emotions → subtle groove, flowing → flowing groove
         if (this.rhythmEnabled && this.rhythm3DAdapter?.isPlaying?.()) {
             const emotionGroove = this._getEmotionGroove(emotion);
             // Use quantize + bars for smooth, musical transition
@@ -761,40 +761,6 @@ export class Core3DManager {
             this.glowIntensity = intensity;
             this.baseGlowIntensity = intensity;
         }
-    }
-
-    /**
-     * Convert linear slider value (0-100) to logarithmic glow intensity (0.3-10.0)
-     * Use this for UI sliders to make intensity changes feel linear to the user
-     *
-     * @param {number} sliderValue - Linear slider value (0-100)
-     * @returns {number} Logarithmic intensity value (0.3-10.0)
-     *
-     * @example
-     * const sliderVal = 50; // Middle of slider
-     * const intensity = core3d.sliderToIntensity(sliderVal);
-     * core3d.setGlowIntensity(intensity);
-     */
-    sliderToIntensity(sliderValue) {
-        // Map 0-100 to 0.3-10.0 using exponential curve
-        // This makes the slider feel linear while outputting the wide range the system expects
-        const normalized = sliderValue / 100; // 0-1
-        const min = 0.3;
-        const max = 10.0;
-        // Exponential mapping: intensity = min * (max/min)^normalized
-        return min * Math.pow(max / min, normalized);
-    }
-
-    /**
-     * Set universal filter intensity calibration offset
-     * Adjusts global brightness for all emotions in real-time
-     * @param {number} offset - Calibration offset (-0.5 to +0.5 recommended)
-     */
-    setIntensityCalibration(offset) {
-        this.intensityCalibrationOffset = offset;
-
-        // Recalculate current emotion's glow intensity with new offset
-        this.setEmotion(this.emotion, this.undertone);
     }
 
     /**
@@ -947,30 +913,6 @@ export class Core3DManager {
 
         // Set eclipse type via EffectManager
         this.effectManager.setLunarEclipse(eclipseType);
-    }
-
-    /**
-     * Set blood moon blend parameters
-     * @param {Object} params - { blendMode, blendStrength, emissiveStrength, eclipseIntensity }
-     */
-    setBloodMoonBlend(params = {}) {
-        if (this.geometryType !== 'moon' || !this.customMaterial) {
-            console.warn('⚠️ Blood moon blend only available for moon geometry');
-            return;
-        }
-
-        if (params.blendMode !== undefined) {
-            this.customMaterial.uniforms.blendMode.value = params.blendMode;
-        }
-        if (params.blendStrength !== undefined) {
-            this.customMaterial.uniforms.blendStrength.value = params.blendStrength;
-        }
-        if (params.emissiveStrength !== undefined) {
-            this.customMaterial.uniforms.emissiveStrength.value = params.emissiveStrength;
-        }
-        if (params.eclipseIntensity !== undefined) {
-            this.customMaterial.uniforms.eclipseIntensity.value = params.eclipseIntensity;
-        }
     }
 
     /**
@@ -4023,7 +3965,6 @@ export class Core3DManager {
             }
 
             // NOW we're fully ready for rendering
-            this._logSceneHierarchy();
             this._ready = true;
 
             // Start element preloading (after ready, so it doesn't block initialization)
@@ -4035,32 +3976,6 @@ export class Core3DManager {
                 this._ready = true;
             }
         }
-    }
-
-    /**
-     * Debug: Log scene hierarchy
-     * @private
-     */
-    _logSceneHierarchy() {
-        const scene = this.renderer?.scene;
-        if (!scene) {
-            return;
-        }
-        scene.children.forEach((child, i) => {
-            const status =
-                child === null
-                    ? 'NULL!'
-                    : child === undefined
-                      ? 'UNDEFINED!'
-                      : child.visible === null
-                        ? 'visible=NULL!'
-                        : child.visible === undefined
-                          ? 'visible=UNDEF!'
-                          : 'OK';
-            console.warn(
-                `  [${i}] ${child?.name || child?.type || 'UNKNOWN'} status=${status} uuid=${child?.uuid?.slice(0, 8) || 'N/A'}`
-            );
-        });
     }
 
     /**
@@ -4400,7 +4315,7 @@ export class Core3DManager {
     /**
      * Map emotion to appropriate groove preset
      * Energetic emotions use bounce groove, calm emotions use subtle groove,
-     * flowing/zen emotions use the flowing zen groove
+     * flowing emotions use the flowing groove
      * @private
      * @param {string} emotion - Emotion name
      * @returns {string} Groove preset name
@@ -4424,8 +4339,7 @@ export class Core3DManager {
             tired: 'groove1',
             sleepy: 'groove1',
 
-            // Flowing/zen emotions → groove3 (flowing, zen)
-            zen: 'groove3',
+            // Flowing emotions → groove3 (flowing)
             love: 'groove3',
             grateful: 'groove3',
             inspired: 'groove3',

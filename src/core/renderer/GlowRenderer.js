@@ -174,34 +174,6 @@ export class GlowRenderer {
     }
 
     /**
-     * Render zen glow effect
-     * @param {number} x - Center X
-     * @param {number} y - Center Y
-     * @param {number} radius - Core radius
-     * @param {number} time - Current time for animation
-     */
-    renderZenGlow(x, y, radius, time) {
-        const { ctx } = this;
-        const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
-        const zenRadius = radius * (0.9 + breathPhase * 0.1);
-
-        // Inner glow
-        const gradient = gradientCache.getRadialGradient(ctx, x, y, 0, x, y, zenRadius, [
-            { offset: 0, color: 'rgba(147, 112, 219, 0.8)' },
-            { offset: 0.7, color: 'rgba(147, 112, 219, 0.3)' },
-            { offset: 1, color: 'rgba(147, 112, 219, 0)' },
-        ]);
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, zenRadius * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    }
-
-    /**
      * Update glow color with transition
      * @param {string} targetColor - Target glow color
      * @param {number} _deltaTime - Time since last frame (unused)

@@ -50,7 +50,7 @@
  * │ 4. Draw colored glow layers (3 gradient circles)
  * │ 5. Draw white core circle
  * │ 6. Draw eye expression if not neutral
- * │ 7. Apply special effects (jitter, zen morph, etc.)
+ * │ 7. Apply special effects (jitter, etc.)
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@
  * │ • Arc         : -1.0 (sad ∩) to 1.0 (happy ∪)
  * │ • Asymmetry   : Different shapes for left/right eyes
  * │ • Blinking    : Smooth open/close animations
- * │ • Zen Morph   : Special ∩∩ shape for meditation
+ * │ • Meditation  : Special ∩∩ shape for calm states
  * └───────────────────────────────────────────────────────────────────────────────────
  *
  * ┌───────────────────────────────────────────────────────────────────────────────────
@@ -102,8 +102,6 @@ import { BreathingAnimator } from './renderer/BreathingAnimator.js';
 import { GlowRenderer } from './renderer/GlowRenderer.js';
 import { CoreRenderer } from './renderer/CoreRenderer.js';
 import { CelestialRenderer } from './renderer/CelestialRenderer.js';
-import { ZenModeRenderer } from './renderer/ZenModeRenderer.js';
-import { ZenModeController } from './renderer/ZenModeController.js';
 import { EpisodicEffectController } from './renderer/EpisodicEffectController.js';
 import { RotationManager } from './renderer/RotationManager.js';
 import { GazeTracker } from './renderer/GazeTracker.js';
@@ -152,8 +150,6 @@ class EmotiveRenderer {
         this.glowRenderer = new GlowRenderer(this);
         this.coreRenderer = new CoreRenderer(this);
         this.celestialRenderer = new CelestialRenderer();
-        this.zenModeRenderer = new ZenModeRenderer();
-        this.zenModeController = new ZenModeController(this);
         this.episodicEffectController = new EpisodicEffectController(this);
         this.rotationManager = new RotationManager(this);
         this.gazeTracker = new GazeTracker(this);
@@ -216,7 +212,6 @@ class EmotiveRenderer {
             gazeLocked: false,
             gazeTrackingEnabled: false, // Whether to track mouse/touch
             gazeTarget: { x: 0, y: 0 }, // Target position for gaze (-1 to 1)
-            zenVortexIntensity: 1.0, // Adjustable whirlpool intensity for zen
             effectiveCenter: { x: 0, y: 0, scale: 1.0 }, // Effective center with position offsets
             // Suspicion state
             squintAmount: 0, // 0-1, how much the eye is narrowed
@@ -256,16 +251,12 @@ class EmotiveRenderer {
             colorTransition: null,
             eyeClose: null,
             eyeOpen: null,
-            zenEnter: null,
-            zenExit: null,
         };
 
         // Track loop manager callback IDs
         this.loopCallbackIds = {
             eyeClose: null,
             eyeOpen: null,
-            zenEnter: null,
-            zenExit: null,
         };
 
         // Timeout tracking for cleanup
@@ -468,13 +459,6 @@ class EmotiveRenderer {
 
         // Sleep state - consolidated here for visualization
         this.sleepZ = [];
-
-        // Zen state animation (now managed by ZenModeController)
-        // Reference to zenTransition for backward compatibility
-        Object.defineProperty(this, 'zenTransition', {
-            get: () => this.zenModeController.getZenTransition(),
-            enumerable: true,
-        });
 
         // Standardized color transition system
         this.colorTransition = {
@@ -731,7 +715,7 @@ class EmotiveRenderer {
         let { coreRadius, glowRadius } = radiusData;
         const { effectiveGlowIntensity, sleepOpacityMod, glowOpacityMod } = radiusData;
 
-        // Apply position modifications: zen levitation, blink squish, jitter, final position (delegated to PositionJitterManager)
+        // Apply position modifications: blink squish, jitter, final position (delegated to PositionJitterManager)
         const posData = this.positionJitterManager.applyAllModifications(
             centerX,
             centerY,
@@ -931,20 +915,6 @@ class EmotiveRenderer {
         );
     }
 
-    renderZenCore(x, y, radius) {
-        // Delegate to ZenModeRenderer
-        return this.zenModeRenderer.renderZenCore(
-            this.ctx,
-            x,
-            y,
-            radius,
-            this.state,
-            this.zenTransition,
-            this.gestureTransform,
-            this.scaleValue.bind(this)
-        );
-    }
-
     renderSpeakingRings(centerX, centerY, coreRadius, deltaTime) {
         return this.specialEffects.renderSpeakingRings(centerX, centerY, coreRadius, deltaTime);
     }
@@ -1139,20 +1109,6 @@ class EmotiveRenderer {
      */
     wakeUp() {
         this.sleepManager.wakeUp();
-    }
-
-    /**
-     * Enter zen meditation mode with animation
-     */
-    enterZenMode(targetColor, targetIntensity) {
-        this.zenModeController.enterZenMode(targetColor, targetIntensity);
-    }
-
-    /**
-     * Exit zen meditation mode with awakening animation
-     */
-    exitZenMode(targetEmotion, targetColor, targetIntensity) {
-        this.zenModeController.exitZenMode(targetEmotion, targetColor, targetIntensity);
     }
 
     /**

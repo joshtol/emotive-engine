@@ -170,45 +170,6 @@ export class CoreRenderer {
     }
 
     /**
-     * Render zen core effect
-     * @param {number} x - Center X
-     * @param {number} y - Center Y
-     * @param {number} radius - Core radius
-     * @param {number} time - Current time for animation
-     */
-    renderZenCore(x, y, radius, time) {
-        const { ctx } = this;
-
-        // Zen breathing effect
-        const breathPhase = Math.sin(time * 0.001) * 0.5 + 0.5;
-        const zenRadius = radius * (0.95 + breathPhase * 0.05);
-
-        // Draw zen core with subtle inner glow
-        ctx.save();
-
-        // Inner shadow for depth
-        ctx.shadowBlur = this.scaleValue(10);
-        ctx.shadowColor = 'rgba(147, 112, 219, 0.3)';
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-
-        // Main core
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath();
-        ctx.arc(x, y, zenRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Inner ring
-        ctx.strokeStyle = 'rgba(147, 112, 219, 0.2)';
-        ctx.lineWidth = this.scaleValue(1);
-        ctx.beginPath();
-        ctx.arc(x, y, zenRadius * 0.9, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-    /**
      * Render sleepy core effect
      * @param {number} x - Center X
      * @param {number} y - Center Y

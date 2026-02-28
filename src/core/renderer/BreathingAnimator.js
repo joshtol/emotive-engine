@@ -42,7 +42,6 @@ export class BreathingAnimator {
             proud: { rate: 0.9, depth: 1.3 },
             content: { rate: 0.8, depth: 1.0 },
             hopeful: { rate: 1.0, depth: 1.1 },
-            zen: { rate: 0.4, depth: 1.5 },
             intrigued: { rate: 1.1, depth: 0.8 },
             embarrassed: { rate: 1.3, depth: 0.7 },
             grateful: { rate: 0.9, depth: 1.1 },

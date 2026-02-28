@@ -32,7 +32,6 @@ import { DebugProfilingManager } from '../debug/DebugProfilingManager.js';
 import { PerformanceBehaviorManager } from '../performance/PerformanceBehaviorManager.js';
 import { PerformanceMonitoringManager } from '../performance/PerformanceMonitoringManager.js';
 import { HealthCheckManager } from './HealthCheckManager.js';
-import { ConfigurationManager } from './ConfigurationManager.js';
 
 /**
  * ModularHandlersInitializer - Initializes all modular handler managers
@@ -371,22 +370,6 @@ export class ModularHandlersInitializer {
             particleSystem: m.particleSystem,
             healthCheckManager: m.healthCheckManager,
             config: m.config,
-            chainTarget: m,
-        });
-
-        // ConfigurationManager - depends on config, multiple systems
-        m.configurationManager = new ConfigurationManager({
-            config: m.config,
-            userConfig: config,
-            animationController: m.animationController,
-            particleSystem: m.particleSystem,
-            soundSystem: m.soundSystem,
-            renderer: m.renderer,
-            gazeTracker: m.gazeTracker,
-            idleBehavior: m.idleBehavior,
-            mobileOptimization: m.mobileOptimization,
-            accessibilityManager: m.accessibilityManager,
-            errorBoundary: m.errorBoundary,
             chainTarget: m,
         });
     }

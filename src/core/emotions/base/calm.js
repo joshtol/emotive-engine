@@ -27,7 +27,7 @@ export default {
         particleRate: 6, // Peaceful flow - 6/sec with max 50 = ~8 sec particle life
         minParticles: 10, // Keep some particles always
         maxParticles: 50, // Match 3D system limit
-        particleBehavior: 'zen', // Zen orbital behavior
+        particleBehavior: 'ascending', // Calm ascending behavior
         breathRate: 0.4, // Much slower breathing than neutral (1.0)
         breathDepth: 0.12, // Deeper breaths than neutral (0.08)
         coreJitter: false, // Perfectly still core

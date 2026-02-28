@@ -1,7 +1,7 @@
 /**
- * Emotive Engine - Minimal Build
- * Core functionality only - animations, emotions, gestures
- * No audio features - optimized for smallest bundle size
+ * Emotive Engine — Minimal Build
+ * Ultra-light loading screen bundle. No audio, plugins, or manager overhead.
+ * Supports: emotions, 2D gestures, shape morphing, particles.
  *
  * @module emotive-engine/minimal
  * @version 3.3.8
@@ -11,24 +11,8 @@
 // CORE ENGINE
 // ============================================================================
 
-// Main API class
-export { default as EmotiveMascot } from './EmotiveMascot.js';
-export { default as EmotiveMascotPublic } from './EmotiveMascotPublic.js';
-
-// ============================================================================
-// ESSENTIAL SYSTEMS
-// ============================================================================
-
-// Rendering
-export { default as EmotiveRenderer } from './core/EmotiveRenderer.js';
-export { default as CanvasManager } from './core/canvas/CanvasManager.js';
-
-// Particle System
-export { default as ParticleSystem } from './core/ParticleSystem.js';
-
-// State Management
-export { EventManager, eventManager } from './core/events/EventManager.js';
-export { StateStore, engineState } from './core/state/StateStore.js';
+// Main class — standalone lightweight mascot (no InitializationManager chain)
+export { MinimalMascot } from './MinimalMascot.js';
 
 // ============================================================================
 // EMOTIONS & GESTURES
@@ -41,26 +25,20 @@ export {
     listEmotions,
 } from './core/emotions/index.js';
 
-export { getGesture, applyGesture, listGestures, GESTURE_TYPES } from './core/gestures/index.js';
+export {
+    getGesture,
+    applyGesture,
+    listGestures,
+    GESTURE_TYPES,
+} from './core/gestures/index-minimal.js';
 
 // ============================================================================
-// UTILITIES
+// CORE SYSTEMS (for advanced users)
 // ============================================================================
 
-// Error Handling
-export { default as ErrorBoundary } from './core/events/ErrorBoundary.js';
-
-// Color utilities
-export { interpolateHsl, applyUndertoneSaturation } from './utils/colorUtils.js';
-
-// Easing functions
-export { easeInOutQuad, easeOutCubic, easeInOutSine, applyEasing } from './utils/easing.js';
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-export { UNDERTONE_MODIFIERS } from './config/undertoneModifiers.js';
+export { default as EmotiveRenderer } from './core/EmotiveRenderer.js';
+export { default as ParticleSystem } from './core/ParticleSystem.js';
+export { EventManager } from './core/events/EventManager.js';
 
 // ============================================================================
 // VERSION INFO
@@ -75,35 +53,35 @@ export const BUILD_TYPE = 'minimal';
 // ============================================================================
 
 export const FEATURES = {
-    rhythmSync: false, // Audio features disabled
-    grooveTemplates: false, // Audio features disabled
-    gestureBlending: true, // Core feature
-    audioReactive: false, // Audio features disabled
-    particleSystem: true, // Core feature
-    accessibility: false, // Disabled for size
-    mobileOptimization: false, // Disabled for size
-    performanceMonitoring: false, // Disabled for size
+    rhythmSync: false,
+    grooveTemplates: false,
+    gestureBlending: true,
+    audioReactive: false,
+    particleSystem: true,
+    accessibility: false,
+    mobileOptimization: false,
+    performanceMonitoring: false,
 };
 
 // ============================================================================
 // DEFAULT EXPORT
 // ============================================================================
 
-// Default export is the public API class
-import EmotiveMascotPublicDefault from './EmotiveMascotPublic.js';
-export default EmotiveMascotPublicDefault;
+import { MinimalMascot as DefaultExport } from './MinimalMascot.js';
+export default DefaultExport;
 
 /**
  * Usage Example:
  *
- * import EmotiveMascot from '@joshtol/emotive-engine/dist/emotive-mascot.minimal.js';
+ * import MinimalMascot from '@joshtol/emotive-engine/minimal';
  *
- * const mascot = new EmotiveMascot({
- *     canvasId: 'mascot-canvas',
- *     emotion: 'joy'
- * });
- *
+ * const mascot = new MinimalMascot({ defaultEmotion: 'joy' });
+ * await mascot.init('mascot-canvas');
  * mascot.start();
  * mascot.setEmotion('surprise');
  * mascot.express('bounce');
+ *
+ * // Hand off state to full/3D mascot:
+ * const state = mascot.getState();
+ * mascot.destroy();
  */

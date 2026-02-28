@@ -19,10 +19,9 @@ export default {
 
         // Particle emission drifts peacefully with rhythm
         particleEmission: {
-            syncMode: 'zen', // Zen peaceful sync
+            syncMode: 'drift', // Peaceful sync
             burstSize: 3, // Small peaceful bursts
             offBeatRate: 0.9, // Steady peaceful flow
-            zenSync: true, // Mindful zen rhythm
         },
 
         // Breathing syncs to very slow, deep rhythm
@@ -35,7 +34,7 @@ export default {
         // Glow pulses gently
         glowSync: {
             intensityRange: [0.55, 0.65],
-            syncTo: 'zen',
+            syncTo: 'beat',
             attack: 0.6, // Very gradual rise
             decay: 0.8, // Long gentle fade
         },

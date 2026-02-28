@@ -84,9 +84,6 @@ export class ResourceCleanupManager {
      */
     clearAnimationStates() {
         this.renderer.colorTransition.active = false;
-        if (this.renderer.zenTransition) {
-            this.renderer.zenTransition.active = false;
-        }
     }
 
     /**

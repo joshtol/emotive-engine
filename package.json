@@ -22,6 +22,11 @@
       "import": "./dist/emotive-mascot-3d-elementals.js",
       "require": "./dist/emotive-mascot-3d-elementals.umd.js"
     },
+    "./minimal": {
+      "types": "./types/minimal.d.ts",
+      "import": "./dist/emotive-mascot.minimal.js",
+      "require": "./dist/emotive-mascot.minimal.umd.js"
+    },
     "./package.json": "./package.json"
   },
   "private": false,
@@ -36,6 +41,8 @@
     "dist/emotive-mascot-3d.umd.js",
     "dist/emotive-mascot-3d-elementals.js",
     "dist/emotive-mascot-3d-elementals.umd.js",
+    "dist/emotive-mascot.minimal.js",
+    "dist/emotive-mascot.minimal.umd.js",
     "types",
     "assets/emotive-engine-icon.svg",
     "assets/emotive-engine-full-BW.svg",
@@ -47,7 +54,6 @@
     "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
     "build:dev": "rollup -c --environment NODE_ENV:development",
     "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
-    "build:demo": "rollup -c rollup.demo.config.js",
     "build:watch": "rollup -c -w --environment NODE_ENV:development",
     "dev": "cd site && npm run dev",
     "serve": "cd site && python -m http.server 5000",

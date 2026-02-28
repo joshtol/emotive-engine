@@ -15,7 +15,7 @@
  * ║ Extracts and calculates particle configuration for 3D rendering:
  * ║ • Reads particle configs from emotion data
  * ║ • Applies undertone modifiers (behavior override, rate multipliers)
- * ║ • Handles special emotion behaviors (zen mixing)
+ * ║ • Handles special emotion behaviors
  * ║ • Provides spawn rates and particle count limits
  * ╚═══════════════════════════════════════════════════════════════════════════════════
  *
@@ -140,28 +140,8 @@ export class ParticleEmotionCalculator {
      * @param {string} emotion - Emotion name
      * @returns {Object} Final config with special behaviors
      */
-    _applySpecialBehaviors(config, emotion) {
-        // Special case: zen emotion mixes falling and orbiting behaviors
-        if (emotion === 'zen') {
-            // Don't override behavior here - will be randomly selected per spawn
-            // Mark as special for orchestrator
-            return {
-                ...config,
-                specialBehavior: 'zen-mixing',
-            };
-        }
-
+    _applySpecialBehaviors(config, _emotion) {
         return config;
-    }
-
-    /**
-     * Select random behavior for zen emotion (called per particle spawn)
-     * Zen creates a meditative mix of falling (sadness) and orbiting (love)
-     * @returns {string} Particle behavior ('falling' or 'orbiting')
-     */
-    selectZenBehavior() {
-        // 60% falling, 40% orbiting for peaceful balance
-        return Math.random() < 0.6 ? 'falling' : 'orbiting';
     }
 
     /**

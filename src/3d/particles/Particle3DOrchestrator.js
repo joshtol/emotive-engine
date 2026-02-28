@@ -140,11 +140,7 @@ export class Particle3DOrchestrator {
         const centerX = canvasSize.width / 2;
         const centerY = canvasSize.height / 2;
 
-        // Handle special behaviors (zen mixing)
-        let spawnBehavior = config.behavior;
-        if (config.specialBehavior === 'zen-mixing') {
-            spawnBehavior = this.emotionCalculator.selectZenBehavior();
-        }
+        const spawnBehavior = config.behavior;
 
         // Spawn particles using 2D particle system
         this.particleSystem.spawn(
