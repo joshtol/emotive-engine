@@ -762,20 +762,32 @@ export class Particle3DTranslator {
     /**
      * ASCENDING: Spiral upward in helical path
      */
-    _translateAscending(particle, corePosition, _canvasSize) {
-        const behaviorData = particle.behaviorData || {};
+    _translateAscending(particle, corePosition, canvasSize) {
+        // Uniform 3D direction per particle (like ambient)
+        const dir = this._getUniformDirection3D(particle);
 
-        // Helical motion parameters (scaled to core size)
-        const angle = behaviorData.spiralAngle || 0;
-        const radius = (behaviorData.spiralRadius || 50) * 0.01 * this.coreRadius3D;
-        const height = particle.age * this.coreRadius3D * 0.5;
+        const centerX = canvasSize.width / 2;
+        const centerY = canvasSize.height / 2;
 
-        // Create helix
-        const x = Math.cos(angle) * radius + corePosition.x;
-        const y = height + corePosition.y;
-        const z = Math.sin(angle) * radius + corePosition.z;
+        // Normalized distance from center in 2D
+        const dx = particle.x - centerX;
+        const dy = particle.y - centerY;
+        const distance2D = Math.sqrt(dx * dx + dy * dy);
+        const normalizedDistance = distance2D / centerX;
 
-        return this.tempVec3.set(x, y, z);
+        // Spread particles around core (like ambient)
+        const minOrbit = this.coreRadius3D * 0.6;
+        const maxOrbit = this.coreRadius3D * 1.2;
+        const worldDistance = minOrbit + normalizedDistance * (maxOrbit - minOrbit);
+
+        // Slow upward rise based on age — incense smoke effect
+        const riseDistance = particle.age * this.coreRadius3D * 0.4;
+
+        return this.tempVec3.set(
+            corePosition.x + dir.x * worldDistance,
+            corePosition.y + dir.y * worldDistance * this.verticalScale + riseDistance,
+            corePosition.z + dir.z * worldDistance
+        );
     }
 
     /**

@@ -83,6 +83,17 @@ class ParticleSpawner {
                 };
             }
 
+            case 'ascending': {
+                // Ascending spawns around glow edge — particles rise like incense
+                const ascAngle = Math.random() * Math.PI * 2;
+                const ascRadius = glowRadius * 0.9;
+                return {
+                    x: centerX + Math.cos(ascAngle) * ascRadius,
+                    y: centerY + Math.sin(ascAngle) * ascRadius,
+                    angle: ascAngle,
+                };
+            }
+
             case 'rising': {
                 // Rising spawns below center and rises up
                 const risingAngle = Math.random() * Math.PI * 2;
