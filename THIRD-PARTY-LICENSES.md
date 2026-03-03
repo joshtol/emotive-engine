@@ -50,6 +50,42 @@ No modifications were made to these textures.
 
 ---
 
+## Code
+
+### Ashima Arts - Simplex Noise (GLSL)
+
+The GLSL simplex noise functions used in instanced material shaders and sun
+shaders are derived from:
+
+- `src/3d/materials/instanced/InstancedFireMaterial.js`
+- `src/3d/materials/instanced/InstancedWaterMaterial.js`
+- `src/3d/shaders/sunWithBlendLayers.js`
+- `src/3d/geometries/Sun.js`
+
+**License:**
+[MIT License](https://github.com/ashima/webgl-noise/blob/master/LICENSE)
+
+**Attribution:**
+
+> Copyright (C) 2011 Ashima Arts. All rights reserved. Distributed under the MIT
+> License. https://github.com/ashima/webgl-noise
+
+---
+
+### Three.js - UnrealBloomPass
+
+The bloom post-processing pass (`src/3d/UnrealBloomPassAlpha.js`) is a modified
+version of Three.js's UnrealBloomPass with alpha channel preservation.
+
+**License:** [MIT License](https://github.com/mrdoob/three.js/blob/dev/LICENSE)
+
+**Attribution:**
+
+> Copyright © 2010-2024 Three.js authors Licensed under the MIT License
+> https://github.com/mrdoob/three.js/blob/dev/LICENSE
+
+---
+
 ## Original Works
 
 All other assets in this repository are original works by the author (Joshua

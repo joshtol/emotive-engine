@@ -286,9 +286,10 @@ export class MobileOptimization {
      */
     setupOrientationHandlers() {
         if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', event => {
+            this._deviceOrientationHandler = event => {
                 this.handleDeviceOrientation(event);
-            });
+            };
+            window.addEventListener('deviceorientation', this._deviceOrientationHandler);
         }
     }
 
@@ -888,6 +889,12 @@ export class MobileOptimization {
         window.removeEventListener('resize', this.handleViewportChange);
         window.removeEventListener('orientationchange', this.handleOrientationChange);
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+
+        // Remove deviceorientation listener
+        if (this._deviceOrientationHandler) {
+            window.removeEventListener('deviceorientation', this._deviceOrientationHandler);
+            this._deviceOrientationHandler = null;
+        }
 
         // Remove battery event listeners
         if (this.batteryRef) {

@@ -215,7 +215,9 @@ export function createSunMaterial(textureLoader, options = {}) {
             varying vec3 vPosition;
             varying vec3 vWorldPosition;
 
-            // Simplex noise for fire animation (Ashima Arts)
+            // Simplex noise functions
+            // Copyright (C) 2011 Ashima Arts. All rights reserved.
+            // Distributed under the MIT License. See https://github.com/ashima/webgl-noise
             vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
             vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
             vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }

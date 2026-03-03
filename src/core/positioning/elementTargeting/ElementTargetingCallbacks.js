@@ -195,15 +195,26 @@ class ElementTargetingCallbacks extends ElementTargeting {
         position = 'right',
         offset = { x: 20, y: 0 }
     ) {
-        return this.moveToElementWithCallback(
+        let intervalId = null;
+
+        const cleanup = this.moveToElementWithCallback(
             targetSelector,
             () => {
-                setInterval(callback, interval);
+                intervalId = setInterval(callback, interval);
             },
             position,
             offset,
             { repeat: true }
         );
+
+        // Wrap the cleanup to also clear the interval
+        return () => {
+            if (intervalId !== null) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            if (cleanup) cleanup();
+        };
     }
 
     /**

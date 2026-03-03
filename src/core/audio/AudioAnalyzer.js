@@ -38,6 +38,12 @@ export class AudioAnalyzer {
         this.beatThreshold = 0.3;
         this.lastBeatTime = 0;
         this.beatCallbacks = [];
+
+        // Pre-allocated buffer for time-domain data (avoids per-frame Uint8Array)
+        this._timeDataArray = null;
+
+        // Pre-bound analyze callback to avoid per-frame closure allocation
+        this._boundAnalyze = () => this.analyze();
     }
 
     /**
@@ -82,6 +88,7 @@ export class AudioAnalyzer {
 
             const bufferLength = this.analyser.frequencyBinCount;
             this.dataArray = new Uint8Array(bufferLength);
+            this._timeDataArray = new Uint8Array(bufferLength);
         }
     }
 
@@ -126,14 +133,13 @@ export class AudioAnalyzer {
     analyze() {
         if (!this.isAnalyzing) return;
 
-        this.animationFrameId = requestAnimationFrame(() => this.analyze());
+        this.animationFrameId = requestAnimationFrame(this._boundAnalyze);
 
         // Get frequency data
         this.analyser.getByteFrequencyData(this.dataArray);
 
         // Also try time domain data to see if mic is working
-        const timeData = new Uint8Array(this.analyser.frequencyBinCount);
-        this.analyser.getByteTimeDomainData(timeData);
+        this.analyser.getByteTimeDomainData(this._timeDataArray);
 
         // Calculate overall amplitude
         let sum = 0;
@@ -313,6 +319,7 @@ export class AudioAnalyzer {
 
         this.analyser = null;
         this.dataArray = null;
+        this._timeDataArray = null;
         this.beatCallbacks = [];
     }
 }

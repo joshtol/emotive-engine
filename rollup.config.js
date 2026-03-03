@@ -40,6 +40,7 @@ const productionPlugins = [
     terser({
         compress: {
             drop_console: false,
+            pure_funcs: ['console.log'],
             drop_debugger: true,
             passes: 2,
             unsafe_arrows: true,
@@ -311,6 +312,7 @@ builds.push({
         ...(isProduction ? [terser({
             compress: {
                 drop_console: false,
+                pure_funcs: ['console.log'],
                 drop_debugger: true,
                 passes: 2
             },
@@ -346,6 +348,7 @@ builds.push({
         ...(isProduction ? [terser({
             compress: {
                 drop_console: false,
+                pure_funcs: ['console.log'],
                 drop_debugger: true,
                 passes: 2
             },
@@ -395,6 +398,7 @@ builds.push({
         ...(isProduction ? [terser({
             compress: {
                 drop_console: false,
+                pure_funcs: ['console.log'],
                 drop_debugger: true,
                 passes: 2
             },
@@ -430,6 +434,7 @@ builds.push({
         ...(isProduction ? [terser({
             compress: {
                 drop_console: false,
+                pure_funcs: ['console.log'],
                 drop_debugger: true,
                 passes: 2
             },

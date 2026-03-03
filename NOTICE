@@ -6,18 +6,8 @@ This file lists all open source software components included in Emotive Engine a
 
 RUNTIME DEPENDENCIES (Included in distributed software)
 
-1. @babel/runtime
-   License: MIT
-   Copyright: Sebastian McKenzie and other contributors
-   Purpose: JavaScript polyfills and runtime helpers
-   URL: https://github.com/babel/babel/tree/main/packages/babel-runtime
-
-2. @sentry/browser
-   License: MIT
-   Copyright: Sentry and its contributors
-   Purpose: Error tracking and performance monitoring
-   URL: https://github.com/getsentry/sentry-javascript
-   Note: This is OPTIONAL and can be disabled via configuration
+None. Emotive Engine has zero runtime dependencies. Three.js is an optional
+peer dependency for 3D mode but is NOT bundled with the distributed software.
 
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -146,7 +136,7 @@ When distributing Emotive Engine, you must:
 
 UPDATES
 
-This NOTICE file is current as of: October 24, 2025
+This NOTICE file is current as of: March 2, 2026
 For the most up-to-date list of dependencies and licenses, run:
   npm list --prod --json
 

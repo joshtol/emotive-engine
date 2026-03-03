@@ -32,6 +32,9 @@ import { listGestures } from './core/gestures/index.js';
  * mascot.setEmotion('joy');
  */
 class EmotiveMascotPublic {
+    /** @type {EmotiveMascot|null} Private backing engine reference */
+    #realEngine = null;
+
     /**
      * Create a new EmotiveMascotPublic instance
      * @param {Object} [config={}] - Configuration options
@@ -62,15 +65,15 @@ class EmotiveMascotPublic {
 
         // Initialize managers
         this._stanceRegistry = new StanceRegistry();
-        this._audioManager = new AudioManager(() => this._getReal());
-        this._gestureController = new GestureController(() => this._getReal(), {
+        this._audioManager = new AudioManager(() => this.#getReal());
+        this._gestureController = new GestureController(() => this.#getReal(), {
             isRecording: () => this._isRecording,
             startTime: () => this._recordingStartTime,
             timeline: () => this._timeline,
         });
         // Create state object with proper context binding
         const self = this;
-        this._timelineRecorder = new TimelineRecorder(() => this._getReal(), this._audioManager, {
+        this._timelineRecorder = new TimelineRecorder(() => this.#getReal(), this._audioManager, {
             get timeline() {
                 return self._timeline;
             },
@@ -103,12 +106,12 @@ class EmotiveMascotPublic {
             },
         });
         this._elementAttachmentManager = new ElementAttachmentManager(
-            () => this._getReal(),
+            () => this.#getReal(),
             () => this._canvas,
             this
         );
         this._visualEffectsManager = new VisualEffectsManager(
-            () => this._getReal(),
+            () => this.#getReal(),
             () => this._canvas
         );
 
@@ -127,8 +130,8 @@ class EmotiveMascotPublic {
      * Get real engine for internal use
      * @private
      */
-    _getReal() {
-        return this._realEngine || this._engine;
+    #getReal() {
+        return this.#realEngine || this._engine;
     }
 
     /**
@@ -176,13 +179,8 @@ class EmotiveMascotPublic {
         // Create and initialize the engine - wrap in protective proxy
         const engine = new EmotiveMascot(engineConfig);
 
-        // Keep real engine reference for internal use (hidden from external access)
-        Object.defineProperty(this, '_realEngine', {
-            value: engine,
-            writable: false,
-            enumerable: false, // Hide from Object.keys()
-            configurable: false,
-        });
+        // Keep real engine reference for internal use (true private field)
+        this.#realEngine = engine;
 
         // Create a protective proxy that hides internal components
         this._engine = new Proxy(engine, {
@@ -309,7 +307,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     start() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.start();
     }
@@ -319,7 +317,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     stop() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.stop();
     }
@@ -329,7 +327,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     pause() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.pause();
     }
@@ -339,7 +337,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     resume() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.resume();
     }
@@ -407,7 +405,7 @@ class EmotiveMascotPublic {
      * @returns {Object} Performance data
      */
     getPerformanceMetrics() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return { fps: 0, frameTime: 0 };
 
         // Try to get from performance monitor
@@ -512,7 +510,7 @@ class EmotiveMascotPublic {
      * mascot.feel('no')   // shakes head
      */
     feel(intent) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
 
         // Rate limiting
@@ -626,7 +624,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
 
         // Handle different parameter formats
@@ -690,7 +688,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     setSoundEnabled(enabled) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
 
         // Set sound state in the engine's sound system
@@ -711,7 +709,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     pushEmotion(emotion, intensity = 0.5) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.stateCoordinator.pushEmotion(emotion, intensity);
         return this;
@@ -725,7 +723,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     nudgeEmotion(emotion, delta, cap = 1.0) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.stateCoordinator.nudgeEmotion(emotion, delta, cap);
         return this;
@@ -739,7 +737,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setEmotionDampening(factor) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.stateCoordinator.setEmotionDampening(factor);
         return this;
@@ -750,7 +748,7 @@ class EmotiveMascotPublic {
      * @returns {number} 0.0-1.0
      */
     getEmotionDampening() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return 0;
         return engine.stateCoordinator.getEmotionDampening();
     }
@@ -760,7 +758,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     clearEmotions() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.stateCoordinator.clearEmotions();
         return this;
@@ -771,7 +769,7 @@ class EmotiveMascotPublic {
      * @returns {Object} { dominant, undercurrents, slots }
      */
     getEmotionalState() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return { dominant: null, undercurrents: [], slots: [] };
         return engine.stateCoordinator.getEmotionalState();
     }
@@ -781,7 +779,7 @@ class EmotiveMascotPublic {
      * @returns {Object} Snapshot that can be JSON.stringify'd
      */
     getSnapshot() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return null;
         const snapshot = {
             version: 1,
@@ -801,7 +799,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     loadSnapshot(data) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine || !data || data.version !== 1) return this;
         if (data.stateMachine) {
             engine.stateMachine.deserialize(data.stateMachine);
@@ -823,7 +821,7 @@ class EmotiveMascotPublic {
      * @returns {Object} EmotionDynamics instance
      */
     get dynamics() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return null;
         return engine.stateCoordinator.dynamics;
     }
@@ -859,7 +857,8 @@ class EmotiveMascotPublic {
      * @returns {Object|null} AudioLayerManager instance
      */
     getAudioLayers() {
-        return this._audioManager.getLayers();
+        const layers = this._audioManager.getLayers();
+        return layers ? Object.freeze({ ...layers }) : null;
     }
 
     /**
@@ -868,7 +867,7 @@ class EmotiveMascotPublic {
      * @returns {number} Effective BPM
      */
     getEffectiveBPM() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine || !engine.rhythmIntegration) return 120;
         let bpm = engine.rhythmIntegration.getEffectiveBPM(engine.stateMachine);
         const dm = this._audioManager.getDifficultyManager();
@@ -906,7 +905,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     applyModifier(name, config) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         engine.stateCoordinator.modifiers.applyModifier(name, config);
         return this;
@@ -918,7 +917,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     removeModifier(name) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return this;
         engine.stateCoordinator.modifiers.removeModifier(name);
         return this;
@@ -929,7 +928,7 @@ class EmotiveMascotPublic {
      * @returns {Array<{name: string, remaining: number|null, config: Object}>}
      */
     getActiveModifiers() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) return [];
         return engine.stateCoordinator.modifiers.getActiveModifiers();
     }
@@ -942,7 +941,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     setShape(shape, configOrTimestamp) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
 
         // Check stance registry first (UP-RESONANCE-2 Feature 7)
@@ -1019,7 +1018,7 @@ class EmotiveMascotPublic {
      */
     dismissStance() {
         if (this._stanceRegistry.dismiss()) {
-            const engine = this._getReal();
+            const engine = this.#getReal();
             if (engine && engine.stateCoordinator) {
                 engine.stateCoordinator._emit('stanceChanged', { name: null, config: null });
             }
@@ -1033,7 +1032,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     enableGazeTracking() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         if (engine.gazeTracker) {
             engine.gazeTracker.enable();
@@ -1046,7 +1045,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     disableGazeTracking() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         if (engine.gazeTracker) {
             engine.gazeTracker.disable();
@@ -1060,7 +1059,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     setGazeTarget(x, y) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         if (engine.gazeTracker) {
             // Update the mouse position directly
@@ -1086,7 +1085,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     setPosition(x, y, z = 0) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         if (engine.positionController) {
             // Ensure onUpdate callback exists
@@ -1117,7 +1116,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     animateToPosition(x, y, z = 0, duration = 1000, easing = 'easeOutCubic') {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         if (engine.positionController) {
             // Ensure onUpdate callback exists
@@ -1190,7 +1189,7 @@ class EmotiveMascotPublic {
      * @throws {Error} If the engine has not been initialized
      */
     getGazeState() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine) throw new Error('Engine not initialized. Call init() first.');
         if (engine.gazeTracker) {
             return engine.gazeTracker.getState();
@@ -1204,7 +1203,7 @@ class EmotiveMascotPublic {
      */
     setBPM(bpm) {
         bpm = Math.max(0, Math.min(300, Number(bpm) || 0));
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.rhythmIntegration) {
             engine.rhythmIntegration.setBPM(bpm);
         }
@@ -1223,7 +1222,7 @@ class EmotiveMascotPublic {
         };
 
         const settings = qualityMap[level] || qualityMap['medium'];
-        const engine = this._getReal();
+        const engine = this.#getReal();
 
         if (engine && engine.performanceMonitor) {
             engine.performanceMonitor.setTargetFPS(settings.fps);
@@ -1245,7 +1244,7 @@ class EmotiveMascotPublic {
      */
     setMaxParticles(maxParticles) {
         maxParticles = Math.max(0, Math.min(1000, Math.floor(Number(maxParticles) || 0)));
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.particleSystem) {
             engine.particleSystem.setMaxParticles(maxParticles);
         }
@@ -1257,7 +1256,7 @@ class EmotiveMascotPublic {
      * @returns {number} Current number of active particles
      */
     getParticleCount() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.particleSystem && engine.particleSystem.particles) {
             return engine.particleSystem.particles.length;
         }
@@ -1270,7 +1269,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setOpacity(opacity) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         opacity = Math.max(0, Math.min(1, opacity));
 
         if (engine && engine.renderer) {
@@ -1436,7 +1435,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setColor(color) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.renderer && engine.renderer.config) {
             engine.renderer.config.coreColor = color;
         }
@@ -1449,7 +1448,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setGlowColor(color) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.renderer && engine.renderer.config) {
             engine.renderer.config.defaultGlowColor = color;
         }
@@ -1478,14 +1477,17 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setSpeed(speed) {
-        this._getReal(); // Ensure engine is initialized
+        const engine = this.#getReal();
         speed = Math.max(0.1, Math.min(10, speed));
 
-        // Store speed multiplier for potential future use
+        // Store speed multiplier locally
         this._speedMultiplier = speed;
 
-        // Note: Actual speed control would need deeper engine integration
-        // This is a placeholder for the API surface
+        // Apply to animation controller so deltaTime is scaled for all subsystems
+        if (engine && engine.animationController) {
+            engine.animationController.setSpeedMultiplier(speed);
+        }
+
         return this;
     }
 
@@ -1494,6 +1496,10 @@ class EmotiveMascotPublic {
      * @returns {number} Current speed multiplier
      */
     getSpeed() {
+        const engine = this.#getReal();
+        if (engine && engine.animationController) {
+            return engine.animationController.getSpeedMultiplier();
+        }
         return this._speedMultiplier || 1.0;
     }
 
@@ -1503,7 +1509,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setFPS(fps) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         fps = Math.max(1, Math.min(120, fps));
 
         if (engine && engine.animationController) {
@@ -1518,7 +1524,7 @@ class EmotiveMascotPublic {
      * @returns {number} Target FPS
      */
     getFPS() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.animationController) {
             return engine.animationController.targetFPS || 60;
         }
@@ -1530,7 +1536,7 @@ class EmotiveMascotPublic {
      * @returns {boolean} True if paused
      */
     isPaused() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.animationController) {
             return engine.animationController.isPaused === true;
         }
@@ -1569,7 +1575,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     on(event, listener) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.eventManager) {
             engine.eventManager.on(event, listener);
         }
@@ -1583,7 +1589,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     off(event, listener) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.eventManager) {
             engine.eventManager.off(event, listener);
         }
@@ -1613,7 +1619,7 @@ class EmotiveMascotPublic {
      * mascot.setScale({ particles: 1.5 })
      */
     setScale(scaleOrOptions) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.positionController) {
             if (typeof scaleOrOptions === 'number') {
                 // Backward compatible: number sets global scale
@@ -1641,7 +1647,7 @@ class EmotiveMascotPublic {
      * @returns {number} Current scale factor
      */
     getScale() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.positionController) {
             return engine.positionController.globalScale || 1.0;
         }
@@ -1717,7 +1723,7 @@ class EmotiveMascotPublic {
      * })
      */
     setBackdrop(options = {}) {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && typeof engine.setBackdrop === 'function') {
             engine.setBackdrop(options);
         }
@@ -1729,7 +1735,7 @@ class EmotiveMascotPublic {
      * @returns {Object|null} Current backdrop config or null if not available
      */
     getBackdrop() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && typeof engine.getBackdrop === 'function') {
             return engine.getBackdrop();
         }
@@ -1864,6 +1870,7 @@ class EmotiveMascotPublic {
         return [
             'neutral',
             'joy',
+            'calm',
             'sadness',
             'anger',
             'fear',
@@ -1872,8 +1879,10 @@ class EmotiveMascotPublic {
             'love',
             'euphoria',
             'excited',
+            'focused',
             'suspicion',
             'resting',
+            'glitch',
         ];
     }
 
@@ -1913,7 +1922,7 @@ class EmotiveMascotPublic {
 
     // Getter properties for components needed by demo - return safe proxies
     get renderer() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine || !engine.renderer) return null;
 
         // Return safe proxy that only exposes necessary methods
@@ -1926,7 +1935,7 @@ class EmotiveMascotPublic {
     }
 
     get shapeMorpher() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine || !engine.shapeMorpher) return null;
 
         // Return safe proxy
@@ -1939,7 +1948,7 @@ class EmotiveMascotPublic {
     }
 
     get gazeTracker() {
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (!engine || !engine.gazeTracker) return null;
 
         // Return safe proxy
@@ -1970,7 +1979,7 @@ class EmotiveMascotPublic {
         // Clean up element tracking
         this.detachFromElement();
 
-        const engine = this._getReal();
+        const engine = this.#getReal();
         if (engine && engine.destroy) {
             engine.destroy();
         }

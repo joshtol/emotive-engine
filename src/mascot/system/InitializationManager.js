@@ -205,6 +205,10 @@ export class InitializationManager {
             throw new Error(`Canvas with ID '${config.canvasId}' not found`);
         }
 
+        // Add accessibility attributes
+        this.mascot.canvas.setAttribute('role', 'img');
+        this.mascot.canvas.setAttribute('aria-label', 'Animated emotional mascot visualization');
+
         // Initialize canvas manager
         this.mascot.canvasManager = new CanvasManager(this.mascot.canvas);
 

@@ -204,17 +204,27 @@ export class AccessibilityManager {
         if (window.matchMedia) {
             // Listen for reduced motion changes
             const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-            motionQuery.addListener(e => {
+            const motionHandler = e => {
                 this.reducedMotionPreferred = e.matches;
                 this.onPreferenceChange('reducedMotion', e.matches);
-            });
+            };
+            if (motionQuery.addEventListener) {
+                motionQuery.addEventListener('change', motionHandler);
+            } else if (motionQuery.addListener) {
+                motionQuery.addListener(motionHandler);
+            }
 
             // Listen for high contrast changes
             const contrastQuery = window.matchMedia('(prefers-contrast: high)');
-            contrastQuery.addListener(e => {
+            const contrastHandler = e => {
                 this.highContrastEnabled = e.matches;
                 this.onPreferenceChange('highContrast', e.matches);
-            });
+            };
+            if (contrastQuery.addEventListener) {
+                contrastQuery.addEventListener('change', contrastHandler);
+            } else if (contrastQuery.addListener) {
+                contrastQuery.addListener(contrastHandler);
+            }
         }
     }
 

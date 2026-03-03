@@ -459,10 +459,14 @@ class RhythmEngine {
 
     /**
      * Sync to audio source (stub for future implementation)
+     * @todo Not yet implemented — beat detection and tempo extraction pending
      */
     syncToAudio(audioContext, audioSource) {
+        if (!this._syncToAudioWarned) {
+            console.warn('[Rhythm] syncToAudio() is not yet implemented');
+            this._syncToAudioWarned = true;
+        }
         this.audioSync = { context: audioContext, source: audioSource };
-        // Future: Implement beat detection and tempo extraction
     }
 
     /**

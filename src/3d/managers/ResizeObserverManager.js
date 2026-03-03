@@ -24,6 +24,22 @@ export class ResizeObserverManager {
 
     /** @private */
     _start() {
+        if (typeof ResizeObserver === 'undefined') {
+            // Fallback: listen for window resize events
+            this._fallbackHandler = () => {
+                const rect = this._container.getBoundingClientRect();
+                const w = Math.round(rect.width);
+                const h = Math.round(rect.height);
+                if (w === this._lastWidth && h === this._lastHeight) return;
+                if (w === 0 || h === 0) return;
+                this._lastWidth = w;
+                this._lastHeight = h;
+                this._onResize(w, h);
+            };
+            window.addEventListener('resize', this._fallbackHandler);
+            return;
+        }
+
         let pending = false;
 
         this._observer = new ResizeObserver(entries => {
@@ -57,6 +73,10 @@ export class ResizeObserverManager {
         if (this._observer) {
             this._observer.disconnect();
             this._observer = null;
+        }
+        if (this._fallbackHandler) {
+            window.removeEventListener('resize', this._fallbackHandler);
+            this._fallbackHandler = null;
         }
         this._container = null;
         this._onResize = null;

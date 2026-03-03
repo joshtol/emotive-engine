@@ -193,16 +193,20 @@ npm install three
 Or via CDN:
 
 ```html
-<!-- 2D Engine -->
+<!-- 2D Engine (UMD, no dependencies) -->
 <script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot.umd.js"></script>
 
-<!-- 3D Engine (requires Three.js to be loaded first) -->
-<script src="https://unpkg.com/three/build/three.min.js"></script>
-<script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d.umd.js"></script>
-
-<!-- 3D Engine with Elementals (requires Three.js to be loaded first) -->
-<script src="https://unpkg.com/three/build/three.min.js"></script>
-<script src="https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d-elementals.umd.js"></script>
+<!-- 3D Engine (ESM — requires import map for Three.js) -->
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.min.js"
+        }
+    }
+</script>
+<script type="module">
+    import { EmotiveMascot3D } from 'https://unpkg.com/@joshtol/emotive-engine/dist/emotive-mascot-3d.js';
+</script>
 ```
 
 ---

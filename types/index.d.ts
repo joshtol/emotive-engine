@@ -7,6 +7,31 @@
 // Usage: import { EmotiveMascot, type EmotiveMascotConfig } from '@joshtol/emotive-engine'
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Core Type Aliases (used by core.d.ts for internal system interfaces)
+export type EmotionType = string;
+export type UndertoneType = string;
+export type GestureType = string;
+export type ParticleBehaviorType = 'float' | 'popcorn' | 'rain' | 'orbit' | 'spiral' | 'drift' | 'pulse';
+export type EmotionalProperties = VisualParams;
+export interface AudioStats {
+    isActive: boolean;
+    currentLevel: number;
+    historySize: number;
+    maxHistorySize: number;
+    lastSpikeTime: number;
+    timeSinceLastSpike: number;
+    averageLevel: number;
+}
+export interface ParticleStats {
+    activeParticles: number;
+    maxParticles: number;
+    poolSize: number;
+    poolHits: number;
+    poolMisses: number;
+    poolEfficiency: number;
+    spawnAccumulator: number;
+}
+
 // Core Types
 export interface EmotiveMascotConfig {
     canvas?: HTMLCanvasElement;
@@ -276,6 +301,32 @@ export class EmotiveMascot {
     morphTo(shape: string, config?: any): void;
     setShape(shape: string, configOrTimestamp?: any | number): void;
 
+    // Multi-Emotion Slot API
+    pushEmotion(emotion: string, intensity?: number): EmotiveMascot;
+    nudgeEmotion(emotion: string, delta: number, cap?: number): EmotiveMascot;
+    setEmotionDampening(factor: number): EmotiveMascot;
+    getEmotionDampening(): number;
+    clearEmotions(): EmotiveMascot;
+    getEmotionalState(): { dominant: string | null; undercurrents: any[]; slots: any[] };
+
+    // Snapshot / Persistence
+    getSnapshot(): any;
+    loadSnapshot(data: any): EmotiveMascot;
+
+    // Modifiers
+    applyModifier(name: string, config: any): EmotiveMascot;
+    removeModifier(name: string): EmotiveMascot;
+    getActiveModifiers(): Array<{ name: string; remaining: number | null; config: any }>;
+
+    // Stances
+    registerStance(name: string, config: any): EmotiveMascot;
+    getActiveStance(): { name: string; config: any } | null;
+    dismissStance(): EmotiveMascot;
+    getAvailableStances(): string[];
+
+    // Dynamics
+    readonly dynamics: any;
+
     // Audio
     loadAudio(source: string | Blob): Promise<void>;
     connectAudio(audioElement: HTMLAudioElement): void;
@@ -286,6 +337,7 @@ export class EmotiveMascot {
     stopRhythmSync(): void;
     setSoundEnabled(enabled: boolean): void;
     setBPM(bpm: number): void;
+    getEffectiveBPM(): number;
 
     // Gaze Tracking
     enableGazeTracking(): void;
@@ -742,6 +794,32 @@ declare namespace EmotiveEngine {
         morphTo(shape: string, config?: any): void;
         setShape(shape: string, configOrTimestamp?: any | number): void;
 
+        // Multi-Emotion Slot API
+        pushEmotion(emotion: string, intensity?: number): EmotiveMascot;
+        nudgeEmotion(emotion: string, delta: number, cap?: number): EmotiveMascot;
+        setEmotionDampening(factor: number): EmotiveMascot;
+        getEmotionDampening(): number;
+        clearEmotions(): EmotiveMascot;
+        getEmotionalState(): { dominant: string | null; undercurrents: any[]; slots: any[] };
+
+        // Snapshot / Persistence
+        getSnapshot(): any;
+        loadSnapshot(data: any): EmotiveMascot;
+
+        // Modifiers
+        applyModifier(name: string, config: any): EmotiveMascot;
+        removeModifier(name: string): EmotiveMascot;
+        getActiveModifiers(): Array<{ name: string; remaining: number | null; config: any }>;
+
+        // Stances
+        registerStance(name: string, config: any): EmotiveMascot;
+        getActiveStance(): { name: string; config: any } | null;
+        dismissStance(): EmotiveMascot;
+        getAvailableStances(): string[];
+
+        // Dynamics
+        readonly dynamics: any;
+
         // Audio
         loadAudio(source: string | Blob): Promise<void>;
         connectAudio(audioElement: HTMLAudioElement): void;
@@ -752,6 +830,7 @@ declare namespace EmotiveEngine {
         stopRhythmSync(): void;
         setSoundEnabled(enabled: boolean): void;
         setBPM(bpm: number): void;
+        getEffectiveBPM(): number;
 
         // Gaze Tracking
         enableGazeTracking(): void;

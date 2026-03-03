@@ -100,6 +100,8 @@ ${blendModesGLSL}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SIMPLEX NOISE (for fire animation - from original sun shader)
+// Copyright (C) 2011 Ashima Arts. All rights reserved.
+// Distributed under the MIT License. See https://github.com/ashima/webgl-noise
 // ═══════════════════════════════════════════════════════════════════════════
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }

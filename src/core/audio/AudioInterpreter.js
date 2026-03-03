@@ -369,6 +369,15 @@ export class AudioInterpreter {
         await this.interpret(text);
     }
 
+    /**
+     * Call the configured LLM endpoint with the given text.
+     * @param {string} text - The text to send to the LLM for interpretation.
+     * @returns {Promise<Object|null>} Validated action object or null.
+     * @security The endpoint URL is caller-provided via configure(). Ensure it points
+     * to a trusted origin before calling this method. API keys are forwarded in
+     * request headers (x-api-key for Anthropic, Authorization Bearer for OpenAI-compatible).
+     * @private
+     */
     async _callLLM(text) {
         const requestId = Date.now();
         this.pendingRequest = requestId;

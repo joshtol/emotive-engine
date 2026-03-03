@@ -104,6 +104,9 @@ class AnimationController {
         this.deltaTime = 0;
         this.isPaused = false;
 
+        // Speed multiplier (1.0 = normal, 2.0 = double speed, 0.5 = half speed)
+        this.speedMultiplier = 1.0;
+
         // Set up visibility change and window focus handling
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
         this.handleWindowBlur = this.handleWindowBlur.bind(this);
@@ -416,6 +419,9 @@ class AnimationController {
 
         this.lastFrameTime = currentTime;
 
+        // Apply speed multiplier to deltaTime so all animations run faster/slower
+        this.deltaTime *= this.speedMultiplier;
+
         // Simple update and render - no overhead
         this.update(this.deltaTime);
         this.render();
@@ -554,6 +560,22 @@ class AnimationController {
      */
     get targetFPS() {
         return this.config.targetFPS || 60;
+    }
+
+    /**
+     * Sets the speed multiplier for all animations
+     * @param {number} multiplier - Speed multiplier (1.0 = normal, 0.1-10.0 range)
+     */
+    setSpeedMultiplier(multiplier) {
+        this.speedMultiplier = Math.max(0.1, Math.min(10, multiplier));
+    }
+
+    /**
+     * Gets the current speed multiplier
+     * @returns {number} Current speed multiplier
+     */
+    getSpeedMultiplier() {
+        return this.speedMultiplier;
     }
 
     /**

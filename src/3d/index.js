@@ -184,6 +184,15 @@ export class EmotiveMascot3D {
         // Accessibility: Check reduced motion preference
         this._prefersReducedMotion = ACCESSIBILITY.prefersReducedMotion();
         this._reducedMotionMediaQuery = null;
+
+        // Pre-bound animate callback to avoid per-frame closure allocation
+        this._boundAnimate = time => this.animate(time);
+
+        // Cached rgbToHex result to avoid per-frame string allocations
+        this._lastGlowR = -1;
+        this._lastGlowG = -1;
+        this._lastGlowB = -1;
+        this._cachedHex = '#FFFFFF';
     }
 
     /**
@@ -288,6 +297,14 @@ export class EmotiveMascot3D {
             );
         }
 
+        // WebGL2 availability check — prevents cryptic black canvas on unsupported environments
+        const testCanvas = document.createElement('canvas');
+        const gl = testCanvas.getContext('webgl2');
+        if (!gl) {
+            console.warn('[EmotiveMascot3D] WebGL2 is not supported in this browser');
+            return this;
+        }
+
         // Setup dual canvas layers via CanvasLayerManager
         this._canvasLayerManager = new CanvasLayerManager({
             canvasId: this.config.canvasId,
@@ -379,7 +396,7 @@ export class EmotiveMascot3D {
 
         this.isRunning = true;
         this.lastFrameTime = null; // Will be set on first animate() call
-        this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
+        this.animationFrameId = requestAnimationFrame(this._boundAnimate);
     }
 
     /**
@@ -407,7 +424,7 @@ export class EmotiveMascot3D {
         // Initialize lastFrameTime on first frame
         if (this.lastFrameTime === null) {
             this.lastFrameTime = currentTime;
-            this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
+            this.animationFrameId = requestAnimationFrame(this._boundAnimate);
             return;
         }
 
@@ -454,7 +471,7 @@ export class EmotiveMascot3D {
                 // Get current emotion and its visual parameters
                 const currentEmotion = this.core3D ? this.core3D.emotion : 'neutral';
                 const emotionData = getEmotion(currentEmotion);
-                const glowColor = this.core3D ? this.rgbToHex(this.core3D.glowColor) : '#FFFFFF';
+                const glowColor = this.core3D ? this._rgbToHexCached(this.core3D.glowColor) : '#FFFFFF';
 
                 // Extract emotion-specific particle parameters
                 const particleBehavior = emotionData?.visual?.particleBehavior || 'ambient';
@@ -514,7 +531,7 @@ export class EmotiveMascot3D {
         }
 
         // Continue loop
-        this.animationFrameId = requestAnimationFrame(time => this.animate(time));
+        this.animationFrameId = requestAnimationFrame(this._boundAnimate);
     }
 
     /**
@@ -1665,6 +1682,24 @@ export class EmotiveMascot3D {
                 return hex.length === 1 ? `0${hex}` : hex;
             })
             .join('')}`;
+    }
+
+    /**
+     * Cached version of rgbToHex — only recomputes when values change.
+     * Avoids per-frame string allocations in the render loop.
+     * @private
+     */
+    _rgbToHexCached(rgb) {
+        const r = rgb[0];
+        const g = rgb[1];
+        const b = rgb[2];
+        if (r !== this._lastGlowR || g !== this._lastGlowG || b !== this._lastGlowB) {
+            this._lastGlowR = r;
+            this._lastGlowG = g;
+            this._lastGlowB = b;
+            this._cachedHex = this.rgbToHex(rgb);
+        }
+        return this._cachedHex;
     }
 
     /**

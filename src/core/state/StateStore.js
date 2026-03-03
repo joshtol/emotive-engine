@@ -287,6 +287,9 @@ export class StateStore {
 
     // Private helper methods
 
+    /** @private Set of property names that must never be traversed via dot-path */
+    static _DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
     /**
      * Notify subscribers of state changes
      * @private
@@ -363,13 +366,18 @@ export class StateStore {
      * @private
      */
     getNestedValue(obj, path) {
-        return path
-            .split('.')
-            .reduce(
-                (current, key) =>
-                    current && current[key] !== undefined ? current[key] : undefined,
-                obj
-            );
+        const keys = path.split('.');
+        for (const key of keys) {
+            if (StateStore._DANGEROUS_KEYS.has(key)) {
+                console.warn('[StateStore] Rejected dangerous path segment:', key);
+                return undefined;
+            }
+        }
+        return keys.reduce(
+            (current, key) =>
+                current && current[key] !== undefined ? current[key] : undefined,
+            obj
+        );
     }
 
     /**
@@ -378,6 +386,12 @@ export class StateStore {
      */
     setNestedValue(obj, path, value) {
         const keys = path.split('.');
+        for (const key of keys) {
+            if (StateStore._DANGEROUS_KEYS.has(key)) {
+                console.warn('[StateStore] Rejected dangerous path segment:', key);
+                return;
+            }
+        }
         const lastKey = keys.pop();
         const target = keys.reduce((current, key) => {
             if (!current[key]) current[key] = {};

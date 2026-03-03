@@ -441,8 +441,9 @@ export class AudioBridge {
             this._bpmDetectionInterval = null;
         }
 
-        // Create dataArray lazily based on the actual analyzer being used
+        // Create dataArrays lazily based on the actual analyzer being used
         let dataArray = null;
+        let timeDomainArray = null;
         let lastPeakTime = 0;
         let prevEnergy = 0;
         let prevTimeDomainAmplitude = 0; // Track previous amplitude for spike detection
@@ -460,10 +461,11 @@ export class AudioBridge {
                 return;
             }
 
-            // Create/recreate dataArray if needed
+            // Create/recreate dataArrays if needed (buffer size may change on analyzer rebuild)
             const bufferLength = this._bufferAnalyzerNode.frequencyBinCount;
             if (!dataArray || dataArray.length !== bufferLength) {
                 dataArray = new Uint8Array(bufferLength);
+                timeDomainArray = new Uint8Array(bufferLength);
             }
 
             this._bufferAnalyzerNode.getByteFrequencyData(dataArray);
@@ -484,7 +486,6 @@ export class AudioBridge {
 
             // Also get time-domain data for transient detection
             // Time domain is better for catching sharp clicks/pops that may not show in FFT
-            const timeDomainArray = new Uint8Array(bufferLength);
             this._bufferAnalyzerNode.getByteTimeDomainData(timeDomainArray);
 
             // Calculate peak-to-peak amplitude in time domain (deviation from 128 center)

@@ -80,7 +80,8 @@ export class ErrorTracker {
         // Handle unhandled promise rejections
         this.originalOnUnhandledRejection = window.onunhandledrejection;
         window.onunhandledrejection = event => {
-            this.captureError(new Error(event.reason), {
+            const err = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+            this.captureError(err, {
                 type: 'unhandledRejection',
                 promise: event.promise,
                 uncaught: true,

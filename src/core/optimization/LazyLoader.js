@@ -68,6 +68,27 @@ export class LazyLoader {
         }
     }
 
+    /**
+     * Validate a module path to prevent directory traversal and external URL loading
+     * @param {string} modulePath - The module path to validate
+     * @throws {Error} If the path is invalid or dangerous
+     * @private
+     */
+    _validateModulePath(modulePath) {
+        if (typeof modulePath !== 'string' || !modulePath) {
+            throw new Error('[LazyLoader] Invalid module path');
+        }
+        if (/^https?:\/\//i.test(modulePath)) {
+            throw new Error('[LazyLoader] External URLs not allowed');
+        }
+        if (modulePath.includes('..')) {
+            throw new Error('[LazyLoader] Directory traversal not allowed');
+        }
+        if (/^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(modulePath)) {
+            throw new Error('[LazyLoader] Protocol-based paths not allowed');
+        }
+    }
+
     _loadModule(moduleName) {
         const loader = this.moduleMap.get(moduleName);
 
@@ -75,6 +96,9 @@ export class LazyLoader {
             // Use dynamic import
             return loader();
         }
+
+        // Validate the module name before building a URL from it
+        this._validateModulePath(moduleName);
 
         // Fallback to URL-based loading
         const url = `${this.baseUrl}${moduleName}.js`;
@@ -87,6 +111,11 @@ export class LazyLoader {
         return this._loadScript(url);
     }
 
+    /**
+     * @note This fallback creates script elements dynamically, which requires
+     * script-src to allow the script origin in Content-Security-Policy.
+     * In strict CSP environments, only dynamic import() (the primary path) is used.
+     */
     _loadScript(url) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');

@@ -109,7 +109,14 @@ class ErrorBoundary {
     wrap(fn, context, fallbackValue = null) {
         return (...args) => {
             try {
-                return fn(...args);
+                const result = fn(...args);
+                if (result && typeof result.then === 'function') {
+                    return result.catch(error => {
+                        this.logError(error, context);
+                        return fallbackValue !== null ? fallbackValue : this.getDefault(context);
+                    });
+                }
+                return result;
             } catch (error) {
                 this.logError(error, context);
                 return fallbackValue !== null ? fallbackValue : this.getDefault(context);

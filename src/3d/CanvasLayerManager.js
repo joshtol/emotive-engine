@@ -67,6 +67,9 @@ export class CanvasLayerManager {
         this.canvas2D.style.zIndex = '1';
         // Disable pointer events - let WebGL canvas handle all interaction
         this.canvas2D.style.pointerEvents = 'none';
+        // Accessibility: decorative layer, hidden from assistive technology
+        this.canvas2D.setAttribute('role', 'presentation');
+        this.canvas2D.setAttribute('aria-hidden', 'true');
         this.container.appendChild(this.canvas2D);
 
         // Create WebGL canvas for 3D core (Layer 2 - front)
@@ -96,6 +99,9 @@ export class CanvasLayerManager {
             this.webglCanvas.style.pointerEvents = 'none';
             this.webglCanvas.style.touchAction = 'auto';
         }
+        // Accessibility: main 3D visualization canvas
+        this.webglCanvas.setAttribute('role', 'img');
+        this.webglCanvas.setAttribute('aria-label', 'Animated emotional mascot visualization');
         // NOTE: Canvas is NOT appended here - call appendWebGLCanvas() after first render
         this._canvasAppended = false;
 

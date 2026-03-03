@@ -189,6 +189,17 @@ export class ElementInstancedSpawner {
         // Per-type parameterAnimation configs for atmospheric energy evaluation
         // Stored at gesture start, evaluated each frame to drive particle energy
         this._parameterAnimations = new Map(); // elementType -> parsed parameterAnimation object
+
+        // Reusable per-frame collections to avoid GC pressure at 60fps
+        this._deadElements = [];
+        this._activeTypes = new Set();
+
+        // Cached viewport width to avoid per-frame DOM reads
+        this._cachedInnerWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+        if (typeof window !== 'undefined') {
+            this._onResize = () => { this._cachedInnerWidth = window.innerWidth; };
+            window.addEventListener('resize', this._onResize);
+        }
     }
 
     /**
@@ -2143,7 +2154,7 @@ export class ElementInstancedSpawner {
         // Enable motion blur when instanced elements are actively moving
         // Disabled on mobile — small viewports make even capped blur too prominent
         if (this._renderer?.motionBlurPass) {
-            const isMobile = window.innerWidth <= 1000;
+            const isMobile = this._cachedInnerWidth <= 1000;
             this._renderer.motionBlurPass.enabled = !isMobile;
         }
 
@@ -2183,7 +2194,8 @@ export class ElementInstancedSpawner {
         }
 
         // Process per-element animations
-        const deadElements = [];
+        const deadElements = this._deadElements;
+        deadElements.length = 0;
 
         for (const [elementId, data] of this.activeElements) {
             const { animState, type, basePosition, baseScale, rotation } = data;
@@ -2526,7 +2538,8 @@ export class ElementInstancedSpawner {
         // Sync particle atmospherics: feed filtered positions + gesture progress + energy
         if (this._particleAtmospherics) {
             // Collect unique element types with active elements
-            const activeTypes = new Set();
+            const activeTypes = this._activeTypes;
+            activeTypes.clear();
             for (const [, data] of this.activeElements) {
                 activeTypes.add(data.type);
             }
@@ -2704,6 +2717,12 @@ export class ElementInstancedSpawner {
         this._initialized.clear();
         this.activeElements.clear();
         this._poolLastUsed.clear();
+
+        // Remove resize listener
+        if (typeof window !== 'undefined' && this._onResize) {
+            window.removeEventListener('resize', this._onResize);
+            this._onResize = null;
+        }
     }
 }
 

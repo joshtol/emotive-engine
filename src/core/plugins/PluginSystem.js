@@ -347,8 +347,8 @@ export class PluginSystem {
             });
 
             return true;
-        } catch {
-            // Failed to register plugin
+        } catch (error) {
+            console.warn('[PluginSystem] Failed to register plugin:', error);
             return false;
         } finally {
             this.loadingPlugins.delete(plugin.name);
@@ -544,8 +544,8 @@ export class PluginSystem {
             const result = await Promise.race([init(this.pluginAPI), timeout]);
 
             return result !== false;
-        } catch {
-            // Plugin initialization error
+        } catch (error) {
+            console.warn('[PluginSystem] Plugin initialization error:', error);
             return false;
         }
     }
@@ -598,8 +598,8 @@ export class PluginSystem {
             this.emitPluginEvent('pluginUnregistered', { name: pluginName });
 
             return true;
-        } catch {
-            // Failed to unregister plugin
+        } catch (error) {
+            console.warn('[PluginSystem] Failed to unregister plugin:', error);
             return false;
         }
     }
@@ -654,8 +654,8 @@ export class PluginSystem {
             try {
                 const result = await hook.handler(data);
                 results.push({ pluginName: hook.pluginName, result });
-            } catch {
-                // Hook error in plugin
+            } catch (error) {
+                console.warn(`[PluginSystem] Hook '${hookName}' error in plugin '${hook.pluginName}':`, error);
             }
         }
 

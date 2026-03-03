@@ -1,3 +1,8 @@
+// Derived from Three.js UnrealBloomPass
+// Copyright © 2010-2024 Three.js authors
+// Licensed under the MIT License
+// https://github.com/mrdoob/three.js/blob/dev/LICENSE
+
 /**
  * UnrealBloomPassAlpha - Modified UnrealBloomPass that preserves alpha channel
  *

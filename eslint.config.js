@@ -9,7 +9,7 @@ export default [
     {
         ignores: ['**/_template.js', '**/*template*.js'],
         languageOptions: {
-            ecmaVersion: 2021,
+            ecmaVersion: 2022,
             sourceType: 'module',
             globals: {
                 // Browser globals

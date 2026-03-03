@@ -22,7 +22,9 @@ export type GeometryType =
     | 'dodecahedron'
     | 'ring'
     | 'smooth-icosahedron'
-    | 'faceted-icosahedron';
+    | 'faceted-icosahedron'
+    | 'diamond'
+    | 'star';
 
 export type EmotionName =
     | 'neutral'
@@ -136,6 +138,8 @@ export interface EmotiveMascot3DConfig {
     coreGeometry?: GeometryType;
     /** Target frames per second */
     targetFPS?: number;
+    /** Base path for loading GLB model assets */
+    assetBasePath?: string;
     /** Enable particle effects */
     enableParticles?: boolean;
     /** Default emotion state */
@@ -198,7 +202,7 @@ export class EmotiveMascot3D {
     init(container: HTMLElement): EmotiveMascot3D;
 
     /** Start animation loop */
-    start(): void;
+    start(): Promise<void>;
 
     /** Stop animation loop */
     stop(): void;
