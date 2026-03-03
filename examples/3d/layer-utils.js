@@ -26,45 +26,79 @@ export function createLayerCard({ layer, blendModeNames, prefix = 'Layer', onUpd
     card.dataset.layerId = layer.id;
     card.draggable = true;
 
-    card.innerHTML = `
-        <div class="layer-header">
-            <div class="layer-title">
-                <span class="drag-handle">⠿</span>
-                <span class="layer-name">${prefix} ${layer.id}</span>
-            </div>
-            <div class="layer-controls-header">
-                <button class="toggle-btn ${layer.enabled ? '' : 'disabled'}">
-                    ${layer.enabled ? 'ON' : 'OFF'}
-                </button>
-                <button class="delete-btn">×</button>
-            </div>
-        </div>
-        <div class="layer-controls">
-            <div class="layer-settings-row">
-                <select class="blend-mode-select">
-                    ${blendModeNames.map((name, idx) =>
-        `<option value="${idx}"${layer.mode === idx ? ' selected' : ''}>${name}</option>`
-    ).join('')}
-                </select>
-                <span class="fader-value">${layer.strength.toFixed(3)}</span>
-            </div>
-            <div class="fader-control">
-                <button class="fader-step fader-step-down">−</button>
-                <input type="range" class="fader-slider" min="0" max="5" step="0.1" value="${layer.strength}">
-                <button class="fader-step fader-step-up">+</button>
-            </div>
-        </div>
-    `;
+    // Build card DOM safely — no innerHTML with interpolated strings
+    const header = document.createElement('div');
+    header.className = 'layer-header';
 
-    // Elements
-    const toggleBtn = card.querySelector('.toggle-btn');
-    const deleteBtn = card.querySelector('.delete-btn');
-    const selectEl = card.querySelector('.blend-mode-select');
-    const slider = card.querySelector('.fader-slider');
-    const valueEl = card.querySelector('.fader-value');
-    const stepDown = card.querySelector('.fader-step-down');
-    const stepUp = card.querySelector('.fader-step-up');
-    const dragHandle = card.querySelector('.drag-handle');
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'layer-title';
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'drag-handle';
+    dragHandle.textContent = '⠿';
+    const layerName = document.createElement('span');
+    layerName.className = 'layer-name';
+    layerName.textContent = `${prefix} ${layer.id}`;
+    titleDiv.appendChild(dragHandle);
+    titleDiv.appendChild(layerName);
+
+    const controlsHeader = document.createElement('div');
+    controlsHeader.className = 'layer-controls-header';
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = `toggle-btn ${layer.enabled ? '' : 'disabled'}`;
+    toggleBtn.textContent = layer.enabled ? 'ON' : 'OFF';
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '\u00d7';
+    controlsHeader.appendChild(toggleBtn);
+    controlsHeader.appendChild(deleteBtn);
+
+    header.appendChild(titleDiv);
+    header.appendChild(controlsHeader);
+
+    const controls = document.createElement('div');
+    controls.className = 'layer-controls';
+
+    const settingsRow = document.createElement('div');
+    settingsRow.className = 'layer-settings-row';
+    const selectEl = document.createElement('select');
+    selectEl.className = 'blend-mode-select';
+    blendModeNames.forEach((name, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        if (layer.mode === idx) opt.selected = true;
+        opt.textContent = name;
+        selectEl.appendChild(opt);
+    });
+    const valueEl = document.createElement('span');
+    valueEl.className = 'fader-value';
+    valueEl.textContent = layer.strength.toFixed(3);
+    settingsRow.appendChild(selectEl);
+    settingsRow.appendChild(valueEl);
+
+    const faderControl = document.createElement('div');
+    faderControl.className = 'fader-control';
+    const stepDown = document.createElement('button');
+    stepDown.className = 'fader-step fader-step-down';
+    stepDown.textContent = '\u2212';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'fader-slider';
+    slider.min = '0';
+    slider.max = '5';
+    slider.step = '0.1';
+    slider.value = layer.strength;
+    const stepUp = document.createElement('button');
+    stepUp.className = 'fader-step fader-step-up';
+    stepUp.textContent = '+';
+    faderControl.appendChild(stepDown);
+    faderControl.appendChild(slider);
+    faderControl.appendChild(stepUp);
+
+    controls.appendChild(settingsRow);
+    controls.appendChild(faderControl);
+
+    card.appendChild(header);
+    card.appendChild(controls);
 
     // Update helper
     const updateValue = newValue => {
@@ -146,31 +180,73 @@ function enterPrecisionMode(card, layer, mainSlider, valueEl, blendModeNames, on
 
     const precisionEl = document.createElement('div');
     precisionEl.className = 'precision-inline';
-    precisionEl.innerHTML = `
-        <div class="precision-inline-header">
-            <span class="precision-inline-title">Fine Tune</span>
-            <button class="precision-inline-close">Done</button>
-        </div>
-        <div class="precision-inline-value">${currentValue.toFixed(3)}</div>
-        <div class="precision-inline-fader">
-            <button class="fader-step fader-step-down">−</button>
-            <input type="range" class="precision-inline-slider" min="${min}" max="${max}" step="0.001" value="${currentValue}">
-            <button class="fader-step fader-step-up">+</button>
-        </div>
-        <div class="precision-inline-range">
-            <span>${min.toFixed(2)}</span>
-            <span>${max.toFixed(2)}</span>
-        </div>
-    `;
+
+    // Build precision DOM safely — no innerHTML with interpolated strings
+    const precisionHeader = document.createElement('div');
+    precisionHeader.className = 'precision-inline-header';
+    const precisionTitle = document.createElement('span');
+    precisionTitle.className = 'precision-inline-title';
+    precisionTitle.textContent = 'Fine Tune';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'precision-inline-close';
+    closeBtn.textContent = 'Done';
+    precisionHeader.appendChild(precisionTitle);
+    precisionHeader.appendChild(closeBtn);
+
+    const precisionValueDiv = document.createElement('div');
+    precisionValueDiv.className = 'precision-inline-value';
+    precisionValueDiv.textContent = currentValue.toFixed(3);
+
+    const precisionFader = document.createElement('div');
+    precisionFader.className = 'precision-inline-fader';
+    const stepDownBtn = document.createElement('button');
+    stepDownBtn.className = 'fader-step fader-step-down';
+    stepDownBtn.textContent = '\u2212';
+    const precisionSliderEl = document.createElement('input');
+    precisionSliderEl.type = 'range';
+    precisionSliderEl.className = 'precision-inline-slider';
+    precisionSliderEl.min = min;
+    precisionSliderEl.max = max;
+    precisionSliderEl.step = '0.001';
+    precisionSliderEl.value = currentValue;
+    const stepUpBtn = document.createElement('button');
+    stepUpBtn.className = 'fader-step fader-step-up';
+    stepUpBtn.textContent = '+';
+    precisionFader.appendChild(stepDownBtn);
+    precisionFader.appendChild(precisionSliderEl);
+    precisionFader.appendChild(stepUpBtn);
+
+    const precisionRange = document.createElement('div');
+    precisionRange.className = 'precision-inline-range';
+    const rangeMinSpan = document.createElement('span');
+    rangeMinSpan.textContent = min.toFixed(2);
+    const rangeMaxSpan = document.createElement('span');
+    rangeMaxSpan.textContent = max.toFixed(2);
+    precisionRange.appendChild(rangeMinSpan);
+    precisionRange.appendChild(rangeMaxSpan);
+
+    precisionEl.appendChild(precisionHeader);
+    precisionEl.appendChild(precisionValueDiv);
+    precisionEl.appendChild(precisionFader);
+    precisionEl.appendChild(precisionRange);
 
     card.classList.add('precision-mode');
     card.appendChild(precisionEl);
 
-    const precisionSlider = precisionEl.querySelector('.precision-inline-slider');
-    const precisionValue = precisionEl.querySelector('.precision-inline-value');
-    const closeBtn = precisionEl.querySelector('.precision-inline-close');
-    const stepDownBtn = precisionEl.querySelector('.fader-step-down');
-    const stepUpBtn = precisionEl.querySelector('.fader-step-up');
+    // Use direct references from DOM construction above
+    const precisionSlider = precisionSliderEl;
+    const precisionValue = precisionValueDiv;
+
+    /** Update range display spans safely (no innerHTML) */
+    const updateRangeDisplay = (rangeEl, minVal, maxVal) => {
+        rangeEl.textContent = '';
+        const minSpan = document.createElement('span');
+        minSpan.textContent = minVal.toFixed(2);
+        const maxSpan = document.createElement('span');
+        maxSpan.textContent = maxVal.toFixed(2);
+        rangeEl.appendChild(minSpan);
+        rangeEl.appendChild(maxSpan);
+    };
 
     const updatePrecisionValue = newValue => {
         newValue = Math.max(0, Math.min(5, newValue));
@@ -187,8 +263,7 @@ function enterPrecisionMode(card, layer, mainSlider, valueEl, blendModeNames, on
         precisionSlider.min = newMin;
         precisionSlider.max = newMax;
         precisionSlider.value = newValue;
-        precisionEl.querySelector('.precision-inline-range').innerHTML =
-            `<span>${newMin.toFixed(2)}</span><span>${newMax.toFixed(2)}</span>`;
+        updateRangeDisplay(precisionEl.querySelector('.precision-inline-range'), newMin, newMax);
 
         onUpdate?.();
     };
@@ -248,8 +323,7 @@ function enterPrecisionMode(card, layer, mainSlider, valueEl, blendModeNames, on
             precisionSlider.min = newMin;
             precisionSlider.max = newMax;
             precisionSlider.value = value;
-            precisionEl.querySelector('.precision-inline-range').innerHTML =
-                `<span>${newMin.toFixed(2)}</span><span>${newMax.toFixed(2)}</span>`;
+            updateRangeDisplay(precisionEl.querySelector('.precision-inline-range'), newMin, newMax);
 
             onUpdate?.();
 

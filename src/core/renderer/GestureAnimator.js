@@ -85,9 +85,6 @@ export class GestureAnimator {
         // Get the gesture configuration (uses cache if available)
         const gesture = getGesture(gestureName);
 
-        // Use cached properties for better performance
-        // const cachedProperties = getGestureProperties(gestureName);
-
         // Trigger chromatic aberration for impact gestures
         const impactGestures = [
             'bounce',

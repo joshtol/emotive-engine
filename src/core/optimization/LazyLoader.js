@@ -117,6 +117,11 @@ export class LazyLoader {
      * In strict CSP environments, only dynamic import() (the primary path) is used.
      */
     _loadScript(url) {
+        /** Modules allowed to be looked up on the window object */
+        const ALLOWED_WINDOW_MODULES = new Set([
+            'EmotiveEngine', 'EmotiveMascot', 'EmotiveMascot3D',
+        ]);
+
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.type = 'module';
@@ -125,7 +130,14 @@ export class LazyLoader {
             script.onload = () => {
                 // Module should have registered itself globally
                 const moduleName = url.split('/').pop().replace('.js', '');
-                const module = window[moduleName] || window.EmotiveEngine[moduleName];
+
+                if (!ALLOWED_WINDOW_MODULES.has(moduleName)) {
+                    console.warn(`[LazyLoader] Blocked window lookup for unrecognized module: ${moduleName}`);
+                    reject(new Error(`Module not allowed for window lookup: ${moduleName}`));
+                    return;
+                }
+
+                const module = window[moduleName] || window.EmotiveEngine?.[moduleName];
 
                 if (module) {
                     resolve(module);

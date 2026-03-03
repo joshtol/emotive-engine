@@ -129,13 +129,6 @@ export class ExecutionLifecycleManager {
                 this.animationController.start();
                 this._state.isRunning = true;
 
-                // Resume ambient audio
-                // Update ambient tone based on emotional state - DISABLED (annoying)
-                // if (this.soundSystem && this.soundSystem.isAvailable()) {
-                //     const currentEmotion = this.stateMachine.getCurrentState().emotion;
-                //     this.soundSystem.setAmbientTone(currentEmotion, 200);
-                // }
-
                 this._emit('resumed');
                 // EmotiveMascot resumed
                 return this._chainTarget;

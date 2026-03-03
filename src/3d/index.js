@@ -2155,7 +2155,10 @@ export class EmotiveMascot3D {
      * @returns {EmotiveMascot3D} this instance for chaining
      */
     setGeometry(geometryName, options = {}) {
-        console.warn('[EmotiveMascot3D] setGeometry() is deprecated. Use morphTo() instead.');
+        if (!this._setGeometryWarned) {
+            console.warn('[EmotiveMascot3D] setGeometry() is deprecated since v3.0. Use setShape() instead.');
+            this._setGeometryWarned = true;
+        }
         return this.morphTo(geometryName, options);
     }
 

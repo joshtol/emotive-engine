@@ -173,7 +173,10 @@ export interface EmotiveMascot3DConfig {
 }
 
 export interface SetEmotionOptions {
+    /** Undertone modifier for the emotion */
     undertone?: string;
+    /** Transition duration in ms (default: 500) */
+    duration?: number;
 }
 
 export class EmotiveMascot3D {

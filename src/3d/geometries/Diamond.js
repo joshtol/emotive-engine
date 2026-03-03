@@ -13,7 +13,6 @@ export function createDiamond() {
     // Diamond proportions (brilliant cut inspired)
     const topHeight = 1.2; // Crown height
     const bottomHeight = -0.8; // Pavilion depth
-    // const tableSize = 0.4;     // Top facet size
     const girdleSize = 0.8; // Widest point
 
     // Key vertices

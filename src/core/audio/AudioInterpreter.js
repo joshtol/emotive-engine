@@ -267,6 +267,7 @@ export class AudioInterpreter {
 
         this.textBuffer = [];
         this.bufferTimeout = null;
+        this._httpsWarned = false;
     }
 
     /**
@@ -381,6 +382,14 @@ export class AudioInterpreter {
     async _callLLM(text) {
         const requestId = Date.now();
         this.pendingRequest = requestId;
+
+        // Warn once if endpoint is not HTTPS (credentials may be exposed in transit)
+        if (!this._httpsWarned && this.endpoint &&
+            !this.endpoint.startsWith('https://') &&
+            !this.endpoint.startsWith('http://localhost')) {
+            console.warn('[AudioInterpreter] Non-HTTPS endpoint — API credentials may be exposed in transit');
+            this._httpsWarned = true;
+        }
 
         let response;
 

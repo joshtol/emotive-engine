@@ -625,25 +625,59 @@ function openPrecisionPopup(valueElement, slider, title) {
     // Determine decimal places from step
     const decimals = step < 0.01 ? 3 : step < 0.1 ? 2 : 1;
 
-    // Create popup
+    // Build popup DOM safely — no innerHTML with interpolated strings
     const popup = document.createElement('div');
     popup.className = 'slider-precision-popup';
-    popup.innerHTML = `
-        <div class="slider-precision-header">
-            <span class="slider-precision-title">${title}</span>
-            <button class="slider-precision-close">Done</button>
-        </div>
-        <div class="slider-precision-value">${currentValue.toFixed(decimals)}</div>
-        <div class="slider-precision-fader">
-            <button class="fader-step" data-step="-1">−</button>
-            <input type="range" class="slider-precision-slider" min="${min}" max="${max}" step="${step}" value="${currentValue}">
-            <button class="fader-step" data-step="1">+</button>
-        </div>
-        <div class="slider-precision-range">
-            <span>${min.toFixed(decimals)}</span>
-            <span>${max.toFixed(decimals)}</span>
-        </div>
-    `;
+
+    const popupHeader = document.createElement('div');
+    popupHeader.className = 'slider-precision-header';
+    const popupTitle = document.createElement('span');
+    popupTitle.className = 'slider-precision-title';
+    popupTitle.textContent = title;
+    const popupCloseBtn = document.createElement('button');
+    popupCloseBtn.className = 'slider-precision-close';
+    popupCloseBtn.textContent = 'Done';
+    popupHeader.appendChild(popupTitle);
+    popupHeader.appendChild(popupCloseBtn);
+
+    const popupValue = document.createElement('div');
+    popupValue.className = 'slider-precision-value';
+    popupValue.textContent = currentValue.toFixed(decimals);
+
+    const popupFader = document.createElement('div');
+    popupFader.className = 'slider-precision-fader';
+    const popupStepDown = document.createElement('button');
+    popupStepDown.className = 'fader-step';
+    popupStepDown.dataset.step = '-1';
+    popupStepDown.textContent = '\u2212';
+    const popupSlider = document.createElement('input');
+    popupSlider.type = 'range';
+    popupSlider.className = 'slider-precision-slider';
+    popupSlider.min = min;
+    popupSlider.max = max;
+    popupSlider.step = step;
+    popupSlider.value = currentValue;
+    const popupStepUp = document.createElement('button');
+    popupStepUp.className = 'fader-step';
+    popupStepUp.dataset.step = '1';
+    popupStepUp.textContent = '+';
+    popupFader.appendChild(popupStepDown);
+    popupFader.appendChild(popupSlider);
+    popupFader.appendChild(popupStepUp);
+
+    const popupRange = document.createElement('div');
+    popupRange.className = 'slider-precision-range';
+    const popupRangeMin = document.createElement('span');
+    popupRangeMin.textContent = min.toFixed(decimals);
+    const popupRangeMax = document.createElement('span');
+    popupRangeMax.textContent = max.toFixed(decimals);
+    popupRange.appendChild(popupRangeMin);
+    popupRange.appendChild(popupRangeMax);
+
+    popup.appendChild(popupHeader);
+    popup.appendChild(popupValue);
+    popup.appendChild(popupFader);
+    popup.appendChild(popupRange);
 
     document.body.appendChild(popup);
 
@@ -679,11 +713,11 @@ function openPrecisionPopup(valueElement, slider, title) {
 
     activePrecisionPopup = popup;
 
-    // Elements
-    const precisionSlider = popup.querySelector('.slider-precision-slider');
-    const valueDisplay = popup.querySelector('.slider-precision-value');
-    const closeBtn = popup.querySelector('.slider-precision-close');
-    const stepBtns = popup.querySelectorAll('.fader-step');
+    // Use direct references from DOM construction above
+    const precisionSlider = popupSlider;
+    const valueDisplay = popupValue;
+    const closeBtn = popupCloseBtn;
+    const stepBtns = [popupStepDown, popupStepUp];
 
     // Update function
     function updateValue(newValue) {

@@ -435,10 +435,6 @@ class ParticleSystem {
         this.particles.push(particle);
         this.particleCount++;
 
-        // Debug logging disabled to prevent console spam
-        // Only uncomment for debugging particle spawning issues
-        // if (this.particleCount <= 3) {
-        // }
     }
 
     /**

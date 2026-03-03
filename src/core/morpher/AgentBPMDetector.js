@@ -77,11 +77,6 @@ export class AgentBPMDetector {
         this.isActive = true;
         this.peakCount++;
 
-        // Log every peak for debugging (first 10 peaks only) - uncomment for debugging
-        // if (this.peakCount <= 10) {
-        //     console.warn(`[BPM] Peak #${this.peakCount}: strength=${strength.toFixed(3)}, time=${Math.round(time)}`);
-        // }
-
         // Skip weak peaks
         if (strength < 0.1) {
             this._skippedPeaks++;

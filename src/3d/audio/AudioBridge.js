@@ -86,6 +86,9 @@ export class AudioBridge {
         const audioUrl = audioElement.src;
 
         // blob: URLs work with fetch in same origin - they're user-uploaded files
+        if (audioUrl && !audioUrl.startsWith('https://') && !audioUrl.startsWith('http://localhost') && !audioUrl.startsWith('blob:') && !audioUrl.startsWith('data:')) {
+            console.warn('[AudioBridge] Non-HTTPS audio source — content may be intercepted');
+        }
         if (audioUrl) {
             try {
                 const response = await fetch(audioUrl);
