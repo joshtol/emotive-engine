@@ -150,7 +150,7 @@ builds.push({
             file: 'dist/mascot.js',
             format: 'es',
             sourcemap: true,
-            banner: `/*! Emotive Engine v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         },
         {
             // UMD for CDN/browser usage (includes all features)
@@ -159,7 +159,7 @@ builds.push({
             name: 'EmotiveMascot',
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         }
     ],
     plugins: [
@@ -184,7 +184,7 @@ builds.push({
             name: 'EmotiveMascotLean',  // Different name for lean build
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine Lean v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine Lean v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         }
     ],
     plugins: [
@@ -232,7 +232,7 @@ builds.push({
             file: 'dist/emotive-mascot.minimal.js',
             format: 'es',
             sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         },
         {
             file: 'dist/emotive-mascot.minimal.umd.js',
@@ -240,7 +240,7 @@ builds.push({
             name: 'EmotiveMascotMinimal',
             exports: 'named',
             sourcemap: true,
-            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine Minimal v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         }
     ],
     plugins: [
@@ -289,7 +289,7 @@ builds.push({
             format: 'es',
             sourcemap: true,
             inlineDynamicImports: true,
-            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         },
         {
             // UMD - three.js external (expects global THREE)
@@ -299,7 +299,7 @@ builds.push({
             exports: 'named',
             sourcemap: true,
             inlineDynamicImports: true,
-            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.0.0'} | MIT License */`,
+            banner: `/*! Emotive Engine 3D v${process.env.npm_package_version || '3.4.0'} | MIT License */`,
             globals: {
                 three: 'THREE'
             }
@@ -337,7 +337,7 @@ builds.push({
             format: 'es',
             sourcemap: true,
             inlineDynamicImports: true,
-            banner: `/*! Emotive Engine 3D (bundled) v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine 3D (bundled) v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         }
     ],
     // No external - bundle everything including Three.js
@@ -373,7 +373,7 @@ builds.push({
             format: 'es',
             sourcemap: true,
             inlineDynamicImports: true,
-            banner: `/*! Emotive Engine 3D + Elementals v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine 3D + Elementals v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         },
         {
             // UMD - three.js external (expects global THREE)
@@ -383,7 +383,7 @@ builds.push({
             exports: 'named',
             sourcemap: true,
             inlineDynamicImports: true,
-            banner: `/*! Emotive Engine 3D + Elementals v${process.env.npm_package_version || '3.0.0'} | MIT License */`,
+            banner: `/*! Emotive Engine 3D + Elementals v${process.env.npm_package_version || '3.4.0'} | MIT License */`,
             globals: {
                 three: 'THREE'
             }
@@ -421,7 +421,7 @@ builds.push({
             format: 'es',
             sourcemap: true,
             inlineDynamicImports: true,
-            banner: `/*! Emotive Engine 3D + Elementals (bundled) v${process.env.npm_package_version || '3.0.0'} | MIT License */`
+            banner: `/*! Emotive Engine 3D + Elementals (bundled) v${process.env.npm_package_version || '3.4.0'} | MIT License */`
         }
     ],
     // No external - bundle everything including Three.js

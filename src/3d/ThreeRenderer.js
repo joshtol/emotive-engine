@@ -250,6 +250,7 @@ export class ThreeRenderer {
         };
 
         // Listen for pointer events at capture phase for earliest possible handling
+        this._boundImmediateUpdate = immediateUpdate;
         this.renderer.domElement.addEventListener('pointermove', immediateUpdate, {
             passive: true,
         });
@@ -420,43 +421,45 @@ export class ThreeRenderer {
         if (this._destroyed) return;
 
         // Fallback: Procedural environment map
-        const size = 512;
-        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(size);
-        const envScene = new THREE.Scene();
+        try {
+            const size = 512;
+            const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(size);
+            const envScene = new THREE.Scene();
 
-        const skyColor = new THREE.Color(0x5599ff);
-        const horizonColor = new THREE.Color(0xff6b9d);
-        const groundColor = new THREE.Color(0x1a1a2e);
+            const skyColor = new THREE.Color(0x5599ff);
+            const horizonColor = new THREE.Color(0xff6b9d);
+            const groundColor = new THREE.Color(0x1a1a2e);
 
-        const hemiLight = new THREE.HemisphereLight(skyColor, groundColor, 1.5);
-        envScene.add(hemiLight);
+            const hemiLight = new THREE.HemisphereLight(skyColor, groundColor, 1.5);
+            envScene.add(hemiLight);
 
-        const light1 = new THREE.PointLight(0x00d4ff, 2, 20);
-        light1.position.set(-5, 2, -5);
-        envScene.add(light1);
+            const light1 = new THREE.PointLight(0x00d4ff, 2, 20);
+            light1.position.set(-5, 2, -5);
+            envScene.add(light1);
 
-        const light2 = new THREE.PointLight(0xff1493, 2, 20);
-        light2.position.set(5, 2, -5);
-        envScene.add(light2);
+            const light2 = new THREE.PointLight(0xff1493, 2, 20);
+            light2.position.set(5, 2, -5);
+            envScene.add(light2);
 
-        const light3 = new THREE.PointLight(0xffaa00, 1.5, 20);
-        light3.position.set(0, 5, 0);
-        envScene.add(light3);
+            const light3 = new THREE.PointLight(0xffaa00, 1.5, 20);
+            light3.position.set(0, 5, 0);
+            envScene.add(light3);
 
-        envScene.background = horizonColor;
+            envScene.background = horizonColor;
 
-        const cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRenderTarget);
-        cubeCamera.update(this.renderer, envScene);
+            const cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRenderTarget);
+            cubeCamera.update(this.renderer, envScene);
 
-        this.envMap = cubeRenderTarget.texture;
+            this.envMap = cubeRenderTarget.texture;
 
-        // CRITICAL: Store procedural environment resources for proper disposal (GPU memory leak fix)
-        this._envCubeRenderTarget = cubeRenderTarget;
-        this._envScene = envScene;
-        this._envCubeCamera = cubeCamera;
-
-        // Mark environment loading as complete (using fallback)
-        this._envMapLoading = false;
+            // CRITICAL: Store procedural environment resources for proper disposal (GPU memory leak fix)
+            this._envCubeRenderTarget = cubeRenderTarget;
+            this._envScene = envScene;
+            this._envCubeCamera = cubeCamera;
+        } finally {
+            // Mark environment loading as complete even if fallback fails
+            this._envMapLoading = false;
+        }
     }
 
     /**
@@ -1987,12 +1990,23 @@ export class ThreeRenderer {
      * @param {THREE.Texture|string|null} textureOrUrl - THREE.Texture, image URL string, or null to clear
      */
     setRefractionBackground(textureOrUrl) {
+        // Dispose previous texture if we own it (loaded from URL)
+        if (this._refractionBackgroundOwned && this._refractionBackground) {
+            this._refractionBackground.dispose();
+        }
+        this._refractionBackgroundOwned = false;
+
         if (!textureOrUrl) {
             this._refractionBackground = null;
         } else if (typeof textureOrUrl === 'string') {
             new THREE.TextureLoader().load(textureOrUrl, tex => {
                 tex.colorSpace = THREE.SRGBColorSpace;
+                // Dispose previous if replaced during async load
+                if (this._refractionBackgroundOwned && this._refractionBackground) {
+                    this._refractionBackground.dispose();
+                }
                 this._refractionBackground = tex;
+                this._refractionBackgroundOwned = true;
             });
         } else {
             this._refractionBackground = textureOrUrl;
@@ -2227,6 +2241,10 @@ export class ThreeRenderer {
                 this._boundHandleContextRestored,
                 false
             );
+            if (this._boundImmediateUpdate) {
+                this.renderer.domElement.removeEventListener('pointermove', this._boundImmediateUpdate);
+                this.renderer.domElement.removeEventListener('pointerdown', this._boundImmediateUpdate);
+            }
         }
 
         // Remove visibility change and focus listeners
@@ -2367,6 +2385,12 @@ export class ThreeRenderer {
         this.accentLight1 = null;
         this.accentLight2 = null;
         this.accentLight3 = null;
+
+        // Dispose refraction background texture if we own it
+        if (this._refractionBackgroundOwned && this._refractionBackground) {
+            this._refractionBackground.dispose();
+        }
+        this._refractionBackground = null;
 
         // Dispose environment map
         if (this.envMap) {

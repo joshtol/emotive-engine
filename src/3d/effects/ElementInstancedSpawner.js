@@ -259,9 +259,14 @@ export class ElementInstancedSpawner {
             return this.pools.get(elementType);
         }
 
-        // Currently initializing - wait for it
+        // Currently initializing - wait for it, but retry on failure
         if (this._initializing.has(elementType)) {
-            return this._initializing.get(elementType);
+            try {
+                return await this._initializing.get(elementType);
+            } catch {
+                // Previous attempt failed; fall through to retry
+                this._initializing.delete(elementType);
+            }
         }
 
         // Start initialization
@@ -308,8 +313,12 @@ export class ElementInstancedSpawner {
         for (const { geometry, name } of geometries) {
             builder.addGeometry(geometry, name);
         }
-        const { geometry: mergedGeometry, modelMap } = builder.build();
-        builder.dispose(); // Clean up cloned geometries
+        let mergedGeometry, modelMap;
+        try {
+            ({ geometry: mergedGeometry, modelMap } = builder.build());
+        } finally {
+            builder.dispose(); // Clean up cloned geometries even if build() throws
+        }
         this.mergedGeometries.set(elementType, { geometry: mergedGeometry, modelMap });
 
         // Create instanced material
@@ -413,6 +422,26 @@ export class ElementInstancedSpawner {
             gltf.scene.traverse(child => {
                 if (!geometry && child.isMesh) {
                     ({ geometry } = child);
+                }
+            });
+
+            // Dispose unused GLTF resources (materials, textures, other geometries)
+            gltf.scene.traverse(child => {
+                if (child.isMesh) {
+                    if (child.geometry && child.geometry !== geometry) {
+                        child.geometry.dispose();
+                    }
+                    if (child.material) {
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        for (const mat of materials) {
+                            for (const key of Object.keys(mat)) {
+                                if (mat[key] && typeof mat[key].dispose === 'function') {
+                                    mat[key].dispose();
+                                }
+                            }
+                            mat.dispose();
+                        }
+                    }
                 }
             });
 

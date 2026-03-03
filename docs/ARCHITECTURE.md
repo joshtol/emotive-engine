@@ -1038,5 +1038,5 @@ mascot.on('resumed', () => {
 
 ---
 
-*Last updated: 2025-10-30*
-*Version: 3.0.0*
+*Last updated: 2026-02-27*
+*Version: 3.4.0*

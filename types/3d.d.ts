@@ -879,6 +879,52 @@ export function getBlendModeIndex(name: BlendMode): number;
 export function isSSR(): boolean;
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// GEOMETRY FACTORIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Create a sphere geometry */
+export function createSphere(radius?: number, detail?: number): THREE.BufferGeometry;
+
+/** Create a crystal geometry */
+export function createCrystal(radius?: number, detail?: number): THREE.BufferGeometry;
+
+/** Create a diamond geometry */
+export function createDiamond(radius?: number): THREE.BufferGeometry;
+
+/** Create sun geometry */
+export function createSunGeometry(radius?: number, detail?: number): THREE.BufferGeometry;
+
+/** Create sun material */
+export function createSunMaterial(options?: any): THREE.ShaderMaterial;
+
+/** Update sun material uniforms */
+export function updateSunMaterial(material: THREE.ShaderMaterial, params: any): void;
+
+/** Dispose sun resources */
+export function disposeSun(mesh: THREE.Mesh): void;
+
+/** Create moon geometry + material */
+export function createMoon(options?: any): THREE.Mesh;
+
+/** Create moon material */
+export function createMoonMaterial(options?: any): THREE.ShaderMaterial;
+
+/** Create moon crescent material */
+export function createMoonCrescentMaterial(options?: any): THREE.ShaderMaterial;
+
+/** Create moon fallback material */
+export function createMoonFallbackMaterial(options?: any): THREE.MeshStandardMaterial;
+
+/** Update moon glow */
+export function updateMoonGlow(material: THREE.ShaderMaterial, params: any): void;
+
+/** Update crescent shadow */
+export function updateCrescentShadow(material: THREE.ShaderMaterial, params: any): void;
+
+/** Dispose moon resources */
+export function disposeMoon(mesh: THREE.Mesh): void;
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // DEFAULT EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 

@@ -7,7 +7,7 @@
  *
  * @fileoverview ContextManager - Context-Aware Performance Adjustment
  * @author Emotive Engine Team
- * @version 3.0.0
+ * @version 3.4.0
  * @module ContextManager
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════

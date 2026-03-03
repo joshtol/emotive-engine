@@ -7,7 +7,7 @@
  *
  * @fileoverview PerformanceSystem - Semantic Performance Orchestrator
  * @author Emotive Engine Team
- * @version 3.0.0
+ * @version 3.4.0
  * @module PerformanceSystem
  *
  * ╔═══════════════════════════════════════════════════════════════════════════════════

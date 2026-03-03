@@ -365,8 +365,23 @@ export class EmotiveMascot {
     readonly canvas: HTMLCanvasElement;
 }
 
-// Factory Functions
-export function createMascot(config?: EmotiveMascotConfig): EmotiveMascot;
+// Site Controller
+export class SiteController {
+    constructor(options?: { mascot?: any; onError?: (error: Error) => void });
+    mascot: any;
+    updateMascot(mascot: any): SiteController;
+    readonly positionController: any | null;
+    getElementTargeting(): any | null;
+    moveToElement(selector: string, options?: { offset?: { x: number; y: number }; speed?: number; easing?: string; coordinateSystem?: string }): any;
+    moveToElementWithPath(selector: string, pathPoints?: Array<{ x: number; y: number }>, alignment?: 'center' | 'start' | 'end', offset?: { x: number; y: number }, options?: { speed?: number; easing?: string; coordinateSystem?: string }): any;
+    setOffset(x: number, y: number, z?: number): void;
+    getOffset(): { x: number; y: number };
+    setEmotion(emotion: string): void;
+    express(gesture: string, options?: { chain?: boolean }): void;
+    stop(): void;
+    play(): void;
+    destroy(): void;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // NAMESPACE EXPORTS (Legacy/UMD Compatibility)

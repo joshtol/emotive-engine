@@ -49,7 +49,6 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
-*.map
 .cache/
 tmp/
 temp/
@@ -61,5 +60,5 @@ temp/
 !assets/emotive-engine-icon.svg
 !assets/emotive-engine-full-BW.svg
 !README.md
-!LICENSE
+!LICENSE.md
 !package.json

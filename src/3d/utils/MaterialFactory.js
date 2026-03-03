@@ -163,7 +163,10 @@ function createCrystalMaterial(
             star: `${assetBasePath}/textures/Crystal/star.png`,
         };
         const texturePath = texturePaths[textureType] || texturePaths.crystal;
-        crystalTexture = textureLoader.load(texturePath, undefined, err =>
+        crystalTexture = textureLoader.load(texturePath, tex => {
+            // Track texture on material for disposal
+            if (material) material.userData._crystalTexture = tex;
+        }, undefined, err =>
             console.warn(`💎 ${textureType} texture failed to load:`, err)
         );
     }

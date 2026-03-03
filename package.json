@@ -27,6 +27,9 @@
       "import": "./dist/emotive-mascot.minimal.js",
       "require": "./dist/emotive-mascot.minimal.umd.js"
     },
+    "./lean": {
+      "require": "./dist/emotive-mascot.lean.umd.js"
+    },
     "./package.json": "./package.json"
   },
   "private": false,
@@ -43,6 +46,8 @@
     "dist/emotive-mascot-3d-elementals.umd.js",
     "dist/emotive-mascot.minimal.js",
     "dist/emotive-mascot.minimal.umd.js",
+    "dist/emotive-mascot.lean.umd.js",
+    "dist/*.map",
     "types",
     "assets/emotive-engine-icon.svg",
     "assets/emotive-engine-full-BW.svg",

@@ -264,7 +264,10 @@ export class FeatureFlags {
             case 'not_in':
                 return !value.includes(attrValue);
             case 'matches':
-                return new RegExp(value).test(String(attrValue));
+                try {
+                    if (typeof value === 'string' && value.length > 200) return false;
+                    return new RegExp(value).test(String(attrValue));
+                } catch { return false; }
             default:
                 return false;
         }
