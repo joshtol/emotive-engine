@@ -112,7 +112,6 @@ export class Core3DManager {
         if (!canvas) {
             throw new Error('[Core3DManager] canvas element is required');
         }
-        // eslint-disable-next-line no-undef
         if (!(canvas instanceof HTMLCanvasElement)) {
             throw new Error('[Core3DManager] canvas must be an HTMLCanvasElement');
         }

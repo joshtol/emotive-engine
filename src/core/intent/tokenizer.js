@@ -108,6 +108,21 @@ const MULTI_WORD_PHRASES = [
 ];
 
 /**
+ * Pre-compiled RegExps for multi-word phrase replacement (avoids re-creating in hot path)
+ * Each entry: { normalized, regex }
+ */
+const PHRASE_REGEXPS = MULTI_WORD_PHRASES.map(phrase => {
+    const normalized = phrase
+        .toLowerCase()
+        .trim()
+        .replace(/['']/g, "'")
+        .replace(/[""]/g, '"')
+        .replace(/\s+/g, ' ');
+    const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return { normalized, regex: new RegExp(escaped, 'g') };
+});
+
+/**
  * Characters that act as separators between intent components
  */
 const SEPARATORS = /[,;|/]+/;
@@ -204,14 +219,11 @@ function extractPhrases(input) {
     let processed = input;
     let placeholderIndex = 0;
 
-    for (const phrase of MULTI_WORD_PHRASES) {
-        const phraseNorm = normalize(phrase);
+    for (const { normalized: phraseNorm, regex } of PHRASE_REGEXPS) {
         if (processed.includes(phraseNorm)) {
             const placeholder = `__PHRASE_${placeholderIndex}__`;
-            processed = processed.replace(
-                new RegExp(phraseNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-                placeholder
-            );
+            regex.lastIndex = 0; // reset stateful 'g' flag
+            processed = processed.replace(regex, placeholder);
             phrases.set(placeholder, phraseNorm);
             placeholderIndex++;
         }

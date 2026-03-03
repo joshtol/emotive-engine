@@ -62,15 +62,19 @@ export class EmotiveDebugger {
             ...config,
         };
 
-        // Log storage
-        this.logs = [];
+        // Log storage (circular buffer — avoids Array.shift() O(n) copy)
+        this._logBuffer = new Array(config.maxLogEntries || 1000);
+        this._logIndex = 0;
+        this._logCount = 0;
         this.errors = [];
         this.profiles = new Map();
         this.memorySnapshots = [];
 
-        // Performance tracking
-        this.frameTimings = [];
+        // Performance tracking (circular buffer — avoids Array.shift() O(n) copy)
         this.maxFrameTimings = 120; // 2 seconds at 60fps
+        this._frameBuffer = new Array(this.maxFrameTimings);
+        this._frameIndex = 0;
+        this._frameCount = 0;
 
         // Error tracking
         this.errorCounts = new Map();
@@ -82,6 +86,16 @@ export class EmotiveDebugger {
             memory: typeof performance !== 'undefined' && performance.memory,
             console: typeof console !== 'undefined',
             stackTrace: typeof Error !== 'undefined',
+        };
+
+        // Cache bound console methods once (avoids .bind() on every log call)
+        const noop = (() => {}).bind(console);
+        this._consoleMethods = {
+            ERROR: noop,
+            WARN: noop,
+            DEBUG: noop,
+            TRACE: noop,
+            DEFAULT: noop,
         };
 
         // Initialize
@@ -153,11 +167,10 @@ export class EmotiveDebugger {
             stackTrace: this.getStackTrace(),
         };
 
-        // Store log entry
-        this.logs.push(logEntry);
-        if (this.logs.length > this.config.maxLogEntries) {
-            this.logs.shift();
-        }
+        // Store log entry (circular buffer)
+        this._logBuffer[this._logIndex] = logEntry;
+        this._logIndex = (this._logIndex + 1) % this.config.maxLogEntries;
+        if (this._logCount < this.config.maxLogEntries) this._logCount++;
 
         // Console output
         if (this.capabilities.console) {
@@ -178,18 +191,7 @@ export class EmotiveDebugger {
      * @returns {Function} Console method
      */
     getConsoleMethod(level) {
-        switch (level) {
-            case 'ERROR':
-                return (() => {}).bind(console);
-            case 'WARN':
-                return (() => {}).bind(console);
-            case 'DEBUG':
-                return (() => {}).bind(console);
-            case 'TRACE':
-                return (() => {}).bind(console);
-            default:
-                return (() => {}).bind(console);
-        }
+        return this._consoleMethods[level] || this._consoleMethods.DEFAULT;
     }
 
     /**
@@ -360,15 +362,35 @@ export class EmotiveDebugger {
     trackFrameTiming(frameTime) {
         if (!this.config.enableProfiling) return;
 
-        this.frameTimings.push({
+        // Circular buffer write
+        this._frameBuffer[this._frameIndex] = {
             timestamp: this.now(),
             frameTime,
             fps: 1000 / frameTime,
-        });
+        };
+        this._frameIndex = (this._frameIndex + 1) % this.maxFrameTimings;
+        if (this._frameCount < this.maxFrameTimings) this._frameCount++;
+    }
 
-        if (this.frameTimings.length > this.maxFrameTimings) {
-            this.frameTimings.shift();
+    /**
+     * Read entries from a circular buffer in chronological order.
+     * @param {Array} buffer - Pre-allocated buffer
+     * @param {number} index - Current write index
+     * @param {number} count - Number of valid entries
+     * @param {number} capacity - Buffer capacity
+     * @param {number} [last=0] - If >0, return only the last N entries
+     * @returns {Array} Entries in insertion order
+     * @private
+     */
+    _readCircular(buffer, index, count, capacity, last = 0) {
+        const n = last > 0 ? Math.min(last, count) : count;
+        const result = new Array(n);
+        // Oldest valid entry starts at (index - count) mod capacity
+        const start = (index - n + capacity) % capacity;
+        for (let i = 0; i < n; i++) {
+            result[i] = buffer[(start + i) % capacity];
         }
+        return result;
     }
 
     /**
@@ -410,8 +432,8 @@ export class EmotiveDebugger {
             capabilities: this.capabilities,
 
             // Logs
-            logCount: this.logs.length,
-            recentLogs: this.logs.slice(-10),
+            logCount: this._logCount,
+            recentLogs: this._readCircular(this._logBuffer, this._logIndex, this._logCount, this.config.maxLogEntries, 10),
 
             // Errors
             errorCount: this.errors.length,
@@ -438,15 +460,16 @@ export class EmotiveDebugger {
      * @returns {Object} Frame timing stats
      */
     getFrameTimingStats() {
-        if (this.frameTimings.length === 0) {
+        if (this._frameCount === 0) {
             return { sampleCount: 0 };
         }
 
-        const frameTimes = this.frameTimings.map(f => f.frameTime);
-        const fps = this.frameTimings.map(f => f.fps);
+        const entries = this._readCircular(this._frameBuffer, this._frameIndex, this._frameCount, this.maxFrameTimings);
+        const frameTimes = entries.map(f => f.frameTime);
+        const fps = entries.map(f => f.fps);
 
         return {
-            sampleCount: this.frameTimings.length,
+            sampleCount: this._frameCount,
             avgFrameTime: frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length,
             minFrameTime: Math.min(...frameTimes),
             maxFrameTime: Math.max(...frameTimes),
@@ -468,10 +491,10 @@ export class EmotiveDebugger {
                 config: this.config,
                 capabilities: this.capabilities,
             },
-            logs: [...this.logs],
+            logs: this._readCircular(this._logBuffer, this._logIndex, this._logCount, this.config.maxLogEntries),
             errors: [...this.errors],
             profiles: Object.fromEntries(this.profiles),
-            frameTimings: [...this.frameTimings],
+            frameTimings: this._readCircular(this._frameBuffer, this._frameIndex, this._frameCount, this.maxFrameTimings),
             memorySnapshots: [...this.memorySnapshots],
             errorCounts: Object.fromEntries(this.errorCounts),
         };
@@ -481,10 +504,14 @@ export class EmotiveDebugger {
      * Clear all debug data
      */
     clear() {
-        this.logs = [];
+        this._logBuffer.fill(undefined);
+        this._logIndex = 0;
+        this._logCount = 0;
         this.errors = [];
         this.profiles.clear();
-        this.frameTimings = [];
+        this._frameBuffer.fill(undefined);
+        this._frameIndex = 0;
+        this._frameCount = 0;
         this.memorySnapshots = [];
         this.errorCounts.clear();
         this.lastErrors.clear();

@@ -2,12 +2,14 @@ import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 
 export default [
+    // Global ignores (standalone object = applies to all configs)
+    { ignores: ['**/_template.js', '**/*template*.js'] },
+
     // Base recommended configuration
     js.configs.recommended,
 
     // Global configuration for all files
     {
-        ignores: ['**/_template.js', '**/*template*.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',
@@ -59,7 +61,8 @@ export default [
                 getEventListeners: 'readonly',
                 crypto: 'readonly',
                 Element: 'readonly',
-                DOMPurify: 'readonly'
+                DOMPurify: 'readonly',
+                HTMLCanvasElement: 'readonly'
             }
         },
         rules: {
@@ -73,7 +76,7 @@ export default [
                 caughtErrorsIgnorePattern: '^_',
                 destructuredArrayIgnorePattern: '^_'
             }],
-            'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
             'prefer-const': 'error',
             'arrow-parens': ['error', 'as-needed'],
             'arrow-spacing': 'error',

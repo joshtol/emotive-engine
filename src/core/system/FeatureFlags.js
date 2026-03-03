@@ -3,6 +3,27 @@
  * Enables controlled rollout and A/B testing of features
  */
 
+/**
+ * Module-level cache for compiled RegExp objects used in condition evaluation.
+ * Bounded to 100 entries to prevent unbounded memory growth.
+ */
+const _regexpCache = new Map();
+const REGEXP_CACHE_LIMIT = 100;
+
+function getCachedRegExp(pattern) {
+    const cached = _regexpCache.get(pattern);
+    if (cached) return cached;
+
+    const re = new RegExp(pattern);
+    if (_regexpCache.size >= REGEXP_CACHE_LIMIT) {
+        // Evict oldest entry (first key in insertion order)
+        const firstKey = _regexpCache.keys().next().value;
+        _regexpCache.delete(firstKey);
+    }
+    _regexpCache.set(pattern, re);
+    return re;
+}
+
 export class FeatureFlags {
     constructor(options = {}) {
         this.flags = new Map();
@@ -266,7 +287,7 @@ export class FeatureFlags {
             case 'matches':
                 try {
                     if (typeof value === 'string' && value.length > 200) return false;
-                    return new RegExp(value).test(String(attrValue));
+                    return getCachedRegExp(value).test(String(attrValue));
                 } catch { return false; }
             default:
                 return false;

@@ -84,9 +84,7 @@ export function initializeYourBehavior(particle) {
  * @param {number} centerX - Orb center X position
  * @param {number} centerY - Orb center Y position
  */
-// eslint-disable-next-line no-unused-vars
 export function updateYourBehavior(particle, dt, centerX, centerY) {
-    // eslint-disable-next-line no-unused-vars
     const data = particle.behaviorData;
 
     // YOUR UPDATE LOGIC HERE

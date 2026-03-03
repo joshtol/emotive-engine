@@ -218,7 +218,6 @@ export function logError(code, context = '') {
     } else if (error.severity === 'warning') {
         console.warn(message);
     } else {
-        // eslint-disable-next-line no-console
         console.info(message);
     }
 }
