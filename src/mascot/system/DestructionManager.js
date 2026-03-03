@@ -42,6 +42,7 @@ export class DestructionManager {
      * @param {Object} [deps.audioHandler] - Audio handler instance
      * @param {Object} [deps.degradationManager] - Degradation manager instance
      * @param {Object} [deps.stateMachine] - State machine instance
+     * @param {Object} [deps.contextManager] - Context manager instance (frustration decay interval)
      * @param {Object} deps.state - Shared state with speaking, llmHandler properties
      * @param {Function} deps.stop - Function to stop animation
      * @param {Function} deps.stopSpeaking - Function to stop speaking
@@ -78,6 +79,7 @@ export class DestructionManager {
         this.audioHandler = deps.audioHandler || null;
         this.degradationManager = deps.degradationManager || null;
         this.stateMachine = deps.stateMachine || null;
+        this.contextManager = deps.contextManager || null;
         this._state = deps.state;
         this._stop = deps.stop;
         this._stopSpeaking = deps.stopSpeaking;
@@ -176,6 +178,11 @@ export class DestructionManager {
         // Clean up state machine (clears state and transitions)
         if (this.stateMachine && typeof this.stateMachine.destroy === 'function') {
             this.stateMachine.destroy();
+        }
+
+        // Clean up context manager (clears 10s frustration decay interval)
+        if (this.contextManager && typeof this.contextManager.destroy === 'function') {
+            this.contextManager.destroy();
         }
     }
 
@@ -350,6 +357,7 @@ export class DestructionManager {
         this.audioHandler = null;
         this.degradationManager = null;
         this.stateMachine = null;
+        this.contextManager = null;
         this._state = null;
         this._stop = null;
         this._stopSpeaking = null;

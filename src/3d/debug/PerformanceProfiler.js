@@ -33,8 +33,10 @@ export class PerformanceProfiler {
         this._reportInterval = 60; // Report every N frames
         this._gl = null;
         this._gpuSyncEnabled = false;
-        this._frameTimestamps = []; // For calculating actual FPS
         this._maxTimestamps = 120; // Keep last 2 seconds at 60fps
+        this._frameTimestamps = new Float64Array(this._maxTimestamps);
+        this._tsIndex = 0;
+        this._tsCount = 0;
     }
 
     /**
@@ -80,7 +82,9 @@ export class PerformanceProfiler {
         this.sections.clear();
         this.frameCount = 0;
         this.totalFrameTime = 0;
-        this._frameTimestamps = [];
+        this._frameTimestamps.fill(0);
+        this._tsIndex = 0;
+        this._tsCount = 0;
     }
 
     startFrame() {
@@ -124,10 +128,11 @@ export class PerformanceProfiler {
         this.totalFrameTime += frameTime;
         this.frameCount++;
 
-        // Track frame timestamps for real FPS calculation
-        this._frameTimestamps.push(now);
-        if (this._frameTimestamps.length > this._maxTimestamps) {
-            this._frameTimestamps.shift();
+        // Track frame timestamps for real FPS calculation (circular buffer)
+        this._frameTimestamps[this._tsIndex] = now;
+        this._tsIndex = (this._tsIndex + 1) % this._maxTimestamps;
+        if (this._tsCount < this._maxTimestamps) {
+            this._tsCount++;
         }
 
         // Auto-report every N frames
@@ -140,12 +145,13 @@ export class PerformanceProfiler {
      * Calculate actual FPS from frame timestamps
      */
     getActualFPS() {
-        if (this._frameTimestamps.length < 2) return 0;
-        const oldest = this._frameTimestamps[0];
-        const newest = this._frameTimestamps[this._frameTimestamps.length - 1];
-        const elapsed = newest - oldest;
+        if (this._tsCount < 2) return 0;
+        // Oldest = write index when full, otherwise 0; newest = last written slot
+        const oldestIdx = this._tsCount < this._maxTimestamps ? 0 : this._tsIndex;
+        const newestIdx = (this._tsIndex - 1 + this._maxTimestamps) % this._maxTimestamps;
+        const elapsed = this._frameTimestamps[newestIdx] - this._frameTimestamps[oldestIdx];
         if (elapsed === 0) return 0;
-        return ((this._frameTimestamps.length - 1) / elapsed) * 1000;
+        return ((this._tsCount - 1) / elapsed) * 1000;
     }
 
     getReport() {

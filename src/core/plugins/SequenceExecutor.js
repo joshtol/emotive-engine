@@ -214,23 +214,14 @@ export class SequenceExecutor {
     sleep(ms, cancellationToken) {
         return new Promise(resolve => {
             const timeout = setTimeout(() => {
+                if (cancellationToken) cancellationToken._sleepTimeout = null;
                 resolve();
             }, ms);
 
-            // Allow cancellation to resolve early
+            // Store timeout so cancel() can clear it and resolve immediately
             if (cancellationToken) {
-                const checkInterval = setInterval(() => {
-                    if (cancellationToken.cancelled) {
-                        clearTimeout(timeout);
-                        clearInterval(checkInterval);
-                        resolve();
-                    }
-                }, 50);
-
-                // Clean up interval when timeout completes
-                setTimeout(() => {
-                    clearInterval(checkInterval);
-                }, ms);
+                cancellationToken._sleepTimeout = timeout;
+                cancellationToken._sleepResolve = resolve;
             }
         });
     }
@@ -243,6 +234,15 @@ export class SequenceExecutor {
         const token = this.activeSequences.get(sequenceId);
         if (token) {
             token.cancelled = true;
+            // Immediately resolve any pending sleep
+            if (token._sleepTimeout) {
+                clearTimeout(token._sleepTimeout);
+                token._sleepTimeout = null;
+            }
+            if (token._sleepResolve) {
+                token._sleepResolve();
+                token._sleepResolve = null;
+            }
             this.activeSequences.delete(sequenceId);
 
             if (this.eventManager) {
@@ -260,6 +260,14 @@ export class SequenceExecutor {
     cancelAll() {
         this.activeSequences.forEach((token, sequenceId) => {
             token.cancelled = true;
+            if (token._sleepTimeout) {
+                clearTimeout(token._sleepTimeout);
+                token._sleepTimeout = null;
+            }
+            if (token._sleepResolve) {
+                token._sleepResolve();
+                token._sleepResolve = null;
+            }
 
             if (this.eventManager) {
                 this.eventManager.emit('sequenceCancelled', {

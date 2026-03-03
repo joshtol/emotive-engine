@@ -5,6 +5,9 @@
 import * as THREE from 'three';
 import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
+
+// Module-level singleton — TextureLoader is stateless, no need to create per-call
+const textureLoader = new THREE.TextureLoader();
 import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
 import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
 import { DEFORMATION_DEFAULT_UNIFORMS } from '../shaders/utils/deformation.js';
@@ -55,8 +58,6 @@ function createCustomTypeMaterial(
     assetBasePath,
     onTextureReady
 ) {
-    const textureLoader = new THREE.TextureLoader();
-
     switch (geometryType) {
         case 'moon':
             return createMoonMaterial(
@@ -125,8 +126,6 @@ function createEmissiveMaterial(
     emotionData,
     assetBasePath
 ) {
-    const textureLoader = new THREE.TextureLoader();
-
     switch (geometryType) {
         case 'sun':
             return createSunMaterialWrapper(
@@ -155,7 +154,6 @@ function createCrystalMaterial(
     // Load texture based on geometry type
     let crystalTexture = null;
     if (textureType) {
-        const textureLoader = new THREE.TextureLoader();
         const texturePaths = {
             crystal: `${assetBasePath}/textures/Crystal/crystal.png`,
             rough: `${assetBasePath}/textures/Crystal/rough.png`,

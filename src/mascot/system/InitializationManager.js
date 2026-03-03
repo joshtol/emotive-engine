@@ -502,6 +502,11 @@ export class InitializationManager {
             decayInterval: config.frustrationDecayInterval || 10000,
         });
 
+        // Wire into destruction chain (created after DestructionManager)
+        if (this.mascot.destructionManager) {
+            this.mascot.destructionManager.contextManager = this.mascot.contextManager;
+        }
+
         // Sequence executor
         this.mascot.sequenceExecutor = new SequenceExecutor({
             mascot: this.mascot,
@@ -527,6 +532,15 @@ export class InitializationManager {
     initializeModularHandlers(config) {
         const initializer = new ModularHandlersInitializer(this.mascot);
         initializer.initialize(config);
+
+        // Wire managers created after DestructionManager into the destruction chain
+        const dm = this.mascot.destructionManager;
+        if (dm) {
+            dm.gestureController = this.mascot.gestureController;
+            dm.stateCoordinator = this.mascot.stateCoordinator;
+            dm.visualizationRunner = this.mascot.visualizationRunner;
+            dm.audioHandler = this.mascot.audioHandler;
+        }
     }
 
     /**
