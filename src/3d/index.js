@@ -288,83 +288,78 @@ export class EmotiveMascot3D {
             );
         }
 
-        try {
-            // Setup dual canvas layers via CanvasLayerManager
-            this._canvasLayerManager = new CanvasLayerManager({
-                canvasId: this.config.canvasId,
-                enableControls: this.config.enableControls,
-            });
-            const layers = this._canvasLayerManager.setup(container);
-            this.container = layers.container;
-            this.webglCanvas = layers.webglCanvas;
-            this.canvas2D = layers.canvas2D;
+        // Setup dual canvas layers via CanvasLayerManager
+        this._canvasLayerManager = new CanvasLayerManager({
+            canvasId: this.config.canvasId,
+            enableControls: this.config.enableControls,
+        });
+        const layers = this._canvasLayerManager.setup(container);
+        this.container = layers.container;
+        this.webglCanvas = layers.webglCanvas;
+        this.canvas2D = layers.canvas2D;
 
-            // Initialize 3D core renderer
-            this.core3D = new Core3DManager(this.webglCanvas, {
-                geometry: this.config.coreGeometry,
-                emotion: this.config.defaultEmotion,
-                enableParticles: this.config.enableParticles,
-                enablePostProcessing: this.config.enablePostProcessing,
-                enableShadows: this.config.enableShadows,
-                enableControls: this.config.enableControls,
-                enableShatter: this.config.enableShatter,
-                autoRotate: this.config.autoRotate,
-                enableBlinking: this.config.enableBlinking,
-                enableBreathing: this.config.enableBreathing,
-                cameraDistance: this.config.cameraDistance,
-                fov: this.config.fov,
-                minZoom: this.config.minZoom,
-                maxZoom: this.config.maxZoom,
-                materialVariant: this.config.materialVariant,
-                assetBasePath: this.config.assetBasePath,
-                preloadElements: this.config.preloadElements,
-                backgroundPrewarm: this.config.backgroundPrewarm,
-            });
+        // Initialize 3D core renderer
+        this.core3D = new Core3DManager(this.webglCanvas, {
+            geometry: this.config.coreGeometry,
+            emotion: this.config.defaultEmotion,
+            enableParticles: this.config.enableParticles,
+            enablePostProcessing: this.config.enablePostProcessing,
+            enableShadows: this.config.enableShadows,
+            enableControls: this.config.enableControls,
+            enableShatter: this.config.enableShatter,
+            autoRotate: this.config.autoRotate,
+            enableBlinking: this.config.enableBlinking,
+            enableBreathing: this.config.enableBreathing,
+            cameraDistance: this.config.cameraDistance,
+            fov: this.config.fov,
+            minZoom: this.config.minZoom,
+            maxZoom: this.config.maxZoom,
+            materialVariant: this.config.materialVariant,
+            assetBasePath: this.config.assetBasePath,
+            preloadElements: this.config.preloadElements,
+            backgroundPrewarm: this.config.backgroundPrewarm,
+        });
 
-            // Cache 2D canvas context to prevent repeated getContext() calls
-            this.ctx2D = this.canvas2D.getContext('2d');
+        // Cache 2D canvas context to prevent repeated getContext() calls
+        this.ctx2D = this.canvas2D.getContext('2d');
 
-            // Initialize particle system (2D overlay)
-            // ONLY create 2D particles if 3D WebGL particles are NOT available
-            // 3D demos should use WebGL particles, not 2D canvas overlay
-            if (this.config.enableParticles && !this.core3D?.particleOrchestrator) {
-                const maxParticles = this.config.maxParticles || 300;
-                this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
+        // Initialize particle system (2D overlay)
+        // ONLY create 2D particles if 3D WebGL particles are NOT available
+        // 3D demos should use WebGL particles, not 2D canvas overlay
+        if (this.config.enableParticles && !this.core3D?.particleOrchestrator) {
+            const maxParticles = this.config.maxParticles || 300;
+            this.particleSystem = new ParticleSystem(maxParticles, this.errorBoundary);
 
-                // Set canvas dimensions for particle containment
-                this.particleSystem.canvasWidth = this.canvas2D.width;
-                this.particleSystem.canvasHeight = this.canvas2D.height;
-            }
-
-            // Observe container for resize (orientation change, layout shift, viewport resize)
-            this._resizeObserver = new ResizeObserverManager(this.container, (width, height) => {
-                this._canvasLayerManager.resize(width, height);
-                this.core3D.renderer.resize(width, height);
-                if (this.particleSystem) {
-                    this.particleSystem.canvasWidth = width;
-                    this.particleSystem.canvasHeight = height;
-                }
-            });
-
-            // Initialize dance choreographer (for auto-dancing when BPM locks)
-            this.danceChoreographer = new DanceChoreographer();
-            this.danceChoreographer.setRhythmAdapter(this.core3D?.rhythm3DAdapter);
-            this.danceChoreographer.setMascot(this);
-            // Note: audioDeformer is set later when listenTo() is called
-
-            // Accessibility: Listen for reduced motion preference changes
-            this._setupReducedMotionListener();
-
-            // Apply reduced motion settings if preference is set
-            if (this._prefersReducedMotion) {
-                this.setReducedMotion(true);
-            }
-
-            return this;
-        } catch (error) {
-            console.error('Failed to initialize 3D engine:', error);
-            throw error;
+            // Set canvas dimensions for particle containment
+            this.particleSystem.canvasWidth = this.canvas2D.width;
+            this.particleSystem.canvasHeight = this.canvas2D.height;
         }
+
+        // Observe container for resize (orientation change, layout shift, viewport resize)
+        this._resizeObserver = new ResizeObserverManager(this.container, (width, height) => {
+            this._canvasLayerManager.resize(width, height);
+            this.core3D.renderer.resize(width, height);
+            if (this.particleSystem) {
+                this.particleSystem.canvasWidth = width;
+                this.particleSystem.canvasHeight = height;
+            }
+        });
+
+        // Initialize dance choreographer (for auto-dancing when BPM locks)
+        this.danceChoreographer = new DanceChoreographer();
+        this.danceChoreographer.setRhythmAdapter(this.core3D?.rhythm3DAdapter);
+        this.danceChoreographer.setMascot(this);
+        // Note: audioDeformer is set later when listenTo() is called
+
+        // Accessibility: Listen for reduced motion preference changes
+        this._setupReducedMotionListener();
+
+        // Apply reduced motion settings if preference is set
+        if (this._prefersReducedMotion) {
+            this.setReducedMotion(true);
+        }
+
+        return this;
     }
 
     /**
@@ -1905,7 +1900,7 @@ export class EmotiveMascot3D {
                 : elementOrSelector;
 
         if (!element) {
-            console.error(`[EmotiveMascot3D] Element not found: ${elementOrSelector}`);
+            console.warn(`[EmotiveMascot3D] Element not found: ${elementOrSelector}`);
             return this;
         }
 

@@ -550,11 +550,16 @@ export class InitializationManager {
     finalizeInitialization(config) {
         // Initialize sound system if enabled
         if (config.enableAudio) {
-            this.mascot.soundSystem.initialize().then(success => {
-                if (success) {
-                    this.mascot.soundSystem.setMasterVolume(config.masterVolume);
-                }
-            });
+            this.mascot.soundSystem
+                .initialize()
+                .then(success => {
+                    if (success) {
+                        this.mascot.soundSystem.setMasterVolume(config.masterVolume);
+                    }
+                })
+                .catch(err => {
+                    console.warn('[InitializationManager] Sound system initialization failed:', err);
+                });
         }
 
         // Initialize rhythm integration

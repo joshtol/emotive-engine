@@ -115,20 +115,16 @@ export function isGestureBlending(gestureType) {
 
 /**
  * Get list of all available gesture types
- * Useful for debugging and UI generation
- *
- * @returns {Array<string>} Array of gesture type names
+ * @returns {Promise<string[]>} Promise resolving to array of gesture type names
+ * @deprecated Use EmotionalStateQueryManager.getAvailableGestures() instead
  */
-export function getAvailableGestures() {
-    const gestures = [];
-
-    // Import the registry to get all gestures
-    import('./index.js').then(module => {
-        const allGestures = module.listGestures();
-        allGestures.forEach(g => gestures.push(g.name));
-    });
-
-    return gestures;
+export async function getAvailableGestures() {
+    try {
+        const module = await import('./index.js');
+        return module.listGestures().map(g => g.name);
+    } catch {
+        return [];
+    }
 }
 
 /**

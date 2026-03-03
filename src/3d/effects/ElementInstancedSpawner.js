@@ -304,7 +304,7 @@ export class ElementInstancedSpawner {
         const geometries = results.filter(r => r !== null);
 
         if (geometries.length === 0) {
-            console.error(`[ElementInstancedSpawner] No models loaded for ${elementType}`);
+            console.warn(`[ElementInstancedSpawner] No models loaded for ${elementType}`);
             return null;
         }
 
@@ -457,7 +457,7 @@ export class ElementInstancedSpawner {
             console.warn(`[ElementInstancedSpawner] No mesh found in ${modelPath}`);
             return null;
         } catch (error) {
-            console.error(`[ElementInstancedSpawner] Failed to load ${modelPath}:`, error);
+            console.warn(`[ElementInstancedSpawner] Failed to load ${modelPath}:`, error);
             return null;
         }
     }

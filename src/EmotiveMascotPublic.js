@@ -164,98 +164,48 @@ class EmotiveMascotPublic {
             return Promise.resolve();
         }
 
-        try {
-            // Store canvas reference for fallback positioning
-            this._canvas = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
+        // Store canvas reference for fallback positioning
+        this._canvas = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
 
-            // Create engine instance with canvas
-            const engineConfig = {
-                ...this._config,
-                canvasId: canvas, // This accepts either string ID or element
-            };
+        // Create engine instance with canvas
+        const engineConfig = {
+            ...this._config,
+            canvasId: canvas, // This accepts either string ID or element
+        };
 
-            // Create and initialize the engine - wrap in protective proxy
-            const engine = new EmotiveMascot(engineConfig);
+        // Create and initialize the engine - wrap in protective proxy
+        const engine = new EmotiveMascot(engineConfig);
 
-            // Keep real engine reference for internal use (hidden from external access)
-            Object.defineProperty(this, '_realEngine', {
-                value: engine,
-                writable: false,
-                enumerable: false, // Hide from Object.keys()
-                configurable: false,
-            });
+        // Keep real engine reference for internal use (hidden from external access)
+        Object.defineProperty(this, '_realEngine', {
+            value: engine,
+            writable: false,
+            enumerable: false, // Hide from Object.keys()
+            configurable: false,
+        });
 
-            // Create a protective proxy that hides internal components
-            this._engine = new Proxy(engine, {
-                get(target, prop) {
-                    // Block access to sensitive internal components
-                    const blockedProps = [
-                        'soundSystem',
-                        'stateMachine',
-                        'emotionLibrary',
-                        'audioLevelProcessor',
-                        'particleSystem',
-                        'errorBoundary',
-                        'performanceMonitor',
-                        'config',
-                        'debugMode',
-                    ];
+        // Create a protective proxy that hides internal components
+        this._engine = new Proxy(engine, {
+            get(target, prop) {
+                // Block access to sensitive internal components
+                const blockedProps = [
+                    'soundSystem',
+                    'stateMachine',
+                    'emotionLibrary',
+                    'audioLevelProcessor',
+                    'particleSystem',
+                    'errorBoundary',
+                    'performanceMonitor',
+                    'config',
+                    'debugMode',
+                ];
 
-                    if (blockedProps.includes(prop)) {
-                        // Return a dummy object that looks empty
-                        return new Proxy(
-                            {},
-                            {
-                                get() {
-                                    return undefined;
-                                },
-                                set() {
-                                    return false;
-                                },
-                                has() {
-                                    return false;
-                                },
-                                ownKeys() {
-                                    return [];
-                                },
-                                getOwnPropertyDescriptor() {
-                                    return undefined;
-                                },
-                            }
-                        );
-                    }
-
-                    // For allowed components, wrap them too
-                    if (
-                        prop === 'renderer' ||
-                        prop === 'shapeMorpher' ||
-                        prop === 'audioAnalyzer' ||
-                        prop === 'gazeTracker'
-                    ) {
-                        const component = target[prop];
-                        if (!component) return undefined;
-
-                        // Return wrapped version that hides internals
-                        return new Proxy(component, {
-                            get(compTarget, compProp) {
-                                // Only expose essential methods
-                                const allowedMethods = {
-                                    renderer: ['setBlinkingEnabled'],
-                                    shapeMorpher: ['resetMusicDetection', 'frequencyData'],
-                                    audioAnalyzer: ['microphoneStream', 'currentFrequencies'],
-                                    gazeTracker: [
-                                        'enable',
-                                        'disable',
-                                        'mousePos',
-                                        'updateTargetGaze',
-                                        'currentGaze',
-                                        'getState',
-                                    ],
-                                };
-
-                                if (allowedMethods[prop]?.includes(compProp)) {
-                                    return compTarget[compProp];
-                                }
+                if (blockedProps.includes(prop)) {
+                    // Return a dummy object that looks empty
+                    return new Proxy(
+                        {},
+                        {
+                            get() {
                                 return undefined;
                             },
                             set() {
@@ -267,46 +217,91 @@ class EmotiveMascotPublic {
                             ownKeys() {
                                 return [];
                             },
-                        });
-                    }
+                            getOwnPropertyDescriptor() {
+                                return undefined;
+                            },
+                        }
+                    );
+                }
 
-                    // Allow safe methods
-                    return target[prop];
-                },
-                set() {
-                    return false; // Prevent any modifications
-                },
-                has(target, prop) {
-                    // Hide internal properties from 'in' operator
-                    const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];
-                    return !blockedProps.includes(prop) && prop in target;
-                },
-                ownKeys(target) {
-                    // Hide internal properties from Object.keys()
-                    const allowedKeys = [
-                        'canvas',
-                        'start',
-                        'stop',
-                        'pause',
-                        'resume',
-                        'setEmotion',
-                        'morphTo',
-                        'express',
-                    ];
-                    return allowedKeys.filter(key => key in target);
-                },
-            });
+                // For allowed components, wrap them too
+                if (
+                    prop === 'renderer' ||
+                    prop === 'shapeMorpher' ||
+                    prop === 'audioAnalyzer' ||
+                    prop === 'gazeTracker'
+                ) {
+                    const component = target[prop];
+                    if (!component) return undefined;
 
-            // Store canvas reference
-            this.canvas = this._engine.canvas;
-            this._initialized = true;
+                    // Return wrapped version that hides internals
+                    return new Proxy(component, {
+                        get(compTarget, compProp) {
+                            // Only expose essential methods
+                            const allowedMethods = {
+                                renderer: ['setBlinkingEnabled'],
+                                shapeMorpher: ['resetMusicDetection', 'frequencyData'],
+                                audioAnalyzer: ['microphoneStream', 'currentFrequencies'],
+                                gazeTracker: [
+                                    'enable',
+                                    'disable',
+                                    'mousePos',
+                                    'updateTargetGaze',
+                                    'currentGaze',
+                                    'getState',
+                                ],
+                            };
 
-            // The initialize method is synchronous, but we keep async for future compatibility
-            return Promise.resolve();
-        } catch (error) {
-            console.error('Failed to initialize Emotive Engine:', error);
-            throw error;
-        }
+                            if (allowedMethods[prop]?.includes(compProp)) {
+                                return compTarget[compProp];
+                            }
+                            return undefined;
+                        },
+                        set() {
+                            return false;
+                        },
+                        has() {
+                            return false;
+                        },
+                        ownKeys() {
+                            return [];
+                        },
+                    });
+                }
+
+                // Allow safe methods
+                return target[prop];
+            },
+            set() {
+                return false; // Prevent any modifications
+            },
+            has(target, prop) {
+                // Hide internal properties from 'in' operator
+                const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];
+                return !blockedProps.includes(prop) && prop in target;
+            },
+            ownKeys(target) {
+                // Hide internal properties from Object.keys()
+                const allowedKeys = [
+                    'canvas',
+                    'start',
+                    'stop',
+                    'pause',
+                    'resume',
+                    'setEmotion',
+                    'morphTo',
+                    'express',
+                ];
+                return allowedKeys.filter(key => key in target);
+            },
+        });
+
+        // Store canvas reference
+        this.canvas = this._engine.canvas;
+        this._initialized = true;
+
+        // The initialize method is synchronous, but we keep async for future compatibility
+        return Promise.resolve();
     }
 
     /**
@@ -1208,10 +1203,12 @@ class EmotiveMascotPublic {
      * @param {number} bpm - Beats per minute
      */
     setBPM(bpm) {
+        bpm = Math.max(0, Math.min(300, Number(bpm) || 0));
         const engine = this._getReal();
         if (engine && engine.rhythmIntegration) {
             engine.rhythmIntegration.setBPM(bpm);
         }
+        return this;
     }
 
     /**
@@ -1247,6 +1244,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setMaxParticles(maxParticles) {
+        maxParticles = Math.max(0, Math.min(1000, Math.floor(Number(maxParticles) || 0)));
         const engine = this._getReal();
         if (engine && engine.particleSystem) {
             engine.particleSystem.setMaxParticles(maxParticles);
@@ -1464,6 +1462,7 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     setTheme(theme) {
+        if (!theme || typeof theme !== 'object') return this;
         if (theme.core) {
             this.setColor(theme.core);
         }

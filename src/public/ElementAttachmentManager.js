@@ -85,7 +85,6 @@ export class ElementAttachmentManager {
     attachToElement(elementOrSelector, options = {}) {
         const engine = this._getEngine();
         if (!engine) {
-            console.error('[EmotiveMascot] Engine not initialized');
             throw new Error('Engine not initialized. Call init() first.');
         }
 
@@ -96,7 +95,7 @@ export class ElementAttachmentManager {
                 : elementOrSelector;
 
         if (!element) {
-            console.error(`[EmotiveMascot] Element not found: ${elementOrSelector}`);
+            console.warn(`[EmotiveMascot] Element not found: ${elementOrSelector}`);
             return this._mascot;
         }
 

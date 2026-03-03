@@ -244,7 +244,7 @@ export function createMoonMaterial(textureLoader, options = {}) {
         undefined,
         // onError callback
         error => {
-            console.error(`❌ Failed to load moon color texture (${resolution}):`, error);
+            console.warn(`Failed to load moon color texture (${resolution}):`, error);
             pendingTextures.delete(colorPath);
         }
     );
@@ -262,7 +262,7 @@ export function createMoonMaterial(textureLoader, options = {}) {
         },
         undefined,
         error => {
-            console.error(`❌ Failed to load moon normal map (${resolution}):`, error);
+            console.warn(`Failed to load moon normal map (${resolution}):`, error);
             pendingTextures.delete(normalPath);
         }
     );
@@ -457,7 +457,7 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
         },
         undefined,
         error => {
-            console.error('❌ Failed to load moon crescent color texture:', error);
+            console.warn('Failed to load moon crescent color texture:', error);
             pendingTextures.delete(colorPath);
         }
     );
@@ -477,7 +477,7 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
         },
         undefined,
         error => {
-            console.error('❌ Failed to load moon crescent normal map:', error);
+            console.warn('Failed to load moon crescent normal map:', error);
             pendingTextures.delete(normalPath);
         }
     );
