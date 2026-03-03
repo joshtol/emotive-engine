@@ -179,67 +179,6 @@ vec2 bubbleField2D(vec3 p, float scale, float density) {
     return vec2(bright, ringDark);
 }
 
-// Internal fracture planes: flat disc-shaped inclusions at random orientations
-// inside the ice volume. Where the surface cuts through a fracture disc, you see
-// a bright scattered-light line that shifts with viewing angle (like real ice).
-// Each cell in the 3D grid may contain a fracture plane with:
-//   - Random center position within cell
-//   - Random plane orientation (normal vector)
-//   - Disc radius with feathery noise-perturbed edges
-//   - View-dependent brightness (planes facing camera flash bright)
-// Returns: brightness (0-1) of fracture scatter at this point.
-float fractureField3D(vec3 p, vec3 viewDir, float scale, float density) {
-    vec3 sp = p * scale;
-    vec3 i = floor(sp);
-    vec3 f = fract(sp);
-
-    float result = 0.0;
-
-    for (int x = -1; x <= 1; x++) {
-        for (int y = -1; y <= 1; y++) {
-            for (int z = -1; z <= 1; z++) {
-                vec3 nb = vec3(float(x), float(y), float(z));
-                vec3 cid = i + nb;
-
-                float exists = hash(cid * 2.3 + 7.91);
-                if (exists < density) {
-                    // Fracture center within cell
-                    vec3 center = nb + vec3(
-                        hash(cid + 0.37),
-                        hash(cid + 1.51),
-                        hash(cid + 2.93)
-                    ) * 0.6 + 0.2;
-
-                    // Random plane orientation
-                    vec3 planeNorm = normalize(vec3(
-                        hash(cid + 5.17) * 2.0 - 1.0,
-                        hash(cid + 6.83) * 2.0 - 1.0,
-                        hash(cid + 8.41) * 2.0 - 1.0
-                    ));
-
-                    // Distance from point to the fracture plane
-                    vec3 toPoint = f - center;
-                    float planeDist = abs(dot(toPoint, planeNorm));
-
-                    // Thick slab — 0.25 ensures high intersection probability.
-                    // At scale 1.5, cell=0.67 units, slab=0.25 → 37% of cell height.
-                    float planeVis = 1.0 - smoothstep(0.0, 0.25, planeDist);
-
-                    // Disc boundary — large discs spanning most of the cell
-                    vec3 inPlane = toPoint - dot(toPoint, planeNorm) * planeNorm;
-                    float radialDist = length(inPlane);
-                    float discRadius = mix(0.5, 0.9, hash(cid + 9.73));
-                    float discMask = 1.0 - smoothstep(discRadius * 0.7, discRadius, radialDist);
-
-                    // No sparkle/brightness multipliers — just geometry.
-                    // Visibility = plane intersection × disc shape. Range 0-1.
-                    result += planeVis * discMask;
-                }
-            }
-        }
-    }
-    return result;
-}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -302,15 +241,6 @@ float voronoiFrost(vec2 p) {
     return d2 - d1;
 }
 
-// Perturb normal using noise gradient for crystalline sparkle
-vec3 perturbNormal(vec3 normal, vec3 pos, float strength) {
-    float eps = 0.05;
-    float nx = noise(pos + vec3(eps, 0, 0)) - noise(pos - vec3(eps, 0, 0));
-    float ny = noise(pos + vec3(0, eps, 0)) - noise(pos - vec3(0, eps, 0));
-    float nz = noise(pos + vec3(0, 0, eps)) - noise(pos - vec3(0, 0, eps));
-    vec3 grad = vec3(nx, ny, nz) / (2.0 * eps);
-    return normalize(normal - grad * strength);
-}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════

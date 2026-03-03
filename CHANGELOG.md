@@ -33,6 +33,42 @@ and this project uses
   particles spawned at center) and 3D translator used uninitialized helix
   parameters (all particles mapped to same point). Now uses uniform sphere
   distribution with age-based upward rise.
+- **3 singleton memory leaks** — `errorTracker` (60s), `gradientCache` (60s),
+  and `healthCheck` (30s) intervals now cleaned up via
+  `DestructionManager.cleanupSingletons()`
+- **ContextManager decay interval leak** — 10s frustration decay timer survived
+  mascot destruction; now wired into DestructionManager post-construction
+- **DestructionManager wiring gap** — 4 managers created after
+  DestructionManager (gestureController, stateCoordinator, visualizationRunner,
+  audioHandler) had null references; now wired post-Phase 9 in
+  InitializationManager
+- **HealthCheck missing destroy()** — added `destroy()` method that calls
+  `stop()` and clears checks/history
+- **ESLint warnings** — removed unused `hash` imports in light/nature effect
+  factories, dead `previousEmotion` assignment, renamed unused `config` param
+
+### Performance
+
+- **DanceChoreographer** — `Float64Array` circular buffer replaces
+  `Array.shift()` on 60-element audio history; O(1) per frame, ~3-5 ms saved
+- **AudioBridge** — `Float64Array` circular buffer replaces `Array.shift()` on
+  20-element flux history; O(1) per 10ms interval
+- **PerformanceProfiler** — `Float64Array` circular buffer replaces
+  `Array.shift()` on 120-element FPS timestamp buffer
+- **MaterialFactory** — 3 per-call `new THREE.TextureLoader()` consolidated to
+  module-level singleton
+- **Core3DManager** — removed redundant `Vector3.clone()` in crack impact path;
+  `addImpact()` already clones internally
+- **SequenceExecutor** — triple-timer sleep pattern (setTimeout + polling
+  setInterval + cleanup setTimeout) replaced with single setTimeout + direct
+  cancel via stored resolve
+
+### Changed
+
+- **Public API chaining** — `setEmotion()`, `setSoundEnabled()`, `setShape()`,
+  `enableGazeTracking()` now return `this` for method chaining
+- **Tree-shaking** — `plugins-exports.js` wildcard `export *` replaced with 18
+  named exports for dead code elimination
 
 ## [3.3.8] - 2026-02-26
 
