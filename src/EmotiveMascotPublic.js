@@ -627,6 +627,7 @@ class EmotiveMascotPublic {
      * @param {string} emotion - Emotion name
      * @param {string|number|Object} [undertoneOrDurationOrOptions] - Undertone string, duration number, or options object
      * @param {number} [timestamp] - Optional timestamp for recording
+     * @returns {EmotiveMascotPublic} This instance for chaining
      * @throws {Error} If the engine has not been initialized
      */
     setEmotion(emotion, undertoneOrDurationOrOptions, timestamp) {
@@ -684,11 +685,13 @@ class EmotiveMascotPublic {
             this._lastIntensity = undefined;
         }
         engine.setEmotion(emotion, Object.keys(opts).length ? opts : null, duration);
+        return this;
     }
 
     /**
      * Enable or disable sound
      * @param {boolean} enabled - Whether sound should be enabled
+     * @returns {EmotiveMascotPublic} This instance for chaining
      * @throws {Error} If the engine has not been initialized
      */
     setSoundEnabled(enabled) {
@@ -699,6 +702,7 @@ class EmotiveMascotPublic {
         if (engine.soundSystem) {
             engine.soundSystem.enabled = enabled;
         }
+        return this;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -939,6 +943,7 @@ class EmotiveMascotPublic {
      * Set shape
      * @param {string} shape - Shape name
      * @param {Object|number} [configOrTimestamp] - Config object or timestamp for recording
+     * @returns {EmotiveMascotPublic} This instance for chaining
      * @throws {Error} If the engine has not been initialized
      */
     setShape(shape, configOrTimestamp) {
@@ -983,6 +988,7 @@ class EmotiveMascotPublic {
 
         // Set in engine with config for rhythm sync
         if (engine) engine.morphTo(resolvedShape, config);
+        return this;
     }
 
     /**
@@ -1028,6 +1034,7 @@ class EmotiveMascotPublic {
 
     /**
      * Enable gaze tracking
+     * @returns {EmotiveMascotPublic} This instance for chaining
      * @throws {Error} If the engine has not been initialized
      */
     enableGazeTracking() {
@@ -1036,6 +1043,7 @@ class EmotiveMascotPublic {
         if (engine.gazeTracker) {
             engine.gazeTracker.enable();
         }
+        return this;
     }
 
     /**

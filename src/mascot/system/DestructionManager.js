@@ -10,7 +10,12 @@
  * - Event listener removal
  * - Plugin cleanup
  * - Error boundary clearing
+ * - Module-level singleton cleanup (errorTracker, gradientCache, healthCheck)
  */
+import { errorTracker } from '../../core/events/ErrorTracker.js';
+import { gradientCache } from '../../core/renderer/GradientCache.js';
+import { healthCheck } from '../../core/system/HealthCheck.js';
+
 export class DestructionManager {
     /**
      * Create DestructionManager
@@ -131,6 +136,7 @@ export class DestructionManager {
         this.cleanupRenderer();
         this.cleanupCanvas();
         this.cleanupManagers();
+        this.cleanupSingletons();
     }
 
     /**
@@ -170,6 +176,26 @@ export class DestructionManager {
         // Clean up state machine (clears state and transitions)
         if (this.stateMachine && typeof this.stateMachine.destroy === 'function') {
             this.stateMachine.destroy();
+        }
+    }
+
+    /**
+     * Clean up module-level singletons with intervals
+     */
+    cleanupSingletons() {
+        // ErrorTracker: 60s reporting interval
+        if (errorTracker) {
+            errorTracker.destroy();
+        }
+
+        // GradientCache: 60s cleanup interval + cached CanvasGradients
+        if (gradientCache) {
+            gradientCache.destroy();
+        }
+
+        // HealthCheck: 30s interval (if started)
+        if (healthCheck) {
+            healthCheck.destroy();
         }
     }
 

@@ -606,6 +606,13 @@ export class HealthCheck {
         }
     }
 
+    destroy() {
+        this.stop();
+        this.checks.clear();
+        this.history = [];
+        this.lastCheck = null;
+    }
+
     setDependencies(deps) {
         Object.assign(this.dependencies, deps);
     }

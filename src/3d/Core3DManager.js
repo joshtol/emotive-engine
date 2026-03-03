@@ -3224,9 +3224,10 @@ export class Core3DManager {
                     // Note: zero direction = radial cracks spreading in all directions
 
                     // Add to manager in mesh-local space
+                    // addImpact() clones internally, no need to clone here
                     this.objectSpaceCrackManager.addImpact({
-                        position: this._crackWorldPos.clone(),
-                        direction: this._crackWorldDir.clone(),
+                        position: this._crackWorldPos,
+                        direction: this._crackWorldDir,
                         propagation: trigger.propagation || 0.8,
                         amount: trigger.amount || 1.0,
                     });

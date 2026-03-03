@@ -33,7 +33,7 @@
  * and imports buildLightEffectGesture from this factory.
  */
 
-import { hash, noise1D } from '../../../../utils/noise.js';
+import { noise1D } from '../../../../utils/noise.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // GESTURE FACTORY — buildLightEffectGesture(config)

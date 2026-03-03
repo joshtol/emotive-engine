@@ -3,7 +3,7 @@
 // All nature gestures use individual files with buildNatureEffectGesture
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-import { hash, noise1D } from '../../../../utils/noise.js';
+import { noise1D } from '../../../../utils/noise.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // MODERN FACTORY — buildNatureEffectGesture(config)

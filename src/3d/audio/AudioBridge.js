@@ -446,8 +446,10 @@ export class AudioBridge {
         let lastPeakTime = 0;
         let prevEnergy = 0;
         let prevTimeDomainAmplitude = 0; // Track previous amplitude for spike detection
-        const fluxHistory = [];
         const fluxHistorySize = 20;
+        const fluxHistory = new Float64Array(fluxHistorySize);
+        let fluxHistoryIndex = 0;
+        let fluxHistoryCount = 0;
 
         this._bpmDetectionInterval = setInterval(() => {
             if (!this._audioElement || this._audioElement.paused) return;
@@ -506,16 +508,21 @@ export class AudioBridge {
             const flux = Math.max(0, lowFreqEnergy - prevEnergy);
             prevEnergy = lowFreqEnergy; // Track bass energy for next frame
 
-            // Track flux history for adaptive threshold
-            fluxHistory.push(flux);
-            if (fluxHistory.length > fluxHistorySize) {
-                fluxHistory.shift();
+            // Track flux history for adaptive threshold (circular buffer)
+            fluxHistory[fluxHistoryIndex] = flux;
+            fluxHistoryIndex = (fluxHistoryIndex + 1) % fluxHistorySize;
+            if (fluxHistoryCount < fluxHistorySize) {
+                fluxHistoryCount++;
             }
 
             // Calculate adaptive threshold based on recent flux
             // With fftSize=2048, we have more frequency bins, so flux values are smaller per-bin
             // Lower multiplier (1.1) and minimum (2) to catch quieter onsets
-            const avgFlux = fluxHistory.reduce((a, b) => a + b, 0) / fluxHistory.length;
+            let fluxSum = 0;
+            for (let i = 0; i < fluxHistoryCount; i++) {
+                fluxSum += fluxHistory[i];
+            }
+            const avgFlux = fluxSum / fluxHistoryCount;
             const threshold = avgFlux * 1.1 + 2;
 
             const now = performance.now();

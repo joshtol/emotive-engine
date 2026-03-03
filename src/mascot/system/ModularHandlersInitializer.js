@@ -339,7 +339,7 @@ export class ModularHandlersInitializer {
      * Layer 3: Initialize managers that depend on Layer 2
      * @private
      */
-    _initializeLayer3(m, config) {
+    _initializeLayer3(m, _config) {
         // PerformanceBehaviorManager - depends on performance system, frustration context manager
         m.performanceBehaviorManager = new PerformanceBehaviorManager({
             errorBoundary: m.errorBoundary,

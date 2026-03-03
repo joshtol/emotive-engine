@@ -285,10 +285,12 @@ export class DanceChoreographer {
         this.barCount = 0;
         this.lastBarProgress = 0;
 
-        // Rolling averages for section detection
-        this._bassHistory = [];
-        this._vocalHistory = [];
+        // Rolling averages for section detection (circular buffers)
         this._historyLength = 60; // ~2 seconds at 30fps
+        this._bassHistory = new Float64Array(this._historyLength);
+        this._vocalHistory = new Float64Array(this._historyLength);
+        this._historyIndex = 0;
+        this._historyCount = 0;
 
         // Gesture scheduling
         this._pendingGestures = [];
@@ -502,16 +504,11 @@ export class DanceChoreographer {
      * @param {Object} audio - Current audio data
      */
     _updateEnergyHistory(audio) {
-        // Add to history
-        this._bassHistory.push(audio.bass);
-        this._vocalHistory.push(audio.vocal);
-
-        // Trim to max length
-        while (this._bassHistory.length > this._historyLength) {
-            this._bassHistory.shift();
-        }
-        while (this._vocalHistory.length > this._historyLength) {
-            this._vocalHistory.shift();
+        this._bassHistory[this._historyIndex] = audio.bass;
+        this._vocalHistory[this._historyIndex] = audio.vocal;
+        this._historyIndex = (this._historyIndex + 1) % this._historyLength;
+        if (this._historyCount < this._historyLength) {
+            this._historyCount++;
         }
     }
 
@@ -522,8 +519,12 @@ export class DanceChoreographer {
      * @returns {number} Smoothed average
      */
     _getSmoothedEnergy(history) {
-        if (history.length === 0) return 0;
-        return history.reduce((a, b) => a + b, 0) / history.length;
+        if (this._historyCount === 0) return 0;
+        let sum = 0;
+        for (let i = 0; i < this._historyCount; i++) {
+            sum += history[i];
+        }
+        return sum / this._historyCount;
     }
 
     /**
@@ -1376,8 +1377,10 @@ export class DanceChoreographer {
         this.lastGestureTime = 0;
         this.lastGlowTime = 0;
         this.lastFlashBar = -GLOW_SAFETY.minBarsBetweenFlash;
-        this._bassHistory = [];
-        this._vocalHistory = [];
+        this._bassHistory.fill(0);
+        this._vocalHistory.fill(0);
+        this._historyIndex = 0;
+        this._historyCount = 0;
         this._gesturesThisBar = 0;
         this._lastGestureBar = -1;
         // Morph state - sync from mascot if available, else default to 'crystal'

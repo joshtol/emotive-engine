@@ -265,7 +265,6 @@ export class EmotionalStateManager {
         }
 
         // Update emotion state BEFORE handling transitions to avoid timing issues
-        const previousEmotion = this.renderer.state.emotion;
         this.renderer.state.emotion = emotion;
 
         // Handle suspicion state
