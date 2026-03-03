@@ -110,15 +110,15 @@ export class Core3DManager {
     constructor(canvas, options = {}) {
         // Validate required dependencies
         if (!canvas) {
-            throw new Error('Core3DManager: canvas element is required');
+            throw new Error('[Core3DManager] canvas element is required');
         }
         // eslint-disable-next-line no-undef
         if (!(canvas instanceof HTMLCanvasElement)) {
-            throw new Error('Core3DManager: canvas must be an HTMLCanvasElement');
+            throw new Error('[Core3DManager] canvas must be an HTMLCanvasElement');
         }
         if (typeof THREE === 'undefined') {
             throw new Error(
-                'Core3DManager: Three.js library is not loaded. Import three.js before using Core3DManager'
+                '[Core3DManager] Three.js library is not loaded. Import three.js before using Core3DManager'
             );
         }
 
@@ -173,7 +173,7 @@ export class Core3DManager {
         const geometryConfig = THREE_GEOMETRIES[this.geometryType];
 
         if (!geometryConfig) {
-            console.warn(`Unknown geometry: ${this.geometryType}, falling back to sphere`);
+            console.warn(`[Core3DManager] Unknown geometry: ${this.geometryType}, falling back to sphere`);
             this.geometryConfig = THREE_GEOMETRIES.sphere;
         } else {
             this.geometryConfig = geometryConfig;
@@ -813,7 +813,7 @@ export class Core3DManager {
      */
     triggerReassembly(duration = 1500) {
         if (!this.shatterSystem) {
-            console.warn('triggerReassembly: ShatterSystem not initialized');
+            console.warn('[Core3DManager] triggerReassembly: ShatterSystem not initialized');
             return false;
         }
         return this.shatterSystem.triggerReassembly(duration);
@@ -833,7 +833,7 @@ export class Core3DManager {
      */
     setSunShadow(eclipseType = 'off') {
         if (this.geometryType !== 'sun' || !this.effectManager.hasSolarEclipse()) {
-            console.warn('⚠️ Eclipse only available for sun geometry');
+            console.warn('[Core3DManager] Eclipse only available for sun geometry');
             return;
         }
 
@@ -907,7 +907,7 @@ export class Core3DManager {
      */
     setMoonEclipse(eclipseType = 'off') {
         if (this.geometryType !== 'moon' || !this.effectManager.hasLunarEclipse()) {
-            console.warn('⚠️ Lunar eclipse only available for moon geometry');
+            console.warn('[Core3DManager] Lunar eclipse only available for moon geometry');
             return;
         }
 
@@ -922,7 +922,7 @@ export class Core3DManager {
      */
     setBlendLayer(layerIndex, params = {}) {
         if ((this.geometryType !== 'moon' && this.geometryType !== 'sun') || !this.customMaterial) {
-            console.warn('⚠️ Blend layers only available for moon and sun geometry');
+            console.warn('[Core3DManager] Blend layers only available for moon and sun geometry');
             return;
         }
 
@@ -950,7 +950,7 @@ export class Core3DManager {
      */
     setAllBlendLayers(layers) {
         if ((this.geometryType !== 'moon' && this.geometryType !== 'sun') || !this.customMaterial) {
-            console.warn('⚠️ Blend layers only available for moon and sun geometry');
+            console.warn('[Core3DManager] Blend layers only available for moon and sun geometry');
             return;
         }
 
@@ -997,7 +997,7 @@ export class Core3DManager {
             !this.customMaterial ||
             this.customMaterialType !== 'crystal'
         ) {
-            console.warn('⚠️ Crystal uniforms only available with crystal blend-layers material');
+            console.warn('[Core3DManager] Crystal uniforms only available with crystal blend-layers material');
             return;
         }
 
@@ -1381,7 +1381,7 @@ export class Core3DManager {
     morphToShape(shapeName, duration = 800) {
         const targetGeometryConfig = THREE_GEOMETRIES[shapeName];
         if (!targetGeometryConfig) {
-            console.warn(`Unknown shape: ${shapeName}`);
+            console.warn(`[Core3DManager] Unknown shape: ${shapeName}`);
             return;
         }
 
@@ -3896,7 +3896,7 @@ export class Core3DManager {
             }
 
             if (!cached || !cached.geometry) {
-                console.warn(`[Core3D:${this._instanceId}] Async geometry load returned null!`);
+                console.warn(`[Core3DManager] Async geometry load returned null (instance ${this._instanceId})`);
                 this._ready = true;
                 return;
             }
@@ -3971,7 +3971,7 @@ export class Core3DManager {
             // Start element preloading (after ready, so it doesn't block initialization)
             this._startElementPreloading();
         } catch (error) {
-            console.warn(`[Core3D:${this._instanceId}] Async geometry load FAILED:`, error);
+            console.warn(`[Core3DManager] Async geometry load failed (instance ${this._instanceId}):`, error);
             // Mark ready even on failure so render doesn't hang (unless destroyed)
             if (!this._destroyed) {
                 this._ready = true;

@@ -369,6 +369,10 @@ class ParticleSystem {
      * @deprecated Use particleSpawner.getSpawnPosition instead
      */
     getSpawnPosition(behavior, centerX, centerY, canvasWidth, canvasHeight) {
+        if (!this._deprecationWarned_getSpawnPosition) {
+            this._deprecationWarned_getSpawnPosition = true;
+            console.warn('[ParticleSystem] getSpawnPosition() is deprecated. Use particleSpawner.getSpawnPosition() instead.');
+        }
         return this.particleSpawner.getSpawnPosition(
             behavior,
             centerX,
@@ -384,6 +388,10 @@ class ParticleSystem {
      * @deprecated Use particleSpawner.clampToCanvas instead
      */
     clampToCanvas(x, y, canvasWidth, canvasHeight, margin = 30) {
+        if (!this._deprecationWarned_clampToCanvas) {
+            this._deprecationWarned_clampToCanvas = true;
+            console.warn('[ParticleSystem] clampToCanvas() is deprecated. Use particleSpawner.clampToCanvas() instead.');
+        }
         return this.particleSpawner.clampToCanvas(x, y, canvasWidth, canvasHeight, margin);
     }
 

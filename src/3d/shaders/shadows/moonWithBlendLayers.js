@@ -304,22 +304,6 @@ void main() {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // UNIVERSAL BLEND MODE LAYERS (Only applied when eclipse is OFF)
-    // These are manual UI-driven color grading tools
-    // NOTE: These are DISABLED by default - they're NEVER used since the multiplexer
-    // demo doesn't enable them. This section exists for potential future manual control.
-    // ═══════════════════════════════════════════════════════════════════════════
-    // INTENTIONALLY COMMENTED OUT - these would interfere with eclipse blend layers
-    // if (eclipseProgress < 0.001) {
-    //     // Layer 1 - manual UI control only
-    //     if (layer1Enabled > 0.5) {
-    //         vec3 blendColor1 = vec3(layer1Strength);
-    //         int mode1 = int(layer1Mode + 0.5);
-    //         finalColor = applyBlendMode(finalColor, blendColor1, mode1);
-    //     }
-    // }
-
     gl_FragColor = vec4(finalColor, opacity);
 }
 `;

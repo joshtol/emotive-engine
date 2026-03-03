@@ -1157,6 +1157,10 @@ class EmotiveRenderer {
      * @deprecated Use gazeTracker.initialize() directly
      */
     initGazeTracking() {
+        if (!this._deprecationWarned_initGazeTracking) {
+            this._deprecationWarned_initGazeTracking = true;
+            console.warn('[EmotiveRenderer] initGazeTracking() is deprecated. Use gazeTracker.initialize() directly.');
+        }
         this.gazeTracker.initialize();
     }
 
@@ -1165,6 +1169,10 @@ class EmotiveRenderer {
      * @deprecated Use gazeTracker.cleanup() directly
      */
     cleanupGazeTracking() {
+        if (!this._deprecationWarned_cleanupGazeTracking) {
+            this._deprecationWarned_cleanupGazeTracking = true;
+            console.warn('[EmotiveRenderer] cleanupGazeTracking() is deprecated. Use gazeTracker.cleanup() directly.');
+        }
         this.gazeTracker.cleanup();
     }
 

@@ -24,6 +24,10 @@ import * as THREE from 'three';
 const POOL_SIZE = 64; // Max instances per element type (16 elements × 4 slots each)
 const TRAIL_COPIES = 1; // Trail copies per main element (reduced from 3)
 const SLOTS_PER_ELEMENT = 1 + TRAIL_COPIES; // 2 slots total (was 4)
+const TRAIL_SCALE_STEP = 0.15; // Each trail copy is 15% smaller than the previous
+const TRAIL_OPACITY_STEP = 0.25; // Each trail copy is 25% less opaque than the previous
+const DEFAULT_FADE_DURATION = 0.5; // Default despawn fade duration in seconds
+const MOTION_THRESHOLD = 0.0001; // Velocity squared threshold for detecting motion
 
 /**
  * Manages a pool of instanced elements for GPU-efficient rendering.
@@ -327,11 +331,11 @@ export class ElementInstancePool {
         const origScaleX = this._scale.x;
         const origScaleY = this._scale.y;
         const origScaleZ = this._scale.z;
-        const hasMotion = velocity && velocity.lengthSq() > 0.0001;
+        const hasMotion = velocity && velocity.lengthSq() > MOTION_THRESHOLD;
 
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = element.trailSlots[i];
-            const trailMultiplier = hasMotion ? 1 - (i + 1) * 0.15 : 0;
+            const trailMultiplier = hasMotion ? 1 - (i + 1) * TRAIL_SCALE_STEP : 0;
 
             if (typeof scale === 'number') {
                 this._scale.setScalar(scale * trailMultiplier);
@@ -376,7 +380,7 @@ export class ElementInstancePool {
         // Update trail slots with progressively lower opacity
         for (let i = 0; i < TRAIL_COPIES; i++) {
             const trailSlot = element.trailSlots[i];
-            this.opacityArray[trailSlot] = opacity * (1 - (i + 1) * 0.25); // 75%, 50%, 25%
+            this.opacityArray[trailSlot] = opacity * (1 - (i + 1) * TRAIL_OPACITY_STEP);
         }
 
         this.opacityAttr.needsUpdate = true;
@@ -387,7 +391,7 @@ export class ElementInstancePool {
      * @param {string} elementId - Element identifier
      * @param {number} [fadeDuration=0.5] - Fade out duration in seconds
      */
-    beginDespawn(elementId, fadeDuration = 0.5) {
+    beginDespawn(elementId, fadeDuration = DEFAULT_FADE_DURATION) {
         const element = this.activeElements.get(elementId);
         if (!element) return;
 

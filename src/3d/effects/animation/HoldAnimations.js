@@ -15,6 +15,15 @@
  * returning a modifier value or offset.
  */
 
+// Assumed frame time for smoothing calculations (~60fps)
+const FRAME_TIME_60FPS = 0.016;
+
+// Small epsilon used as direction bias when offset is near zero
+const DIRECTION_BIAS_EPSILON = 0.001;
+
+// Default maximum drift time in seconds (caps unbounded drift growth)
+const DEFAULT_MAX_DRIFT_TIME = 3.0;
+
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // PULSE ANIMATION - Scale oscillation
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -140,7 +149,7 @@ export function calculateFlicker(config, time, prevValue = 1) {
 
             // Smooth transition between random values
             const targetValue = 1 + (random * 2 - 1) * intensity;
-            const smoothing = Math.min(rate * 0.016, 1); // ~60fps smoothing
+            const smoothing = Math.min(rate * FRAME_TIME_60FPS, 1);
             return prevValue + (targetValue - prevValue) * smoothing;
         }
     }
@@ -225,26 +234,26 @@ export function calculateDrift(config, currentOffset, deltaTime) {
     switch (direction) {
         case 'outward': {
             // Move away from origin in all 3 axes
-            offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
-            offset.y += (offset.y || 0.001) > 0 ? increment + noiseY : -increment + noiseY;
-            offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+            offset.x += (offset.x || DIRECTION_BIAS_EPSILON) > 0 ? increment + noiseX : -increment + noiseX;
+            offset.y += (offset.y || DIRECTION_BIAS_EPSILON) > 0 ? increment + noiseY : -increment + noiseY;
+            offset.z += (offset.z || DIRECTION_BIAS_EPSILON) > 0 ? increment + noiseZ : -increment + noiseZ;
             break;
         }
 
         case 'outward-flat': {
             // Move away from origin in XZ plane only (horizontal radiation)
             // Perfect for radiating heat waves, expanding ripples
-            offset.x += (offset.x || 0.001) > 0 ? increment + noiseX : -increment + noiseX;
-            offset.z += (offset.z || 0.001) > 0 ? increment + noiseZ : -increment + noiseZ;
+            offset.x += (offset.x || DIRECTION_BIAS_EPSILON) > 0 ? increment + noiseX : -increment + noiseX;
+            offset.z += (offset.z || DIRECTION_BIAS_EPSILON) > 0 ? increment + noiseZ : -increment + noiseZ;
             // No Y movement - stays at same height
             break;
         }
 
         case 'inward': {
             // Move toward origin
-            offset.x -= (offset.x || 0.001) > 0 ? increment : -increment;
-            offset.y -= (offset.y || 0.001) > 0 ? increment : -increment;
-            offset.z -= (offset.z || 0.001) > 0 ? increment : -increment;
+            offset.x -= (offset.x || DIRECTION_BIAS_EPSILON) > 0 ? increment : -increment;
+            offset.y -= (offset.y || DIRECTION_BIAS_EPSILON) > 0 ? increment : -increment;
+            offset.z -= (offset.z || DIRECTION_BIAS_EPSILON) > 0 ? increment : -increment;
             break;
         }
 
@@ -632,7 +641,7 @@ export function calculatePhysicsDrift(
 
     // Cap time to prevent unbounded drift growth
     // Elements shouldn't drift for more than a few seconds regardless of lifetime
-    const maxDriftTime = driftConfig.maxTime || 3.0;
+    const maxDriftTime = driftConfig.maxTime || DEFAULT_MAX_DRIFT_TIME;
     const cappedTime = Math.min(time, maxDriftTime);
 
     switch (driftConfig.direction) {

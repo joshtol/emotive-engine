@@ -684,18 +684,36 @@ export interface AttachOptions {
 // FEEL RESULT
 // ═══════════════════════════════════════════════════════════════════════════════
 
+export interface ParsedIntent {
+    /** Detected emotion (null if none recognized) */
+    emotion: EmotionName | null;
+    /** Emotional undertone (default: 'clear') */
+    undertone: string;
+    /** Detected gesture names */
+    gestures: GestureName[];
+    /** Target shape/geometry (null if none recognized) */
+    shape: GeometryType | null;
+    /** Intensity value (0-1) */
+    intensity: number;
+    /** Duration in milliseconds */
+    duration: number;
+    /** Transition style (e.g. 'smooth', 'sharp') */
+    transition: string;
+    /** Repetition mode (e.g. 'once', 'loop') */
+    repetition: string;
+    /** Tokens that could not be parsed */
+    unrecognized: string[];
+    /** Raw input string */
+    raw: string;
+}
+
 export interface FeelResult {
     /** Whether the feel() call succeeded */
     success: boolean;
-    /** Parsed intent data (emotion, gestures, etc.) */
-    parsed?: {
-        emotion?: EmotionName;
-        undertone?: string;
-        gestures?: GestureName[];
-        geometry?: GeometryType;
-    };
+    /** Parsed intent data from IntentParser */
+    parsed?: ParsedIntent | null;
     /** Error message if success is false */
-    error?: string;
+    error?: string | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

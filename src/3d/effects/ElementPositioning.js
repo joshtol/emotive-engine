@@ -23,6 +23,18 @@ import * as THREE from 'three';
 import { getModelOrientation } from './ElementSizing.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
+// SURFACE SAMPLING CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+const MAX_SAMPLE_ATTEMPTS = 30; // Max attempts to find a valid position per sample
+const MAX_CONSECUTIVE_FAILURES = 20; // Failures before relaxing distance constraint
+const DISTANCE_RELAXATION_FACTOR = 0.5; // Multiply min distance by this on relaxation
+const MIN_CANDIDATE_POOL_SIZE = 20; // Minimum candidates to consider for random selection
+const CANDIDATE_POOL_RATIO = 0.4; // Fraction of sorted candidates to consider
+const CLUSTER_SCAN_LIMIT = 50; // Max candidates to evaluate when clustering
+const CLUSTER_TOP_CANDIDATES = 10; // Top candidates for cluster center selection
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
 // REUSABLE TEMP OBJECT POOL - Prevents per-frame/per-element allocations
 // ═══════════════════════════════════════════════════════════════════════════════════════
 //
@@ -192,7 +204,7 @@ export function sampleSurfacePoints(
         const numClusters = Math.max(1, Math.floor(count * (1 - clustering) * 0.5));
         for (let c = 0; c < numClusters && candidates.length > 0; c++) {
             // Pick from top candidates
-            const idx = Math.floor(Math.random() * Math.min(candidates.length, 10));
+            const idx = Math.floor(Math.random() * Math.min(candidates.length, CLUSTER_TOP_CANDIDATES));
             clusterCenters.push(candidates[idx].position.clone());
         }
     }
@@ -209,15 +221,13 @@ export function sampleSurfacePoints(
 
     // Track attempts to avoid infinite loops
     let consecutiveFailures = 0;
-    const maxFailures = 20;
     let currentMinDistance = minDistance;
 
     for (let i = 0; i < count && candidates.length > 0; i++) {
         let selected = null;
         let attempts = 0;
-        const maxAttempts = 30;
 
-        while (!selected && attempts < maxAttempts) {
+        while (!selected && attempts < MAX_SAMPLE_ATTEMPTS) {
             attempts++;
             let candidateIdx;
 
@@ -227,7 +237,7 @@ export function sampleSurfacePoints(
                 let bestScore = Infinity;
                 let bestIdx = -1;
 
-                for (let j = 0; j < Math.min(candidates.length, 50); j++) {
+                for (let j = 0; j < Math.min(candidates.length, CLUSTER_SCAN_LIMIT); j++) {
                     if (usedIndices.has(candidates[j].index)) continue;
 
                     const pos = candidates[j].position;
@@ -244,7 +254,7 @@ export function sampleSurfacePoints(
                 candidateIdx = bestIdx;
             } else {
                 // Weighted random selection with distance checking
-                const poolSize = Math.min(candidates.length, Math.max(20, candidates.length * 0.4));
+                const poolSize = Math.min(candidates.length, Math.max(MIN_CANDIDATE_POOL_SIZE, candidates.length * CANDIDATE_POOL_RATIO));
 
                 // Build list of valid candidates (not used, far enough)
                 const validCandidates = [];
@@ -279,9 +289,9 @@ export function sampleSurfacePoints(
             } else {
                 // No valid candidate found, reduce distance requirement
                 consecutiveFailures++;
-                if (consecutiveFailures >= maxFailures) {
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
                     // Significantly relax distance for remaining elements
-                    currentMinDistance *= 0.5;
+                    currentMinDistance *= DISTANCE_RELAXATION_FACTOR;
                     consecutiveFailures = 0;
                 }
             }

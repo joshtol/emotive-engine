@@ -305,14 +305,12 @@ export default {
                 };
             }
 
-            // const data = particle.gestureData.stretch;
             const config = motion.config || {};
             const strength = motion.strength || 1.0;
 
             // Calculate scale factors
             let scaleX = config.scaleX || 1.3;
             let scaleY = config.scaleY || 0.9;
-            // const scaleZ = 1.0; // No Z-axis stretching by default
 
             // Apply area preservation if enabled
             if (config.preserveArea && scaleX !== 1 && scaleY !== 1) {

@@ -127,7 +127,6 @@ vec3 selectedNormal = normal * modelMatch;
 export const MODEL_SELECTION_FRAGMENT = /* glsl */ `
 // Discard fragments from non-selected models
 // Note: This is less efficient than vertex-level culling
-// if (abs(aModelIndex - aSelectedModel) > 0.5) discard;
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════

@@ -21,6 +21,8 @@
 import { getGesture, isBlendingGesture, isOverrideGesture } from './index.js';
 import rhythmIntegration from '../audio/rhythmIntegration.js';
 
+let _deprecationWarned_getAvailableGestures = false;
+
 /**
  * Apply gesture motion to a particle using the modular system
  * This is a drop-in replacement for the old applyGestureMotion function
@@ -119,6 +121,10 @@ export function isGestureBlending(gestureType) {
  * @deprecated Use EmotionalStateQueryManager.getAvailableGestures() instead
  */
 export async function getAvailableGestures() {
+    if (!_deprecationWarned_getAvailableGestures) {
+        _deprecationWarned_getAvailableGestures = true;
+        console.warn('[GestureMotion] getAvailableGestures() is deprecated. Use EmotionalStateQueryManager.getAvailableGestures() instead.');
+    }
     try {
         const module = await import('./index.js');
         return module.listGestures().map(g => g.name);
