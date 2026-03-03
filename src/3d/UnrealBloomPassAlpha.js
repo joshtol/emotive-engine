@@ -329,7 +329,7 @@ export class UnrealBloomPassAlpha extends Pass {
             this.renderTargetsHorizontal[i].setSize(resx, resy);
             this.renderTargetsVertical[i].setSize(resx, resy);
 
-            this.separableBlurMaterials[i].uniforms['texSize'].value = new Vector2(resx, resy);
+            this.separableBlurMaterials[i].uniforms['texSize'].value.set(resx, resy);
 
             resx = Math.round(resx / 2);
             resy = Math.round(resy / 2);

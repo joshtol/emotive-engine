@@ -35,6 +35,9 @@ export class GestureBlender {
         // Key: animation id, Value: true if already triggered
         this._crackTriggeredAnimations = new Set();
 
+        // Reusable Set for active animation ID tracking (avoids per-frame allocation)
+        this._activeAnimIds = new Set();
+
         // Pre-allocated accumulator object (reset each frame instead of recreating)
         // This eliminates per-frame object allocation for ~30+ properties
         this._accumulated = {
@@ -645,7 +648,9 @@ export class GestureBlender {
         ];
 
         // Clean up old crack trigger tracking (remove animations that are no longer active)
-        const activeAnimIds = new Set(animations.map(a => a.startTime));
+        this._activeAnimIds.clear();
+        for (const a of animations) this._activeAnimIds.add(a.startTime);
+        const activeAnimIds = this._activeAnimIds;
         for (const animId of this._crackTriggeredAnimations) {
             if (!activeAnimIds.has(animId)) {
                 this._crackTriggeredAnimations.delete(animId);
@@ -757,6 +762,7 @@ export class GestureBlender {
         this.accumulatedRotationQuat = null;
         this.finalQuaternion = null;
         this.prevRotation = null;
+        this._activeAnimIds = null;
     }
 }
 

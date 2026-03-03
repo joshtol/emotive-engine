@@ -337,6 +337,24 @@ export class EmotiveMascot3D {
     /** Set groove configuration for idle animations */
     setGrooveConfig(config: GrooveConfig): void;
 
+    /** Set groove confidence (controls groove animation intensity, 0-1) */
+    setGrooveConfidence(confidence: number): void;
+
+    /** Get current groove confidence (0-1) */
+    getGrooveConfidence(): number;
+
+    /** Set BPM multiplier for groove animation speed control (0.25-4.0, default 1.0) */
+    setBPMMultiplier(multiplier: number): void;
+
+    /** Get current BPM multiplier (default 1.0) */
+    getBPMMultiplier(): number;
+
+    /** Get available groove preset names */
+    getGroovePresets(): string[];
+
+    /** Get current groove preset name */
+    getCurrentGroove(): string;
+
     /** Check if rhythm is currently playing */
     isRhythmPlaying(): boolean;
 
@@ -364,6 +382,41 @@ export class EmotiveMascot3D {
 
     /** Disconnect audio and stop audio-reactive animations */
     disconnectAudio(): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // DANCE CHOREOGRAPHER
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Enable automatic dance choreography */
+    enableDance(): void;
+
+    /** Disable automatic dance choreography */
+    disableDance(): void;
+
+    /** Check if dance choreography is enabled */
+    isDanceEnabled(): boolean;
+
+    /** Set dance intensity (affects gesture frequency and amplitude, 0-1) */
+    setDanceIntensity(intensity: number): void;
+
+    /** Get current dance intensity (0-1) */
+    getDanceIntensity(): number;
+
+    /** Get dance choreographer status for debugging */
+    getDanceStatus(): DanceStatus;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BPM DETECTION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Get BPM detection status */
+    getBPMStatus(): BPMStatus;
+
+    /** Get BPM debug log for clipboard copy */
+    getBPMDebugLog(): string;
+
+    /** Reset BPM detection to start fresh */
+    resetBPMDetection(seedBPM?: number | null): void;
 
     // ─────────────────────────────────────────────────────────────────────────
     // CORE GLOW
@@ -463,6 +516,12 @@ export class EmotiveMascot3D {
     /** Get list of available geometries */
     getAvailableGeometries(): string[];
 
+    /** Pre-warm gesture factories and optionally element models */
+    warmUpGestures(config?: WarmUpGesturesConfig): void;
+
+    /** Get gesture categories mapping (for UI generation) */
+    getGestureCategories(): Record<string, string[]>;
+
     /** Set groove preset */
     setGroove(preset: string, options?: { bars?: number; duration?: number }): EmotiveMascot3D;
 
@@ -483,6 +542,87 @@ export class EmotiveMascot3D {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ADDITIONAL TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
+
+export interface WarmUpGesturesConfig {
+    /** Called with gesture name/category objects per batch */
+    onBatch?: (names: string[]) => void;
+    /** Called when all names are yielded (DOM ready) */
+    onComplete?: () => void;
+    /** Called when all lazy factories are pre-warmed */
+    onFactoriesReady?: () => void;
+    /** Whether to pre-warm factories in background (default: true) */
+    prewarmFactories?: boolean;
+    /** Whether to pre-warm element model GLBs (default: false) */
+    prewarmModels?: boolean;
+    /** Called when all element models are pre-loaded */
+    onModelsReady?: () => void;
+}
+
+export interface DanceStatus {
+    /** Whether dance choreography is enabled */
+    enabled: boolean;
+    /** Current dance intensity (0-1) */
+    intensity: number;
+    /** Current groove preset name */
+    currentGroove: string | null;
+    /** Label for current geometry target */
+    currentTarget: string | null;
+    /** Label for base geometry target */
+    baseTarget: string | null;
+    /** Current emotion name */
+    currentEmotion: string | null;
+    /** Base emotion name */
+    baseEmotion: string | null;
+    /** Number of bars elapsed */
+    barCount: number;
+    /** Smoothed average bass energy */
+    avgBass: string;
+    /** Smoothed average vocal energy */
+    avgVocal: string;
+    /** Time since last gesture trigger */
+    lastGestureAgo: string;
+    /** Time since last glow change */
+    lastGlowAgo: string;
+    /** Bar index of last morph */
+    lastMorphBar: number;
+    /** Bars elapsed since last morph */
+    barsSinceLastMorph: number;
+    /** Bar index of last emotion change */
+    lastEmotionBar: number;
+    /** Bars elapsed since last emotion change */
+    barsSinceLastEmotion: number;
+    /** Whether a glow change can be triggered now */
+    canGlow: boolean;
+}
+
+export interface BPMStatus {
+    /** Current detected BPM */
+    bpm: number;
+    /** Subdivision level */
+    subdivision: number;
+    /** Detection confidence (0-1) */
+    confidence: number;
+    /** Whether BPM is locked (Stage 1+) */
+    locked: boolean;
+    /** Lock stage (0=detecting, 1=initial, 2=refining, 3=final) */
+    lockStage: number;
+    /** Correction type applied */
+    correctionType: 'none' | 'halved' | 'doubled';
+    /** True when fully locked and memory cleaned */
+    finalized: boolean;
+    /** Animation intensity scalar (0.15-1.0) */
+    grooveConfidence: number;
+    /** Number of BPM candidates in histogram */
+    agentCount: number;
+    /** Total peaks detected */
+    peakCount: number;
+    /** Histogram size */
+    histogramSize: number;
+    /** Top 5 BPM candidates with scores */
+    topAgents: Array<{ bpm: number; score: number }>;
+    /** Number of intervals in buffer */
+    intervalCount: number;
+}
 
 export type RhythmPattern = 'straight' | 'swing' | 'waltz' | 'dubstep' | 'breakbeat' | string;
 

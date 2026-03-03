@@ -279,14 +279,14 @@ class Particle {
     }
 
     /**
-     * DEPRECATED - Undertones no longer affect particle motion
-     * Kept for compatibility but does nothing
-     * @param {number} _dt - Normalized delta time (unused but kept for API compatibility)
-     * @param {Object} _modifier - Undertone modifier settings (unused but kept for API compatibility)
+     * No-op stub — undertone modifiers affect color saturation (via EmotionalStateManager),
+     * not particle motion. This method is retained for interface compatibility but is
+     * never called in the current codebase.
+     * @param {number} _dt - Normalized delta time (unused)
+     * @param {Object} _modifier - Undertone modifier settings (unused)
      */
     applyUndertoneModifier(_dt, _modifier) {
-        // Undertones no longer affect particles
-        // They only affect color saturation and core behaviors
+        // intentional no-op: particle motion is unaffected by undertones
     }
 
     /**

@@ -85,14 +85,14 @@ class ModuleLoader {
                     }
 
                     registry[mod.name] = mod;
-                } catch {
-                    // Failed to load module
+                } catch (e) {
+                    console.warn(`[ModuleLoader] Failed to load module from glob:`, e);
                 }
             }
 
             return registry;
-        } catch {
-            // Failed to load modules matching pattern
+        } catch (e) {
+            console.warn(`[ModuleLoader] Failed to load modules matching pattern:`, e);
             return registry;
         }
     }
@@ -119,8 +119,8 @@ class ModuleLoader {
                 }
 
                 registry[mod.name] = mod;
-            } catch {
-                // Failed to load module
+            } catch (e) {
+                console.warn(`[ModuleLoader] Failed to load manual module:`, e);
             }
         }
 

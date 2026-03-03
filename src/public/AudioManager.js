@@ -110,8 +110,8 @@ export class AudioManager {
             audio.addEventListener('loadedmetadata', () => {
                 this._audioDuration = audio.duration * 1000; // Convert to ms
                 resolve();
-            });
-            audio.addEventListener('error', reject);
+            }, { once: true });
+            audio.addEventListener('error', reject, { once: true });
             audio.load();
         });
 

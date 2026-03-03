@@ -80,6 +80,7 @@ export class EmotionCache {
         } catch (error) {
             console.error('[EmotionCache] Initialization failed:', error);
             this.isInitialized = false;
+            console.warn('[EmotionCache] Running uninitialized — lookups will return defaults');
         }
     }
 

@@ -362,13 +362,13 @@ export class FeatureFlags {
     loadFromStorage() {
         if (!this.config.enableCache) return;
 
+        const storage = this.getStorage();
+        if (!storage) return;
+
+        const stored = storage.getItem(this.config.storageKey);
+        if (!stored) return;
+
         try {
-            const storage = this.getStorage();
-            if (!storage) return;
-
-            const stored = storage.getItem(this.config.storageKey);
-            if (!stored) return;
-
             const data = JSON.parse(stored);
 
             // Check if data is stale (older than refresh interval)
@@ -378,7 +378,13 @@ export class FeatureFlags {
 
             this.updateFlags(data.flags);
         } catch (error) {
-            console.error('Failed to load feature flags from storage:', error);
+            console.warn('Failed to load feature flags from storage, removing corrupted key:', error);
+            try {
+                storage.removeItem(this.config.storageKey);
+            } catch {
+                // Storage removal failed — ignore
+            }
+            
         }
     }
 

@@ -869,7 +869,13 @@ export class Rhythm3DAdapter {
      * @param {Object} config - Groove settings
      */
     setGrooveConfig(config) {
-        Object.assign(this.config, config);
+        if (config && typeof config === 'object') {
+            for (const key of Object.keys(config)) {
+                if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+                    this.config[key] = config[key];
+                }
+            }
+        }
     }
 
     /**

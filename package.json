@@ -28,8 +28,10 @@
       "require": "./dist/emotive-mascot.minimal.umd.js"
     },
     "./lean": {
-      "default": "./dist/emotive-mascot.lean.umd.js",
-      "require": "./dist/emotive-mascot.lean.umd.js"
+      "types": "./types/lean.d.ts",
+      "import": "./dist/emotive-mascot.lean.umd.js",
+      "require": "./dist/emotive-mascot.lean.umd.js",
+      "default": "./dist/emotive-mascot.lean.umd.js"
     },
     "./package.json": "./package.json"
   },

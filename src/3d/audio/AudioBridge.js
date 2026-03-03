@@ -50,6 +50,7 @@ export class AudioBridge {
         this._detectedBPM = 0;
         this._bpmConfidence = 0;
         this._bpmLocked = false;
+        this._pendingTimeouts = new Set();
     }
 
     /**
@@ -107,15 +108,15 @@ export class AudioBridge {
         if (this._connectedAudioElement === audioElement && this._audioSourceNode) {
             try {
                 this._audioSourceNode.connect(this._analyzerNode);
-            } catch {
-                // Already connected, ignore
+            } catch (e) {
+                // Already connected — expected
             }
         } else {
             if (this._audioSourceNode) {
                 try {
                     this._audioSourceNode.disconnect();
-                } catch {
-                    // Ignore if already disconnected
+                } catch (e) {
+                    // Already disconnected — expected
                 }
             }
 
@@ -216,8 +217,8 @@ export class AudioBridge {
         if (this._audioSourceNode) {
             try {
                 this._audioSourceNode.disconnect();
-            } catch {
-                // Ignore
+            } catch (e) {
+                // Already disconnected — expected
             }
         }
 
@@ -343,7 +344,8 @@ export class AudioBridge {
             this._startBPMDetection();
 
             // Validate after short delay - analyzer either works immediately or not at all
-            setTimeout(() => {
+            const validationId = setTimeout(() => {
+                this._pendingTimeouts.delete(validationId);
                 const isWorking = this._validateAnalyzerWorking();
 
                 if (isWorking) {
@@ -360,13 +362,15 @@ export class AudioBridge {
                     this._rebuildBufferAnalysis();
 
                     // Retry after rebuild
-                    setTimeout(attemptStart, 100);
+                    const retryId = setTimeout(() => { this._pendingTimeouts.delete(retryId); attemptStart(); }, 100);
+                    this._pendingTimeouts.add(retryId);
                 } else {
                     console.error(
                         '[BPM] Analyzer validation FAILED after max retries - detection may not work'
                     );
                 }
             }, 300); // Check after 300ms - enough time to see data if working
+            this._pendingTimeouts.add(validationId);
         };
 
         attemptStart();
@@ -613,8 +617,8 @@ export class AudioBridge {
         if (this._analysisGainNode) {
             try {
                 this._analysisGainNode.disconnect();
-            } catch {
-                // Already disconnected, ignore
+            } catch (e) {
+                // Already disconnected — expected
             }
             this._analysisGainNode = null;
         }
@@ -690,8 +694,8 @@ export class AudioBridge {
             try {
                 this._analysisSourceNode.stop();
                 this._analysisSourceNode.disconnect();
-            } catch {
-                // Already stopped
+            } catch (e) {
+                // Already stopped — expected
             }
             this._analysisSourceNode = null;
         }
@@ -701,8 +705,8 @@ export class AudioBridge {
         if (this._bufferAnalyzerNode) {
             try {
                 this._bufferAnalyzerNode.disconnect();
-            } catch {
-                // Already disconnected
+            } catch (e) {
+                // Already disconnected — expected
             }
             // Null it out to force recreation on next track
             // This ensures completely fresh analyzer state
@@ -715,8 +719,8 @@ export class AudioBridge {
                 this._analysisGainNode.disconnect();
                 // Reconnect to destination (it's the final node in chain)
                 this._analysisGainNode.connect(this._audioContext.destination);
-            } catch {
-                // Ignore
+            } catch (e) {
+                // Reconnection failed — expected during teardown
             }
         }
     }
@@ -727,12 +731,18 @@ export class AudioBridge {
     destroy() {
         this.disconnectAudio();
 
+        // Clear pending retry timeouts
+        if (this._pendingTimeouts) {
+            for (const id of this._pendingTimeouts) clearTimeout(id);
+            this._pendingTimeouts.clear();
+        }
+
         // Close audio context
         if (this._audioContext) {
             try {
                 this._audioContext.close();
-            } catch {
-                // Ignore
+            } catch (e) {
+                // Context already closed — expected
             }
             this._audioContext = null;
         }

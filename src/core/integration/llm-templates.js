@@ -334,7 +334,12 @@ const response = await anthropic.messages.create({
   messages: [{ role: 'user', content: userMessage }]
 });
 
-const llmResponse = JSON.parse(response.content[0].text);
+let llmResponse;
+try {
+  llmResponse = JSON.parse(response?.content?.[0]?.text);
+} catch {
+  llmResponse = { error: 'Failed to parse LLM response' };
+}
 await mascot.handleLLMResponse(llmResponse);
     `.trim(),
 };
@@ -374,7 +379,12 @@ const response = await openai.chat.completions.create({
   ]
 });
 
-const llmResponse = JSON.parse(response.choices[0].message.content);
+let llmResponse;
+try {
+  llmResponse = JSON.parse(response?.choices?.[0]?.message?.content);
+} catch {
+  llmResponse = { error: 'Failed to parse LLM response' };
+}
 await mascot.handleLLMResponse(llmResponse);
     `.trim(),
 };
@@ -408,7 +418,12 @@ const result = await model.generateContent([
   userMessage
 ]);
 
-const llmResponse = JSON.parse(result.response.text());
+let llmResponse;
+try {
+  llmResponse = JSON.parse(result?.response?.text());
+} catch {
+  llmResponse = { error: 'Failed to parse LLM response' };
+}
 await mascot.handleLLMResponse(llmResponse);
     `.trim(),
 };

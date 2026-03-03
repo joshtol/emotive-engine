@@ -73,6 +73,7 @@ export class ShapeCache {
         } catch (error) {
             console.error('[ShapeCache] Initialization failed:', error);
             this.isInitialized = false;
+            console.warn('[ShapeCache] Running uninitialized — lookups will return defaults');
         }
     }
 

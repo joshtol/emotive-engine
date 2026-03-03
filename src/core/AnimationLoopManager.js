@@ -50,7 +50,9 @@ export class AnimationLoopManager {
 
         // Performance monitoring
         this.performanceMonitor = null;
-        this.frameTimeHistory = [];
+        this.frameTimeHistory = new Array(60).fill(0);
+        this._historyIndex = 0;
+        this._historyCount = 0;
         this.maxHistorySize = 60;
 
         // Bind methods
@@ -156,11 +158,10 @@ export class AnimationLoopManager {
             this.fps = Math.round(1000 / (this.deltaTime || 16.67));
         }
 
-        // Track frame time
-        this.frameTimeHistory.push(this.deltaTime);
-        if (this.frameTimeHistory.length > this.maxHistorySize) {
-            this.frameTimeHistory.shift();
-        }
+        // Track frame time (circular buffer — avoids Array.shift() O(n) copy)
+        this.frameTimeHistory[this._historyIndex] = this.deltaTime;
+        this._historyIndex = (this._historyIndex + 1) % this.maxHistorySize;
+        if (this._historyCount < this.maxHistorySize) this._historyCount++;
 
         // Group callbacks by priority
         const callbacksByPriority = this.groupCallbacksByPriority();
@@ -299,15 +300,16 @@ export class AnimationLoopManager {
             minFrameTime: Infinity,
         };
 
-        // Calculate frame time stats
-        if (this.frameTimeHistory.length > 0) {
+        // Calculate frame time stats (circular buffer — iterate only valid entries)
+        if (this._historyCount > 0) {
             let total = 0;
-            for (const time of this.frameTimeHistory) {
+            for (let i = 0; i < this._historyCount; i++) {
+                const time = this.frameTimeHistory[i];
                 total += time;
                 stats.maxFrameTime = Math.max(stats.maxFrameTime, time);
                 stats.minFrameTime = Math.min(stats.minFrameTime, time);
             }
-            stats.averageFrameTime = total / this.frameTimeHistory.length;
+            stats.averageFrameTime = total / this._historyCount;
         }
 
         // Get callback stats by priority
@@ -353,7 +355,9 @@ export class AnimationLoopManager {
     destroy() {
         this.stop();
         this.callbacks.clear();
-        this.frameTimeHistory = [];
+        this.frameTimeHistory.fill(0);
+        this._historyIndex = 0;
+        this._historyCount = 0;
     }
 }
 

@@ -115,14 +115,15 @@ export class AudioAnalyzer {
             // Start analysis loop
             this.analyze();
         } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
             // If already connected, just restart analysis
-            if (error.message && error.message.includes('already been used')) {
+            if (msg.includes('already been used')) {
                 this.source = this.elementSource; // Use existing source
                 this.connectedElement = audioElement;
                 this.isAnalyzing = true;
                 this.analyze();
             } else {
-                // Audio context not available
+                console.warn('[AudioAnalyzer] Unexpected error during connect:', msg);
             }
         }
     }
@@ -274,8 +275,8 @@ export class AudioAnalyzer {
         if (this.gainNode) {
             try {
                 this.gainNode.disconnect();
-            } catch {
-                // Ignore disconnect errors
+            } catch (e) {
+                // Already disconnected — expected
             }
             this.gainNode = null;
         }
@@ -284,8 +285,8 @@ export class AudioAnalyzer {
         if (this.elementSource && this.connectedElement) {
             try {
                 this.elementSource.connect(this.analyser);
-            } catch {
-                // Already connected, that's fine
+            } catch (e) {
+                // Already connected — expected
             }
             this.source = this.elementSource;
         }

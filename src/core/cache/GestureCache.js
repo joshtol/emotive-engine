@@ -86,6 +86,7 @@ export class GestureCache {
         } catch (error) {
             console.error('GestureCache initialization failed:', error);
             this.isInitialized = false;
+            console.warn('[GestureCache] Running uninitialized — lookups will return defaults');
         }
     }
 

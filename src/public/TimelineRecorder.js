@@ -198,7 +198,13 @@ export class TimelineRecorder {
      * timelineRecorder.importTimeline(json);
      */
     importTimeline(json) {
-        const data = JSON.parse(json);
+        let data;
+        try {
+            data = JSON.parse(json);
+        } catch {
+            console.warn('TimelineRecorder: Failed to parse timeline JSON');
+            return;
+        }
         this._state.timeline.length = 0;
         this._state.timeline.push(...(data.events || []));
         this._audioManager.setAudioDuration(data.duration || 0);

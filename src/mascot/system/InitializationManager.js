@@ -430,6 +430,7 @@ export class InitializationManager {
             });
         } catch (error) {
             console.error('AnimationController initialization failed:', error);
+            console.warn('[InitializationManager] Running with fallback AnimationController — some features may be limited');
             // Fallback: create minimal animation controller interface
             this.mascot.animationController = this.createFallbackAnimationController(
                 config.targetFPS

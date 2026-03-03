@@ -201,6 +201,14 @@ export class SequenceExecutor {
             }
         } catch (error) {
             console.error('[SequenceExecutor] Error executing step:', step, error);
+            if (this.eventManager) {
+                this.eventManager.emit('stepError', {
+                    action,
+                    value,
+                    error,
+                    timestamp: Date.now(),
+                });
+            }
         }
     }
 

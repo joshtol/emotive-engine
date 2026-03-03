@@ -273,6 +273,18 @@ class EmotiveMascotPublic {
             set() {
                 return false; // Prevent any modifications
             },
+            deleteProperty() {
+                return false;
+            },
+            defineProperty() {
+                return false;
+            },
+            getPrototypeOf() {
+                return null;
+            },
+            setPrototypeOf() {
+                return false;
+            },
             has(target, prop) {
                 // Hide internal properties from 'in' operator
                 const blockedProps = ['soundSystem', 'stateMachine', 'emotionLibrary'];

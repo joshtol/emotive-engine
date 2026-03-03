@@ -23,7 +23,7 @@ import { GeometryMorpher } from './utils/GeometryMorpher.js';
 // are now managed by BehaviorController
 import { updateSunMaterial, SUN_ROTATION_CONFIG } from './geometries/Sun.js';
 import { getEmotion } from '../core/emotions/index.js';
-// getGesture - available but currently unused (gestures handled by GestureBlender)
+// getGesture - not imported here; gesture lookup handled by AnimationManager and GestureBlender
 import { getUndertoneModifier } from '../config/undertoneModifiers.js';
 import { hexToRGB, applyUndertoneSaturation } from './utils/ColorUtilities.js';
 import { getGlowIntensityForColor, normalizeRGBLuminance } from '../utils/glowIntensityFilter.js';

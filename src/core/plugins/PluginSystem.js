@@ -767,11 +767,11 @@ export class PluginSystem {
 
     /**
      * Error from plugin context
-     * @param {string} _pluginName - Plugin name (unused but kept for API compatibility)
-     * @param {...*} _args - Error arguments (unused but kept for API compatibility)
+     * @param {string} pluginName - Plugin name
+     * @param {...*} args - Error arguments
      */
-    errorFromPlugin(_pluginName, ..._args) {
-        // Plugin error message
+    errorFromPlugin(pluginName, ...args) {
+        console.warn(`[PluginSystem] ${pluginName}:`, ...args);
     }
 
     /**
