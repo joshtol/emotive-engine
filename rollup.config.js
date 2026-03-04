@@ -180,6 +180,12 @@ builds.push({
     input: 'src/lean.js',
     output: [
         {
+            file: 'dist/emotive-mascot.lean.js',
+            format: 'es',
+            sourcemap: true,
+            banner: `/*! Emotive Engine Lean v${process.env.npm_package_version || '3.4.0'} | MIT License */`
+        },
+        {
             file: 'dist/emotive-mascot.lean.umd.js',
             format: 'umd',
             name: 'EmotiveMascotLean',  // Different name for lean build

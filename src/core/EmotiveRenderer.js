@@ -132,7 +132,8 @@ class EmotiveRenderer {
         this.ctx = canvasManager.getContext();
 
         if (!this.ctx) {
-            // Canvas context not available
+            console.warn('EmotiveRenderer: canvas 2D context is null — rendering will be disabled.');
+            this._contextLost = true;
         }
 
         // Gesture compositor for emotion/undertone modulation
@@ -673,6 +674,9 @@ class EmotiveRenderer {
      * Main render method
      */
     render(state, deltaTime, gestureTransform = null) {
+        // Bail out if canvas context was never acquired
+        if (this._contextLost) return;
+
         // Frame initialization: performance markers and cleanup (delegated to RenderPerformanceManager)
         const frameStartTime = this.renderPerformanceManager.initializeFrame();
 

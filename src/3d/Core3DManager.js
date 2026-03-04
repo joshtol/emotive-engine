@@ -380,6 +380,7 @@ export class Core3DManager {
         this.baseScale = 0.16; // Properly sized core relative to particles
         this.scale = 0.16; // Current scale (base + animation)
         this.position = [0, 0, 0];
+        this._nonUniformScaleBuf = [1, 1, 1]; // Pre-allocated buffer for nonUniformScale
 
         // Rhythm engine reference (for BPM sync)
         this.rhythmEngine = options.rhythmEngine || null;
@@ -2003,21 +2004,17 @@ export class Core3DManager {
             const posMult = hasAbsolute ? rhythmMod.positionMultiplier : 1.0;
 
             // 3. Combine: gesture + camera-relative + groove + smoothed boost
-            this.position = [
-                blended.position[0] * posMult + camRelWorldX + grooveOffsetX + posBoost[0],
-                blended.position[1] * posMult + camRelWorldY + grooveOffsetY + posBoost[1],
-                blended.position[2] * posMult + camRelWorldZ + grooveOffsetZ + posBoost[2],
-            ];
+            this.position[0] = blended.position[0] * posMult + camRelWorldX + grooveOffsetX + posBoost[0];
+            this.position[1] = blended.position[1] * posMult + camRelWorldY + grooveOffsetY + posBoost[1];
+            this.position[2] = blended.position[2] * posMult + camRelWorldZ + grooveOffsetZ + posBoost[2];
 
             // ═══════════════════════════════════════════════════════════════════════
             // ROTATION: Groove sway + Absolute gestures + Accent boosts
             // (Camera-relative rotation is applied via cameraRoll in renderer)
             // ═══════════════════════════════════════════════════════════════════════
-            this.rotation = [
-                blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend + rotBoost[0],
-                blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend + rotBoost[1],
-                blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend + rotBoost[2],
-            ];
+            this.rotation[0] = blended.rotation[0] + rhythmMod.grooveRotation[0] * grooveBlend + rotBoost[0];
+            this.rotation[1] = blended.rotation[1] + rhythmMod.grooveRotation[1] * grooveBlend + rotBoost[1];
+            this.rotation[2] = blended.rotation[2] + rhythmMod.grooveRotation[2] * grooveBlend + rotBoost[2];
 
             // ═══════════════════════════════════════════════════════════════════════
             // SCALE: Groove pulse × Absolute gestures × Accent boost (smoothed)
@@ -2030,35 +2027,29 @@ export class Core3DManager {
             // Non-uniform scale (squash/stretch) - apply rhythm multipliers
             if (blended.nonUniformScale) {
                 const totalMult = grooveScaleEffect * scaleMult * scaleBoost;
-                this.nonUniformScale = [
-                    blended.nonUniformScale[0] * totalMult,
-                    blended.nonUniformScale[1] * totalMult,
-                    blended.nonUniformScale[2] * totalMult,
-                ];
+                this._nonUniformScaleBuf[0] = blended.nonUniformScale[0] * totalMult;
+                this._nonUniformScaleBuf[1] = blended.nonUniformScale[1] * totalMult;
+                this._nonUniformScaleBuf[2] = blended.nonUniformScale[2] * totalMult;
+                this.nonUniformScale = this._nonUniformScaleBuf;
             } else {
                 this.nonUniformScale = null;
             }
         } else {
             // No rhythm - apply gestures + camera-relative with smoothed boosts
             // (Camera-relative rotation is applied via cameraRoll in renderer)
-            this.position = [
-                blended.position[0] + camRelWorldX + posBoost[0],
-                blended.position[1] + camRelWorldY + posBoost[1],
-                blended.position[2] + camRelWorldZ + posBoost[2],
-            ];
-            this.rotation = [
-                blended.rotation[0] + rotBoost[0],
-                blended.rotation[1] + rotBoost[1],
-                blended.rotation[2] + rotBoost[2],
-            ];
+            this.position[0] = blended.position[0] + camRelWorldX + posBoost[0];
+            this.position[1] = blended.position[1] + camRelWorldY + posBoost[1];
+            this.position[2] = blended.position[2] + camRelWorldZ + posBoost[2];
+            this.rotation[0] = blended.rotation[0] + rotBoost[0];
+            this.rotation[1] = blended.rotation[1] + rotBoost[1];
+            this.rotation[2] = blended.rotation[2] + rotBoost[2];
             this.scale = blended.scale * scaleBoost;
             // Non-uniform scale (squash/stretch) - apply scale boost
             if (blended.nonUniformScale) {
-                this.nonUniformScale = [
-                    blended.nonUniformScale[0] * scaleBoost,
-                    blended.nonUniformScale[1] * scaleBoost,
-                    blended.nonUniformScale[2] * scaleBoost,
-                ];
+                this._nonUniformScaleBuf[0] = blended.nonUniformScale[0] * scaleBoost;
+                this._nonUniformScaleBuf[1] = blended.nonUniformScale[1] * scaleBoost;
+                this._nonUniformScaleBuf[2] = blended.nonUniformScale[2] * scaleBoost;
+                this.nonUniformScale = this._nonUniformScaleBuf;
             } else {
                 this.nonUniformScale = null;
             }
@@ -4275,10 +4266,6 @@ export class Core3DManager {
         this.gestureBlender.destroy?.();
         this.geometryMorpher.destroy?.();
         this.blinkAnimator.destroy?.();
-
-        // Clean up behavior controller (disposes all behavior objects)
-        this.behaviorController.dispose();
-        this.behaviorController = null;
 
         // Clean up temp THREE.js objects
         this.tempEuler = null;

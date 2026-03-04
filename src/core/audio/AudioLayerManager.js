@@ -29,15 +29,29 @@ export class AudioLayerManager {
      */
     async addLayer(name, config) {
         let buffer;
-        if (config.src instanceof ArrayBuffer) {
-            buffer = await this._ctx.decodeAudioData(config.src);
-        } else if (config.src instanceof Blob) {
-            const arrayBuf = await config.src.arrayBuffer();
-            buffer = await this._ctx.decodeAudioData(arrayBuf);
-        } else if (typeof config.src === 'string') {
-            const response = await fetch(config.src);
-            const arrayBuf = await response.arrayBuffer();
-            buffer = await this._ctx.decodeAudioData(arrayBuf);
+        try {
+            if (config.src instanceof ArrayBuffer) {
+                buffer = await this._ctx.decodeAudioData(config.src);
+            } else if (config.src instanceof Blob) {
+                const arrayBuf = await config.src.arrayBuffer();
+                buffer = await this._ctx.decodeAudioData(arrayBuf);
+            } else if (typeof config.src === 'string') {
+                const response = await fetch(config.src);
+                if (!response.ok) {
+                    console.warn(`AudioLayerManager: failed to fetch layer "${name}" from "${config.src}" — HTTP ${response.status}`);
+                    return;
+                }
+                const arrayBuf = await response.arrayBuffer();
+                buffer = await this._ctx.decodeAudioData(arrayBuf);
+            }
+        } catch (err) {
+            console.warn(`AudioLayerManager: failed to load layer "${name}" —`, err.message || err);
+            return;
+        }
+
+        if (!buffer) {
+            console.warn(`AudioLayerManager: no audio buffer produced for layer "${name}" — skipping.`);
+            return;
         }
 
         const gainNode = this._ctx.createGain();

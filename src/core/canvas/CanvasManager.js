@@ -51,6 +51,10 @@ class CanvasManager {
             desynchronized: true, // Better performance for animations
             willReadFrequently: false, // We're not reading pixels
         });
+        if (!this.ctx) {
+            console.warn('CanvasManager: getContext("2d") returned null — canvas may be unavailable or context already acquired.');
+            this._contextLost = true;
+        }
         this.dpr = window.devicePixelRatio || 1;
         this.width = 0;
         this.height = 0;
@@ -75,6 +79,9 @@ class CanvasManager {
      * Handles canvas resizing with proper high-DPI support
      */
     resize() {
+        // Bail out if 2D context was never acquired
+        if (this._contextLost) return;
+
         // Check if render size is explicitly set
         if (this.renderSize && this.renderSize.width && this.renderSize.height) {
             // Use exact render dimensions
@@ -199,6 +206,7 @@ class CanvasManager {
      * Clears the entire canvas
      */
     clear() {
+        if (this._contextLost) return;
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
 
@@ -221,6 +229,7 @@ class CanvasManager {
      * @param {number} rotation - Rotation in radians
      */
     setTransform(x = 0, y = 0, scale = 1, rotation = 0) {
+        if (this._contextLost) return;
         this.ctx.save();
         this.ctx.translate(x, y);
         this.ctx.rotate(rotation);
@@ -231,6 +240,7 @@ class CanvasManager {
      * Restores the previous transform state
      */
     restoreTransform() {
+        if (this._contextLost) return;
         this.ctx.restore();
     }
 

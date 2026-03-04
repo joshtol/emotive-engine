@@ -10,9 +10,16 @@
 const _regexpCache = new Map();
 const REGEXP_CACHE_LIMIT = 100;
 
+// Reject patterns with nested quantifiers that can cause exponential backtracking (ReDoS)
+const REDOS_PATTERN = /([+*]|\{[0-9]+,\})\s*[)]\s*[+*?]|\([^)]*[+*][^)]*\)\s*[+*]/;
+
 function getCachedRegExp(pattern) {
     const cached = _regexpCache.get(pattern);
     if (cached) return cached;
+
+    if (REDOS_PATTERN.test(pattern)) {
+        return null;
+    }
 
     const re = new RegExp(pattern);
     if (_regexpCache.size >= REGEXP_CACHE_LIMIT) {
@@ -287,7 +294,9 @@ export class FeatureFlags {
             case 'matches':
                 try {
                     if (typeof value === 'string' && value.length > 200) return false;
-                    return getCachedRegExp(value).test(String(attrValue));
+                    const re = getCachedRegExp(value);
+                    if (!re) return false;
+                    return re.test(String(attrValue));
                 } catch { return false; }
             default:
                 return false;

@@ -1428,8 +1428,15 @@ class EmotiveMascotPublic {
      * @returns {EmotiveMascotPublic} This instance for chaining
      */
     registerAmbientPreset(name, config) {
+        if (name === '__proto__' || name === 'constructor' || name === 'prototype') return this;
         if (!this._ambientPresets) this._ambientPresets = {};
-        this._ambientPresets[name] = { ...config };
+        const safe = {};
+        for (const key of Object.keys(config)) {
+            if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+                safe[key] = config[key];
+            }
+        }
+        this._ambientPresets[name] = safe;
         return this;
     }
 

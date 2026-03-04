@@ -43,8 +43,11 @@
  */
 class SimpleFPSCounter {
     constructor() {
-        // Array to store timestamps from the last second
-        this.timestamps = [];
+        // Circular buffer for timestamps (max 120 frames in 1 second at 120fps)
+        this._maxTimestamps = 120;
+        this._timestamps = new Float64Array(this._maxTimestamps);
+        this._tsWriteIndex = 0;
+        this._tsCount = 0;
 
         // Current FPS value
         this.fps = 0;
@@ -57,9 +60,11 @@ class SimpleFPSCounter {
         this.lastFrameTime = 0;
         this.frameTime = 0;
 
-        // Average frame time over last N frames
-        this.frameTimes = [];
+        // Circular buffer for frame times (last N frames)
         this.maxFrameTimeSamples = 10;
+        this._frameTimes = new Float64Array(this.maxFrameTimeSamples);
+        this._ftWriteIndex = 0;
+        this._ftCount = 0;
         this.averageFrameTime = 0;
     }
 
@@ -69,16 +74,18 @@ class SimpleFPSCounter {
      * @param {number} timestamp - High resolution timestamp from requestAnimationFrame
      */
     update(timestamp) {
-        // Remove timestamps older than 1 second
-        while (this.timestamps.length > 0 && this.timestamps[0] <= timestamp - 1000) {
-            this.timestamps.shift();
+        // Write timestamp into circular buffer
+        this._timestamps[this._tsWriteIndex] = timestamp;
+        this._tsWriteIndex = (this._tsWriteIndex + 1) % this._maxTimestamps;
+        if (this._tsCount < this._maxTimestamps) this._tsCount++;
+
+        // Count timestamps within last 1000ms
+        const cutoff = timestamp - 1000;
+        let count = 0;
+        for (let i = 0; i < this._tsCount; i++) {
+            if (this._timestamps[i] > cutoff) count++;
         }
-
-        // Add current timestamp
-        this.timestamps.push(timestamp);
-
-        // FPS is the number of frames in the last second
-        this.fps = this.timestamps.length;
+        this.fps = count;
 
         // Apply smoothing to reduce display jitter
         if (this.smoothedFPS === 0) {
@@ -92,16 +99,18 @@ class SimpleFPSCounter {
         if (this.lastFrameTime > 0) {
             this.frameTime = timestamp - this.lastFrameTime;
 
-            // Track frame times for averaging
-            this.frameTimes.push(this.frameTime);
-            if (this.frameTimes.length > this.maxFrameTimeSamples) {
-                this.frameTimes.shift();
-            }
+            // Track frame times in circular buffer
+            this._frameTimes[this._ftWriteIndex] = this.frameTime;
+            this._ftWriteIndex = (this._ftWriteIndex + 1) % this.maxFrameTimeSamples;
+            if (this._ftCount < this.maxFrameTimeSamples) this._ftCount++;
 
             // Calculate average frame time
-            if (this.frameTimes.length > 0) {
-                const sum = this.frameTimes.reduce((a, b) => a + b, 0);
-                this.averageFrameTime = sum / this.frameTimes.length;
+            if (this._ftCount > 0) {
+                let sum = 0;
+                for (let i = 0; i < this._ftCount; i++) {
+                    sum += this._frameTimes[i];
+                }
+                this.averageFrameTime = sum / this._ftCount;
             }
         }
         this.lastFrameTime = timestamp;
@@ -143,12 +152,16 @@ class SimpleFPSCounter {
      * Reset the FPS counter
      */
     reset() {
-        this.timestamps = [];
+        this._timestamps.fill(0);
+        this._tsWriteIndex = 0;
+        this._tsCount = 0;
         this.fps = 0;
         this.smoothedFPS = 0;
         this.lastFrameTime = 0;
         this.frameTime = 0;
-        this.frameTimes = [];
+        this._frameTimes.fill(0);
+        this._ftWriteIndex = 0;
+        this._ftCount = 0;
         this.averageFrameTime = 0;
     }
 

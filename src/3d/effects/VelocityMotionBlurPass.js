@@ -245,6 +245,13 @@ export class VelocityMotionBlurPass extends Pass {
 
         // Temporary scene for velocity rendering
         this._velocityScene = new THREE.Scene();
+
+        // Pre-allocated objects for _renderVelocityPass (avoid per-frame allocations)
+        this._savedClearColor = new THREE.Color();
+        this._originalParents = new Map();
+        this._originalMaterials = new Map();
+        this._savedWorldMatrices = new Map();
+        this._matrixPool = [];  // Reusable Matrix4 pool
     }
 
     /** Register an instanced mesh (must have aVelocity attribute). */
@@ -329,9 +336,8 @@ export class VelocityMotionBlurPass extends Pass {
     /** @private Renders instanced meshes with velocity material to velocity buffer. */
     _renderVelocityPass(renderer) {
         const currentRenderTarget = renderer.getRenderTarget();
-        const currentClearColor = new THREE.Color();
         const currentClearAlpha = renderer.getClearAlpha();
-        renderer.getClearColor(currentClearColor);
+        renderer.getClearColor(this._savedClearColor);
         const currentAutoClear = renderer.autoClear;
 
         // Clear velocity target: RG=0.5 (zero velocity), A=0 (no element)
@@ -340,9 +346,15 @@ export class VelocityMotionBlurPass extends Pass {
         renderer.clear();
         renderer.autoClear = false;
 
-        const originalParents = new Map();
-        const originalMaterials = new Map();
-        const savedWorldMatrices = new Map();
+        // Reuse pre-allocated maps (clear, don't re-create)
+        const originalParents = this._originalParents;
+        const originalMaterials = this._originalMaterials;
+        const savedWorldMatrices = this._savedWorldMatrices;
+        originalParents.clear();
+        originalMaterials.clear();
+        savedWorldMatrices.clear();
+
+        let poolIndex = 0;
 
         for (const mesh of this.instancedMeshes) {
             if (!mesh.visible || mesh.count === 0) continue;
@@ -351,7 +363,13 @@ export class VelocityMotionBlurPass extends Pass {
             // inside a container Group at the mascot's position. Reparenting
             // to the flat velocity scene would lose that offset, causing the
             // velocity buffer to mark the wrong screen pixels.
-            savedWorldMatrices.set(mesh, mesh.matrixWorld.clone());
+            // Use pooled Matrix4 instead of clone() to avoid per-frame allocation.
+            if (poolIndex >= this._matrixPool.length) {
+                this._matrixPool.push(new THREE.Matrix4());
+            }
+            const savedMatrix = this._matrixPool[poolIndex++];
+            savedMatrix.copy(mesh.matrixWorld);
+            savedWorldMatrices.set(mesh, savedMatrix);
 
             originalParents.set(mesh, mesh.parent);
             originalMaterials.set(mesh, mesh.material);
@@ -361,7 +379,7 @@ export class VelocityMotionBlurPass extends Pass {
             // Force the saved world matrix — prevents renderer.render() from
             // recomputing it relative to the velocity scene's identity root.
             mesh.matrixWorldAutoUpdate = false;
-            mesh.matrixWorld.copy(savedWorldMatrices.get(mesh));
+            mesh.matrixWorld.copy(savedMatrix);
         }
 
         if (this._velocityScene.children.length > 0) {
@@ -376,7 +394,7 @@ export class VelocityMotionBlurPass extends Pass {
         }
 
         renderer.autoClear = currentAutoClear;
-        renderer.setClearColor(currentClearColor, currentClearAlpha);
+        renderer.setClearColor(this._savedClearColor, currentClearAlpha);
         renderer.setRenderTarget(currentRenderTarget);
     }
 

@@ -122,6 +122,36 @@ export class GestureBlender {
 
         // Pre-allocated arrays for non-uniform scale result
         this._finalNonUniformScale = [1.0, 1.0, 1.0];
+
+        // Pre-allocated overlay objects for reuse (avoids per-frame spread allocation)
+        // Each overlay gets a reusable object that Object.assign copies into
+        this._overlayPool = {
+            electricOverlay: {},
+            waterOverlay: {},
+            fireOverlay: {},
+            smokeOverlay: {},
+            voidOverlay: {},
+            iceOverlay: {},
+            lightOverlay: {},
+            poisonOverlay: {},
+            earthOverlay: {},
+            natureOverlay: {},
+            deformation: {},
+            shatter: {},
+            crack: {},
+        };
+    }
+
+    /**
+     * Copy properties from source into a pre-allocated pooled object.
+     * Reuses the same object each frame to avoid spread allocation.
+     * @param {string} key - Pool key (e.g. 'electricOverlay')
+     * @param {Object} source - Source object to copy from
+     * @returns {Object} The pooled object with copied properties
+     * @private
+     */
+    _copyToPool(key, source) {
+        return Object.assign(this._overlayPool[key], source);
     }
 
     /**
@@ -308,7 +338,7 @@ export class GestureBlender {
                             !accumulated.electricOverlay ||
                             output.electricOverlay.charge > accumulated.electricOverlay.charge
                         ) {
-                            accumulated.electricOverlay = { ...output.electricOverlay };
+                            accumulated.electricOverlay = this._copyToPool('electricOverlay', output.electricOverlay);
                         }
                     }
 
@@ -319,7 +349,7 @@ export class GestureBlender {
                             !accumulated.waterOverlay ||
                             output.waterOverlay.wetness > accumulated.waterOverlay.wetness
                         ) {
-                            accumulated.waterOverlay = { ...output.waterOverlay };
+                            accumulated.waterOverlay = this._copyToPool('waterOverlay', output.waterOverlay);
                         }
                     }
 
@@ -330,7 +360,7 @@ export class GestureBlender {
                             !accumulated.fireOverlay ||
                             output.fireOverlay.heat > accumulated.fireOverlay.heat
                         ) {
-                            accumulated.fireOverlay = { ...output.fireOverlay };
+                            accumulated.fireOverlay = this._copyToPool('fireOverlay', output.fireOverlay);
                         }
                     }
 
@@ -341,7 +371,7 @@ export class GestureBlender {
                             !accumulated.smokeOverlay ||
                             output.smokeOverlay.thickness > accumulated.smokeOverlay.thickness
                         ) {
-                            accumulated.smokeOverlay = { ...output.smokeOverlay };
+                            accumulated.smokeOverlay = this._copyToPool('smokeOverlay', output.smokeOverlay);
                         }
                     }
 
@@ -352,7 +382,7 @@ export class GestureBlender {
                             !accumulated.voidOverlay ||
                             output.voidOverlay.strength > accumulated.voidOverlay.strength
                         ) {
-                            accumulated.voidOverlay = { ...output.voidOverlay };
+                            accumulated.voidOverlay = this._copyToPool('voidOverlay', output.voidOverlay);
                         }
                     }
 
@@ -363,7 +393,7 @@ export class GestureBlender {
                             !accumulated.iceOverlay ||
                             output.iceOverlay.strength > accumulated.iceOverlay.strength
                         ) {
-                            accumulated.iceOverlay = { ...output.iceOverlay };
+                            accumulated.iceOverlay = this._copyToPool('iceOverlay', output.iceOverlay);
                         }
                     }
 
@@ -374,7 +404,7 @@ export class GestureBlender {
                             !accumulated.lightOverlay ||
                             output.lightOverlay.strength > accumulated.lightOverlay.strength
                         ) {
-                            accumulated.lightOverlay = { ...output.lightOverlay };
+                            accumulated.lightOverlay = this._copyToPool('lightOverlay', output.lightOverlay);
                         }
                     }
 
@@ -385,7 +415,7 @@ export class GestureBlender {
                             !accumulated.poisonOverlay ||
                             output.poisonOverlay.strength > accumulated.poisonOverlay.strength
                         ) {
-                            accumulated.poisonOverlay = { ...output.poisonOverlay };
+                            accumulated.poisonOverlay = this._copyToPool('poisonOverlay', output.poisonOverlay);
                         }
                     }
 
@@ -396,7 +426,7 @@ export class GestureBlender {
                             !accumulated.earthOverlay ||
                             output.earthOverlay.strength > accumulated.earthOverlay.strength
                         ) {
-                            accumulated.earthOverlay = { ...output.earthOverlay };
+                            accumulated.earthOverlay = this._copyToPool('earthOverlay', output.earthOverlay);
                         }
                     }
 
@@ -407,7 +437,7 @@ export class GestureBlender {
                             !accumulated.natureOverlay ||
                             output.natureOverlay.strength > accumulated.natureOverlay.strength
                         ) {
-                            accumulated.natureOverlay = { ...output.natureOverlay };
+                            accumulated.natureOverlay = this._copyToPool('natureOverlay', output.natureOverlay);
                         }
                     }
 
@@ -521,7 +551,7 @@ export class GestureBlender {
                             !accumulated.deformation ||
                             d.strength > accumulated.deformation.strength
                         ) {
-                            accumulated.deformation = { ...d };
+                            accumulated.deformation = this._copyToPool('deformation', d);
                         }
                     }
 
@@ -534,12 +564,13 @@ export class GestureBlender {
                     // Also pass through reassemble triggers separately.
                     if (output.shatter) {
                         if (output.shatter.enabled && !accumulated.shatter) {
-                            accumulated.shatter = { ...output.shatter };
+                            accumulated.shatter = this._copyToPool('shatter', output.shatter);
                         }
                         // Pass through reassembly trigger even when shatter.enabled is false
                         if (output.shatter.reassemble) {
                             if (!accumulated.shatter) {
-                                accumulated.shatter = { enabled: false };
+                                this._overlayPool.shatter.enabled = false;
+                                accumulated.shatter = this._overlayPool.shatter;
                             }
                             accumulated.shatter.reassemble = true;
                             accumulated.shatter.reassembleDuration =
@@ -589,7 +620,7 @@ export class GestureBlender {
 
                         // Store latest crack params for glow updates
                         if (c.enabled) {
-                            accumulated.crack = { ...c };
+                            accumulated.crack = this._copyToPool('crack', c);
                         }
                     }
                 }
@@ -763,6 +794,7 @@ export class GestureBlender {
         this.finalQuaternion = null;
         this.prevRotation = null;
         this._activeAnimIds = null;
+        this._overlayPool = null;
     }
 }
 

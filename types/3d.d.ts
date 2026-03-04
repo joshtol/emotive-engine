@@ -528,11 +528,11 @@ export class EmotiveMascot3D {
     /** Set groove preset */
     setGroove(preset: string, options?: { bars?: number; duration?: number }): EmotiveMascot3D;
 
-    /** Enable crystal soul effect */
-    enableCrystalSoul(): EmotiveMascot3D;
+    /** Enable or disable the core glow (crystal soul) effect */
+    setCoreGlowEnabled(enabled: boolean): EmotiveMascot3D;
 
-    /** Disable crystal soul effect */
-    disableCrystalSoul(): EmotiveMascot3D;
+    /** Check if core glow (crystal soul) effect is enabled */
+    isCoreGlowEnabled(): boolean;
 
     // ─────────────────────────────────────────────────────────────────────────
     // EVENT MANAGER

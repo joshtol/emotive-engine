@@ -28,6 +28,10 @@ export class AnimationLoopManager {
         this.callbacks = new Map();
         this.callbackIdCounter = 0;
 
+        // Pre-grouped callbacks by priority (rebuilt on register/unregister)
+        this._groupedCallbacks = new Map();
+        this._groupsDirty = true;
+
         // Frame timing
         this.frameId = null;
         this.isRunning = false;
@@ -84,6 +88,8 @@ export class AnimationLoopManager {
             enabled: true,
         });
 
+        this._groupsDirty = true;
+
         // Auto-start if this is the first callback
         if (this.callbacks.size === 1 && !this.isRunning) {
             this.start();
@@ -98,6 +104,7 @@ export class AnimationLoopManager {
      */
     unregister(id) {
         this.callbacks.delete(id);
+        this._groupsDirty = true;
 
         // Auto-stop if no callbacks remain
         if (this.callbacks.size === 0 && this.isRunning) {
@@ -163,8 +170,11 @@ export class AnimationLoopManager {
         this._historyIndex = (this._historyIndex + 1) % this.maxHistorySize;
         if (this._historyCount < this.maxHistorySize) this._historyCount++;
 
-        // Group callbacks by priority
-        const callbacksByPriority = this.groupCallbacksByPriority();
+        // Group callbacks by priority (only rebuild when callbacks change)
+        if (this._groupsDirty) {
+            this._rebuildGroups();
+        }
+        const callbacksByPriority = this._groupedCallbacks;
 
         // Execute callbacks by priority
         let timeSpent = 0;
@@ -232,23 +242,23 @@ export class AnimationLoopManager {
     }
 
     /**
-     * Group callbacks by priority for efficient execution
-     * @returns {Map} Map of priority to callback arrays
+     * Rebuild the persistent priority-grouped callbacks map.
+     * Called only when callbacks are registered or unregistered.
      */
-    groupCallbacksByPriority() {
-        const groups = new Map();
+    _rebuildGroups() {
+        this._groupedCallbacks.clear();
 
         for (const [, callbackData] of this.callbacks) {
             const { priority } = callbackData;
 
-            if (!groups.has(priority)) {
-                groups.set(priority, []);
+            if (!this._groupedCallbacks.has(priority)) {
+                this._groupedCallbacks.set(priority, []);
             }
 
-            groups.get(priority).push(callbackData);
+            this._groupedCallbacks.get(priority).push(callbackData);
         }
 
-        return groups;
+        this._groupsDirty = false;
     }
 
     /**
@@ -355,6 +365,8 @@ export class AnimationLoopManager {
     destroy() {
         this.stop();
         this.callbacks.clear();
+        this._groupedCallbacks.clear();
+        this._groupsDirty = true;
         this.frameTimeHistory.fill(0);
         this._historyIndex = 0;
         this._historyCount = 0;
