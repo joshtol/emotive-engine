@@ -547,6 +547,26 @@ export class Core3DManager {
             this.setGlassMaterialEnabled(true);
         }
 
+        // Pre-allocated render options object to avoid per-frame allocation (16 properties)
+        this._renderOptions = {
+            position: this.position,
+            rotation: this.rotation,
+            scale: 0.16,
+            nonUniformScale: null,
+            glowColor: this.glowColor,
+            glowColorHex: '#FFFFFF',
+            glowIntensity: 1.0,
+            hasActiveGesture: false,
+            calibrationRotation: this.calibrationRotation,
+            cameraRoll: 0,
+            solarEclipse: null,
+            deltaTime: 0,
+            morphProgress: null,
+            hasSoul: false,
+            hasParticles: false,
+            deformation: null,
+        };
+
         // Initialize emotion
         this.setEmotion(this.emotion);
     }
@@ -3822,33 +3842,33 @@ export class Core3DManager {
             }
         }
 
-        // Render with Three.js
+        // Render with Three.js — update pre-allocated options object (avoids per-frame allocation)
         profiler.start('threeRenderer');
-        this.renderer.render({
-            position: this.position,
-            rotation: this.rotation,
-            scale: finalScale,
-            nonUniformScale: finalNonUniformScale, // [x, y, z] for squash/stretch, null for uniform
-            glowColor: this.glowColor,
-            glowColorHex: this.glowColorHex, // For bloom luminance normalization
-            glowIntensity: effectiveGlowIntensity,
-            hasActiveGesture: this.animationManager.hasActiveAnimations(), // Faster lerp during gestures
-            calibrationRotation: this.calibrationRotation, // Applied on top of animated rotation
-            cameraRoll: this._cameraRoll || 0, // Camera-relative roll for tidal-locked lean gestures
-            solarEclipse: this.effectManager.getSolarEclipse(), // Pass eclipse manager for synchronized updates
-            deltaTime, // Pass deltaTime for eclipse animation
-            morphProgress: morphState.isTransitioning ? morphState.visualProgress : null, // For corona fade-in
-            // OPTIMIZATION FLAGS: Skip render passes when not needed
-            hasSoul: this.customMaterialType === 'crystal' && this.crystalSoul !== null,
-            // PERFORMANCE: Only run particle bloom if there are actual visible particles
-            // This skips 13+ render passes when particles are enabled but idle
-            hasParticles:
-                this.particleVisibility &&
-                this.particleOrchestrator !== null &&
-                this.particleOrchestrator.getParticleCount() > 0,
-            // Shader-based localized vertex deformation for impacts
-            deformation: this._deformation,
-        });
+        const opts = this._renderOptions;
+        opts.position = this.position;
+        opts.rotation = this.rotation;
+        opts.scale = finalScale;
+        opts.nonUniformScale = finalNonUniformScale; // [x, y, z] for squash/stretch, null for uniform
+        opts.glowColor = this.glowColor;
+        opts.glowColorHex = this.glowColorHex; // For bloom luminance normalization
+        opts.glowIntensity = effectiveGlowIntensity;
+        opts.hasActiveGesture = this.animationManager.hasActiveAnimations(); // Faster lerp during gestures
+        opts.calibrationRotation = this.calibrationRotation; // Applied on top of animated rotation
+        opts.cameraRoll = this._cameraRoll || 0; // Camera-relative roll for tidal-locked lean gestures
+        opts.solarEclipse = this.effectManager.getSolarEclipse(); // Pass eclipse manager for synchronized updates
+        opts.deltaTime = deltaTime; // Pass deltaTime for eclipse animation
+        opts.morphProgress = morphState.isTransitioning ? morphState.visualProgress : null; // For corona fade-in
+        // OPTIMIZATION FLAGS: Skip render passes when not needed
+        opts.hasSoul = this.customMaterialType === 'crystal' && this.crystalSoul !== null;
+        // PERFORMANCE: Only run particle bloom if there are actual visible particles
+        // This skips 13+ render passes when particles are enabled but idle
+        opts.hasParticles =
+            this.particleVisibility &&
+            this.particleOrchestrator !== null &&
+            this.particleOrchestrator.getParticleCount() > 0;
+        // Shader-based localized vertex deformation for impacts
+        opts.deformation = this._deformation;
+        this.renderer.render(opts);
         profiler.end('threeRenderer');
 
         // Update lunar eclipse animation (Blood Moon)

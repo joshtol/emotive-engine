@@ -178,17 +178,23 @@ export class AudioHandler {
             return this._chainTarget;
         }
 
-        // Store previous state for event
-        const previousAudioLevel = this.audioLevelProcessor.getCurrentLevel();
+        // Store previous state for event (audioLevelProcessor is optional)
+        const previousAudioLevel = this.audioLevelProcessor
+            ? this.audioLevelProcessor.getCurrentLevel()
+            : 0;
 
-        // Clean up audio level processor
-        this.audioLevelProcessor.cleanup();
+        // Clean up audio level processor if it exists
+        if (this.audioLevelProcessor) {
+            this.audioLevelProcessor.cleanup();
+        }
 
         // Reset speech state
         this._state.speaking = false;
 
         // Notify renderer about speech stop (triggers 500ms return-to-base transition)
-        this.renderer.onSpeechStop();
+        if (this.renderer) {
+            this.renderer.onSpeechStop();
+        }
 
         // Emit speech stop event
         this._emit('speechStopped', {

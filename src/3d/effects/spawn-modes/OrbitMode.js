@@ -18,6 +18,10 @@ import { normalizeOrientation } from './AxisTravelMode.js';
 // STATIC UTILITY FUNCTIONS - Used by ElementInstancedSpawner
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Pre-allocated result object for calculateOrbitPosition to avoid per-frame GC pressure.
+// Callers MUST read values before the next call (single-threaded, so this is safe).
+const _orbitResult = { x: 0, y: 0, z: 0, angle: 0, scale: 1 };
+
 /**
  * Parse orbit configuration from gesture spawnMode
  * @param {Object} config - Raw configuration from gesture
@@ -182,14 +186,16 @@ export function calculateOrbitPosition(
     // Rotate angle based on progress and speed (revolutions)
     const rotatedAngle = angle + gestureProgress * orbitConfig.speed * Math.PI * 2;
 
-    const x = Math.cos(rotatedAngle) * radius;
-    const z = Math.sin(rotatedAngle) * radius;
-    const y = height + (formationData.heightOffset || 0);
+    // Write into pre-allocated _orbitResult to avoid per-frame object creation
+    _orbitResult.x = Math.cos(rotatedAngle) * radius;
+    _orbitResult.z = Math.sin(rotatedAngle) * radius;
+    _orbitResult.y = height + (formationData.heightOffset || 0);
 
     // Interpolate scale
-    const scale = orbitConfig.startScale + (orbitConfig.endScale - orbitConfig.startScale) * t;
+    _orbitResult.scale = orbitConfig.startScale + (orbitConfig.endScale - orbitConfig.startScale) * t;
+    _orbitResult.angle = rotatedAngle;
 
-    return { x, y, z, angle: rotatedAngle, scale };
+    return _orbitResult;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

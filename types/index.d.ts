@@ -409,6 +409,44 @@ export class EmotiveMascot {
     // Events
     on(event: string, handler: Function): EmotiveMascot;
     off(event: string, handler?: Function): EmotiveMascot;
+    once(event: string, callback: Function): EmotiveMascot;
+    emit(event: string, data?: any): void;
+    removeAllListeners(event?: string | null): EmotiveMascot;
+    listenerCount(event: string): number;
+    getEventNames(): string[];
+
+    // Audio / Speech
+    setVolume(volume: number): EmotiveMascot;
+    getVolume(): number;
+    startSpeaking(audioContext: AudioContext): EmotiveMascot;
+    stopSpeaking(): EmotiveMascot;
+    isSpeaking(): boolean;
+    connectAudioSource(audioSource: any): EmotiveMascot;
+
+    // Breathing
+    breathe(type?: string): EmotiveMascot;
+    stopBreathing(): EmotiveMascot;
+
+    // State
+    sleep(): EmotiveMascot;
+    wake(): EmotiveMascot;
+    isActive(): boolean;
+    getPosition(): { x: number; y: number } | null;
+    setOffset(x: number, y: number, z?: number): EmotiveMascot;
+    getOffset(): { x: number; y: number; z: number };
+
+    // Performance
+    setTargetFPS(targetFPS: number): EmotiveMascot;
+    getTargetFPS(): number;
+
+    // Plugin
+    registerPlugin(plugin: any): Promise<boolean>;
+
+    // Accessibility
+    setAccessibility(options: { colorBlindMode?: string; reducedMotion?: boolean; highContrast?: boolean }): void;
+
+    // Resize Handling
+    handleResize(width: number, height: number, dpr?: number): void;
 
     // Component access (safe proxies)
     readonly renderer: any;
@@ -902,6 +940,44 @@ declare namespace EmotiveEngine {
         // Events
         on(event: string, handler: Function): EmotiveMascot;
         off(event: string, handler?: Function): EmotiveMascot;
+        once(event: string, callback: Function): EmotiveMascot;
+        emit(event: string, data?: any): void;
+        removeAllListeners(event?: string | null): EmotiveMascot;
+        listenerCount(event: string): number;
+        getEventNames(): string[];
+
+        // Audio / Speech
+        setVolume(volume: number): EmotiveMascot;
+        getVolume(): number;
+        startSpeaking(audioContext: AudioContext): EmotiveMascot;
+        stopSpeaking(): EmotiveMascot;
+        isSpeaking(): boolean;
+        connectAudioSource(audioSource: any): EmotiveMascot;
+
+        // Breathing
+        breathe(type?: string): EmotiveMascot;
+        stopBreathing(): EmotiveMascot;
+
+        // State
+        sleep(): EmotiveMascot;
+        wake(): EmotiveMascot;
+        isActive(): boolean;
+        getPosition(): { x: number; y: number } | null;
+        setOffset(x: number, y: number, z?: number): EmotiveMascot;
+        getOffset(): { x: number; y: number; z: number };
+
+        // Performance
+        setTargetFPS(targetFPS: number): EmotiveMascot;
+        getTargetFPS(): number;
+
+        // Plugin
+        registerPlugin(plugin: any): Promise<boolean>;
+
+        // Accessibility
+        setAccessibility(options: { colorBlindMode?: string; reducedMotion?: boolean; highContrast?: boolean }): void;
+
+        // Resize Handling
+        handleResize(width: number, height: number, dpr?: number): void;
 
         // Component access (safe proxies)
         readonly renderer: any;

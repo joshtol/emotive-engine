@@ -20,6 +20,19 @@ import { getEasing } from '../animation/Easing.js';
 // STATIC UTILITY FUNCTIONS - Used by ElementInstancedSpawner and presets
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Pre-allocated result object for calculateAxisTravelPosition to avoid per-frame GC pressure.
+// Callers MUST read values before the next call (single-threaded, so this is safe).
+const _atResult = {
+    axisPos: 0,
+    axis: 'y',
+    positionOffset: { x: 0, y: 0, z: 0 },
+    scale: 1,
+    diameter: 1,
+    rotationOffset: 0,
+    meshRotationOffset: 0,
+    scaleMultiplier: 1.0,
+};
+
 /**
  * Parse formation configuration
  * @param {Object} formation - Formation config
@@ -333,27 +346,34 @@ export function calculateAxisTravelPosition(
     }
 
     // Position offset scaled by mascot radius - now supports XYZ
-    const rawOffset = formationData?.positionOffset || { x: 0, y: 0, z: 0 };
-    // Handle both old format (number) and new format (object with x,y,z)
-    const positionOffset =
-        typeof rawOffset === 'number'
-            ? { x: 0, y: rawOffset * mascotRadius, z: 0 }
-            : {
-                  x: (rawOffset.x || 0) * mascotRadius,
-                  y: (rawOffset.y || 0) * mascotRadius,
-                  z: (rawOffset.z || 0) * mascotRadius,
-              };
+    // Write into pre-allocated _atResult to avoid per-frame object creation
+    const rawOffset = formationData?.positionOffset;
+    const offset = _atResult.positionOffset;
+    if (!rawOffset) {
+        offset.x = 0;
+        offset.y = 0;
+        offset.z = 0;
+    } else if (typeof rawOffset === 'number') {
+        // Handle old format (number = Y only)
+        offset.x = 0;
+        offset.y = rawOffset * mascotRadius;
+        offset.z = 0;
+    } else {
+        offset.x = (rawOffset.x || 0) * mascotRadius;
+        offset.y = (rawOffset.y || 0) * mascotRadius;
+        offset.z = (rawOffset.z || 0) * mascotRadius;
+    }
 
-    return {
-        axisPos,
-        axis: axisConfig.axis,
-        positionOffset,
-        scale,
-        diameter,
-        rotationOffset: formationData?.rotationOffset || 0,
-        meshRotationOffset: formationData?.meshRotationOffset || 0,
-        scaleMultiplier: formationData?.scaleMultiplier ?? 1.0,
-    };
+    _atResult.axisPos = axisPos;
+    _atResult.axis = axisConfig.axis;
+    // positionOffset already written above
+    _atResult.scale = scale;
+    _atResult.diameter = diameter;
+    _atResult.rotationOffset = formationData?.rotationOffset || 0;
+    _atResult.meshRotationOffset = formationData?.meshRotationOffset || 0;
+    _atResult.scaleMultiplier = formationData?.scaleMultiplier ?? 1.0;
+
+    return _atResult;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

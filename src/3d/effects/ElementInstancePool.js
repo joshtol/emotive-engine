@@ -12,7 +12,7 @@
  * - 1 InstancedMesh per element type (fire, ice, water, etc.)
  * - Merged geometry with all model variants baked in
  * - Per-instance attributes for animation (spawnTime, exitTime, modelIndex, etc.)
- * - Trail copies as additional instance slots (4 slots per element: 1 main + 3 trail)
+ * - Trail copies as additional instance slots (SLOTS_PER_ELEMENT slots per element: 1 main + TRAIL_COPIES trail)
  * - Time-offset animation calculated in shaders
  *
  * This replaces the old system that cloned materials per element, causing GPU memory leaks.
@@ -154,9 +154,12 @@ export class ElementInstancePool {
             return false;
         }
 
-        // Get a slot group (main + 3 trails are consecutive)
+        // Get a slot group (main + TRAIL_COPIES trails are consecutive)
         const mainSlot = this.freeSlots.pop();
-        const trailSlots = [mainSlot + 1, mainSlot + 2, mainSlot + 3];
+        const trailSlots = [];
+        for (let i = 0; i < TRAIL_COPIES; i++) {
+            trailSlots.push(mainSlot + 1 + i);
+        }
 
         const spawnTime = this.globalTime;
 

@@ -219,7 +219,10 @@ export class Rhythm3DAdapter {
      */
     _lerpArray(current, target, speed, deltaTime) {
         const t = 1 - Math.exp(-speed * deltaTime);
-        return current.map((v, i) => v + (target[i] - v) * t);
+        for (let i = 0; i < current.length; i++) {
+            current[i] = current[i] + (target[i] - current[i]) * t;
+        }
+        return current;
     }
 
     /**
@@ -287,14 +290,15 @@ export class Rhythm3DAdapter {
         this.enabled = true;
 
         // Subscribe to beat events for accent tracking
-        this.adapter.onBeat(beatInfo => {
+        this._beatHandler = beatInfo => {
             this.accent = beatInfo.accent;
             this.isOnBeat = true;
             // Clear on-beat flag after short window
             setTimeout(() => {
                 this.isOnBeat = false;
             }, 100);
-        });
+        };
+        this._beatUnsub = this.adapter.onBeat(this._beatHandler);
     }
 
     /**
@@ -600,10 +604,14 @@ export class Rhythm3DAdapter {
 
         // Write to target values (these get smoothed in applySmoothing)
         // Position: X sway, Y bounce, Z drift (forward/back)
-        this._target.grooveOffset = [sway, bounce, zDrift];
+        this._target.grooveOffset[0] = sway;
+        this._target.grooveOffset[1] = bounce;
+        this._target.grooveOffset[2] = zDrift;
         this._target.grooveScale = pulse;
         // Rotation: X tilt (nod), Y tilt (turn), Z sway (lean)
-        this._target.grooveRotation = [tiltX, tiltY, rotationSway];
+        this._target.grooveRotation[0] = tiltX;
+        this._target.grooveRotation[1] = tiltY;
+        this._target.grooveRotation[2] = rotationSway;
         this._target.grooveGlow = grooveGlow;
     }
 
@@ -649,7 +657,7 @@ export class Rhythm3DAdapter {
 
         // Smooth groove values
         // Higher smoothing speed keeps groove tightly synced to beat
-        this.modulation.grooveOffset = this._lerpArray(
+        this._lerpArray(
             this.modulation.grooveOffset,
             this._target.grooveOffset,
             grooveSmoothingSpeed,
@@ -661,7 +669,7 @@ export class Rhythm3DAdapter {
             grooveSmoothingSpeed,
             dt
         );
-        this.modulation.grooveRotation = this._lerpArray(
+        this._lerpArray(
             this.modulation.grooveRotation,
             this._target.grooveRotation,
             grooveSmoothingSpeed,
@@ -687,9 +695,13 @@ export class Rhythm3DAdapter {
         this._target.positionMultiplier = 1.0;
         this._target.rotationMultiplier = 1.0;
         this._target.accentBoost = 0.0;
-        this._target.grooveOffset = [0, 0, 0];
+        this._target.grooveOffset[0] = 0;
+        this._target.grooveOffset[1] = 0;
+        this._target.grooveOffset[2] = 0;
         this._target.grooveScale = 1.0;
-        this._target.grooveRotation = [0, 0, 0];
+        this._target.grooveRotation[0] = 0;
+        this._target.grooveRotation[1] = 0;
+        this._target.grooveRotation[2] = 0;
         this._target.grooveGlow = 1.0;
 
         // Smooth toward neutral (slower speed for graceful fade-out)
@@ -719,16 +731,16 @@ export class Rhythm3DAdapter {
             dt
         );
         this.modulation.accentBoost = this._lerp(this.modulation.accentBoost, 0.0, fadeSpeed, dt);
-        this.modulation.grooveOffset = this._lerpArray(
+        this._lerpArray(
             this.modulation.grooveOffset,
-            [0, 0, 0],
+            this._target.grooveOffset,
             fadeSpeed,
             dt
         );
         this.modulation.grooveScale = this._lerp(this.modulation.grooveScale, 1.0, fadeSpeed, dt);
-        this.modulation.grooveRotation = this._lerpArray(
+        this._lerpArray(
             this.modulation.grooveRotation,
-            [0, 0, 0],
+            this._target.grooveRotation,
             fadeSpeed,
             dt
         );
@@ -915,6 +927,17 @@ export class Rhythm3DAdapter {
      */
     destroy() {
         this.enabled = false;
+        // Unsubscribe from beat events
+        if (this._beatUnsub && typeof this._beatUnsub === 'function') {
+            this._beatUnsub();
+        } else if (this.adapter && this._beatHandler) {
+            // Fallback: try offBeat if onBeat didn't return unsub
+            if (typeof this.adapter.offBeat === 'function') {
+                this.adapter.offBeat(this._beatHandler);
+            }
+        }
+        this._beatHandler = null;
+        this._beatUnsub = null;
         this.adapter = null;
         this.resetModulation();
     }

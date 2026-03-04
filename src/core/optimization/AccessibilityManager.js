@@ -203,27 +203,27 @@ export class AccessibilityManager {
     setupPreferenceListeners() {
         if (window.matchMedia) {
             // Listen for reduced motion changes
-            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-            const motionHandler = e => {
+            this._motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            this._motionHandler = e => {
                 this.reducedMotionPreferred = e.matches;
                 this.onPreferenceChange('reducedMotion', e.matches);
             };
-            if (motionQuery.addEventListener) {
-                motionQuery.addEventListener('change', motionHandler);
-            } else if (motionQuery.addListener) {
-                motionQuery.addListener(motionHandler);
+            if (this._motionQuery.addEventListener) {
+                this._motionQuery.addEventListener('change', this._motionHandler);
+            } else if (this._motionQuery.addListener) {
+                this._motionQuery.addListener(this._motionHandler);
             }
 
             // Listen for high contrast changes
-            const contrastQuery = window.matchMedia('(prefers-contrast: high)');
-            const contrastHandler = e => {
+            this._contrastQuery = window.matchMedia('(prefers-contrast: high)');
+            this._contrastHandler = e => {
                 this.highContrastEnabled = e.matches;
                 this.onPreferenceChange('highContrast', e.matches);
             };
-            if (contrastQuery.addEventListener) {
-                contrastQuery.addEventListener('change', contrastHandler);
-            } else if (contrastQuery.addListener) {
-                contrastQuery.addListener(contrastHandler);
+            if (this._contrastQuery.addEventListener) {
+                this._contrastQuery.addEventListener('change', this._contrastHandler);
+            } else if (this._contrastQuery.addListener) {
+                this._contrastQuery.addListener(this._contrastHandler);
             }
         }
     }
@@ -655,6 +655,26 @@ export class AccessibilityManager {
         if (this.boundHandleKeyUp) {
             document.removeEventListener('keyup', this.boundHandleKeyUp);
             this.boundHandleKeyUp = null;
+        }
+
+        // Remove matchMedia listeners
+        if (this._motionQuery && this._motionHandler) {
+            if (this._motionQuery.removeEventListener) {
+                this._motionQuery.removeEventListener('change', this._motionHandler);
+            } else if (this._motionQuery.removeListener) {
+                this._motionQuery.removeListener(this._motionHandler);
+            }
+            this._motionQuery = null;
+            this._motionHandler = null;
+        }
+        if (this._contrastQuery && this._contrastHandler) {
+            if (this._contrastQuery.removeEventListener) {
+                this._contrastQuery.removeEventListener('change', this._contrastHandler);
+            } else if (this._contrastQuery.removeListener) {
+                this._contrastQuery.removeListener(this._contrastHandler);
+            }
+            this._contrastQuery = null;
+            this._contrastHandler = null;
         }
 
         // Remove live region

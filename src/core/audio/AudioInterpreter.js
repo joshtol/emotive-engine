@@ -312,6 +312,23 @@ export class AudioInterpreter {
         }
     }
 
+    /**
+     * Destroy the interpreter, clearing all pending callbacks and releasing references.
+     */
+    destroy() {
+        this.disable();
+        this.enabled = false;
+        this.textBuffer.length = 0;
+        this.pendingRequest = null;
+        this.lastAction = null;
+        this.currentState = null;
+        this.onAction = null;
+        this.onError = null;
+        this.apiKey = null;
+        this.endpoint = null;
+        this.model = null;
+    }
+
     updateCurrentState(state) {
         if (state.geometry) this.currentState.geometry = state.geometry;
         if (state.sss) this.currentState.sss = state.sss;

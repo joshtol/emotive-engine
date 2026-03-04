@@ -52,7 +52,6 @@ export class PluginSystem {
             maxPlugins: config.maxPlugins || 50,
             pluginTimeout: config.pluginTimeout || 5000,
             allowOverrides: config.allowOverrides !== false,
-            ...config,
         };
 
         // Store mascot reference for plugin access
@@ -238,6 +237,17 @@ export class PluginSystem {
      * @returns {Object} Sandbox environment
      */
     createSandbox() {
+        // WARNING: This sandbox only uses .bind() to set `this` context for plugin
+        // methods (see initializePlugin). It does NOT provide true execution isolation.
+        // Plugins can still access globals via closures, the scope chain, or
+        // constructor references (e.g., ({}).constructor.constructor('return this')()).
+        // For real sandboxing, consider iframe-based or Worker-based isolation.
+        console.warn(
+            '[PluginSystem] sandboxPlugins is enabled, but the sandbox provides ' +
+            '.bind() context isolation only, not true execution sandboxing. ' +
+            'Plugins may still access globals through closures or prototype chains.'
+        );
+
         // Create a limited execution environment
         const sandbox = {
             // Safe global objects

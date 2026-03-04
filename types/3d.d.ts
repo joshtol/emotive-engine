@@ -218,7 +218,7 @@ export class EmotiveMascot3D {
     // ─────────────────────────────────────────────────────────────────────────
 
     /** Set emotional state */
-    setEmotion(emotion: EmotionName, options?: string | SetEmotionOptions): void;
+    setEmotion(emotion: EmotionName, options?: string | SetEmotionOptions): EmotiveMascot3D;
 
     /** Update undertone without changing emotion */
     setUndertone(undertone: string | null): void;
@@ -231,7 +231,7 @@ export class EmotiveMascot3D {
     // ─────────────────────────────────────────────────────────────────────────
 
     /** Express a gesture */
-    express(gestureName: GestureName): void;
+    express(gestureName: GestureName): EmotiveMascot3D;
 
     /** Execute a gesture chain */
     chain(chainName: ChainPreset | string | string[]): void;
@@ -422,16 +422,6 @@ export class EmotiveMascot3D {
     resetBPMDetection(seedBPM?: number | null): void;
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CORE GLOW
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /** Enable or disable the inner soul/core glow */
-    setCoreGlowEnabled(enabled: boolean): void;
-
-    /** Check if core glow is currently enabled */
-    isCoreGlowEnabled(): boolean;
-
-    // ─────────────────────────────────────────────────────────────────────────
     // MORPHING
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -514,7 +504,7 @@ export class EmotiveMascot3D {
     getAvailableEmotions(): string[];
 
     /** Get list of available gestures */
-    getAvailableGestures(): string[];
+    getAvailableGestures(): Array<{name: string; emoji: string; type: string; category: string; description: string; source: string; usesShatter?: boolean}>;
 
     /** Get list of available geometries */
     getAvailableGeometries(): string[];
@@ -533,6 +523,39 @@ export class EmotiveMascot3D {
 
     /** Check if core glow (crystal soul) effect is enabled */
     isCoreGlowEnabled(): boolean;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GESTURES (additional)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Trigger a gesture by name (elemental or standard) */
+    gesture(gestureName: string, options?: {scale?: number}): EmotiveMascot3D;
+
+    /** Execute a chain sequence of gesture steps */
+    executeChainSequence(steps: string[]): void;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SHATTER
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Trigger reassembly animation after shatter */
+    triggerReassembly(duration?: number): boolean;
+
+    /** Check if shatter is currently frozen */
+    isShatterFrozen(): boolean;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONTAINMENT & TRANSITIONS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Set containment bounds for the mascot */
+    setContainment(bounds: any, scale?: number): void;
+
+    /** Set color transition duration in milliseconds */
+    setColorTransitionDuration(durationMs: number): EmotiveMascot3D;
+
+    /** Set SSS transition duration in milliseconds */
+    setSSSTransitionDuration(durationMs: number): EmotiveMascot3D;
 
     // ─────────────────────────────────────────────────────────────────────────
     // EVENT MANAGER

@@ -44,6 +44,8 @@ class RhythmIntegration {
         this.subsystemConfigs = new Map();
         this.activeModulations = new Map();
         this._inputEvaluator = null;
+        this._unsubBeat = null;
+        this._unsubBar = null;
     }
 
     /**
@@ -53,9 +55,9 @@ class RhythmIntegration {
         this.adapter = rhythmEngine.getAdapter();
         this.enabled = true;
 
-        // Subscribe to rhythm events
-        this.adapter.onBeat(this.handleBeat.bind(this));
-        this.adapter.onBar(this.handleBar.bind(this));
+        // Subscribe to rhythm events (store unsubscribe functions for cleanup)
+        this._unsubBeat = this.adapter.onBeat(this.handleBeat.bind(this));
+        this._unsubBar = this.adapter.onBar(this.handleBar.bind(this));
     }
 
     /**
@@ -327,6 +329,32 @@ class RhythmIntegration {
         // Unlock BPM when stopping
         this.bpmLocked = false;
         this.lockedBPM = null;
+    }
+
+    /**
+     * Destroy the integration, unsubscribing all events and releasing references.
+     */
+    destroy() {
+        this.stop();
+
+        // Unsubscribe from beat/bar events
+        if (this._unsubBeat) {
+            this._unsubBeat();
+            this._unsubBeat = null;
+        }
+        if (this._unsubBar) {
+            this._unsubBar();
+            this._unsubBar = null;
+        }
+
+        // Clear internal state
+        this.enabled = false;
+        this.adapter = null;
+        this.subsystemConfigs.clear();
+        this.activeModulations.clear();
+        this.lastBeatInfo = null;
+        this.lastBarInfo = null;
+        this._inputEvaluator = null;
     }
 
     /**

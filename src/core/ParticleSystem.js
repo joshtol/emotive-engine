@@ -506,10 +506,9 @@ class ParticleSystem {
         // 50 particles don't need memory tracking overhead
         // Memory leaks aren't a concern with such small numbers
 
-        // PERFORMANCE OPTIMIZATION: Use simple filter instead of complex loop
-        // More efficient for small particle counts
-        this.particles = this.particles.filter(particle => {
-            particle.update(
+        // Update particles and remove dead ones in-place (no allocation)
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            this.particles[i].update(
                 deltaTime,
                 centerX,
                 centerY,
@@ -518,8 +517,10 @@ class ParticleSystem {
                 gestureProgress,
                 this.containmentBounds
             );
-            return particle.isAlive();
-        });
+            if (!this.particles[i].isAlive()) {
+                this.removeParticle(i);
+            }
+        }
 
         // Enforce particle limit by removing oldest if necessary
         while (this.particles.length > this.maxParticles) {

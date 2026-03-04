@@ -26,6 +26,15 @@ export class EventManager {
             removed: 0,
             active: 0,
         };
+
+        // Alive-flag: EmotiveMascot3D._isDestroyed() checks `!eventManager._listeners`.
+        // The monkey-patch in index.js / EmotiveMascot.js used to set this, but now
+        // that EventManager has native on/off/emit the patch is skipped. Keep _listeners
+        // as a simple alive-sentinel so the destroy-check still works.
+        this._listeners = {};
+
+        // Event emitter listeners (for on/off/emit pattern used by EventListenerManager)
+        this._emitters = new Map();
     }
 
     /**
@@ -275,6 +284,120 @@ export class EventManager {
     // Removed setupUnloadHandler - causes permission violations
     // Browser automatically cleans up event listeners on unload
 
+    // ─── Event Emitter API (on/off/emit/once pattern) ───
+
+    /**
+     * Subscribe to an emitted event
+     * @param {string} event - Event name
+     * @param {Function} callback - Event callback
+     */
+    on(event, callback) {
+        if (!this._emitters.has(event)) {
+            this._emitters.set(event, []);
+        }
+        this._emitters.get(event).push(callback);
+    }
+
+    /**
+     * Unsubscribe from an emitted event
+     * @param {string} event - Event name
+     * @param {Function} callback - Event callback to remove
+     */
+    off(event, callback) {
+        const listeners = this._emitters.get(event);
+        if (!listeners) return;
+        const idx = listeners.indexOf(callback);
+        if (idx !== -1) listeners.splice(idx, 1);
+        if (listeners.length === 0) this._emitters.delete(event);
+    }
+
+    /**
+     * Emit an event to all subscribers
+     * @param {string} event - Event name
+     * @param {*} data - Event data
+     */
+    emit(event, data = null) {
+        const listeners = this._emitters.get(event);
+        if (!listeners) return;
+        for (let i = 0; i < listeners.length; i++) {
+            try {
+                listeners[i](data);
+            } catch (e) {
+                console.warn(`[EventManager] Error in "${event}" listener:`, e);
+            }
+        }
+    }
+
+    /**
+     * Remove all emitter listeners for a specific event or all events
+     * @param {string|null} event - Event name, or null to clear all
+     * @returns {number} Number of listeners removed
+     */
+    removeAllListeners(event = null) {
+        if (event) {
+            const listeners = this._emitters.get(event);
+            const count = listeners ? listeners.length : 0;
+            this._emitters.delete(event);
+            return count;
+        }
+        let total = 0;
+        for (const listeners of this._emitters.values()) {
+            total += listeners.length;
+        }
+        this._emitters.clear();
+        return total;
+    }
+
+    /**
+     * Get the number of emitter listeners for an event
+     * @param {string} event - Event name
+     * @returns {number} Listener count
+     */
+    listenerCount(event) {
+        const listeners = this._emitters.get(event);
+        return listeners ? listeners.length : 0;
+    }
+
+    /**
+     * Get all registered emitter event names
+     * @returns {string[]} Array of event names
+     */
+    getEventNames() {
+        return Array.from(this._emitters.keys());
+    }
+
+    /**
+     * Get event system statistics
+     * @returns {Object} Stats including DOM and emitter listeners
+     */
+    getEventStats() {
+        let emitterTotal = 0;
+        for (const listeners of this._emitters.values()) {
+            emitterTotal += listeners.length;
+        }
+        return {
+            domListeners: this.stats.active,
+            emitterEvents: this._emitters.size,
+            emitterListeners: emitterTotal,
+        };
+    }
+
+    /**
+     * Get debug information about the event system
+     * @returns {Object} Debug info
+     */
+    getDebugInfo() {
+        const emitterInfo = {};
+        for (const [event, listeners] of this._emitters) {
+            emitterInfo[event] = listeners.length;
+        }
+        return {
+            domStats: this.getStats(),
+            emitterEvents: emitterInfo,
+            activeListeners: this.getActiveListeners(),
+        };
+    }
+
     /**
      * Generate unique ID
      * @private
@@ -382,6 +505,8 @@ export class EventManager {
         const count = this.removeAll();
         this.listeners.clear();
         this.groups.clear();
+        this._emitters.clear();
+        this._listeners = null; // Signal destruction for _isDestroyed() checks
         this.stats = {
             registered: 0,
             removed: 0,
