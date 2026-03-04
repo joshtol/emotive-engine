@@ -639,6 +639,16 @@ export class ThreeRenderer {
         // Meshes that need screen-space refraction (ice instanced meshes)
         this._refractionMeshes = new Set();
 
+        // Auto-detect CSS background for refraction (colors and images)
+        this._bgAutoCache = {
+            colorStr: null,
+            imageStr: null,
+            color: null,       // THREE.Color instance (reused)
+            texture: null,     // THREE.Texture for loaded image
+            imageUrl: null,    // Last loaded URL (for dedup)
+        };
+        this._autoRefractionBackground = null;
+
         // === DISTORTION RENDER TARGET ===
         // Half-res — distortion offsets are low frequency (smooth/blurry by nature)
         const halfWidth = Math.floor(drawingBufferSize.x * 0.5);
@@ -1828,9 +1838,12 @@ export class ThreeRenderer {
                 // The canvas is transparent (alpha:true) so the CSS background behind
                 // it is invisible to WebGL. Setting scene.background lets refracting
                 // materials distort the actual page background, not just 3D geometry.
+                // Auto-detect CSS background if no manual override is set.
+                this._syncAutoRefractionBackground();
                 const savedBackground = this.scene.background;
-                if (this._refractionBackground) {
-                    this.scene.background = this._refractionBackground;
+                const refractionBg = this._refractionBackground || this._autoRefractionBackground;
+                if (refractionBg) {
+                    this.scene.background = refractionBg;
                 }
 
                 // Render scene (layer 0) without refraction meshes to refraction target
@@ -1984,7 +1997,90 @@ export class ThreeRenderer {
     }
 
     /**
-     * Set a background texture for refraction capture.
+     * Auto-detect the CSS background behind the canvas and sync it to
+     * _autoRefractionBackground for use in the refraction pass.
+     * Walks up the DOM from the canvas to find the nearest ancestor with a
+     * visible background (image URL or solid color). Caches aggressively —
+     * only performs expensive work when the CSS value actually changes.
+     * @private
+     */
+    _syncAutoRefractionBackground() {
+        // Manual override takes precedence — skip auto-detection entirely
+        if (this._refractionBackground) return;
+
+        const canvas = this.renderer.domElement;
+        if (!canvas) return;
+
+        let bgColor = null;
+        let bgImage = null;
+
+        // Walk up the DOM tree from the canvas to find the nearest visible background
+        let el = canvas.parentElement;
+        while (el) {
+            const style = window.getComputedStyle(el);
+
+            // Check backgroundImage first — images render on top of colors in CSS
+            if (style.backgroundImage !== 'none') {
+                const urlMatch = style.backgroundImage.match(/url\(["']?(.+?)["']?\)/);
+                if (urlMatch) {
+                    bgImage = urlMatch[1];
+                    break;
+                }
+            }
+
+            // Check backgroundColor — skip fully transparent
+            const bg = style.backgroundColor;
+            if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                bgColor = bg;
+                break;
+            }
+
+            el = el.parentElement;
+        }
+
+        const cache = this._bgAutoCache;
+
+        // Handle image backgrounds
+        if (bgImage) {
+            if (bgImage !== cache.imageUrl) {
+                cache.imageUrl = bgImage;
+                cache.colorStr = null; // Clear color cache — image takes over
+                new THREE.TextureLoader().load(bgImage, (tex) => {
+                    tex.colorSpace = THREE.SRGBColorSpace;
+                    if (cache.texture) cache.texture.dispose();
+                    cache.texture = tex;
+                    this._autoRefractionBackground = tex;
+                });
+            }
+            return;
+        }
+
+        // Handle solid color backgrounds
+        if (bgColor) {
+            if (bgColor !== cache.colorStr) {
+                cache.colorStr = bgColor;
+                // Dispose any stale image texture
+                if (cache.texture) {
+                    cache.texture.dispose();
+                    cache.texture = null;
+                    cache.imageUrl = null;
+                }
+                if (!cache.color) cache.color = new THREE.Color();
+                cache.color.setStyle(bgColor);
+                this._autoRefractionBackground = cache.color;
+            }
+            return;
+        }
+
+        // No visible background found — clear auto background
+        this._autoRefractionBackground = null;
+    }
+
+    /**
+     * Set a background texture for refraction capture (manual override).
+     * When set to a non-null value, this overrides the automatic CSS background
+     * detection. Set to null to clear the override and return to auto-detection.
+     *
      * The scene canvas is transparent (alpha:true), so the CSS background behind it
      * is invisible to WebGL. During refraction capture, this texture is temporarily
      * set as scene.background so refracting materials can distort it.
@@ -2392,6 +2488,15 @@ export class ThreeRenderer {
             this._refractionBackground.dispose();
         }
         this._refractionBackground = null;
+
+        // Dispose auto-detected refraction background resources
+        if (this._bgAutoCache) {
+            if (this._bgAutoCache.texture) {
+                this._bgAutoCache.texture.dispose();
+            }
+            this._bgAutoCache = null;
+        }
+        this._autoRefractionBackground = null;
 
         // Dispose environment map
         if (this.envMap) {
