@@ -3975,6 +3975,12 @@ export class Core3DManager {
                 this.elementSpawner.initialize(this.renderer.coreMesh, this.renderer.camera);
             }
 
+            // Freeze animations BEFORE marking ready so the first rendered frame
+            // is already frozen — no rotation visible at all during prewarm.
+            if (this._backgroundPrewarm && this.elementSpawner) {
+                this._freezeForPrewarm();
+            }
+
             // NOW we're fully ready for rendering
             this._ready = true;
 
@@ -4128,7 +4134,11 @@ export class Core3DManager {
     _startElementPreloading() {
         if (this._destroyed || !this.elementSpawner) return;
 
-        // Option 2: Immediate preload of specified elements
+        // Priority queue for on-demand element loading during prewarm
+        this._prewarmQueue = [...ALL_ELEMENT_TYPES];
+        this._prewarmLoaded = new Set();
+
+        // Immediate preload of specified elements
         if (this._preloadElements.length > 0) {
             this._preloadElements.forEach(type => {
                 if (ALL_ELEMENT_TYPES.includes(type)) {
@@ -4137,37 +4147,143 @@ export class Core3DManager {
             });
         }
 
-        // Option 3: Background pre-warm after delay
+        // Background pre-warm (freeze already applied before _ready=true)
         if (this._backgroundPrewarm) {
-            this._prewarmTimeoutId = setTimeout(() => {
-                this._backgroundPrewarmElements();
-            }, BACKGROUND_PREWARM_DELAY);
+            // Start immediately — mascot is frozen so stutters are invisible
+            this._backgroundPrewarmElements();
         }
     }
 
     /**
-     * Background pre-warm: load remaining element types that weren't explicitly preloaded
+     * Bump an element type to the front of the prewarm queue.
+     * Called when a gesture fires before prewarm finishes — ensures that
+     * element loads next instead of waiting its turn.
+     * @param {string} elementType
+     */
+    /**
+     * Bump an element type to the front of the prewarm queue and unfreeze.
+     * Called when a gesture fires before prewarm finishes — the user is now
+     * interacting so we unfreeze immediately and prioritize their element.
+     * After the gesture's element loads, the queue resumes with the rest.
+     * @param {string} elementType
+     */
+    prioritizeElement(elementType) {
+        if (!this._prewarmQueue) return;
+        const idx = this._prewarmQueue.indexOf(elementType);
+        if (idx > 0) {
+            this._prewarmQueue.splice(idx, 1);
+            this._prewarmQueue.unshift(elementType);
+        }
+        // User is interacting — unfreeze now
+        if (this._prewarmFrozen) {
+            this._unfreezeAfterPrewarm();
+        }
+    }
+
+    /**
+     * Freeze rotation, particles, and breathing during prewarm.
+     * The mascot sits still while shaders compile — frame drops are invisible.
+     * @private
+     */
+    _freezeForPrewarm() {
+        this._prewarmFrozen = true;
+
+        // Save current state so we can restore exactly
+        this._prewarmSavedState = {
+            rotationDisabled: this.rotationDisabled,
+            breathingEnabled: this.breathingEnabled,
+            particleVisibility: this.particleVisibility,
+        };
+
+        // Freeze everything — mascot must be completely still
+        this.rotationDisabled = true;
+        if (this.behaviorController) {
+            this.behaviorController.rotationDisabled = true;
+            this.behaviorController.rotationBehavior = null;
+            // Also save and disable righting behavior (pulls toward upright, causes drift)
+            this._prewarmSavedState.rightingBehavior = this.behaviorController.rightingBehavior;
+            this.behaviorController.rightingBehavior = null;
+        }
+        // Zero out any accumulated rotation
+        this.baseEuler[0] = 0;
+        this.baseEuler[1] = 0;
+        this.baseEuler[2] = 0;
+        this.breathingEnabled = false;
+        this.particleVisibility = false;
+        if (this.particleOrchestrator?.renderer) {
+            this.particleOrchestrator.renderer.setVisible(false);
+        }
+    }
+
+    /**
+     * Unfreeze animations after prewarm completes.
+     * @private
+     */
+    _unfreezeAfterPrewarm() {
+        if (!this._prewarmFrozen || this._destroyed) return;
+        this._prewarmFrozen = false;
+
+        const saved = this._prewarmSavedState;
+        if (!saved) return;
+
+        // Restore rotation + righting
+        this.rotationDisabled = saved.rotationDisabled;
+        if (this.behaviorController) {
+            this.behaviorController.rotationDisabled = saved.rotationDisabled;
+            this.behaviorController.rightingBehavior = saved.rightingBehavior || null;
+        }
+        // Re-trigger emotion to restore rotation behavior
+        if (!saved.rotationDisabled) {
+            this.setEmotion(this.emotion, this.undertone);
+        }
+
+        // Restore breathing
+        this.breathingEnabled = saved.breathingEnabled;
+
+        // Restore particles
+        this.particleVisibility = saved.particleVisibility;
+        if (saved.particleVisibility && this.particleOrchestrator?.renderer) {
+            this.particleOrchestrator.renderer.setVisible(true);
+            this.particleOrchestrator.setEmotion(this.emotion, this.undertone);
+        }
+
+        this._prewarmSavedState = null;
+    }
+
+    /**
+     * Background pre-warm: load remaining element types that weren't explicitly preloaded.
+     * Awaits each load sequentially so concurrent shader compiles don't stack.
+     * Unfreezes animations when complete.
      * @private
      */
     async _backgroundPrewarmElements() {
         if (this._destroyed || !this.elementSpawner) return;
 
-        // Find elements that haven't been preloaded yet
-        const alreadyLoaded = new Set(this._preloadElements);
-        const toPrewarm = ALL_ELEMENT_TYPES.filter(type => !alreadyLoaded.has(type));
-
-        if (toPrewarm.length === 0) return;
-
-        // Load one at a time with small delays to avoid blocking the main thread
-        for (const type of toPrewarm) {
+        // Drain the priority queue — fire is first by default (most likely
+        // to be selected since its category is expanded on load).
+        // prioritizeElement() can reorder the queue if the user selects
+        // a different element before prewarm finishes.
+        while (this._prewarmQueue && this._prewarmQueue.length > 0) {
             if (this._destroyed) break;
 
-            // Small delay between loads to keep UI responsive
+            // Pop the next highest-priority element
+            const type = this._prewarmQueue.shift();
+
+            // Skip if already loaded (by _preloadElements or a prior gesture)
+            if (this._prewarmLoaded.has(type) || this.elementSpawner._initialized.has(type)) {
+                continue;
+            }
+
+            // Small delay between loads
             await new Promise(resolve => setTimeout(resolve, 100));
-
             if (this._destroyed) break;
-            this.elementSpawner.preloadModels(type);
+
+            await this.elementSpawner.preloadModels(type);
+            this._prewarmLoaded.add(type);
         }
+
+        // All elements loaded — unfreeze animations
+        this._unfreezeAfterPrewarm();
     }
 
     /**
@@ -4178,6 +4294,11 @@ export class Core3DManager {
         if (this._prewarmTimeoutId) {
             clearTimeout(this._prewarmTimeoutId);
             this._prewarmTimeoutId = null;
+        }
+        // If destroyed during prewarm, don't leave animations frozen
+        if (this._prewarmFrozen) {
+            this._prewarmFrozen = false;
+            this._prewarmSavedState = null;
         }
     }
 
@@ -4379,6 +4500,9 @@ export class Core3DManager {
         if (!this.elementSpawner) return;
         const { spawnMode, animation, models, count, scale, embedDepth, duration } = overlay;
         if (!spawnMode || spawnMode === 'none') return;
+
+        // If prewarm is still running, bump this element to front of queue
+        this.prioritizeElement(elementType);
 
         const modeSignature = Array.isArray(spawnMode)
             ? `layers:${spawnMode.length}:${spawnMode.map(l => l.type).join(',')}`

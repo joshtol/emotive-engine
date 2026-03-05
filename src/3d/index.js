@@ -1034,6 +1034,9 @@ export class EmotiveMascot3D {
 
                 // Enable geometry's internal rotation behavior
                 this.core3D.rotationDisabled = false;
+                if (this.core3D.behaviorController) {
+                    this.core3D.behaviorController.rotationDisabled = false;
+                }
                 // Re-trigger emotion to restore rotation behavior
                 this.setEmotion(this.core3D.emotion, this.undertone);
             }
@@ -1050,13 +1053,10 @@ export class EmotiveMascot3D {
         }
         if (this.core3D) {
             this.core3D.rotationDisabled = true;
-            this.core3D.rotationBehavior = null;
-            // Zero out any accumulated rotation velocity
-            if (this.core3D.baseEuler) {
-                // Keep current position but stop future rotation
-                this.core3D.baseEuler[0] = 0;
-                this.core3D.baseEuler[1] = 0;
-                this.core3D.baseEuler[2] = 0;
+            // Disable rotation on the BehaviorController (the actual rotation driver)
+            if (this.core3D.behaviorController) {
+                this.core3D.behaviorController.rotationDisabled = true;
+                this.core3D.behaviorController.rotationBehavior = null;
             }
         }
     }

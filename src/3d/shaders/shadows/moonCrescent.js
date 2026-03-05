@@ -143,10 +143,10 @@ void main() {
     float litFactor = pow(shadowFactor, 2.0); // Maximum contrast
 
     // TEXTURE ENHANCEMENT: Boost surface detail contrast
-    // Slightly darken dark areas, brighten bright areas of texture
-    vec3 detailEnhanced = texColor.rgb * 1.08; // Subtle boost
+    // Darken dark areas, brighten mid-tones, clamp so bright areas never exceed 1.0
     float textureLuminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
-    detailEnhanced = mix(texColor.rgb * 0.95, texColor.rgb * 1.12, smoothstep(0.3, 0.7, textureLuminance));
+    vec3 detailEnhanced = mix(texColor.rgb * 0.92, texColor.rgb * 1.06, smoothstep(0.25, 0.55, textureLuminance));
+    detailEnhanced = min(detailEnhanced, vec3(0.85));
 
     // Combine enhanced texture with diffuse lighting
     vec3 litColor = detailEnhanced * diffuseLighting;

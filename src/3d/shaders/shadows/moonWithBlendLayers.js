@@ -143,9 +143,9 @@ void main() {
     // Apply shadow transition (moon phase only - NOT camera-based)
     // The moon texture is uniformly visible; only the phase shadow creates darkness
     float litFactor = pow(shadowFactor, 2.0);
-    vec3 detailEnhanced = texColor.rgb * 1.08;
     float textureLuminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
-    detailEnhanced = mix(texColor.rgb * 0.95, texColor.rgb * 1.12, smoothstep(0.3, 0.7, textureLuminance));
+    vec3 detailEnhanced = mix(texColor.rgb * 0.92, texColor.rgb * 1.06, smoothstep(0.25, 0.55, textureLuminance));
+    detailEnhanced = min(detailEnhanced, vec3(0.85));
 
     // Lit areas show texture; shadowed areas show earthshine
     // NO camera-based limb darkening - moon rotates, texture stays uniformly lit

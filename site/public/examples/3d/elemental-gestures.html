@@ -210,6 +210,7 @@
             background: rgba(74, 222, 128, 0.15);
         }
 
+
         /* Section headers with counts */
         .section h2 .gesture-count {
             font-size: 11px;
@@ -821,7 +822,7 @@
             materialVariant: 'multiplexer',
             assetBasePath: '/assets',
             preloadElements: [],
-            backgroundPrewarm: false
+            backgroundPrewarm: true
         });
 
         mascot.init(container);
@@ -1186,7 +1187,7 @@
         // Wobble toggle (uses shared demo-utils pattern)
         setupWobbleToggle(() => mascot);
 
-        // Gesture button clicks
+        // Gesture button clicks (including prime buttons in section headers)
         document.addEventListener('click', e => {
             const btn = e.target.closest('[data-gesture]');
             if (!btn) return;
