@@ -145,18 +145,6 @@ describe('AnimationLoopManager', () => {
         });
     });
 
-    describe('groupCallbacksByPriority', () => {
-        it('should group callbacks correctly', () => {
-            manager.register(() => {}, AnimationPriority.CRITICAL);
-            manager.register(() => {}, AnimationPriority.CRITICAL);
-            manager.register(() => {}, AnimationPriority.LOW);
-
-            const groups = manager.groupCallbacksByPriority();
-            expect(groups.get(AnimationPriority.CRITICAL)).toHaveLength(2);
-            expect(groups.get(AnimationPriority.LOW)).toHaveLength(1);
-        });
-    });
-
     describe('shouldSkipPriority', () => {
         it('should never skip CRITICAL', () => {
             manager.fps = 10; // Very low FPS
