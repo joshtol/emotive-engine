@@ -20,7 +20,7 @@ function initSectionToggles() {
     document.querySelectorAll('.section h2').forEach(h2 => {
         h2.addEventListener('click', e => {
             // Don't collapse if clicking on a toggle switch inside the header
-            if (e.target.closest('.toggle-switch')) return;
+            if (e.target.closest('.toggle-switch') || e.target.closest('.featured-gesture')) return;
 
             const content = h2.nextElementSibling;
             if (content?.classList.contains('section-content')) {

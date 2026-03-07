@@ -1023,23 +1023,20 @@ export class EmotiveMascot3D {
      */
     enableAutoRotate() {
         if (this.core3D) {
-            // Don't enable rotation for geometries with special rotation rules (moon is tidally locked)
-            if (this.core3D.geometryType !== 'moon') {
-                // Enable OrbitControls camera rotation
-                if (this.core3D.renderer?.controls) {
-                    this.core3D.renderer.controls.autoRotate = true;
-                    this.core3D.renderer.controls.autoRotateSpeed =
-                        this.core3D.options?.autoRotateSpeed ?? 0.5;
-                }
-
-                // Enable geometry's internal rotation behavior
-                this.core3D.rotationDisabled = false;
-                if (this.core3D.behaviorController) {
-                    this.core3D.behaviorController.rotationDisabled = false;
-                }
-                // Re-trigger emotion to restore rotation behavior
-                this.setEmotion(this.core3D.emotion, this.undertone);
+            // Enable OrbitControls camera rotation
+            if (this.core3D.renderer?.controls) {
+                this.core3D.renderer.controls.autoRotate = true;
+                this.core3D.renderer.controls.autoRotateSpeed =
+                    this.core3D.options?.autoRotateSpeed ?? 0.5;
             }
+
+            // Enable geometry's internal rotation behavior
+            this.core3D.rotationDisabled = false;
+            if (this.core3D.behaviorController) {
+                this.core3D.behaviorController.rotationDisabled = false;
+            }
+            // Re-trigger emotion to restore rotation behavior
+            this.setEmotion(this.core3D.emotion, this.undertone);
         }
     }
 

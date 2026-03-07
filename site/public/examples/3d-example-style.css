@@ -78,7 +78,7 @@ body {
     align-items: center;
     justify-content: center;
     min-width: 0;
-    padding: 2vmin;
+    padding: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -117,10 +117,12 @@ h2:hover {
 
 h2::after {
     content: '\2212'; /* minus sign */
-    font-size: clamp(14px, 1.2vw, 18px);
-    font-weight: 400;
+    font-size: clamp(20px, 1.8vw, 24px);
+    font-weight: 700;
     color: rgba(255, 255, 255, 0.5);
     transition: transform 0.2s;
+    padding: 4px 2px;
+    flex-shrink: 0;
 }
 
 h2.collapsed::after {
@@ -139,6 +141,21 @@ h2.collapsed::after {
     opacity: 0;
     margin-bottom: 0;
     overflow: hidden;
+}
+
+/* Tighten collapsed sections */
+.section:has(> .section-content.collapsed) {
+    margin-bottom: clamp(6px, 0.8vw, 10px);
+    padding-bottom: clamp(6px, 0.8vw, 10px);
+}
+
+.section:has(> h2.collapsed) {
+    margin-bottom: clamp(6px, 0.8vw, 10px);
+    padding-bottom: clamp(6px, 0.8vw, 10px);
+}
+
+h2.collapsed {
+    margin-bottom: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -427,7 +444,8 @@ input[type="range"]::-moz-range-thumb {
 .section h2.has-toggle {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .section h2.has-toggle > span:first-child {

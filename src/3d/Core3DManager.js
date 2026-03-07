@@ -848,6 +848,14 @@ export class Core3DManager {
     }
 
     /**
+     * Get the SolarEclipse instance (for direct control of shadow position, coverage, corona layers)
+     * @returns {SolarEclipse|null}
+     */
+    get solarEclipse() {
+        return this.effectManager?.getSolarEclipse() ?? null;
+    }
+
+    /**
      * Set solar eclipse type (only works for sun geometry)
      * @param {string} eclipseType - Eclipse type: 'off', 'annular', or 'total'
      */
@@ -1188,6 +1196,10 @@ export class Core3DManager {
     setWobbleEnabled(enabled) {
         this.wobbleEnabled = enabled;
         this.behaviorController.setWobbleEnabled(enabled);
+
+        // Clear freeze-wobble tracking so the per-frame freeze logic
+        // doesn't override this explicit user toggle
+        this._wobbleWasFrozen = false;
 
         // When disabling wobble, reset pitch/roll to upright, preserve yaw for rotation continuity
         if (!enabled) {
@@ -1775,6 +1787,11 @@ export class Core3DManager {
             const minFramesPassed = this._postSwapFrameCount >= 2;
             const timedOut = Date.now() - this._postSwapHoldTime > 500;
             if ((texturesReady && minFramesPassed) || timedOut) {
+                // Force opacity to 1.0 before grow phase starts — prevents untextured
+                // flash on geometries like moon whose material fades in asynchronously
+                if (this.customMaterial?.uniforms?.opacity) {
+                    this.customMaterial.uniforms.opacity.value = 1.0;
+                }
                 this.geometryMorpher.resumeFromSwap();
                 this._postSwapHold = false;
             }

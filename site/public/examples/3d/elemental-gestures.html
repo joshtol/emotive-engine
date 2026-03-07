@@ -43,109 +43,6 @@
         .element-earth { --element-color: #a3a3a3; }
         .element-nature { --element-color: #4ade80; }
 
-        /* Search box styling */
-        .search-box {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .search-box input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            padding: 8px 12px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s, background 0.2s;
-        }
-
-        .search-box input:focus {
-            border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        .search-box input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Filter checkboxes with element colors */
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .filter-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-
-        .filter-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .filter-item input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            accent-color: var(--accent);
-            cursor: pointer;
-        }
-
-        .filter-item label {
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filter-item .element-icon {
-            font-size: 14px;
-        }
-
-        .filter-count {
-            font-size: 10px;
-            opacity: 0.6;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 5px;
-            border-radius: 10px;
-        }
-
-        /* Stats display */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .stat-label {
-            font-size: 11px;
-            opacity: 0.6;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
         /* Gesture button enhancements */
         .gesture-btn {
             display: flex;
@@ -211,12 +108,167 @@
         }
 
 
-        /* Section headers with counts */
+        /* Featured gesture pill in section headers */
+        .featured-gesture {
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+            text-transform: none;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+            margin-left: auto;
+            margin-right: 4px;
+            flex-shrink: 0;
+            width: fit-content;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 50%;
+        }
+
+        .featured-gesture:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        .featured-gesture:active {
+            transform: scale(0.95);
+        }
+
+        /* Element-tinted featured pills */
+        .featured-gesture[data-element="fire"] {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.3);
+            color: #fb923c;
+        }
+        .featured-gesture[data-element="fire"]:hover {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: rgba(249, 115, 22, 0.5);
+            box-shadow: 0 0 8px rgba(249, 115, 22, 0.2);
+        }
+        .featured-gesture[data-element="ice"] {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+        }
+        .featured-gesture[data-element="ice"]:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+        }
+        .featured-gesture[data-element="electric"] {
+            background: rgba(250, 204, 21, 0.1);
+            border-color: rgba(250, 204, 21, 0.3);
+            color: #facc15;
+        }
+        .featured-gesture[data-element="electric"]:hover {
+            background: rgba(250, 204, 21, 0.18);
+            border-color: rgba(250, 204, 21, 0.5);
+            box-shadow: 0 0 8px rgba(250, 204, 21, 0.2);
+        }
+        .featured-gesture[data-element="water"] {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+        }
+        .featured-gesture[data-element="water"]:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+        }
+        .featured-gesture[data-element="void"] {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: rgba(168, 85, 247, 0.3);
+            color: #c084fc;
+        }
+        .featured-gesture[data-element="void"]:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: rgba(168, 85, 247, 0.5);
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.2);
+        }
+        .featured-gesture[data-element="light"] {
+            background: rgba(254, 240, 138, 0.1);
+            border-color: rgba(254, 240, 138, 0.3);
+            color: #fef08a;
+        }
+        .featured-gesture[data-element="light"]:hover {
+            background: rgba(254, 240, 138, 0.18);
+            border-color: rgba(254, 240, 138, 0.5);
+            box-shadow: 0 0 8px rgba(254, 240, 138, 0.2);
+        }
+        .featured-gesture[data-element="earth"] {
+            background: rgba(163, 163, 163, 0.1);
+            border-color: rgba(163, 163, 163, 0.3);
+            color: #d4d4d4;
+        }
+        .featured-gesture[data-element="earth"]:hover {
+            background: rgba(163, 163, 163, 0.2);
+            border-color: rgba(163, 163, 163, 0.5);
+            box-shadow: 0 0 8px rgba(163, 163, 163, 0.2);
+        }
+        .featured-gesture[data-element="nature"] {
+            background: rgba(74, 222, 128, 0.1);
+            border-color: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+        .featured-gesture[data-element="nature"]:hover {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.5);
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.2);
+        }
+
+        /* Shuffle button */
+        .shuffle-bar {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .shuffle-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(var(--accent-rgb), 0.15);
+            border: 1px solid rgba(var(--accent-rgb), 0.3);
+            border-radius: 8px;
+            color: var(--accent);
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .shuffle-btn:hover {
+            background: rgba(var(--accent-rgb), 0.25);
+            transform: scale(1.02);
+        }
+
+        .shuffle-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Section headers with counts — hidden when collapsed, shown when expanded */
         .section h2 .gesture-count {
             font-size: 11px;
             font-weight: normal;
             opacity: 0.6;
             margin-left: 6px;
+        }
+
+        .section h2.collapsed .gesture-count {
+            display: none;
+        }
+
+        .section h2:not(.collapsed) .featured-gesture {
+            display: none;
         }
 
         /* Section header element icons */
@@ -230,27 +282,6 @@
             visibility: hidden !important;
             height: 0 !important;
             overflow: hidden !important;
-        }
-
-        /* Left-menu collapsible section */
-        .left-menu #filters-section > h2 {
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-
-        .left-menu #filters-section > h2::after {
-            content: '+';
-            font-size: 16px;
-            font-weight: bold;
-            color: #888;
-            margin-left: 8px;
-        }
-
-        .left-menu #filters-section > h2:not(.collapsed)::after {
-            content: '−';
         }
 
         /* Right-menu sections */
@@ -486,6 +517,10 @@
             }
             .gesture-btn:hover { transform: none; }
 
+            .featured-gesture {
+                margin-right: 28px;
+            }
+
             /* Floating toast near canvas */
             .mobile-toast {
                 display: block;
@@ -537,6 +572,17 @@
                 margin: 0 auto;
             }
         }
+
+        .logo-badge {
+            position: absolute;
+            top: clamp(8px, 1.5vh, 16px);
+            left: clamp(8px, 1.5vw, 16px);
+            width: clamp(80px, 12vmin, 180px);
+            opacity: 0.4;
+            z-index: 101;
+            pointer-events: none;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+        }
     </style>
 </head>
 <body>
@@ -553,10 +599,55 @@
                     <button data-action="geometry" data-value="moon">🌙 Moon</button>
                     <button data-action="geometry" data-value="sun">☀️ Sun</button>
                 </div>
+
+                <!-- Moon Phase controls (moon only) -->
+                <div id="moon-phase-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Moon Phase</div>
+                    <div class="button-grid">
+                        <button data-action="moon-phase" data-value="new">🌑 New</button>
+                        <button data-action="moon-phase" data-value="waxing-crescent">🌒 Wax Cres</button>
+                        <button data-action="moon-phase" data-value="first-quarter">🌓 1st Qtr</button>
+                        <button data-action="moon-phase" data-value="waxing-gibbous">🌔 Wax Gib</button>
+                        <button data-action="moon-phase" data-value="full" class="active">🌕 Full</button>
+                        <button data-action="moon-phase" data-value="waning-gibbous">🌖 Wan Gib</button>
+                        <button data-action="moon-phase" data-value="last-quarter">🌗 Last Qtr</button>
+                        <button data-action="moon-phase" data-value="waning-crescent">🌘 Wan Cres</button>
+                    </div>
+                </div>
+
+                <!-- Lunar Eclipse controls (moon only, full moon required) -->
+                <div id="lunar-eclipse-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Lunar Eclipse</div>
+                    <div class="button-grid">
+                        <button data-action="lunar-eclipse" data-value="penumbral">🌔 Penumbral</button>
+                        <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
+                        <button data-action="lunar-eclipse" data-value="total">🩸 Blood Moon</button>
+                    </div>
+                    <div id="lunar-eclipse-hint" style="display: none; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; font-style: italic;">Select Full Moon to unlock</div>
+                </div>
+
+                <!-- Solar Eclipse controls (sun only) -->
+                <div id="eclipse-section" style="display: none; margin-top: 12px;">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Solar Eclipse</div>
+                    <div class="button-grid">
+                        <button data-action="eclipse" data-value="annular">🌑 Annular</button>
+                        <button data-action="eclipse" data-value="total">🌚 Total</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="section">
+        <div class="section" id="info-section">
+            <div class="info-box" id="info-box">
+                <div class="info-default">
+                    <strong>Elemental Gestures</strong><br>
+                    Destruction effects powered by fire, ice, electricity, water, void, light, earth, and nature.
+                </div>
+                <div class="info-gesture" id="info-gesture"></div>
+            </div>
+        </div>
+
+        <div class="section" id="emotion-section">
             <h2 class="has-toggle">
                 <span>Emotion</span>
                 <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
@@ -581,98 +672,11 @@
                 </div>
             </div>
         </div>
-
-        <div class="section" id="filters-section">
-            <h2 class="collapsed">Search & Filters</h2>
-            <div class="section-content collapsed">
-                <div class="search-box">
-                    <input type="text" id="gesture-search" placeholder="Filter elemental gestures...">
-                </div>
-                <div class="filter-group">
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-fire" checked>
-                        <label for="filter-fire">
-                            <span class="element-icon">🔥</span> Fire
-                            <span class="filter-count" id="count-fire">0</span>
-                        </label>
-                    </div>
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-ice" checked>
-                        <label for="filter-ice">
-                            <span class="element-icon">❄️</span> Ice
-                            <span class="filter-count" id="count-ice">0</span>
-                        </label>
-                    </div>
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-electric" checked>
-                        <label for="filter-electric">
-                            <span class="element-icon">⚡</span> Electric
-                            <span class="filter-count" id="count-electric">0</span>
-                        </label>
-                    </div>
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-water" checked>
-                        <label for="filter-water">
-                            <span class="element-icon">💧</span> Water
-                            <span class="filter-count" id="count-water">0</span>
-                        </label>
-                    </div>
-                    <!-- Poison filter removed - no element spawning -->
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-void" checked>
-                        <label for="filter-void">
-                            <span class="element-icon">🌑</span> Void
-                            <span class="filter-count" id="count-void">0</span>
-                        </label>
-                    </div>
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-light" checked>
-                        <label for="filter-light">
-                            <span class="element-icon">✨</span> Light
-                            <span class="filter-count" id="count-light">0</span>
-                        </label>
-                    </div>
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-earth" checked>
-                        <label for="filter-earth">
-                            <span class="element-icon">🪨</span> Earth
-                            <span class="filter-count" id="count-earth">0</span>
-                        </label>
-                    </div>
-                    <div class="filter-item">
-                        <input type="checkbox" id="filter-nature" checked>
-                        <label for="filter-nature">
-                            <span class="element-icon">🌿</span> Nature
-                            <span class="filter-count" id="count-nature">0</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="stats-grid" style="margin-top: 12px;">
-                    <div class="stat-item">
-                        <div class="stat-value" id="stat-total">-</div>
-                        <div class="stat-label">Elemental</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="stat-visible">-</div>
-                        <div class="stat-label">Visible</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section" id="info-section">
-            <div class="info-box" id="info-box">
-                <div class="info-default">
-                    <strong>Elemental Gestures</strong><br>
-                    Destruction effects powered by fire, ice, electricity, water, void, light, earth, and nature.
-                </div>
-                <div class="info-gesture" id="info-gesture"></div>
-            </div>
-        </div>
     </div>
 
     <!-- CENTER ANIMATION -->
     <div class="center-content">
+        <img class="logo-badge" src="/assets/emotive-engine-full-W.svg" alt="Emotive Engine">
         <div id="animation-container"></div>
         <div class="camera-hint">Drag to rotate | Scroll to zoom | Click elements to unleash</div>
         <div class="mobile-toast" id="mobile-toast"></div>
@@ -685,9 +689,13 @@
 
     <!-- RIGHT MENU -->
     <div class="right-menu">
+        <div class="shuffle-bar">
+            <button class="shuffle-btn" id="shuffle-btn">🎲 Shuffle</button>
+        </div>
+
         <div class="section" id="section-fire">
-            <h2><span class="element-icon">🔥</span> Fire <span class="gesture-count" id="header-count-fire"></span></h2>
-            <div class="section-content">
+            <h2 class="collapsed"><span class="element-icon">🔥</span> Fire <button class="featured-gesture" data-gesture="firemeditation" data-element="fire">firemeditation</button><span class="gesture-count" id="header-count-fire"></span></h2>
+            <div class="section-content collapsed">
                 <div class="button-grid" id="grid-fire">
                     <div class="loading-state">
                         <div class="spinner"></div>
@@ -698,7 +706,7 @@
         </div>
 
         <div class="section" id="section-ice">
-            <h2 class="collapsed"><span class="element-icon">❄️</span> Ice <span class="gesture-count" id="header-count-ice"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">❄️</span> Ice <button class="featured-gesture" data-gesture="icecrown" data-element="ice">icecrown</button><span class="gesture-count" id="header-count-ice"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-ice">
                     <div class="loading-state">
@@ -710,7 +718,7 @@
         </div>
 
         <div class="section" id="section-electric">
-            <h2 class="collapsed"><span class="element-icon">⚡</span> Electric <span class="gesture-count" id="header-count-electric"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">⚡</span> Electric <button class="featured-gesture" data-gesture="electricsurge" data-element="electric">electricsurge</button><span class="gesture-count" id="header-count-electric"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-electric">
                     <div class="loading-state">
@@ -722,7 +730,7 @@
         </div>
 
         <div class="section" id="section-water">
-            <h2 class="collapsed"><span class="element-icon">💧</span> Water <span class="gesture-count" id="header-count-water"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">💧</span> Water <button class="featured-gesture" data-gesture="watervortex" data-element="water">watervortex</button><span class="gesture-count" id="header-count-water"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-water">
                     <div class="loading-state">
@@ -736,7 +744,7 @@
         <!-- Poison section removed - no element spawning -->
 
         <div class="section" id="section-void">
-            <h2 class="collapsed"><span class="element-icon">🌑</span> Void <span class="gesture-count" id="header-count-void"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">🌑</span> Void <button class="featured-gesture" data-gesture="voidsingularity" data-element="void">voidsingularity</button><span class="gesture-count" id="header-count-void"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-void">
                     <div class="loading-state">
@@ -748,7 +756,7 @@
         </div>
 
         <div class="section" id="section-light">
-            <h2 class="collapsed"><span class="element-icon">✨</span> Light <span class="gesture-count" id="header-count-light"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">✨</span> Light <button class="featured-gesture" data-gesture="lightascend" data-element="light">lightascend</button><span class="gesture-count" id="header-count-light"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-light">
                     <div class="loading-state">
@@ -760,7 +768,7 @@
         </div>
 
         <div class="section" id="section-earth">
-            <h2 class="collapsed"><span class="element-icon">🪨</span> Earth <span class="gesture-count" id="header-count-earth"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">🪨</span> Earth <button class="featured-gesture" data-gesture="earthquake" data-element="earth">earthquake</button><span class="gesture-count" id="header-count-earth"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-earth">
                     <div class="loading-state">
@@ -772,7 +780,7 @@
         </div>
 
         <div class="section" id="section-nature">
-            <h2 class="collapsed"><span class="element-icon">🌿</span> Nature <span class="gesture-count" id="header-count-nature"></span></h2>
+            <h2 class="collapsed"><span class="element-icon">🌿</span> Nature <button class="featured-gesture" data-gesture="naturecleanse" data-element="nature">naturecleanse</button><span class="gesture-count" id="header-count-nature"></span></h2>
             <div class="section-content collapsed">
                 <div class="button-grid" id="grid-nature">
                     <div class="loading-state">
@@ -799,7 +807,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { profiler } from '/emotive-engine-3d-elementals.bundled.js';
+        import EmotiveMascot3D, { profiler, animateMoonPhase } from '/emotive-engine-3d-elementals.bundled.js';
         import { setupParticlesToggle, setupVisualToggles, setupWobbleToggle } from '/examples/3d/demo-utils.js';
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -861,21 +869,15 @@
         // Elements
         const grids = {};
         const sections = {};
-        const filters = {};
-        const counts = {};
         const headerCounts = {};
 
         elements.forEach(el => {
             grids[el] = document.getElementById(`grid-${el}`);
             sections[el] = document.getElementById(`section-${el}`);
-            filters[el] = document.getElementById(`filter-${el}`);
-            counts[el] = document.getElementById(`count-${el}`);
             headerCounts[el] = document.getElementById(`header-count-${el}`);
         });
 
-        const searchInput = document.getElementById('gesture-search');
-        const statTotal = document.getElementById('stat-total');
-        const statVisible = document.getElementById('stat-visible');
+        let currentMoonPhase = 'full';
         const tooltip = document.getElementById('gesture-tooltip');
         const infoBox = document.getElementById('info-box');
         const infoGesture = document.getElementById('info-gesture');
@@ -1033,54 +1035,10 @@
                         if (c === 0 && grids[el]) {
                             grids[el].innerHTML = '<div class="empty-state">No gestures</div>';
                         }
-                        if (counts[el]) counts[el].textContent = c;
                         if (headerCounts[el]) headerCounts[el].textContent = `(${c})`;
                     });
-                    statTotal.textContent = allElementalGestures.length;
-                    updateVisibleCount();
                 }
             });
-        }
-
-        /**
-         * Filter gestures based on search and element filters
-         */
-        function filterGestures() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-
-            // Check which elements are enabled
-            const enabledElements = {};
-            elements.forEach(el => {
-                enabledElements[el] = filters[el]?.checked ?? true;
-            });
-
-            // Show/hide sections based on element filters
-            Object.entries(sections).forEach(([element, section]) => {
-                if (section) {
-                    section.style.display = enabledElements[element] ? '' : 'none';
-                }
-            });
-
-            // Filter individual buttons
-            document.querySelectorAll('.gesture-btn').forEach(btn => {
-                const name = btn.dataset.gesture.toLowerCase();
-                const element = btn.dataset.element;
-
-                const matchesSearch = !searchTerm || name.includes(searchTerm);
-                const matchesElement = enabledElements[element];
-
-                btn.classList.toggle('hidden', !matchesSearch || !matchesElement);
-            });
-
-            updateVisibleCount();
-        }
-
-        /**
-         * Update visible gesture count
-         */
-        function updateVisibleCount() {
-            const visible = document.querySelectorAll('.gesture-btn:not(.hidden)').length;
-            statVisible.textContent = visible;
         }
 
         /**
@@ -1119,6 +1077,25 @@
 
         // Section toggling handled by demo-utils.js (auto-initializes on all .section h2)
         // No page-specific toggle handlers needed — demo-utils covers all sections.
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RESPONSIVE: Move Emotion section between left-menu (desktop) and right-menu (mobile)
+        // ═══════════════════════════════════════════════════════════════════════════
+        const emotionSection = document.getElementById('emotion-section');
+        const leftMenu = document.querySelector('.left-menu');
+        const rightMenu = document.querySelector('.right-menu');
+        const visualsSection = rightMenu.querySelector('.visual-controls');
+
+        function placeEmotionSection() {
+            const mobile = window.matchMedia('(max-width: 1000px)').matches;
+            if (mobile && emotionSection.parentElement === leftMenu) {
+                rightMenu.insertBefore(emotionSection, visualsSection);
+            } else if (!mobile && emotionSection.parentElement === rightMenu) {
+                leftMenu.appendChild(emotionSection);
+            }
+        }
+        placeEmotionSection();
+        window.addEventListener('resize', placeEmotionSection);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // MOBILE: Accordion behavior — one element section open at a time
@@ -1161,15 +1138,122 @@
         }
 
         // Geometry button clicks
+        let currentGeometry = 'crystal';
         document.addEventListener('click', e => {
             const btn = e.target.closest('[data-action="geometry"]');
             if (!btn) return;
 
             const value = btn.dataset.value;
             mascot.morphTo(value);
+            currentGeometry = value;
 
             document.querySelectorAll('[data-action="geometry"]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+
+            // Show/hide geometry-specific controls
+            document.getElementById('eclipse-section').style.display = (value === 'sun') ? 'block' : 'none';
+            document.getElementById('moon-phase-section').style.display = (value === 'moon') ? 'block' : 'none';
+            document.getElementById('lunar-eclipse-section').style.display = (value === 'moon') ? 'block' : 'none';
+
+            // Apply geometry-specific defaults
+            const particlesToggleEl = document.getElementById('particles-toggle');
+            const autoRotateBtn = document.querySelector('[data-action="toggle-auto-rotate"]');
+
+            if (value === 'moon') {
+                mascot.disableParticles();
+                mascot.disableAutoRotate();
+                mascot.disableBlinking();
+                particlesToggleEl?.classList.remove('active');
+                autoRotateBtn?.classList.remove('active');
+
+                // Initialize moon to full phase after morph completes
+                setTimeout(() => {
+                    if (mascot.core3D?.customMaterial?.uniforms?.shadowOffset) {
+                        mascot.core3D.customMaterial.uniforms.shadowOffset.value.x = 0;
+                        mascot.core3D.customMaterial.uniforms.shadowOffset.value.y = 0;
+                    }
+                    if (mascot.core3D?.renderer?.controls) {
+                        mascot.core3D.renderer.controls.autoRotate = false;
+                    }
+                }, 600);
+            } else if (value === 'sun') {
+                mascot.disableParticles();
+                mascot.enableAutoRotate();
+                mascot.disableBlinking();
+                particlesToggleEl?.classList.remove('active');
+                autoRotateBtn?.classList.add('active');
+            } else {
+                // Crystal-type geometries
+                mascot.enableParticles();
+                mascot.enableAutoRotate();
+                mascot.disableBlinking();
+                particlesToggleEl?.classList.add('active');
+                autoRotateBtn?.classList.add('active');
+            }
+        });
+
+        // Moon phase button clicks
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="moon-phase"]');
+            if (!btn || currentGeometry !== 'moon') return;
+
+            const value = btn.dataset.value;
+            if (mascot.core3D?.customMaterial) {
+                animateMoonPhase(mascot.core3D.customMaterial, value, 1500);
+                currentMoonPhase = value;
+
+                document.querySelectorAll('[data-action="moon-phase"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Lunar eclipse only available on full moon
+                const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
+                const lunarEclipseHint = document.getElementById('lunar-eclipse-hint');
+                if (value === 'full') {
+                    lunarEclipseSection.style.opacity = '1';
+                    lunarEclipseSection.style.pointerEvents = 'auto';
+                    lunarEclipseHint.style.display = 'none';
+                } else {
+                    mascot.core3D.setMoonEclipse('off');
+                    document.querySelectorAll('[data-action="lunar-eclipse"]').forEach(b => b.classList.remove('active'));
+                    lunarEclipseSection.style.opacity = '0.4';
+                    lunarEclipseSection.style.pointerEvents = 'none';
+                    lunarEclipseHint.style.display = 'block';
+                }
+            }
+        });
+
+        // Solar eclipse button clicks
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="eclipse"]');
+            if (!btn || currentGeometry !== 'sun') return;
+
+            const value = btn.dataset.value;
+            if (btn.classList.contains('active')) {
+                mascot.core3D.setSunShadow('off');
+                btn.classList.remove('active');
+            } else {
+                document.querySelectorAll('[data-action="eclipse"]').forEach(b => b.classList.remove('active'));
+                mascot.core3D.setSunShadow(value);
+                btn.classList.add('active');
+            }
+        });
+
+        // Lunar eclipse button clicks
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="lunar-eclipse"]');
+            if (!btn || currentGeometry !== 'moon' || currentMoonPhase !== 'full') return;
+
+            const value = btn.dataset.value;
+            if (btn.classList.contains('active')) {
+                mascot.core3D.setMoonEclipse('off');
+                btn.classList.remove('active');
+                document.getElementById('moon-phase-section').style.display = 'block';
+            } else {
+                document.querySelectorAll('[data-action="lunar-eclipse"]').forEach(b => b.classList.remove('active'));
+                mascot.core3D.setMoonEclipse(value);
+                btn.classList.add('active');
+                document.getElementById('moon-phase-section').style.display = 'none';
+            }
         });
 
         // Emotion button clicks
@@ -1202,14 +1286,13 @@
             mascot.express(gestureName);
         });
 
-        // Search input
-        searchInput.addEventListener('input', filterGestures);
-
-        // Filter checkboxes
-        Object.values(filters).forEach(checkbox => {
-            if (checkbox) {
-                checkbox.addEventListener('change', filterGestures);
-            }
+        // Shuffle button — random gesture
+        document.getElementById('shuffle-btn').addEventListener('click', () => {
+            if (allElementalGestures.length === 0) return;
+            const gesture = allElementalGestures[Math.floor(Math.random() * allElementalGestures.length)];
+            mascot.express(gesture.name);
+            const meta = elementMeta[gesture.element];
+            if (meta) showMobileToast(`${meta.emoji} ${gesture.name} [${meta.name}]`);
         });
 
         // Tooltip on hover
