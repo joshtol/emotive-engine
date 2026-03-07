@@ -111,14 +111,14 @@ export class AudioBridge {
         if (this._connectedAudioElement === audioElement && this._audioSourceNode) {
             try {
                 this._audioSourceNode.connect(this._analyzerNode);
-            } catch (e) {
+            } catch (_e) {
                 // Already connected — expected
             }
         } else {
             if (this._audioSourceNode) {
                 try {
                     this._audioSourceNode.disconnect();
-                } catch (e) {
+                } catch (_e) {
                     // Already disconnected — expected
                 }
             }
@@ -220,7 +220,7 @@ export class AudioBridge {
         if (this._audioSourceNode) {
             try {
                 this._audioSourceNode.disconnect();
-            } catch (e) {
+            } catch (_e) {
                 // Already disconnected — expected
             }
         }
@@ -620,7 +620,7 @@ export class AudioBridge {
         if (this._analysisGainNode) {
             try {
                 this._analysisGainNode.disconnect();
-            } catch (e) {
+            } catch (_e) {
                 // Already disconnected — expected
             }
             this._analysisGainNode = null;
@@ -697,7 +697,7 @@ export class AudioBridge {
             try {
                 this._analysisSourceNode.stop();
                 this._analysisSourceNode.disconnect();
-            } catch (e) {
+            } catch (_e) {
                 // Already stopped — expected
             }
             this._analysisSourceNode = null;
@@ -708,7 +708,7 @@ export class AudioBridge {
         if (this._bufferAnalyzerNode) {
             try {
                 this._bufferAnalyzerNode.disconnect();
-            } catch (e) {
+            } catch (_e) {
                 // Already disconnected — expected
             }
             // Null it out to force recreation on next track
@@ -722,7 +722,7 @@ export class AudioBridge {
                 this._analysisGainNode.disconnect();
                 // Reconnect to destination (it's the final node in chain)
                 this._analysisGainNode.connect(this._audioContext.destination);
-            } catch (e) {
+            } catch (_e) {
                 // Reconnection failed — expected during teardown
             }
         }
@@ -744,7 +744,7 @@ export class AudioBridge {
         if (this._audioContext) {
             try {
                 this._audioContext.close();
-            } catch (e) {
+            } catch (_e) {
                 // Context already closed — expected
             }
             this._audioContext = null;

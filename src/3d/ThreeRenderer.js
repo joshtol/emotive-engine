@@ -387,7 +387,7 @@ export class ThreeRenderer {
                 let texture = null;
                 try {
                     texture = await hdrLoader.loadAsync(hdrPath);
-                } catch (e) {
+                } catch (_e) {
                     // HDRI loading failed — will fall back to procedural
                 }
 
@@ -409,12 +409,12 @@ export class ThreeRenderer {
                 pmremGenerator.dispose();
                 this._envMapLoading = false; // HDRI loaded successfully
                 return;
-            } catch (e) {
+            } catch (_e) {
                 // HDRI is optional — fall back to procedural envmap
-                console.warn('[ThreeRenderer] HDRI loading failed, using procedural environment:', e.message || e);
+                console.warn('[ThreeRenderer] HDRI loading failed, using procedural environment:', _e.message || _e);
                 pmremGenerator.dispose();
             }
-        } catch (e) {
+        } catch (_e) {
             // HDRLoader not available — use procedural envmap
         }
 

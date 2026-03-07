@@ -296,7 +296,7 @@ export default class LLMResponseHandler {
                     }
 
                     return this.mascot;
-                } catch (e) {
+                } catch (_e) {
                     // Performance not available, fall back to manual choreography
                     console.warn(
                         `Semantic performance '${performanceName}' not available, using manual choreography`

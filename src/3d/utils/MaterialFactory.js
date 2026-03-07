@@ -385,7 +385,7 @@ function createCrystalMaterial(
 }
 
 function createMoonMaterial(
-    textureLoader,
+    loader,
     glowColor,
     glowIntensity,
     materialVariant = null,
@@ -398,7 +398,7 @@ function createMoonMaterial(
     const resolution = isMobile ? '2k' : '4k';
 
     if (materialVariant === 'multiplexer') {
-        const material = createMoonMultiplexerMaterial(textureLoader, {
+        const material = createMoonMultiplexerMaterial(loader, {
             resolution,
             glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
             glowIntensity,
@@ -408,7 +408,7 @@ function createMoonMaterial(
         return { material, type: 'moon-multiplexer' };
     }
 
-    const material = createMoonShadowMaterial(textureLoader, {
+    const material = createMoonShadowMaterial(loader, {
         resolution,
         glowColor: new THREE.Color(glowColor[0], glowColor[1], glowColor[2]),
         glowIntensity,
@@ -421,14 +421,14 @@ function createMoonMaterial(
 }
 
 function createSunMaterialWrapper(
-    textureLoader,
+    loader,
     glowColor,
     glowIntensity,
     materialVariant = null,
     _emotionData = null,
     assetBasePath = '/assets'
 ) {
-    const material = createSunMaterial(textureLoader, {
+    const material = createSunMaterial(loader, {
         glowColor,
         glowIntensity,
         resolution: '4k',

@@ -274,7 +274,7 @@ export class ElementInstancedSpawner {
         if (this._initializing.has(elementType)) {
             try {
                 return await this._initializing.get(elementType);
-            } catch (e) {
+            } catch (_e) {
                 // Previous attempt failed; fall through to retry
                 this._initializing.delete(elementType);
             }

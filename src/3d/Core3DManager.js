@@ -79,8 +79,6 @@ const ALL_ELEMENT_TYPES = [
     'light',
 ];
 
-// Delay before background pre-warm starts (ms)
-const BACKGROUND_PREWARM_DELAY = 2000;
 
 export class Core3DManager {
     /**

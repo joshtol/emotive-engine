@@ -275,7 +275,7 @@ export class AudioAnalyzer {
         if (this.gainNode) {
             try {
                 this.gainNode.disconnect();
-            } catch (e) {
+            } catch (_e) {
                 // Already disconnected — expected
             }
             this.gainNode = null;
@@ -285,7 +285,7 @@ export class AudioAnalyzer {
         if (this.elementSource && this.connectedElement) {
             try {
                 this.elementSource.connect(this.analyser);
-            } catch (e) {
+            } catch (_e) {
                 // Already connected — expected
             }
             this.source = this.elementSource;
