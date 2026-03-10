@@ -61,7 +61,6 @@
   "scripts": {
     "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
     "build:dev": "rollup -c --environment NODE_ENV:development",
-    "build:split": "rollup -c rollup.split.config.js --environment NODE_ENV:production",
     "build:watch": "rollup -c -w --environment NODE_ENV:development",
     "dev": "cd site && npm run dev",
     "serve": "cd site && python -m http.server 5000",
