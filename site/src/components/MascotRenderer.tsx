@@ -153,36 +153,14 @@ export default function MascotRenderer({
         return
       }
 
-      // Wait for global to be available (handles both new and existing scripts)
-      const waitForGlobal = (name: string, timeout = 10000): Promise<any> => {
-        return new Promise((resolve, reject) => {
-          const start = Date.now()
-          const check = () => {
-            const global = (window as any)[name]
-            if (global) {
-              resolve(global)
-            } else if (Date.now() - start > timeout) {
-              reject(new Error(`Timeout waiting for ${name}`))
-            } else {
-              setTimeout(check, 50)
-            }
-          }
-          check()
-        })
+      // Load the 3D engine via ES module import (includes Three.js)
+      if (!(window as any)._emotiveEngine3D) {
+        (window as any)._emotiveEngine3D = import(
+          /* webpackIgnore: true */ '/emotive-engine-3d.bundled.js'
+        )
       }
-
-      const existingScript = document.querySelector('script[src*="/emotive-engine-3d"]')
-
-      if (!existingScript) {
-        const script = document.createElement('script')
-        script.src = `/emotive-engine-3d.umd.js?v=${Date.now()}`
-        script.async = true
-        document.head.appendChild(script)
-      }
-
-      // Wait for the global to be available
-      const EmotiveMascot3DModule = await waitForGlobal('EmotiveMascot3D')
-      const EmotiveMascot3D = EmotiveMascot3DModule?.default || EmotiveMascot3DModule
+      const engineModule = await (window as any)._emotiveEngine3D
+      const EmotiveMascot3D = engineModule.EmotiveMascot3D || engineModule.default
 
       if (!EmotiveMascot3D || typeof EmotiveMascot3D !== 'function') {
         throw new Error('EmotiveMascot3D class not found in module')

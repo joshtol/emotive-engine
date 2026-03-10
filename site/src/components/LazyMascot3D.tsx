@@ -92,24 +92,14 @@ export default function LazyMascot3D({
         const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent)
         const isLowEnd = cpuCores <= 4 || isMobile
 
-        // Load the 3D engine script dynamically
-        const existingScript = document.querySelector('script[src*="/emotive-engine-3d"]')
-        let script = existingScript as HTMLScriptElement
-
-        if (!existingScript) {
-          script = document.createElement('script')
-          script.src = `/emotive-engine-3d.umd.js?v=${Date.now()}`
-          script.async = true
-
-          await new Promise((resolve, reject) => {
-            script.onload = resolve
-            script.onerror = reject
-            document.head.appendChild(script)
-          })
+        // Load the 3D engine via ES module import (includes Three.js)
+        if (!(window as any)._emotiveEngine3D) {
+          (window as any)._emotiveEngine3D = import(
+            /* webpackIgnore: true */ '/emotive-engine-3d.bundled.js'
+          )
         }
-
-        // Access global EmotiveMascot3D
-        const EmotiveMascot3D = (window as any).EmotiveMascot3D?.default || (window as any).EmotiveMascot3D
+        const engineModule = await (window as any)._emotiveEngine3D
+        const EmotiveMascot3D = engineModule.EmotiveMascot3D || engineModule.default
 
         if (!EmotiveMascot3D) {
           console.error('EmotiveMascot3D not found')

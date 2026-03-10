@@ -562,7 +562,7 @@ input[type="range"]::-moz-range-thumb {
         height: 40vh;
         min-height: 250px;
         width: 100%;
-        padding: 10px;
+        padding: 0;
         background: inherit;
         overflow: hidden;
     }

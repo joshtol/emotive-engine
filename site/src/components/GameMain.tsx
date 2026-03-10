@@ -216,18 +216,14 @@ export default function GameMain({ currentUndertone, onGesture, onMascotReady, e
     const initialize3DEngine = async () => {
       if (!container3DRef.current) return
 
-      // Load the 3D engine script dynamically
-      const existingScript = document.querySelector('script[src*="/emotive-engine-3d"]')
-      if (!existingScript) {
-        const script = document.createElement('script')
-        script.src = `/emotive-engine-3d.umd.js?v=${Date.now()}`
-        script.async = true
-        document.head.appendChild(script)
+      // Load the 3D engine via ES module import (includes Three.js)
+      if (!(window as any)._emotiveEngine3D) {
+        (window as any)._emotiveEngine3D = import(
+          /* webpackIgnore: true */ '/emotive-engine-3d.bundled.js'
+        )
       }
-
-      // Wait for global to be available
-      const EmotiveMascot3DModule = await waitForGlobal('EmotiveMascot3D')
-      const EmotiveMascot3D = EmotiveMascot3DModule?.default || EmotiveMascot3DModule
+      const engineModule = await (window as any)._emotiveEngine3D
+      const EmotiveMascot3D = engineModule.EmotiveMascot3D || engineModule.default
 
       if (!EmotiveMascot3D || typeof EmotiveMascot3D !== 'function') {
         throw new Error('EmotiveMascot3D class not found in module')

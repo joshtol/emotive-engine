@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<!--
+  ELEMENTAL BANNER - Capture tool for README/demo gifs
+
+  Exactly 1200x675 (16:9). No UI chrome. Auto-cycles through one
+  showcase gesture per element with element name + icon overlay.
+
+  Usage:
+  1. Open in browser at http://localhost:3001/examples/3d/elemental-banner.html
+  2. Record with ScreenToGif, OBS, or browser DevTools recorder
+  3. Crop to window content area (1200x675)
+
+  Controls:
+  - Click anywhere to pause/resume auto-cycle
+  - Press 1-8 to jump to a specific element
+  - Press Space to skip to next element
+  - Press R to restart from the beginning
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Elemental Banner Capture</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 600px;
+            height: 338px;
+            overflow: hidden;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        #scene {
+            width: 600px;
+            height: 338px;
+            position: relative;
+        }
+
+        /* Progress bar — thin line at very bottom */
+        #progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--el-color, #667eea);
+            transition: width 0.1s linear;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        /* Element dots — top right */
+        #element-dots {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .dot.active {
+            background: var(--dot-color);
+            transform: scale(1.4);
+            box-shadow: 0 0 10px var(--dot-color);
+        }
+
+        /* Pause indicator */
+        #pause-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #pause-indicator.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="scene">
+        <div id="progress-bar"></div>
+        <div id="element-dots"></div>
+        <div id="pause-indicator">PAUSED</div>
+        <!-- Alignment frame: press A to toggle on/off. Align ScreenToGif to the red border, then press A to hide before recording. -->
+        <div id="align-frame" style="
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border: 2px solid red;
+            pointer-events: none; z-index: 999;
+        ">
+            <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,0,0,0.4);"></div>
+            <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,0,0,0.4);"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import EmotiveMascot3D from '/emotive-engine-3d-elementals.bundled.js';
+
+        // ═══════════════════════════════════════════════════════════════
+        // CONFIGURATION
+        // ═══════════════════════════════════════════════════════════════
+
+        const showcase = [
+            { gesture: 'firemeditation',  color: '#f97316', duration: 3000 },
+            { gesture: 'naturecleanse',   color: '#4ade80', duration: 3000 },
+            { gesture: 'lightascend',     color: '#fef08a', duration: 3000 },
+        ];
+
+        // Gap between gestures
+        const TRANSITION_GAP = 500;
+
+        // ═══════════════════════════════════════════════════════════════
+        // INIT MASCOT
+        // ═══════════════════════════════════════════════════════════════
+
+        const container = document.getElementById('scene');
+        const mascot = new EmotiveMascot3D({
+            coreGeometry: 'crystal',
+            enableParticles: true,
+            enablePostProcessing: true,
+            enableShadows: false,
+            enableControls: false,
+            autoRotate: true,
+            autoRotateSpeed: 0.4,
+            cameraDistance: 1.45,
+            fov: 30,
+            minZoom: 0.9,
+            maxZoom: 2.0,
+            materialVariant: 'multiplexer',
+            assetBasePath: '/assets',
+            preloadElements: [],
+            backgroundPrewarm: true,
+            enableBlinking: false,
+            enableBreathing: true,
+        });
+
+        mascot.init(container);
+        mascot.start();
+        window.mascot = mascot;
+
+        // ═══════════════════════════════════════════════════════════════
+        // UI ELEMENTS
+        // ═══════════════════════════════════════════════════════════════
+
+        const progressBar = document.getElementById('progress-bar');
+        const dotsContainer = document.getElementById('element-dots');
+        const pauseIndicator = document.getElementById('pause-indicator');
+
+        // Build dot indicators
+        const dots = showcase.map((item, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.setProperty('--dot-color', item.color);
+            dotsContainer.appendChild(dot);
+            return dot;
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // CYCLE LOGIC
+        // ═══════════════════════════════════════════════════════════════
+
+        let currentIndex = 0;
+        let paused = false;
+        let cycleTimer = null;
+        let progressTimer = null;
+        let startTime = 0;
+
+        function showElement(index) {
+            currentIndex = index;
+            const item = showcase[index];
+
+            // Update dots
+            dots.forEach((d, i) => {
+                d.classList.toggle('active', i === index);
+            });
+
+            // Set element color as CSS var
+            document.documentElement.style.setProperty('--el-color', item.color);
+
+            // Reset progress
+            progressBar.style.width = '0%';
+            progressBar.style.background = item.color;
+
+            // Fire gesture after brief pause for fade
+            setTimeout(() => {
+                mascot.express(item.gesture);
+
+                // Animate progress bar
+                startTime = performance.now();
+                cancelAnimationFrame(progressTimer);
+                function updateProgress() {
+                    const elapsed = performance.now() - startTime;
+                    const pct = Math.min(elapsed / item.duration * 100, 100);
+                    progressBar.style.width = pct + '%';
+                    if (pct < 100) {
+                        progressTimer = requestAnimationFrame(updateProgress);
+                    }
+                }
+                progressTimer = requestAnimationFrame(updateProgress);
+            }, 200);
+
+            // Schedule next
+            if (!paused) {
+                clearTimeout(cycleTimer);
+                cycleTimer = setTimeout(() => {
+                    const next = (index + 1) % showcase.length;
+                    showElement(next);
+                }, item.duration + TRANSITION_GAP);
+            }
+        }
+
+        function togglePause() {
+            paused = !paused;
+            pauseIndicator.classList.toggle('visible', paused);
+            if (!paused) {
+                // Resume — advance to next
+                const next = (currentIndex + 1) % showcase.length;
+                showElement(next);
+            } else {
+                clearTimeout(cycleTimer);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // KEYBOARD / MOUSE CONTROLS
+        // ═══════════════════════════════════════════════════════════════
+
+        document.addEventListener('click', (e) => {
+            togglePause();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= showcase.length) {
+                paused = true;
+                pauseIndicator.classList.add('visible');
+                clearTimeout(cycleTimer);
+                showElement(num - 1);
+                return;
+            }
+
+            switch (e.key) {
+                case ' ':
+                    e.preventDefault();
+                    clearTimeout(cycleTimer);
+                    showElement((currentIndex + 1) % showcase.length);
+                    break;
+                case 'r':
+                case 'R':
+                    paused = false;
+                    pauseIndicator.classList.remove('visible');
+                    clearTimeout(cycleTimer);
+                    showElement(0);
+                    break;
+                case 'a':
+                case 'A':
+                    document.getElementById('align-frame').style.display =
+                        document.getElementById('align-frame').style.display === 'none' ? '' : 'none';
+                    break;
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // START — wait for gestures to be registered, then begin
+        // ═══════════════════════════════════════════════════════════════
+
+        // Give the engine a moment to load assets and register gestures
+        setTimeout(() => {
+            showElement(0);
+        }, 2000);
+    </script>
+</body>
+</html>

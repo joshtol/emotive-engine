@@ -8,9 +8,42 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 
+<img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine — 8 elemental shaders, 160+ gestures" width="100%" />
+
+Real-time character animation engine with **Canvas 2D** and **WebGL 3D**
+rendering.<br/> 8 elemental shader systems. 160+ elemental gestures. One
+replicable pattern.
+
+**[Live Demo](https://joshtol.github.io/emotive-engine)** ·
+**[Elemental Gestures Demo](https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html)**
+· **[NPM](https://www.npmjs.com/package/@joshtol/emotive-engine)**
+
 </div>
 
-## Table of Contents
+---
+
+## 30-Second Quick Start
+
+```javascript
+import { EmotiveMascot } from '@joshtol/emotive-engine';
+
+const mascot = new EmotiveMascot();
+await mascot.init(document.getElementById('app'));
+mascot.start();
+mascot.feel('happy, bouncing'); // Natural language control!
+```
+
+```bash
+npm install @joshtol/emotive-engine
+```
+
+[Full Documentation](#api-reference) |
+[LLM Integration](./docs/LLM_INTEGRATION.md)
+
+---
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
 
 - [Quick Start](#30-second-quick-start)
 - [Features](#features)
@@ -31,39 +64,7 @@
 - [Performance Tips](#performance-tips)
 - [License](#license)
 
----
-
-## 30-Second Quick Start
-
-```javascript
-import { EmotiveMascot } from '@joshtol/emotive-engine';
-
-const mascot = new EmotiveMascot();
-await mascot.init(document.getElementById('app'));
-mascot.start();
-mascot.feel('happy, bouncing'); // Natural language control!
-```
-
-```bash
-npm install @joshtol/emotive-engine
-```
-
-[Live Demos](https://joshtol.github.io/emotive-engine) |
-[Full Documentation](#api-reference) |
-[LLM Integration](./docs/LLM_INTEGRATION.md)
-
-<div align="center">
-
-<img src="assets/previews/3d-demo.gif" alt="Emotive Engine 3D Demo" width="100%" />
-
-Real-time character animation engine with **Canvas 2D** and **WebGL 3D**
-rendering.
-
-[Live Demos](https://joshtol.github.io/emotive-engine) |
-[Documentation](#api-reference) |
-[NPM](https://www.npmjs.com/package/@joshtol/emotive-engine)
-
-</div>
+</details>
 
 ---
 
@@ -107,6 +108,21 @@ rendering.
 ---
 
 ## Demo Gallery
+
+### Elemental Gestures (3D)
+
+<div align="center">
+
+<!-- TODO: Replace with final elemental gestures gif/video -->
+<img src="assets/previews/elemental-gestures.gif" alt="Elemental Gestures — Fire, Water, Ice, Electricity, Earth, Nature, Light, Void" width="100%" />
+
+8 elements · 160+ gestures · Custom GLSL shaders · One replicable pattern
+
+**[Try the live demo](https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html)**
+
+</div>
+
+<!-- TODO: Add individual element preview gifs (fire.gif, water.gif, ice.gif, electric.gif, earth.gif, nature.gif, light.gif, void.gif) -->
 
 ### 3D WebGL Examples
 
@@ -397,7 +413,7 @@ GLSL shaders, instanced GPU models, and per-element bloom thresholds:
 | Element         | Gestures | Key Effects                                |
 | --------------- | -------- | ------------------------------------------ |
 | **Fire**        | 19       | Additive flame stacking, decoupled alpha   |
-| **Water**       | 20       | Splash rings, flow dynamics                |
+| **Water**       | 21       | Splash rings, flow dynamics                |
 | **Ice**         | 16       | Voronoi cracks, subsurface refraction      |
 | **Electricity** | 22       | 3D Voronoi bolts, lightning flash mechanic |
 | **Earth**       | 22       | Petrify, rumble, quake effects             |

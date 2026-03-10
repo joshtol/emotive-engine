@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-const ENGINE_3D_SCRIPT_ID = 'emotive-engine-3d-script'
-const ENGINE_3D_SCRIPT_SRC = '/emotive-engine-3d.umd.js'
+const ENGINE_3D_BUNDLED_SRC = '/emotive-engine-3d.bundled.js'
 
 export interface Use3DMascotControllerOptions {
   /** Container element ID for the 3D canvas */
@@ -70,46 +69,19 @@ async function loadEngine3DScript(): Promise<any> {
     return window.__emotiveEngine3DPromise
   }
 
-  window.__emotiveEngine3DPromise = new Promise<any>((resolve, reject) => {
-    let script = document.getElementById(ENGINE_3D_SCRIPT_ID) as HTMLScriptElement | null
-
-    if (!script) {
-      script = document.createElement('script')
-      script.id = ENGINE_3D_SCRIPT_ID
-      script.async = true
-      script.src = ENGINE_3D_SCRIPT_SRC
-      document.head.appendChild(script)
+  window.__emotiveEngine3DPromise = import(
+    /* webpackIgnore: true */ ENGINE_3D_BUNDLED_SRC
+  ).then((module) => {
+    const ctor = module.EmotiveMascot3D || module.default
+    if (!ctor) {
+      throw new Error('Emotive 3D engine loaded but EmotiveMascot3D is undefined.')
     }
-
-    const handleLoad = () => {
-      cleanup()
-      if (window.EmotiveMascot3D) {
-        resolve(window.EmotiveMascot3D)
-      } else {
-        reject(new Error('Emotive 3D engine script loaded but EmotiveMascot3D is undefined.'))
-      }
-    }
-
-    const handleError = () => {
-      cleanup()
-      reject(new Error('Failed to load emotive 3D engine script.'))
-    }
-
-    const cleanup = () => {
-      if (!script) {
-        return
-      }
-      script.removeEventListener('load', handleLoad)
-      script.removeEventListener('error', handleError)
-    }
-
-    script.addEventListener('load', handleLoad)
-    script.addEventListener('error', handleError)
+    window.EmotiveMascot3D = ctor
+    return ctor
   })
 
   try {
-    const mascotCtor = await window.__emotiveEngine3DPromise
-    return mascotCtor
+    return await window.__emotiveEngine3DPromise
   } finally {
     window.__emotiveEngine3DPromise = undefined
   }

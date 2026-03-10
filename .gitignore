@@ -94,8 +94,12 @@ site/playwright/.cache/
 .vercel
 *.tsbuildinfo
 
-# Claude Code local settings (machine-specific)
-.claude/settings.local.json
+# Claude Code (local settings, memory, project context)
+.claude/
+
+# HN launch planning
+UP-HNEWS.md
+UP-COMB.md
 best.code-workspace
 
 # Backup files
