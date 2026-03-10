@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Emotive Engine - Emotion-Driven Animation',
-  description: 'Interactive rhythm-based animation engine with musical time synchronization',
+  description: 'Open-source character animation engine. 8 elemental GLSL shaders, 169 gestures, Canvas 2D + WebGL 3D.',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -39,6 +39,27 @@ export const metadata: Metadata = {
     ],
     shortcut: '/favicon.ico',
     apple: '/favicon.svg',
+  },
+  openGraph: {
+    title: 'Emotive Engine - Emotion-Driven Animation',
+    description: 'Open-source character animation engine. 8 elemental GLSL shaders, 169 gestures, Canvas 2D + WebGL 3D.',
+    url: 'https://joshtol.github.io/emotive-engine',
+    siteName: 'Emotive Engine',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Emotive Engine - Elemental crystal shader effects',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Emotive Engine - Emotion-Driven Animation',
+    description: 'Open-source character animation engine. 8 elemental GLSL shaders, 169 gestures, Canvas 2D + WebGL 3D.',
+    images: ['/og-image.png'],
   },
 }
 
