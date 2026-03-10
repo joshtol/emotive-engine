@@ -56,7 +56,7 @@
     "assets/emotive-engine-full-BW.svg",
     "README.md",
     "LICENSE.md",
-    "THIRD-PARTY-LICENSES.md"
+    "docs/THIRD-PARTY-LICENSES.md"
   ],
   "scripts": {
     "build": "rollup -c --environment NODE_ENV:production && node scripts/copy-built-files.js",
@@ -70,8 +70,8 @@
     "copy-files": "node scripts/copy-built-files.js",
     "build:docs": "node scripts/build-docs.js",
     "optimize": "node scripts/optimize-bundle.js",
-    "docs": "jsdoc -c jsdoc.json",
-    "docs:api": "typedoc",
+    "docs": "jsdoc -c docs/jsdoc.json",
+    "docs:api": "typedoc --options docs/typedoc.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

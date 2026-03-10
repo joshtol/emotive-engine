@@ -94,7 +94,7 @@ function cleanDocsDirectory() {
 function generateJSDocConfig() {
     console.log('ðŸ“ Generating JSDoc configuration...');
 
-    const configPath = path.join(__dirname, 'jsdoc.json');
+    const configPath = path.join(__dirname, '..', 'docs', 'jsdoc.json');
     fs.writeFileSync(configPath, JSON.stringify(jsdocConfig, null, 2));
 
     console.log('âœ… JSDoc configuration generated');
