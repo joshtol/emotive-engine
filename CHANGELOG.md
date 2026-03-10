@@ -9,6 +9,35 @@ and this project uses
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-03-10
+
+### Fixed
+
+- **3D element attachment** — `attachToElement()` now uses viewport-center
+  offsets (matching 2D behavior) instead of container-relative positioning,
+  fixing split/glitch when attaching to DOM elements
+- **Sun bloom blow-out** — capped HDR brightness at `vec3(2.5)` to prevent
+  excessive bloom on sun geometry
+- **EmotiveMascot3D global** — `window.EmotiveMascot3D` is now set after bundled
+  ES import in MascotRenderer, GameMain, and LazyMascot3D
+- **HDRI 404 on Vercel** — added gitignore exception for
+  `site/public/hdri/studio_1k.hdr`
+- **Asset paths on site** — added `assetBasePath: '/assets'` to all 3D mascot
+  constructors on the Next.js site
+
+### Improved
+
+- **Geometry morphing** — faster transitions (800ms → 600ms), never fully
+  vanishes at midpoint (minScale 8%), easeOutBack bounce on grow phase, and
+  skips midpoint hold when textures are cached
+- **README** — slimmed from ~700 to ~210 lines; reference content moved to
+  `docs/API.md`
+
+### Removed
+
+- Unused root files: `favicon.ico`, `vercel.json`, `rollup.split.config.js`
+- Dead directories: `skills/`, `benchmarks/`, `codemods/`, `.claude-plugin/`
+
 ## [3.4.0] - 2026-02-27
 
 ### Optimized
