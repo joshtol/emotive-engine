@@ -278,7 +278,7 @@ The expected directory structure under your `assetBasePath`:
 import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
 
 const mascot = new EmotiveMascot3D({
-    coreGeometry: 'crystal', // crystal, diamond, heart, moon, rough, sphere, star, sun
+    coreGeometry: 'crystal', // crystal, heart, moon, rough, sphere, star, sun
     assetBasePath: '/assets', // path to self-hosted assets (see 3D Assets section)
     enableParticles: true,
     enablePostProcessing: true,
@@ -440,7 +440,6 @@ mascot.express('zap');
 | Geometry  | Description               | Shader                   |
 | --------- | ------------------------- | ------------------------ |
 | `crystal` | Faceted hexagonal crystal | Subsurface scattering    |
-| `diamond` | Brilliant-cut diamond     | Subsurface scattering    |
 | `heart`   | Heart-shaped crystal      | Subsurface scattering    |
 | `moon`    | Realistic lunar surface   | Custom phase shader      |
 | `rough`   | Rough organic crystal     | Subsurface scattering    |
@@ -483,7 +482,7 @@ mascot.startLunarEclipse({ type: 'total' }); // 'total', 'partial', or 'penumbra
 ```javascript
 new EmotiveMascot3D({
     // Geometry
-    coreGeometry: 'crystal', // crystal, diamond, heart, moon, rough, sphere, star, sun
+    coreGeometry: 'crystal', // crystal, heart, moon, rough, sphere, star, sun
     assetBasePath: '/assets',
 
     // Rendering
