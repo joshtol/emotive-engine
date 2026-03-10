@@ -885,13 +885,12 @@ export class Core3DManager {
         // Morph to sun, then trigger eclipse after morph completes
         this.morphToShape('sun');
 
-        // Wait for morph to complete (shrink + grow phases)
-        // Default morph duration is 500ms, so wait a bit longer
+        // Wait for morph to complete (shrink + grow phases, 600ms default)
         setTimeout(() => {
             if (this.effectManager.hasSolarEclipse()) {
                 this.effectManager.setSolarEclipse(eclipseType);
             }
-        }, 600);
+        }, 700);
     }
 
     /**
@@ -912,12 +911,12 @@ export class Core3DManager {
         // Morph to moon, then trigger eclipse after morph completes
         this.morphToShape('moon');
 
-        // Wait for morph to complete (shrink + grow phases)
+        // Wait for morph to complete (shrink + grow phases, 600ms default)
         setTimeout(() => {
             if (this.effectManager.hasLunarEclipse()) {
                 this.effectManager.setLunarEclipse(eclipseType);
             }
-        }, 600);
+        }, 700);
     }
 
     /**
@@ -1406,9 +1405,9 @@ export class Core3DManager {
      * smoothly transition to the new target without visual glitches.
      *
      * @param {string} shapeName - Target geometry name
-     * @param {number} duration - Transition duration in ms (default: 800ms)
+     * @param {number} duration - Transition duration in ms (default: 600ms)
      */
-    morphToShape(shapeName, duration = 800) {
+    morphToShape(shapeName, duration = 600) {
         const targetGeometryConfig = THREE_GEOMETRIES[shapeName];
         if (!targetGeometryConfig) {
             console.warn(`[Core3DManager] Unknown shape: ${shapeName}`);
@@ -1768,23 +1767,27 @@ export class Core3DManager {
                 }
             }
 
-            // Hold morph at scale=0 until material textures are loaded
-            // and Three.js scene has stabilized (min 2 frames).
-            // Unlike the old _skipRenderFrames approach, this freezes the
-            // morph clock so the grow phase starts cleanly from scale=0.
-            this.geometryMorpher.pauseAtSwap();
-            this._postSwapHold = true;
-            this._postSwapHoldTime = Date.now();
-            this._postSwapFrameCount = 0;
+            // Hold morph at midpoint only if textures aren't ready yet.
+            // If textures are already cached (e.g., returning to a previously
+            // visited geometry), skip the hold entirely for a seamless transition.
+            const texturesAlreadyCached = this._isMaterialTextureReady();
+            if (!texturesAlreadyCached) {
+                this.geometryMorpher.pauseAtSwap();
+                this._postSwapHold = true;
+                this._postSwapHoldTime = Date.now();
+                this._postSwapFrameCount = 0;
+            } else {
+                // Textures cached — no hold needed, morph continues uninterrupted
+                this._postSwapHold = false;
+            }
         }
 
-        // Post-swap hold: wait for material textures + scene stabilization before growing
+        // Post-swap hold: wait for material textures before growing
         if (this._postSwapHold && morphState.waitingForGeometry) {
             this._postSwapFrameCount++;
             const texturesReady = this._isMaterialTextureReady();
-            const minFramesPassed = this._postSwapFrameCount >= 2;
-            const timedOut = Date.now() - this._postSwapHoldTime > 500;
-            if ((texturesReady && minFramesPassed) || timedOut) {
+            const timedOut = Date.now() - this._postSwapHoldTime > 300;
+            if (texturesReady || timedOut) {
                 // Force opacity to 1.0 before grow phase starts — prevents untextured
                 // flash on geometries like moon whose material fades in asynchronously
                 if (this.customMaterial?.uniforms?.opacity) {

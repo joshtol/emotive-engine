@@ -373,6 +373,9 @@ export function createSunMaterial(textureLoader, options = {}) {
                 float coronaModulation = 1.0 + (wave * 2.0 - 1.0) * waveStrength;
                 finalColor *= coronaModulation;
 
+                // Cap HDR brightness to prevent bloom blow-out
+                finalColor = min(finalColor, vec3(2.5));
+
                 // Apply fade-in opacity to prevent texture flash during load
                 gl_FragColor = vec4(finalColor, opacity);
             }

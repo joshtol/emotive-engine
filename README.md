@@ -22,30 +22,55 @@ replicable pattern.
 
 ---
 
-## 30-Second Quick Start
-
-```javascript
-import { EmotiveMascot } from '@joshtol/emotive-engine';
-
-const mascot = new EmotiveMascot();
-await mascot.init(document.getElementById('app'));
-mascot.start();
-mascot.feel('happy, bouncing'); // Natural language control!
-```
+## Quick Start
 
 ```bash
 npm install @joshtol/emotive-engine
 ```
 
-[Full Documentation](#api-reference) |
-[LLM Integration](./docs/LLM_INTEGRATION.md)
+### 3D Mode (WebGL)
+
+```javascript
+import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
+
+const mascot = new EmotiveMascot3D({
+    coreGeometry: 'crystal',
+    assetBasePath: '/assets', // path to self-hosted assets (see 3D Assets section)
+});
+
+mascot.init(document.getElementById('container'));
+mascot.start();
+
+mascot.setEmotion('joy');
+mascot.express('bounce');
+mascot.morphTo('heart');
+```
+
+3D mode requires Three.js as a peer dependency: `npm install three`
+
+### 2D Mode (Canvas)
+
+```javascript
+import { EmotiveMascot } from '@joshtol/emotive-engine';
+
+const mascot = new EmotiveMascot();
+await mascot.init(document.getElementById('container'));
+mascot.start();
+
+mascot.setEmotion('joy');
+mascot.express('bounce');
+mascot.feel('happy, bouncing'); // Natural language control
+```
+
+[API Reference](#api-reference) |
+[LLM Integration Guide](./docs/LLM_INTEGRATION.md)
 
 ---
 
 <details>
 <summary><strong>Table of Contents</strong></summary>
 
-- [Quick Start](#30-second-quick-start)
+- [Quick Start](#quick-start)
 - [Features](#features)
 - [Demo Gallery](#demo-gallery)
 - [Installation](#installation)
@@ -58,10 +83,6 @@ npm install @joshtol/emotive-engine
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Running Locally](#running-locally)
-- [Browser Support](#browser-support)
-- [Multi-Instance Support](#multi-instance-support)
-- [Server-Side Rendering (SSR)](#server-side-rendering-ssr)
-- [Performance Tips](#performance-tips)
 - [License](#license)
 
 </details>
@@ -108,21 +129,6 @@ npm install @joshtol/emotive-engine
 ---
 
 ## Demo Gallery
-
-### Elemental Gestures (3D)
-
-<div align="center">
-
-<!-- TODO: Replace with final elemental gestures gif/video -->
-<img src="assets/previews/elemental-gestures.gif" alt="Elemental Gestures — Fire, Water, Ice, Electricity, Earth, Nature, Light, Void" width="100%" />
-
-8 elements · 160+ gestures · Custom GLSL shaders · One replicable pattern
-
-**[Try the live demo](https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html)**
-
-</div>
-
-<!-- TODO: Add individual element preview gifs (fire.gif, water.gif, ice.gif, electric.gif, earth.gif, nature.gif, light.gif, void.gif) -->
 
 ### 3D WebGL Examples
 
@@ -264,52 +270,7 @@ The expected directory structure under your `assetBasePath`:
 └── hdri/               # Environment maps (optional, enhances reflections)
 ```
 
-> Assets are available in the repository under `assets/` and `public/hdri/`.
-
 > **2D mode does not require any external assets** — it works out of the box.
-
----
-
-## Quick Start
-
-### 3D Mode (WebGL)
-
-```javascript
-import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
-
-const mascot = new EmotiveMascot3D({
-    coreGeometry: 'crystal', // crystal, heart, moon, rough, sphere, star, sun
-    assetBasePath: '/assets', // path to self-hosted assets (see 3D Assets section)
-    enableParticles: true,
-    enablePostProcessing: true,
-});
-
-mascot.init(document.getElementById('container'));
-mascot.start();
-
-// Control emotions and gestures
-mascot.setEmotion('joy');
-mascot.express('bounce');
-mascot.morphTo('heart');
-```
-
-### 2D Mode (Canvas)
-
-```javascript
-import { EmotiveMascot } from '@joshtol/emotive-engine';
-
-const mascot = new EmotiveMascot({
-    canvasId: 'mascot',
-    defaultEmotion: 'neutral',
-});
-
-await mascot.init(document.getElementById('container'));
-mascot.start();
-
-// Same API as 3D
-mascot.setEmotion('joy');
-mascot.express('bounce');
-```
 
 ---
 
@@ -318,20 +279,11 @@ mascot.express('bounce');
 The `feel()` method lets LLMs control the mascot using natural language:
 
 ```javascript
-// Simple emotion
-mascot.feel('happy');
-
-// Emotion with gesture
-mascot.feel('curious, leaning in');
-
-// With undertone modifier
-mascot.feel('happy but nervous');
-
-// With shape morph
-mascot.feel('loving, heart shape, sparkle');
-
-// With intensity
-mascot.feel('very angry, shaking');
+mascot.feel('happy'); // Simple emotion
+mascot.feel('curious, leaning in'); // Emotion + gesture
+mascot.feel('happy but nervous'); // With undertone
+mascot.feel('loving, heart shape, sparkle'); // Shape morph
+mascot.feel('very angry, shaking'); // With intensity
 ```
 
 The engine parses ~1400 synonyms to understand natural expressions. For full
@@ -564,6 +516,16 @@ mascot.enableGroove();
 mascot.disableGroove();
 ```
 
+### SSR / Multi-Instance
+
+The engine requires a browser environment. For SSR frameworks (Next.js, Nuxt),
+use dynamic imports with `ssr: false` or `<ClientOnly>`. An `isSSR()` helper is
+exported from `@joshtol/emotive-engine/3d`.
+
+Multiple mascots can run independently on the same page — each instance has its
+own animation loop, emotion state, and resources. See the
+[dual mascot demo](https://joshtol.github.io/emotive-engine/examples/3d/dual-mascot-test.html).
+
 ---
 
 ## Running Locally
@@ -593,102 +555,6 @@ Or view the [live demo gallery](https://joshtol.github.io/emotive-engine).
 | Chrome Android | 90+     |
 
 3D mode requires WebGL 2.0 support.
-
----
-
-## Multi-Instance Support
-
-Multiple mascots can run independently on the same page. Each instance has its
-own animation loop, emotion state, and resources.
-
-```javascript
-import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
-
-// Create two independent mascots
-const mascot1 = new EmotiveMascot3D({ coreGeometry: 'crystal' });
-const mascot2 = new EmotiveMascot3D({ coreGeometry: 'moon' });
-
-mascot1.init(document.getElementById('container-1'));
-mascot2.init(document.getElementById('container-2'));
-
-mascot1.start();
-mascot2.start();
-
-// Control independently
-mascot1.setEmotion('joy');
-mascot2.setEmotion('calm');
-
-// Stop one without affecting the other
-mascot1.stop();
-mascot2.express('bounce'); // Still running
-```
-
-See the
-[dual mascot demo](https://joshtol.github.io/emotive-engine/examples/3d/dual-mascot-test.html)
-for a live example.
-
----
-
-## Server-Side Rendering (SSR)
-
-The engine requires a browser environment. For SSR frameworks, use dynamic
-imports:
-
-### Next.js
-
-```javascript
-import dynamic from 'next/dynamic';
-
-const MascotComponent = dynamic(
-    () =>
-        import('@joshtol/emotive-engine/3d').then(mod => {
-            // Initialize after dynamic import
-            const mascot = new mod.EmotiveMascot3D({ coreGeometry: 'crystal' });
-            return { default: () => <div ref={el => el && mascot.init(el)} /> };
-        }),
-    { ssr: false }
-);
-```
-
-### Nuxt 3
-
-```vue
-<template>
-    <ClientOnly>
-        <div ref="container" />
-    </ClientOnly>
-</template>
-
-<script setup>
-const container = ref(null);
-
-onMounted(async () => {
-    const { EmotiveMascot3D } = await import('@joshtol/emotive-engine/3d');
-    const mascot = new EmotiveMascot3D({ coreGeometry: 'crystal' });
-    mascot.init(container.value);
-    mascot.start();
-});
-</script>
-```
-
-### SSR Detection Helper
-
-```javascript
-import { isSSR } from '@joshtol/emotive-engine/3d';
-
-if (!isSSR()) {
-    // Safe to initialize mascot
-}
-```
-
----
-
-## Performance Tips
-
-- Disable post-processing on mobile for 60fps
-- Use `enableShadows: false` unless needed
-- Lower `maxParticles` on constrained devices
-- 2D mode is lighter weight for simple use cases
 
 ---
 

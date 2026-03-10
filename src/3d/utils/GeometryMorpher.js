@@ -18,12 +18,15 @@ export class GeometryMorpher {
         this.currentGeometryType = null;
         this.targetGeometryType = null;
         this.morphStartTime = 0;
-        this.morphDuration = 1000; // Smooth, relaxed transition (increased from 800ms)
+        this.morphDuration = 600; // Snappy transition
         this.morphProgress = 0;
         this.visualProgress = 0; // Smoothed progress for rendering
         this.hasSwappedGeometry = false; // Track if we've swapped at midpoint
         this.isPausedAtSwap = false; // Paused waiting for async geometry load
         this.pausedAtTime = 0; // Time when paused (to resume correctly)
+
+        // Minimum scale at midpoint — never fully vanish, makes swap less noticeable
+        this.minScale = 0.08;
 
         // Easing function
         this.easing = 'easeInOutCubic';
@@ -75,9 +78,11 @@ export class GeometryMorpher {
                 this.morphStartTime = Date.now();
                 this.morphDuration = duration;
                 // Map current scale back to progress (inverse of shrink calculation)
-                // scale = 1 - (progress*2)^2, so progress = sqrt(1-scale) / 2
+                // scale = 1 - (1-min) * (progress*2)^2, so progress = sqrt((1-scale)/(1-min)) / 2
+                const min = this.minScale;
+                const normalizedScale = Math.min(currentScale, 1);
                 const inverseProgress =
-                    currentScale > 0 ? Math.sqrt(1 - Math.min(currentScale, 1)) / 2 : 0.5;
+                    normalizedScale > min ? Math.sqrt((1 - normalizedScale) / (1 - min)) / 2 : 0.5;
                 this.morphProgress = inverseProgress;
                 this.visualProgress = inverseProgress;
                 this.hasSwappedGeometry = false; // Need to swap again at midpoint
@@ -261,22 +266,25 @@ export class GeometryMorpher {
             return Math.max(0, eased); // Clamp to prevent negative scale
         }
 
-        // Shrink phase (0 to 0.5): scale goes from 1.0 to 0.0
-        // Grow phase (0.5 to 1.0): scale goes from 0.0 to 1.0
-        // This creates a smooth "blink out, swap, blink in" effect
+        // Shrink phase (0 to 0.5): scale goes from 1.0 to minScale
+        // Grow phase (0.5 to 1.0): scale goes from minScale to 1.0 with overshoot
+        // minScale > 0 keeps the mascot slightly visible so the swap is less noticeable
+
+        const min = this.minScale;
 
         if (progress <= 0.5) {
-            // Shrinking: progress 0->0.5 maps to scale 1->0
-            // Use easeInQuad for accelerating shrink (jaunty feel)
+            // Shrinking: progress 0->0.5 maps to scale 1->minScale
             const shrinkProgress = progress * 2; // 0 to 1
-            const eased = shrinkProgress * shrinkProgress; // easeIn
-            return 1.0 - eased;
+            const eased = shrinkProgress * shrinkProgress; // easeInQuad
+            return 1.0 - (1.0 - min) * eased;
         } else {
-            // Growing: progress 0.5->1.0 maps to scale 0->1
-            // Use easeOutQuad for decelerating grow (bouncy arrival)
+            // Growing: progress 0.5->1.0 maps to scale minScale->1.0
+            // Use easeOutBack for organic bounce overshoot
             const growProgress = (progress - 0.5) * 2; // 0 to 1
-            const eased = growProgress * (2 - growProgress); // easeOut
-            return eased;
+            const c1 = 1.2; // Subtle overshoot (less aggressive than growIn's 1.7)
+            const c3 = c1 + 1;
+            const eased = 1 + c3 * Math.pow(growProgress - 1, 3) + c1 * Math.pow(growProgress - 1, 2);
+            return min + (1.0 - min) * Math.max(0, eased);
         }
     }
 

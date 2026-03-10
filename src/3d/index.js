@@ -1718,8 +1718,14 @@ export class EmotiveMascot3D {
         this.position = { x, y, z };
 
         if (this._attachedElement) {
-            // When attached to an element, use raw pixel offset — no hero layout assumptions
-            this.container.style.transform = `translate(${x}px, ${y}px)`;
+            // When attached to an element, position container centered on the target.
+            // x,y are offsets from viewport center (matching 2D approach).
+            // Override CSS position to place container exactly at target.
+            const cx = window.innerWidth / 2 + x;
+            const cy = window.innerHeight / 2 + y;
+            this.container.style.left = `${cx  }px`;
+            this.container.style.top = `${cy  }px`;
+            this.container.style.transform = 'translate(-50%, -50%)';
         } else {
             // Hero mode: combine with CSS centering transforms
             const isMobile = window.innerWidth < 768;
@@ -1935,6 +1941,15 @@ export class EmotiveMascot3D {
             return this;
         }
 
+        // Save original CSS positioning so we can restore on detach
+        if (!this._originalContainerStyles && this.container) {
+            this._originalContainerStyles = {
+                left: this.container.style.left,
+                top: this.container.style.top,
+                transform: this.container.style.transform,
+            };
+        }
+
         // Store element tracking info
         this._attachedElement = element;
         this._attachOptions = {
@@ -1975,19 +1990,18 @@ export class EmotiveMascot3D {
         if (!this._attachedElement || !this.container) return;
 
         const targetRect = this._attachedElement.getBoundingClientRect();
-        const containerRect = this.container.getBoundingClientRect();
+
+        // Match 2D approach: calculate offset from viewport center
+        const viewportCenterX = window.innerWidth / 2;
+        const viewportCenterY = window.innerHeight / 2;
 
         // Get element center in viewport coordinates
         const elementCenterX = targetRect.left + targetRect.width / 2;
         const elementCenterY = targetRect.top + targetRect.height / 2;
 
-        // Get container center from actual DOM position (works with any CSS layout)
-        const containerCenterX = containerRect.left + containerRect.width / 2;
-        const containerCenterY = containerRect.top + containerRect.height / 2;
-
-        // Calculate offset needed to move from container's position to element center
-        const offsetX = elementCenterX - containerCenterX + this._attachOptions.offsetX;
-        const offsetY = elementCenterY - containerCenterY + this._attachOptions.offsetY;
+        // Offset from viewport center (what setPosition expects in attached mode)
+        const offsetX = elementCenterX - viewportCenterX + this._attachOptions.offsetX;
+        const offsetY = elementCenterY - viewportCenterY + this._attachOptions.offsetY;
 
         // Use animation on first attach, instant updates on scroll/resize
         const isFirstAttach = !this._hasAttachedBefore;
@@ -2031,6 +2045,14 @@ export class EmotiveMascot3D {
     detachFromElement() {
         this._attachedElement = null;
         this._hasAttachedBefore = false;
+
+        // Restore original container CSS positioning
+        if (this._originalContainerStyles && this.container) {
+            this.container.style.left = this._originalContainerStyles.left;
+            this.container.style.top = this._originalContainerStyles.top;
+            this.container.style.transform = this._originalContainerStyles.transform;
+            this._originalContainerStyles = null;
+        }
 
         // Remove event listeners
         if (this._elementTrackingHandlers) {
