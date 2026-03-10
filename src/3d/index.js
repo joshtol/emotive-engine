@@ -1717,19 +1717,18 @@ export class EmotiveMascot3D {
         // Store new position
         this.position = { x, y, z };
 
-        // Use transform only to avoid conflicting with CSS position properties
-        // The container is positioned with CSS (top: 50%, left: X%, transform: translateY(-50%))
-        // We combine the base centering transform with our offset
-        const isMobile = window.innerWidth < 768;
-
-        if (isMobile) {
-            // Mobile: container is centered (top: 50%, left: 50%, transform: translate(-50%, -50%))
-            // Apply offset from center using transform only
-            this.container.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+        if (this._attachedElement) {
+            // When attached to an element, use raw pixel offset — no hero layout assumptions
+            this.container.style.transform = `translate(${x}px, ${y}px)`;
         } else {
-            // Desktop: container is at left: 12%, top: 50%, transform: translateY(-50%)
-            // Use translate for both x and y offset to keep base position intact
-            this.container.style.transform = `translate(${x}px, calc(-50% + ${y}px))`;
+            // Hero mode: combine with CSS centering transforms
+            const isMobile = window.innerWidth < 768;
+
+            if (isMobile) {
+                this.container.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            } else {
+                this.container.style.transform = `translate(${x}px, calc(-50% + ${y}px))`;
+            }
         }
 
         // Emit position change event
