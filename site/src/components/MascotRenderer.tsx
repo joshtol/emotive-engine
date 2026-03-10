@@ -189,6 +189,7 @@ export default function MascotRenderer({
         enableBlinking: true,
         enableBreathing: true,
         enableShadows: false,
+        assetBasePath: '/assets',
       })
 
       mascot.init(container3DRef.current)

@@ -303,6 +303,7 @@ export function useCardMascot({
             cameraDistance,
             fov,
             enableShadows: false,
+            assetBasePath: '/assets',
           })
 
           cardMascot.init(container)

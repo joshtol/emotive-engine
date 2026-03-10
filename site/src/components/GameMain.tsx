@@ -251,6 +251,7 @@ export default function GameMain({ currentUndertone, onGesture, onMascotReady, e
         enableBlinking: true,
         enableBreathing: true,
         enableShadows: false,
+        assetBasePath: '/assets',
       })
 
       mascotInstance.init(container3DRef.current)

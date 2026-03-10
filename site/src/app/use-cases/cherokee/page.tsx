@@ -863,6 +863,7 @@ export default function CherokeePage() {
             cameraDistance,
             fov,
             enableShadows: false,
+            assetBasePath: '/assets',
           })
 
           // Note: Don't check cancelled here - React Strict Mode sets it during async waits

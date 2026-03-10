@@ -128,6 +128,7 @@ export default function LazyMascot3D({
           enableShadows: false,
           minZoom: 1.5,
           maxZoom: 10,
+          assetBasePath: '/assets',
         })
 
         mascotInstance.init(container)

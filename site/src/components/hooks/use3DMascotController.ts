@@ -166,6 +166,7 @@ export function use3DMascotController(options: Use3DMascotControllerOptions = {}
         enableShadows: false,
         minZoom: 1.5,
         maxZoom: 10,
+        assetBasePath: '/assets',
       })
 
       mascot.init(container)
