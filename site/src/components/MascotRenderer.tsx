@@ -166,6 +166,9 @@ export default function MascotRenderer({
         throw new Error('EmotiveMascot3D class not found in module')
       }
 
+      // Expose globally so other components (e.g. Cherokee cards) can find it
+      ;(window as any).EmotiveMascot3D = EmotiveMascot3D
+
       const cpuCores = navigator.hardwareConcurrency || 4
       const isMobileDevice = /Android|iPhone|iPad/i.test(navigator.userAgent)
       const isLowEnd = cpuCores <= 4 || isMobileDevice

@@ -106,6 +106,9 @@ export default function LazyMascot3D({
           return
         }
 
+        // Expose globally so other components can find it
+        ;(window as any).EmotiveMascot3D = EmotiveMascot3D
+
         // Adaptive settings
         const maxParticles = isLowEnd ? 100 : 200
         const targetFPS = isLowEnd ? 30 : 60
