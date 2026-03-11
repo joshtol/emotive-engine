@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <!--
-  ELEMENTAL BANNER - Social Preview Capture (1200x630)
+  ELEMENTAL BANNER - Social Preview Capture (1280x720)
 
-  Captures og:image for social media. Dark background, centered crystal.
+  Captures og:image screenshots and video clips for social media.
+  Dark background, centered crystal.
 
   Usage:
   1. Open at http://localhost:3001/examples/3d/elemental-banner.html
   2. Press 1-8 to pick an element, click to pause
-  3. Press S to save PNG
+  3. Press S to save PNG, R to start/stop video recording
 
   Controls:
   - 1-8: Jump to element (fire, water, ice, electric, earth, nature, light, void)
   - Space: Next element
   - Click: Pause/resume
-  - S: Save screenshot
+  - S: Save screenshot (1200x630 PNG)
+  - R: Start/stop video recording (1280x720 WebM)
   - A: Toggle alignment guides
 -->
 <html lang="en">
@@ -24,15 +26,15 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html, body {
-            width: 1200px;
-            height: 630px;
+            width: 1280px;
+            height: 720px;
             overflow: hidden;
             background: #050505;
         }
 
         #scene {
-            width: 1200px;
-            height: 630px;
+            width: 1280px;
+            height: 720px;
             position: relative;
             background: #050505;
         }
@@ -70,7 +72,7 @@
             <div class="h"></div>
             <div class="v"></div>
             <div class="safe"></div>
-            <div class="size">1200 × 630</div>
+            <div class="size">1280 × 720</div>
         </div>
     </div>
 
@@ -88,7 +90,7 @@
             { gesture: 'watervortex',      label: 'water'    },
             { gesture: 'voidsingularity',  label: 'void'     },
             { gesture: 'lightascend',      label: 'light'    },
-            { gesture: 'earthquake',       label: 'earth'    },
+            { gesture: 'earthimpact',      label: 'earth'    },
             { gesture: 'naturecleanse',    label: 'nature'   },
         ];
 
@@ -174,10 +176,8 @@
         // return blank AFTER the frame. But gl.readPixels() works
         // if called in the SAME call stack as the render.
         //
-        // Strategy: monkey-patch the Three.js renderer's
-        // render() method to intercept right after the full
-        // post-processing pipeline (bloom, AO, etc.) writes
-        // to the screen buffer. One-shot, restores immediately.
+        // Strategy: monkey-patch rAF to intercept right after the
+        // full post-processing pipeline writes to the screen buffer.
         // ═══════════════════════════════════════════════════════════════
 
         function saveScreenshot() {
@@ -191,30 +191,20 @@
             const w = gl.drawingBufferWidth;
             const h = gl.drawingBufferHeight;
 
-            // Patch: intercept the NEXT compositor render-to-screen
-            // The composer calls renderer.render() multiple times per frame,
-            // but the final result lands in the default framebuffer.
-            // We use requestAnimationFrame to let the engine do its full
-            // render cycle, then immediately read pixels before the
-            // browser presents and clears the buffer.
             const origRAF = window.requestAnimationFrame;
             let captured = false;
 
-            // Override rAF to sneak in after the engine's frame
             window.requestAnimationFrame = function(cb) {
                 return origRAF.call(window, function(time) {
-                    // Let the engine render its frame
                     cb(time);
 
-                    // Now read pixels — still in the same task, buffer intact
                     if (!captured) {
                         captured = true;
-                        window.requestAnimationFrame = origRAF; // Restore immediately
+                        window.requestAnimationFrame = origRAF;
 
                         const pixels = new Uint8Array(w * h * 4);
                         gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-                        // Compose: flip vertically and draw onto output canvas
                         const out = document.createElement('canvas');
                         out.width = 1200;
                         out.height = 630;
@@ -246,6 +236,131 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
+        // VIDEO RECORDING — captures WebGL canvas via readPixels
+        //
+        // Same rAF monkey-patch approach as screenshot, but continuous.
+        // Reads pixels each frame, draws to an offscreen 2D canvas,
+        // and feeds captureStream() into MediaRecorder.
+        //
+        // Output: WebM (VP9). Convert to MP4 for Twitter upload:
+        //   ffmpeg -i clip.webm -c:v libx264 -pix_fmt yuv420p clip.mp4
+        // ═══════════════════════════════════════════════════════════════
+
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordingLabel = '';
+        let mirrorCanvas = null;
+        let mirrorCtx = null;
+
+        function startRecording() {
+            const threeRenderer = mascot.core3D?.renderer?.renderer;
+            if (!threeRenderer) {
+                console.error('Cannot access Three.js renderer');
+                return;
+            }
+
+            const gl = threeRenderer.getContext();
+            const w = gl.drawingBufferWidth;
+            const h = gl.drawingBufferHeight;
+
+            // Offscreen 2D canvas at video resolution — feeds MediaRecorder
+            mirrorCanvas = document.createElement('canvas');
+            mirrorCanvas.width = 1280;
+            mirrorCanvas.height = 720;
+            mirrorCtx = mirrorCanvas.getContext('2d');
+
+            // Temp canvas for pixel flip (same size as WebGL buffer)
+            const flipCanvas = document.createElement('canvas');
+            flipCanvas.width = w;
+            flipCanvas.height = h;
+            const flipCtx = flipCanvas.getContext('2d');
+
+            recordedChunks = [];
+            recordingLabel = showcase[currentIndex].label;
+
+            // Capture stream from the mirror canvas
+            const stream = mirrorCanvas.captureStream(60);
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9',
+                videoBitsPerSecond: 8_000_000, // 8 Mbps — high quality
+            });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `elemental-${recordingLabel}.webm`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log(`Saved: elemental-${recordingLabel}.webm (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
+                mediaRecorder = null;
+            };
+
+            mediaRecorder.start();
+
+            // Monkey-patch rAF to mirror each frame to the 2D canvas
+            const origRAF = window.requestAnimationFrame;
+
+            window.requestAnimationFrame = function(cb) {
+                return origRAF.call(window, function(time) {
+                    cb(time); // Engine renders its frame
+
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        // Read pixels from WebGL
+                        const pixels = new Uint8Array(w * h * 4);
+                        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                        // Flip vertically
+                        const imgData = flipCtx.createImageData(w, h);
+                        for (let row = 0; row < h; row++) {
+                            const srcOff = row * w * 4;
+                            const dstOff = (h - 1 - row) * w * 4;
+                            imgData.data.set(pixels.subarray(srcOff, srcOff + w * 4), dstOff);
+                        }
+                        flipCtx.putImageData(imgData, 0, 0);
+
+                        // Draw to mirror canvas at video resolution
+                        mirrorCtx.fillStyle = '#050505';
+                        mirrorCtx.fillRect(0, 0, 1280, 720);
+                        mirrorCtx.drawImage(flipCanvas, 0, 0, 1280, 720);
+                    } else {
+                        // Recording stopped — restore original rAF
+                        window.requestAnimationFrame = origRAF;
+                    }
+                });
+            };
+
+            console.log('Recording started — press R to stop');
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                // Paint final black frame so captureStream doesn't grab a white canvas
+                if (mirrorCtx) {
+                    mirrorCtx.fillStyle = '#050505';
+                    mirrorCtx.fillRect(0, 0, 1280, 720);
+                }
+                mediaRecorder.stop();
+                console.log('Recording stopped — saving...');
+            }
+            // Don't null mediaRecorder here — onstop handler needs it.
+            // rAF patch will restore itself on next tick when state !== 'recording'.
+        }
+
+        function toggleRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // CONTROLS
         // ═══════════════════════════════════════════════════════════════
 
@@ -265,9 +380,7 @@
                     showElement((currentIndex + 1) % showcase.length);
                     break;
                 case 'r':
-                    paused = false;
-                    clearTimeout(cycleTimer);
-                    showElement(0);
+                    toggleRecording();
                     break;
                 case 'a':
                     const frame = document.getElementById('align-frame');
