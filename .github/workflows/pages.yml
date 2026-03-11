@@ -78,6 +78,12 @@ jobs:
           # Also fix demo-utils.js which imports from /examples/3d/layer-utils.js
           sed -i "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" _pages/examples/3d/demo-utils.js 2>/dev/null || true
 
+          # Copy screenshots for CodePen thumbnails and social previews
+          cp -r site/public/screenshots _pages/screenshots 2>/dev/null || true
+
+          # Copy og-image for social previews
+          cp site/public/og-image.png _pages/og-image.png 2>/dev/null || true
+
           # Copy assets needed by examples
           cp -r assets _pages/assets 2>/dev/null || true
 
