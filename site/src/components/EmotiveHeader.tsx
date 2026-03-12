@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import TrackSelectionModal from './TrackSelectionModal'
 
@@ -15,50 +15,18 @@ interface EmotiveHeaderProps {
 
 export default function EmotiveHeader({ showMusicControls = false, mascot, onMessage, onGesture, onMobileMenuChange }: EmotiveHeaderProps) {
   const pathname = usePathname()
-  const router = useRouter()
-  const [isUseCasesOpen, setIsUseCasesOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [mobileUseCasesExpanded, setMobileUseCasesExpanded] = useState(false)
 
-  // Notify parent when mobile menu state changes
   const toggleMobileMenu = useCallback(() => {
     const newState = !isMobileMenuOpen
     setIsMobileMenuOpen(newState)
-    // Expand Use Cases by default when opening mobile menu
-    if (newState) {
-      setMobileUseCasesExpanded(true)
-    }
     onMobileMenuChange?.(newState)
   }, [isMobileMenuOpen, onMobileMenuChange])
   const [showTrackModal, setShowTrackModal] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const useCases = [
-    { name: 'Cherokee', href: '/use-cases/cherokee' },
-    { name: 'Retail', href: '/use-cases/retail' },
-    { name: 'Smart Home', href: '/use-cases/smart-home' },
-    { name: 'Education', href: '/use-cases/education' },
-  ]
-
-  const isUseCaseActive = pathname.startsWith('/use-cases')
-
-  // Dropdown handlers with delay
-  const handleDropdownEnter = useCallback(() => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current)
-      closeTimeoutRef.current = null
-    }
-    setIsUseCasesOpen(true)
-  }, [])
-
-  const handleDropdownLeave = useCallback(() => {
-    closeTimeoutRef.current = setTimeout(() => {
-      setIsUseCasesOpen(false)
-    }, 300) // 300ms delay before closing
-  }, [])
 
   // Audio handling
   const connectAudioToMascot = useCallback(async (audioElement: HTMLAudioElement) => {
@@ -247,78 +215,28 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
         </button>
 
         <div className="header-navigation">
-        <Link
-          href="/"
-          className={`nav-link ${pathname === '/' ? 'active' : ''}`}
-        >
-          Home
-        </Link>
-        <Link
-          href="/demo"
-          className={`nav-link ${pathname === '/demo' ? 'active' : ''}`}
-        >
-          Demo
-        </Link>
-
-        {/* Use Cases Dropdown */}
-        <div
-          className="use-cases-dropdown"
-          onMouseEnter={handleDropdownEnter}
-          onMouseLeave={handleDropdownLeave}
-        >
-          <button
-            className={`nav-link use-cases-trigger ${isUseCaseActive ? 'active' : ''}`}
-            onClick={() => setIsUseCasesOpen(!isUseCasesOpen)}
-            aria-expanded={isUseCasesOpen}
-            aria-haspopup="true"
+          <Link
+            href="/examples"
+            className={`nav-link ${pathname.startsWith('/examples') ? 'active' : ''}`}
           >
-            Use Cases
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              style={{
-                marginLeft: '0.25rem',
-                transform: isUseCasesOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease',
-              }}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-
-          {isUseCasesOpen && (
-            <div className="use-cases-menu">
-              {useCases.map((useCase) => (
-                <Link
-                  key={useCase.href}
-                  href={useCase.href}
-                  prefetch={false}
-                  className={`use-case-item ${pathname.startsWith(useCase.href) ? 'active' : ''}`}
-                  onClick={() => setIsUseCasesOpen(false)}
-                  onMouseEnter={() => router.prefetch(useCase.href)}
-                  onTouchStart={() => router.prefetch(useCase.href)}
-                >
-                  {useCase.name}
-                </Link>
-              ))}
-            </div>
-          )}
+            Examples
+          </Link>
+          <Link
+            href="/demo"
+            className={`nav-link ${pathname === '/demo' ? 'active' : ''}`}
+          >
+            Demo
+          </Link>
+          <a
+            href="https://github.com/joshtol/emotive-engine"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-link"
+          >
+            GitHub
+          </a>
         </div>
-
-        <a
-          href="https://github.com/joshtol/emotive-engine"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="nav-link"
-        >
-          Docs
-        </a>
       </div>
-    </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
@@ -328,45 +246,12 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
             <Link href="/" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
               Home
             </Link>
+            <Link href="/examples" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+              Examples
+            </Link>
             <Link href="/demo" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
               Demo
             </Link>
-
-            {/* Use Cases - Collapsible */}
-            <button
-              className="mobile-menu-divider mobile-menu-collapsible"
-              onClick={() => setMobileUseCasesExpanded(!mobileUseCasesExpanded)}
-            >
-              Use Cases
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                style={{
-                  marginLeft: 'auto',
-                  transform: mobileUseCasesExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s ease',
-                }}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-            {mobileUseCasesExpanded && useCases.map((useCase) => (
-              <Link
-                key={useCase.href}
-                href={useCase.href}
-                prefetch={false}
-                className="mobile-menu-item mobile-menu-subitem"
-                onClick={() => setIsMobileMenuOpen(false)}
-                onTouchStart={() => router.prefetch(useCase.href)}
-              >
-                {useCase.name}
-              </Link>
-            ))}
-
             <a
               href="https://github.com/joshtol/emotive-engine"
               target="_blank"
@@ -374,7 +259,7 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
               className="mobile-menu-item"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Docs
+              GitHub
             </a>
           </div>
         </>

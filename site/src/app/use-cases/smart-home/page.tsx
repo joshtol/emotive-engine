@@ -348,7 +348,7 @@ export default function SmartHomePage() {
               </button>
 
               <a
-                href="/docs"
+                href="https://github.com/joshtol/emotive-engine"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -882,7 +882,7 @@ export default function SmartHomePage() {
               zIndex: 1
             }}>
               <a
-                href="/docs"
+                href="https://github.com/joshtol/emotive-engine"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',

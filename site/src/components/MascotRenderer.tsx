@@ -156,7 +156,7 @@ export default function MascotRenderer({
       // Load the 3D engine via ES module import (includes Three.js)
       if (!(window as any)._emotiveEngine3D) {
         (window as any)._emotiveEngine3D = import(
-          /* webpackIgnore: true */ '/emotive-engine-3d.bundled.js'
+          /* webpackIgnore: true */ '/emotive-engine-3d-elementals.bundled.js'
         )
       }
       const engineModule = await (window as any)._emotiveEngine3D
