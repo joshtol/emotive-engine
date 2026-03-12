@@ -2,323 +2,211 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-/**
- * Lazy-loaded FeaturesShowcase that only renders when scrolled into view
- * Prevents hydration mismatches and reduces initial bundle evaluation
- */
+const FEATURES_WIDE = [
+  {
+    stat: '8',
+    title: 'Elemental Shader Systems',
+    description: 'Custom GLSL per element — ice, fire, water, electric, void, light, earth, nature. Each with bloom, ambient occlusion, and GPU instancing.',
+    color: '#a78bfa',
+  },
+  {
+    stat: '169',
+    title: 'Gesture Library',
+    description: 'Crowns, vortices, impacts, drills, helixes, splashes. Elemental spectacles and subtle ambient idles.',
+    color: '#f97316',
+  },
+]
+
+const FEATURES_NARROW = [
+  {
+    stat: '60fps',
+    title: 'GPU Instanced',
+    description: '1000+ particles on mid-range hardware. WebGL renderer with Canvas 2D fallback.',
+    color: '#67e8f9',
+  },
+  {
+    stat: '3 lines',
+    title: 'Simple API',
+    description: 'React, Vue, Svelte, vanilla JS. No build config required.',
+    color: '#38bdf8',
+  },
+  {
+    stat: 'TS',
+    title: 'TypeScript-First',
+    description: 'Full type definitions. Autocomplete for every gesture and parameter.',
+    color: '#818cf8',
+  },
+  {
+    stat: 'MIT',
+    title: 'Open License',
+    description: 'No attribution required. Commercial use OK.',
+    color: '#4ade80',
+  },
+]
+
 export default function LazyFeaturesShowcase() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
-  const [showAll, setShowAll] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
 
-  // Intersection Observer to load content when visible
   useEffect(() => {
     if (!containerRef.current) return
-
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          // Keep observer active, persist visibility once loaded
-          if (entry.isIntersecting && !isVisible) {
-            setIsVisible(true)
-            setIsMobile(window.innerWidth < 768)
-          }
-        })
+        if (entries[0].isIntersecting && !isVisible) setIsVisible(true)
       },
-      {
-        threshold: 0.1,
-        rootMargin: '100px' // Load before entering viewport
-      }
+      { threshold: 0.05, rootMargin: '120px' }
     )
-
     observer.observe(containerRef.current)
-
     return () => observer.disconnect()
   }, [isVisible])
-
-  // Window resize handler (only after visible)
-  useEffect(() => {
-    if (!isVisible) return
-
-    const handleResize = () => setIsMobile(window.innerWidth < 768)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [isVisible])
-
-  const features = [
-    // Priority 1 (Top 3 - Mobile + Desktop)
-    {
-      icon: '⚡',
-      title: '60fps Animation',
-      description: 'Silky smooth even with 1000+ particles',
-      color: '#667eea',
-      priority: 1
-    },
-    {
-      icon: '💭',
-      title: 'Emotional States',
-      description: 'Full emotional spectrum from joy to contemplation',
-      color: '#F59E0B',
-      priority: 1
-    },
-    {
-      icon: '🚀',
-      title: 'Simple API',
-      description: 'From init to emotions in just 3 lines of code',
-      color: '#10B981',
-      priority: 1
-    },
-
-    // Priority 2 (Top 8 - Desktop only)
-    {
-      icon: '📦',
-      title: 'Lightweight Bundle',
-      description: 'Optimized builds for every use case',
-      color: '#8B5CF6',
-      priority: 2
-    },
-    {
-      icon: '🤖',
-      title: 'LLM Integration',
-      description: 'Claude & GPT sentiment detection',
-      color: '#EC4899',
-      priority: 2
-    },
-    {
-      icon: '🎨',
-      title: 'Zero GPU Required',
-      description: 'Pure Canvas 2D rendering',
-      color: '#06B6D4',
-      priority: 2
-    },
-    {
-      icon: '👋',
-      title: 'Rich Gestures',
-      description: 'Wave, bounce, explode, shimmer, and more',
-      color: '#F97316',
-      priority: 2
-    },
-    {
-      icon: '🌀',
-      title: 'Shape Morphing',
-      description: 'Dynamic formations and transitions',
-      color: '#14B8A6',
-      priority: 2
-    },
-
-    // Priority 3 (Expandable)
-    {
-      icon: '📘',
-      title: 'TypeScript Support',
-      description: 'Full type definitions included',
-      color: '#3B82F6',
-      priority: 3
-    },
-    {
-      icon: '📱',
-      title: 'Any Device',
-      description: 'Desktop, mobile, tablet - all supported',
-      color: '#A855F7',
-      priority: 3
-    },
-    {
-      icon: '🎵',
-      title: 'Audio Sync',
-      description: 'Optional audio module for music sync',
-      color: '#EF4444',
-      priority: 3
-    },
-    {
-      icon: '⚛️',
-      title: 'Framework Agnostic',
-      description: 'React, Vue, Svelte, or vanilla JS',
-      color: '#6366F1',
-      priority: 3
-    },
-    {
-      icon: '🎯',
-      title: 'Event-Driven',
-      description: 'Rich event system for custom behaviors',
-      color: '#10B981',
-      priority: 3
-    },
-    {
-      icon: '🔧',
-      title: 'Highly Customizable',
-      description: 'Every parameter is configurable',
-      color: '#F59E0B',
-      priority: 3
-    },
-    {
-      icon: '♿',
-      title: 'Accessible',
-      description: 'ARIA labels and reduced motion support',
-      color: '#06B6D4',
-      priority: 3
-    },
-    {
-      icon: '📊',
-      title: 'Performance Monitoring',
-      description: 'Built-in FPS and memory tracking',
-      color: '#8B5CF6',
-      priority: 3
-    }
-  ]
-
-  const getVisibleFeatures = () => {
-    if (showAll) return features
-    if (isMobile) return features.filter(f => f.priority === 1) // Top 3
-    return features.filter(f => f.priority <= 2) // Top 8
-  }
-
-  const visibleFeatures = isVisible ? getVisibleFeatures() : []
-  const hiddenCount = features.length - visibleFeatures.length
-
-  // Reserve space to prevent layout shift
-  const estimatedHeight = isMobile ? '600px' : '800px'
 
   return (
     <section
       ref={containerRef}
       style={{
-        minHeight: isVisible ? 'auto' : estimatedHeight,
-        padding: '5rem 2rem',
-        background: 'linear-gradient(180deg, rgba(10,10,10,0.5) 0%, rgba(5,5,5,0.3) 100%)',
+        padding: 'clamp(3rem, 6vw, 5rem) clamp(1rem, 3vw, 2rem)',
+        maxWidth: '1200px',
+        margin: '0 auto',
         position: 'relative',
-        contentVisibility: 'auto', // Browser optimization for off-screen content
-        containIntrinsicSize: estimatedHeight // Reserve space for layout
+        zIndex: 2,
+        minHeight: isVisible ? 'auto' : '500px',
       }}
     >
-      {!isVisible && (
-        // Skeleton loader
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          opacity: 0.3
+      <style>{`
+        .features-bento {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        .feature-wide { grid-column: span 2; }
+        .feature-narrow { grid-column: span 1; }
+        .feature-cell {
+          background: #0a0a0c;
+          transition: background 0.2s ease;
+        }
+        .feature-cell:hover { background: #0f0f12; }
+        @media (max-width: 767px) {
+          .features-bento { grid-template-columns: repeat(2, 1fr); }
+          .feature-wide { grid-column: span 2; }
+        }
+        @media (max-width: 420px) {
+          .features-bento { grid-template-columns: 1fr; }
+          .feature-wide { grid-column: span 1; }
+          .feature-narrow { grid-column: span 1; }
+        }
+      `}</style>
+
+      {/* Section header */}
+      <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 4vw, 3rem)' }}>
+        <h2 style={{
+          fontFamily: 'var(--font-primary)',
+          fontSize: 'clamp(2rem, 5vw, 3rem)',
+          fontWeight: '700',
+          marginBottom: '0.75rem',
+          letterSpacing: '-0.03em',
+          color: '#ffffff',
         }}>
-          <div style={{
-            width: '200px',
-            height: '40px',
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            margin: '0 auto 2rem'
-          }} />
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
-            gap: '1.5rem'
-          }}>
-            {[...Array(isMobile ? 3 : 8)].map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  height: '150px',
-                  background: 'rgba(255,255,255,0.05)',
-                  borderRadius: '16px'
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+          Under the hood.
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1rem' }}>
+          GPU-native shader pipeline. Developer-first API.
+        </p>
+      </div>
 
-      {isVisible && (
-        <>
-          <h2 style={{
-            fontSize: 'clamp(2rem, 5vw, 3rem)',
-            fontWeight: '800',
-            textAlign: 'center',
-            marginBottom: '4rem',
-            background: 'linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            Core Features
-          </h2>
-
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
-            gap: '1.5rem',
-            marginBottom: hiddenCount > 0 ? '3rem' : 0
-          }}>
-            {visibleFeatures.map((feature, index) => (
-              <div
-                key={index}
-                style={{
-                  padding: '2rem',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '16px',                  transition: 'transform 0.3s ease, border-color 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.borderColor = feature.color
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
-                }}
-              >
-                <div style={{
-                  fontSize: '2.5rem',
-                  marginBottom: '1rem'
-                }}>
-                  {feature.icon}
-                </div>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '700',
-                  marginBottom: '0.5rem',
-                  color: feature.color
-                }}>
-                  {feature.title}
-                </h3>
-                <p style={{
-                  fontSize: '0.95rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  lineHeight: 1.6
-                }}>
-                  {feature.description}
-                </p>
+      {/* Bento grid */}
+      {isVisible ? (
+        <div className="features-bento">
+          {/* Wide cards — top row */}
+          {FEATURES_WIDE.map((f, i) => (
+            <div
+              key={f.stat}
+              className={`feature-cell feature-wide`}
+              style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}
+            >
+              <div style={{
+                fontSize: 'clamp(2.75rem, 6vw, 4.5rem)',
+                fontWeight: '700',
+                fontFamily: 'var(--font-primary)',
+                color: f.color,
+                lineHeight: 1,
+                marginBottom: '0.5rem',
+                letterSpacing: '-0.04em',
+              }}>
+                {f.stat}
               </div>
-            ))}
-          </div>
-
-          {hiddenCount > 0 && (
-            <div style={{ textAlign: 'center' }}>
-              <button
-                onClick={() => setShowAll(!showAll)}
-                style={{
-                  padding: '1rem 2rem',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#667eea',
-                  background: 'rgba(102, 126, 234, 0.15)',
-                  border: '1px solid rgba(102, 126, 234, 0.3)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.25)'
-                  e.currentTarget.style.transform = 'scale(1.05)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.15)'
-                  e.currentTarget.style.transform = 'scale(1)'
-                }}
-              >
-                {showAll ? 'Show Less' : `Show ${hiddenCount} More Features`}
-              </button>
+              <div style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: 'rgba(255,255,255,0.9)',
+                marginBottom: '0.6rem',
+                letterSpacing: '-0.01em',
+              }}>
+                {f.title}
+              </div>
+              <p style={{
+                fontSize: '0.875rem',
+                color: 'rgba(255,255,255,0.4)',
+                lineHeight: 1.6,
+                margin: 0,
+                maxWidth: '320px',
+              }}>
+                {f.description}
+              </p>
             </div>
-          )}
-        </>
+          ))}
+
+          {/* Narrow cards — bottom row */}
+          {FEATURES_NARROW.map((f) => (
+            <div
+              key={f.stat}
+              className="feature-cell feature-narrow"
+              style={{ padding: 'clamp(1.25rem, 2.5vw, 2rem)' }}
+            >
+              <div style={{
+                fontSize: 'clamp(1.4rem, 3vw, 1.75rem)',
+                fontWeight: '700',
+                fontFamily: 'var(--font-primary)',
+                color: f.color,
+                lineHeight: 1,
+                marginBottom: '0.4rem',
+                letterSpacing: '-0.03em',
+              }}>
+                {f.stat}
+              </div>
+              <div style={{
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                color: 'rgba(255,255,255,0.85)',
+                marginBottom: '0.35rem',
+              }}>
+                {f.title}
+              </div>
+              <p style={{
+                fontSize: '0.8rem',
+                color: 'rgba(255,255,255,0.38)',
+                lineHeight: 1.5,
+                margin: 0,
+              }}>
+                {f.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Skeleton */
+        <div className="features-bento" style={{ opacity: 0.2 }}>
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className={`feature-cell ${i < 2 ? 'feature-wide' : 'feature-narrow'}`}
+              style={{ height: i < 2 ? '160px' : '120px' }}
+            />
+          ))}
+        </div>
       )}
     </section>
   )
