@@ -324,16 +324,14 @@ export default function MascotRenderer({
         zIndex: 100001, // ABOVE header (100000) to fix Android stacking context bug
       }
     : {
-        // Desktop: center crystal in the gap, 50% from top (vertically centered)
-        // Size: 500 * 1.5 = 750, 700 * 1.5 = 1050
         position: 'fixed',
         top: '50%',
         left: 'calc(max(20px, (50vw - 500px) / 2 - 375px))',
         transform: 'translateY(-50%)',
-        width: '750px',   // 500 * 1.5
-        height: '1050px', // 700 * 1.5
+        width: '750px',
+        height: '1050px',
         pointerEvents: enableControls ? 'auto' : 'none',
-        zIndex: 100001, // ABOVE header to fix stacking context issues
+        zIndex: 100001,
       }
 
   return (

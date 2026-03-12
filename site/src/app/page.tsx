@@ -16,7 +16,7 @@ const HERO_ELEMENTS = [
   { name: 'water',       gesture: 'watervortex',     label: 'Water',       color: '#38bdf8' },
   { name: 'void',        gesture: 'voidvortex',      label: 'Void',        color: '#818cf8' },
   { name: 'light',       gesture: 'lightcrown',      label: 'Light',       color: '#fde68a' },
-  { name: 'earth',       gesture: 'earthpillar',     label: 'Earth',       color: '#86efac' },
+  { name: 'earth',       gesture: 'earthimpact',     label: 'Earth',       color: '#86efac' },
   { name: 'nature',      gesture: 'naturevortex',    label: 'Nature',      color: '#4ade80' },
 ]
 
