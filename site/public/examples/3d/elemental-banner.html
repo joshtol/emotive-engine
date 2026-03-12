@@ -1,45 +1,50 @@
 <!DOCTYPE html>
 <!--
-  ELEMENTAL BANNER - Social Preview Capture (1280x720)
+  ELEMENTAL BANNER - Social Preview Capture
 
-  Captures og:image screenshots and video clips for social media.
-  Dark background, centered crystal.
+  Controls panel is OUTSIDE #scene — never appears in screenshots or recordings.
 
-  Usage:
-  1. Open at http://localhost:3001/examples/3d/elemental-banner.html
-  2. Press 1-8 to pick an element, click to pause
-  3. Press S to save PNG, R to start/stop video recording
-
-  Controls:
-  - 1-8: Jump to element (fire, water, ice, electric, earth, nature, light, void)
+  Keyboard shortcuts:
+  - 1-8: Jump to element (fire, ice, electric, water, void, light, earth, nature)
   - Space: Next element
-  - Click: Pause/resume
-  - S: Save screenshot (1200x630 PNG)
-  - R: Start/stop video recording (1280x720 WebM)
+  - Click scene: Pause/resume
+  - S: Screenshot (current preset dimensions)
+  - R: Start/stop WebM recording
+  - G: Start/stop GIF recording (15fps)
   - A: Toggle alignment guides
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Elemental Banner Capture</title>
+    <!-- gif.js — loaded as classic script so window.GIF is available in the module below -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html, body {
-            width: 1280px;
-            height: 720px;
-            overflow: hidden;
-            background: #050505;
+            background: #0d0d0d;
+            overflow: auto;
         }
 
+        body {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 12px;
+            gap: 10px;
+            min-width: max-content;
+            font-family: monospace;
+        }
+
+        /* ── Scene — only this div (and its canvases) gets captured ── */
         #scene {
-            width: 1280px;
-            height: 720px;
             position: relative;
             background: #050505;
+            flex-shrink: 0;
         }
 
-        /* Alignment frame — hidden by default */
+        /* Alignment frame overlay */
         #align-frame {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             border: 1px solid rgba(255,0,0,0.4);
@@ -59,11 +64,108 @@
             top: 10%; left: 10%; right: 10%; bottom: 10%;
             border: 1px dashed rgba(255,0,0,0.15);
         }
-        #align-frame .size {
+        #align-frame .size-label {
             position: absolute; bottom: 4px; left: 4px;
             font-size: 10px; color: rgba(255,0,0,0.4);
             font-family: monospace;
         }
+
+        /* ── Control panel — outside #scene, not captured ── */
+        #controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #2a2a2a;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        #controls .sep {
+            width: 1px;
+            height: 18px;
+            background: #333;
+            flex-shrink: 0;
+        }
+
+        #controls label {
+            color: #555;
+            font-size: 11px;
+        }
+
+        #controls select {
+            background: #222;
+            color: #ddd;
+            border: 1px solid #383838;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+        }
+        #controls select:focus { border-color: #555; }
+
+        #controls button {
+            background: #222;
+            color: #bbb;
+            border: 1px solid #383838;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        #controls button:hover { background: #2e2e2e; color: #eee; }
+        #controls button.recording {
+            background: #4a1010;
+            border-color: #a33;
+            color: #ff9090;
+        }
+
+        #status {
+            color: #f88;
+            font-size: 11px;
+            min-width: 10px;
+        }
+
+        .hint {
+            color: #333;
+            font-size: 11px;
+            margin-left: auto;
+        }
+
+        /* GIF compression options row — shown only when format=GIF */
+        #gif-opts {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 6px 12px;
+            background: #161616;
+            border-radius: 6px;
+            border: 1px solid #252525;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        #gif-opts label { color: #555; font-size: 11px; }
+
+        #gif-opts select {
+            background: #222; color: #ddd;
+            border: 1px solid #383838;
+            padding: 3px 6px; border-radius: 4px;
+            font-family: monospace; font-size: 12px; cursor: pointer;
+        }
+
+        #gif-opts input[type=range] {
+            width: 100px; cursor: pointer; accent-color: #666;
+        }
+
+        #gif-lossy-val { color: #777; min-width: 24px; }
     </style>
 </head>
 <body>
@@ -72,15 +174,77 @@
             <div class="h"></div>
             <div class="v"></div>
             <div class="safe"></div>
-            <div class="size">1280 × 720</div>
+            <div class="size-label">1280 × 720</div>
         </div>
+    </div>
+
+    <div id="controls">
+        <label>Size</label>
+        <select id="preset-select">
+            <option value="1280x720">1280×720 · 16:9</option>
+            <option value="1200x630">1200×630 · og:image</option>
+            <option value="720x720">720×720  · square</option>
+            <option value="1080x608">1080×608 · X video</option>
+        </select>
+
+        <div class="sep"></div>
+
+        <label>Format</label>
+        <select id="format-select">
+            <option value="webm">WebM</option>
+            <option value="gif">GIF (15fps)</option>
+        </select>
+
+        <div class="sep"></div>
+
+        <button id="btn-record" title="R">⏺ Record</button>
+        <button id="btn-screenshot" title="S">📷 Screenshot</button>
+        <button id="btn-guides" title="A">⊞ Guides</button>
+
+        <div class="sep"></div>
+
+        <span id="status"></span>
+        <span class="hint">1–8 element · Space next · click pause</span>
+    </div>
+
+    <!-- GIF compression options — hidden until format=GIF is selected -->
+    <div id="gif-opts">
+        <label>Optimize</label>
+        <select id="gif-opt">
+            <option value="-O3">Combined · remove duplicates + transparency + lossy</option>
+            <option value="-O2">Transparency · remove duplicates + transparency</option>
+            <option value="-O1">Duplicates · remove duplicate frames only</option>
+        </select>
+
+        <div class="sep" style="width:1px;height:18px;background:#2a2a2a;flex-shrink:0;"></div>
+
+        <label>Lossy</label>
+        <input id="gif-lossy" type="range" min="30" max="200" value="30">
+        <span id="gif-lossy-val">30</span>
+
     </div>
 
     <script type="module">
         import EmotiveMascot3D from '/emotive-engine-3d-elementals.bundled.js';
 
         // ═══════════════════════════════════════════════════════════════
-        // SHOWCASE — most dramatic gesture per element
+        // PRESETS
+        // Each preset: canvas dimensions + per-format camera nudge.
+        // nudgeY shifts camera.position.y up so the mascot sits slightly
+        // below center — visually better than dead-center framing.
+        // ═══════════════════════════════════════════════════════════════
+
+        const PRESETS = {
+            '1280x720': { w: 1280, h: 720,  nudgeY: 0.06 },
+            '1200x630': { w: 1200, h: 630,  nudgeY: 0.06 },
+            '720x720':  { w: 720,  h: 720,  nudgeY: 0.03 },
+            '1080x608': { w: 1080, h: 608,  nudgeY: 0.06 },
+        };
+
+        let activePreset = PRESETS['1280x720'];
+
+        // ═══════════════════════════════════════════════════════════════
+        // SHOWCASE
         // ═══════════════════════════════════════════════════════════════
 
         const showcase = [
@@ -95,13 +259,15 @@
         ];
 
         const GESTURE_DURATION = 5000;
-        const TRANSITION_GAP = 800;
+        const TRANSITION_GAP   = 800;
 
         // ═══════════════════════════════════════════════════════════════
         // INIT MASCOT
         // ═══════════════════════════════════════════════════════════════
 
-        const container = document.getElementById('scene');
+        const scene = document.getElementById('scene');
+        applyPresetCSS(activePreset);  // set scene div size before mascot init
+
         const mascot = new EmotiveMascot3D({
             coreGeometry: 'crystal',
             enableParticles: true,
@@ -122,28 +288,78 @@
             enableBreathing: false,
         });
 
-        mascot.init(container);
+        mascot.init(scene);
         mascot.start();
         window.mascot = mascot;
 
-        // Nudge camera target up so crystal sits slightly below center
+        // Store camera base Y before nudge so preset changes can reset it cleanly.
+        let camBaseY = null;
         setTimeout(() => {
             const cam = mascot.core3D?.renderer?.camera;
-            if (cam) cam.position.y += 0.06;
+            if (cam) {
+                camBaseY = cam.position.y;
+                cam.position.y += activePreset.nudgeY;
+            }
         }, 500);
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRESET RESIZE
+        // ═══════════════════════════════════════════════════════════════
+
+        function applyPresetCSS(preset) {
+            scene.style.width  = preset.w + 'px';
+            scene.style.height = preset.h + 'px';
+            document.querySelector('#align-frame .size-label').textContent =
+                `${preset.w} × ${preset.h}`;
+        }
+
+        function applyPreset(preset) {
+            activePreset = preset;
+            applyPresetCSS(preset);
+
+            // Resize Three.js WebGL renderer (also resizes its canvas + style)
+            const threeRenderer = mascot.core3D?.renderer?.renderer;
+            if (threeRenderer) {
+                threeRenderer.setSize(preset.w, preset.h);
+            }
+
+            // Resize 2D canvas layer (mascot body/face overlay)
+            if (mascot._canvasLayerManager?.resize) {
+                mascot._canvasLayerManager.resize(preset.w, preset.h);
+            } else {
+                // Fallback: manually resize any canvas that isn't the WebGL one
+                scene.querySelectorAll('canvas').forEach(c => {
+                    if (c !== threeRenderer?.domElement) {
+                        c.width  = preset.w;
+                        c.height = preset.h;
+                        c.style.width  = preset.w + 'px';
+                        c.style.height = preset.h + 'px';
+                    }
+                });
+            }
+
+            // Update camera aspect ratio + re-apply Y nudge from stored base
+            const cam = mascot.core3D?.renderer?.camera;
+            if (cam) {
+                cam.aspect = preset.w / preset.h;
+                cam.updateProjectionMatrix();
+                if (camBaseY !== null) {
+                    cam.position.y = camBaseY + preset.nudgeY;
+                }
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // CYCLE LOGIC
         // ═══════════════════════════════════════════════════════════════
 
         let currentIndex = 0;
-        let paused = false;
-        let cycleTimer = null;
+        let paused       = false;
+        let cycleTimer   = null;
 
         function showElement(index) {
             currentIndex = index;
             const item = showcase[index];
-
             setTimeout(() => mascot.express(item.gesture), 200);
 
             if (!paused) {
@@ -170,29 +386,19 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // SCREENSHOT — hooks into the engine's own render loop
-        //
-        // preserveDrawingBuffer is false, so toDataURL/drawImage
-        // return blank AFTER the frame. But gl.readPixels() works
-        // if called in the SAME call stack as the render.
-        //
-        // Strategy: monkey-patch rAF to intercept right after the
-        // full post-processing pipeline writes to the screen buffer.
+        // SCREENSHOT — readPixels inside same rAF call stack
         // ═══════════════════════════════════════════════════════════════
 
         function saveScreenshot() {
             const threeRenderer = mascot.core3D?.renderer?.renderer;
-            if (!threeRenderer) {
-                console.error('Cannot access Three.js renderer');
-                return;
-            }
+            if (!threeRenderer) { console.error('No Three.js renderer'); return; }
 
             const gl = threeRenderer.getContext();
-            const w = gl.drawingBufferWidth;
-            const h = gl.drawingBufferHeight;
+            const w  = gl.drawingBufferWidth;
+            const h  = gl.drawingBufferHeight;
 
             const origRAF = window.requestAnimationFrame;
-            let captured = false;
+            let captured  = false;
 
             window.requestAnimationFrame = function(cb) {
                 return origRAF.call(window, function(time) {
@@ -205,29 +411,30 @@
                         const pixels = new Uint8Array(w * h * 4);
                         gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-                        const out = document.createElement('canvas');
-                        out.width = 1200;
-                        out.height = 630;
-                        const ctx = out.getContext('2d');
-
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(0, 0, 1200, 630);
-
-                        const imgData = ctx.createImageData(w, h);
+                        // Flip Y — WebGL origin is bottom-left
+                        const imgData = new ImageData(w, h);
                         for (let row = 0; row < h; row++) {
-                            const srcOff = row * w * 4;
-                            const dstOff = (h - 1 - row) * w * 4;
-                            imgData.data.set(pixels.subarray(srcOff, srcOff + w * 4), dstOff);
+                            const src = row * w * 4;
+                            const dst = (h - 1 - row) * w * 4;
+                            imgData.data.set(pixels.subarray(src, src + w * 4), dst);
                         }
 
                         const tmp = document.createElement('canvas');
-                        tmp.width = w;
+                        tmp.width  = w;
                         tmp.height = h;
                         tmp.getContext('2d').putImageData(imgData, 0, 0);
-                        ctx.drawImage(tmp, 0, 0, 1200, 630);
+
+                        // Output at preset dimensions (1:1 if buffer matches, else scale)
+                        const out    = document.createElement('canvas');
+                        out.width    = activePreset.w;
+                        out.height   = activePreset.h;
+                        const outCtx = out.getContext('2d');
+                        outCtx.fillStyle = '#050505';
+                        outCtx.fillRect(0, 0, activePreset.w, activePreset.h);
+                        outCtx.drawImage(tmp, 0, 0, activePreset.w, activePreset.h);
 
                         const link = document.createElement('a');
-                        link.download = `og-image-${showcase[currentIndex].label}.png`;
+                        link.download = `${showcase[currentIndex].label}-${activePreset.w}x${activePreset.h}.png`;
                         link.href = out.toDataURL('image/png');
                         link.click();
                     }
@@ -236,53 +443,40 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // VIDEO RECORDING — captures WebGL canvas via readPixels
-        //
-        // Same rAF monkey-patch approach as screenshot, but continuous.
-        // Reads pixels each frame, draws to an offscreen 2D canvas,
-        // and feeds captureStream() into MediaRecorder.
-        //
-        // Output: WebM (VP9). Convert to MP4 for Twitter upload:
-        //   ffmpeg -i clip.webm -c:v libx264 -pix_fmt yuv420p clip.mp4
+        // WEBM RECORDING — readPixels each frame → captureStream
         // ═══════════════════════════════════════════════════════════════
 
-        let mediaRecorder = null;
-        let recordedChunks = [];
-        let recordingLabel = '';
-        let mirrorCanvas = null;
-        let mirrorCtx = null;
+        let mediaRecorder   = null;
+        let recordedChunks  = [];
+        let recordingLabel  = '';
+        let mirrorCanvas    = null;
+        let mirrorCtx       = null;
 
-        function startRecording() {
+        function startWebMRecording() {
             const threeRenderer = mascot.core3D?.renderer?.renderer;
-            if (!threeRenderer) {
-                console.error('Cannot access Three.js renderer');
-                return;
-            }
+            if (!threeRenderer) { console.error('No Three.js renderer'); return; }
 
             const gl = threeRenderer.getContext();
-            const w = gl.drawingBufferWidth;
-            const h = gl.drawingBufferHeight;
+            const w  = gl.drawingBufferWidth;
+            const h  = gl.drawingBufferHeight;
 
-            // Offscreen 2D canvas at video resolution — feeds MediaRecorder
-            mirrorCanvas = document.createElement('canvas');
-            mirrorCanvas.width = 1280;
-            mirrorCanvas.height = 720;
-            mirrorCtx = mirrorCanvas.getContext('2d');
+            mirrorCanvas        = document.createElement('canvas');
+            mirrorCanvas.width  = activePreset.w;
+            mirrorCanvas.height = activePreset.h;
+            mirrorCtx           = mirrorCanvas.getContext('2d');
 
-            // Temp canvas for pixel flip (same size as WebGL buffer)
-            const flipCanvas = document.createElement('canvas');
-            flipCanvas.width = w;
-            flipCanvas.height = h;
-            const flipCtx = flipCanvas.getContext('2d');
+            const flipCanvas   = document.createElement('canvas');
+            flipCanvas.width   = w;
+            flipCanvas.height  = h;
+            const flipCtx      = flipCanvas.getContext('2d');
 
             recordedChunks = [];
             recordingLabel = showcase[currentIndex].label;
 
-            // Capture stream from the mirror canvas
             const stream = mirrorCanvas.captureStream(60);
             mediaRecorder = new MediaRecorder(stream, {
                 mimeType: 'video/webm;codecs=vp9',
-                videoBitsPerSecond: 8_000_000, // 8 Mbps — high quality
+                videoBitsPerSecond: 8_000_000,
             });
 
             mediaRecorder.ondataavailable = (e) => {
@@ -291,81 +485,309 @@
 
             mediaRecorder.onstop = () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
+                const url  = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.download = `elemental-${recordingLabel}.webm`;
+                link.download = `${recordingLabel}-${activePreset.w}x${activePreset.h}.webm`;
                 link.href = url;
                 link.click();
                 URL.revokeObjectURL(url);
-                console.log(`Saved: elemental-${recordingLabel}.webm (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
+                console.log(`Saved: ${link.download} (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
                 mediaRecorder = null;
+                setStatus('');
+                document.getElementById('btn-record').classList.remove('recording');
+                document.getElementById('btn-record').textContent = '⏺ Record';
             };
 
             mediaRecorder.start();
+            setStatus('● REC WebM');
+            document.getElementById('btn-record').classList.add('recording');
+            document.getElementById('btn-record').textContent = '⏹ Stop';
+            console.log('WebM recording started — press R to stop');
 
-            // Monkey-patch rAF to mirror each frame to the 2D canvas
             const origRAF = window.requestAnimationFrame;
-
             window.requestAnimationFrame = function(cb) {
                 return origRAF.call(window, function(time) {
-                    cb(time); // Engine renders its frame
+                    cb(time);
 
                     if (mediaRecorder && mediaRecorder.state === 'recording') {
-                        // Read pixels from WebGL
                         const pixels = new Uint8Array(w * h * 4);
                         gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-                        // Flip vertically
                         const imgData = flipCtx.createImageData(w, h);
                         for (let row = 0; row < h; row++) {
-                            const srcOff = row * w * 4;
-                            const dstOff = (h - 1 - row) * w * 4;
-                            imgData.data.set(pixels.subarray(srcOff, srcOff + w * 4), dstOff);
+                            const src = row * w * 4;
+                            const dst = (h - 1 - row) * w * 4;
+                            imgData.data.set(pixels.subarray(src, src + w * 4), dst);
                         }
                         flipCtx.putImageData(imgData, 0, 0);
 
-                        // Draw to mirror canvas at video resolution
                         mirrorCtx.fillStyle = '#050505';
-                        mirrorCtx.fillRect(0, 0, 1280, 720);
-                        mirrorCtx.drawImage(flipCanvas, 0, 0, 1280, 720);
+                        mirrorCtx.fillRect(0, 0, activePreset.w, activePreset.h);
+                        mirrorCtx.drawImage(flipCanvas, 0, 0, activePreset.w, activePreset.h);
                     } else {
-                        // Recording stopped — restore original rAF
                         window.requestAnimationFrame = origRAF;
                     }
                 });
             };
-
-            console.log('Recording started — press R to stop');
         }
 
-        function stopRecording() {
+        function stopWebMRecording() {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
-                // Paint final black frame so captureStream doesn't grab a white canvas
                 if (mirrorCtx) {
                     mirrorCtx.fillStyle = '#050505';
-                    mirrorCtx.fillRect(0, 0, 1280, 720);
+                    mirrorCtx.fillRect(0, 0, activePreset.w, activePreset.h);
                 }
                 mediaRecorder.stop();
-                console.log('Recording stopped — saving...');
+                console.log('WebM recording stopped — saving...');
             }
-            // Don't null mediaRecorder here — onstop handler needs it.
-            // rAF patch will restore itself on next tick when state !== 'recording'.
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // GIF RECORDING — gif.js at 15fps via worker blob (bypass CORS)
+        // ═══════════════════════════════════════════════════════════════
+
+        let gifEncoder     = null;
+        let gifCapturing   = false;
+        let gifFrameCount  = 0;
+        let gifWorkerURL   = null;
+        const GIF_FPS      = 15;
+        const GIF_DELAY    = Math.round(1000 / GIF_FPS);   // ms per frame
+        const GIF_INTERVAL = Math.round(60 / GIF_FPS);     // capture every Nth rAF tick
+
+        // Pre-fetch worker script and blob it to bypass CDN CORS restrictions
+        async function initGifWorker() {
+            try {
+                const resp = await fetch(
+                    'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+                );
+                const text = await resp.text();
+                const blob = new Blob([text], { type: 'application/javascript' });
+                gifWorkerURL = URL.createObjectURL(blob);
+                console.log('GIF worker ready');
+            } catch (e) {
+                console.warn('GIF worker prefetch failed — GIF recording unavailable:', e);
+            }
+        }
+
+        initGifWorker();
+
+        // ═══════════════════════════════════════════════════════════════
+        // GIFSICLE — in-browser GIF optimizer via WASM
+        // Runs after gif.js encodes the raw GIF, before download.
+        // ═══════════════════════════════════════════════════════════════
+
+        let gifsicle = null;
+
+        async function initGifsicle() {
+            try {
+                const mod = await import(
+                    'https://cdn.jsdelivr.net/npm/gifsicle-wasm-browser/dist/gifsicle.min.js'
+                );
+                gifsicle = mod.default;
+                console.log('gifsicle ready');
+            } catch (e) {
+                console.warn('gifsicle load failed — GIF will download unoptimized:', e);
+            }
+        }
+
+        initGifsicle();
+
+        // Lossy slider live label
+        document.getElementById('gif-lossy').addEventListener('input', (e) => {
+            document.getElementById('gif-lossy-val').textContent = e.target.value;
+        });
+
+        function startGifRecording() {
+            if (!window.GIF) { console.error('gif.js not loaded'); return; }
+            if (!gifWorkerURL) { console.error('GIF worker not ready'); return; }
+
+            const threeRenderer = mascot.core3D?.renderer?.renderer;
+            if (!threeRenderer) { console.error('No Three.js renderer'); return; }
+
+            const gl = threeRenderer.getContext();
+            const w  = gl.drawingBufferWidth;
+            const h  = gl.drawingBufferHeight;
+
+            const flipCanvas   = document.createElement('canvas');
+            flipCanvas.width   = w;
+            flipCanvas.height  = h;
+            const flipCtx      = flipCanvas.getContext('2d');
+
+            const outCanvas   = document.createElement('canvas');
+            outCanvas.width   = activePreset.w;
+            outCanvas.height  = activePreset.h;
+            const outCtx      = outCanvas.getContext('2d');
+
+            gifEncoder = new window.GIF({
+                workers: 2,
+                quality: 10,
+                width:  activePreset.w,
+                height: activePreset.h,
+                workerScript: gifWorkerURL,
+                background: '#050505',
+            });
+
+            gifEncoder.on('finished', async (rawBlob) => {
+                let finalBlob = rawBlob;
+                const filename = `${showcase[currentIndex].label}-${activePreset.w}x${activePreset.h}.gif`;
+
+                if (gifsicle) {
+                    setStatus('⚙ Optimizing…');
+                    try {
+                        const lossy = document.getElementById('gif-lossy').value;
+                        const opt   = document.getElementById('gif-opt').value;
+                        const cmd   = `${opt} --lossy=${lossy} 1.gif -o /out/out.gif`;
+
+                        const result = await gifsicle.run({
+                            input:   [{ file: rawBlob, name: '1.gif' }],
+                            command: [cmd],
+                        });
+
+                        if (result && result[0]) {
+                            finalBlob = result[0];
+                            console.log(
+                                `GIF: ${(rawBlob.size / 1024 / 1024).toFixed(1)} MB → ` +
+                                `${(finalBlob.size / 1024 / 1024).toFixed(1)} MB  cmd: ${cmd}`
+                            );
+                        }
+                    } catch (e) {
+                        console.warn('gifsicle failed — downloading unoptimized GIF:', e);
+                    }
+                }
+
+                const url  = URL.createObjectURL(finalBlob);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log(`Saved: ${filename} (${(finalBlob.size / 1024 / 1024).toFixed(1)} MB)`);
+                gifEncoder = null;
+                setStatus('');
+                document.getElementById('btn-record').classList.remove('recording');
+                document.getElementById('btn-record').textContent = '⏺ Record';
+            });
+
+            gifEncoder.on('progress', (p) => {
+                setStatus(`⚙ Encoding ${Math.round(p * 100)}%`);
+            });
+
+            gifCapturing  = true;
+            gifFrameCount = 0;
+            const gifLabel = showcase[currentIndex].label;
+
+            setStatus('● REC GIF');
+            document.getElementById('btn-record').classList.add('recording');
+            document.getElementById('btn-record').textContent = '⏹ Stop';
+            console.log(`GIF recording started at ${GIF_FPS}fps — press G to stop`);
+
+            const origRAF = window.requestAnimationFrame;
+            let tick = 0;
+
+            window.requestAnimationFrame = function(cb) {
+                return origRAF.call(window, function(time) {
+                    cb(time);
+                    tick++;
+
+                    if (gifCapturing && tick % GIF_INTERVAL === 0) {
+                        const pixels = new Uint8Array(w * h * 4);
+                        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                        const imgData = flipCtx.createImageData(w, h);
+                        for (let row = 0; row < h; row++) {
+                            const src = row * w * 4;
+                            const dst = (h - 1 - row) * w * 4;
+                            imgData.data.set(pixels.subarray(src, src + w * 4), dst);
+                        }
+                        flipCtx.putImageData(imgData, 0, 0);
+
+                        outCtx.fillStyle = '#050505';
+                        outCtx.fillRect(0, 0, activePreset.w, activePreset.h);
+                        outCtx.drawImage(flipCanvas, 0, 0, activePreset.w, activePreset.h);
+
+                        gifEncoder.addFrame(outCtx, { copy: true, delay: GIF_DELAY });
+                        gifFrameCount++;
+                    } else if (!gifCapturing) {
+                        window.requestAnimationFrame = origRAF;
+                    }
+                });
+            };
+        }
+
+        function stopGifRecording() {
+            if (!gifCapturing || !gifEncoder) return;
+            gifCapturing = false;
+            setStatus(`⚙ Encoding ${gifFrameCount} frames…`);
+            console.log(`GIF recording stopped — encoding ${gifFrameCount} frames…`);
+            gifEncoder.render();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // UNIFIED TOGGLE
+        // ═══════════════════════════════════════════════════════════════
+
+        function isRecording() {
+            return (mediaRecorder && mediaRecorder.state === 'recording') || gifCapturing;
         }
 
         function toggleRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                stopRecording();
+            const format = document.getElementById('format-select').value;
+
+            if (isRecording()) {
+                if (format === 'gif') {
+                    stopGifRecording();
+                } else {
+                    stopWebMRecording();
+                }
             } else {
-                startRecording();
+                if (format === 'gif') {
+                    startGifRecording();
+                } else {
+                    startWebMRecording();
+                }
             }
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // CONTROLS
+        // STATUS
         // ═══════════════════════════════════════════════════════════════
 
-        container.addEventListener('click', () => togglePause());
+        function setStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
 
+        // ═══════════════════════════════════════════════════════════════
+        // CONTROLS — buttons + keyboard
+        // ═══════════════════════════════════════════════════════════════
+
+        // Format dropdown — show/hide GIF options row
+        document.getElementById('format-select').addEventListener('change', (e) => {
+            document.getElementById('gif-opts').style.display =
+                e.target.value === 'gif' ? 'flex' : 'none';
+        });
+
+        // Preset dropdown
+        document.getElementById('preset-select').addEventListener('change', (e) => {
+            const preset = PRESETS[e.target.value];
+            if (preset) applyPreset(preset);
+        });
+
+        // Record button
+        document.getElementById('btn-record').addEventListener('click', toggleRecording);
+
+        // Screenshot button
+        document.getElementById('btn-screenshot').addEventListener('click', saveScreenshot);
+
+        // Guides toggle
+        const alignFrame = document.getElementById('align-frame');
+        document.getElementById('btn-guides').addEventListener('click', () => {
+            alignFrame.style.display = alignFrame.style.display === 'none' ? '' : 'none';
+        });
+
+        // Click scene to pause/resume
+        scene.addEventListener('click', togglePause);
+
+        // Keyboard
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
             if (num >= 1 && num <= showcase.length) {
@@ -380,14 +802,26 @@
                     showElement((currentIndex + 1) % showcase.length);
                     break;
                 case 'r':
-                    toggleRecording();
+                    document.getElementById('format-select').value = 'webm';
+                    if (isRecording() && !gifCapturing) {
+                        stopWebMRecording();
+                    } else if (!isRecording()) {
+                        startWebMRecording();
+                    }
                     break;
-                case 'a':
-                    const frame = document.getElementById('align-frame');
-                    frame.style.display = frame.style.display === 'none' ? '' : 'none';
+                case 'g':
+                    document.getElementById('format-select').value = 'gif';
+                    if (gifCapturing) {
+                        stopGifRecording();
+                    } else if (!isRecording()) {
+                        startGifRecording();
+                    }
                     break;
                 case 's':
                     saveScreenshot();
+                    break;
+                case 'a':
+                    alignFrame.style.display = alignFrame.style.display === 'none' ? '' : 'none';
                     break;
             }
         });
