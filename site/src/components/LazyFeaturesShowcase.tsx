@@ -5,14 +5,14 @@ import { useState, useEffect, useRef } from 'react'
 const FEATURES_WIDE = [
   {
     stat: '8',
-    title: 'Elemental Shader Systems',
-    description: 'Custom GLSL per element — ice, fire, water, electric, void, light, earth, nature. Each with bloom, ambient occlusion, and GPU instancing.',
+    title: 'Fragment shaders',
+    description: 'Ice, fire, water, electric, void, light, earth, nature. Each element has its own GLSL — Voronoi cracks, plasma arcs, fluid ripples, crystal refraction.',
     color: '#a78bfa',
   },
   {
     stat: '169',
-    title: 'Gesture Library',
-    description: 'Crowns, vortices, impacts, drills, helixes, splashes. Elemental spectacles and subtle ambient idles.',
+    title: 'Gestures',
+    description: 'Crown, vortex, impact, drill, helix, barrage, splash, encase... plus idle animations: breathe, sway, float, bob, drift, peek.',
     color: '#f97316',
   },
 ]
@@ -20,26 +20,26 @@ const FEATURES_WIDE = [
 const FEATURES_NARROW = [
   {
     stat: '60fps',
-    title: 'GPU Instanced',
-    description: '1000+ particles on mid-range hardware. WebGL renderer with Canvas 2D fallback.',
+    title: 'WebGL canvas',
+    description: 'Tested at 1000+ simultaneous instanced particles. Automatic Canvas 2D fallback.',
     color: '#67e8f9',
   },
   {
-    stat: '3 lines',
-    title: 'Simple API',
-    description: 'React, Vue, Svelte, vanilla JS. No build config required.',
+    stat: 'init()',
+    title: 'then express()',
+    description: 'That\'s the API. Works in React, Vue, Svelte, and vanilla JS.',
     color: '#38bdf8',
   },
   {
     stat: 'TS',
-    title: 'TypeScript-First',
-    description: 'Full type definitions. Autocomplete for every gesture and parameter.',
+    title: 'TypeScript',
+    description: 'Typed throughout. All gestures, elements, and parameters have definitions.',
     color: '#818cf8',
   },
   {
     stat: 'MIT',
-    title: 'Open License',
-    description: 'No attribution required. Commercial use OK.',
+    title: 'License',
+    description: 'Do whatever you want with it.',
     color: '#4ade80',
   },
 ]
@@ -110,10 +110,10 @@ export default function LazyFeaturesShowcase() {
           letterSpacing: '-0.03em',
           color: '#ffffff',
         }}>
-          Under the hood.
+          What's shipped.
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1rem' }}>
-          GPU-native shader pipeline. Developer-first API.
+          Eight shader systems, 169 gestures, one small bundle.
         </p>
       </div>
 

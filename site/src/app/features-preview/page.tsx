@@ -1,6 +1,6 @@
 'use client'
 
-import FeaturesShowcase from '@/components/FeaturesShowcase'
+import FeaturesShowcase from '@/components/LazyFeaturesShowcase'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 
