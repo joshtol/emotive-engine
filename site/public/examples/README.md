@@ -52,24 +52,6 @@ Comprehensive demo of all core features with best-practice layout.
 
 ---
 
-### **[breathing-app.html](breathing-app.html)** ⭐⭐ Intermediate
-
-Complete breathing exercise app with timed animation sequences.
-
-**Features demonstrated:**
-
-- Timed animation sequences (inhale/hold/exhale/hold)
-- Dynamic scale changes (expand/contract)
-- Custom timing controls (4-7-8 breathing, box breathing, etc.)
-- State management (start/stop/reset)
-- UI feedback during breathing phases
-
-**Complexity:** ⭐⭐ Intermediate
-
-**Requires:** `npm run build:dev`
-
----
-
 ### **[event-handling.html](event-handling.html)** ⭐⭐ Intermediate
 
 Shows how to listen to **REAL** mascot events.
@@ -258,7 +240,6 @@ npm run serve
 | -------------------------------------------------------------------------- | ----------------- | ----------------------- |
 | **[hello-world.html](hello-world.html)**                                   | ⭐ Beginner       | First-time learning     |
 | **[basic-usage.html](basic-usage.html)**                                   | ⭐⭐ Intermediate | Learning all features   |
-| **[breathing-app.html](breathing-app.html)**                               | ⭐⭐ Intermediate | Timed animations        |
 | **[event-handling.html](event-handling.html)**                             | ⭐⭐ Intermediate | Event-driven apps       |
 | **[rhythm-sync-demo.html](rhythm-sync-demo.html)**                         | ⭐⭐⭐ Advanced   | Rhythm-based animations |
 | **[hero-banner-capture.html](hero-banner-capture.html)**                   | ⭐⭐ Intermediate | Creating banner assets  |
@@ -381,8 +362,7 @@ above. Many examples online use fake API methods that don't exist.
 1. **[hello-world.html](hello-world.html)** - Learn basic initialization
 2. **[basic-usage.html](basic-usage.html)** - Explore all core features
 3. **[event-handling.html](event-handling.html)** - Understand event system
-4. **[breathing-app.html](breathing-app.html)** or
-   **[rhythm-sync-demo.html](rhythm-sync-demo.html)** - Advanced timing
+4. **[rhythm-sync-demo.html](rhythm-sync-demo.html)** - Advanced timing
 5. **[llm-integration/claude-haiku.html](llm-integration/claude-haiku.html)** -
    AI integration
 

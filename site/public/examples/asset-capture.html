@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<!--
+  ASSET CAPTURE — Gallery Preview Generator
+
+  Loads each example's behavior in a capture area at the exact preview dimensions.
+  Same capture pipeline as elemental-banner.html (gif.js + gifsicle + WebM + screenshot).
+
+  Sizes:
+    Normal:   400 × 225  (16:9)
+    Featured: 600 × 257  (21:9)
+
+  Keyboard shortcuts:
+    S — Screenshot
+    R — WebM recording toggle
+    G — GIF recording toggle
+    L — Record next full loop (auto start/stop)
+    A — Alignment guides
+    Space — Restart current sequence
+    Click — Pause / resume
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Asset Capture — Example Previews</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: #0d0d0d; overflow: auto; }
+        body {
+            display: inline-flex; flex-direction: column; align-items: flex-start;
+            padding: 12px; gap: 8px; min-width: max-content; font-family: monospace;
+        }
+
+        /* ── Controls — top bar ── */
+        #controls {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            padding: 8px 12px; background: #1a1a1a; border-radius: 6px;
+            border: 1px solid #2a2a2a; font-size: 12px; color: #aaa;
+        }
+        #controls .sep { width: 1px; height: 18px; background: #333; flex-shrink: 0; }
+        #controls label { color: #555; font-size: 11px; }
+        #controls select {
+            background: #222; color: #ddd; border: 1px solid #383838;
+            padding: 4px 6px; border-radius: 4px; font-family: monospace;
+            font-size: 12px; cursor: pointer; outline: none;
+        }
+        #controls select:focus { border-color: #555; }
+        #controls button {
+            background: #222; color: #bbb; border: 1px solid #383838;
+            padding: 4px 10px; border-radius: 4px; font-family: monospace;
+            font-size: 12px; cursor: pointer;
+        }
+        #controls button:hover { background: #2e2e2e; color: #eee; }
+        #controls button.recording { background: #4a1010; border-color: #a33; color: #ff9090; }
+        #controls button.pending  { background: #3a3a10; border-color: #aa3; color: #ffdd80; }
+        #status { color: #f88; font-size: 11px; min-width: 10px; }
+        .hint { color: #333; font-size: 11px; margin-left: auto; }
+
+        /* ── GIF options row ── */
+        #gif-opts {
+            display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+            padding: 6px 12px; background: #161616; border-radius: 6px;
+            border: 1px solid #252525; font-size: 12px; color: #aaa;
+        }
+        #gif-opts label { color: #555; font-size: 11px; }
+        #gif-opts select {
+            background: #222; color: #ddd; border: 1px solid #383838;
+            padding: 3px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; cursor: pointer;
+        }
+        #gif-opts input[type=range] { width: 100px; cursor: pointer; accent-color: #666; }
+        #gif-lossy-val { color: #777; min-width: 24px; }
+
+        /* ── Scene ── */
+        #scene {
+            position: relative; background: #050505; flex-shrink: 0; overflow: hidden;
+        }
+        #scene canvas.mascot-2d {
+            position: absolute; top: 0; left: 0;
+        }
+
+        /* ── Alignment guides ── */
+        #align-frame {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border: 1px solid rgba(255,0,0,0.4);
+            pointer-events: none; z-index: 999; display: none;
+        }
+        #align-frame .h { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,0,0,0.2); }
+        #align-frame .v { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,0,0,0.2); }
+        #align-frame .safe { position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%; border: 1px dashed rgba(255,0,0,0.15); }
+        #align-frame .size-label { position: absolute; bottom: 4px; left: 4px; font-size: 10px; color: rgba(255,0,0,0.4); font-family: monospace; }
+
+        /* ── Loop progress bar ── */
+        #progress-bar {
+            position: relative; height: 6px; background: #1a1a1a;
+            border-radius: 3px; overflow: hidden;
+        }
+        #progress-fill {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background: #555; border-radius: 3px;
+            transition: none;
+        }
+        #progress-fill.recording { background: #a33; }
+        #progress-fill.pending   { background: #aa3; }
+
+        /* ── Step markers on progress bar ── */
+        .step-marker {
+            position: absolute; top: 0; height: 100%; width: 1px;
+            background: rgba(255,255,255,0.15); pointer-events: none;
+        }
+
+        /* ── Loop info row ── */
+        #loop-info {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 11px; color: #555; padding: 0 2px;
+        }
+        #loop-info .loop-count { color: #777; }
+        #loop-info .loop-time { color: #555; margin-left: auto; }
+    </style>
+</head>
+<body>
+    <!-- ── Controls (TOP) ── -->
+    <div id="controls">
+        <label>Example</label>
+        <select id="example-select">
+            <optgroup label="2D Canvas">
+                <option value="hello-world">Hello World</option>
+                <option value="basic-usage">Basic Usage</option>
+                <option value="event-handling">Event Handling</option>
+                <option value="rhythm-sync">Rhythm Sync</option>
+            </optgroup>
+            <optgroup label="3D WebGL">
+                <option value="3d-showcase">3D Showcase ★</option>
+                <option value="3d-elemental">3D Elemental ★</option>
+                <option value="crystal">Crystal Soul</option>
+                <option value="moon">Moon Phases</option>
+                <option value="blood-moon">Blood Moon Eclipse ★</option>
+                <option value="sun">Solar Eclipse</option>
+            </optgroup>
+            <optgroup label="LLM">
+                <option value="claude-chat">Claude Chat</option>
+            </optgroup>
+        </select>
+
+        <div class="sep"></div>
+
+        <label>Format</label>
+        <select id="format-select">
+            <option value="webm">WebM</option>
+            <option value="gif">GIF (20fps)</option>
+        </select>
+
+        <div class="sep"></div>
+
+        <button id="btn-record" title="R / G">⏺ Record</button>
+        <button id="btn-loop" title="L">⟳ Record loop</button>
+        <button id="btn-screenshot" title="S">📷 Screenshot</button>
+        <button id="btn-guides" title="A">⊞ Guides</button>
+
+        <div class="sep"></div>
+
+        <span id="status"></span>
+        <span class="hint">S shot · R webm · G gif · L loop · A guides · Space restart</span>
+    </div>
+
+    <!-- ── GIF compression options ── -->
+    <div id="gif-opts">
+        <label>Optimize</label>
+        <select id="gif-opt">
+            <option value="-O3">Combined · duplicates + transparency + lossy</option>
+            <option value="-O2">Transparency · duplicates + transparency</option>
+            <option value="-O1">Duplicates · remove duplicate frames only</option>
+        </select>
+        <div class="sep" style="width:1px;height:18px;background:#2a2a2a;flex-shrink:0;"></div>
+        <label>Lossy</label>
+        <input id="gif-lossy" type="range" min="30" max="200" value="30">
+        <span id="gif-lossy-val">30</span>
+    </div>
+
+    <!-- ── Scene (capture area) ── -->
+    <div id="scene">
+        <div id="align-frame">
+            <div class="h"></div>
+            <div class="v"></div>
+            <div class="safe"></div>
+            <div class="size-label">400 × 225</div>
+        </div>
+    </div>
+
+    <!-- ── Progress bar + loop info ── -->
+    <div id="progress-bar">
+        <div id="progress-fill" style="width: 0%"></div>
+    </div>
+    <div id="loop-info">
+        <span class="loop-count" id="loop-count">Loop 0</span>
+        <span id="loop-phase"></span>
+        <span class="loop-time" id="loop-time">0.0s / 0.0s</span>
+    </div>
+
+    <!-- 2D UMD bundle — sets window.EmotiveMascot -->
+    <script src="/emotive-engine.js"></script>
+
+    <!-- Kill feature-flags auto-refresh (no /api route on Live Server) -->
+    <script>
+        try {
+            const ns = window.EmotiveMascot;
+            if (ns && ns.featureFlags) {
+                ns.featureFlags.stopAutoRefresh();
+                ns.featureFlags.config.endpoint = '';
+            }
+        } catch(e) {}
+    </script>
+
+    <script type="module">
+        import EmotiveMascot3D, { animateMoonPhase } from '/emotive-engine-3d-elementals.bundled.js';
+        import { applySSSPreset } from '/examples/3d/demo-utils.js';
+
+        // ═══════════════════════════════════════════════════════════════
+        // EXAMPLE PRESETS
+        // ═══════════════════════════════════════════════════════════════
+
+        const SIZES = {
+            normal:   { w: 400, h: 225 },
+            featured: { w: 600, h: 257 },
+        };
+
+        // All loops target 3-5s → 45-75 frames at 15fps → small GIFs
+        const _BD = { shape: 'circle', fillStyle: 'rgba(255,255,255,0.04)', border: { lineWidth: 2, strokeStyle: 'rgba(255,255,255,0.08)' }, shadow: { blur: 20, color: 'rgba(200,200,255,0.06)' } };
+        const _2D = { targetFPS: 60, enableAudio: false, enableGazeTracking: false, enableIdleBehaviors: false };
+
+        const EXAMPLES = {
+            // ── 2D Canvas ─────────────────────────────────────────
+            'hello-world': {
+                category: '2d', size: 'normal', label: 'Hello World',
+                config: { ..._2D, defaultEmotion: 'neutral' }, backdrop: _BD,
+                sequence: [
+                    { at: 0,    label: 'neutral', fn: m => m.setEmotion('neutral') },
+                    { at: 1000, label: 'calm',    fn: m => m.setEmotion('calm') },
+                    { at: 2000, label: 'excited', fn: m => m.setEmotion('excited') },
+                    { at: 3000, label: 'sadness', fn: m => m.setEmotion('sadness') },
+                ],
+                duration: 4000,
+            },
+            'basic-usage': {
+                category: '2d', size: 'normal', label: 'Basic Usage',
+                config: { ..._2D, defaultEmotion: 'joy' }, backdrop: _BD,
+                sequence: [
+                    { at: 0,    label: 'joy+bounce',  fn: m => { m.setEmotion('joy');     m.express('bounce'); } },
+                    { at: 1200, label: 'calm+moon',    fn: m => { m.setEmotion('calm');    m.morphTo('moon');   m.express('breathe'); } },
+                    { at: 2400, label: 'excited+star', fn: m => { m.setEmotion('excited'); m.morphTo('star');   m.express('spin'); } },
+                    { at: 3600, label: 'love+heart',   fn: m => { m.setEmotion('love');    m.morphTo('heart');  m.express('glow'); } },
+                ],
+                duration: 5000,
+            },
+            'event-handling': {
+                category: '2d', size: 'normal', label: 'Event Handling',
+                config: { ..._2D, defaultEmotion: 'neutral' }, backdrop: _BD,
+                sequence: [
+                    { at: 0,    label: 'bounce', fn: m => { m.setEmotion('joy');     m.express('bounce'); } },
+                    { at: 1000, label: 'pulse',  fn: m => { m.setEmotion('excited'); m.express('pulse'); } },
+                    { at: 2000, label: 'glow',   fn: m => { m.setEmotion('focused'); m.express('glow'); } },
+                    { at: 3000, label: 'spin',   fn: m => { m.setEmotion('calm');    m.express('spin'); } },
+                ],
+                duration: 4000,
+            },
+            'rhythm-sync': {
+                category: '2d', size: 'normal', label: 'Rhythm Sync',
+                config: { ..._2D, defaultEmotion: 'excited' }, backdrop: _BD,
+                sequence: [
+                    { at: 0,    label: 'bounce', fn: m => m.express('bounce') },
+                    { at: 500,  label: 'bounce', fn: m => m.express('bounce') },
+                    { at: 1000, label: 'bounce', fn: m => m.express('bounce') },
+                    { at: 1500, label: 'bounce', fn: m => m.express('bounce') },
+                    { at: 2000, label: 'pulse',  fn: m => m.express('pulse') },
+                    { at: 2500, label: 'pulse',  fn: m => m.express('pulse') },
+                    { at: 3000, label: 'pulse',  fn: m => m.express('pulse') },
+                    { at: 3500, label: 'pulse',  fn: m => m.express('pulse') },
+                ],
+                duration: 4000,
+            },
+
+            // ── 3D WebGL ──────────────────────────────────────────
+            '3d-showcase': {
+                category: '3d', size: 'featured', label: '3D Showcase',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableShadows: false,
+                    enableControls: false, autoRotate: true, autoRotateSpeed: 0.3,
+                    cameraDistance: 1.6, fov: 30,
+                    assetBasePath: '/assets',
+                    enableBlinking: false, enableBreathing: true,
+                },
+                sequence: [
+                    { at: 0,    label: 'quartz+joy',    fn: m => { m.setEmotion('joy');     applySSSPreset(m, 'quartz');   m.express('bounce'); } },
+                    { at: 1000, label: 'glow',           fn: m => { m.express('glow'); } },
+                    { at: 2000, label: 'emerald+love',   fn: m => { m.setEmotion('love');    applySSSPreset(m, 'emerald');  m.express('pulse'); } },
+                    { at: 3000, label: 'rough+ruby',     fn: m => { m.morphTo('rough');      applySSSPreset(m, 'ruby');     m.setEmotion('focused'); m.express('spin'); } },
+                    { at: 4000, label: 'sapphire+calm',  fn: m => { m.setEmotion('calm');    applySSSPreset(m, 'sapphire'); m.express('float'); } },
+                    { at: 5000, label: 'crystal+quartz', fn: m => { m.morphTo('crystal');    applySSSPreset(m, 'quartz');   m.setEmotion('joy'); m.express('spin'); } },
+                ],
+                duration: 6000,
+            },
+            '3d-elemental': {
+                category: '3d', size: 'featured', label: '3D Elemental',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableShadows: false,
+                    enableControls: false, autoRotate: true, autoRotateSpeed: 0.25,
+                    cameraDistance: 1.8, fov: 30, materialVariant: 'multiplexer',
+                    assetBasePath: '/assets', preloadElements: [],
+                    backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
+                },
+                sequence: [
+                    { at: 0,    label: 'ice+water',      fn: m => { m.express('icevortex');  m.express('waterhelix'); } },
+                    { at: 1500, label: 'electric',        fn: m => m.express('electricsurge') },
+                    { at: 3000, label: 'fire+electric',   fn: m => { m.express('firedance');  m.express('electriccrackle'); } },
+                    { at: 4500, label: 'water+ice',       fn: m => { m.express('watervortex'); m.express('icecrown'); } },
+                ],
+                duration: 6000,
+            },
+            'crystal': {
+                category: '3d', size: 'normal', label: 'Crystal Soul',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: false,
+                    enablePostProcessing: true, enableControls: false,
+                    autoRotate: true, autoRotateSpeed: 0.3,
+                    enableBlinking: false, enableBreathing: true,
+                    cameraDistance: 1.3, fov: 30, assetBasePath: '/assets',
+                },
+                sequence: [
+                    { at: 0,    label: 'neutral', fn: m => m.setEmotion('neutral') },
+                    { at: 1500, label: 'joy',     fn: m => m.setEmotion('joy') },
+                    { at: 3000, label: 'love',    fn: m => m.setEmotion('love') },
+                ],
+                duration: 4500,
+            },
+            'moon': {
+                category: '3d', size: 'normal', label: 'Moon Phases',
+                cameraNudgeY: 0.06,
+                config3d: {
+                    coreGeometry: 'moon', enableParticles: false,
+                    enableControls: false, autoRotate: false,
+                    enableBlinking: false, enableBreathing: false,
+                    cameraDistance: 0.65, assetBasePath: '/assets',
+                },
+                sequence: [
+                    // Forward: waning-crescent → … → new, then reverse back to waning-crescent
+                    { at: 0,    label: 'waning-cres',   fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waning-crescent', 400); } catch(e){} } },
+                    { at: 600,  label: 'last-quarter',   fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'last-quarter', 400); } catch(e){} } },
+                    { at: 1200, label: 'waning-gib',     fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waning-gibbous', 400); } catch(e){} } },
+                    { at: 1800, label: 'full',            fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'full', 400); } catch(e){} } },
+                    { at: 2400, label: 'waxing-gib',     fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waxing-gibbous', 400); } catch(e){} } },
+                    { at: 3000, label: 'first-quarter',   fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'first-quarter', 400); } catch(e){} } },
+                    { at: 3600, label: 'waxing-cres',    fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waxing-crescent', 400); } catch(e){} } },
+                    { at: 4200, label: 'new',             fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'new', 400); } catch(e){} } },
+                    // Reverse
+                    { at: 4800, label: 'waxing-cres',    fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waxing-crescent', 400); } catch(e){} } },
+                    { at: 5400, label: 'first-quarter',   fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'first-quarter', 400); } catch(e){} } },
+                    { at: 6000, label: 'waxing-gib',     fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waxing-gibbous', 400); } catch(e){} } },
+                    { at: 6600, label: 'full',            fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'full', 400); } catch(e){} } },
+                    { at: 7200, label: 'waning-gib',     fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'waning-gibbous', 400); } catch(e){} } },
+                    { at: 7800, label: 'last-quarter',    fn: m => { try { animateMoonPhase(m.core3D.customMaterial, 'last-quarter', 400); } catch(e){} } },
+                ],
+                duration: 8400,
+            },
+            'blood-moon': {
+                category: '3d', size: 'featured', label: 'Blood Moon Eclipse',
+                cameraNudgeY: 0.01,
+                config3d: {
+                    coreGeometry: 'moon', materialVariant: 'multiplexer',
+                    enableParticles: false, enableControls: false,
+                    autoRotate: false, enableBlinking: false, enableBreathing: false,
+                    cameraDistance: 0.55, assetBasePath: '/assets',
+                },
+                // rAF-based eclipse animation: sweep eclipseShadowPos + eclipseProgress
+                eclipseSweep: true,
+                sequence: [
+                    { at: 0, label: 'eclipse', fn: () => {} },
+                ],
+                duration: 6000,
+            },
+            'sun': {
+                category: '3d', size: 'normal', label: 'Solar Eclipse',
+                config3d: {
+                    coreGeometry: 'sun', materialVariant: 'multiplexer',
+                    enableParticles: false, enablePostProcessing: true,
+                    enableShadows: false, enableControls: false,
+                    autoRotate: true, enableBlinking: false, enableBreathing: false,
+                    cameraDistance: 1.3, assetBasePath: '/assets',
+                },
+                sequence: [
+                    { at: 0,    label: 'joy',     fn: m => m.setEmotion('joy') },
+                    { at: 1500, label: 'neutral', fn: m => m.setEmotion('neutral') },
+                    { at: 3000, label: 'calm',    fn: m => m.setEmotion('calm') },
+                ],
+                duration: 4500,
+            },
+
+            // ── LLM ──────────────────────────────────────────────
+            'claude-chat': {
+                category: '2d', size: 'normal', label: 'Claude Chat',
+                config: { ..._2D, defaultEmotion: 'neutral', enableIdleBehaviors: true }, backdrop: _BD,
+                sequence: [
+                    { at: 0,    label: 'neutral',  fn: m => { m.setEmotion('neutral'); } },
+                    { at: 1000, label: 'joy+sun',  fn: m => { m.setEmotion('joy');     m.morphTo('sun');   m.express('bounce'); } },
+                    { at: 2500, label: 'love',     fn: m => { m.setEmotion('love');    m.morphTo('heart'); m.express('glow'); } },
+                    { at: 4000, label: 'focused',  fn: m => { m.setEmotion('focused'); m.morphTo('circle'); m.express('breathe'); } },
+                ],
+                duration: 5000,
+            },
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════
+
+        const scene       = document.getElementById('scene');
+        const progressBar = document.getElementById('progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        const loopCountEl = document.getElementById('loop-count');
+        const loopPhaseEl = document.getElementById('loop-phase');
+        const loopTimeEl  = document.getElementById('loop-time');
+
+        let currentMascot    = null;
+        let currentPresetId  = null;
+        let currentCategory  = null;
+        let sequenceTimers   = [];
+        let paused           = false;
+        let activeW, activeH;
+
+        // Loop tracking
+        let loopStartTime    = 0;
+        let loopDuration     = 1;
+        let loopCount        = 0;
+        let currentStepLabel = '';
+
+        // Loop-synced recording
+        let pendingLoopRecord = false;  // armed — will start at next loop boundary
+        let loopRecording     = false;  // currently recording a loop
+
+        // ═══════════════════════════════════════════════════════════════
+        // SCENE SIZING
+        // ═══════════════════════════════════════════════════════════════
+
+        function setSceneSize(w, h) {
+            activeW = w;
+            activeH = h;
+            scene.style.width  = w + 'px';
+            scene.style.height = h + 'px';
+            progressBar.style.width = w + 'px';
+            document.getElementById('loop-info').style.width = w + 'px';
+            document.querySelector('#align-frame .size-label').textContent = `${w} × ${h}`;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PROGRESS BAR — updated every rAF
+        // ═══════════════════════════════════════════════════════════════
+
+        function updateProgress() {
+            if (!paused && loopDuration > 0) {
+                const elapsed = Date.now() - loopStartTime;
+                const pct = Math.min(100, (elapsed / loopDuration) * 100);
+                progressFill.style.width = pct + '%';
+                loopTimeEl.textContent = `${(elapsed / 1000).toFixed(1)}s / ${(loopDuration / 1000).toFixed(1)}s`;
+            }
+            requestAnimationFrame(updateProgress);
+        }
+        requestAnimationFrame(updateProgress);
+
+        // Render step markers on the progress bar
+        function renderStepMarkers(preset) {
+            // Remove old markers
+            progressBar.querySelectorAll('.step-marker').forEach(el => el.remove());
+
+            if (!preset.sequence || preset.duration <= 0) return;
+            preset.sequence.forEach(step => {
+                const pct = (step.at / preset.duration) * 100;
+                const marker = document.createElement('div');
+                marker.className = 'step-marker';
+                marker.style.left = pct + '%';
+                progressBar.appendChild(marker);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // DESTROY CURRENT MASCOT
+        // ═══════════════════════════════════════════════════════════════
+
+        function destroyCurrent() {
+            sequenceTimers.forEach(t => clearTimeout(t));
+            sequenceTimers = [];
+            if (shadowSweepRaf) { cancelAnimationFrame(shadowSweepRaf); shadowSweepRaf = null; }
+
+            if (currentMascot) {
+                try {
+                    if (typeof currentMascot.destroy === 'function') currentMascot.destroy();
+                    else if (typeof currentMascot.stop === 'function') currentMascot.stop();
+                } catch (e) { /* ignore */ }
+                currentMascot = null;
+            }
+
+            Array.from(scene.children).forEach(child => {
+                if (child.id !== 'align-frame') scene.removeChild(child);
+            });
+
+            currentCategory = null;
+            loopCount = 0;
+            loopCountEl.textContent = 'Loop 0';
+            loopPhaseEl.textContent = '';
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // INIT 2D / 3D
+        // ═══════════════════════════════════════════════════════════════
+
+        function init2D(preset) {
+            const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+            if (!EmotiveMascot) { setStatus('❌ EmotiveMascot (2D) not loaded'); return; }
+
+            const canvas    = document.createElement('canvas');
+            canvas.className = 'mascot-2d';
+            canvas.width    = activeW;
+            canvas.height   = activeH;
+            canvas.style.width  = activeW + 'px';
+            canvas.style.height = activeH + 'px';
+            scene.appendChild(canvas);
+
+            const mascot = new EmotiveMascot(preset.config);
+            mascot.init(canvas);
+            if (preset.backdrop) mascot.setBackdrop(preset.backdrop);
+            mascot.start();
+
+            // Scale up to fill the wide rectangle (default is sized for square canvas)
+            setTimeout(() => mascot.setScale({ core: preset.scale2d || 1.8 }), 100);
+
+            currentMascot   = mascot;
+            currentCategory = '2d';
+        }
+
+        function init3D(preset) {
+            const container   = document.createElement('div');
+            container.style.width  = activeW + 'px';
+            container.style.height = activeH + 'px';
+            container.style.position = 'relative';
+            scene.appendChild(container);
+
+            // Force preserveDrawingBuffer: true so GIF capture can read the canvas
+            const origGetContext = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function(type, attrs) {
+                if (type === 'webgl' || type === 'webgl2') {
+                    attrs = Object.assign({}, attrs, { preserveDrawingBuffer: true });
+                }
+                return origGetContext.call(this, type, attrs);
+            };
+
+            const mascot = new EmotiveMascot3D(preset.config3d);
+            mascot.init(container);
+
+            // Restore original getContext immediately after init
+            HTMLCanvasElement.prototype.getContext = origGetContext;
+
+            mascot.start();
+            currentMascot   = mascot;
+            currentCategory = '3d';
+
+            setTimeout(() => {
+                const cam = mascot.core3D?.renderer?.camera;
+                if (cam) {
+                    cam.position.y += (preset.cameraNudgeY ?? 0.04);
+                    cam.aspect = activeW / activeH;
+                    cam.updateProjectionMatrix();
+                }
+            }, 500);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SEQUENCE RUNNER — with loop callbacks
+        // ═══════════════════════════════════════════════════════════════
+
+        let shadowSweepRaf = null;
+
+        function runSequence(preset) {
+            sequenceTimers.forEach(t => clearTimeout(t));
+            sequenceTimers = [];
+            if (shadowSweepRaf) { cancelAnimationFrame(shadowSweepRaf); shadowSweepRaf = null; }
+
+            function scheduleLoop() {
+                // Loop boundary — update tracking
+                loopStartTime = Date.now();
+                loopDuration  = preset.duration;
+                loopCount++;
+                loopCountEl.textContent = `Loop ${loopCount}`;
+                progressFill.style.width = '0%';
+
+                // Loop-synced recording: start at loop boundary
+                if (pendingLoopRecord && !loopRecording) {
+                    pendingLoopRecord = false;
+                    loopRecording = true;
+                    startRecordingActual();
+                    progressFill.classList.remove('pending');
+                    progressFill.classList.add('recording');
+                }
+
+                // Eclipse sweep (blood-moon): animate eclipse uniforms with easeInOut
+                if (preset.eclipseSweep && currentMascot) {
+                    const sweepStart = Date.now();
+                    const half = preset.duration / 2;
+                    // Init eclipse uniforms
+                    try {
+                        const u = currentMascot.core3D.customMaterial.uniforms;
+                        u.eclipseShadowPos.value = [-2.0, 0.0];
+                        u.eclipseShadowRadius.value = 1.2;
+                        u.eclipseProgress.value = 0.0;
+                        u.emissiveStrength.value = 0.0;
+                        u.shadowDarkness.value = 1.0;
+                    } catch(e) {}
+
+                    function eclipseTick() {
+                        if (paused) { shadowSweepRaf = requestAnimationFrame(eclipseTick); return; }
+                        const elapsed = Date.now() - sweepStart;
+                        const t = Math.min(elapsed / preset.duration, 1);
+                        // Linear sweep: shadow travels -2 → 0 → +2 (enters left, exits right)
+                        // Eclipse intensity peaks at midpoint (t=0.5, shadowPos=0)
+                        const shadowPos = -2.0 + 4.0 * t;
+                        // Bell curve for eclipse intensity: 0 at edges, 1 at center
+                        const intensity = Math.max(0, 1 - Math.abs(shadowPos) * 0.5);
+                        const eased = intensity * intensity * (3 - 2 * intensity); // smoothstep
+                        try {
+                            const u = currentMascot.core3D.customMaterial.uniforms;
+                            u.eclipseShadowPos.value[0] = shadowPos;
+                            u.eclipseProgress.value = eased;
+                            u.emissiveStrength.value = 0.39 * eased;
+                            u.shadowDarkness.value = 1.0 - (0.47 * eased);
+                        } catch(e) {}
+                        currentStepLabel = `eclipse ${(eased * 100).toFixed(0)}%`;
+                        loopPhaseEl.textContent = currentStepLabel;
+                        if (t < 1) shadowSweepRaf = requestAnimationFrame(eclipseTick);
+                    }
+                    eclipseTick();
+                }
+
+                // Schedule each step
+                preset.sequence.forEach(step => {
+                    const t = setTimeout(() => {
+                        if (!paused && currentMascot) {
+                            try { step.fn(currentMascot); } catch(e) { console.warn('Step error:', e); }
+                            currentStepLabel = step.label || '';
+                            loopPhaseEl.textContent = currentStepLabel;
+                        }
+                    }, step.at);
+                    sequenceTimers.push(t);
+                });
+
+                // Schedule next loop
+                const loopTimer = setTimeout(() => {
+                    // Loop-synced recording: stop at loop end
+                    if (loopRecording) {
+                        loopRecording = false;
+                        stopRecordingActual();
+                        progressFill.classList.remove('recording');
+                    }
+                    if (shadowSweepRaf) { cancelAnimationFrame(shadowSweepRaf); shadowSweepRaf = null; }
+
+                    if (!paused) scheduleLoop();
+                }, preset.duration);
+                sequenceTimers.push(loopTimer);
+            }
+
+            scheduleLoop();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LOAD EXAMPLE
+        // ═══════════════════════════════════════════════════════════════
+
+        async function loadExample(id) {
+            if (isRecording()) {
+                setStatus('⚠ Stop recording before switching');
+                return;
+            }
+
+            const preset = EXAMPLES[id];
+            if (!preset) { setStatus(`❌ Unknown: ${id}`); return; }
+
+            destroyCurrent();
+            currentPresetId = id;
+            paused = false;
+            pendingLoopRecord = false;
+            loopRecording = false;
+
+            const sz = SIZES[preset.size];
+            setSceneSize(sz.w, sz.h);
+            renderStepMarkers(preset);
+
+            setStatus(`Loading ${preset.label}…`);
+
+            if (preset.category === '2d') {
+                init2D(preset);
+            } else {
+                init3D(preset);
+            }
+
+            const startDelay = preset.category === '3d' ? 2500 : 500;
+            setTimeout(() => {
+                runSequence(preset);
+                setStatus('');
+            }, startDelay);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FRAME GRABBER — unified 2D / 3D
+        // ═══════════════════════════════════════════════════════════════
+
+        function grabFrame(outCtx) {
+            outCtx.fillStyle = '#050505';
+            outCtx.fillRect(0, 0, activeW, activeH);
+
+            if (currentCategory === '3d') {
+                // Use drawImage on the WebGL canvas — reads the composited front buffer,
+                // no Y-flip needed, works regardless of preserveDrawingBuffer setting
+                const threeCanvas = currentMascot?.core3D?.renderer?.renderer?.domElement;
+                if (!threeCanvas) return false;
+                outCtx.drawImage(threeCanvas, 0, 0, activeW, activeH);
+            } else {
+                const src = scene.querySelector('canvas.mascot-2d');
+                if (!src) return false;
+                outCtx.drawImage(src, 0, 0, activeW, activeH);
+            }
+            return true;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SCREENSHOT
+        // ═══════════════════════════════════════════════════════════════
+
+        function saveScreenshot() {
+            if (currentCategory === '3d') {
+                const origRAF = window.requestAnimationFrame;
+                let captured = false;
+                window.requestAnimationFrame = function(cb) {
+                    return origRAF.call(window, function(time) {
+                        cb(time);
+                        if (!captured) {
+                            captured = true;
+                            window.requestAnimationFrame = origRAF;
+                            const out = document.createElement('canvas');
+                            out.width = activeW; out.height = activeH;
+                            grabFrame(out.getContext('2d'));
+                            const link = document.createElement('a');
+                            link.download = `${currentPresetId}.png`;
+                            link.href = out.toDataURL('image/png');
+                            link.click();
+                        }
+                    });
+                };
+            } else {
+                const out = document.createElement('canvas');
+                out.width = activeW; out.height = activeH;
+                grabFrame(out.getContext('2d'));
+                const link = document.createElement('a');
+                link.download = `${currentPresetId}.png`;
+                link.href = out.toDataURL('image/png');
+                link.click();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // WEBM RECORDING
+        // ═══════════════════════════════════════════════════════════════
+
+        let mediaRecorder  = null;
+        let recordedChunks = [];
+
+        function startWebMRecording() {
+            const mirrorCanvas   = document.createElement('canvas');
+            mirrorCanvas.width   = activeW;
+            mirrorCanvas.height  = activeH;
+            const mirrorCtx      = mirrorCanvas.getContext('2d');
+
+            recordedChunks = [];
+
+            const stream = mirrorCanvas.captureStream(60);
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9',
+                videoBitsPerSecond: 8_000_000,
+            });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url  = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `${currentPresetId}.webm`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log(`Saved: ${link.download} (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
+                mediaRecorder = null;
+                onRecordingStopped();
+            };
+
+            mediaRecorder.start();
+            onRecordingStarted('WebM');
+
+            const origRAF = window.requestAnimationFrame;
+            window.requestAnimationFrame = function(cb) {
+                return origRAF.call(window, function(time) {
+                    cb(time);
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        grabFrame(mirrorCtx);
+                    } else {
+                        window.requestAnimationFrame = origRAF;
+                    }
+                });
+            };
+        }
+
+        function stopWebMRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // GIF RECORDING
+        // ═══════════════════════════════════════════════════════════════
+
+        let gifEncoder      = null;
+        let gifCapturing    = false;
+        let gifFrameCount   = 0;
+        let gifTotalFrames  = 0;      // exact target frame count for loop recording
+        let gifWorkerURL    = null;
+        let gifLastCapture  = 0;      // timestamp of last captured frame
+        const GIF_FPS       = 20;     // 20fps = 50ms delay — exact in GIF format (10ms resolution)
+        const GIF_DELAY     = 50;     // 1000/20 = 50ms, no rounding error
+        const GIF_CAPTURE_MS = 50;    // capture interval in ms (wall-clock)
+
+        async function initGifWorker() {
+            try {
+                const resp = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+                const text = await resp.text();
+                const blob = new Blob([text], { type: 'application/javascript' });
+                gifWorkerURL = URL.createObjectURL(blob);
+                console.log('GIF worker ready');
+            } catch (e) { console.warn('GIF worker prefetch failed:', e); }
+        }
+        initGifWorker();
+
+        let gifsicle = null;
+        async function initGifsicle() {
+            try {
+                const mod = await import('https://cdn.jsdelivr.net/npm/gifsicle-wasm-browser/dist/gifsicle.min.js');
+                gifsicle = mod.default;
+                console.log('gifsicle ready');
+            } catch (e) { console.warn('gifsicle load failed:', e); }
+        }
+        initGifsicle();
+
+        document.getElementById('gif-lossy').addEventListener('input', (e) => {
+            document.getElementById('gif-lossy-val').textContent = e.target.value;
+        });
+
+        function startGifRecording() {
+            if (!window.GIF) { console.error('gif.js not loaded'); return; }
+            if (!gifWorkerURL) { console.error('GIF worker not ready'); return; }
+
+            const outCanvas  = document.createElement('canvas');
+            outCanvas.width  = activeW;
+            outCanvas.height = activeH;
+            const outCtx     = outCanvas.getContext('2d');
+
+            gifEncoder = new window.GIF({
+                workers: 2, quality: 10,
+                width: activeW, height: activeH,
+                workerScript: gifWorkerURL, background: '#050505',
+            });
+
+            gifEncoder.on('finished', async (rawBlob) => {
+                let finalBlob = rawBlob;
+                const filename = `${currentPresetId}.gif`;
+
+                if (gifsicle) {
+                    setStatus('⚙ Optimizing…');
+                    try {
+                        const lossy = document.getElementById('gif-lossy').value;
+                        const opt   = document.getElementById('gif-opt').value;
+                        const cmd   = `${opt} --lossy=${lossy} --colors 256 1.gif -o /out/out.gif`;
+                        const result = await gifsicle.run({
+                            input: [{ file: rawBlob, name: '1.gif' }],
+                            command: [cmd],
+                        });
+                        if (result && result[0]) {
+                            finalBlob = result[0];
+                            console.log(`GIF: ${(rawBlob.size/1024/1024).toFixed(1)} MB → ${(finalBlob.size/1024/1024).toFixed(1)} MB`);
+                        }
+                    } catch (e) { console.warn('gifsicle failed:', e); }
+                }
+
+                const url  = URL.createObjectURL(finalBlob);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log(`Saved: ${filename} (${(finalBlob.size/1024/1024).toFixed(1)} MB)`);
+                gifEncoder = null;
+                onRecordingStopped();
+            });
+
+            gifEncoder.on('progress', (p) => {
+                setStatus(`⚙ Encoding ${Math.round(p * 100)}%`);
+            });
+
+            gifCapturing   = true;
+            gifFrameCount  = 0;
+
+            gifTotalFrames = 0;  // no GIF-side auto-stop; loop timer handles stop for loop recording
+
+            gifLastCapture = 0;
+            onRecordingStarted('GIF');
+
+            const origRAF = window.requestAnimationFrame;
+
+            window.requestAnimationFrame = function(cb) {
+                return origRAF.call(window, function(time) {
+                    cb(time);
+
+                    if (!gifCapturing) {
+                        window.requestAnimationFrame = origRAF;
+                        return;
+                    }
+
+                    // Wall-clock gating inside rAF — captures at real 20fps
+                    // regardless of actual render framerate, but reads the canvas
+                    // right after render (inside rAF) so the buffer is valid
+                    const now = performance.now();
+                    if (now - gifLastCapture >= GIF_CAPTURE_MS) {
+                        gifLastCapture = now;
+                        grabFrame(outCtx);
+                        gifEncoder.addFrame(outCtx, { copy: true, delay: GIF_DELAY });
+                        gifFrameCount++;
+
+                        // Auto-stop after exact frame count (loop recording only)
+                        if (gifTotalFrames > 0 && gifFrameCount >= gifTotalFrames) {
+                            gifCapturing = false;
+                            loopRecording = false;
+                            window.requestAnimationFrame = origRAF;
+                            setStatus(`⚙ Encoding ${gifFrameCount} frames…`);
+                            console.log(`GIF auto-stop: ${gifFrameCount} frames captured`);
+                            gifEncoder.render();
+                            progressFill.classList.remove('recording');
+                            return;
+                        }
+                    }
+                });
+            };
+        }
+
+        function stopGifRecording() {
+            if (!gifCapturing || !gifEncoder) return;
+            gifCapturing = false;
+            setStatus(`⚙ Encoding ${gifFrameCount} frames…`);
+            gifEncoder.render();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // RECORDING HELPERS
+        // ═══════════════════════════════════════════════════════════════
+
+        function isRecording() {
+            return (mediaRecorder && mediaRecorder.state === 'recording') || gifCapturing;
+        }
+
+        function startRecordingActual() {
+            const format = document.getElementById('format-select').value;
+            if (format === 'gif') startGifRecording();
+            else startWebMRecording();
+        }
+
+        function stopRecordingActual() {
+            const format = document.getElementById('format-select').value;
+            if (format === 'gif') stopGifRecording();
+            else stopWebMRecording();
+        }
+
+        function onRecordingStarted(label) {
+            setStatus(`● REC ${label}`);
+            document.getElementById('btn-record').classList.add('recording');
+            document.getElementById('btn-record').textContent = '⏹ Stop';
+            if (!loopRecording) progressFill.classList.add('recording');
+        }
+
+        function onRecordingStopped() {
+            setStatus('');
+            document.getElementById('btn-record').classList.remove('recording');
+            document.getElementById('btn-record').textContent = '⏺ Record';
+            document.getElementById('btn-loop').classList.remove('pending');
+            document.getElementById('btn-loop').textContent = '⟳ Record loop';
+            progressFill.classList.remove('recording');
+            progressFill.classList.remove('pending');
+        }
+
+        function toggleRecording() {
+            if (isRecording()) {
+                stopRecordingActual();
+                loopRecording = false;
+            } else {
+                startRecordingActual();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LOOP-SYNCED RECORDING
+        // ═══════════════════════════════════════════════════════════════
+
+        function toggleLoopRecord() {
+            if (pendingLoopRecord) {
+                // Disarm
+                pendingLoopRecord = false;
+                document.getElementById('btn-loop').classList.remove('pending');
+                document.getElementById('btn-loop').textContent = '⟳ Record loop';
+                progressFill.classList.remove('pending');
+                setStatus('');
+            } else if (loopRecording || isRecording()) {
+                // Already recording — stop
+                if (loopRecording) {
+                    loopRecording = false;
+                    stopRecordingActual();
+                    progressFill.classList.remove('recording');
+                }
+            } else {
+                // Arm — will start at next loop boundary
+                pendingLoopRecord = true;
+                document.getElementById('btn-loop').classList.add('pending');
+                document.getElementById('btn-loop').textContent = '⟳ Armed…';
+                progressFill.classList.add('pending');
+                setStatus('⏳ Waiting for loop…');
+            }
+        }
+
+        function setStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CONTROLS WIRING
+        // ═══════════════════════════════════════════════════════════════
+
+        document.getElementById('format-select').addEventListener('change', (e) => {
+            document.getElementById('gif-opts').style.display =
+                e.target.value === 'gif' ? 'flex' : 'none';
+        });
+
+        document.getElementById('example-select').addEventListener('change', (e) => {
+            loadExample(e.target.value);
+        });
+
+        document.getElementById('btn-record').addEventListener('click', toggleRecording);
+        document.getElementById('btn-loop').addEventListener('click', toggleLoopRecord);
+        document.getElementById('btn-screenshot').addEventListener('click', saveScreenshot);
+
+        const alignFrame = document.getElementById('align-frame');
+        document.getElementById('btn-guides').addEventListener('click', () => {
+            alignFrame.style.display = alignFrame.style.display === 'none' ? '' : 'none';
+        });
+
+        scene.addEventListener('click', () => {
+            paused = !paused;
+            if (!paused && currentPresetId) {
+                const preset = EXAMPLES[currentPresetId];
+                if (preset) runSequence(preset);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            switch (e.key.toLowerCase()) {
+                case ' ':
+                    e.preventDefault();
+                    if (currentPresetId) loadExample(currentPresetId);
+                    break;
+                case 'r':
+                    document.getElementById('format-select').value = 'webm';
+                    document.getElementById('gif-opts').style.display = 'none';
+                    if (isRecording() && !gifCapturing) stopWebMRecording();
+                    else if (!isRecording()) startWebMRecording();
+                    break;
+                case 'g':
+                    document.getElementById('format-select').value = 'gif';
+                    document.getElementById('gif-opts').style.display = 'flex';
+                    if (gifCapturing) stopGifRecording();
+                    else if (!isRecording()) startGifRecording();
+                    break;
+                case 'l':
+                    toggleLoopRecord();
+                    break;
+                case 's':
+                    saveScreenshot();
+                    break;
+                case 'a':
+                    alignFrame.style.display = alignFrame.style.display === 'none' ? '' : 'none';
+                    break;
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // START
+        // ═══════════════════════════════════════════════════════════════
+
+        loadExample('hello-world');
+    </script>
+</body>
+</html>

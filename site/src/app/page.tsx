@@ -539,7 +539,7 @@ export default function HomePage() {
 
           <div style={{ textAlign: 'center', marginTop: '2.5rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href="https://codepen.io/collection/YyWKxK"
+              href="https://codepen.io/collection/RPgQNZ"
               target="_blank"
               rel="noopener noreferrer"
               style={{

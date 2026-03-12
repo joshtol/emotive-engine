@@ -778,28 +778,6 @@ jobs:
                     </div>
                   </a>
 
-                  <!-- Breathing App -->
-                  <a href="examples/2d/breathing-app.html" class="card small">
-                    <div class="card-preview">
-                      <img src="assets/previews/breathing.gif" alt="Breathing App" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F32C;</span></div>
-                    </div>
-                    <div class="card-content">
-                      <div class="card-meta">
-                        <span class="card-category canvas">Canvas</span>
-                        <span class="complexity">
-                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
-                        </span>
-                      </div>
-                      <h3>Breathing App</h3>
-                      <p>Guided breathing exercises.</p>
-                      <div class="card-tags">
-                        <span class="tag">wellness</span>
-                        <span class="tag">animation</span>
-                      </div>
-                    </div>
-                  </a>
-
                   <!-- Event Handling -->
                   <a href="examples/2d/event-handling.html" class="card small">
                     <div class="card-preview">

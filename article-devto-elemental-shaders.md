@@ -2,7 +2,7 @@
 title:
     '8 GLSL Shader Systems in 6 Months: Building Elemental Effects for a
     Character Animation Engine'
-published: false
+published: true
 description:
     'How I wrote fire, water, ice, electricity, earth, nature, light, and void
     shaders from scratch for Emotive Engine v3.4.1. Architecture, GLSL snippets,
@@ -309,7 +309,7 @@ Crystal morphing with orbit spawning_
 {% codepen https://codepen.io/joshtol/pen/preview/jEMVyrK %} _Nature Cleanse —
 Organic growth patterns_
 
-[Full collection on CodePen](https://codepen.io/collection/YyWKxK)
+[Full collection on CodePen](https://codepen.io/collection/RPgQNZ)
 
 ---
 
@@ -321,6 +321,6 @@ Organic growth patterns_
   [joshtol/emotive-engine](https://github.com/joshtol/emotive-engine)
 - **npm**: `npm install @joshtol/emotive-engine`
 - **CodePen collection**:
-  [Emotive Engine — Elemental Shaders](https://codepen.io/collection/YyWKxK)
+  [Emotive Engine — Elemental Shaders](https://codepen.io/collection/RPgQNZ)
 
 MIT licensed. PRs welcome.

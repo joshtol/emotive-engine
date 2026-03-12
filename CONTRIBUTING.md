@@ -40,7 +40,6 @@ npm run serve
 # Try different examples:
 # - examples/hello-world.html (⭐ simplest)
 # - examples/basic-usage.html (⭐⭐ all features)
-# - examples/breathing-app.html (⭐⭐ timed animations)
 # - examples/rhythm-sync-demo.html (⭐⭐⭐ advanced)
 ```
 
