@@ -263,8 +263,8 @@ export default function HomePage() {
               maxWidth: '620px',
               margin: '0 auto 2.5rem',
             }}>
-              Open-source WebGL + Canvas 2D library. Real-time elemental shader
-              effects, emotional states, and gesture system for mascot characters.
+              A JavaScript library for animated characters with elemental effects.
+              8 GPU shader systems, 291 gestures, WebGL + Canvas 2D. MIT.
             </p>
 
             {/* Active element indicator */}
@@ -362,12 +362,12 @@ export default function HomePage() {
               letterSpacing: '0.3px',
             }}>
               {[
-                '8 Elements',
-                '120+ Gestures',
-                '60fps',
-                'MIT License',
+                '8 shaders',
+                '291 gestures',
+                '60fps WebGL',
+                'Canvas 2D fallback',
                 'TypeScript',
-                'React · Vue · Vanilla',
+                'MIT',
               ].map((stat, i) => (
                 <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   {i > 0 && <span style={{ color: `${activeElement.color}66`, transition: 'color 0.8s ease' }}>·</span>}
@@ -394,10 +394,10 @@ export default function HomePage() {
               marginBottom: '0.75rem',
               letterSpacing: '-0.02em',
             }}>
-              Three lines to a living character.
+              From install to fire crown in four lines.
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem' }}>
-              Works with React, Vue, Svelte, and vanilla JS.
+              React, Vue, Svelte, vanilla JS.
             </p>
           </div>
 
@@ -600,15 +600,16 @@ export default function HomePage() {
               letterSpacing: '-0.02em',
               lineHeight: 1.2,
             }}>
-              Ready to start building?
+              npm install @joshtol/emotive-engine
             </h2>
             <p style={{
-              color: 'rgba(255,255,255,0.55)',
-              fontSize: '1rem',
+              color: 'rgba(255,255,255,0.45)',
+              fontSize: '0.95rem',
               marginBottom: '2rem',
               lineHeight: 1.6,
+              fontFamily: '"Fira Code", "Cascadia Code", monospace',
             }}>
-              MIT licensed. No account required. Works with React, Vue, and vanilla JS.
+              React, Vue, Svelte, vanilla JS. MIT.
             </p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <a

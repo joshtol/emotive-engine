@@ -10,9 +10,9 @@ const FEATURES_WIDE = [
     color: '#a78bfa',
   },
   {
-    stat: '169',
+    stat: '291',
     title: 'Gestures',
-    description: 'Crown, vortex, impact, drill, helix, barrage, splash, encase... plus idle animations: breathe, sway, float, bob, drift, peek.',
+    description: '161 elemental (crown, vortex, impact, drill, helix, barrage...) + 130 base idles (breathe, sway, float, drift, peek). Elemental gestures require the 3D renderer.',
     color: '#f97316',
   },
 ]
@@ -25,9 +25,9 @@ const FEATURES_NARROW = [
     color: '#67e8f9',
   },
   {
-    stat: 'init()',
-    title: 'then express()',
-    description: 'That\'s the API. Works in React, Vue, Svelte, and vanilla JS.',
+    stat: 'API',
+    title: 'init() + express()',
+    description: 'That\'s it. Works in React, Vue, Svelte, and vanilla JS.',
     color: '#38bdf8',
   },
   {
@@ -113,7 +113,7 @@ export default function LazyFeaturesShowcase() {
           What's shipped.
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1rem' }}>
-          Eight shader systems, 169 gestures, one small bundle.
+          Eight shader systems, 291 gestures, 320 KB minimal to 1.9 MB full.
         </p>
       </div>
 
