@@ -27,14 +27,14 @@ const AMBIENT_GESTURES = ['float', 'breathe', 'sway', 'bob', 'glow', 'peek', 'ti
 const AMBIENT_INTERVAL_MS = 9000
 
 const ELEMENTS_GRID = [
-  { name: 'fire',     label: 'Fire',        gif: '/screenshots/social/fire.gif',     color: '#f97316' },
-  { name: 'ice',      label: 'Ice',         gif: '/screenshots/social/ice.gif',      color: '#67e8f9' },
-  { name: 'electric', label: 'Electric',    gif: '/screenshots/social/electric.gif', color: '#a78bfa' },
-  { name: 'water',    label: 'Water',       gif: '/screenshots/social/water.gif',    color: '#38bdf8' },
-  { name: 'void',     label: 'Void',        gif: '/screenshots/social/void.gif',     color: '#818cf8' },
-  { name: 'light',    label: 'Light',       gif: '/screenshots/social/light.gif',    color: '#fde68a' },
-  { name: 'earth',    label: 'Earth',       gif: '/screenshots/social/earth.gif',    color: '#86efac' },
-  { name: 'nature',   label: 'Nature',      gif: '/screenshots/social/nature.gif',   color: '#4ade80' },
+  { name: 'fire',     label: 'Fire',     gif: '/screenshots/social/fire.gif',     color: '#f97316', gestures: 19, codepen: 'LERbxpE' },
+  { name: 'ice',      label: 'Ice',      gif: '/screenshots/social/ice.gif',      color: '#67e8f9', gestures: 16, codepen: 'LERbbgK' },
+  { name: 'electric', label: 'Electric', gif: '/screenshots/social/electric.gif', color: '#a78bfa', gestures: 22, codepen: 'zxKoNvX' },
+  { name: 'water',    label: 'Water',    gif: '/screenshots/social/water.gif',    color: '#38bdf8', gestures: 21, codepen: 'QwKGdym' },
+  { name: 'void',     label: 'Void',     gif: '/screenshots/social/void.gif',     color: '#818cf8', gestures: 17, codepen: 'raMWjxP' },
+  { name: 'light',    label: 'Light',    gif: '/screenshots/social/light.gif',    color: '#fde68a', gestures: 23, codepen: 'YPGpNqq' },
+  { name: 'earth',    label: 'Earth',    gif: '/screenshots/social/earth.gif',    color: '#86efac', gestures: 22, codepen: 'jEMVyqx' },
+  { name: 'nature',   label: 'Nature',   gif: '/screenshots/social/nature.gif',   color: '#4ade80', gestures: 21, codepen: 'jEMVyrK' },
 ]
 
 export default function HomePage() {
@@ -263,8 +263,8 @@ export default function HomePage() {
               maxWidth: '620px',
               margin: '0 auto 2.5rem',
             }}>
-              A JavaScript library for animated characters with elemental effects.
-              8 GPU shader systems, 291 gestures, WebGL + Canvas 2D. MIT.
+              Elemental shader effects for web characters.
+              8 custom GLSL shaders, 291 gestures, WebGL + Canvas 2D. MIT.
             </p>
 
             {/* Active element indicator */}
@@ -478,7 +478,7 @@ export default function HomePage() {
               8 Elemental Shader Systems
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem', maxWidth: '500px', margin: '0 auto' }}>
-              Each element is a full GPU-instanced shader system with bloom, AO, and 15+ unique gestures.
+              Custom GLSL per element. 16–23 gestures each. Click any to try on CodePen.
             </p>
           </div>
 
@@ -490,7 +490,7 @@ export default function HomePage() {
             {ELEMENTS_GRID.map((el) => (
               <a
                 key={el.name}
-                href={`https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html#${el.name}`}
+                href={`https://codepen.io/joshtol/pen/${el.codepen}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -531,16 +531,16 @@ export default function HomePage() {
                 }}>
                   <span style={{ fontWeight: '700', fontSize: '1rem', color: el.color }}>{el.label}</span>
                   <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', fontWeight: '500' }}>
-                    15+ gestures →
+                    {el.gestures} gestures · CodePen →
                   </span>
                 </div>
               </a>
             ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+          <div style={{ textAlign: 'center', marginTop: '2.5rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href="https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html"
+              href="https://codepen.io/collection/YyWKxK"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -568,7 +568,36 @@ export default function HomePage() {
                 e.currentTarget.style.color = 'rgba(255,255,255,0.7)'
               }}
             >
-              Try all 8 elements live →
+              CodePen collection →
+            </a>
+            <a
+              href="https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.875rem 2rem',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: 'rgba(255,255,255,0.4)',
+                textDecoration: 'none',
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.65)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.4)'
+              }}
+            >
+              All 291 gestures →
             </a>
           </div>
         </section>
