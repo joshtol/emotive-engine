@@ -453,18 +453,19 @@ export default function EmotiveHeader({ showMusicControls = false, mascot, onMes
           height: 2.75rem;
           align-items: center;
           justify-content: center;
-          background: rgba(102, 126, 234, 0.1);
-          border: 1px solid rgba(102, 126, 234, 0.3);
-          border-radius: 8px;
-          color: white;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          color: rgba(255, 255, 255, 0.8);
           cursor: pointer;
           transition: all 0.2s ease;
           z-index: 100003;
         }
 
         .mobile-menu-btn:hover {
-          background: rgba(102, 126, 234, 0.2);
-          border-color: rgba(102, 126, 234, 0.5);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.3);
+          color: white;
         }
 
         /* Mobile Menu Overlay & Menu */

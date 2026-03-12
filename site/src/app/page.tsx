@@ -222,10 +222,11 @@ export default function HomePage() {
           width: '100%',
           boxSizing: 'border-box',
         }}>
-          {/* Ambient glow */}
+          {/* Ambient glow — color tracks active element */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'radial-gradient(ellipse at top, rgba(102,126,234,0.15) 0%, transparent 50%)',
+            background: `radial-gradient(ellipse at 30% 30%, ${activeElement.color}18 0%, transparent 55%)`,
+            transition: 'background 1s ease',
             zIndex: 0, pointerEvents: 'none',
           }} />
 
@@ -238,35 +239,17 @@ export default function HomePage() {
             zIndex: 10,
           }}>
 
-            {/* Pill badge */}
-            <div style={{
-              display: 'inline-block',
-              padding: '0.5rem 1.25rem',
-              background: 'rgba(102,126,234,0.12)',
-              border: '1px solid rgba(102,126,234,0.25)',
-              borderRadius: '30px',
-              marginBottom: '2rem',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-              color: '#a5b4fc',
-              textTransform: 'uppercase',
-              letterSpacing: '1.5px',
-            }}>
-              Open Source · MIT · WebGL · Canvas 2D
-            </div>
-
             {/* Headline */}
             <h1 style={{
               fontFamily: 'var(--font-primary)',
               fontSize: 'clamp(3rem, 7vw, 5.5rem)',
-              fontWeight: '900',
+              fontWeight: '700',
               marginBottom: '1.5rem',
-              lineHeight: 1.05,
-              letterSpacing: '-0.04em',
-              background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 30%, #a5b4fc 60%, #667eea 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              lineHeight: 1.0,
+              letterSpacing: '-0.03em',
+              color: '#ffffff',
+              textShadow: `0 0 80px ${activeElement.color}44`,
+              transition: 'text-shadow 1s ease',
             }}>
               Elemental Effects.<br />Expressive Characters.
             </h1>
@@ -313,21 +296,21 @@ export default function HomePage() {
                   padding: '0.9rem 2.25rem',
                   fontSize: '1rem',
                   fontWeight: '700',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  borderRadius: '50px',
+                  background: `${activeElement.color}cc`,
+                  color: '#0a0a0a',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   display: 'inline-block',
-                  boxShadow: '0 8px 32px rgba(102,126,234,0.4)',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  boxShadow: `0 8px 32px ${activeElement.color}55`,
+                  transition: 'transform 0.2s ease, box-shadow 0.8s ease, background 0.8s ease',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(102,126,234,0.6)'
+                  e.currentTarget.style.boxShadow = `0 12px 40px ${activeElement.color}88`
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(102,126,234,0.4)'
+                  e.currentTarget.style.boxShadow = `0 8px 32px ${activeElement.color}55`
                 }}
               >
                 Live Demo
@@ -341,23 +324,23 @@ export default function HomePage() {
                   padding: '0.9rem 2.25rem',
                   fontSize: '1rem',
                   fontWeight: '700',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: 'rgba(255,255,255,0.9)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '50px',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.85)',
+                  border: `1px solid ${activeElement.color}55`,
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  transition: 'all 0.2s ease',
+                  transition: 'border-color 0.8s ease, background 0.2s ease',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                  e.currentTarget.style.background = `${activeElement.color}11`
+                  e.currentTarget.style.borderColor = `${activeElement.color}99`
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.borderColor = `${activeElement.color}55`
                 }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -387,7 +370,7 @@ export default function HomePage() {
                 'React · Vue · Vanilla',
               ].map((stat, i) => (
                 <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {i > 0 && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
+                  {i > 0 && <span style={{ color: `${activeElement.color}66`, transition: 'color 0.8s ease' }}>·</span>}
                   {stat}
                 </span>
               ))}
@@ -565,22 +548,24 @@ export default function HomePage() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 padding: '0.875rem 2rem',
-                background: 'rgba(102,126,234,0.1)',
-                border: '1px solid rgba(102,126,234,0.25)',
-                borderRadius: '12px',
-                color: '#a5b4fc',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '8px',
+                color: 'rgba(255,255,255,0.7)',
                 textDecoration: 'none',
                 fontSize: '0.95rem',
                 fontWeight: '600',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(102,126,234,0.2)'
-                e.currentTarget.style.borderColor = 'rgba(102,126,234,0.4)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.9)'
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(102,126,234,0.1)'
-                e.currentTarget.style.borderColor = 'rgba(102,126,234,0.25)'
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.7)'
               }}
             >
               Try all 8 elements live →
@@ -634,20 +619,20 @@ export default function HomePage() {
                   padding: '0.9rem 2.25rem',
                   fontSize: '1rem',
                   fontWeight: '700',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  borderRadius: '50px',
+                  background: 'rgba(167,139,250,0.85)',
+                  color: '#0a0a0a',
+                  borderRadius: '8px',
                   textDecoration: 'none',
-                  boxShadow: '0 8px 32px rgba(102,126,234,0.4)',
+                  boxShadow: '0 8px 32px rgba(167,139,250,0.4)',
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(102,126,234,0.6)'
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(167,139,250,0.6)'
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(102,126,234,0.4)'
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(167,139,250,0.4)'
                 }}
               >
                 View on GitHub
@@ -658,18 +643,20 @@ export default function HomePage() {
                   padding: '0.9rem 2.25rem',
                   fontSize: '1rem',
                   fontWeight: '700',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: 'rgba(255,255,255,0.9)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '50px',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.85)',
+                  border: '1px solid rgba(167,139,250,0.35)',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                  e.currentTarget.style.background = 'rgba(167,139,250,0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(167,139,250,0.6)'
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.borderColor = 'rgba(167,139,250,0.35)'
                 }}
               >
                 Browse Examples
