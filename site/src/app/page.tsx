@@ -5,7 +5,6 @@ import Link from 'next/link'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import MascotRenderer from '@/components/MascotRenderer'
-import LazyFeaturesShowcase from '@/components/LazyFeaturesShowcase'
 import type { MascotMode } from '@/components/hooks/useMascotMode'
 
 // Elements to cycle through in the hero, with a showcase gesture each
@@ -601,9 +600,6 @@ export default function HomePage() {
             </a>
           </div>
         </section>
-
-        {/* ── FEATURES ─────────────────────────────────────────────────── */}
-        <LazyFeaturesShowcase />
 
         {/* ── FINAL CTA ────────────────────────────────────────────────── */}
         <section style={{
