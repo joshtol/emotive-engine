@@ -26,49 +26,7 @@ interface Example {
 }
 
 const examples: Example[] = [
-  // ── 2D Canvas ──────────────────────────────────────────────
-  {
-    id: 'hello-world',
-    title: 'Hello World',
-    description: 'Minimal setup — one mascot, four lines.',
-    category: '2d',
-    path: '/examples/2d/hello-world',
-    preview: '/screenshots/examples/hello-world.gif',
-  },
-  {
-    id: 'basic-usage',
-    title: 'Basic Usage',
-    description: 'Emotions, gestures, and shapes with keyboard shortcuts.',
-    category: '2d',
-    path: '/examples/2d/basic-usage',
-    preview: '/screenshots/examples/basic-usage.gif',
-  },
-  {
-    id: 'event-handling',
-    title: 'Event Handling',
-    description: 'Monitor mascot events in real-time with filtering.',
-    category: '2d',
-    path: '/examples/2d/event-handling',
-    preview: '/screenshots/examples/event-handling.gif',
-  },
-  {
-    id: 'rhythm-sync',
-    title: 'Rhythm Sync',
-    description: 'Beat-synchronized animations with tap tempo.',
-    category: '2d',
-    path: '/examples/2d/rhythm-sync',
-    preview: '/screenshots/examples/rhythm-sync.gif',
-  },
-  // ── 3D WebGL ───────────────────────────────────────────────
-  {
-    id: '3d-showcase',
-    title: '3D Showcase',
-    description: 'SSS material presets, emotions, and gestures on crystal geometry.',
-    category: '3d',
-    path: '/examples/3d/showcase',
-    preview: '/screenshots/examples/3d-showcase.gif',
-    featured: true,
-  },
+  // ── Row 1: elemental (2 col) + dual mascot ────────────────
   {
     id: '3d-elemental',
     title: '3D Elemental',
@@ -79,21 +37,14 @@ const examples: Example[] = [
     featured: true,
   },
   {
-    id: 'crystal-demo',
-    title: 'Crystal Soul',
-    description: 'Frosted crystal with inner soul glow and SSS presets.',
+    id: 'dual-mascot',
+    title: 'Dual Mascot',
+    description: 'Two independent 3D mascots running simultaneously on one page.',
     category: '3d',
-    path: '/examples/3d/crystal',
-    preview: '/screenshots/examples/crystal.gif',
+    path: '/examples/3d/dual-mascot',
+    preview: '/screenshots/examples/dual-mascot.gif',
   },
-  {
-    id: 'moon-demo',
-    title: 'Moon Phases',
-    description: 'Realistic moon with 8 phases and tidal lock camera.',
-    category: '3d',
-    path: '/examples/3d/moon',
-    preview: '/screenshots/examples/moon.gif',
-  },
+  // ── Row 2: blood moon (2 col) + sun ───────────────────────
   {
     id: 'blood-moon',
     title: 'Blood Moon Eclipse',
@@ -111,15 +62,25 @@ const examples: Example[] = [
     path: '/examples/3d/sun',
     preview: '/screenshots/examples/sun.gif',
   },
+  // ── Row 3: crystal + showcase (2 col) ─────────────────────
   {
-    id: 'dual-mascot',
-    title: 'Dual Mascot',
-    description: 'Two independent 3D mascots running simultaneously on one page.',
+    id: 'crystal-demo',
+    title: 'Crystal Soul',
+    description: 'Frosted crystal with inner soul glow and SSS presets.',
     category: '3d',
-    path: '/examples/3d/dual-mascot',
-    preview: '/screenshots/examples/dual-mascot.gif',
+    path: '/examples/3d/crystal',
+    preview: '/screenshots/examples/crystal.gif',
   },
-  // ── LLM Integration ────────────────────────────────────────
+  {
+    id: '3d-showcase',
+    title: '3D Showcase',
+    description: 'SSS material presets, emotions, and gestures on crystal geometry.',
+    category: '3d',
+    path: '/examples/3d/showcase',
+    preview: '/screenshots/examples/3d-showcase.gif',
+    featured: true,
+  },
+  // ── Row 4: claude chat + rhythm sync + moon ────────────────
   {
     id: 'claude-haiku',
     title: 'Claude Chat',
@@ -127,6 +88,47 @@ const examples: Example[] = [
     category: 'llm',
     path: '/examples/llm/claude-chat',
     preview: '/screenshots/examples/claude-chat.gif',
+  },
+  {
+    id: 'rhythm-sync',
+    title: 'Rhythm Sync',
+    description: 'Beat-synchronized animations with tap tempo.',
+    category: '2d',
+    path: '/examples/2d/rhythm-sync',
+    preview: '/screenshots/examples/rhythm-sync.gif',
+  },
+  {
+    id: 'moon-demo',
+    title: 'Moon Phases',
+    description: 'Realistic moon with 8 phases and tidal lock camera.',
+    category: '3d',
+    path: '/examples/3d/moon',
+    preview: '/screenshots/examples/moon.gif',
+  },
+  // ── Row 5: basic usage + event handling + hello world ──────
+  {
+    id: 'basic-usage',
+    title: 'Basic Usage',
+    description: 'Emotions, gestures, and shapes with keyboard shortcuts.',
+    category: '2d',
+    path: '/examples/2d/basic-usage',
+    preview: '/screenshots/examples/basic-usage.gif',
+  },
+  {
+    id: 'event-handling',
+    title: 'Event Handling',
+    description: 'Monitor mascot events in real-time with filtering.',
+    category: '2d',
+    path: '/examples/2d/event-handling',
+    preview: '/screenshots/examples/event-handling.gif',
+  },
+  {
+    id: 'hello-world',
+    title: 'Hello World',
+    description: 'Minimal setup — one mascot, four lines.',
+    category: '2d',
+    path: '/examples/2d/hello-world',
+    preview: '/screenshots/examples/hello-world.gif',
   },
 ]
 
