@@ -9,12 +9,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   'llm': '#67e8f9',
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  '2d':  '2D Canvas',
-  '3d':  '3D WebGL',
-  'llm': 'LLM',
-}
-
 interface Example {
   id: string
   title: string
@@ -23,18 +17,35 @@ interface Example {
   path: string
   preview?: string          // screenshot/gif path — placeholder gradient if missing
   featured?: boolean        // spans 2 columns on desktop
+  portrait?: boolean        // tall 3:4 aspect — sits next to featured cards
 }
 
 const examples: Example[] = [
-  // ── Row 1: elemental (2 col) + dual mascot ────────────────
   {
     id: '3d-elemental',
     title: '3D Elemental',
     description: 'Fire, ice, electric, and water effects firing simultaneously.',
     category: '3d',
     path: '/examples/3d/elemental-gestures',
-    preview: '/screenshots/examples/3d-elemental.gif',
-    featured: true,
+    preview: '/screenshots/examples/hero-elemental-portrait.webm',
+    portrait: true,
+  },
+  // ── 2D Canvas ──────────────────────────────────────────────
+  {
+    id: 'crystal-demo',
+    title: 'Crystal Soul',
+    description: 'Frosted crystal with inner soul glow and SSS presets.',
+    category: '3d',
+    path: '/examples/3d/crystal',
+    preview: '/screenshots/examples/crystal.webm',
+  },
+  {
+    id: 'basic-usage',
+    title: 'Basic Usage',
+    description: 'Emotions, gestures, and shapes with keyboard shortcuts.',
+    category: '2d',
+    path: '/examples/2d/basic-usage',
+    preview: '/screenshots/examples/basic-usage.webm',
   },
   {
     id: 'dual-mascot',
@@ -42,17 +53,8 @@ const examples: Example[] = [
     description: 'Two independent 3D mascots running simultaneously on one page.',
     category: '3d',
     path: '/examples/3d/dual-mascot',
-    preview: '/screenshots/examples/dual-mascot.gif',
-  },
-  // ── Row 2: blood moon (2 col) + sun ───────────────────────
-  {
-    id: 'blood-moon',
-    title: 'Blood Moon Eclipse',
-    description: 'Lunar eclipse with shadow sweep and Rayleigh scattering.',
-    category: '3d',
-    path: '/examples/3d/blood-moon',
-    preview: '/screenshots/examples/blood-moon.gif',
-    featured: true,
+    preview: '/screenshots/examples/dual-mascot-portrait.webm',
+    portrait: true,
   },
   {
     id: 'sun-demo',
@@ -60,42 +62,26 @@ const examples: Example[] = [
     description: 'Solar eclipse with corona effects and blend layers.',
     category: '3d',
     path: '/examples/3d/sun',
-    preview: '/screenshots/examples/sun.gif',
+    preview: '/screenshots/examples/sun.webm',
+    featured: true,
   },
-  // ── Row 3: crystal + showcase (2 col) ─────────────────────
-  {
-    id: 'crystal-demo',
-    title: 'Crystal Soul',
-    description: 'Frosted crystal with inner soul glow and SSS presets.',
-    category: '3d',
-    path: '/examples/3d/crystal',
-    preview: '/screenshots/examples/crystal.gif',
-  },
+  // ── 3D WebGL ───────────────────────────────────────────────
   {
     id: '3d-showcase',
     title: '3D Showcase',
     description: 'SSS material presets, emotions, and gestures on crystal geometry.',
     category: '3d',
     path: '/examples/3d/showcase',
-    preview: '/screenshots/examples/3d-showcase.gif',
-    featured: true,
+    preview: '/screenshots/examples/3d-showcase-portrait.webm',
+    portrait: true,
   },
-  // ── Row 4: claude chat + rhythm sync + moon ────────────────
   {
     id: 'claude-haiku',
     title: 'Claude Chat',
     description: 'Emotional AI assistant with Claude Haiku integration.',
     category: 'llm',
     path: '/examples/llm/claude-chat',
-    preview: '/screenshots/examples/claude-chat.gif',
-  },
-  {
-    id: 'rhythm-sync',
-    title: 'Rhythm Sync',
-    description: 'Beat-synchronized animations with tap tempo.',
-    category: '2d',
-    path: '/examples/2d/rhythm-sync',
-    preview: '/screenshots/examples/rhythm-sync.gif',
+    preview: '/screenshots/examples/claude-chat.webm',
   },
   {
     id: 'moon-demo',
@@ -103,16 +89,33 @@ const examples: Example[] = [
     description: 'Realistic moon with 8 phases and tidal lock camera.',
     category: '3d',
     path: '/examples/3d/moon',
-    preview: '/screenshots/examples/moon.gif',
+    preview: '/screenshots/examples/moon.webm',
   },
-  // ── Row 5: basic usage + event handling + hello world ──────
   {
-    id: 'basic-usage',
-    title: 'Basic Usage',
-    description: 'Emotions, gestures, and shapes with keyboard shortcuts.',
+    id: 'blood-moon',
+    title: 'Blood Moon Eclipse',
+    description: 'Lunar eclipse with shadow sweep and Rayleigh scattering.',
+    category: '3d',
+    path: '/examples/3d/blood-moon',
+    preview: '/screenshots/examples/blood-moon.webm',
+    featured: true,
+  },
+  {
+    id: 'groove-demo',
+    title: 'Groove Demo',
+    description: 'Music-reactive dance with groove modes and beat detection.',
+    category: '3d',
+    path: '/examples/3d/groove-demo',
+    preview: '/screenshots/examples/groove-portrait.webm',
+    portrait: true,
+  },
+  {
+    id: 'rhythm-sync',
+    title: 'Rhythm Sync',
+    description: 'Beat-synchronized animations with tap tempo.',
     category: '2d',
-    path: '/examples/2d/basic-usage',
-    preview: '/screenshots/examples/basic-usage.gif',
+    path: '/examples/2d/rhythm-sync',
+    preview: '/screenshots/examples/rhythm-sync.webm',
   },
   {
     id: 'event-handling',
@@ -120,7 +123,7 @@ const examples: Example[] = [
     description: 'Monitor mascot events in real-time with filtering.',
     category: '2d',
     path: '/examples/2d/event-handling',
-    preview: '/screenshots/examples/event-handling.gif',
+    preview: '/screenshots/examples/event-handling.webm',
   },
   {
     id: 'hello-world',
@@ -128,7 +131,7 @@ const examples: Example[] = [
     description: 'Minimal setup — one mascot, four lines.',
     category: '2d',
     path: '/examples/2d/hello-world',
-    preview: '/screenshots/examples/hello-world.gif',
+    preview: '/screenshots/examples/hello-world.webm',
   },
 ]
 
@@ -136,13 +139,15 @@ function PreviewImage({ example }: { example: Example }) {
   const [failed, setFailed] = useState(false)
   const color = CATEGORY_COLORS[example.category]
 
+  const aspectRatio = example.portrait ? '3 / 4' : example.featured ? '21 / 9' : '16 / 9'
+
   if (!example.preview || failed) {
     // Gradient placeholder — tinted by category
     return (
       <div
         style={{
           width: '100%',
-          aspectRatio: example.featured ? '21 / 9' : '16 / 9',
+          aspectRatio,
           background: `linear-gradient(135deg, ${color}18 0%, ${color}08 50%, ${color}18 100%)`,
           borderBottom: `1px solid rgba(255,255,255,0.06)`,
           display: 'flex',
@@ -173,16 +178,18 @@ function PreviewImage({ example }: { example: Example }) {
   return (
     <div style={{
       width: '100%',
-      aspectRatio: example.featured ? '21 / 9' : '16 / 9',
+      aspectRatio,
       overflow: 'hidden',
       borderBottom: '1px solid rgba(255,255,255,0.06)',
       position: 'relative',
     }}>
-      <img
+      <video
         src={example.preview}
-        alt={example.title}
+        autoPlay
+        loop
+        muted
+        playsInline
         onError={() => setFailed(true)}
-        loading="lazy"
         style={{
           width: '100%',
           height: '100%',
@@ -195,78 +202,18 @@ function PreviewImage({ example }: { example: Example }) {
 }
 
 export default function ExamplesPage() {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | '2d' | '3d' | 'llm'>('all')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
-
-  const filteredExamples = selectedCategory === 'all'
-    ? examples
-    : examples.filter(e => e.category === selectedCategory)
-
-  const categories = ['all', '2d', '3d', 'llm'] as const
 
   return (
     <main style={{
       minHeight: 'calc(100vh - 80px)',
-      padding: '120px 1.5rem 4rem',
+      padding: '120px 1.5rem 0',
       background: '#0a0a0c',
     }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '3rem', maxWidth: 600, margin: '0 auto 3rem' }}>
-        <h1 style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-          fontWeight: 700,
-          color: '#F2F1F1',
-          marginBottom: '0.5rem',
-          letterSpacing: '-0.02em',
-        }}>
-          Examples
-        </h1>
-        <p style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
-          color: '#888',
-          lineHeight: 1.5,
-        }}>
-          12 examples. 2D Canvas, 3D WebGL, LLM integration.
-        </p>
-
-        {/* Category filter */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          marginTop: '1.5rem',
-        }}>
-          {categories.map(cat => {
-            const isActive = selectedCategory === cat
-            const color = cat === 'all' ? '#888' : CATEGORY_COLORS[cat]
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  color: isActive ? '#0a0a0c' : '#999',
-                  background: isActive ? `${color}cc` : 'transparent',
-                  border: `1px solid ${isActive ? `${color}88` : 'rgba(255,255,255,0.1)'}`,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {cat === 'all' ? 'All' : CATEGORY_LABELS[cat]}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {/* Cards grid */}
+      <div style={{
+        padding: '0 1.5rem 4rem',
+      }}>
       <div style={{
         display: 'grid',
         gap: '1px',
@@ -281,6 +228,7 @@ export default function ExamplesPage() {
             display: grid;
             grid-template-columns: 1fr;
             gap: 1px;
+            grid-auto-flow: dense;
           }
           @media (min-width: 640px) {
             .examples-grid {
@@ -288,6 +236,9 @@ export default function ExamplesPage() {
             }
             .examples-grid .card-featured {
               grid-column: span 2;
+            }
+            .examples-grid .card-portrait {
+              grid-row: span 2;
             }
           }
           @media (min-width: 1024px) {
@@ -297,14 +248,14 @@ export default function ExamplesPage() {
           }
         `}</style>
         <div className="examples-grid">
-          {filteredExamples.map(example => {
+          {examples.map(example => {
             const color = CATEGORY_COLORS[example.category]
             const isHovered = hoveredId === example.id
             return (
               <Link
                 key={example.id}
                 href={example.path}
-                className={example.featured ? 'card-featured' : undefined}
+                className={example.featured ? 'card-featured' : example.portrait ? 'card-portrait' : undefined}
                 onMouseEnter={() => setHoveredId(example.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{
@@ -375,6 +326,7 @@ export default function ExamplesPage() {
             )
           })}
         </div>
+      </div>
       </div>
     </main>
   )

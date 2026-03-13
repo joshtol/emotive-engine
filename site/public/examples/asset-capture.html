@@ -7,7 +7,9 @@
 
   Sizes:
     Normal:   400 × 225  (16:9)
+    Portrait: 400 × 534  (3:4)
     Featured: 600 × 257  (21:9)
+    Hero:    1200 × 514  (21:9)
 
   Keyboard shortcuts:
     S — Screenshot
@@ -145,12 +147,17 @@
             </optgroup>
             <optgroup label="3D WebGL">
                 <option value="3d-showcase">3D Showcase ★</option>
+                <option value="3d-showcase-portrait">3D Showcase ▐ Portrait</option>
                 <option value="3d-elemental">3D Elemental ★</option>
+                <option value="hero-elemental">3D Elemental ★ Hero</option>
+                <option value="hero-elemental-portrait">3D Elemental ★ Hero Portrait</option>
                 <option value="crystal">Crystal Soul</option>
                 <option value="moon">Moon Phases</option>
                 <option value="blood-moon">Blood Moon Eclipse ★</option>
-                <option value="sun">Solar Eclipse</option>
+                <option value="sun">Solar Eclipse ★</option>
                 <option value="dual-mascot">Dual Mascot</option>
+                <option value="dual-mascot-portrait">Dual Mascot ▐ Portrait</option>
+                <option value="groove-portrait">Groove Demo ▐ Portrait</option>
             </optgroup>
             <optgroup label="LLM">
                 <option value="claude-chat">Claude Chat</option>
@@ -240,7 +247,9 @@
 
         const SIZES = {
             normal:   { w: 400, h: 225 },
+            portrait: { w: 400, h: 534 },
             featured: { w: 600, h: 257 },
+            hero:     { w: 1200, h: 514 },
         };
 
         // All loops target 3-5s → 45-75 frames at 15fps → small GIFs
@@ -299,6 +308,26 @@
             },
 
             // ── 3D WebGL ──────────────────────────────────────────
+            '3d-showcase-portrait': {
+                category: '3d', size: 'portrait', label: '3D Showcase Portrait',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableShadows: false,
+                    enableControls: false, autoRotate: true, autoRotateSpeed: 0.3,
+                    cameraDistance: 1.6, fov: 30,
+                    assetBasePath: '/assets',
+                    enableBlinking: false, enableBreathing: true,
+                },
+                sequence: [
+                    { at: 0,    label: 'quartz+joy',    fn: m => { m.setEmotion('joy');     applySSSPreset(m, 'quartz');   m.express('bounce'); } },
+                    { at: 1000, label: 'glow',           fn: m => { m.express('glow'); } },
+                    { at: 2000, label: 'emerald+love',   fn: m => { m.setEmotion('love');    applySSSPreset(m, 'emerald');  m.express('pulse'); } },
+                    { at: 3000, label: 'rough+ruby',     fn: m => { m.morphTo('rough');      applySSSPreset(m, 'ruby');     m.setEmotion('focused'); m.express('spin'); } },
+                    { at: 4000, label: 'sapphire+calm',  fn: m => { m.setEmotion('calm');    applySSSPreset(m, 'sapphire'); m.express('sway'); } },
+                    { at: 5000, label: 'crystal+quartz', fn: m => { m.morphTo('crystal');    applySSSPreset(m, 'quartz');   m.setEmotion('joy'); m.express('spin'); } },
+                ],
+                duration: 6000,
+            },
             '3d-showcase': {
                 category: '3d', size: 'featured', label: '3D Showcase',
                 config3d: {
@@ -330,12 +359,45 @@
                     backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
                 },
                 sequence: [
-                    { at: 0,    label: 'ice+water',      fn: m => { m.express('icevortex');  m.express('waterhelix'); } },
-                    { at: 1500, label: 'electric',        fn: m => m.express('electricsurge') },
-                    { at: 3000, label: 'fire+electric',   fn: m => { m.express('firedance');  m.express('electriccrackle'); } },
-                    { at: 4500, label: 'water+ice',       fn: m => { m.express('watervortex'); m.express('icecrown'); } },
+                    { at: 0,    label: 'electricsurge',     fn: m => m.express('electricsurge') },
+                    { at: 2500, label: 'voidsingularity',   fn: m => m.express('voidsingularity') },
+                    { at: 5000, label: 'icecrown',          fn: m => m.express('icecrown') },
                 ],
-                duration: 6000,
+                duration: 7500,
+            },
+            'hero-elemental-portrait': {
+                category: '3d', size: 'portrait', label: '3D Elemental Hero Portrait',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableShadows: false,
+                    enableControls: false, autoRotate: true, autoRotateSpeed: 0.25,
+                    cameraDistance: 1.8, fov: 30, materialVariant: 'multiplexer',
+                    assetBasePath: '/assets', preloadElements: [],
+                    backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
+                },
+                sequence: [
+                    { at: 0,    label: 'electricsurge',     fn: m => m.express('electricsurge') },
+                    { at: 2500, label: 'voidsingularity',   fn: m => m.express('voidsingularity') },
+                    { at: 5000, label: 'icecrown',          fn: m => m.express('icecrown') },
+                ],
+                duration: 7500,
+            },
+            'hero-elemental': {
+                category: '3d', size: 'hero', label: '3D Elemental Hero',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableShadows: false,
+                    enableControls: false, autoRotate: true, autoRotateSpeed: 0.25,
+                    cameraDistance: 1.8, fov: 30, materialVariant: 'multiplexer',
+                    assetBasePath: '/assets', preloadElements: [],
+                    backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
+                },
+                sequence: [
+                    { at: 0,    label: 'electricsurge',     fn: m => m.express('electricsurge') },
+                    { at: 2500, label: 'voidsingularity',   fn: m => m.express('voidsingularity') },
+                    { at: 5000, label: 'icecrown',          fn: m => m.express('icecrown') },
+                ],
+                duration: 7500,
             },
             'crystal': {
                 category: '3d', size: 'normal', label: 'Crystal Soul',
@@ -399,7 +461,7 @@
                 duration: 6000,
             },
             'sun': {
-                category: '3d', size: 'normal', label: 'Solar Eclipse',
+                category: '3d', size: 'featured', label: 'Solar Eclipse',
                 cameraNudgeY: -0.02,
                 config3d: {
                     coreGeometry: 'sun', materialVariant: 'multiplexer',
@@ -441,6 +503,61 @@
                     { at: 4500, label: 'calm+joy',        fn: (m, m2) => { m.setEmotion('calm');       m2.setEmotion('joy');      m.express('wobble'); m2.express('sway'); } },
                 ],
                 duration: 6000,
+            },
+
+            'dual-mascot-portrait': {
+                category: '3d', size: 'portrait', label: 'Dual Mascot Portrait',
+                dualMascot: true, dualLayout: 'stacked',
+                config3dA: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableControls: false,
+                    autoRotate: true, autoRotateSpeed: 0.3,
+                    cameraDistance: 1.4, fov: 30,
+                    materialVariant: 'multiplexer',
+                    assetBasePath: '/assets',
+                    enableBlinking: false, enableBreathing: true,
+                },
+                config3dB: {
+                    coreGeometry: 'moon', enableParticles: true,
+                    enablePostProcessing: true, enableControls: false,
+                    autoRotate: true, cameraDistance: 1.3, fov: 30,
+                    enableBlinking: false, enableBreathing: false,
+                    assetBasePath: '/assets',
+                },
+                sequence: [
+                    { at: 0,    label: 'joy+calm',       fn: (m, m2) => { m.setEmotion('joy');        m2.setEmotion('calm');     m.express('bounce'); m2.express('sway'); } },
+                    { at: 1500, label: 'love+surprise',   fn: (m, m2) => { m.setEmotion('love');       m2.setEmotion('surprise'); m.express('pulse');  m2.express('breathe'); } },
+                    { at: 3000, label: 'excited+love',    fn: (m, m2) => { m.setEmotion('excitement'); m2.setEmotion('love');     m.express('twist');  m2.express('glow'); } },
+                    { at: 4500, label: 'calm+joy',        fn: (m, m2) => { m.setEmotion('calm');       m2.setEmotion('joy');      m.express('wobble'); m2.express('sway'); } },
+                ],
+                duration: 6000,
+            },
+
+            'groove-portrait': {
+                category: '3d', size: 'portrait', label: 'Groove Demo Portrait',
+                config3d: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableControls: false,
+                    autoRotate: true, autoRotateSpeed: 0.3,
+                    cameraDistance: 1.2, fov: 30,
+                    materialVariant: 'multiplexer',
+                    assetBasePath: '/assets',
+                    enableBlinking: true, enableBreathing: true,
+                },
+                onInit: m => {
+                    m.enableGroove();
+                    m.enableDance();
+                    m.setDanceIntensity(1.0);
+                    m.setRhythmBPM(120);
+                    m.startRhythm(120);
+                },
+                sequence: [
+                    { at: 0,    label: 'groove1+calm',    fn: m => { m.morphTo('rough'); m.setSSSPreset('amethyst'); m.setGroove('groove1'); m.setEmotion('calm');       m.express('sway'); } },
+                    { at: 2000, label: 'groove2+joy',     fn: m => { m.morphTo('rough'); m.setGroove('groove2'); m.setEmotion('joy');        m.express('bounce'); } },
+                    { at: 4000, label: 'groove3+excited',  fn: m => { m.morphTo('rough'); m.setGroove('groove3'); m.setEmotion('excitement'); m.express('spin'); } },
+                    { at: 6000, label: 'groove1+love',    fn: m => { m.morphTo('rough'); m.setGroove('groove1'); m.setEmotion('love');       m.express('pulse'); } },
+                ],
+                duration: 8000,
             },
 
             // ── LLM ──────────────────────────────────────────────
@@ -596,19 +713,21 @@
 
         function createEntry3D(preset, w, h) {
             if (preset.dualMascot) {
+                const stacked = preset.dualLayout === 'stacked';
                 const wrapper = document.createElement('div');
                 wrapper.style.cssText = `width:${w}px;height:${h}px;position:relative;`;
                 const inner = document.createElement('div');
-                inner.style.cssText = `width:${w}px;height:${h}px;display:flex;gap:0;`;
+                inner.style.cssText = `width:${w}px;height:${h}px;display:flex;${stacked ? 'flex-direction:column;' : ''}gap:0;`;
                 wrapper.appendChild(inner);
                 scene.appendChild(wrapper);
 
-                const halfW = Math.floor(w / 2);
+                const cellW = stacked ? w : Math.floor(w / 2);
+                const cellH = stacked ? Math.floor(h / 2) : h;
                 const contA = document.createElement('div');
-                contA.style.cssText = `width:${halfW}px;height:${h}px;position:relative;`;
+                contA.style.cssText = `width:${cellW}px;height:${cellH}px;position:relative;`;
                 inner.appendChild(contA);
                 const contB = document.createElement('div');
-                contB.style.cssText = `width:${halfW}px;height:${h}px;position:relative;`;
+                contB.style.cssText = `width:${cellW}px;height:${cellH}px;position:relative;`;
                 inner.appendChild(contB);
 
                 const mascotA = new EmotiveMascot3D(preset.config3dA);
@@ -619,7 +738,7 @@
                 mascotB.init(contB);
                 mascotB.start();
 
-                return { container: wrapper, mascot: mascotA, mascot2: mascotB, category: '3d', halfW };
+                return { container: wrapper, mascot: mascotA, mascot2: mascotB, category: '3d', cellW, cellH, stacked };
             }
 
             const container = document.createElement('div');
@@ -640,7 +759,7 @@
                     const cam = m.core3D?.renderer?.camera;
                     if (cam) {
                         cam.position.y += (preset.cameraNudgeY ?? 0.04);
-                        cam.aspect = entry.halfW / h;
+                        cam.aspect = entry.cellW / entry.cellH;
                         cam.updateProjectionMatrix();
                     }
                 });
@@ -861,6 +980,11 @@
                     applyCameraNudge(entry, preset, sz.w, sz.h);
                 }
 
+                // Run preset-specific init (e.g., enable groove/dance)
+                if (preset.onInit && entry.mascot) {
+                    try { preset.onInit(entry.mascot); } catch(e) { console.warn('onInit error:', e); }
+                }
+
                 sceneLoader.style.display = 'none';
             }
 
@@ -884,12 +1008,19 @@
 
             if (currentCategory === '3d') {
                 if (secondMascot) {
-                    // Dual mascot: draw both canvases side by side
-                    const halfW = Math.floor(activeW / 2);
+                    // Dual mascot: draw both canvases (side by side or stacked)
+                    const entry = currentPresetId ? pool[currentPresetId] : null;
                     const canvasA = currentMascot?.core3D?.renderer?.renderer?.domElement;
                     const canvasB = secondMascot?.core3D?.renderer?.renderer?.domElement;
-                    if (canvasA) outCtx.drawImage(canvasA, 0, 0, halfW, activeH);
-                    if (canvasB) outCtx.drawImage(canvasB, halfW, 0, halfW, activeH);
+                    if (entry?.stacked) {
+                        const halfH = Math.floor(activeH / 2);
+                        if (canvasA) outCtx.drawImage(canvasA, 0, 0, activeW, halfH);
+                        if (canvasB) outCtx.drawImage(canvasB, 0, halfH, activeW, halfH);
+                    } else {
+                        const halfW = Math.floor(activeW / 2);
+                        if (canvasA) outCtx.drawImage(canvasA, 0, 0, halfW, activeH);
+                        if (canvasB) outCtx.drawImage(canvasB, halfW, 0, halfW, activeH);
+                    }
                 } else {
                     // Use drawImage on the WebGL canvas — reads the composited front buffer,
                     // no Y-flip needed, works regardless of preserveDrawingBuffer setting
