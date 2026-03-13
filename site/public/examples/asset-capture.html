@@ -158,9 +158,6 @@
                 <option value="dual-mascot-portrait">Dual Mascot ▐ Portrait</option>
                 <option value="groove-portrait">Groove Demo ▐ Portrait</option>
             </optgroup>
-            <optgroup label="LLM">
-                <option value="claude-chat">Claude Chat</option>
-            </optgroup>
         </select>
 
         <div class="sep"></div>
@@ -548,18 +545,6 @@
                 duration: 8000,
             },
 
-            // ── LLM ──────────────────────────────────────────────
-            'claude-chat': {
-                category: '2d', size: 'normal', label: 'Claude Chat',
-                config: { ..._2D, defaultEmotion: 'neutral', enableIdleBehaviors: true }, backdrop: _BD,
-                sequence: [
-                    { at: 0,    label: 'neutral',  fn: m => { m.setEmotion('neutral'); } },
-                    { at: 1000, label: 'joy+sun',  fn: m => { m.setEmotion('joy');     m.morphTo('sun');   m.express('bounce'); } },
-                    { at: 2500, label: 'love',     fn: m => { m.setEmotion('love');    m.morphTo('heart'); m.express('glow'); } },
-                    { at: 4000, label: 'focused',  fn: m => { m.setEmotion('focused'); m.morphTo('circle'); m.express('breathe'); } },
-                ],
-                duration: 5000,
-            },
         };
 
         // ═══════════════════════════════════════════════════════════════

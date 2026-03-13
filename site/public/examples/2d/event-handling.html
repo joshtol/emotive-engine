@@ -9,13 +9,7 @@
   - Building event-driven UIs
   - Real-time event logging and filtering
 
-  Key concepts:
-  - Event listener pattern (on/off methods)
-  - Event data structures
-  - Filtering and displaying events
-  - Building responsive UIs from events
-
-  Complexity: ⭐⭐⭐ Advanced
+  Complexity: Advanced
   Next: Build your own event-driven application
 -->
 <html lang="en">
@@ -24,50 +18,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Handling - Emotive Engine</title>
 
-    <!-- Shared example styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/examples/example-styles.css">
 
     <style>
-        body {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 30px;
-            align-items: start;
-            padding: 40px;
-        }
-
-        /* Left column */
-        .controls-panel {
-            max-width: 400px;
-        }
-
-        /* Canvas container */
-        .canvas-container {
-            width: 400px;
-            height: 400px;
-            border: 2px solid rgba(221, 74, 154, 0.3);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
-            margin-bottom: 30px;
-            overflow: hidden;
-            background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #1a1a2e 100%);
-            position: relative;
-        }
-
-        #mascot-canvas {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
-            border: none;
-        }
-
-        /* Event log panel */
         .log-panel {
-            background: rgba(42, 42, 42, 0.6);
-            border-radius: 12px;
-            border: 1px solid rgba(242, 241, 241, 0.1);
-            padding: 20px;
-            height: calc(100vh - 80px);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: clamp(12px, 2vw, 20px);
+            height: clamp(400px, 70vh, calc(100vh - 80px));
             display: flex;
             flex-direction: column;
         }
@@ -76,199 +38,107 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: clamp(10px, 1.5vw, 20px);
         }
 
         .log-header h2 {
             margin: 0;
-            color: #DD4A9A;
-            font-size: 18px;
+            color: #a0b4f0;
+            font-size: clamp(14px, 1.8vw, 18px);
         }
 
-        .log-controls {
-            display: flex;
-            gap: 8px;
-        }
+        .log-controls { display: flex; gap: 6px; }
 
-        .log-controls button {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        /* Event filters */
         .event-filters {
             display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
+            gap: 6px;
+            margin-bottom: clamp(8px, 1.2vw, 15px);
             flex-wrap: wrap;
         }
 
-        .filter-btn {
-            padding: 6px 12px;
-            font-size: 12px;
-            background: rgba(64, 144, 206, 0.2);
-            border: 1px solid rgba(64, 144, 206, 0.3);
-        }
-
-        .filter-btn.active {
-            background: rgba(64, 144, 206, 0.5);
-            border-color: #4090CE;
-        }
-
-        /* Event log */
         .event-log {
             flex: 1;
             overflow-y: auto;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
-            padding: 12px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+            padding: clamp(8px, 1.2vw, 12px);
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            font-size: clamp(10px, 1vw, 12px);
         }
 
         .event-entry {
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: clamp(6px, 1vw, 10px);
+            margin-bottom: 6px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 6px;
-            border-left: 3px solid #DD4A9A;
+            border-left: 3px solid #a0b4f0;
             animation: slideIn 0.2s ease;
         }
 
         @keyframes slideIn {
-            from {
-                transform: translateY(-10px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .event-entry.emotion {
-            border-left-color: #DD4A9A;
-        }
+        .event-entry.emotion { border-left-color: #a0b4f0; }
+        .event-entry.gesture { border-left-color: #38bdf8; }
+        .event-entry.system  { border-left-color: #67e8f9; }
 
-        .event-entry.gesture {
-            border-left-color: #4090CE;
-        }
+        .event-time { color: #888; font-size: clamp(9px, 0.9vw, 10px); }
+        .event-type { color: #a0b4f0; font-weight: bold; display: inline-block; margin-left: 6px; font-size: clamp(10px, 1vw, 12px); }
+        .event-data { color: #67e8f9; margin-top: 4px; white-space: pre-wrap; word-break: break-all; font-size: clamp(10px, 1vw, 12px); }
 
-        .event-entry.system {
-            border-left-color: #84CFC5;
-        }
-
-        .event-time {
-            color: #B8B8B8;
-            font-size: 10px;
-        }
-
-        .event-type {
-            color: #DD4A9A;
-            font-weight: bold;
-            display: inline-block;
-            margin-left: 8px;
-        }
-
-        .event-data {
-            color: #84CFC5;
-            margin-top: 6px;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        /* Stats */
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(242, 241, 241, 0.1);
+            gap: clamp(6px, 1vw, 10px);
+            margin-top: clamp(12px, 1.5vw, 20px);
+            padding-top: clamp(12px, 1.5vw, 20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #DD4A9A;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #B8B8B8;
-            margin-top: 4px;
-        }
-
-        /* Trigger buttons */
-        .triggers-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 1024px) {
-            body {
-                grid-template-columns: 1fr;
-            }
-
-            .log-panel {
-                height: 500px;
-            }
-        }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: clamp(16px, 2.2vw, 24px); font-weight: 600; color: #a0b4f0; }
+        .stat-label { font-size: clamp(9px, 1vw, 11px); color: #888; margin-top: 4px; }
     </style>
 </head>
-<body>
+<body class="example-layout">
     <div class="controls-panel">
-        <div class="example-header">
-            <img src="/assets/emotive-engine-icon.svg" alt="Emotive Engine" class="example-logo">
-            <h1 class="example-title">Event Handling</h1>
-        </div>
-
-        <p class="example-subtitle">Monitor mascot events in real-time</p>
-
         <div class="canvas-container">
             <canvas id="mascot-canvas"></canvas>
         </div>
 
         <div class="control-group">
-            <h3>Trigger Actions</h3>
-            <div class="triggers-grid">
-                <button onclick="triggerEmotion('joy')">😊 Joy</button>
-                <button onclick="triggerEmotion('calm')">😌 Calm</button>
-                <button onclick="triggerEmotion('excited')">🎉 Excited</button>
-                <button onclick="triggerEmotion('sadness')">😢 Sadness</button>
-                <button onclick="triggerGesture('bounce')">Bounce</button>
-                <button onclick="triggerGesture('spin')">Spin</button>
-                <button onclick="triggerGesture('pulse')">Pulse</button>
-                <button onclick="triggerGesture('glow')">Glow</button>
-            </div>
+            <h3>Trigger Emotions</h3>
+            <div class="grid-4" id="emotion-buttons"></div>
+        </div>
+
+        <div class="control-group" style="margin-top: 12px;">
+            <h3>Trigger Gestures</h3>
+            <div class="grid-3" id="gesture-buttons"></div>
         </div>
 
         <div class="example-info">
-            <strong>💡 What to observe:</strong><br>
-            • Each action triggers an event<br>
-            • Events show when they occur<br>
-            • Event data contains useful information<br>
-            • You can filter by event type<br><br>
+            <strong>What to observe:</strong><br>
+            Each action triggers an event<br>
+            Events show when they occur<br>
+            Event data contains useful information<br>
+            You can filter by event type<br><br>
 
-            <strong>📖 Event Types:</strong><br>
-            • <code style="color: #DD4A9A;">emotion</code> - Emotional state changes<br>
-            • <code style="color: #4090CE;">gesture</code> - Animation triggers<br>
-            • <code style="color: #84CFC5;">system</code> - System messages<br><br>
+            <strong>Event Types:</strong><br>
+            <code>emotion</code> - Emotional state changes<br>
+            <code>gesture</code> - Animation triggers<br>
+            <code>system</code> - System messages<br><br>
 
             <strong>Build your own:</strong><br>
-            Use <code>mascot.on('event', handler)</code> to listen for events and build responsive, event-driven UIs.
+            Use <code>mascot.on('event', handler)</code> to listen
+            for events and build responsive, event-driven UIs.
         </div>
     </div>
 
     <div class="log-panel">
         <div class="log-header">
-            <h2>📡 Event Log</h2>
+            <h2>Event Log</h2>
             <div class="log-controls">
                 <button class="secondary" onclick="clearLog()">Clear</button>
                 <button class="secondary" onclick="togglePause()" id="pause-btn">Pause</button>
@@ -276,10 +146,10 @@
         </div>
 
         <div class="event-filters">
-            <button class="filter-btn active" onclick="setFilter('all')">All</button>
-            <button class="filter-btn" onclick="setFilter('emotion')">Emotions</button>
-            <button class="filter-btn" onclick="setFilter('gesture')">Gestures</button>
-            <button class="filter-btn" onclick="setFilter('system')">System</button>
+            <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+            <button class="filter-btn" onclick="setFilter('emotion', this)">Emotions</button>
+            <button class="filter-btn" onclick="setFilter('gesture', this)">Gestures</button>
+            <button class="filter-btn" onclick="setFilter('system', this)">System</button>
         </div>
 
         <div class="event-log" id="event-log"></div>
@@ -300,241 +170,142 @@
         </div>
     </div>
 
-    <!-- Load Emotive Engine UMD bundle -->
     <script src="/emotive-engine.js"></script>
+    <script src="/examples/example-data.js"></script>
+    <script src="/examples/example-init.js"></script>
 
     <script>
         let mascot;
         let eventLog = [];
         let currentFilter = 'all';
         let isPaused = false;
-        let stats = {
-            total: 0,
-            emotion: 0,
-            gesture: 0,
-            system: 0
-        };
+        let stats = { total: 0, emotion: 0, gesture: 0, system: 0 };
 
-        // STEP 1: Initialize mascot
-        async function init() {
-            try {
-                const canvas = document.getElementById('mascot-canvas');
-                const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
+        initMascot('mascot-canvas').then(m => {
+            mascot = m;
+            setupEventListeners();
+            logEvent('system', 'Mascot initialized successfully');
+        }).catch(err => {
+            logEvent('system', 'Initialization error: ' + err.message);
+        });
 
-                if (!EmotiveMascot) {
-                    logEvent('system', 'Error: EmotiveMascot not loaded');
-                    return;
-                }
+        renderEmotionButtons('emotion-buttons', triggerEmotion);
+        renderGestureButtons('gesture-buttons', triggerGesture);
 
-                canvas.width = 400;
-                canvas.height = 400;
+        initCollapsibleSections();
 
-                mascot = new EmotiveMascot({
-                    canvasId: 'mascot-canvas',
-                    targetFPS: 60,
-                    enableAudio: false,
-                    defaultEmotion: 'neutral',
-                    enableGazeTracking: false,
-                    enableIdleBehaviors: false
-                });
-
-                window.mascot = mascot;
-
-                await mascot.init(canvas);
-
-                mascot.setBackdrop({
-                    enabled: true,
-                    radius: 3.5,
-                    intensity: 0.9,
-                    blendMode: 'normal',
-                    falloff: 'smooth',
-                    edgeSoftness: 0.95,
-                    coreTransparency: 0.25,
-                    responsive: true
-                });
-
-                mascot.start();
-
-                // STEP 2: Set up event listeners
-                setupEventListeners();
-
-                logEvent('system', 'Mascot initialized successfully');
-                console.log('✅ Event handling demo ready');
-
-            } catch (error) {
-                logEvent('system', `Initialization error: ${error.message}`);
-                console.error('Failed to initialize:', error);
-            }
-        }
-
-        // STEP 2: Set up event listeners
         function setupEventListeners() {
-            // Listen for gesture events (emitted automatically)
             mascot.on('gesture', (data) => {
-                logEvent('gesture', `Gesture executed: ${data.name}`, data);
+                logEvent('gesture', 'Gesture executed: ' + data.name, data);
             });
-
-            // Listen for shape morph events
             mascot.on('shapeMorphStarted', (data) => {
-                logEvent('system', `Shape morphing: ${data.from} → ${data.to}`, data);
+                logEvent('system', 'Shape morphing: ' + data.from + ' \u2192 ' + data.to, data);
             });
-
-            // Listen for resize events
             mascot.on('resize', (data) => {
-                logEvent('system', `Canvas resized: ${data.width}x${data.height}`, data);
+                logEvent('system', 'Canvas resized: ' + data.width + 'x' + data.height, data);
             });
+            mascot.on('paused', () => logEvent('system', 'Animation paused'));
+            mascot.on('resumed', () => logEvent('system', 'Animation resumed'));
+            mascot.on('performanceDegradation', (data) => logEvent('system', 'Performance degradation applied', data));
+            mascot.on('performanceRecovery', (data) => logEvent('system', 'Performance recovered', data));
 
-            // Listen for pause/resume events
-            mascot.on('paused', () => {
-                logEvent('system', 'Animation paused');
-            });
-
-            mascot.on('resumed', () => {
-                logEvent('system', 'Animation resumed');
-            });
-
-            // Listen for performance events
-            mascot.on('performanceDegradation', (data) => {
-                logEvent('system', 'Performance degradation applied', data);
-            });
-
-            mascot.on('performanceRecovery', (data) => {
-                logEvent('system', 'Performance recovered', data);
-            });
-
-            logEvent('system', 'Event listeners registered successfully');
-            console.log('📡 Listening for: gesture, shapeMorphStarted, resize, paused, resumed, performance events');
+            logEvent('system', 'Event listeners registered');
         }
 
-        // STEP 3: Trigger actions
         function triggerEmotion(emotion) {
             if (!mascot) return;
-
             mascot.setEmotion(emotion);
-
-            // Manual log for emotion changes (no event emitted by setEmotion currently)
-            logEvent('emotion', `Emotion changed to: ${emotion}`, { emotion });
+            logEvent('emotion', 'Emotion changed to: ' + emotion, { emotion });
         }
 
         function triggerGesture(gesture) {
             if (!mascot) return;
-
-            // Gesture events are emitted automatically, no manual logging needed!
             mascot.express(gesture);
         }
 
-        // STEP 4: Log events to UI
-        function logEvent(type, message, data = null) {
+        function logEvent(type, message, data) {
             if (isPaused) return;
 
-            const event = {
-                type,
-                message,
-                data,
+            var event = {
+                type: type,
+                message: message,
+                data: data || null,
                 timestamp: new Date().toLocaleTimeString()
             };
 
             eventLog.unshift(event);
+            if (eventLog.length > 100) eventLog.pop();
 
-            // Keep log size manageable
-            if (eventLog.length > 100) {
-                eventLog.pop();
-            }
-
-            // Update stats
             stats.total++;
-            if (stats[type] !== undefined) {
-                stats[type]++;
-            }
-            updateStats();
+            if (stats[type] !== undefined) stats[type]++;
+            updateEventStats();
 
-            // Display if matches filter
             if (currentFilter === 'all' || currentFilter === type) {
                 displayEvent(event);
             }
         }
 
         function displayEvent(event) {
-            const logElement = document.getElementById('event-log');
+            var logEl = document.getElementById('event-log');
+            var entry = document.createElement('div');
+            entry.className = 'event-entry ' + event.type;
 
-            const entry = document.createElement('div');
-            entry.className = `event-entry ${event.type}`;
-
-            let html = `
-                <span class="event-time">${event.timestamp}</span>
-                <span class="event-type">[${event.type}]</span>
-            `;
-
-            html += `<div class="event-data">${event.message}</div>`;
+            var html = '<span class="event-time">' + event.timestamp + '</span>' +
+                       '<span class="event-type">[' + event.type + ']</span>' +
+                       '<div class="event-data">' + event.message + '</div>';
 
             if (event.data) {
-                html += `<div class="event-data">${JSON.stringify(event.data, null, 2)}</div>`;
+                html += '<div class="event-data">' + JSON.stringify(event.data, null, 2) + '</div>';
             }
 
             entry.innerHTML = html;
+            logEl.insertBefore(entry, logEl.firstChild);
 
-            logElement.insertBefore(entry, logElement.firstChild);
-
-            // Keep only last 50 visible
-            while (logElement.children.length > 50) {
-                logElement.removeChild(logElement.lastChild);
+            while (logEl.children.length > 50) {
+                logEl.removeChild(logEl.lastChild);
             }
         }
 
-        function setFilter(filter) {
+        function setFilter(filter, btn) {
             currentFilter = filter;
 
-            // Update button states
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
+            document.querySelectorAll('.filter-btn').forEach(function(b) {
+                b.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
 
-            // Redisplay filtered events
-            const logElement = document.getElementById('event-log');
-            logElement.innerHTML = '';
+            var logEl = document.getElementById('event-log');
+            logEl.innerHTML = '';
 
-            const filtered = currentFilter === 'all'
+            var filtered = currentFilter === 'all'
                 ? eventLog
-                : eventLog.filter(e => e.type === currentFilter);
+                : eventLog.filter(function(e) { return e.type === currentFilter; });
 
             filtered.slice(0, 50).forEach(displayEvent);
-
-            logEvent('system', `Filter changed to: ${filter}`);
+            logEvent('system', 'Filter changed to: ' + filter);
         }
 
         function clearLog() {
             eventLog = [];
-            stats = {
-                total: 0,
-                emotion: 0,
-                gesture: 0,
-                system: 0
-            };
+            stats = { total: 0, emotion: 0, gesture: 0, system: 0 };
             document.getElementById('event-log').innerHTML = '';
-            updateStats();
+            updateEventStats();
             logEvent('system', 'Event log cleared');
         }
 
         function togglePause() {
             isPaused = !isPaused;
-            const btn = document.getElementById('pause-btn');
+            var btn = document.getElementById('pause-btn');
             btn.textContent = isPaused ? 'Resume' : 'Pause';
-            btn.style.background = isPaused ? '#48bb78' : '';
-
-            if (!isPaused) {
-                logEvent('system', 'Event logging resumed');
-            }
+            btn.style.background = isPaused ? 'rgba(102, 126, 234, 0.25)' : '';
+            if (!isPaused) logEvent('system', 'Event logging resumed');
         }
 
-        function updateStats() {
+        function updateEventStats() {
             document.getElementById('total-events').textContent = stats.total;
             document.getElementById('emotion-count').textContent = stats.emotion;
             document.getElementById('gesture-count').textContent = stats.gesture;
         }
-
-        // Initialize
-        init();
     </script>
 </body>
 </html>

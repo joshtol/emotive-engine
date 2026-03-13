@@ -1,3 +1,4 @@
+import './examples.css'
 import EmotiveHeader from '@/components/EmotiveHeader'
 import EmotiveFooter from '@/components/EmotiveFooter'
 

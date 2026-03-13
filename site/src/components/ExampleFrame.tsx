@@ -56,7 +56,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     <main style={{
       minHeight: 'calc(100vh - 80px)',
       background: '#0a0a0a',
-      paddingTop: '80px',
+      paddingTop: 0,
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
@@ -83,7 +83,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
         style={{
           flex: 1,
           width: '100%',
-          height: 'calc(100vh - 80px)',
+          height: '100vh',
           border: 'none',
           background: '#0a0a0a',
           opacity: isLoading ? 0 : 1,

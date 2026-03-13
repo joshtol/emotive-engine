@@ -6,14 +6,13 @@ import Link from 'next/link'
 const CATEGORY_COLORS: Record<string, string> = {
   '2d':  '#38bdf8',
   '3d':  '#a78bfa',
-  'llm': '#67e8f9',
 }
 
 interface Example {
   id: string
   title: string
   description: string
-  category: '2d' | '3d' | 'llm'
+  category: '2d' | '3d'
   path: string
   preview?: string          // screenshot/gif path — placeholder gradient if missing
   featured?: boolean        // spans 2 columns on desktop
@@ -65,14 +64,6 @@ const examples: Example[] = [
     path: '/examples/3d/showcase',
     preview: '/screenshots/examples/3d-showcase-portrait.webm',
     portrait: true,
-  },
-  {
-    id: 'claude-haiku',
-    title: 'Claude Chat',
-    description: 'Emotional AI assistant with Claude Haiku integration.',
-    category: 'llm',
-    path: '/examples/llm/claude-chat',
-    preview: '/screenshots/examples/claude-chat.webm',
   },
   {
     id: 'dual-mascot',

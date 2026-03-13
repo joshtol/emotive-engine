@@ -49,7 +49,6 @@ jobs:
           # and examples/ for 2D (which don't need bundled Three.js)
           mkdir -p _pages/examples
           cp -r examples/2d _pages/examples/2d 2>/dev/null || true
-          cp -r examples/llm-integration _pages/examples/llm-integration 2>/dev/null || true
           cp examples/*.css _pages/examples/ 2>/dev/null || true
           # 3D examples from site/public use bundled imports that work in browsers
           cp -r site/public/examples/3d _pages/examples/3d
@@ -573,7 +572,6 @@ jobs:
                 <div class="hero-badges">
                   <span class="badge webgl">WebGL 3D</span>
                   <span class="badge canvas">Canvas 2D</span>
-                  <span class="badge ai">LLM Ready</span>
                 </div>
               </header>
 
@@ -824,38 +822,6 @@ jobs:
                 </div>
               </section>
 
-              <!-- LLM Integration -->
-              <section class="section">
-                <div class="section-header">
-                  <div class="section-icon ai">&#x1F916;</div>
-                  <h2>LLM Integration</h2>
-                  <span class="section-count">1 demo</span>
-                </div>
-
-                <div class="bento-grid">
-                  <a href="examples/llm-integration/claude-haiku.html" class="card medium">
-                    <div class="card-preview">
-                      <img src="assets/previews/claude-chat.gif" alt="Claude Chat" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                      <div class="preview-placeholder" style="display:none"><span class="icon">&#x1F4AC;</span></div>
-                    </div>
-                    <div class="card-content">
-                      <div class="card-meta">
-                        <span class="card-category ai">AI</span>
-                        <span class="complexity">
-                          <span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star empty">&#9733;</span><span class="star empty">&#9733;</span>
-                        </span>
-                      </div>
-                      <h3>Claude Chat</h3>
-                      <p>Emotional AI assistant responding with emotions based on conversation sentiment.</p>
-                      <div class="card-tags">
-                        <span class="tag">Claude</span>
-                        <span class="tag">sentiment</span>
-                        <span class="tag">chat</span>
-                      </div>
-                    </div>
-                  </a>
-                </div>
-              </section>
 
               <!-- Footer -->
               <footer class="footer">

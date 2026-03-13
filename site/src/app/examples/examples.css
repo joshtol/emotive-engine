@@ -1,0 +1,298 @@
+/* ── Shared Example Page Styles ─────────────────────────── */
+
+/* Main container */
+.example-main {
+  min-height: calc(100vh - 160px);
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  color: white;
+  padding-top: 0;
+  padding-bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Gradient heading */
+.example-title {
+  font-size: 32px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #DD4A9A 0%, #4090CE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+/* Subtitle */
+.example-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 30px;
+}
+
+/* Canvas container — standard rectangle */
+.example-canvas {
+  border: 2px solid rgba(221, 74, 154, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+  margin-bottom: 30px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #1a1a2e 100%);
+}
+
+/* Canvas container — circular (breathing app) */
+.example-canvas-circle {
+  border: 2px solid rgba(221, 74, 154, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+  margin: 0 auto 30px;
+  overflow: hidden;
+  background: radial-gradient(circle, #0a0a1a 0%, #16213e 100%);
+  position: relative;
+  transition: box-shadow 0.3s ease;
+}
+.example-canvas-circle.active {
+  box-shadow: 0 8px 60px rgba(64, 144, 206, 0.4);
+}
+
+/* Canvas element */
+.example-canvas canvas {
+  width: 100%;
+  height: 100%;
+}
+.example-canvas-circle canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Section headers (Emotions, Shapes, Gestures, etc.) */
+.example-section-header {
+  color: #DD4A9A;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+/* Primary button — magenta */
+.example-btn {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  background: #DD4A9A;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(221, 74, 154, 0.3);
+}
+.example-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Secondary button — azure outline */
+.example-btn-secondary {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(64, 144, 206, 0.3);
+  border-radius: 8px;
+  background: rgba(64, 144, 206, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.example-btn-secondary:hover {
+  background: rgba(64, 144, 206, 0.3);
+  border-color: rgba(64, 144, 206, 0.5);
+}
+
+/* Large button variant */
+.example-btn-lg {
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Small button variant */
+.example-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* Danger / stop button */
+.example-btn-danger {
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: rgba(200, 60, 60, 0.8);
+  color: white;
+  cursor: pointer;
+}
+
+/* Toggle button (BPM presets, filters) */
+.example-btn-toggle {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.example-btn-toggle.active {
+  background: rgba(221, 74, 154, 0.3);
+  border-color: #DD4A9A;
+}
+
+/* Pill toggle (event filters) */
+.example-btn-pill {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.example-btn-pill.active {
+  background: rgba(64, 144, 206, 0.3);
+  border-color: #4090CE;
+  color: #4090CE;
+}
+
+/* Pattern button (breathing) */
+.example-btn-pattern {
+  padding: 16px 12px;
+  text-align: center;
+  border: 1px solid rgba(221, 74, 154, 0.3);
+  border-radius: 8px;
+  background: rgba(221, 74, 154, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.example-btn-pattern.active {
+  background: rgba(64, 144, 206, 0.3);
+  border-color: #4090CE;
+}
+
+/* Status bar — teal */
+.example-status {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  background: rgba(132, 207, 197, 0.2);
+  border: 1px solid rgba(132, 207, 197, 0.3);
+  color: #84CFC5;
+}
+
+/* Info box — magenta */
+.example-info {
+  max-width: 600px;
+  padding: 20px;
+  background: rgba(221, 74, 154, 0.1);
+  border: 1px solid rgba(221, 74, 154, 0.3);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Inline code in info boxes */
+.example-info code {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #84CFC5;
+}
+
+/* Stat card (breathing app) */
+.example-stat {
+  text-align: center;
+  padding: 16px;
+  background: rgba(42, 42, 42, 0.6);
+  border-radius: 12px;
+}
+.example-stat-label {
+  font-size: 12px;
+  color: #B8B8B8;
+  margin-bottom: 8px;
+}
+.example-stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #DD4A9A;
+}
+
+/* Event log viewer */
+.example-log {
+  height: 400px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12px;
+}
+.example-log-entry {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.example-log-time {
+  color: rgba(255, 255, 255, 0.4);
+}
+.example-log-type {
+  color: #DD4A9A;
+  margin-left: 8px;
+}
+.example-log-data {
+  color: #84CFC5;
+  margin-left: 8px;
+}
+.example-log-empty {
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 20px;
+}
+
+/* Phase overlay (breathing) */
+.example-phase-badge {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 20px;
+  color: #84CFC5;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Range input accent */
+.example-range {
+  width: 300px;
+  margin-bottom: 30px;
+  accent-color: #DD4A9A;
+}
+
+/* BPM display */
+.example-bpm {
+  font-size: 48px;
+  font-weight: 700;
+  color: #DD4A9A;
+  margin-bottom: 8px;
+}
+.example-beat-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}

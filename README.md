@@ -155,10 +155,6 @@ TypeScript definitions · Unified API
 <img src="assets/previews/rhythm.gif" alt="Rhythm Sync" width="100%" /><br/>
 <strong>Rhythm Sync</strong>
 </td>
-<td align="center" width="33%">
-<img src="assets/previews/claude-chat.gif" alt="Claude Chat" width="100%" /><br/>
-<strong>LLM Integration</strong>
-</td>
 </tr>
 </table>
 

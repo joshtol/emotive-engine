@@ -170,30 +170,6 @@ Generates the Quick Start demo GIF showing emotion transitions.
 
 ---
 
-## 🤖 AI Integration
-
-### **[llm-integration/claude-haiku.html](llm-integration/claude-haiku.html)** ⭐⭐⭐ Advanced
-
-Complete example integrating with Claude AI (Anthropic).
-
-**Features demonstrated:**
-
-- Two-panel chat interface (chat + mascot)
-- Demo responses with sentiment analysis
-- Real-time mascot reactions to conversation
-- Sentiment → emotion → shape → gesture mapping
-- Example prompts for quick testing
-- Works in demo mode (no API key required for testing)
-
-**Complexity:** ⭐⭐⭐ Advanced
-
-**Requires:** `npm run build:dev`
-
-**See also:** [llm-integration/README.md](llm-integration/README.md) for
-complete LLM integration guide
-
----
-
 ## 🛠️ Framework Integration Templates
 
 ### **[react-component.jsx](react-component.jsx)** ⭐⭐⭐⭐ Advanced
@@ -269,18 +245,17 @@ npm run serve
 
 ## 📖 All Examples Summary
 
-| Example                                                                    | Complexity        | Best For                |
-| -------------------------------------------------------------------------- | ----------------- | ----------------------- |
-| **[elemental-gestures.html](3d/elemental-gestures.html)**                  | ⭐⭐⭐ Advanced   | 3D elemental effects    |
-| **[hello-world.html](hello-world.html)**                                   | ⭐ Beginner       | First-time learning     |
-| **[basic-usage.html](basic-usage.html)**                                   | ⭐⭐ Intermediate | Learning all features   |
-| **[event-handling.html](event-handling.html)**                             | ⭐⭐ Intermediate | Event-driven apps       |
-| **[rhythm-sync-demo.html](rhythm-sync-demo.html)**                         | ⭐⭐⭐ Advanced   | Rhythm-based animations |
-| **[hero-banner-capture.html](hero-banner-capture.html)**                   | ⭐⭐ Intermediate | Creating banner assets  |
-| **[emotion-demo-capture.html](emotion-demo-capture.html)**                 | ⭐⭐ Intermediate | Creating demo GIFs      |
-| **[llm-integration/claude-haiku.html](llm-integration/claude-haiku.html)** | ⭐⭐⭐ Advanced   | AI integration          |
-| **[react-component.jsx](react-component.jsx)**                             | ⭐⭐⭐⭐ Advanced | React integration guide |
-| **[vue-component.vue](vue-component.vue)**                                 | ⭐⭐⭐⭐ Advanced | Vue integration guide   |
+| Example                                                    | Complexity        | Best For                |
+| ---------------------------------------------------------- | ----------------- | ----------------------- |
+| **[elemental-gestures.html](3d/elemental-gestures.html)**  | ⭐⭐⭐ Advanced   | 3D elemental effects    |
+| **[hello-world.html](hello-world.html)**                   | ⭐ Beginner       | First-time learning     |
+| **[basic-usage.html](basic-usage.html)**                   | ⭐⭐ Intermediate | Learning all features   |
+| **[event-handling.html](event-handling.html)**             | ⭐⭐ Intermediate | Event-driven apps       |
+| **[rhythm-sync-demo.html](rhythm-sync-demo.html)**         | ⭐⭐⭐ Advanced   | Rhythm-based animations |
+| **[hero-banner-capture.html](hero-banner-capture.html)**   | ⭐⭐ Intermediate | Creating banner assets  |
+| **[emotion-demo-capture.html](emotion-demo-capture.html)** | ⭐⭐ Intermediate | Creating demo GIFs      |
+| **[react-component.jsx](react-component.jsx)**             | ⭐⭐⭐⭐ Advanced | React integration guide |
+| **[vue-component.vue](vue-component.vue)**                 | ⭐⭐⭐⭐ Advanced | Vue integration guide   |
 
 ---
 
@@ -396,11 +371,8 @@ above. Many examples online use fake API methods that don't exist.
 1. **[hello-world.html](hello-world.html)** - Learn basic initialization
 2. **[basic-usage.html](basic-usage.html)** - Explore all core features
 3. **[event-handling.html](event-handling.html)** - Understand event system
-4. **[rhythm-sync-demo.html](rhythm-sync-demo.html)** - Advanced timing
-5. **[llm-integration/claude-haiku.html](llm-integration/claude-haiku.html)** -
-   AI integration
-
-**Want to use with React/Vue?**
+4. **[rhythm-sync-demo.html](rhythm-sync-demo.html)** - Advanced timing **Want
+   to use with React/Vue?**
 
 - Study HTML examples first to understand the real API
 - Then read the template files ([react-component.jsx](react-component.jsx),
@@ -551,7 +523,6 @@ mascot.on('resize', data => {
 - **[Main README](../README.md)** - Project overview and features
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
 - **[ARCHITECTURE.md](../docs/ARCHITECTURE.md)** - Codebase architecture
-- **[LLM Integration Guide](llm-integration/README.md)** - AI integration docs
 
 ---
 
@@ -563,9 +534,6 @@ Many online examples use **fake API methods** that don't exist:
 
 **❌ FAKE (don't use these):**
 
-- `handleLLMResponse()`
-- `configureLLMHandler()`
-- `getLLMPromptTemplate()`
 - `addGesture()` (use `express()` instead)
 - `blendEmotions()`
 - `queueGestures()`

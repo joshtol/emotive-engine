@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap');
+
 /**
  * Emotive Engine - Shared Example Styles
  * Brand-consistent styling for all example pages
@@ -10,70 +12,103 @@
 }
 
 body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #1a1a1a;
+    font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0c;
     color: #F2F1F1;
     min-height: 100vh;
-    padding: 40px 20px;
+    padding: clamp(12px, 2.5vw, 24px);
 }
 
-/* Header with logo */
+/* Header — no logo, just title */
 .example-header {
     display: flex;
     align-items: center;
     gap: 20px;
-    margin-bottom: 40px;
+    margin-bottom: 16px;
     justify-content: center;
 }
 
 .example-logo {
-    width: 60px;
-    height: auto;
-    filter: brightness(0) invert(1);
+    display: none;
 }
 
 .example-title {
-    font-size: 32px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #DD4A9A 0%, #4090CE 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: clamp(22px, 3.5vw, 32px);
+    font-weight: 700;
+    color: #F2F1F1;
+    letter-spacing: -0.03em;
 }
 
 .example-subtitle {
-    color: #B8B8B8;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #888;
     font-size: 14px;
     text-align: center;
     margin-bottom: 30px;
 }
 
-/* Canvas styling */
+/* Fluid tiling grid — tiles side-by-side on wide, stacks on narrow */
+.example-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(260px, 35vw, 380px), 1fr));
+    gap: clamp(16px, 2.5vw, 30px);
+    align-items: start;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Full-width children span all columns */
+.example-layout .full-width {
+    grid-column: 1 / -1;
+}
+
+/* Canvas container */
+.canvas-container {
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: transparent;
+    position: relative;
+    margin: 0 auto;
+}
+
+.canvas-container canvas {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 canvas {
-    border: 2px solid rgba(221, 74, 154, 0.3);
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.3);
-    box-shadow: 0 8px 32px rgba(221, 74, 154, 0.15);
+    border: none;
+    background: transparent;
 }
 
 /* Button styling */
 button {
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: 500;
-    border: none;
-    border-radius: 8px;
-    background: #DD4A9A;
-    color: #F2F1F1;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    padding: clamp(7px, 1vw, 10px) clamp(8px, 1.2vw, 12px);
+    font-size: clamp(10px, 1.2vw, 13px);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid rgba(102, 126, 234, 0.20);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #d4d0d0;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(221, 74, 154, 0.3);
+    transition: all 0.2s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 button:hover {
-    background: rgba(221, 74, 154, 0.8);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(221, 74, 154, 0.4);
+    background: rgba(102, 126, 234, 0.12);
+    border-color: rgba(102, 126, 234, 0.35);
+    color: #F2F1F1;
 }
 
 button:active {
@@ -81,128 +116,246 @@ button:active {
 }
 
 button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+}
+
+/* Primary button */
+button.primary {
+    background: rgba(102, 126, 234, 0.25);
+    border-color: rgba(102, 126, 234, 0.40);
+    color: #a0b4f0;
+}
+
+button.primary:hover {
+    background: rgba(102, 126, 234, 0.35);
+    border-color: rgba(102, 126, 234, 0.50);
 }
 
 /* Secondary button variant */
 button.secondary {
-    background: rgba(64, 144, 206, 0.2);
-    border: 1px solid rgba(64, 144, 206, 0.3);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    color: #d4d0d0;
 }
 
 button.secondary:hover {
-    background: rgba(64, 144, 206, 0.3);
+    background: rgba(102, 126, 234, 0.12);
+    border-color: rgba(102, 126, 234, 0.40);
 }
 
-/* Info boxes */
+/* Active/selected state */
+button.active {
+    background: rgba(102, 126, 234, 0.20);
+    border-color: rgba(102, 126, 234, 0.40);
+    color: #a0b4f0;
+}
+
+/* Emotion buttons with SVG icons */
+.emotion-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+    overflow: hidden;
+}
+
+.emotion-btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.emotion-icon {
+    width: clamp(16px, 1.8vw, 20px);
+    height: clamp(16px, 1.8vw, 20px);
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.shape-icon {
+    filter: invert(0.75) sepia(0.2) saturate(0.5) hue-rotate(190deg) brightness(1.2);
+}
+
+/* Active emotion indicator */
+.emotion-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: clamp(12px, 2vw, 20px);
+}
+
+.emotion-indicator img {
+    width: clamp(40px, 6vw, 64px);
+    height: clamp(40px, 6vw, 64px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    filter: drop-shadow(0 0 12px rgba(102, 126, 234, 0.3));
+}
+
+.emotion-indicator img.pop {
+    transform: scale(1.15);
+}
+
+.emotion-indicator .emotion-label {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a0b4f0;
+    margin-left: 12px;
+}
+
+/* Info boxes — matches homepage code block style */
 .example-info {
-    margin-top: 40px;
-    padding: 20px;
-    background: rgba(221, 74, 154, 0.1);
-    border: 1px solid rgba(221, 74, 154, 0.3);
-    border-radius: 8px;
-    color: #B8B8B8;
-    font-size: 14px;
-    line-height: 1.6;
+    margin-top: clamp(20px, 3vw, 40px);
+    padding: clamp(1rem, 2.5vw, 2rem) clamp(1.2rem, 3vw, 2.5rem);
+    background: rgba(10, 10, 12, 0.9);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    color: #888;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: clamp(0.75rem, 1.4vw, 0.9rem);
+    line-height: 1.8;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .example-info code {
     background: rgba(0, 0, 0, 0.4);
     padding: 2px 6px;
     border-radius: 4px;
-    color: #84CFC5;
-    font-family: 'Courier New', monospace;
+    color: #67e8f9;
+    font-size: 0.9em;
 }
 
 /* Control groups */
 .example-controls {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
     margin: 20px 0;
 }
 
 .control-group {
-    background: rgba(42, 42, 42, 0.6);
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid rgba(242, 241, 241, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    padding: clamp(12px, 2vw, 20px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .control-group h3 {
-    color: #DD4A9A;
-    font-size: 14px;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #888;
+    font-size: clamp(10px, 1vw, 12px);
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
+    letter-spacing: 0.08em;
+    margin-bottom: clamp(8px, 1.2vw, 12px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.control-group h3::after {
+    content: '\2212';
+    font-size: 16px;
+    line-height: 1;
+    color: rgba(102, 126, 234, 0.5);
+    transition: transform 0.2s ease;
+}
+
+.control-group h3.collapsed::after {
+    content: '+';
+}
+
+.control-group h3.collapsed {
+    margin-bottom: 0;
+}
+
+.control-group .collapsible-content {
+    transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+    max-height: 800px;
+    opacity: 1;
+    overflow: visible;
+}
+
+.control-group .collapsible-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
 }
 
 /* Status indicators */
 .status {
-    padding: 8px 16px;
+    padding: clamp(6px, 0.8vw, 8px) clamp(10px, 1.5vw, 16px);
     border-radius: 6px;
-    font-size: 14px;
+    font-size: clamp(11px, 1.2vw, 13px);
     text-align: center;
 }
 
 .status.success {
-    background: rgba(132, 207, 197, 0.2);
-    border: 1px solid rgba(132, 207, 197, 0.3);
-    color: #84CFC5;
+    background: rgba(103, 232, 249, 0.10);
+    border: 1px solid rgba(103, 232, 249, 0.20);
+    color: #67e8f9;
 }
 
 .status.error {
-    background: rgba(221, 74, 154, 0.2);
-    border: 1px solid rgba(221, 74, 154, 0.3);
-    color: #DD4A9A;
+    background: rgba(248, 113, 113, 0.10);
+    border: 1px solid rgba(248, 113, 113, 0.20);
+    color: #fca5a5;
 }
 
 .status.info {
-    background: rgba(64, 144, 206, 0.2);
-    border: 1px solid rgba(64, 144, 206, 0.3);
-    color: #4090CE;
+    background: rgba(102, 126, 234, 0.10);
+    border: 1px solid rgba(102, 126, 234, 0.20);
+    color: #a0b4f0;
+}
+
+/* Controls wrapper — fills grid cell */
+.controls {
+    width: 100%;
+}
+
+/* Button grids — fluid, auto-wrapping */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 14vw, 140px), 1fr)); gap: clamp(6px, 0.8vw, 10px); }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(90px, 12vw, 120px), 1fr)); gap: clamp(6px, 0.8vw, 10px); }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 14vw, 140px), 1fr)); gap: clamp(6px, 0.8vw, 10px); }
+.grid-5 { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(70px, 9vw, 90px), 1fr)); gap: clamp(6px, 0.8vw, 10px); }
+
+/* Control actions row (centered) */
+.control-actions {
+    display: flex;
+    gap: clamp(8px, 1.2vw, 12px);
+    justify-content: center;
+    margin-top: clamp(16px, 2.5vw, 30px);
+}
+
+.control-actions button {
+    min-width: clamp(120px, 16vw, 160px);
 }
 
 /* Links */
 a {
-    color: #DD4A9A;
+    color: #a78bfa;
     text-decoration: none;
     transition: color 0.2s;
 }
 
 a:hover {
-    color: #4090CE;
+    color: #67e8f9;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    body {
-        padding: 20px 10px;
-    }
-
-    .example-title {
-        font-size: 24px;
-    }
-
-    .example-header {
+/* Responsive — only for things auto-fit can't handle */
+@media (max-width: 480px) {
+    .control-actions {
         flex-direction: column;
-        gap: 10px;
     }
 
-    .example-logo {
-        width: 40px;
-    }
-
-    canvas {
-        max-width: 100%;
-        height: auto;
-    }
-
-    button {
-        padding: 10px 20px;
-        font-size: 14px;
+    .control-actions button {
+        width: 100%;
     }
 }
