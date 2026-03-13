@@ -56,6 +56,21 @@
         #status { color: #f88; font-size: 11px; min-width: 10px; }
         .hint { color: #333; font-size: 11px; margin-left: auto; }
 
+        /* ── Loading spinner (shown inside scene) ── */
+        #scene-loader {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: #050505; z-index: 100;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; font-family: monospace;
+        }
+        #scene-loader .spinner {
+            width: 24px; height: 24px; border: 2px solid #333;
+            border-top-color: #888; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #scene-loader .label { color: #666; font-size: 11px; }
+
         /* ── GIF options row ── */
         #gif-opts {
             display: none; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -135,6 +150,7 @@
                 <option value="moon">Moon Phases</option>
                 <option value="blood-moon">Blood Moon Eclipse ★</option>
                 <option value="sun">Solar Eclipse</option>
+                <option value="dual-mascot">Dual Mascot</option>
             </optgroup>
             <optgroup label="LLM">
                 <option value="claude-chat">Claude Chat</option>
@@ -178,6 +194,10 @@
 
     <!-- ── Scene (capture area) ── -->
     <div id="scene">
+        <div id="scene-loader">
+            <div class="spinner"></div>
+            <div class="label" id="loader-label">Loading…</div>
+        </div>
         <div id="align-frame">
             <div class="h"></div>
             <div class="v"></div>
@@ -294,7 +314,7 @@
                     { at: 1000, label: 'glow',           fn: m => { m.express('glow'); } },
                     { at: 2000, label: 'emerald+love',   fn: m => { m.setEmotion('love');    applySSSPreset(m, 'emerald');  m.express('pulse'); } },
                     { at: 3000, label: 'rough+ruby',     fn: m => { m.morphTo('rough');      applySSSPreset(m, 'ruby');     m.setEmotion('focused'); m.express('spin'); } },
-                    { at: 4000, label: 'sapphire+calm',  fn: m => { m.setEmotion('calm');    applySSSPreset(m, 'sapphire'); m.express('float'); } },
+                    { at: 4000, label: 'sapphire+calm',  fn: m => { m.setEmotion('calm');    applySSSPreset(m, 'sapphire'); m.express('sway'); } },
                     { at: 5000, label: 'crystal+quartz', fn: m => { m.morphTo('crystal');    applySSSPreset(m, 'quartz');   m.setEmotion('joy'); m.express('spin'); } },
                 ],
                 duration: 6000,
@@ -335,7 +355,7 @@
             },
             'moon': {
                 category: '3d', size: 'normal', label: 'Moon Phases',
-                cameraNudgeY: 0.06,
+                cameraNudgeY: 0.02,
                 config3d: {
                     coreGeometry: 'moon', enableParticles: false,
                     enableControls: false, autoRotate: false,
@@ -380,19 +400,47 @@
             },
             'sun': {
                 category: '3d', size: 'normal', label: 'Solar Eclipse',
+                cameraNudgeY: -0.02,
                 config3d: {
                     coreGeometry: 'sun', materialVariant: 'multiplexer',
                     enableParticles: false, enablePostProcessing: true,
                     enableShadows: false, enableControls: false,
                     autoRotate: true, enableBlinking: false, enableBreathing: false,
-                    cameraDistance: 1.3, assetBasePath: '/assets',
+                    cameraDistance: 0.95, assetBasePath: '/assets',
+                },
+                solarEclipseSweep: true,
+                sequence: [
+                    { at: 0, label: 'start', fn: () => {} },
+                ],
+                duration: 8000,
+            },
+
+            'dual-mascot': {
+                category: '3d', size: 'normal', label: 'Dual Mascot',
+                dualMascot: true,
+                config3dA: {
+                    coreGeometry: 'crystal', enableParticles: true,
+                    enablePostProcessing: true, enableControls: false,
+                    autoRotate: true, autoRotateSpeed: 0.3,
+                    cameraDistance: 1.4, fov: 30,
+                    materialVariant: 'multiplexer',
+                    assetBasePath: '/assets',
+                    enableBlinking: false, enableBreathing: true,
+                },
+                config3dB: {
+                    coreGeometry: 'moon', enableParticles: true,
+                    enablePostProcessing: true, enableControls: false,
+                    autoRotate: true, cameraDistance: 1.3, fov: 30,
+                    enableBlinking: false, enableBreathing: false,
+                    assetBasePath: '/assets',
                 },
                 sequence: [
-                    { at: 0,    label: 'joy',     fn: m => m.setEmotion('joy') },
-                    { at: 1500, label: 'neutral', fn: m => m.setEmotion('neutral') },
-                    { at: 3000, label: 'calm',    fn: m => m.setEmotion('calm') },
+                    { at: 0,    label: 'joy+calm',       fn: (m, m2) => { m.setEmotion('joy');        m2.setEmotion('calm');     m.express('bounce'); m2.express('sway'); } },
+                    { at: 1500, label: 'love+surprise',   fn: (m, m2) => { m.setEmotion('love');       m2.setEmotion('surprise'); m.express('pulse');  m2.express('breathe'); } },
+                    { at: 3000, label: 'excited+love',    fn: (m, m2) => { m.setEmotion('excitement'); m2.setEmotion('love');     m.express('twist');  m2.express('glow'); } },
+                    { at: 4500, label: 'calm+joy',        fn: (m, m2) => { m.setEmotion('calm');       m2.setEmotion('joy');      m.express('wobble'); m2.express('sway'); } },
                 ],
-                duration: 4500,
+                duration: 6000,
             },
 
             // ── LLM ──────────────────────────────────────────────
@@ -419,8 +467,14 @@
         const loopCountEl = document.getElementById('loop-count');
         const loopPhaseEl = document.getElementById('loop-phase');
         const loopTimeEl  = document.getElementById('loop-time');
+        const sceneLoader = document.getElementById('scene-loader');
+        const loaderLabel = document.getElementById('loader-label');
+
+        // Lazy pool: presetId → { container, mascot, mascot2?, category }
+        const pool = {};
 
         let currentMascot    = null;
+        let secondMascot     = null;
         let currentPresetId  = null;
         let currentCategory  = null;
         let sequenceTimers   = [];
@@ -434,8 +488,17 @@
         let currentStepLabel = '';
 
         // Loop-synced recording
-        let pendingLoopRecord = false;  // armed — will start at next loop boundary
-        let loopRecording     = false;  // currently recording a loop
+        let pendingLoopRecord = false;
+        let loopRecording     = false;
+
+        // Force preserveDrawingBuffer for ALL WebGL contexts
+        const _origGetContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function(type, attrs) {
+            if (type === 'webgl' || type === 'webgl2') {
+                attrs = Object.assign({}, attrs, { preserveDrawingBuffer: true });
+            }
+            return _origGetContext.call(this, type, attrs);
+        };
 
         // ═══════════════════════════════════════════════════════════════
         // SCENE SIZING
@@ -468,9 +531,7 @@
 
         // Render step markers on the progress bar
         function renderStepMarkers(preset) {
-            // Remove old markers
             progressBar.querySelectorAll('.step-marker').forEach(el => el.remove());
-
             if (!preset.sequence || preset.duration <= 0) return;
             preset.sequence.forEach(step => {
                 const pct = (step.at / preset.duration) * 100;
@@ -482,26 +543,21 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // DESTROY CURRENT MASCOT
+        // STOP CURRENT SEQUENCE — mascots stay alive in pool
         // ═══════════════════════════════════════════════════════════════
 
-        function destroyCurrent() {
+        function stopCurrent() {
             sequenceTimers.forEach(t => clearTimeout(t));
             sequenceTimers = [];
             if (shadowSweepRaf) { cancelAnimationFrame(shadowSweepRaf); shadowSweepRaf = null; }
 
-            if (currentMascot) {
-                try {
-                    if (typeof currentMascot.destroy === 'function') currentMascot.destroy();
-                    else if (typeof currentMascot.stop === 'function') currentMascot.stop();
-                } catch (e) { /* ignore */ }
-                currentMascot = null;
+
+            if (currentPresetId && pool[currentPresetId]) {
+                pool[currentPresetId].container.style.display = 'none';
             }
 
-            Array.from(scene.children).forEach(child => {
-                if (child.id !== 'align-frame') scene.removeChild(child);
-            });
-
+            currentMascot   = null;
+            secondMascot    = null;
             currentCategory = null;
             loopCount = 0;
             loopCountEl.textContent = 'Loop 0';
@@ -509,67 +565,93 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // INIT 2D / 3D
+        // LAZY INIT — create mascot on first use, cache for reuse
         // ═══════════════════════════════════════════════════════════════
 
-        function init2D(preset) {
+        function createEntry2D(preset, w, h) {
             const EmotiveMascot = window.EmotiveMascot?.default || window.EmotiveMascot;
-            if (!EmotiveMascot) { setStatus('❌ EmotiveMascot (2D) not loaded'); return; }
+            if (!EmotiveMascot) return null;
 
             const canvas    = document.createElement('canvas');
             canvas.className = 'mascot-2d';
-            canvas.width    = activeW;
-            canvas.height   = activeH;
-            canvas.style.width  = activeW + 'px';
-            canvas.style.height = activeH + 'px';
-            scene.appendChild(canvas);
+            canvas.width    = w;
+            canvas.height   = h;
+            canvas.style.width  = w + 'px';
+            canvas.style.height = h + 'px';
+
+            // Container must be visible during init so getBoundingClientRect works
+            const container = document.createElement('div');
+            container.style.cssText = `width:${w}px;height:${h}px;position:relative;`;
+            container.appendChild(canvas);
+            scene.appendChild(container);
 
             const mascot = new EmotiveMascot(preset.config);
             mascot.init(canvas);
             if (preset.backdrop) mascot.setBackdrop(preset.backdrop);
             mascot.start();
-
-            // Scale up to fill the wide rectangle (default is sized for square canvas)
             setTimeout(() => mascot.setScale({ core: preset.scale2d || 1.8 }), 100);
 
-            currentMascot   = mascot;
-            currentCategory = '2d';
+            return { container, mascot, mascot2: null, category: '2d' };
         }
 
-        function init3D(preset) {
-            const container   = document.createElement('div');
-            container.style.width  = activeW + 'px';
-            container.style.height = activeH + 'px';
-            container.style.position = 'relative';
-            scene.appendChild(container);
+        function createEntry3D(preset, w, h) {
+            if (preset.dualMascot) {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = `width:${w}px;height:${h}px;position:relative;`;
+                const inner = document.createElement('div');
+                inner.style.cssText = `width:${w}px;height:${h}px;display:flex;gap:0;`;
+                wrapper.appendChild(inner);
+                scene.appendChild(wrapper);
 
-            // Force preserveDrawingBuffer: true so GIF capture can read the canvas
-            const origGetContext = HTMLCanvasElement.prototype.getContext;
-            HTMLCanvasElement.prototype.getContext = function(type, attrs) {
-                if (type === 'webgl' || type === 'webgl2') {
-                    attrs = Object.assign({}, attrs, { preserveDrawingBuffer: true });
-                }
-                return origGetContext.call(this, type, attrs);
-            };
+                const halfW = Math.floor(w / 2);
+                const contA = document.createElement('div');
+                contA.style.cssText = `width:${halfW}px;height:${h}px;position:relative;`;
+                inner.appendChild(contA);
+                const contB = document.createElement('div');
+                contB.style.cssText = `width:${halfW}px;height:${h}px;position:relative;`;
+                inner.appendChild(contB);
+
+                const mascotA = new EmotiveMascot3D(preset.config3dA);
+                mascotA.init(contA);
+                mascotA.start();
+
+                const mascotB = new EmotiveMascot3D(preset.config3dB);
+                mascotB.init(contB);
+                mascotB.start();
+
+                return { container: wrapper, mascot: mascotA, mascot2: mascotB, category: '3d', halfW };
+            }
+
+            const container = document.createElement('div');
+            container.style.cssText = `width:${w}px;height:${h}px;position:relative;`;
+            scene.appendChild(container);
 
             const mascot = new EmotiveMascot3D(preset.config3d);
             mascot.init(container);
-
-            // Restore original getContext immediately after init
-            HTMLCanvasElement.prototype.getContext = origGetContext;
-
             mascot.start();
-            currentMascot   = mascot;
-            currentCategory = '3d';
 
-            setTimeout(() => {
-                const cam = mascot.core3D?.renderer?.camera;
+            return { container, mascot, mascot2: null, category: '3d' };
+        }
+
+        function applyCameraNudge(entry, preset, w, h) {
+            if (entry.category !== '3d') return;
+            if (entry.mascot2) {
+                [entry.mascot, entry.mascot2].forEach(m => {
+                    const cam = m.core3D?.renderer?.camera;
+                    if (cam) {
+                        cam.position.y += (preset.cameraNudgeY ?? 0.04);
+                        cam.aspect = entry.halfW / h;
+                        cam.updateProjectionMatrix();
+                    }
+                });
+            } else {
+                const cam = entry.mascot.core3D?.renderer?.camera;
                 if (cam) {
                     cam.position.y += (preset.cameraNudgeY ?? 0.04);
-                    cam.aspect = activeW / activeH;
+                    cam.aspect = w / h;
                     cam.updateProjectionMatrix();
                 }
-            }, 500);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -578,10 +660,12 @@
 
         let shadowSweepRaf = null;
 
+
         function runSequence(preset) {
             sequenceTimers.forEach(t => clearTimeout(t));
             sequenceTimers = [];
             if (shadowSweepRaf) { cancelAnimationFrame(shadowSweepRaf); shadowSweepRaf = null; }
+
 
             function scheduleLoop() {
                 // Loop boundary — update tracking
@@ -638,11 +722,62 @@
                     eclipseTick();
                 }
 
+                // Solar eclipse sweep: off → total → off → annular → off
+                if (preset.solarEclipseSweep && currentMascot) {
+                    const sweepStart = Date.now();
+                    const dur = preset.duration;
+                    // Each phase is 1/4 of total duration
+                    const phase = dur / 4; // 2000ms each
+
+                    try {
+                        currentMascot.core3D.setSunShadow('off');
+                    } catch(e) {}
+
+                    function solarTick() {
+                        if (paused) { shadowSweepRaf = requestAnimationFrame(solarTick); return; }
+                        const elapsed = Date.now() - sweepStart;
+                        const t = Math.min(elapsed / dur, 1);
+
+                        try {
+                            const eclipse = currentMascot.core3D.solarEclipse;
+                            if (!eclipse) { shadowSweepRaf = requestAnimationFrame(solarTick); return; }
+
+                            if (elapsed < phase) {
+                                // Phase 1: off → total (shadow sweeps -2 → 0)
+                                const p = elapsed / phase;
+                                if (p < 0.01) currentMascot.core3D.setSunShadow('total');
+                                eclipse.setManualShadowPosition(-2.0 + 2.0 * p);
+                                currentStepLabel = `total in ${(p * 100).toFixed(0)}%`;
+                            } else if (elapsed < phase * 2) {
+                                // Phase 2: total → off (shadow sweeps 0 → +2)
+                                const p = (elapsed - phase) / phase;
+                                eclipse.setManualShadowPosition(2.0 * p);
+                                currentStepLabel = `total out ${(p * 100).toFixed(0)}%`;
+                            } else if (elapsed < phase * 3) {
+                                // Phase 3: off → annular (shadow sweeps -2 → 0)
+                                const p = (elapsed - phase * 2) / phase;
+                                if (p < 0.01) currentMascot.core3D.setSunShadow('annular');
+                                eclipse.setManualShadowPosition(-2.0 + 2.0 * p);
+                                currentStepLabel = `annular in ${(p * 100).toFixed(0)}%`;
+                            } else {
+                                // Phase 4: annular → off (shadow sweeps 0 → +2)
+                                const p = (elapsed - phase * 3) / phase;
+                                eclipse.setManualShadowPosition(2.0 * p);
+                                currentStepLabel = `annular out ${(p * 100).toFixed(0)}%`;
+                            }
+                        } catch(e) {}
+
+                        loopPhaseEl.textContent = currentStepLabel;
+                        if (t < 1) shadowSweepRaf = requestAnimationFrame(solarTick);
+                    }
+                    solarTick();
+                }
+
                 // Schedule each step
                 preset.sequence.forEach(step => {
                     const t = setTimeout(() => {
                         if (!paused && currentMascot) {
-                            try { step.fn(currentMascot); } catch(e) { console.warn('Step error:', e); }
+                            try { step.fn(currentMascot, secondMascot); } catch(e) { console.warn('Step error:', e); }
                             currentStepLabel = step.label || '';
                             loopPhaseEl.textContent = currentStepLabel;
                         }
@@ -659,6 +794,7 @@
                         progressFill.classList.remove('recording');
                     }
                     if (shadowSweepRaf) { cancelAnimationFrame(shadowSweepRaf); shadowSweepRaf = null; }
+        
 
                     if (!paused) scheduleLoop();
                 }, preset.duration);
@@ -681,7 +817,7 @@
             const preset = EXAMPLES[id];
             if (!preset) { setStatus(`❌ Unknown: ${id}`); return; }
 
-            destroyCurrent();
+            stopCurrent();
             currentPresetId = id;
             paused = false;
             pendingLoopRecord = false;
@@ -691,19 +827,51 @@
             setSceneSize(sz.w, sz.h);
             renderStepMarkers(preset);
 
-            setStatus(`Loading ${preset.label}…`);
+            let entry = pool[id];
 
-            if (preset.category === '2d') {
-                init2D(preset);
-            } else {
-                init3D(preset);
+            if (!entry) {
+                // First time — show loader, create mascot, wait for settle
+                sceneLoader.style.display = 'flex';
+                loaderLabel.textContent = `Loading ${preset.label}…`;
+                setStatus(`Loading ${preset.label}…`);
+
+                // Yield a frame so the loader is visible
+                await new Promise(r => requestAnimationFrame(r));
+
+                try {
+                    if (preset.category === '2d') {
+                        entry = createEntry2D(preset, sz.w, sz.h);
+                    } else {
+                        entry = createEntry3D(preset, sz.w, sz.h);
+                    }
+                    pool[id] = entry;
+                } catch (e) {
+                    console.error(`Failed to create ${id}:`, e);
+                    sceneLoader.style.display = 'none';
+                    setStatus(`❌ Failed: ${id}`);
+                    return;
+                }
+
+                // Wait for GPU to finish (shaders, textures, models)
+                const settleMs = preset.category === '3d' ? 2500 : 400;
+                await new Promise(r => setTimeout(r, settleMs));
+
+                // Apply camera nudge after settle
+                if (entry.category === '3d') {
+                    applyCameraNudge(entry, preset, sz.w, sz.h);
+                }
+
+                sceneLoader.style.display = 'none';
             }
 
-            const startDelay = preset.category === '3d' ? 2500 : 500;
-            setTimeout(() => {
-                runSequence(preset);
-                setStatus('');
-            }, startDelay);
+            // Show cached container
+            entry.container.style.display = 'block';
+            currentMascot   = entry.mascot;
+            secondMascot    = entry.mascot2 || null;
+            currentCategory = entry.category;
+
+            runSequence(preset);
+            setStatus('');
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -715,13 +883,23 @@
             outCtx.fillRect(0, 0, activeW, activeH);
 
             if (currentCategory === '3d') {
-                // Use drawImage on the WebGL canvas — reads the composited front buffer,
-                // no Y-flip needed, works regardless of preserveDrawingBuffer setting
-                const threeCanvas = currentMascot?.core3D?.renderer?.renderer?.domElement;
-                if (!threeCanvas) return false;
-                outCtx.drawImage(threeCanvas, 0, 0, activeW, activeH);
+                if (secondMascot) {
+                    // Dual mascot: draw both canvases side by side
+                    const halfW = Math.floor(activeW / 2);
+                    const canvasA = currentMascot?.core3D?.renderer?.renderer?.domElement;
+                    const canvasB = secondMascot?.core3D?.renderer?.renderer?.domElement;
+                    if (canvasA) outCtx.drawImage(canvasA, 0, 0, halfW, activeH);
+                    if (canvasB) outCtx.drawImage(canvasB, halfW, 0, halfW, activeH);
+                } else {
+                    // Use drawImage on the WebGL canvas — reads the composited front buffer,
+                    // no Y-flip needed, works regardless of preserveDrawingBuffer setting
+                    const threeCanvas = currentMascot?.core3D?.renderer?.renderer?.domElement;
+                    if (!threeCanvas) return false;
+                    outCtx.drawImage(threeCanvas, 0, 0, activeW, activeH);
+                }
             } else {
-                const src = scene.querySelector('canvas.mascot-2d');
+                const entry = currentPresetId ? pool[currentPresetId] : null;
+                const src = entry?.container?.querySelector('canvas.mascot-2d');
                 if (!src) return false;
                 outCtx.drawImage(src, 0, 0, activeW, activeH);
             }

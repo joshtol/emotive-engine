@@ -111,6 +111,14 @@ const examples: Example[] = [
     path: '/examples/3d/sun',
     preview: '/screenshots/examples/sun.gif',
   },
+  {
+    id: 'dual-mascot',
+    title: 'Dual Mascot',
+    description: 'Two independent 3D mascots running simultaneously on one page.',
+    category: '3d',
+    path: '/examples/3d/dual-mascot',
+    preview: '/screenshots/examples/dual-mascot.gif',
+  },
   // ── LLM Integration ────────────────────────────────────────
   {
     id: 'claude-haiku',
@@ -218,7 +226,7 @@ export default function ExamplesPage() {
           color: '#888',
           lineHeight: 1.5,
         }}>
-          11 examples. 2D Canvas, 3D WebGL, LLM integration.
+          12 examples. 2D Canvas, 3D WebGL, LLM integration.
         </p>
 
         {/* Category filter */}
