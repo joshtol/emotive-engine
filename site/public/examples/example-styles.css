@@ -338,6 +338,29 @@ button.active {
     min-width: clamp(120px, 16vw, 160px);
 }
 
+/* Tap button — large touch target for rhythm input */
+.tap-button {
+    width: 100%;
+    padding: clamp(14px, 2.5vw, 22px);
+    font-size: clamp(16px, 2.2vw, 20px);
+    background: rgba(102, 126, 234, 0.15);
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    color: #a0b4f0;
+    margin-bottom: 8px;
+}
+
+.tap-button:active { transform: scale(0.98); }
+
+/* Beat pulse animation for gesture buttons */
+@keyframes beatPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(102, 126, 234, 0.8); }
+}
+
+button.beat-pulse {
+    animation: beatPulse 0.3s ease;
+}
+
 /* Links */
 a {
     color: #a78bfa;

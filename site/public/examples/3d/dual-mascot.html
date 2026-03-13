@@ -91,64 +91,6 @@
             box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.1);
         }
 
-        /* Controls */
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .control-row button {
-            flex: 1;
-            min-width: 80px;
-        }
-
-        /* Button variants */
-        button.emotion {
-            background: rgba(var(--accent-rgb), 0.2);
-            border-color: rgba(var(--accent-rgb), 0.4);
-        }
-
-        button.emotion:hover {
-            background: rgba(var(--accent-rgb), 0.35);
-            border-color: rgba(var(--accent-rgb), 0.6);
-        }
-
-        button.gesture {
-            background: rgba(250, 180, 100, 0.2);
-            border-color: rgba(250, 180, 100, 0.4);
-        }
-
-        button.gesture:hover {
-            background: rgba(250, 180, 100, 0.35);
-            border-color: rgba(250, 180, 100, 0.6);
-        }
-
-        button.stop {
-            background: rgba(234, 102, 102, 0.2);
-            border-color: rgba(234, 102, 102, 0.4);
-        }
-
-        button.stop:hover {
-            background: rgba(234, 102, 102, 0.35);
-            border-color: rgba(234, 102, 102, 0.6);
-        }
-
-        button.start {
-            background: rgba(102, 234, 150, 0.2);
-            border-color: rgba(102, 234, 150, 0.4);
-        }
-
-        button.start:hover {
-            background: rgba(102, 234, 150, 0.35);
-            border-color: rgba(102, 234, 150, 0.6);
-        }
-
         /* Status indicator */
         .status {
             text-align: center;
@@ -183,7 +125,6 @@
         }
 
         .test-log {
-            font-family: 'Monaco', 'Menlo', monospace;
             font-size: 0.8rem;
             background: rgba(0, 0, 0, 0.4);
             border-radius: 8px;
@@ -249,18 +190,18 @@
             <div class="animation-container" id="container-1"></div>
             <div class="controls">
                 <div class="control-row">
-                    <button class="emotion" data-mascot="1" data-emotion="joy">Joy</button>
-                    <button class="emotion" data-mascot="1" data-emotion="sadness">Sad</button>
-                    <button class="emotion" data-mascot="1" data-emotion="excitement">Excited</button>
+                    <button class="btn-emotion" data-mascot="1" data-emotion="joy">Joy</button>
+                    <button class="btn-emotion" data-mascot="1" data-emotion="sadness">Sad</button>
+                    <button class="btn-emotion" data-mascot="1" data-emotion="excitement">Excited</button>
                 </div>
                 <div class="control-row">
-                    <button class="gesture" data-mascot="1" data-gesture="bounce">Bounce</button>
-                    <button class="gesture" data-mascot="1" data-gesture="sway">Sway</button>
-                    <button class="gesture" data-mascot="1" data-gesture="pulse">Pulse</button>
+                    <button class="btn-gesture" data-mascot="1" data-gesture="bounce">Bounce</button>
+                    <button class="btn-gesture" data-mascot="1" data-gesture="sway">Sway</button>
+                    <button class="btn-gesture" data-mascot="1" data-gesture="pulse">Pulse</button>
                 </div>
                 <div class="control-row">
-                    <button class="start" data-mascot="1" data-action="start">Start</button>
-                    <button class="stop" data-mascot="1" data-action="stop">Stop</button>
+                    <button class="btn-start" data-mascot="1" data-action="start">Start</button>
+                    <button class="btn-stop" data-mascot="1" data-action="stop">Stop</button>
                 </div>
             </div>
             <div class="status running" id="status-1">Running</div>
@@ -272,18 +213,18 @@
             <div class="animation-container" id="container-2"></div>
             <div class="controls">
                 <div class="control-row">
-                    <button class="emotion" data-mascot="2" data-emotion="calm">Calm</button>
-                    <button class="emotion" data-mascot="2" data-emotion="surprise">Surprise</button>
-                    <button class="emotion" data-mascot="2" data-emotion="love">Love</button>
+                    <button class="btn-emotion" data-mascot="2" data-emotion="calm">Calm</button>
+                    <button class="btn-emotion" data-mascot="2" data-emotion="surprise">Surprise</button>
+                    <button class="btn-emotion" data-mascot="2" data-emotion="love">Love</button>
                 </div>
                 <div class="control-row">
-                    <button class="gesture" data-mascot="2" data-gesture="sway">Sway</button>
-                    <button class="gesture" data-mascot="2" data-gesture="breathe">Breathe</button>
-                    <button class="gesture" data-mascot="2" data-gesture="glow">Glow</button>
+                    <button class="btn-gesture" data-mascot="2" data-gesture="sway">Sway</button>
+                    <button class="btn-gesture" data-mascot="2" data-gesture="breathe">Breathe</button>
+                    <button class="btn-gesture" data-mascot="2" data-gesture="glow">Glow</button>
                 </div>
                 <div class="control-row">
-                    <button class="start" data-mascot="2" data-action="start">Start</button>
-                    <button class="stop" data-mascot="2" data-action="stop">Stop</button>
+                    <button class="btn-start" data-mascot="2" data-action="start">Start</button>
+                    <button class="btn-stop" data-mascot="2" data-action="stop">Stop</button>
                 </div>
             </div>
             <div class="status running" id="status-2">Running</div>
@@ -292,7 +233,7 @@
 
     <div class="test-results">
         <h3>Test Log</h3>
-        <div class="test-log" id="test-log"></div>
+        <div class="test-log font-mono" id="test-log"></div>
     </div>
 
     <script type="module">

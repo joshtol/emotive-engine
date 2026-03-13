@@ -41,40 +41,8 @@
                 #5a4a40 100%);
         }
 
-        /* Crystal container */
-        #crystal-container {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1;
-            border-radius: clamp(12px, 1.5vw, 20px);
-            /* Subtle glow around container */
-            box-shadow: 0 0 60px rgba(100, 200, 255, 0.15);
-        }
 
-        #crystal-container canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
 
-        /* Mobile responsive */
-        @media (max-width: 1000px) {
-            .emotion-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 600px) {
-            .emotion-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .emotion-grid button {
-                padding: clamp(6px, 0.6vw, 10px);
-                font-size: clamp(8px, 0.7vw, 10px);
-            }
-        }
     </style>
 </head>
 <body>

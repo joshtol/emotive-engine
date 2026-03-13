@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
 /**
  * EMOTIVE ENGINE - Shared Example Styles
  *
@@ -38,7 +40,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: var(--text-primary);
     width: 100%;
     height: 100vh;
@@ -47,6 +49,11 @@ body {
     /* Disable 300ms tap delay on mobile (iOS Safari, Chrome) */
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+}
+
+.font-mono,
+textarea {
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -98,6 +105,7 @@ body {
    COLLAPSIBLE HEADERS
    ═══════════════════════════════════════════════════════════════════════════ */
 h2 {
+    font-family: 'Montserrat', system-ui, sans-serif;
     font-size: clamp(11px, 1vw, 13px);
     margin-bottom: clamp(8px, 1vw, 12px);
     color: var(--text-secondary);
@@ -168,31 +176,159 @@ h2.collapsed {
     margin-bottom: clamp(8px, 1vw, 12px);
 }
 
+/* Scrollable button grid in side menus */
+.right-menu .button-grid {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.right-menu .button-grid::-webkit-scrollbar { width: 4px; }
+.right-menu .button-grid::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 2px; }
+.right-menu .button-grid::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb), 0.4); border-radius: 2px; }
+.right-menu .button-grid::-webkit-scrollbar-thumb:hover { background: rgba(var(--accent-rgb), 0.6); }
+
+/* Loading/empty states span full grid width */
+.button-grid > .loading-state,
+.button-grid > .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    opacity: 0.5;
+    font-size: 13px;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 30px;
+    opacity: 0.6;
+}
+
 button {
+    font-family: 'Montserrat', system-ui, sans-serif;
     padding: clamp(6px, 0.7vw, 10px) clamp(3px, 0.4vw, 6px);
-    background: var(--bg-button);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(var(--accent-rgb), 0.20);
+    color: #d4d0d0;
     border-radius: clamp(6px, 0.6vw, 8px);
     cursor: pointer;
     font-size: clamp(9px, 0.8vw, 11px);
-    transition: all 0.2s;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: clamp(2px, 0.3vw, 4px);
     min-width: 0;
     width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 button:hover {
-    background: var(--bg-button-hover);
-    border-color: rgba(var(--accent-rgb), 0.5);
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: rgba(var(--accent-rgb), 0.35);
+    color: #F2F1F1;
 }
 
 button.active {
-    background: rgba(var(--accent-rgb), 0.3);
-    border-color: rgba(var(--accent-rgb), 0.8);
+    background: rgba(var(--accent-rgb), 0.20);
+    border-color: rgba(var(--accent-rgb), 0.40);
+    color: rgba(var(--accent-rgb), 1);
+}
+
+/* Semantic button color variants */
+button.btn-emotion {
+    background: rgba(var(--accent-rgb), 0.2);
+    border-color: rgba(var(--accent-rgb), 0.4);
+}
+button.btn-emotion:hover {
+    background: rgba(var(--accent-rgb), 0.35);
+    border-color: rgba(var(--accent-rgb), 0.6);
+}
+
+button.btn-gesture {
+    background: rgba(250, 180, 100, 0.2);
+    border-color: rgba(250, 180, 100, 0.4);
+}
+button.btn-gesture:hover {
+    background: rgba(250, 180, 100, 0.35);
+    border-color: rgba(250, 180, 100, 0.6);
+}
+
+button.btn-stop {
+    background: rgba(234, 102, 102, 0.2);
+    border-color: rgba(234, 102, 102, 0.4);
+}
+button.btn-stop:hover {
+    background: rgba(234, 102, 102, 0.35);
+    border-color: rgba(234, 102, 102, 0.6);
+}
+
+button.btn-start {
+    background: rgba(102, 234, 150, 0.2);
+    border-color: rgba(102, 234, 150, 0.4);
+}
+button.btn-start:hover {
+    background: rgba(102, 234, 150, 0.35);
+    border-color: rgba(102, 234, 150, 0.6);
+}
+
+/* Gesture button — card-style with emoji + name */
+.gesture-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 8px;
+    min-height: 60px;
+    font-size: 11px;
+    line-height: 1.2;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s;
+}
+.gesture-btn .emoji { font-size: 18px; }
+.gesture-btn .name { word-break: break-word; text-align: center; }
+.gesture-btn:hover { transform: scale(1.05); }
+.gesture-btn.hidden { display: none; }
+
+/* Element-tinted gesture button hovers */
+.gesture-btn[data-element="fire"]:hover { border-color: rgba(249, 115, 22, 0.5); background: rgba(249, 115, 22, 0.15); }
+.gesture-btn[data-element="ice"]:hover { border-color: rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.15); }
+.gesture-btn[data-element="electric"]:hover { border-color: rgba(250, 204, 21, 0.5); background: rgba(250, 204, 21, 0.15); }
+.gesture-btn[data-element="water"]:hover { border-color: rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.15); }
+.gesture-btn[data-element="void"]:hover { border-color: rgba(168, 85, 247, 0.5); background: rgba(168, 85, 247, 0.15); }
+.gesture-btn[data-element="light"]:hover { border-color: rgba(254, 240, 138, 0.5); background: rgba(254, 240, 138, 0.15); }
+.gesture-btn[data-element="earth"]:hover { border-color: rgba(163, 163, 163, 0.5); background: rgba(163, 163, 163, 0.15); }
+.gesture-btn[data-element="nature"]:hover { border-color: rgba(74, 222, 128, 0.5); background: rgba(74, 222, 128, 0.15); }
+
+/* GPU monitor inline buttons */
+.gpu-monitor-btn {
+    font-size: 9px;
+    padding: 3px 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+    transition: color 0.15s;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+.gpu-monitor-btn:hover {
+    background: none;
+    border: none;
+    color: var(--accent);
+}
+.gpu-monitor-btn.btn-danger:hover {
+    color: #e85d5d;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -212,7 +348,7 @@ button.active {
 
 .slider-value {
     color: var(--accent);
-    font-family: monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     cursor: pointer;
     padding: 2px 4px;
     border-radius: 3px;
@@ -284,7 +420,7 @@ button.active {
 
 .slider-precision-value {
     font-size: 24px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     font-weight: 600;
     color: var(--accent);
     text-align: center;
@@ -344,7 +480,7 @@ button.active {
     display: flex;
     justify-content: space-between;
     font-size: 9px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     color: rgba(255, 255, 255, 0.35);
 }
 
@@ -404,7 +540,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 4px 12px;
     height: 22px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(var(--accent-rgb), 0.20);
     border-radius: 11px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -412,7 +548,7 @@ input[type="range"]::-moz-range-thumb {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: rgba(255, 255, 255, 0.4);
+    color: #d4d0d0;
 }
 
 /* Checkmark icon - always present but hidden when inactive */
@@ -426,8 +562,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .toggle-switch:hover {
-    border-color: rgba(255, 255, 255, 0.35);
-    color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(var(--accent-rgb), 0.35);
+    color: #F2F1F1;
 }
 
 .toggle-switch.active {
@@ -485,7 +621,12 @@ input[type="range"]::-moz-range-thumb {
 #mascot-container,
 #crystal-container,
 #sun-container,
-#animation-container {
+/* Shared 3D container sizing — use on any #*-container */
+#animation-container,
+#crystal-container,
+#moon-container,
+#sun-container,
+#mascot-container {
     width: 100%;
     height: 100%;
     max-width: 100%;
@@ -496,11 +637,11 @@ input[type="range"]::-moz-range-thumb {
     touch-action: none;
 }
 
-.animation-container canvas,
-#mascot-container canvas,
+#animation-container canvas,
 #crystal-container canvas,
+#moon-container canvas,
 #sun-container canvas,
-#animation-container canvas {
+#mascot-container canvas {
     width: 100% !important;
     height: 100% !important;
 }
@@ -701,27 +842,8 @@ button.toggle-btn.active::before {
 
 .emotion-grid button {
     padding: clamp(8px, 0.8vw, 12px);
-    font-size: clamp(9px, 0.8vw, 11px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: var(--bg-button);
-    color: white;
-    border-radius: clamp(6px, 0.6vw, 8px);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-.emotion-grid button:hover {
-    background: var(--bg-button-hover);
-    border-color: rgba(var(--accent-rgb), 0.5);
-}
-
-.emotion-grid button.active {
-    background: rgba(var(--accent-rgb), 0.3);
-    border-color: rgba(var(--accent-rgb), 0.8);
-}
 
 @media (max-width: 1000px) {
     .emotion-grid {
@@ -1195,7 +1317,7 @@ button.toggle-btn.active::before {
 
 .fader-value {
     font-size: 11px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     color: var(--layer-accent, var(--accent));
     min-width: 48px;
     text-align: right;
@@ -1219,10 +1341,10 @@ button.toggle-btn.active::before {
     width: 24px;
     height: 24px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(var(--accent-rgb), 0.20);
     border-radius: 4px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #d4d0d0;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -1236,9 +1358,9 @@ button.toggle-btn.active::before {
 }
 
 .fader-step:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: rgba(var(--accent-rgb), 0.35);
+    color: #F2F1F1;
 }
 
 .fader-step:active {
@@ -1279,7 +1401,7 @@ button.toggle-btn.active::before {
 .layer-card .slider-label > .slider-value {
     order: 3;
     font-size: 11px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     color: var(--layer-accent, var(--accent));
     min-width: 32px;
     text-align: right;
@@ -1331,7 +1453,7 @@ button.toggle-btn.active::before {
     color: rgba(255, 255, 255, 0.35);
     cursor: pointer;
     font-size: 8px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     transition: all 0.15s ease;
 }
 
@@ -1348,7 +1470,7 @@ button.toggle-btn.active::before {
 /* Strength value - positioned at golden ratio point */
 .strength-value {
     font-size: 11px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     color: var(--layer-accent, var(--accent));
     min-width: 40px;
     text-align: right;
@@ -1366,7 +1488,7 @@ button.toggle-btn.active::before {
 .strength-value-input {
     width: 48px;
     font-size: 11px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     color: var(--accent);
     text-align: right;
     padding: 2px 4px;
@@ -1571,7 +1693,7 @@ button.toggle-btn.active::before {
 /* Large value display */
 .precision-inline-value {
     font-size: 24px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     font-weight: 600;
     color: var(--accent);
     text-align: center;
@@ -1590,7 +1712,7 @@ button.toggle-btn.active::before {
 .precision-inline-input {
     width: 100%;
     font-size: 24px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     font-weight: 600;
     color: var(--accent);
     background: rgba(0, 0, 0, 0.4);
@@ -1666,7 +1788,7 @@ button.toggle-btn.active::before {
     display: flex;
     justify-content: space-between;
     font-size: 9px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     color: rgba(255, 255, 255, 0.35);
 }
 
@@ -1752,4 +1874,383 @@ button.toggle-btn.active::before {
         font-size: 28px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ELEMENT COLOR SYSTEM — Shared variables for elemental theming
+   ═══════════════════════════════════════════════════════════════════════════ */
+.element-fire { --element-color: #f97316; }
+.element-ice { --element-color: #38bdf8; }
+.element-electric { --element-color: #facc15; }
+.element-water { --element-color: #3b82f6; }
+.element-void { --element-color: #a855f7; }
+.element-light { --element-color: #fef08a; }
+.element-earth { --element-color: #a3a3a3; }
+.element-nature { --element-color: #4ade80; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FEATURED GESTURE PILL — Inline pill button in section headers
+   ═══════════════════════════════════════════════════════════════════════════ */
+.featured-gesture {
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(var(--accent-rgb), 0.20);
+    color: #d4d0d0;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    margin-left: auto;
+    margin-right: 4px;
+    flex-shrink: 0;
+    width: fit-content;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+}
+
+.featured-gesture:hover {
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: rgba(var(--accent-rgb), 0.35);
+    color: #F2F1F1;
+    box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.1);
+}
+
+.featured-gesture:active {
+    transform: scale(0.95);
+}
+
+/* Element-tinted featured pills */
+.featured-gesture[data-element="fire"] { background: rgba(249, 115, 22, 0.1); border-color: rgba(249, 115, 22, 0.3); color: #fb923c; }
+.featured-gesture[data-element="fire"]:hover { background: rgba(249, 115, 22, 0.2); border-color: rgba(249, 115, 22, 0.5); box-shadow: 0 0 8px rgba(249, 115, 22, 0.2); }
+.featured-gesture[data-element="ice"] { background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8; }
+.featured-gesture[data-element="ice"]:hover { background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 0 8px rgba(56, 189, 248, 0.2); }
+.featured-gesture[data-element="electric"] { background: rgba(250, 204, 21, 0.1); border-color: rgba(250, 204, 21, 0.3); color: #facc15; }
+.featured-gesture[data-element="electric"]:hover { background: rgba(250, 204, 21, 0.18); border-color: rgba(250, 204, 21, 0.5); box-shadow: 0 0 8px rgba(250, 204, 21, 0.2); }
+.featured-gesture[data-element="water"] { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+.featured-gesture[data-element="water"]:hover { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 8px rgba(59, 130, 246, 0.2); }
+.featured-gesture[data-element="void"] { background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3); color: #c084fc; }
+.featured-gesture[data-element="void"]:hover { background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.5); box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
+.featured-gesture[data-element="light"] { background: rgba(254, 240, 138, 0.1); border-color: rgba(254, 240, 138, 0.3); color: #fef08a; }
+.featured-gesture[data-element="light"]:hover { background: rgba(254, 240, 138, 0.18); border-color: rgba(254, 240, 138, 0.5); box-shadow: 0 0 8px rgba(254, 240, 138, 0.2); }
+.featured-gesture[data-element="earth"] { background: rgba(163, 163, 163, 0.1); border-color: rgba(163, 163, 163, 0.3); color: #d4d4d4; }
+.featured-gesture[data-element="earth"]:hover { background: rgba(163, 163, 163, 0.2); border-color: rgba(163, 163, 163, 0.5); box-shadow: 0 0 8px rgba(163, 163, 163, 0.2); }
+.featured-gesture[data-element="nature"] { background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80; }
+.featured-gesture[data-element="nature"]:hover { background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.5); box-shadow: 0 0 8px rgba(74, 222, 128, 0.2); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE GRID — Moon phase button layout
+   ═══════════════════════════════════════════════════════════════════════════ */
+.phase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(5px, 0.6vw, 8px);
+    margin-bottom: clamp(8px, 1vw, 12px);
+}
+
+@media (max-width: 1000px) {
+    .phase-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .phase-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEARCH & FILTER UI — Search box and checkbox filter patterns
+   ═══════════════════════════════════════════════════════════════════════════ */
+.search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.search-box input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(var(--accent-rgb), 0.20);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.search-box input:focus {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.filter-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-item input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.filter-item label {
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-count {
+    font-size: 10px;
+    opacity: 0.6;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 5px;
+    border-radius: 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATS GRID — Stat display cards
+   ═══════════════════════════════════════════════════════════════════════════ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.stat-label {
+    font-size: 11px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTROL LAYOUT — Flex row/column for button groups
+   ═══════════════════════════════════════════════════════════════════════════ */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-row {
+    display: flex;
+    gap: 8px;
+}
+
+.control-row button {
+    flex: 1;
+    min-width: 80px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOADING SPINNER — Shared animation for async loading states
+   ═══════════════════════════════════════════════════════════════════════════ */
+.loading-state .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION HEADER PATTERNS — Gesture counts, collapsed states, element icons
+   ═══════════════════════════════════════════════════════════════════════════ */
+.section h2 .gesture-count {
+    font-size: 11px;
+    font-weight: normal;
+    opacity: 0.6;
+    margin-left: 6px;
+}
+
+.section h2.collapsed .gesture-count {
+    display: none;
+}
+
+.section h2:not(.collapsed) .featured-gesture {
+    display: none;
+}
+
+.section h2 .element-icon {
+    margin-right: 6px;
+}
+
+/* Right-menu section layout */
+.right-menu {
+    display: flex;
+    flex-direction: column;
+}
+
+.right-menu > .section {
+    display: block;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.right-menu .section-content {
+    display: block;
+}
+
+.right-menu .section > h2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    font-size: clamp(11px, 1vw, 13px);
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    cursor: pointer;
+}
+
+/* Aggressive collapse — completely remove from layout */
+.section-content.collapsed {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHUFFLE BUTTON — Full-width accent-tinted action button
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shuffle-bar {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.shuffle-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: rgba(var(--accent-rgb), 0.15);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+    border-radius: 8px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.shuffle-btn:hover {
+    background: rgba(var(--accent-rgb), 0.25);
+    transform: scale(1.02);
+}
+
+.shuffle-btn:active {
+    transform: scale(0.98);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RECENT GESTURES — Quick-access pill buttons
+   ═══════════════════════════════════════════════════════════════════════════ */
+.recent-gestures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.recent-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+    background: rgba(var(--accent-rgb), 0.2);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+}
+
+.recent-btn:hover {
+    background: rgba(var(--accent-rgb), 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GESTURE TOOLTIP — Floating tooltip near center content
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gesture-tooltip {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(var(--accent-rgb), 0.5);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    line-height: 1.4;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.15s;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.gesture-tooltip.visible { opacity: 1; }
+
+body:has(.gesture-tooltip.visible) .camera-hint {
+    opacity: 0 !important;
+    animation: none !important;
+}
+
+.gesture-tooltip .tooltip-name { font-weight: bold; color: var(--accent); }
+.gesture-tooltip .tooltip-type { font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-left: 8px; }
+.gesture-tooltip .tooltip-desc { opacity: 0.8; margin-left: 8px; }
+
+/* Info box gesture display toggle */
+.info-gesture { display: none; }
+.info-box.showing-gesture .info-default { display: none; }
+.info-box.showing-gesture .info-gesture { display: block; }
 

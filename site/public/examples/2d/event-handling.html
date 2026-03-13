@@ -297,7 +297,7 @@
             isPaused = !isPaused;
             var btn = document.getElementById('pause-btn');
             btn.textContent = isPaused ? 'Resume' : 'Pause';
-            btn.style.background = isPaused ? 'rgba(102, 126, 234, 0.25)' : '';
+            btn.classList.toggle('active', isPaused);
             if (!isPaused) logEvent('system', 'Event logging resumed');
         }
 

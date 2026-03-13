@@ -33,414 +33,12 @@
             background: url('/assets/images/arch-bg.jpg') center/cover no-repeat;
         }
 
-        /* Element color accents */
-        .element-fire { --element-color: #f97316; }
-        .element-ice { --element-color: #38bdf8; }
-        .element-electric { --element-color: #facc15; }
-        .element-water { --element-color: #3b82f6; }
-        .element-void { --element-color: #a855f7; }
-        .element-light { --element-color: #fef08a; }
-        .element-earth { --element-color: #a3a3a3; }
-        .element-nature { --element-color: #4ade80; }
-
-        /* Gesture button enhancements */
-        .gesture-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 10px 8px;
-            min-height: 60px;
-            font-size: 11px;
-            line-height: 1.2;
-            transition: transform 0.15s, background 0.15s, border-color 0.15s;
-        }
-
-        .gesture-btn .emoji {
-            font-size: 18px;
-        }
-
-        .gesture-btn .name {
-            word-break: break-word;
-            text-align: center;
-        }
-
-        .gesture-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .gesture-btn.hidden {
-            display: none;
-        }
-
-        /* Element-specific button styling */
-        .gesture-btn[data-element="fire"]:hover {
-            border-color: rgba(249, 115, 22, 0.5);
-            background: rgba(249, 115, 22, 0.15);
-        }
-        .gesture-btn[data-element="ice"]:hover {
-            border-color: rgba(56, 189, 248, 0.5);
-            background: rgba(56, 189, 248, 0.15);
-        }
-        .gesture-btn[data-element="electric"]:hover {
-            border-color: rgba(250, 204, 21, 0.5);
-            background: rgba(250, 204, 21, 0.15);
-        }
-        .gesture-btn[data-element="water"]:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            background: rgba(59, 130, 246, 0.15);
-        }
-        .gesture-btn[data-element="void"]:hover {
-            border-color: rgba(168, 85, 247, 0.5);
-            background: rgba(168, 85, 247, 0.15);
-        }
-        .gesture-btn[data-element="light"]:hover {
-            border-color: rgba(254, 240, 138, 0.5);
-            background: rgba(254, 240, 138, 0.15);
-        }
-        .gesture-btn[data-element="earth"]:hover {
-            border-color: rgba(163, 163, 163, 0.5);
-            background: rgba(163, 163, 163, 0.15);
-        }
-        .gesture-btn[data-element="nature"]:hover {
-            border-color: rgba(74, 222, 128, 0.5);
-            background: rgba(74, 222, 128, 0.15);
-        }
-
-
-        /* Featured gesture pill in section headers */
-        .featured-gesture {
-            font-size: 11px;
-            padding: 6px 12px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.55);
-            cursor: pointer;
-            text-transform: none;
-            letter-spacing: 0.3px;
-            font-weight: 500;
-            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
-            margin-left: auto;
-            margin-right: 4px;
-            flex-shrink: 0;
-            width: fit-content;
-            line-height: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 50%;
-        }
-
-        .featured-gesture:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: white;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
-        }
-
-        .featured-gesture:active {
-            transform: scale(0.95);
-        }
-
-        /* Element-tinted featured pills */
-        .featured-gesture[data-element="fire"] {
-            background: rgba(249, 115, 22, 0.1);
-            border-color: rgba(249, 115, 22, 0.3);
-            color: #fb923c;
-        }
-        .featured-gesture[data-element="fire"]:hover {
-            background: rgba(249, 115, 22, 0.2);
-            border-color: rgba(249, 115, 22, 0.5);
-            box-shadow: 0 0 8px rgba(249, 115, 22, 0.2);
-        }
-        .featured-gesture[data-element="ice"] {
-            background: rgba(56, 189, 248, 0.1);
-            border-color: rgba(56, 189, 248, 0.3);
-            color: #38bdf8;
-        }
-        .featured-gesture[data-element="ice"]:hover {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: rgba(56, 189, 248, 0.5);
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
-        }
-        .featured-gesture[data-element="electric"] {
-            background: rgba(250, 204, 21, 0.1);
-            border-color: rgba(250, 204, 21, 0.3);
-            color: #facc15;
-        }
-        .featured-gesture[data-element="electric"]:hover {
-            background: rgba(250, 204, 21, 0.18);
-            border-color: rgba(250, 204, 21, 0.5);
-            box-shadow: 0 0 8px rgba(250, 204, 21, 0.2);
-        }
-        .featured-gesture[data-element="water"] {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.3);
-            color: #60a5fa;
-        }
-        .featured-gesture[data-element="water"]:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
-        }
-        .featured-gesture[data-element="void"] {
-            background: rgba(168, 85, 247, 0.1);
-            border-color: rgba(168, 85, 247, 0.3);
-            color: #c084fc;
-        }
-        .featured-gesture[data-element="void"]:hover {
-            background: rgba(168, 85, 247, 0.2);
-            border-color: rgba(168, 85, 247, 0.5);
-            box-shadow: 0 0 8px rgba(168, 85, 247, 0.2);
-        }
-        .featured-gesture[data-element="light"] {
-            background: rgba(254, 240, 138, 0.1);
-            border-color: rgba(254, 240, 138, 0.3);
-            color: #fef08a;
-        }
-        .featured-gesture[data-element="light"]:hover {
-            background: rgba(254, 240, 138, 0.18);
-            border-color: rgba(254, 240, 138, 0.5);
-            box-shadow: 0 0 8px rgba(254, 240, 138, 0.2);
-        }
-        .featured-gesture[data-element="earth"] {
-            background: rgba(163, 163, 163, 0.1);
-            border-color: rgba(163, 163, 163, 0.3);
-            color: #d4d4d4;
-        }
-        .featured-gesture[data-element="earth"]:hover {
-            background: rgba(163, 163, 163, 0.2);
-            border-color: rgba(163, 163, 163, 0.5);
-            box-shadow: 0 0 8px rgba(163, 163, 163, 0.2);
-        }
-        .featured-gesture[data-element="nature"] {
-            background: rgba(74, 222, 128, 0.1);
-            border-color: rgba(74, 222, 128, 0.3);
-            color: #4ade80;
-        }
-        .featured-gesture[data-element="nature"]:hover {
-            background: rgba(74, 222, 128, 0.2);
-            border-color: rgba(74, 222, 128, 0.5);
-            box-shadow: 0 0 8px rgba(74, 222, 128, 0.2);
-        }
-
-        /* Shuffle button */
-        .shuffle-bar {
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .shuffle-btn {
-            width: 100%;
-            padding: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            background: rgba(var(--accent-rgb), 0.15);
-            border: 1px solid rgba(var(--accent-rgb), 0.3);
-            border-radius: 8px;
-            color: var(--accent);
-            cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
-        }
-
-        .shuffle-btn:hover {
-            background: rgba(var(--accent-rgb), 0.25);
-            transform: scale(1.02);
-        }
-
-        .shuffle-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* Section headers with counts — hidden when collapsed, shown when expanded */
-        .section h2 .gesture-count {
-            font-size: 11px;
-            font-weight: normal;
-            opacity: 0.6;
-            margin-left: 6px;
-        }
-
-        .section h2.collapsed .gesture-count {
-            display: none;
-        }
-
-        .section h2:not(.collapsed) .featured-gesture {
-            display: none;
-        }
-
-        /* Section header element icons */
-        .section h2 .element-icon {
-            margin-right: 6px;
-        }
-
-        /* Hide collapsed sections properly */
-        .section-content.collapsed {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            overflow: hidden !important;
-        }
-
-        /* Right-menu sections */
-        .right-menu {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .right-menu > .section {
-            display: block;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .right-menu .section-content {
-            display: block;
-        }
-
-        .right-menu .section > h2 {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            background: none !important;
-            border: none !important;
-            padding: 0 !important;
-            min-height: auto !important;
-            font-size: clamp(11px, 1vw, 13px);
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            cursor: pointer;
-        }
-
-        /* Button grid scrollable */
-        .right-menu .button-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        /* Custom scrollbar */
-        .right-menu .button-grid::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .right-menu .button-grid::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 2px;
-        }
-
-        .right-menu .button-grid::-webkit-scrollbar-thumb {
-            background: rgba(var(--accent-rgb), 0.4);
-            border-radius: 2px;
-        }
-
-        .right-menu .button-grid::-webkit-scrollbar-thumb:hover {
-            background: rgba(var(--accent-rgb), 0.6);
-        }
-
-        .right-menu .button-grid > .gesture-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .button-grid > .loading-state,
-        .button-grid > .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 20px;
-            opacity: 0.5;
-            font-size: 13px;
-        }
-
-        .loading-state {
-            text-align: center;
-            padding: 30px;
-            opacity: 0.6;
-        }
-
-        .loading-state .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Gesture tooltip */
-        .gesture-tooltip {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid rgba(var(--accent-rgb), 0.5);
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 12px;
-            line-height: 1.4;
-            pointer-events: none;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.15s;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        .gesture-tooltip.visible {
-            opacity: 1;
-        }
-
-        body:has(.gesture-tooltip.visible) .camera-hint {
-            opacity: 0 !important;
-            animation: none !important;
-        }
-
-        .gesture-tooltip .tooltip-name {
-            font-weight: bold;
-            color: var(--accent);
-        }
-
+        /* Elemental tooltip uses .tooltip-element instead of .tooltip-type */
         .gesture-tooltip .tooltip-element {
             font-size: 10px;
             text-transform: uppercase;
             opacity: 0.6;
             margin-left: 8px;
-        }
-
-        .gesture-tooltip .tooltip-desc {
-            opacity: 0.8;
-            margin-left: 8px;
-        }
-
-        /* Info box gesture display */
-        .info-gesture {
-            display: none;
-        }
-
-        .info-box.showing-gesture .info-default {
-            display: none;
-        }
-
-        .info-box.showing-gesture .info-gesture {
-            display: block;
         }
 
         .info-box.showing-gesture {
@@ -1489,10 +1087,11 @@
                 // Hide tab (visible when monitor is hidden)
                 const showTab = document.createElement('div');
                 showTab.id = 'gpu-monitor-tab';
+                showTab.classList.add('font-mono');
                 showTab.style.cssText = `
                     position: absolute; right: 0; top: 8px;
                     background: var(--bg-panel); color: var(--text-muted);
-                    font-family: 'SF Mono', Monaco, Inconsolata, monospace; font-size: 9px;
+                    font-size: 9px;
                     padding: 4px 6px; border-radius: 4px 0 0 4px; z-index: 10;
                     cursor: pointer; user-select: none;
                     border: 1px solid var(--border-color); border-right: none;
@@ -1508,10 +1107,10 @@
                 // Main HUD panel
                 display = document.createElement('div');
                 display.id = 'gpu-monitor-display';
+                display.classList.add('font-mono');
                 display.style.cssText = `
                     position: absolute; right: 8px; top: 8px;
                     background: var(--bg-panel); color: var(--text-secondary);
-                    font-family: 'SF Mono', Monaco, Inconsolata, monospace;
                     font-size: 10px; padding: 10px 10px; border-radius: 6px; z-index: 10;
                     user-select: none; min-width: 72px;
                     border: 1px solid var(--border-color); backdrop-filter: blur(10px);
@@ -1601,10 +1200,9 @@
 
                     // Action buttons
                     html += `<div style="border-top:1px solid var(--border-color);margin:4px 0;"></div>`;
-                    const btnStyle = `font-size:9px;padding:3px 0;cursor:pointer;background:none;border:none;color:var(--text-muted);text-align:center;width:100%;transition:color 0.15s;`;
-                    html += `<button onclick="event.stopPropagation();gpuMonitor.copyToClipboard()" style="${btnStyle}" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color=''">Copy</button>`;
-                    html += `<button onclick="event.stopPropagation();gpuMonitor.resetPeaks()" style="${btnStyle}" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color=''">Reset</button>`;
-                    html += `<button onclick="event.stopPropagation();gpuMonitor.clear()" style="${btnStyle}" onmouseenter="this.style.color='#e85d5d'" onmouseleave="this.style.color=''">Clear</button>`;
+                    html += `<button class="gpu-monitor-btn" onclick="event.stopPropagation();gpuMonitor.copyToClipboard()">Copy</button>`;
+                    html += `<button class="gpu-monitor-btn" onclick="event.stopPropagation();gpuMonitor.resetPeaks()">Reset</button>`;
+                    html += `<button class="gpu-monitor-btn btn-danger" onclick="event.stopPropagation();gpuMonitor.clear()">Clear</button>`;
                 }
 
                 // Click area for expand/collapse (bottom)
