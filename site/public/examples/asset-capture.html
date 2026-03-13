@@ -142,7 +142,6 @@
             <optgroup label="2D Canvas">
                 <option value="hello-world">Hello World</option>
                 <option value="basic-usage">Basic Usage</option>
-                <option value="event-handling">Event Handling</option>
                 <option value="rhythm-sync">Rhythm Sync</option>
             </optgroup>
             <optgroup label="3D WebGL">
@@ -279,17 +278,6 @@
                     { at: 3600, label: 'love+heart',   fn: m => { m.setEmotion('love');    m.morphTo('heart');  m.express('glow'); } },
                 ],
                 duration: 5000,
-            },
-            'event-handling': {
-                category: '2d', size: 'normal', label: 'Event Handling',
-                config: { ..._2D, defaultEmotion: 'neutral' }, backdrop: _BD,
-                sequence: [
-                    { at: 0,    label: 'bounce', fn: m => { m.setEmotion('joy');     m.express('bounce'); } },
-                    { at: 1000, label: 'pulse',  fn: m => { m.setEmotion('excited'); m.express('pulse'); } },
-                    { at: 2000, label: 'glow',   fn: m => { m.setEmotion('focused'); m.express('glow'); } },
-                    { at: 3000, label: 'spin',   fn: m => { m.setEmotion('calm');    m.express('spin'); } },
-                ],
-                duration: 4000,
             },
             'rhythm-sync': {
                 category: '2d', size: 'normal', label: 'Rhythm Sync',

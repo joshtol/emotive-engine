@@ -48,15 +48,6 @@ const examples: Example[] = [
     preview: '/screenshots/examples/basic-usage.webm',
   },
   {
-    id: 'dual-mascot',
-    title: 'Dual Mascot',
-    description: 'Two independent 3D mascots running simultaneously on one page.',
-    category: '3d',
-    path: '/examples/3d/dual-mascot',
-    preview: '/screenshots/examples/dual-mascot-portrait.webm',
-    portrait: true,
-  },
-  {
     id: 'sun-demo',
     title: 'Solar Eclipse',
     description: 'Solar eclipse with corona effects and blend layers.',
@@ -82,6 +73,15 @@ const examples: Example[] = [
     category: 'llm',
     path: '/examples/llm/claude-chat',
     preview: '/screenshots/examples/claude-chat.webm',
+  },
+  {
+    id: 'dual-mascot',
+    title: 'Dual Mascot',
+    description: 'Two independent 3D mascots running simultaneously on one page.',
+    category: '3d',
+    path: '/examples/3d/dual-mascot',
+    preview: '/screenshots/examples/dual-mascot-portrait.webm',
+    portrait: true,
   },
   {
     id: 'moon-demo',
@@ -118,14 +118,6 @@ const examples: Example[] = [
     preview: '/screenshots/examples/rhythm-sync.webm',
   },
   {
-    id: 'event-handling',
-    title: 'Event Handling',
-    description: 'Monitor mascot events in real-time with filtering.',
-    category: '2d',
-    path: '/examples/2d/event-handling',
-    preview: '/screenshots/examples/event-handling.webm',
-  },
-  {
     id: 'hello-world',
     title: 'Hello World',
     description: 'Minimal setup — one mascot, four lines.',
@@ -139,7 +131,7 @@ function PreviewImage({ example }: { example: Example }) {
   const [failed, setFailed] = useState(false)
   const color = CATEGORY_COLORS[example.category]
 
-  const aspectRatio = example.portrait ? '3 / 4' : example.featured ? '21 / 9' : '16 / 9'
+  const aspectRatio = example.portrait ? undefined : example.featured ? '21 / 9' : '16 / 9'
 
   if (!example.preview || failed) {
     // Gradient placeholder — tinted by category
@@ -147,7 +139,9 @@ function PreviewImage({ example }: { example: Example }) {
       <div
         style={{
           width: '100%',
-          aspectRatio,
+          aspectRatio: aspectRatio ?? '3 / 4',
+          flex: example.portrait ? 1 : undefined,
+          minHeight: example.portrait ? 0 : undefined,
           background: `linear-gradient(135deg, ${color}18 0%, ${color}08 50%, ${color}18 100%)`,
           borderBottom: `1px solid rgba(255,255,255,0.06)`,
           display: 'flex',
@@ -178,7 +172,7 @@ function PreviewImage({ example }: { example: Example }) {
   return (
     <div style={{
       width: '100%',
-      aspectRatio,
+      ...(example.portrait ? { flex: 1, minHeight: 0 } : { aspectRatio }),
       overflow: 'hidden',
       borderBottom: '1px solid rgba(255,255,255,0.06)',
       position: 'relative',
@@ -207,7 +201,7 @@ export default function ExamplesPage() {
   return (
     <main style={{
       minHeight: 'calc(100vh - 80px)',
-      padding: '120px 1.5rem 0',
+      paddingTop: 0,
       background: '#0a0a0c',
     }}>
       {/* Cards grid */}
@@ -223,7 +217,7 @@ export default function ExamplesPage() {
         borderRadius: 12,
         overflow: 'hidden',
       }}>
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           .examples-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -246,16 +240,88 @@ export default function ExamplesPage() {
               grid-template-columns: repeat(3, 1fr);
             }
           }
-        `}</style>
+          .card-hero {
+            background: #0a0a0c !important;
+            border: none !important;
+            position: relative;
+            overflow: visible !important;
+            z-index: 1;
+            box-shadow:
+              0 0 60px 10px rgba(167,139,250,0.12),
+              0 0 120px 20px rgba(56,189,248,0.06),
+              0 20px 60px -10px rgba(0,0,0,0.8) !important;
+            transition: box-shadow 0.4s ease, transform 0.4s ease !important;
+          }
+          .card-hero:hover {
+            transform: scale(1.01);
+            box-shadow:
+              0 0 80px 15px rgba(167,139,250,0.18),
+              0 0 160px 30px rgba(56,189,248,0.09),
+              0 30px 80px -10px rgba(0,0,0,0.9) !important;
+          }
+          .card-hero .hero-body {
+            position: relative;
+            overflow: hidden;
+          }
+          .card-hero .hero-body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+              105deg,
+              transparent 20%,
+              rgba(167,139,250,0.07) 35%,
+              rgba(255,255,255,0.10) 38%,
+              rgba(56,189,248,0.07) 41%,
+              transparent 55%
+            );
+            background-size: 250% 100%;
+            animation: heroShimmer 10s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+          }
+          @keyframes heroShimmer {
+            0% { background-position: 200% 0; opacity: 0; }
+            5% { opacity: 1; }
+            15% { opacity: 1; }
+            20% { background-position: -50% 0; opacity: 0; }
+            100% { background-position: -50% 0; opacity: 0; }
+          }
+          .card-hero::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 13px;
+            background: linear-gradient(
+              160deg,
+              rgba(167,139,250,0.25),
+              rgba(56,189,248,0.15),
+              rgba(167,139,250,0.05),
+              rgba(103,232,249,0.20)
+            );
+            z-index: -1;
+            filter: blur(1px);
+            opacity: 0.6;
+            transition: opacity 0.4s ease;
+          }
+          .card-hero:hover::after {
+            opacity: 1;
+          }
+        `}} />
         <div className="examples-grid">
           {examples.map(example => {
             const color = CATEGORY_COLORS[example.category]
             const isHovered = hoveredId === example.id
+            const isHero = example.id === '3d-elemental'
             return (
               <Link
                 key={example.id}
                 href={example.path}
-                className={example.featured ? 'card-featured' : example.portrait ? 'card-portrait' : undefined}
+                className={[
+                  example.featured ? 'card-featured' : example.portrait ? 'card-portrait' : null,
+                  isHero ? 'card-hero' : null,
+                ].filter(Boolean).join(' ')}
                 onMouseEnter={() => setHoveredId(example.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{
@@ -265,14 +331,14 @@ export default function ExamplesPage() {
                   textDecoration: 'none',
                   transition: 'all 0.25s ease',
                   position: 'relative',
-                  boxShadow: isHovered ? `inset 0 0 0 1px ${color}44, 0 8px 32px ${color}15` : 'none',
+                  boxShadow: !isHero && isHovered ? `inset 0 0 0 1px ${color}44, 0 8px 32px ${color}15` : 'none',
                 }}
               >
                 {/* Preview image / placeholder */}
                 <PreviewImage example={example} />
 
                 {/* Card body */}
-                <div style={{ padding: 'clamp(1rem, 2vw, 1.5rem)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div className={isHero ? 'hero-body' : undefined} style={{ padding: 'clamp(1rem, 2vw, 1.5rem)', flexShrink: 0 }}>
                   {/* Category + title row */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem' }}>
                     <span style={{
@@ -306,7 +372,6 @@ export default function ExamplesPage() {
                     fontSize: '0.8125rem',
                     color: '#888',
                     lineHeight: 1.5,
-                    flex: 1,
                   }}>
                     {example.description}
                   </p>
