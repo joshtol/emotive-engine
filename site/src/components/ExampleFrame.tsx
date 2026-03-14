@@ -122,13 +122,15 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
 
   const closeModal = useCallback(() => {
     setShowModal(false)
+    setCopied(false)
     if (blobUrl) {
-      // Revoke after transition
       const url = blobUrl
       setTimeout(() => URL.revokeObjectURL(url), 300)
       setBlobUrl(null)
     }
   }, [blobUrl])
+
+  const [copied, setCopied] = useState(false)
 
   const handleDownload = useCallback(() => {
     if (!blobUrl) return
@@ -144,14 +146,34 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
       const resp = await fetch(blobUrl)
       const blob = await resp.blob()
       const file = new File([blob], 'emotive-engine.webm', { type: 'video/webm' })
-      await navigator.share({ files: [file], title: 'Emotive Engine' })
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Made with Emotive Engine' })
+      } else {
+        await navigator.share({ title: 'Made with Emotive Engine', text: 'Check out this animation made with Emotive Engine!' })
+      }
     } catch {
-      // user cancelled
+      // user cancelled or unsupported
     }
   }, [blobUrl])
 
-  // Check if Web Share API supports files
-  const canShare = typeof navigator !== 'undefined' && navigator.share && navigator.canShare
+  const handleCopy = useCallback(async () => {
+    if (!blobUrl) return
+    try {
+      const resp = await fetch(blobUrl)
+      const blob = await resp.blob()
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type]: blob })
+      ])
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API may not support video — fall back to download
+      handleDownload()
+    }
+  }, [blobUrl, handleDownload])
+
+  // Check if Web Share API is available
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share
 
   // Slide-out prompt: show "Record and share!" then collapse back to dot
   const [showPrompt, setShowPrompt] = useState(false)
@@ -240,6 +262,13 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
         .emotive-rec-header-btn:hover {
           background: rgba(0, 0, 0, 0.65) !important;
           border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        .emotive-share-btn-primary:hover {
+          filter: brightness(1.15) !important;
+        }
+        .emotive-share-btn:hover {
+          background: rgba(255, 255, 255, 0.14) !important;
+          border-color: rgba(255, 255, 255, 0.25) !important;
         }
       `}</style>
 
@@ -340,31 +369,36 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
               playsInline
               style={{ width: '100%', borderRadius: '10px', background: '#000', marginBottom: '16px' }}
             />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {canShare && (
-                <button
-                  onClick={handleShare}
-                  style={{
-                    all: 'unset',
-                    flex: 1,
-                    padding: '10px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: 'rgba(255,255,255,0.12)',
-                    color: '#fff',
-                  }}
-                >
-                  Share
-                </button>
-              )}
+            {canShare && (
               <button
-                onClick={handleDownload}
+                onClick={handleShare}
+                className="emotive-share-btn-primary"
                 style={{
                   all: 'unset',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: '#fff',
+                  marginBottom: '10px',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                Share
+              </button>
+            )}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={handleCopy}
+                className="emotive-share-btn"
+                style={{
+                  all: 'unset',
+                  boxSizing: 'border-box',
                   flex: 1,
                   padding: '10px 16px',
                   borderRadius: '10px',
@@ -373,8 +407,28 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                   fontWeight: 500,
                   textAlign: 'center',
                   cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: 'rgba(255,255,255,0.75)',
+                  background: 'rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.85)',
+                }}
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+              <button
+                onClick={handleDownload}
+                className="emotive-share-btn"
+                style={{
+                  all: 'unset',
+                  boxSizing: 'border-box',
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.85)',
                 }}
               >
                 Download
