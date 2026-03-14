@@ -16,6 +16,7 @@
   var sourceCanvas = null;
   var isRecording = false;
   var _bgCanvas = null; // Pre-rendered background, built once at record start
+  var videoTrack = null;
 
   // Force preserveDrawingBuffer for ALL WebGL contexts so drawImage
   // can always read the rendered frame (without this, buffer is cleared
@@ -62,6 +63,7 @@
           mirrorCtx.fillRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
         }
         mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
+        if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
       }
     });
   };
@@ -242,6 +244,89 @@
     ctx.fillRect(0, 0, w, h);
   }
 
+  // ── WebM Metadata ──
+  // Inject Matroska Tags (TITLE, URL) into the WebM blob so video players
+  // and file managers show attribution. Uses raw EBML encoding — no deps.
+
+  // Encode an integer as a Matroska variable-length int (VINT)
+  function encodeVINT(value) {
+    if (value < 0x80) return [0x80 | value];
+    if (value < 0x4000) return [0x40 | (value >> 8), value & 0xFF];
+    if (value < 0x200000) return [0x20 | (value >> 16), (value >> 8) & 0xFF, value & 0xFF];
+    return [0x10 | (value >> 24), (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF];
+  }
+
+  // Wrap data in an EBML element: [id bytes] [size VINT] [data bytes]
+  function ebml(id, data) {
+    var size = encodeVINT(data.length);
+    var out = new Uint8Array(id.length + size.length + data.length);
+    out.set(id, 0);
+    out.set(size, id.length);
+    out.set(data, id.length + size.length);
+    return out;
+  }
+
+  function ebmlString(id, str) {
+    return ebml(id, new TextEncoder().encode(str));
+  }
+
+  function simpleTag(name, value) {
+    var tagName = ebmlString([0x45, 0xA3], name);    // TagName
+    var tagStr  = ebmlString([0x44, 0x87], value);    // TagString
+    var body = new Uint8Array(tagName.length + tagStr.length);
+    body.set(tagName, 0);
+    body.set(tagStr, tagName.length);
+    return ebml([0x67, 0xC8], body);                  // SimpleTag
+  }
+
+  function buildTagsElement() {
+    var targets = ebml([0x63, 0xC0], new Uint8Array(0)); // Targets (empty = global)
+    var title = simpleTag('TITLE', 'Made with Emotive Engine');
+    var url   = simpleTag('URL', 'https://github.com/anthropics/emotive-engine');
+
+    // Tag = Targets + SimpleTags
+    var tagBody = new Uint8Array(targets.length + title.length + url.length);
+    tagBody.set(targets, 0);
+    tagBody.set(title, targets.length);
+    tagBody.set(url, targets.length + title.length);
+
+    var tag = ebml([0x73, 0x73], tagBody);              // Tag
+    return ebml([0x12, 0x54, 0xC3, 0x67], tag);         // Tags
+  }
+
+  // Insert Tags element into WebM blob before the first Cluster.
+  // Chrome's MediaRecorder uses unknown-size Segment, so no size update needed.
+  function injectMetadata(blob, callback) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data = new Uint8Array(reader.result);
+      var tags = buildTagsElement();
+
+      // Find first Cluster element (ID 0x1F43B675)
+      var pos = -1;
+      for (var i = 0; i < data.length - 3; i++) {
+        if (data[i] === 0x1F && data[i + 1] === 0x43 && data[i + 2] === 0xB6 && data[i + 3] === 0x75) {
+          pos = i;
+          break;
+        }
+      }
+
+      if (pos === -1) {
+        callback(blob); // can't find insertion point, return original
+        return;
+      }
+
+      // Splice: [header..tracks] + [tags] + [clusters..]
+      var result = new Uint8Array(data.length + tags.length);
+      result.set(data.subarray(0, pos), 0);
+      result.set(tags, pos);
+      result.set(data.subarray(pos), pos + tags.length);
+
+      callback(new Blob([result], { type: 'video/webm' }));
+    };
+    reader.readAsArrayBuffer(blob);
+  }
+
   // ── Recording Pipeline ──
   function startRecording() {
     sourceCanvas = findCanvas();
@@ -266,8 +351,10 @@
   function beginRecorder() {
     recordedChunks = [];
 
-    // captureStream(60) = continuous 60fps capture from mirror canvas
-    var stream = mirrorCanvas.captureStream(60);
+    // captureStream(0) = on-demand capture via requestFrame() in the rAF hook.
+    // This ties each video frame 1:1 to an actual render, keeping realtime pace.
+    var stream = mirrorCanvas.captureStream(0);
+    videoTrack = stream.getVideoTracks()[0];
     var mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
       : 'video/webm';
@@ -282,13 +369,16 @@
     };
 
     mediaRecorder.onstop = function () {
-      var blob = new Blob(recordedChunks, { type: 'video/webm' });
-      var blobUrl = URL.createObjectURL(blob);
-      parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, size: blob.size }, '*');
-      mediaRecorder = null;
-      mirrorCanvas = null;
-      mirrorCtx = null;
-      _bgCanvas = null;
+      var raw = new Blob(recordedChunks, { type: 'video/webm' });
+      injectMetadata(raw, function (blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, size: blob.size }, '*');
+        mediaRecorder = null;
+        mirrorCanvas = null;
+        mirrorCtx = null;
+        _bgCanvas = null;
+        videoTrack = null;
+      });
     };
 
     mediaRecorder.start(100); // collect data every 100ms for smoother stop
