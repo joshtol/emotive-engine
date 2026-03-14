@@ -4,6 +4,10 @@
 (function () {
   'use strict';
 
+  // Guard against double-initialization
+  if (window.__emotiveRecorderLoaded) return;
+  window.__emotiveRecorderLoaded = true;
+
   // ── State ──
   var mediaRecorder = null;
   var recordedChunks = [];
@@ -99,8 +103,7 @@
         'margin-left: 8px;' +
         'flex-shrink: 0;' +
       '}' +
-
-      /* ── Share Modal ── */
+      // Share Modal
       '.emotive-share-overlay {' +
         'position: fixed;' +
         'inset: 0;' +
@@ -289,7 +292,7 @@
   function onKeyDown(e) {
     if (e.key.toLowerCase() !== 'r') return;
     var tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
     e.preventDefault();
     toggleRecording();
   }
@@ -305,18 +308,46 @@
     var canShare = navigator.share && navigator.canShare &&
       navigator.canShare({ files: [new File([blob], 'recording.webm', { type: 'video/webm' })] });
 
-    overlay.innerHTML =
-      '<div class="emotive-share-modal">' +
-        '<div class="emotive-share-header">' +
-          '<span class="emotive-share-title">Recording ready!</span>' +
-          '<button class="emotive-share-close">&times;</button>' +
-        '</div>' +
-        '<video class="emotive-share-preview" src="' + blobUrl + '" autoplay loop muted playsinline></video>' +
-        '<div class="emotive-share-actions">' +
-          (canShare ? '<button class="emotive-share-btn">Share</button>' : '') +
-          '<button class="emotive-share-dl">Download</button>' +
-        '</div>' +
-      '</div>';
+    // Build modal via DOM APIs (avoid innerHTML with dynamic URLs)
+    var modal = document.createElement('div');
+    modal.className = 'emotive-share-modal';
+
+    var header = document.createElement('div');
+    header.className = 'emotive-share-header';
+    var title = document.createElement('span');
+    title.className = 'emotive-share-title';
+    title.textContent = 'Recording ready!';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'emotive-share-close';
+    closeBtn.innerHTML = '&times;';
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    var video = document.createElement('video');
+    video.className = 'emotive-share-preview';
+    video.src = blobUrl;
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+
+    var actions = document.createElement('div');
+    actions.className = 'emotive-share-actions';
+    if (canShare) {
+      var shareBtnEl = document.createElement('button');
+      shareBtnEl.className = 'emotive-share-btn';
+      shareBtnEl.textContent = 'Share';
+      actions.appendChild(shareBtnEl);
+    }
+    var dlBtn = document.createElement('button');
+    dlBtn.className = 'emotive-share-dl';
+    dlBtn.textContent = 'Download';
+    actions.appendChild(dlBtn);
+
+    modal.appendChild(header);
+    modal.appendChild(video);
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
 
     function close() {
       overlay.classList.remove('visible');
@@ -332,12 +363,11 @@
     });
 
     // Close button
-    overlay.querySelector('.emotive-share-close').addEventListener('click', close);
+    closeBtn.addEventListener('click', close);
 
     // Share button (if available)
-    var shareBtn = overlay.querySelector('.emotive-share-btn');
-    if (shareBtn) {
-      shareBtn.addEventListener('click', function () {
+    if (canShare) {
+      shareBtnEl.addEventListener('click', function () {
         var file = new File([blob], 'emotive-engine.webm', { type: 'video/webm' });
         navigator.share({
           files: [file],
@@ -347,7 +377,7 @@
     }
 
     // Download button
-    overlay.querySelector('.emotive-share-dl').addEventListener('click', function () {
+    dlBtn.addEventListener('click', function () {
       var a = document.createElement('a');
       a.download = 'emotive-engine.webm';
       a.href = blobUrl;
