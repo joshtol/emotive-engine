@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ExampleFrameProps {
   src: string
@@ -12,6 +13,32 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false)
+  const [recReady, setRecReady] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [headerEl, setHeaderEl] = useState<Element | null>(null)
+
+  // Find the header element for the portal (may render after this component)
+  useEffect(() => {
+    const h = document.querySelector('.emotive-header')
+    if (h) {
+      setHeaderEl(h)
+      return
+    }
+    // Header may not exist yet — watch for it
+    const obs = new MutationObserver(() => {
+      const el = document.querySelector('.emotive-header')
+      if (el) {
+        obs.disconnect()
+        setHeaderEl(el)
+      }
+    })
+    obs.observe(document.body, { childList: true, subtree: true })
+    return () => obs.disconnect()
+  }, [])
+
   // Handle iframe load
   const handleLoad = useCallback(() => {
     if (timeoutRef.current) {
@@ -19,28 +46,31 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
       timeoutRef.current = null
     }
     setIsLoading(false)
+    // Ping the iframe to re-send ready (in case we missed it)
+    const iframe = iframeRef.current
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'emotive-rec-ping' }, '*')
+    }
   }, [])
 
   // Reset loading state when src changes and set up fallback timeout
   useEffect(() => {
     setIsLoading(true)
+    setRecReady(false)
+    setIsRecording(false)
 
-    // Fallback: if onLoad doesn't fire within 5 seconds, show content anyway
-    // This handles cases where iframe is cached or onLoad doesn't fire
     timeoutRef.current = setTimeout(() => {
       setIsLoading(false)
     }, 5000)
 
-    // Check if iframe is already loaded (cached content)
     const iframe = iframeRef.current
     if (iframe) {
-      // For same-origin iframes, we can check readyState
       try {
         if (iframe.contentDocument?.readyState === 'complete') {
           handleLoad()
         }
       } catch {
-        // Cross-origin - can't check, rely on onLoad event
+        // Cross-origin
       }
     }
 
@@ -52,44 +82,307 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     }
   }, [src, handleLoad])
 
+  // Listen for messages from the iframe's record.js
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (!e.data || !e.data.type) return
+      switch (e.data.type) {
+        case 'emotive-rec-ready':
+          setRecReady(true)
+          break
+        case 'emotive-rec-started':
+          setIsRecording(true)
+          break
+        case 'emotive-rec-stopped':
+          setIsRecording(false)
+          if (e.data.blobUrl) {
+            setBlobUrl(e.data.blobUrl)
+            setShowModal(true)
+          }
+          break
+        case 'emotive-rec-error':
+          setIsRecording(false)
+          console.warn('Recording error:', e.data.error)
+          break
+      }
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
+  const toggleRecording = useCallback(() => {
+    const iframe = iframeRef.current
+    if (!iframe?.contentWindow || !recReady) return
+    if (isRecording) {
+      iframe.contentWindow.postMessage({ type: 'emotive-rec-stop' }, '*')
+    } else {
+      iframe.contentWindow.postMessage({ type: 'emotive-rec-start' }, '*')
+    }
+  }, [isRecording, recReady])
+
+  const closeModal = useCallback(() => {
+    setShowModal(false)
+    if (blobUrl) {
+      // Revoke after transition
+      const url = blobUrl
+      setTimeout(() => URL.revokeObjectURL(url), 300)
+      setBlobUrl(null)
+    }
+  }, [blobUrl])
+
+  const handleDownload = useCallback(() => {
+    if (!blobUrl) return
+    const a = document.createElement('a')
+    a.download = 'emotive-engine.webm'
+    a.href = blobUrl
+    a.click()
+  }, [blobUrl])
+
+  const handleShare = useCallback(async () => {
+    if (!blobUrl) return
+    try {
+      const resp = await fetch(blobUrl)
+      const blob = await resp.blob()
+      const file = new File([blob], 'emotive-engine.webm', { type: 'video/webm' })
+      await navigator.share({ files: [file], title: 'Emotive Engine' })
+    } catch {
+      // user cancelled
+    }
+  }, [blobUrl])
+
+  // Check if Web Share API supports files
+  const canShare = typeof navigator !== 'undefined' && navigator.share && navigator.canShare
+
+  // Slide-out prompt: show "Record and share!" then collapse back to dot
+  const [showPrompt, setShowPrompt] = useState(false)
+  useEffect(() => {
+    if (!recReady || isRecording) return
+    const expandTimer = setTimeout(() => setShowPrompt(true), 1200)
+    const collapseTimer = setTimeout(() => setShowPrompt(false), 5000)
+    return () => { clearTimeout(expandTimer); clearTimeout(collapseTimer) }
+  }, [recReady, isRecording])
+
+  // Record button rendered into the header via portal
+  const pillExpanded = isRecording || showPrompt
+  const recordButton = headerEl ? createPortal(
+    <button
+      onClick={toggleRecording}
+      className="emotive-rec-header-btn"
+      aria-label={isRecording ? 'Stop recording' : 'Record animation'}
+      style={{
+        all: 'unset',
+        boxSizing: 'border-box',
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0px',
+        padding: '0',
+        background: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '22px',
+        cursor: 'pointer',
+        transition: 'background 0.2s, border-color 0.2s',
+        userSelect: 'none',
+        zIndex: 10,
+        opacity: recReady ? 1 : 0.4,
+        pointerEvents: recReady ? 'auto' : 'none',
+        overflow: 'hidden',
+      } as React.CSSProperties}
+    >
+      {/* Red dot */}
+      <span style={{
+        width: '36px',
+        height: '36px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <span style={{
+          width: '14px',
+          height: '14px',
+          borderRadius: '50%',
+          background: '#e53e3e',
+          animation: isRecording ? 'emotive-rec-pulse 1s ease-in-out infinite' : 'none',
+        }} />
+      </span>
+      {/* Sliding label */}
+      <span style={{
+        color: 'rgba(255, 255, 255, 0.85)',
+        fontSize: '12px',
+        fontWeight: 500,
+        letterSpacing: '0.3px',
+        whiteSpace: 'nowrap',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        overflow: 'hidden',
+        maxWidth: pillExpanded ? '160px' : '0px',
+        opacity: pillExpanded ? 1 : 0,
+        paddingRight: pillExpanded ? '14px' : '0px',
+        transition: 'max-width 0.4s ease, opacity 0.3s ease, padding-right 0.4s ease',
+      }}>
+        {isRecording ? 'REC ■' : 'Record and share!'}
+      </span>
+    </button>,
+    headerEl
+  ) : null
+
   return (
-    <main style={{
-      minHeight: 'calc(100vh - 80px)',
-      background: '#0a0a0a',
-      paddingTop: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'relative',
-    }}>
-      {isLoading && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: 'rgba(255,255,255,0.5)',
-          fontSize: '14px',
-          zIndex: 10,
-        }}>
-          Loading {title}...
+    <>
+      <style>{`
+        @keyframes emotive-rec-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        .emotive-rec-header-btn:hover {
+          background: rgba(0, 0, 0, 0.65) !important;
+          border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+      `}</style>
+
+      {recordButton}
+
+      <main style={{
+        minHeight: 'calc(100vh - 80px)',
+        background: '#0a0a0a',
+        paddingTop: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}>
+        {isLoading && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: '14px',
+            zIndex: 10,
+          }}>
+            Loading {title}...
+          </div>
+        )}
+        <iframe
+          ref={iframeRef}
+          key={src}
+          src={src}
+          title={title}
+          onLoad={handleLoad}
+          style={{
+            flex: 1,
+            width: '100%',
+            height: '100vh',
+            border: 'none',
+            background: '#0a0a0a',
+            opacity: isLoading ? 0 : 1,
+            transition: 'opacity 0.3s ease',
+          }}
+        />
+      </main>
+
+      {/* Share Modal */}
+      {showModal && blobUrl && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal() }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100000,
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{
+            background: 'rgba(20, 20, 25, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '400px',
+            width: '90vw',
+            color: '#fff',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '16px', fontWeight: 600 }}>Recording ready!</span>
+              <button
+                onClick={closeModal}
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  color: 'rgba(255,255,255,0.5)',
+                  fontSize: '20px',
+                  borderRadius: '6px',
+                }}
+              >
+                &times;
+              </button>
+            </div>
+            <video
+              src={blobUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{ width: '100%', borderRadius: '10px', background: '#000', marginBottom: '16px' }}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {canShare && (
+                <button
+                  onClick={handleShare}
+                  style={{
+                    all: 'unset',
+                    flex: 1,
+                    padding: '10px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.12)',
+                    color: '#fff',
+                  }}
+                >
+                  Share
+                </button>
+              )}
+              <button
+                onClick={handleDownload}
+                style={{
+                  all: 'unset',
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: 'rgba(255,255,255,0.75)',
+                }}
+              >
+                Download
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      <iframe
-        ref={iframeRef}
-        key={src}
-        src={src}
-        title={title}
-        onLoad={handleLoad}
-        style={{
-          flex: 1,
-          width: '100%',
-          height: '100vh',
-          border: 'none',
-          background: '#0a0a0a',
-          opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.3s ease',
-        }}
-      />
-    </main>
+    </>
   )
 }

@@ -37,6 +37,7 @@
                 #5a4a40 100%);
         }
     </style>
+    <script src="/examples/record.js"></script>
 </head>
 <body>
     <!-- LEFT MENU: Geometry -->
@@ -435,8 +436,8 @@
         });
 
         // Set initial active button
-        document.querySelector('[data-value="neutral"]').classList.add('active');
+        var neutralBtn = document.querySelector('[data-value="neutral"]');
+        if (neutralBtn) neutralBtn.classList.add('active');
     </script>
-    <script src="/examples/record.js"></script>
 </body>
 </html>
