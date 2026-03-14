@@ -226,7 +226,7 @@
         function logEvent(type, message, data) {
             if (isPaused) return;
 
-            var event = {
+            const event = {
                 type: type,
                 message: message,
                 data: data || null,
@@ -246,11 +246,11 @@
         }
 
         function displayEvent(event) {
-            var logEl = document.getElementById('event-log');
-            var entry = document.createElement('div');
+            const logEl = document.getElementById('event-log');
+            const entry = document.createElement('div');
             entry.className = 'event-entry ' + event.type;
 
-            var html = '<span class="event-time">' + event.timestamp + '</span>' +
+            let html = '<span class="event-time">' + event.timestamp + '</span>' +
                        '<span class="event-type">[' + event.type + ']</span>' +
                        '<div class="event-data">' + event.message + '</div>';
 
@@ -274,10 +274,10 @@
             });
             if (btn) btn.classList.add('active');
 
-            var logEl = document.getElementById('event-log');
+            const logEl = document.getElementById('event-log');
             logEl.innerHTML = '';
 
-            var filtered = currentFilter === 'all'
+            const filtered = currentFilter === 'all'
                 ? eventLog
                 : eventLog.filter(function(e) { return e.type === currentFilter; });
 
@@ -295,7 +295,7 @@
 
         function togglePause() {
             isPaused = !isPaused;
-            var btn = document.getElementById('pause-btn');
+            const btn = document.getElementById('pause-btn');
             btn.textContent = isPaused ? 'Resume' : 'Pause';
             btn.classList.toggle('active', isPaused);
             if (!isPaused) logEvent('system', 'Event logging resumed');

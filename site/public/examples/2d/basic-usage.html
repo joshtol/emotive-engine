@@ -92,7 +92,7 @@
             }, 500);
 
             setupKeyboardShortcuts();
-        }).catch(() => {});
+        }).catch(err => console.error('Init failed:', err));
 
         renderEmotionButtons('emotion-buttons', setEmotion);
         renderShapeButtons('shape-buttons', shape => {
@@ -131,7 +131,7 @@
             mascot.setEmotion(emotion);
             showEmotionIndicator(emotion);
 
-            var gesture = EMOTION_GESTURES[emotion];
+            const gesture = EMOTION_GESTURES[emotion];
             if (gesture) setTimeout(() => mascot.express(gesture), 300);
         }
 
@@ -148,14 +148,14 @@
 
         function randomAction() {
             if (!mascot) return;
-            var actions = [
+            const actions = [
                 () => { setEmotion(randomFrom(EMOTIONS)); },
                 () => {
-                    var g = randomFrom(GESTURES);
+                    const g = randomFrom(GESTURES);
                     mascot.express(g);
                 },
                 () => {
-                    var s = randomFrom(SHAPES);
+                    const s = randomFrom(SHAPES);
                     mascot.morphTo(s);
                 }
             ];

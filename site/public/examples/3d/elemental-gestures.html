@@ -187,7 +187,7 @@
 
                 <!-- Moon Phase controls (moon only) -->
                 <div id="moon-phase-section" style="display: none; margin-top: 12px;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Moon Phase</div>
+                    <div class="subsection-label">Moon Phase</div>
                     <div class="button-grid">
                         <button data-action="moon-phase" data-value="new">🌑 New</button>
                         <button data-action="moon-phase" data-value="waxing-crescent">🌒 Wax Cres</button>
@@ -202,18 +202,18 @@
 
                 <!-- Lunar Eclipse controls (moon only, full moon required) -->
                 <div id="lunar-eclipse-section" style="display: none; margin-top: 12px;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Lunar Eclipse</div>
+                    <div class="subsection-label">Lunar Eclipse</div>
                     <div class="button-grid">
                         <button data-action="lunar-eclipse" data-value="penumbral">🌔 Penumbral</button>
                         <button data-action="lunar-eclipse" data-value="partial">🌗 Partial</button>
-                        <button data-action="lunar-eclipse" data-value="total">🩸 Blood Moon</button>
+                        <button data-action="lunar-eclipse" data-value="total">🩸 Eclipse</button>
                     </div>
-                    <div id="lunar-eclipse-hint" style="display: none; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; font-style: italic;">Select Full Moon to unlock</div>
+                    <div id="lunar-eclipse-hint" class="subsection-hint" style="display: none;">Select Full Moon to unlock</div>
                 </div>
 
                 <!-- Solar Eclipse controls (sun only) -->
                 <div id="eclipse-section" style="display: none; margin-top: 12px;">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Solar Eclipse</div>
+                    <div class="subsection-label">Solar Eclipse</div>
                     <div class="button-grid">
                         <button data-action="eclipse" data-value="annular">🌑 Annular</button>
                         <button data-action="eclipse" data-value="total">🌚 Total</button>

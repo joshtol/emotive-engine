@@ -186,7 +186,7 @@
 
             tapTimes.push(now);
 
-            var button = document.querySelector('.tap-button');
+            const button = document.querySelector('.tap-button');
             button.classList.add('active');
             setTimeout(() => {
                 button.classList.remove('active');
@@ -260,7 +260,7 @@
             if (!mascot) return;
 
             if (activeGesture) {
-                var prevBtn = document.querySelector('.gesture-grid button[data-gesture="' + activeGesture + '"]');
+                const prevBtn = document.querySelector('.gesture-grid button[data-gesture="' + activeGesture + '"]');
                 if (prevBtn) prevBtn.classList.remove('active');
             }
 
@@ -269,7 +269,7 @@
             activeGesture = gesture;
             const interval = 60000 / currentBPM;
 
-            var button = document.querySelector('.gesture-grid button[data-gesture="' + gesture + '"]');
+            const button = document.querySelector('.gesture-grid button[data-gesture="' + gesture + '"]');
             if (button) button.classList.add('active');
 
             mascot.express(gesture);
@@ -298,7 +298,7 @@
             if (gestureInterval) { clearInterval(gestureInterval); gestureInterval = null; }
 
             if (activeGesture) {
-                var btn = document.querySelector('.gesture-grid button[data-gesture="' + activeGesture + '"]');
+                const btn = document.querySelector('.gesture-grid button[data-gesture="' + activeGesture + '"]');
                 if (btn) btn.classList.remove('active');
                 activeGesture = null;
             }

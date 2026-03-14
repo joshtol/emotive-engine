@@ -274,7 +274,7 @@
                         parsedLyrics = parseLyrics(text);
                         log(`Lyrics loaded: ${parsedLyrics.length} lines`, 'info');
                     }
-                } catch {}
+                } catch (e) { console.error('Error:', e); }
             } else {
                 document.getElementById('llmLyrics').value = '';
                 parsedLyrics = [];
