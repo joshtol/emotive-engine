@@ -1,10 +1,10 @@
 // site/public/examples/record.js
-// Drop-in WebM recording utility for Emotive Engine examples.
-// Usage: <script src="/examples/record.js"></script>
+// Headless WebM recording service for Emotive Engine examples.
+// Runs inside the iframe. Controlled by postMessage from the parent page.
+// Usage: <script src="/examples/record.js"></script> (in <head>)
 (function () {
   'use strict';
 
-  // Guard against double-initialization
   if (window.__emotiveRecorderLoaded) return;
   window.__emotiveRecorderLoaded = true;
 
@@ -13,203 +13,60 @@
   var recordedChunks = [];
   var mirrorCanvas = null;
   var mirrorCtx = null;
-  var origRAF = null;
   var sourceCanvas = null;
   var isRecording = false;
 
-  // ── CSS Injection ──
-  function injectStyles() {
-    var style = document.createElement('style');
-    style.textContent =
-      '.emotive-rec-btn {' +
-        'position: fixed;' +
-        'bottom: 12px;' +
-        'left: 12px;' +
-        'z-index: 99999;' +
-        'display: flex;' +
-        'align-items: center;' +
-        'gap: 0;' +
-        'cursor: pointer;' +
-        'border: none;' +
-        'padding: 0;' +
-        'background: none;' +
-        'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;' +
-        'transition: opacity 0.3s;' +
-      '}' +
-      '.emotive-rec-dot {' +
-        'width: 36px;' +
-        'height: 36px;' +
-        'border-radius: 50%;' +
-        'background: rgba(0, 0, 0, 0.45);' +
-        'backdrop-filter: blur(12px);' +
-        '-webkit-backdrop-filter: blur(12px);' +
-        'border: 1px solid rgba(255, 255, 255, 0.15);' +
-        'display: flex;' +
-        'align-items: center;' +
-        'justify-content: center;' +
-        'flex-shrink: 0;' +
-      '}' +
-      '.emotive-rec-dot-inner {' +
-        'width: 12px;' +
-        'height: 12px;' +
-        'border-radius: 50%;' +
-        'background: #e53e3e;' +
-        'transition: transform 0.2s;' +
-      '}' +
-      '.emotive-rec-btn.recording .emotive-rec-dot-inner {' +
-        'animation: emotive-rec-pulse 1s ease-in-out infinite;' +
-      '}' +
-      '@keyframes emotive-rec-pulse {' +
-        '0%, 100% { opacity: 1; transform: scale(1); }' +
-        '50% { opacity: 0.5; transform: scale(0.85); }' +
-      '}' +
-      '.emotive-rec-pill {' +
-        'height: 36px;' +
-        'border-radius: 0 18px 18px 0;' +
-        'background: rgba(0, 0, 0, 0.45);' +
-        'backdrop-filter: blur(12px);' +
-        '-webkit-backdrop-filter: blur(12px);' +
-        'border: 1px solid rgba(255, 255, 255, 0.15);' +
-        'border-left: none;' +
-        'display: flex;' +
-        'align-items: center;' +
-        'padding: 0 14px 0 4px;' +
-        'overflow: hidden;' +
-        'max-width: 0;' +
-        'opacity: 0;' +
-        'transition: max-width 0.4s ease, opacity 0.3s ease, padding 0.4s ease;' +
-        'white-space: nowrap;' +
-        'color: rgba(255, 255, 255, 0.85);' +
-        'font-size: 12px;' +
-        'font-weight: 500;' +
-        'letter-spacing: 0.3px;' +
-      '}' +
-      '.emotive-rec-pill.expanded {' +
-        'max-width: 200px;' +
-        'opacity: 1;' +
-        'padding: 0 14px 0 4px;' +
-      '}' +
-      '.emotive-rec-pill.recording {' +
-        'max-width: 200px;' +
-        'opacity: 1;' +
-        'padding: 0 14px 0 4px;' +
-      '}' +
-      '.emotive-rec-stop {' +
-        'display: inline-block;' +
-        'width: 10px;' +
-        'height: 10px;' +
-        'background: #e53e3e;' +
-        'border-radius: 2px;' +
-        'margin-left: 8px;' +
-        'flex-shrink: 0;' +
-      '}' +
-      // Share Modal
-      '.emotive-share-overlay {' +
-        'position: fixed;' +
-        'inset: 0;' +
-        'z-index: 100000;' +
-        'background: rgba(0, 0, 0, 0.6);' +
-        'backdrop-filter: blur(4px);' +
-        '-webkit-backdrop-filter: blur(4px);' +
-        'display: flex;' +
-        'align-items: center;' +
-        'justify-content: center;' +
-        'opacity: 0;' +
-        'transition: opacity 0.25s;' +
-      '}' +
-      '.emotive-share-overlay.visible {' +
-        'opacity: 1;' +
-      '}' +
-      '.emotive-share-modal {' +
-        'background: rgba(20, 20, 25, 0.85);' +
-        'backdrop-filter: blur(20px);' +
-        '-webkit-backdrop-filter: blur(20px);' +
-        'border: 1px solid rgba(255, 255, 255, 0.12);' +
-        'border-radius: 16px;' +
-        'padding: 24px;' +
-        'max-width: 400px;' +
-        'width: 90vw;' +
-        'color: #fff;' +
-        'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;' +
-        'transform: scale(0.95);' +
-        'transition: transform 0.25s;' +
-      '}' +
-      '.emotive-share-overlay.visible .emotive-share-modal {' +
-        'transform: scale(1);' +
-      '}' +
-      '.emotive-share-header {' +
-        'display: flex;' +
-        'justify-content: space-between;' +
-        'align-items: center;' +
-        'margin-bottom: 16px;' +
-      '}' +
-      '.emotive-share-title {' +
-        'font-size: 16px;' +
-        'font-weight: 600;' +
-      '}' +
-      '.emotive-share-close {' +
-        'background: none;' +
-        'border: none;' +
-        'color: rgba(255, 255, 255, 0.5);' +
-        'font-size: 20px;' +
-        'cursor: pointer;' +
-        'padding: 4px 8px;' +
-        'border-radius: 6px;' +
-        'transition: color 0.15s, background 0.15s;' +
-      '}' +
-      '.emotive-share-close:hover {' +
-        'color: #fff;' +
-        'background: rgba(255, 255, 255, 0.1);' +
-      '}' +
-      '.emotive-share-preview {' +
-        'width: 100%;' +
-        'border-radius: 10px;' +
-        'background: #000;' +
-        'margin-bottom: 16px;' +
-      '}' +
-      '.emotive-share-actions {' +
-        'display: flex;' +
-        'gap: 10px;' +
-      '}' +
-      '.emotive-share-actions button {' +
-        'flex: 1;' +
-        'padding: 10px 16px;' +
-        'border-radius: 10px;' +
-        'border: 1px solid rgba(255, 255, 255, 0.15);' +
-        'font-size: 13px;' +
-        'font-weight: 500;' +
-        'cursor: pointer;' +
-        'transition: background 0.15s, border-color 0.15s;' +
-        'font-family: inherit;' +
-      '}' +
-      '.emotive-share-btn {' +
-        'background: rgba(255, 255, 255, 0.12);' +
-        'color: #fff;' +
-      '}' +
-      '.emotive-share-btn:hover {' +
-        'background: rgba(255, 255, 255, 0.2);' +
-        'border-color: rgba(255, 255, 255, 0.3);' +
-      '}' +
-      '.emotive-share-dl {' +
-        'background: rgba(255, 255, 255, 0.06);' +
-        'color: rgba(255, 255, 255, 0.75);' +
-      '}' +
-      '.emotive-share-dl:hover {' +
-        'background: rgba(255, 255, 255, 0.12);' +
-        'color: #fff;' +
-      '}';
-    document.head.appendChild(style);
+  // Force preserveDrawingBuffer for ALL WebGL contexts so drawImage
+  // can always read the rendered frame (without this, buffer is cleared
+  // after compositing → black frames).
+  var _origGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (type, attrs) {
+    if (type === 'webgl' || type === 'webgl2') {
+      attrs = Object.assign({}, attrs, { preserveDrawingBuffer: true });
+    }
+    return _origGetContext.call(this, type, attrs);
+  };
+
+  function findCanvas() {
+    var all = document.querySelectorAll('canvas');
+    if (all.length <= 1) return all[0] || null;
+    // Multiple canvases (3D examples have particles overlay + WebGL canvas).
+    // Find the one with an existing WebGL context — that's the rendered scene.
+    for (var i = all.length - 1; i >= 0; i--) {
+      try {
+        // getContext returns the EXISTING context if one was already created;
+        // a 2D-context canvas returns null for webgl2/webgl.
+        var gl = all[i].getContext('webgl2') || all[i].getContext('webgl');
+        if (gl) return all[i];
+      } catch (e) { /* skip */ }
+    }
+    // Fallback: last canvas (WebGL is appended after particles overlay)
+    return all[all.length - 1];
   }
 
-  // ── Canvas Discovery ──
-  function findCanvas() {
-    return document.querySelector('canvas');
-  }
+  // ── rAF hook ──
+  // Grab frames right after the app's render callback and draw onto the
+  // mirror canvas. With captureStream(60) the stream picks up changes
+  // automatically — no manual requestFrame() needed.
+  var _origRAF = window.requestAnimationFrame;
+  window.requestAnimationFrame = function (callback) {
+    return _origRAF.call(window, function (timestamp) {
+      callback(timestamp);
+      // Frame just rendered — copy to mirror canvas
+      if (isRecording && mirrorCtx && sourceCanvas) {
+        mirrorCtx.clearRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
+        mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
+      }
+    });
+  };
 
   // ── Recording Pipeline ──
   function startRecording() {
     sourceCanvas = findCanvas();
-    if (!sourceCanvas) return;
+    if (!sourceCanvas) {
+      parent.postMessage({ type: 'emotive-rec-error', error: 'No canvas found' }, '*');
+      return;
+    }
 
     mirrorCanvas = document.createElement('canvas');
     mirrorCanvas.width = sourceCanvas.width || sourceCanvas.clientWidth;
@@ -218,6 +75,7 @@
 
     recordedChunks = [];
 
+    // captureStream(60) = continuous 60fps capture from mirror canvas
     var stream = mirrorCanvas.captureStream(60);
     var mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
@@ -234,207 +92,46 @@
 
     mediaRecorder.onstop = function () {
       var blob = new Blob(recordedChunks, { type: 'video/webm' });
-      showShareModal(blob);
+      var blobUrl = URL.createObjectURL(blob);
+      parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, size: blob.size }, '*');
       mediaRecorder = null;
       mirrorCanvas = null;
       mirrorCtx = null;
     };
 
-    mediaRecorder.start();
+    mediaRecorder.start(100); // collect data every 100ms for smoother stop
     isRecording = true;
 
-    // Update button UI
-    recBtn.classList.add('recording');
-    recPill.classList.add('recording');
-    recPill.querySelector('.emotive-rec-label').innerHTML = 'REC <span class="emotive-rec-stop"></span>';
-
-    // Monkey-patch rAF to grab frames after each render
-    origRAF = window.requestAnimationFrame;
-    window.requestAnimationFrame = function (cb) {
-      return origRAF.call(window, function (time) {
-        cb(time);
-        if (mirrorCtx && sourceCanvas && mediaRecorder && mediaRecorder.state === 'recording') {
-          mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
-        } else if (!isRecording) {
-          window.requestAnimationFrame = origRAF;
-        }
-      });
-    };
+    parent.postMessage({ type: 'emotive-rec-started' }, '*');
   }
 
   function stopRecording() {
     isRecording = false;
-
-    if (origRAF) {
-      window.requestAnimationFrame = origRAF;
-      origRAF = null;
-    }
-
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
     }
-
-    // Update button UI
-    recBtn.classList.remove('recording');
-    recPill.classList.remove('recording');
-    recPill.classList.remove('expanded');
-    recPill.querySelector('.emotive-rec-label').textContent = 'Tap to record!';
   }
 
-  function toggleRecording() {
-    if (isRecording) {
-      stopRecording();
-    } else {
+  // ── Listen for commands from parent ──
+  window.addEventListener('message', function (e) {
+    if (!e.data || !e.data.type) return;
+    if (e.data.type === 'emotive-rec-start') {
       startRecording();
+    } else if (e.data.type === 'emotive-rec-stop') {
+      stopRecording();
+    } else if (e.data.type === 'emotive-rec-ping') {
+      notifyReady();
     }
-  }
+  });
 
-  function onKeyDown(e) {
-    if (e.key.toLowerCase() !== 'r') return;
-    var tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
-    e.preventDefault();
-    toggleRecording();
-  }
-
-  // ── Share Modal ──
-  function showShareModal(blob) {
-    var blobUrl = URL.createObjectURL(blob);
-
-    // Create overlay
-    var overlay = document.createElement('div');
-    overlay.className = 'emotive-share-overlay';
-
-    var canShare = navigator.share && navigator.canShare &&
-      navigator.canShare({ files: [new File([blob], 'recording.webm', { type: 'video/webm' })] });
-
-    // Build modal via DOM APIs (avoid innerHTML with dynamic URLs)
-    var modal = document.createElement('div');
-    modal.className = 'emotive-share-modal';
-
-    var header = document.createElement('div');
-    header.className = 'emotive-share-header';
-    var title = document.createElement('span');
-    title.className = 'emotive-share-title';
-    title.textContent = 'Recording ready!';
-    var closeBtn = document.createElement('button');
-    closeBtn.className = 'emotive-share-close';
-    closeBtn.innerHTML = '&times;';
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-
-    var video = document.createElement('video');
-    video.className = 'emotive-share-preview';
-    video.src = blobUrl;
-    video.autoplay = true;
-    video.loop = true;
-    video.muted = true;
-    video.playsInline = true;
-
-    var actions = document.createElement('div');
-    actions.className = 'emotive-share-actions';
-    if (canShare) {
-      var shareBtnEl = document.createElement('button');
-      shareBtnEl.className = 'emotive-share-btn';
-      shareBtnEl.textContent = 'Share';
-      actions.appendChild(shareBtnEl);
-    }
-    var dlBtn = document.createElement('button');
-    dlBtn.className = 'emotive-share-dl';
-    dlBtn.textContent = 'Download';
-    actions.appendChild(dlBtn);
-
-    modal.appendChild(header);
-    modal.appendChild(video);
-    modal.appendChild(actions);
-    overlay.appendChild(modal);
-
-    function close() {
-      overlay.classList.remove('visible');
-      setTimeout(function () {
-        overlay.remove();
-        URL.revokeObjectURL(blobUrl);
-      }, 250);
-    }
-
-    // Close on backdrop click
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) close();
-    });
-
-    // Close button
-    closeBtn.addEventListener('click', close);
-
-    // Share button (if available)
-    if (canShare) {
-      shareBtnEl.addEventListener('click', function () {
-        var file = new File([blob], 'emotive-engine.webm', { type: 'video/webm' });
-        navigator.share({
-          files: [file],
-          title: 'Emotive Engine',
-        }).catch(function () { /* user cancelled share */ });
-      });
-    }
-
-    // Download button
-    dlBtn.addEventListener('click', function () {
-      var a = document.createElement('a');
-      a.download = 'emotive-engine.webm';
-      a.href = blobUrl;
-      a.click();
-    });
-
-    document.body.appendChild(overlay);
-
-    // Trigger transition
-    requestAnimationFrame(function () {
-      overlay.classList.add('visible');
-    });
-  }
-
-  // ── Floating Record Button ──
-  var recBtn, recPill;
-
-  function createRecordButton() {
-    recBtn = document.createElement('button');
-    recBtn.className = 'emotive-rec-btn';
-    recBtn.setAttribute('aria-label', 'Record animation');
-
-    recBtn.innerHTML =
-      '<div class="emotive-rec-dot">' +
-        '<div class="emotive-rec-dot-inner"></div>' +
-      '</div>' +
-      '<div class="emotive-rec-pill">' +
-        '<span class="emotive-rec-label">Tap to record!</span>' +
-      '</div>';
-
-    recPill = recBtn.querySelector('.emotive-rec-pill');
-    recBtn.addEventListener('click', toggleRecording);
-    document.body.appendChild(recBtn);
-
-    // Expand after 1s to draw attention
-    setTimeout(function () {
-      recPill.classList.add('expanded');
-    }, 1000);
-
-    // Collapse after 5s
-    setTimeout(function () {
-      if (!isRecording) {
-        recPill.classList.remove('expanded');
-      }
-    }, 5000);
-  }
-
-  // ── Initialization ──
-  function init() {
-    injectStyles();
-    createRecordButton();
-    document.addEventListener('keydown', onKeyDown);
+  // Tell the parent we're ready
+  function notifyReady() {
+    parent.postMessage({ type: 'emotive-rec-ready' }, '*');
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', notifyReady);
   } else {
-    init();
+    notifyReady();
   }
 })();
