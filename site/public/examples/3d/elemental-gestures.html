@@ -115,9 +115,6 @@
             }
             .gesture-btn:hover { transform: none; }
 
-            .featured-gesture {
-                margin-right: 28px;
-            }
 
             /* Floating toast near canvas */
             .mobile-toast {
@@ -241,23 +238,7 @@
                 <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
             </h2>
             <div class="section-content">
-                <div class="button-grid" style="max-height: none;">
-                    <button data-action="emotion" data-value="neutral" class="active">😐 Neutral</button>
-                    <button data-action="emotion" data-value="joy">😊 Joy</button>
-                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
-                    <button data-action="emotion" data-value="anger">😠 Anger</button>
-                    <button data-action="emotion" data-value="fear">😨 Fear</button>
-                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                    <button data-action="emotion" data-value="love">💕 Love</button>
-                    <button data-action="emotion" data-value="excited">😆 Excited</button>
-                    <button data-action="emotion" data-value="calm">😌 Calm</button>
-                    <button data-action="emotion" data-value="euphoria">🤩 Euphoria</button>
-                    <button data-action="emotion" data-value="focused">🎯 Focused</button>
-                    <button data-action="emotion" data-value="resting">😴 Resting</button>
-                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
-                    <button data-action="emotion" data-value="suspicion">🧐 Suspicion</button>
-                    <button data-action="emotion" data-value="glitch">🌈 Glitch</button>
-                </div>
+                <div class="emotion-grid" id="emotion-buttons"></div>
             </div>
         </div>
     </div>
@@ -379,28 +360,48 @@
         </div>
 
         <div class="section visual-controls">
-            <h2 class="has-toggle">
+            <h2 class="has-toggle collapsed">
                 <span>Visuals</span>
                 <div class="toggle-switch active" id="particles-toggle">Particles</div>
-                <div class="toggle-switch active" data-action="toggle-auto-rotate">Rotate</div>
             </h2>
-            <div class="section-content">
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
                 </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch active" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D, { profiler, animateMoonPhase } from '/emotive-engine-3d-elementals.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles, setupWobbleToggle } from '/examples/3d/demo-utils.js';
+        import { setupParticlesToggle, setupVisualToggles, setupWobbleToggle, setActiveButton, createEmotionButtons, createActivityLog } from '/examples/3d/demo-utils.js';
+
+        const log = createActivityLog();
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE MASCOT
         // ═══════════════════════════════════════════════════════════════════════════
 
+        log('Initializing mascot...', 'info');
         const container = document.getElementById('animation-container');
         const mascot = new EmotiveMascot3D({
             coreGeometry: 'crystal',
@@ -422,6 +423,7 @@
 
         mascot.init(container);
         mascot.start();
+        log('Ready!', 'success');
 
         // Expose for console debugging
         window.mascot = mascot;
@@ -430,6 +432,26 @@
         // Setup shared toggles
         setupParticlesToggle(mascot);
         setupVisualToggles(mascot);
+
+        // Log visual toggle changes (listeners run after demo-utils toggles state)
+        document.querySelectorAll('[data-action]').forEach(el => {
+            const { action } = el.dataset;
+            if (['toggle-glow', 'toggle-blink', 'toggle-breathing', 'toggle-auto-rotate'].includes(action)) {
+                el.addEventListener('click', () => {
+                    const label = action.replace('toggle-', '');
+                    const on = el.classList.contains('active');
+                    log(`${label}: ${on ? 'on' : 'off'}`, 'info');
+                });
+            }
+        });
+        // Log particles toggle
+        const particlesToggleEl = document.getElementById('particles-toggle');
+        if (particlesToggleEl) {
+            particlesToggleEl.addEventListener('click', () => {
+                const on = particlesToggleEl.classList.contains('active');
+                log(`Particles: ${on ? 'on' : 'off'}`, 'info');
+            });
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // ELEMENTAL GESTURE DISCOVERY
@@ -570,15 +592,7 @@
             btn.dataset.element = element;
             btn.dataset.description = gesture.description || '';
 
-            // Pure DOM API — no innerHTML parsing overhead
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'emoji';
-            emojiSpan.textContent = gesture.emoji || elementMeta[element].emoji;
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'name';
-            nameSpan.textContent = gesture.name;
-            btn.appendChild(emojiSpan);
-            btn.appendChild(nameSpan);
+            btn.textContent = gesture.name;
 
             return btn;
         }
@@ -733,9 +747,9 @@
             const value = btn.dataset.value;
             mascot.morphTo(value);
             currentGeometry = value;
+            log(`Geometry: ${value}`, 'info');
 
-            document.querySelectorAll('[data-action="geometry"]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            setActiveButton('[data-action="geometry"]', btn);
 
             // Show/hide geometry-specific controls
             document.getElementById('eclipse-section').style.display = (value === 'sun') ? 'block' : 'none';
@@ -788,9 +802,9 @@
             if (mascot.core3D?.customMaterial) {
                 animateMoonPhase(mascot.core3D.customMaterial, value, 1500);
                 currentMoonPhase = value;
+                log(`Moon phase: ${value}`, 'info');
 
-                document.querySelectorAll('[data-action="moon-phase"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                setActiveButton('[data-action="moon-phase"]', btn);
 
                 // Lunar eclipse only available on full moon
                 const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
@@ -818,10 +832,11 @@
             if (btn.classList.contains('active')) {
                 mascot.core3D.setSunShadow('off');
                 btn.classList.remove('active');
+                log('Solar eclipse: off', 'info');
             } else {
-                document.querySelectorAll('[data-action="eclipse"]').forEach(b => b.classList.remove('active'));
+                setActiveButton('[data-action="eclipse"]', btn);
                 mascot.core3D.setSunShadow(value);
-                btn.classList.add('active');
+                log(`Solar eclipse: ${value}`, 'info');
             }
         });
 
@@ -835,28 +850,30 @@
                 mascot.core3D.setMoonEclipse('off');
                 btn.classList.remove('active');
                 document.getElementById('moon-phase-section').style.display = 'block';
+                log('Lunar eclipse: off', 'info');
             } else {
-                document.querySelectorAll('[data-action="lunar-eclipse"]').forEach(b => b.classList.remove('active'));
+                setActiveButton('[data-action="lunar-eclipse"]', btn);
                 mascot.core3D.setMoonEclipse(value);
-                btn.classList.add('active');
                 document.getElementById('moon-phase-section').style.display = 'none';
+                log(`Lunar eclipse: ${value}`, 'info');
             }
         });
 
-        // Emotion button clicks
-        document.addEventListener('click', e => {
-            const btn = e.target.closest('[data-action="emotion"]');
-            if (!btn) return;
-
-            const value = btn.dataset.value;
-            mascot.setEmotion(value);
-
-            document.querySelectorAll('[data-action="emotion"]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
+        // Emotion buttons
+        createEmotionButtons('emotion-buttons', (emotion) => {
+            mascot.setEmotion(emotion);
+            log(`Emotion: ${emotion}`, 'info');
+        }, { activeEmotion: 'neutral' });
 
         // Wobble toggle (uses shared demo-utils pattern)
         setupWobbleToggle(() => mascot);
+        const wobbleToggleEl = document.getElementById('wobble-toggle');
+        if (wobbleToggleEl) {
+            wobbleToggleEl.addEventListener('click', () => {
+                const on = wobbleToggleEl.classList.contains('active');
+                log(`Wobble: ${on ? 'on' : 'off'}`, 'info');
+            });
+        }
 
         // Gesture button clicks (including prime buttons in section headers)
         document.addEventListener('click', e => {
@@ -870,6 +887,7 @@
             const meta = elementMeta[element];
             if (meta) showMobileToast(`${meta.emoji} ${gestureName}  [${meta.name}]`);
 
+            log(`Gesture: ${gestureName} [${element}]`, 'info');
             mascot.express(gestureName);
         });
 
@@ -877,6 +895,7 @@
         document.getElementById('shuffle-btn').addEventListener('click', () => {
             if (allElementalGestures.length === 0) return;
             const gesture = allElementalGestures[Math.floor(Math.random() * allElementalGestures.length)];
+            log(`Shuffle: ${gesture.name} [${gesture.element}]`, 'info');
             mascot.express(gesture.name);
             const meta = elementMeta[gesture.element];
             if (meta) showMobileToast(`${meta.emoji} ${gesture.name} [${meta.name}]`);

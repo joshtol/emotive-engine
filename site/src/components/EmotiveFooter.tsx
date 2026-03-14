@@ -51,7 +51,7 @@ const FOOTER_LINKS = [
 export default function EmotiveFooter() {
   return (
     <div className="legal-footer" style={{ padding: '1.5rem clamp(1rem, 3vw, 2rem)' }}>
-      <div className="footer-content" style={{ maxWidth: '1200px', width: '100%', justifyContent: 'space-between' }}>
+      <div className="footer-content" style={{ maxWidth: '1200px', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <span className="trademark">emotive ENGINE™</span>
           <span className="separator">•</span>

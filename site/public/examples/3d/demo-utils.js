@@ -754,3 +754,151 @@ if (document.readyState === 'loading') {
 
 // Export for manual use if needed
 export { openPrecisionPopup, closePrecisionPopup };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// Shared utilities for button state, sliders, and color pickers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Set the active button within a group — removes .active from all matching
+ * the selector, then adds it to the target element.
+ * @param {string} selector - CSS selector for the button group
+ * @param {Element} target - The button to make active
+ */
+export function setActiveButton(selector, target) {
+    document.querySelectorAll(selector).forEach(btn => btn.classList.remove('active'));
+    target.classList.add('active');
+}
+
+/**
+ * Convert a hex color string to a normalized [0-1] RGB array.
+ * @param {string} hex - Hex color (e.g. '#ff9400')
+ * @returns {number[]} [r, g, b] with values 0-1
+ */
+export function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+        parseInt(result[1], 16) / 255,
+        parseInt(result[2], 16) / 255,
+        parseInt(result[3], 16) / 255
+    ] : [1.0, 1.0, 1.0];
+}
+
+/**
+ * Wire up a color picker input to display RGB values and call a callback.
+ * @param {string} pickerId - ID of the <input type="color">
+ * @param {string} valueId - ID of the element to show "RGB: r, g, b"
+ * @param {Function} onColorChange - Called with [r, g, b] (0-1) on each change
+ */
+export function setupColorPicker(pickerId, valueId, onColorChange) {
+    const picker = document.getElementById(pickerId);
+    if (!picker) return;
+    picker.addEventListener('input', (e) => {
+        const rgb = hexToRgb(e.target.value);
+        const valueEl = document.getElementById(valueId);
+        if (valueEl) valueEl.textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
+        onColorChange?.(rgb);
+    });
+}
+
+/**
+ * Wire up a range slider to update a display element and call a callback.
+ * @param {string} sliderId - ID of the <input type="range">
+ * @param {string} valueId - ID of the element to show the current value
+ * @param {Function} onUpdate - Called with the parsed float value
+ * @param {number} [decimals=2] - Number of decimal places in the display
+ * @param {string} [suffix=''] - Suffix appended to the display value (e.g. '°', '%')
+ */
+export function setupSlider(sliderId, valueId, onUpdate, decimals = 2, suffix = '') {
+    const slider = document.getElementById(sliderId);
+    const valueDisplay = document.getElementById(valueId);
+    if (!slider) return;
+    slider.addEventListener('input', () => {
+        const value = parseFloat(slider.value);
+        if (valueDisplay) valueDisplay.textContent = value.toFixed(decimals) + suffix;
+        onUpdate(value);
+    });
+}
+
+/**
+ * Programmatically sync a slider and its display to a given value.
+ * @param {string} id - Base ID (slider is `${id}-slider`, display is `${id}-value`)
+ * @param {*} value - The value to set
+ * @param {number} [decimals=2] - Decimal places for the display
+ */
+export function setSlider(id, value, decimals = 2) {
+    const slider = document.getElementById(id + '-slider');
+    const display = document.getElementById(id + '-value');
+    if (slider && value !== undefined) {
+        slider.value = value;
+        if (display) display.textContent = value.toFixed(decimals);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EMOTION BUTTONS
+// Shared emotion button grid with SVG icons from /assets/states/
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const EMOTIONS = [
+    'joy', 'love', 'excited', 'euphoria',
+    'calm', 'surprise', 'neutral', 'glitch',
+    'sadness', 'anger', 'fear', 'disgust'
+];
+
+/**
+ * Populate a container with emotion buttons using SVG icons.
+ * Each button gets data-emotion="name" and calls onEmotionChange on click.
+ * @param {string} containerId - ID of the container element to fill
+ * @param {Function} onEmotionChange - Called with emotion name string on click
+ * @param {Object} [options]
+ * @param {string} [options.activeEmotion] - Initially active emotion (default: none)
+ * @param {string} [options.basePath='/assets/states'] - Path to SVG directory
+ */
+export function createEmotionButtons(containerId, onEmotionChange, options = {}) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const basePath = options.basePath || '/assets/states';
+    const activeEmotion = options.activeEmotion || null;
+
+    container.innerHTML = '';
+
+    for (const emotion of EMOTIONS) {
+        const btn = document.createElement('button');
+        btn.dataset.emotion = emotion;
+        btn.className = emotion === activeEmotion ? 'active' : '';
+        btn.innerHTML = `<img src="${basePath}/${emotion}.svg" alt="${emotion}"><span>${emotion.charAt(0).toUpperCase() + emotion.slice(1)}</span>`;
+        btn.addEventListener('click', () => {
+            setActiveButton(`#${containerId} [data-emotion]`, btn);
+            onEmotionChange(emotion);
+        });
+        container.appendChild(btn);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ACTIVITY LOG
+// Shared collapsible log panel for demo activity
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Create an activity logger that appends timestamped entries to a container.
+ * @param {string} [containerId='activity-log'] - ID of the log container element
+ * @returns {Function} log(message, type) — type is a CSS class: 'info', 'success', 'warn', 'error'
+ */
+export function createActivityLog(containerId = 'activity-log') {
+    return (message, type = 'info') => {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const time = new Date().toLocaleTimeString('en-US', {
+            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${message}</span>`;
+        el.appendChild(entry);
+        el.scrollTop = el.scrollHeight;
+    };
+}

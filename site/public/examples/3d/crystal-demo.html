@@ -75,26 +75,11 @@
 
         <div class="section">
             <h2 class="has-toggle">
-                <span>Emotions</span>
+                <span>Emotion</span>
                 <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
             </h2>
             <div class="section-content">
-                <div class="emotion-grid">
-                    <button data-emotion="neutral" class="active">😐 Neutral</button>
-                    <button data-emotion="joy">😊 Joy</button>
-                    <button data-emotion="sadness">😢 Sadness</button>
-                    <button data-emotion="anger">😠 Anger</button>
-                    <button data-emotion="fear">😨 Fear</button>
-                    <button data-emotion="surprise">😲 Surprise</button>
-                    <button data-emotion="disgust">🤢 Disgust</button>
-                    <button data-emotion="love">❤️ Love</button>
-                    <button data-emotion="calm">😌 Calm</button>
-                    <button data-emotion="excited">🤩 Excited</button>
-                    <button data-emotion="focused">🎯 Focused</button>
-                    <button data-emotion="suspicion">🤨 Suspicion</button>
-                    <button data-emotion="resting">😴 Resting</button>
-                    <button data-emotion="euphoria">🤯 Euphoria</button>
-                </div>
+                <div class="emotion-grid" id="emotion-buttons"></div>
             </div>
         </div>
 
@@ -115,14 +100,18 @@
 
     <div class="right-menu">
         <div class="section visual-controls">
-            <h2 class="has-toggle">
+            <h2 class="has-toggle collapsed">
                 <span>Visuals</span>
-                <div class="toggle-switch" id="particles-toggle">Particles</div>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
             </h2>
-            <div class="section-content">
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
                 </div>
                 <div class="toggle-control">
                     <span class="toggle-label">Breathing</span>
@@ -386,6 +375,12 @@
             </div>
         </div>
 
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -398,16 +393,24 @@
             sssPresets as sharedSSSPresets,
             createBlendLayerGroup,
             createLayerShaderUpdater,
-            syncLayersFromShader
+            syncLayersFromShader,
+            setActiveButton,
+            setupSlider,
+            setSlider,
+            createEmotionButtons,
+            createActivityLog
         } from '/examples/3d/demo-utils.js';
 
+        const log = createActivityLog();
         const MAX_BLEND_LAYERS = 2;  // 2 layers per component
+
+        log('Initializing Crystal...', 'info');
 
         const container = document.getElementById('crystal-container');
         const mascot = new EmotiveMascot3D({
             canvasId: 'crystal',
             coreGeometry: 'crystal',
-            enableParticles: false,
+            enableParticles: true,
             enableControls: true,
             autoRotate: true,
             autoRotateSpeed: 0.3,
@@ -422,19 +425,10 @@
 
         mascot.init(container);
         mascot.start();
+        log('Ready!', 'success');
 
         // Set initial emotion
         mascot.setEmotion('neutral');
-
-        // Helper to update slider and display
-        function setSlider(id, value, decimals = 2) {
-            const slider = document.getElementById(id + '-slider');
-            const display = document.getElementById(id + '-value');
-            if (slider && value !== undefined) {
-                slider.value = value;
-                if (display) display.textContent = value.toFixed(decimals);
-            }
-        }
 
         // Track currently selected SSS preset and geometry
         let currentSSSPreset = 'quartz';
@@ -500,33 +494,43 @@
         // Geometry buttons
         document.querySelectorAll('[data-geometry]').forEach(btn => {
             btn.addEventListener('click', () => {
-                const geometry = btn.dataset.geometry;
-                currentGeometry = geometry;  // Track current geometry
-                mascot.morphTo(geometry);
-
-                // Update active state
-                document.querySelectorAll('[data-geometry]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                // SSS preset is now applied via onMaterialSwap callback (no delay needed)
+                currentGeometry = btn.dataset.geometry;
+                log(`Morph → ${currentGeometry}`, 'info');
+                mascot.morphTo(currentGeometry);
+                setActiveButton('[data-geometry]', btn);
             });
         });
 
         // Emotion buttons
-        document.querySelectorAll('[data-emotion]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const emotion = btn.dataset.emotion;
-                mascot.setEmotion(emotion);
-
-                // Update active state
-                document.querySelectorAll('[data-emotion]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
+        createEmotionButtons('emotion-buttons', (emotion) => {
+            mascot.setEmotion(emotion);
+            log(`Emotion: ${emotion}`, 'info');
+        }, { activeEmotion: 'neutral' });
 
         // Setup shared toggles from demo-utils
         setupWobbleToggle(mascot);
         setupParticlesToggle(mascot);
         setupVisualToggles(mascot);
+
+        // Log visual toggle changes
+        document.getElementById('wobble-toggle')?.addEventListener('click', () => {
+            const on = document.getElementById('wobble-toggle').classList.contains('active');
+            log(`Wobble ${on ? 'on' : 'off'}`, 'info');
+        });
+        document.getElementById('particles-toggle')?.addEventListener('click', () => {
+            const on = document.getElementById('particles-toggle').classList.contains('active');
+            log(`Particles ${on ? 'on' : 'off'}`, 'info');
+        });
+        document.querySelectorAll('[data-action]').forEach(el => {
+            const action = el.dataset.action;
+            if (['toggle-glow', 'toggle-blink', 'toggle-breathing', 'toggle-auto-rotate'].includes(action)) {
+                el.addEventListener('click', () => {
+                    const label = action.replace('toggle-', '');
+                    const on = el.classList.contains('active');
+                    log(`${label.charAt(0).toUpperCase() + label.slice(1)} ${on ? 'on' : 'off'}`, 'info');
+                });
+            }
+        });
 
         // Soul Animation toggle controls (crystal-specific)
         function setupToggle(id, onToggle, initialState = false) {
@@ -551,18 +555,6 @@
                 mascot.core3D.setCrystalSoulEffects({ crossWaveEnabled: enabled });
             }
         }, true);
-
-        // Slider controls for crystal appearance
-        function setupSlider(sliderId, valueId, onUpdate, decimals = 2) {
-            const slider = document.getElementById(sliderId);
-            const valueDisplay = document.getElementById(valueId);
-
-            slider.addEventListener('input', () => {
-                const value = parseFloat(slider.value);
-                valueDisplay.textContent = value.toFixed(decimals);
-                onUpdate(value);
-            });
-        }
 
         // Size sliders
         setupSlider('shell-size-slider', 'shell-size-value', (value) => {
@@ -789,13 +781,10 @@
         // SSS preset buttons
         document.querySelectorAll('[data-sss-preset]').forEach(btn => {
             btn.addEventListener('click', () => {
-                const presetName = btn.dataset.sssPreset;
-                currentSSSPreset = presetName;  // Track selected preset
-                applySSSPreset(presetName);
-
-                // Update active state
-                document.querySelectorAll('[data-sss-preset]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                currentSSSPreset = btn.dataset.sssPreset;
+                log(`SSS preset → ${currentSSSPreset}`, 'info');
+                applySSSPreset(currentSSSPreset);
+                setActiveButton('[data-sss-preset]', btn);
             });
         });
 
@@ -882,12 +871,20 @@
         const getUniforms = () => mascot?.core3D?.customMaterial?.uniforms;
 
         // Create layer groups for each component
+        // Wrap updateShader to add blend layer logging
+        function withBlendLog(name, updater) {
+            return (layers) => {
+                log(`Blend ${name}: ${layers.length} layer${layers.length !== 1 ? 's' : ''}`, 'info');
+                updater(layers);
+            };
+        }
+
         const shellLayerGroup = createBlendLayerGroup({
             name: 'Shell',
             containerId: 'shell-layers-container',
             addBtnId: 'add-shell-layer-btn',
             maxLayers: MAX_BLEND_LAYERS,
-            updateShader: createLayerShaderUpdater(getUniforms, 'shellLayer', MAX_BLEND_LAYERS),
+            updateShader: withBlendLog('Shell', createLayerShaderUpdater(getUniforms, 'shellLayer', MAX_BLEND_LAYERS)),
             blendModeNames
         });
 
@@ -896,12 +893,12 @@
             containerId: 'soul-layers-container',
             addBtnId: 'add-soul-layer-btn',
             maxLayers: MAX_BLEND_LAYERS,
-            updateShader: (layers) => {
+            updateShader: withBlendLog('Soul', (layers) => {
                 // Soul uses CrystalSoul's setBlendLayers, not shader uniforms
                 if (mascot?.core3D?.crystalSoul) {
                     mascot.core3D.crystalSoul.setBlendLayers(layers);
                 }
-            },
+            }),
             blendModeNames
         });
 
@@ -910,7 +907,7 @@
             containerId: 'rim-layers-container',
             addBtnId: 'add-rim-layer-btn',
             maxLayers: MAX_BLEND_LAYERS,
-            updateShader: createLayerShaderUpdater(getUniforms, 'rimLayer', MAX_BLEND_LAYERS),
+            updateShader: withBlendLog('Rim', createLayerShaderUpdater(getUniforms, 'rimLayer', MAX_BLEND_LAYERS)),
             blendModeNames
         });
 
@@ -919,7 +916,7 @@
             containerId: 'sss-layers-container',
             addBtnId: 'add-sss-layer-btn',
             maxLayers: MAX_BLEND_LAYERS,
-            updateShader: createLayerShaderUpdater(getUniforms, 'sssLayer', MAX_BLEND_LAYERS),
+            updateShader: withBlendLog('SSS', createLayerShaderUpdater(getUniforms, 'sssLayer', MAX_BLEND_LAYERS)),
             blendModeNames
         });
 

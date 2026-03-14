@@ -58,14 +58,22 @@
         </div>
 
         <div class="section visual-controls">
-            <h2 class="has-toggle">
+            <h2 class="has-toggle collapsed">
                 <span>Visuals</span>
                 <div class="toggle-switch active" id="particles-toggle">Particles</div>
             </h2>
-            <div class="section-content">
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
                 </div>
                 <div class="toggle-control">
                     <span class="toggle-label">Auto-Rotate</span>
@@ -111,11 +119,20 @@
                 Dance Choreographer reacts to audio energy. LLM Interpreter understands lyrics semantically. Both can run together!
             </div>
         </div>
+
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D, { AudioInterpreter, LLM_ENDPOINTS } from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+        import { setupParticlesToggle, setupVisualToggles, applySSSPreset, setActiveButton, createActivityLog } from '/examples/3d/demo-utils.js';
+
+        const log = createActivityLog();
 
         const STORAGE_KEY = 'groove-demo-api-key';
         const PROVIDER_KEY = 'groove-demo-provider';
@@ -151,8 +168,9 @@
         }
 
         async function init() {
+            log('Initializing mascot...', 'info');
             mascot = new EmotiveMascot3D({
-                coreGeometry: 'crystal',
+                coreGeometry: 'rough',
                 enableParticles: true,
                 enablePostProcessing: true,
                 enableBlinking: true,
@@ -170,6 +188,9 @@
 
             await mascot.init(container);
             mascot.start();
+            log('Ready!', 'success');
+            applySSSPreset(mascot, 'amethyst', 'rough');
+            log('SSS preset: amethyst', 'info');
             mascot.setEmotion('calm');
             mascot.enableGroove();
             mascot.enableDance();
@@ -180,6 +201,7 @@
 
             await loadTrack('female');
             initAudioInterpreter();
+            log('Audio interpreter ready', 'info');
 
             // Restore saved API key and provider
             const savedKey = localStorage.getItem(STORAGE_KEY);
@@ -193,6 +215,7 @@
                 llmApiKeyInput.value = savedKey;
                 // Auto-enable LLM interpreter if we have a saved key
                 enableLLMInterpreter(savedKey, llmProviderSelect.value);
+                log('Restored saved API key', 'info');
             }
         }
 
@@ -204,6 +227,7 @@
 
             if (audioInterpreter.enable()) {
                 updateLLMStatus(true, `Active (${provider})`);
+                log(`LLM enabled: ${provider}`, 'success');
                 return true;
             }
             return false;
@@ -214,11 +238,13 @@
                 audioInterpreter.disable();
             }
             updateLLMStatus(false, 'Disabled');
+            log('LLM disabled', 'info');
         }
 
         async function loadTrack(id) {
             const url = DEMO_TRACKS[id];
             if (!url) return;
+            log(`Loading track: ${id}`, 'info');
 
             if (audioElement) {
                 audioElement.pause();
@@ -235,6 +261,8 @@
                 audioElement.onerror = () => rej(new Error('Load failed'));
             });
 
+            log(`Track loaded: ${id}`, 'success');
+
             // Load lyrics if available
             const lrcUrl = TRACK_LYRICS[id];
             if (lrcUrl) {
@@ -244,6 +272,7 @@
                         const text = await r.text();
                         document.getElementById('llmLyrics').value = text;
                         parsedLyrics = parseLyrics(text);
+                        log(`Lyrics loaded: ${parsedLyrics.length} lines`, 'info');
                     }
                 } catch {}
             } else {
@@ -253,6 +282,7 @@
         }
 
         async function loadAudioFile(file) {
+            log(`Loading file: ${file.name}`, 'info');
             if (audioElement) {
                 audioElement.pause();
                 if (audioElement.src.startsWith('blob:')) URL.revokeObjectURL(audioElement.src);
@@ -270,6 +300,7 @@
 
             parsedLyrics = [];
             document.getElementById('llmLyrics').value = '';
+            log(`File loaded: ${file.name}`, 'success');
         }
 
         async function playAudio() {
@@ -278,12 +309,14 @@
             await mascot.connectAudio(audioElement);
             await audioElement.play();
             isPlaying = true;
+            log('Playing audio', 'success');
             document.getElementById('playBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
 
             startBPMMonitor();
             if (parsedLyrics.length > 0 && audioInterpreter?.enabled) {
                 startLyricsTracking();
+                log('Lyrics tracking started', 'info');
             }
 
             audioElement.onended = () => {
@@ -291,6 +324,7 @@
                 document.getElementById('playBtn').disabled = false;
                 document.getElementById('stopBtn').disabled = true;
                 stopLyricsTracking();
+                log('Track ended', 'info');
             };
         }
 
@@ -300,6 +334,7 @@
                 audioElement.currentTime = 0;
             }
             isPlaying = false;
+            log('Audio stopped', 'info');
             document.getElementById('playBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             stopLyricsTracking();
@@ -333,6 +368,7 @@
             document.getElementById('bpmValue').textContent = bpm;
             mascot.setRhythmBPM(bpm);
             if (!isPlaying) mascot.startRhythm(bpm);
+            log(`Tap tempo: ${bpm} BPM`, 'info');
 
             setTimeout(() => {
                 if (performance.now() - tapTimes[tapTimes.length - 1] > 2000) tapTimes = [];
@@ -340,17 +376,18 @@
         }
 
         function setGroove(name) {
-            document.querySelectorAll('[data-groove]').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.groove === name);
-            });
+            const target = document.querySelector(`[data-groove="${name}"]`);
+            if (target) setActiveButton('[data-groove]', target);
             mascot.setGroove(name);
+            const labels = { groove1: 'Subtle', groove2: 'Energy', groove3: 'Flow' };
+            log(`Groove: ${labels[name] || name}`, 'info');
         }
 
         // LLM Interpreter
         function initAudioInterpreter() {
             audioInterpreter = new AudioInterpreter({
                 onAction: handleLLMAction,
-                onError: (e) => console.error('LLM Error:', e)
+                onError: (e) => { console.error('LLM Error:', e); log(`LLM error: ${e.message || e}`, 'info'); }
             });
         }
 
@@ -401,6 +438,7 @@
         function handleLLMAction(action) {
             if (!mascot || !action) return;
 
+            log(`LLM action: ${JSON.stringify(action)}`, 'info');
             if (action.geometry) mascot.morphTo(action.geometry);
             if (action.sss) mascot.setSSSPreset?.(action.sss);
             if (action.emotion) mascot.setEmotion(action.emotion);
@@ -417,6 +455,7 @@
 
         // Event listeners
         document.getElementById('trackSelect').addEventListener('change', e => {
+            log(`Track selected: ${e.target.options[e.target.selectedIndex].text}`, 'info');
             if (isPlaying) stopAudio();
             loadTrack(e.target.value);
         });
@@ -444,6 +483,7 @@
             const v = parseInt(e.target.value, 10);
             document.getElementById('intensityValue').textContent = `${v}%`;
             mascot?.setDanceIntensity?.(v / 100);
+            log(`Dance intensity: ${v}%`, 'info');
         });
 
         // API Key management
@@ -455,6 +495,7 @@
                 localStorage.setItem(STORAGE_KEY, key);
                 localStorage.setItem(PROVIDER_KEY, provider);
                 enableLLMInterpreter(key, provider);
+                log('API key saved', 'success');
             }
         });
 
@@ -463,6 +504,7 @@
             llmApiKeyInput.value = '';
             disableLLMInterpreter();
             updateLLMStatus(false, 'Key cleared');
+            log('API key cleared', 'info');
         });
 
         llmProviderSelect.addEventListener('change', () => {
@@ -473,13 +515,14 @@
             if (key && audioInterpreter?.enabled) {
                 enableLLMInterpreter(key, provider);
             }
+            log(`LLM provider: ${provider}`, 'info');
         });
 
         document.getElementById('llmParseLyrics').addEventListener('click', () => {
             const text = document.getElementById('llmLyrics').value.trim();
-            if (!text) { parsedLyrics = []; return; }
+            if (!text) { parsedLyrics = []; log('Lyrics cleared', 'info'); return; }
             parsedLyrics = parseLyrics(text);
-            console.log(`Parsed ${parsedLyrics.length} lyric lines`);
+            log(`Parsed ${parsedLyrics.length} lyric lines`, 'success');
         });
 
         document.getElementById('llmTestInput').addEventListener('keydown', async e => {
@@ -488,6 +531,7 @@
                 if (!text || !audioInterpreter?.enabled) return;
 
                 e.target.disabled = true;
+                log(`LLM input: "${text}"`, 'info');
                 try { await audioInterpreter.interpret(text); }
                 finally { e.target.disabled = false; }
                 e.target.value = '';
@@ -515,6 +559,7 @@
             dragCounter = 0;
             const f = e.dataTransfer.files;
             if (f.length > 0 && (f[0].type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a)$/i.test(f[0].name))) {
+                log(`Dropped file: ${f[0].name}`, 'info');
                 if (isPlaying) stopAudio();
                 await loadAudioFile(f[0]);
             }

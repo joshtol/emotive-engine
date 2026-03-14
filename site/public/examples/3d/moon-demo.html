@@ -70,6 +70,31 @@
     </div>
 
     <div class="right-menu">
+        <div class="section visual-controls">
+            <h2 class="has-toggle collapsed">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content collapsed">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>Shadow Position</h2>
             <div class="section-content">
@@ -130,11 +155,17 @@
             </div>
         </div>
 
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D, { animateMoonPhase } from '/emotive-engine-3d.bundled.js';
-        import { setupTidalLock } from '/examples/3d/demo-utils.js';
+        import { setupTidalLock, setActiveButton, setupVisualToggles, setupParticlesToggle, createActivityLog } from '/examples/3d/demo-utils.js';
 
         // Calibrated rotation for "Man in the Moon" Earth-facing view
         let currentRotation = { x: 55.5, y: -85.0, z: -60.5 };
@@ -151,8 +182,16 @@
             assetBasePath: '/assets'
         });
 
+        const log = createActivityLog();
+        log('Initializing moon...', 'info');
+
         mascot.init(container);
         mascot.start();
+        log('Ready!', 'success');
+
+        // Setup visual toggles
+        setupVisualToggles(mascot);
+        setupParticlesToggle(mascot);
 
         // Set to waning crescent on load
         setTimeout(() => {
@@ -160,6 +199,7 @@
                 animateMoonPhase(mascot.core3D.customMaterial, 'waning-crescent', 1500);
                 document.querySelectorAll('[data-phase]').forEach(btn => btn.classList.remove('active'));
                 document.querySelector('[data-phase="waning-crescent"]')?.classList.add('active');
+                log('Phase: waning-crescent', 'info');
             }
             if (mascot.core3D?.renderer?.controls) {
                 mascot.core3D.renderer.controls.autoRotate = false;
@@ -173,9 +213,9 @@
         document.querySelectorAll('[data-phase]').forEach(button => {
             button.addEventListener('click', async () => {
                 const phase = button.dataset.phase;
+                log(`Phase: ${phase}`, 'info');
 
-                document.querySelectorAll('[data-phase]').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
+                setActiveButton('[data-phase]', button);
 
                 if (mascot.core3D?.customMaterial) {
                     try {
@@ -212,6 +252,8 @@
 
         shadowXSlider.addEventListener('input', (e) => updateShadow('x', parseFloat(e.target.value)));
         shadowYSlider.addEventListener('input', (e) => updateShadow('y', parseFloat(e.target.value)));
+        shadowXSlider.addEventListener('change', (e) => log(`Shadow X: ${parseFloat(e.target.value).toFixed(1)}`, 'info'));
+        shadowYSlider.addEventListener('change', (e) => log(`Shadow Y: ${parseFloat(e.target.value).toFixed(1)}`, 'info'));
 
         // Rotation controls
         const rotationXSlider = document.getElementById('rotation-x-slider');
@@ -235,11 +277,36 @@
         rotationXSlider.addEventListener('input', (e) => updateRotation('x', parseFloat(e.target.value)));
         rotationYSlider.addEventListener('input', (e) => updateRotation('y', parseFloat(e.target.value)));
         rotationZSlider.addEventListener('input', (e) => updateRotation('z', parseFloat(e.target.value)));
+        rotationXSlider.addEventListener('change', (e) => log(`Rotation X: ${parseFloat(e.target.value).toFixed(1)}°`, 'info'));
+        rotationYSlider.addEventListener('change', (e) => log(`Rotation Y: ${parseFloat(e.target.value).toFixed(1)}°`, 'info'));
+        rotationZSlider.addEventListener('change', (e) => log(`Rotation Z: ${parseFloat(e.target.value).toFixed(1)}°`, 'info'));
 
         document.getElementById('reset-rotation').addEventListener('click', () => {
             updateRotation('x', 55.5);
             updateRotation('y', -85.0);
             updateRotation('z', -60.5);
+            log('Rotation reset to default', 'info');
+        });
+
+        // Log visual toggle and particle changes
+        document.querySelectorAll('[data-action]').forEach(el => {
+            el.addEventListener('click', () => {
+                const action = el.dataset.action;
+                const enabled = el.classList.contains('active');
+                const labels = {
+                    'toggle-glow': 'Core Glow',
+                    'toggle-blink': 'Blinking',
+                    'toggle-breathing': 'Breathing',
+                    'toggle-auto-rotate': 'Auto-Rotate'
+                };
+                const label = labels[action];
+                if (label) log(`${label}: ${enabled ? 'on' : 'off'}`, 'info');
+            });
+        });
+
+        document.getElementById('particles-toggle')?.addEventListener('click', () => {
+            const enabled = document.getElementById('particles-toggle').classList.contains('active');
+            log(`Particles: ${enabled ? 'on' : 'off'}`, 'info');
         });
     </script>
 </body>

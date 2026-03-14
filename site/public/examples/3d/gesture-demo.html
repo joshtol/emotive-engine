@@ -262,14 +262,22 @@
         </div>
 
         <div class="section visual-controls">
-            <h2 class="has-toggle">
+            <h2 class="has-toggle collapsed">
                 <span>Visuals</span>
                 <div class="toggle-switch active" id="particles-toggle">Particles</div>
             </h2>
-            <div class="section-content">
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
                 </div>
                 <div class="toggle-control">
                     <span class="toggle-label">Auto-Rotate</span>
@@ -277,15 +285,26 @@
                 </div>
             </div>
         </div>
+
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+        import { setupParticlesToggle, setupVisualToggles, setActiveButton, createActivityLog } from '/examples/3d/demo-utils.js';
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE MASCOT
         // ═══════════════════════════════════════════════════════════════════════════
+
+        const log = createActivityLog();
+
+        log('Initializing mascot...', 'info');
 
         const container = document.getElementById('animation-container');
         const mascot = new EmotiveMascot3D({
@@ -309,6 +328,25 @@
         // Setup shared toggles
         setupParticlesToggle(mascot);
         setupVisualToggles(mascot);
+
+        // Log visual toggle changes
+        const particlesToggle = document.getElementById('particles-toggle');
+        if (particlesToggle) {
+            particlesToggle.addEventListener('click', () => {
+                const on = particlesToggle.classList.contains('active');
+                log(`Particles: ${on ? 'on' : 'off'}`, 'info');
+            });
+        }
+        document.querySelectorAll('[data-action]').forEach(el => {
+            const action = el.dataset.action;
+            if (['toggle-glow', 'toggle-breathing', 'toggle-auto-rotate', 'toggle-blink'].includes(action)) {
+                el.addEventListener('click', () => {
+                    const on = el.classList.contains('active');
+                    const label = action.replace('toggle-', '');
+                    log(`${label}: ${on ? 'on' : 'off'}`, 'info');
+                });
+            }
+        });
 
         // ═══════════════════════════════════════════════════════════════════════════
         // GESTURE DISCOVERY & UI GENERATION
@@ -383,10 +421,7 @@
             btn.dataset.category = category;
             btn.dataset.description = gesture.description || '';
 
-            btn.innerHTML = `
-                <span class="emoji">${gesture.emoji || '✨'}</span>
-                <span class="name">${gesture.name}</span>
-            `;
+            btn.textContent = gesture.name;
 
             return btn;
         }
@@ -516,9 +551,7 @@
             }
 
             recentContainer.innerHTML = recentGestures.map(name => {
-                const gesture = allGestures.find(g => g.name === name);
-                const emoji = gesture?.emoji || '✨';
-                return `<button class="recent-btn" data-gesture="${name}">${emoji} ${name}</button>`;
+                return `<button class="recent-btn" data-gesture="${name}">${name}</button>`;
             }).join('');
         }
 
@@ -562,12 +595,10 @@
             const btn = e.target.closest('[data-action="geometry"]');
             if (!btn) return;
 
-            const value = btn.dataset.value;
-            mascot.morphTo(value);
-
-            // Update active state
-            document.querySelectorAll('[data-action="geometry"]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            const shape = btn.dataset.value;
+            mascot.morphTo(shape);
+            setActiveButton('[data-action="geometry"]', btn);
+            log(`Geometry: ${shape}`, 'info');
         });
 
         // Gesture button clicks (event delegation)
@@ -582,15 +613,25 @@
             const gestureName = btn.dataset.gesture;
             mascot.express(gestureName);
             addToRecent(gestureName);
+            log(`Gesture: ${gestureName}`, 'info');
         });
 
         // Search input
-        searchInput.addEventListener('input', filterGestures);
+        searchInput.addEventListener('input', () => {
+            filterGestures();
+            const term = searchInput.value.trim();
+            if (term) {
+                log(`Search: "${term}"`, 'info');
+            }
+        });
 
         // Filter checkboxes
-        Object.values(filters).forEach(checkbox => {
+        Object.entries(filters).forEach(([category, checkbox]) => {
             if (checkbox) {
-                checkbox.addEventListener('change', filterGestures);
+                checkbox.addEventListener('change', () => {
+                    filterGestures();
+                    log(`Filter ${category}: ${checkbox.checked ? 'on' : 'off'}`, 'info');
+                });
             }
         });
 
@@ -625,9 +666,12 @@
         // Wait a tick for mascot to fully initialize, then populate gestures
         setTimeout(() => {
             populateGestures();
+            log(`Loaded ${allGestures.length} gestures`, 'success');
+            log('Ready!', 'success');
 
             // Fire an initial gesture to show the mascot is alive
             mascot.express('sway');
+            log('Gesture: sway', 'info');
         }, 100);
     </script>
 </body>

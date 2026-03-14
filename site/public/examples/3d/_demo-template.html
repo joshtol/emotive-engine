@@ -82,14 +82,22 @@
         </div>
 
         <div class="section visual-controls">
-            <h2 class="has-toggle">
+            <h2 class="has-toggle collapsed">
                 <span>Visuals</span>
                 <div class="toggle-switch active" id="particles-toggle">Particles</div>
             </h2>
-            <div class="section-content">
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
                 </div>
                 <div class="toggle-control">
                     <span class="toggle-label">Auto-Rotate</span>
@@ -104,11 +112,18 @@
                 Explain what this demo does here.
             </div>
         </div>
+
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles } from '/examples/3d/demo-utils.js';
+        import { setupParticlesToggle, setupVisualToggles, createActivityLog } from '/examples/3d/demo-utils.js';
 
         // Initialize mascot
         const container = document.getElementById('animation-container');
@@ -129,6 +144,8 @@
 
         mascot.init(container);
         mascot.start();
+
+        const log = createActivityLog();
 
         // Fire sway gesture on load
         setTimeout(() => {

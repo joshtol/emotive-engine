@@ -88,11 +88,22 @@
 
     <div class="right-menu">
         <div class="section visual-controls">
-            <h2>Visuals</h2>
-            <div class="section-content">
+            <h2 class="has-toggle collapsed">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
                 </div>
                 <div class="toggle-control">
                     <span class="toggle-label">Auto-Rotate</span>
@@ -119,13 +130,21 @@
                 </div>
             </div>
         </div>
+
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D, { blendModeNames } from '/emotive-engine-3d.bundled.js';
         import { exitPrecisionMode } from '/examples/3d/layer-utils.js';
-        import { createBlendLayerGroup, syncLayersFromShader, setupVisualToggles } from '/examples/3d/demo-utils.js';
+        import { createBlendLayerGroup, syncLayersFromShader, setupVisualToggles, setupParticlesToggle, setActiveButton, setupSlider, createActivityLog } from '/examples/3d/demo-utils.js';
 
+        const log = createActivityLog();
         let mascot = null;
         const MAX_BLEND_LAYERS = 4;
 
@@ -143,6 +162,8 @@
                         ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
                         : { mode: 0, strength: 0, enabled: false });
                 }
+                const active = layers.filter(l => l?.enabled);
+                log(`Sun layers: ${active.length} active`, 'info');
             },
             blendModeNames
         });
@@ -160,6 +181,8 @@
                         ? { mode: layer.mode, strength: layer.strength, enabled: layer.enabled }
                         : { mode: 0, strength: 0, enabled: false });
                 }
+                const active = layers.filter(l => l?.enabled);
+                log(`Corona layers: ${active.length} active`, 'info');
             },
             blendModeNames
         });
@@ -167,6 +190,7 @@
         // Initialize mascot
         (async () => {
             try {
+                log('Initializing sun mascot…', 'info');
                 const container = document.getElementById('sun-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'sun',
@@ -185,9 +209,27 @@
                 mascot.init(container);
                 mascot.start();
                 mascot.setEmotion('joy');
+                log('Ready!', 'success');
 
                 // Setup visual toggles
                 setupVisualToggles(mascot);
+                setupParticlesToggle(mascot);
+
+                // Log visual toggle changes
+                document.querySelectorAll('[data-action]').forEach(el => {
+                    const action = el.dataset.action;
+                    if (['toggle-glow', 'toggle-breathing', 'toggle-auto-rotate', 'toggle-blink'].includes(action)) {
+                        el.addEventListener('click', () => {
+                            const label = action.replace('toggle-', '');
+                            const on = el.classList.contains('active');
+                            log(`${label}: ${on ? 'on' : 'off'}`, 'info');
+                        });
+                    }
+                });
+                document.getElementById('particles-toggle')?.addEventListener('click', () => {
+                    const on = document.getElementById('particles-toggle').classList.contains('active');
+                    log(`Particles: ${on ? 'on' : 'off'}`, 'info');
+                });
 
                 // Auto-populate from shader defaults
                 setTimeout(() => {
@@ -206,6 +248,7 @@
                 }, 500);
             } catch (error) {
                 console.error('Failed to initialize:', error);
+                log('Init failed: ' + error.message, 'info');
             }
         })();
 
@@ -213,9 +256,9 @@
         document.addEventListener('click', (e) => {
             if (e.target.dataset.action === 'eclipse') {
                 const type = e.target.dataset.value;
-                document.querySelectorAll('[data-action="eclipse"]').forEach(btn => btn.classList.remove('active'));
-                e.target.classList.add('active');
+                setActiveButton('[data-action="eclipse"]', e.target);
 
+                log(`Eclipse: ${type}`, 'info');
                 const controls = document.getElementById('eclipse-controls-section');
                 if (type === 'off') {
                     controls.style.display = 'none';
@@ -236,48 +279,22 @@
                 return;
             }
 
-            if (e.target.dataset.action === 'toggle-glow') {
-                const enabled = mascot.core3D?.coreGlowEnabled !== false;
-                mascot.core3D.setCoreGlowEnabled(!enabled);
-                e.target.classList.toggle('active', !enabled);
-                return;
-            }
-
-            if (e.target.dataset.action === 'toggle-auto-rotate') {
-                if (mascot.autoRotateEnabled) {
-                    mascot.disableAutoRotate();
-                    e.target.classList.remove('active');
-                } else {
-                    mascot.enableAutoRotate();
-                    e.target.classList.add('active');
-                }
-                return;
-            }
         });
 
-        document.getElementById('shadow-pos-slider').addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('shadow-pos-value').textContent = value.toFixed(2);
-            if (mascot?.core3D?.solarEclipse) {
-                mascot.core3D.solarEclipse.setManualShadowPosition(value);
-            }
+        setupSlider('shadow-pos-slider', 'shadow-pos-value', (value) => {
+            if (mascot?.core3D?.solarEclipse) mascot.core3D.solarEclipse.setManualShadowPosition(value);
+            log(`Shadow position: ${value.toFixed(2)}`, 'info');
         });
 
-        document.getElementById('total-shadow-slider').addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('total-shadow-value').textContent = value.toFixed(3);
-            if (mascot.core3D?.solarEclipse) {
-                mascot.core3D.solarEclipse.setShadowCoverage(value);
-            }
-        });
+        setupSlider('total-shadow-slider', 'total-shadow-value', (value) => {
+            if (mascot.core3D?.solarEclipse) mascot.core3D.solarEclipse.setShadowCoverage(value);
+            log(`Total shadow size: ${value.toFixed(3)}`, 'info');
+        }, 3);
 
-        document.getElementById('annular-shadow-slider').addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('annular-shadow-value').textContent = value.toFixed(3);
-            if (mascot.core3D?.solarEclipse) {
-                mascot.core3D.solarEclipse.setShadowCoverage(value);
-            }
-        });
+        setupSlider('annular-shadow-slider', 'annular-shadow-value', (value) => {
+            if (mascot.core3D?.solarEclipse) mascot.core3D.solarEclipse.setShadowCoverage(value);
+            log(`Annular shadow size: ${value.toFixed(3)}`, 'info');
+        }, 3);
     </script>
 </body>
 </html>

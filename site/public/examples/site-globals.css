@@ -1475,12 +1475,13 @@ h2.section-header {
   height: 100%;
 }
 .legal-footer:hover { color: var(--text-primary); }
-.footer-content { 
-  display: flex; 
-  align-items: center; 
-  gap: clamp(8px, 1vw, 16px); 
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 1vw, 16px);
   flex-wrap: wrap;
-  justify-content: center;
+  width: 100%;
 }
 .trademark { 
   font-weight: var(--font-medium); 
@@ -1499,9 +1500,10 @@ h2.section-header {
   font-weight: var(--font-normal); 
   font-size: clamp(8px, 1.2vw, 12px);
 }
-.footer-links { 
-  display: flex; 
-  gap: clamp(8px, 1vw, 16px); 
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 1vw, 16px);
 }
 .footer-link { 
   background: none;
@@ -3210,22 +3212,22 @@ h2.section-header {
 @media (max-width: 1024px) {
   .emotive-container {
     min-height: 100vh !important;
-    grid-template-rows: 6vh 1fr 4vh !important;
+    grid-template-rows: 6vh 1fr auto !important;
   }
-  
+
   .emotive-header {
     height: 6vh !important;
   }
-  
+
   .emotive-footer {
-    height: 4vh !important;
     z-index: 1 !important;
   }
-  
+
   /* Ensure footer is visible on tablets */
   .legal-footer {
     display: flex !important;
     visibility: visible !important;
+    height: auto !important;
   }
 }
 
@@ -3233,7 +3235,7 @@ h2.section-header {
 @media (orientation: portrait) {
   .emotive-container {
     min-height: 100vh !important;
-    grid-template-rows: 5vh 1fr 4vh !important;
+    grid-template-rows: 5vh 1fr auto !important;
   }
   
   .emotive-main {
@@ -3266,8 +3268,8 @@ h2.section-header {
   
   .game-canvas-area {
     grid-area: canvas;
-    width: min(100vw, calc(100vh - 5vh - 4vh - 25vh));
-    height: min(100vw, calc(100vh - 5vh - 4vh - 25vh));
+    width: min(100vw, calc(100vh - 5vh - 3rem - 25vh));
+    height: min(100vw, calc(100vh - 5vh - 3rem - 25vh));
     aspect-ratio: 1;
     z-index: 2 !important;
   }
@@ -3300,8 +3302,8 @@ h2.section-header {
   
   /* Increase state columns size in portrait */
   .state-icon {
-    width: calc(min(calc(100vw * 0.45 / 9), calc(100vh - 5vh - 4vh - calc(100vw * 0.45 / 9)) / 5) * 2.1) !important;
-    height: calc(min(calc(100vw * 0.45 / 9), calc(100vh - 5vh - 4vh - calc(100vw * 0.45 / 9)) / 5) * 2.1) !important;
+    width: calc(min(calc(100vw * 0.45 / 9), calc(100vh - 5vh - 3rem - calc(100vw * 0.45 / 9)) / 5) * 2.1) !important;
+    height: calc(min(calc(100vw * 0.45 / 9), calc(100vh - 5vh - 3rem - calc(100vw * 0.45 / 9)) / 5) * 2.1) !important;
   }
   
   /* Increase shape bars size in portrait */
@@ -3330,27 +3332,37 @@ h2.section-header {
   /* Reduce header height and content size in portrait */
   .emotive-container {
     min-height: 100vh !important;
-    grid-template-rows: 5vh 1fr 4vh !important;
+    grid-template-rows: 5vh 1fr auto !important;
   }
-  
+
   .emotive-header {
     height: 5vh !important;
     z-index: 100000 !important;
     position: relative !important;
   }
-  
+
   .emotive-footer {
-    height: 4vh !important;
     z-index: 1 !important;
     display: flex !important;
     visibility: visible !important;
   }
-  
+
   /* Ensure footer is visible in portrait mode */
   .legal-footer {
     display: flex !important;
     visibility: visible !important;
-    height: 100% !important;
+    height: auto !important;
+    padding: clamp(8px, 1.5vh, 16px) clamp(12px, 2vw, 24px) !important;
+  }
+
+  .footer-content {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: clamp(4px, 0.8vh, 8px) !important;
+  }
+
+  .footer-links {
+    justify-content: center !important;
   }
   
   .emotive-logo-svg {

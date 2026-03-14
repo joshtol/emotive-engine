@@ -115,36 +115,24 @@
         <div class="camera-hint">Drag to rotate • Pinch or scroll to zoom</div>
     </div>
 
-    <!-- RIGHT MENU: Emotions & Controls -->
+    <!-- RIGHT MENU: Emotion & Controls -->
     <div class="right-menu">
         <div class="section">
             <h2 class="has-toggle">
-                <span>Emotions</span>
+                <span>Emotion</span>
                 <div class="toggle-switch active" id="wobble-toggle">Wobble</div>
             </h2>
             <div class="section-content">
-                <div class="button-grid">
-                    <button data-action="emotion" data-value="joy">😊 Joy</button>
-                    <button data-action="emotion" data-value="love">❤️ Love</button>
-                    <button data-action="emotion" data-value="excited">🎉 Excited</button>
-                    <button data-action="emotion" data-value="euphoria">✨ Euphoria</button>
-                    <button data-action="emotion" data-value="calm">😌 Calm</button>
-                    <button data-action="emotion" data-value="sadness">😢 Sadness</button>
-                    <button data-action="emotion" data-value="anger">😠 Anger</button>
-                    <button data-action="emotion" data-value="fear">😰 Fear</button>
-                    <button data-action="emotion" data-value="surprise">😲 Surprise</button>
-                    <button data-action="emotion" data-value="disgust">🤢 Disgust</button>
-                    <button data-action="emotion" data-value="neutral">😐 Neutral</button>
-                </div>
+                <div class="emotion-grid" id="emotion-buttons"></div>
             </div>
         </div>
 
         <div class="section visual-controls" id="visual-controls-section">
-            <h2 class="has-toggle">
+            <h2 class="has-toggle collapsed">
                 <span>Visuals</span>
                 <div class="toggle-switch" id="particles-toggle">Particles</div>
             </h2>
-            <div class="section-content">
+            <div class="section-content collapsed">
                 <div class="toggle-control">
                     <span class="toggle-label">Core Glow</span>
                     <div class="toggle-switch active" data-action="toggle-glow"></div>
@@ -199,6 +187,13 @@
                 </div>
             </div>
         </div>
+
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -208,9 +203,13 @@
             setupParticlesToggle,
             setupVisualToggles,
             applySSSPreset,
-            isCrystalGeometry
+            isCrystalGeometry,
+            setActiveButton,
+            createEmotionButtons,
+            createActivityLog
         } from '/examples/3d/demo-utils.js';
 
+        const log = createActivityLog();
         let mascot = null;
         let currentGeometry = 'crystal';
         let currentMoonPhase = 'full';
@@ -219,6 +218,7 @@
         // Initialize
         (async () => {
             try {
+                log('Initializing...', 'info');
                 const container = document.getElementById('mascot-container');
                 mascot = new EmotiveMascot3D({
                     coreGeometry: 'crystal',
@@ -237,7 +237,13 @@
 
                 mascot.init(container);
                 mascot.start();
+                log('Ready!', 'success');
                 mascot.setEmotion('neutral');
+
+                createEmotionButtons('emotion-buttons', (emotion) => {
+                    mascot.setEmotion(emotion);
+                    log(`Emotion: ${emotion}`, 'info');
+                });
 
                 // Crystal defaults
                 mascot.enableParticles();
@@ -262,6 +268,7 @@
                     mascot.express('sway');
                 }, 500);
             } catch (error) {
+                log(`Init failed: ${error.message}`, 'warn');
                 console.error('Failed to initialize EmotiveMascot3D:', error);
             }
         })();
@@ -271,6 +278,23 @@
         setupParticlesToggle(mascot);
         setupVisualToggles(mascot);
 
+        // Log toggle changes
+        document.getElementById('wobble-toggle')?.addEventListener('click', () => {
+            const on = document.getElementById('wobble-toggle').classList.contains('active');
+            log(`Wobble: ${on ? 'on' : 'off'}`, 'info');
+        });
+        document.getElementById('particles-toggle')?.addEventListener('click', () => {
+            const on = document.getElementById('particles-toggle').classList.contains('active');
+            log(`Particles: ${on ? 'on' : 'off'}`, 'info');
+        });
+        document.querySelectorAll('[data-action^="toggle-"]').forEach(el => {
+            el.addEventListener('click', () => {
+                const name = el.dataset.action.replace('toggle-', '');
+                const on = el.classList.contains('active');
+                log(`${name.charAt(0).toUpperCase() + name.slice(1)}: ${on ? 'on' : 'off'}`, 'info');
+            });
+        });
+
         // Event delegation
         document.addEventListener('click', (e) => {
             if (!e.target.matches('button[data-action]') || !mascot) return;
@@ -279,18 +303,11 @@
             const value = e.target.dataset.value;
 
             switch (action) {
-                case 'emotion':
-                    mascot.setEmotion(value);
-                    document.querySelectorAll('[data-action="emotion"]').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    break;
-
                 case 'geometry':
+                    log(`Morph: ${value}`, 'info');
                     mascot.morphTo(value);
                     currentGeometry = value;
-
-                    document.querySelectorAll('[data-action="geometry"]').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
+                    setActiveButton('[data-action="geometry"]', e.target);
 
                     // Show/hide geometry-specific controls
                     const isCrystal = isCrystalGeometry(value);
@@ -341,20 +358,21 @@
                     break;
 
                 case 'gesture':
+                    log(`Gesture: ${value}`, 'info');
                     mascot.express(value);
                     break;
 
                 case 'eclipse':
                     if (currentGeometry !== 'sun') break;
 
-                    const eclipseButtons = document.querySelectorAll('[data-action="eclipse"]');
                     if (e.target.classList.contains('active')) {
+                        log('Eclipse: off', 'info');
                         mascot.core3D.setSunShadow('off');
                         e.target.classList.remove('active');
                     } else {
-                        eclipseButtons.forEach(btn => btn.classList.remove('active'));
+                        log(`Eclipse: ${value}`, 'info');
+                        setActiveButton('[data-action="eclipse"]', e.target);
                         mascot.core3D.setSunShadow(value);
-                        e.target.classList.add('active');
                     }
                     break;
 
@@ -362,11 +380,10 @@
                     if (currentGeometry !== 'moon') break;
 
                     if (mascot.core3D?.customMaterial) {
+                        log(`Moon phase: ${value}`, 'info');
                         animateMoonPhase(mascot.core3D.customMaterial, value, 1500);
                         currentMoonPhase = value;
-
-                        document.querySelectorAll('[data-action="moon-phase"]').forEach(btn => btn.classList.remove('active'));
-                        e.target.classList.add('active');
+                        setActiveButton('[data-action="moon-phase"]', e.target);
 
                         // Lunar eclipse only available on full moon
                         const lunarEclipseSection = document.getElementById('lunar-eclipse-section');
@@ -386,34 +403,33 @@
                     break;
 
                 case 'camera':
+                    log(`Camera: ${value}`, 'info');
                     mascot.setCameraPreset(value, 1000);
-                    document.querySelectorAll('[data-action="camera"]').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
+                    setActiveButton('[data-action="camera"]', e.target);
                     break;
 
                 case 'lunar-eclipse':
                     if (currentGeometry !== 'moon' || currentMoonPhase !== 'full') break;
 
-                    const lunarEclipseButtons = document.querySelectorAll('[data-action="lunar-eclipse"]');
                     if (e.target.classList.contains('active')) {
+                        log('Lunar eclipse: off', 'info');
                         mascot.core3D.setMoonEclipse('off');
                         e.target.classList.remove('active');
                         document.getElementById('moon-phase-section').style.display = 'block';
                     } else {
-                        lunarEclipseButtons.forEach(btn => btn.classList.remove('active'));
+                        log(`Lunar eclipse: ${value}`, 'info');
+                        setActiveButton('[data-action="lunar-eclipse"]', e.target);
                         mascot.core3D.setMoonEclipse(value);
-                        e.target.classList.add('active');
                         document.getElementById('moon-phase-section').style.display = 'none';
                     }
                     break;
 
                 case 'sss-preset':
                     if (!isCrystalGeometry(currentGeometry)) break;
-
+                    log(`SSS preset: ${value}`, 'info');
                     currentSSSPreset = value;
                     applySSSPreset(mascot, value, currentGeometry);
-                    document.querySelectorAll('[data-action="sss-preset"]').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
+                    setActiveButton('[data-action="sss-preset"]', e.target);
                     break;
             }
         });

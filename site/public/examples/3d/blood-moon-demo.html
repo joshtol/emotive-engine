@@ -145,6 +145,31 @@
 
     <div class="right-menu">
 
+        <div class="section visual-controls">
+            <h2 class="has-toggle collapsed">
+                <span>Visuals</span>
+                <div class="toggle-switch active" id="particles-toggle">Particles</div>
+            </h2>
+            <div class="section-content collapsed">
+                <div class="toggle-control">
+                    <span class="toggle-label">Core Glow</span>
+                    <div class="toggle-switch active" data-action="toggle-glow"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Blinking</span>
+                    <div class="toggle-switch active" data-action="toggle-blink"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Breathing</span>
+                    <div class="toggle-switch active" data-action="toggle-breathing"></div>
+                </div>
+                <div class="toggle-control">
+                    <span class="toggle-label">Auto-Rotate</span>
+                    <div class="toggle-switch" data-action="toggle-auto-rotate"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2 class="collapsed">Blend</h2>
             <div class="section-content collapsed">
@@ -232,17 +257,25 @@
                 </div>
             </div>
         </div>
+
+        <div class="section">
+            <h2 class="collapsed">Log</h2>
+            <div class="section-content collapsed">
+                <div class="activity-log" id="activity-log"></div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import EmotiveMascot3D, { setMoonPhase, animateMoonPhase, blendModeNames } from '/emotive-engine-3d.bundled.js';
         import { exitPrecisionMode } from '/examples/3d/layer-utils.js';
-        import { setupTidalLock, createBlendLayerGroup, syncLayersFromShader } from '/examples/3d/demo-utils.js';
+        import { setupTidalLock, createBlendLayerGroup, syncLayersFromShader, setupColorPicker, setupSlider, setupVisualToggles, setupParticlesToggle, createActivityLog } from '/examples/3d/demo-utils.js';
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
         let currentRotation = { x: 55.5, y: -85.0, z: -60.5 };
 
+        const log = createActivityLog();
         const container = document.getElementById('moon-container');
         const mascot = new EmotiveMascot3D({
             canvasId: 'moon',
@@ -257,8 +290,28 @@
             assetBasePath: '/assets'
         });
 
+        log('Initializing Blood Moon mascot…', 'info');
         mascot.init(container);
         mascot.start();
+        log('Ready!', 'success');
+
+        // Setup visual toggles
+        setupVisualToggles(mascot);
+        setupParticlesToggle(mascot);
+
+        // Log visual toggle interactions
+        document.querySelectorAll('[data-action]').forEach(el => {
+            el.addEventListener('click', () => {
+                const active = el.classList.contains('active');
+                const labels = { 'toggle-glow': 'Core Glow', 'toggle-blink': 'Blinking', 'toggle-breathing': 'Breathing', 'toggle-auto-rotate': 'Auto-Rotate' };
+                const label = labels[el.dataset.action];
+                if (label) log(`${label}: ${active ? 'on' : 'off'}`, 'info');
+            });
+        });
+        document.getElementById('particles-toggle')?.addEventListener('click', () => {
+            const active = document.getElementById('particles-toggle').classList.contains('active');
+            log(`Particles: ${active ? 'on' : 'off'}`, 'info');
+        });
 
         // Disable particles on load (initialized but hidden)
         mascot.disableParticles();
@@ -273,11 +326,10 @@
         // SHADOW POSITION SLIDER
         // ═══════════════════════════════════════════════════════════════════════════
 
-        document.getElementById('shadow-pos-slider').addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('shadow-pos-value').textContent = value.toFixed(2);
+        setupSlider('shadow-pos-slider', 'shadow-pos-value', (value) => {
             if (mascot?.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseShadowPos.value[0] = value;
+                log(`Shadow position: ${value.toFixed(2)}`, 'info');
             }
         });
 
@@ -330,9 +382,12 @@
 
                     if (progress < 1.0) {
                         requestAnimationFrame(animateEclipse);
+                    } else {
+                        log('Eclipse animation complete', 'success');
                     }
                 }
 
+                log('Animating eclipse…', 'info');
                 requestAnimationFrame(animateEclipse);
             }
         }, 800);
@@ -346,81 +401,40 @@
 
         // Setup tidal lock behavior from demo-utils
         setupTidalLock(mascot, 2000);
+        log('Tidal lock enabled', 'info');
 
         // Eclipse progress slider (advanced control)
-        const eclipseProgressSlider = document.getElementById('eclipse-progress-slider');
-        eclipseProgressSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('eclipse-progress-value').textContent = value.toFixed(2);
+        setupSlider('eclipse-progress-slider', 'eclipse-progress-value', (value) => {
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseProgress.value = value;
                 mascot.core3D.customMaterial.uniforms.eclipseIntensity.value = value;
+                log(`Eclipse progress: ${value.toFixed(2)}`, 'info');
             }
         });
 
         // Shadow radius slider
-        const shadowRadiusSlider = document.getElementById('shadow-radius-slider');
-        shadowRadiusSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('shadow-radius-value').textContent = value.toFixed(2);
+        setupSlider('shadow-radius-slider', 'shadow-radius-value', (value) => {
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseShadowRadius.value = value;
+                log(`Shadow radius: ${value.toFixed(2)}`, 'info');
             }
         });
 
         // Eclipse Color Pickers
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? [
-                parseInt(result[1], 16) / 255,
-                parseInt(result[2], 16) / 255,
-                parseInt(result[3], 16) / 255
-            ] : [1.0, 1.0, 1.0];
-        }
+        const u = () => mascot.core3D?.customMaterial?.uniforms;
+        setupColorPicker('shadow-color', 'shadow-color-value', rgb => { if (u()) { u().eclipseShadowColor.value = rgb; log('Shadow color changed', 'info'); } });
+        setupColorPicker('midtone-color', 'midtone-color-value', rgb => { if (u()) { u().eclipseMidtoneColor.value = rgb; log('Midtone color changed', 'info'); } });
+        setupColorPicker('highlight-color', 'highlight-color-value', rgb => { if (u()) { u().eclipseHighlightColor.value = rgb; log('Highlight color changed', 'info'); } });
+        setupColorPicker('glow-color', 'glow-color-value', rgb => { if (u()) { u().eclipseGlowColor.value = rgb; log('Glow color changed', 'info'); } });
 
-        const shadowColorPicker = document.getElementById('shadow-color');
-        const midtoneColorPicker = document.getElementById('midtone-color');
-        const highlightColorPicker = document.getElementById('highlight-color');
-        const glowColorPicker = document.getElementById('glow-color');
         const resetColorsBtn = document.getElementById('reset-colors-btn');
 
-        shadowColorPicker.addEventListener('input', (e) => {
-            const rgb = hexToRgb(e.target.value);
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = rgb;
-                document.getElementById('shadow-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
-            }
-        });
-
-        midtoneColorPicker.addEventListener('input', (e) => {
-            const rgb = hexToRgb(e.target.value);
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseMidtoneColor.value = rgb;
-                document.getElementById('midtone-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
-            }
-        });
-
-        highlightColorPicker.addEventListener('input', (e) => {
-            const rgb = hexToRgb(e.target.value);
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseHighlightColor.value = rgb;
-                document.getElementById('highlight-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
-            }
-        });
-
-        glowColorPicker.addEventListener('input', (e) => {
-            const rgb = hexToRgb(e.target.value);
-            if (mascot.core3D?.customMaterial?.uniforms) {
-                mascot.core3D.customMaterial.uniforms.eclipseGlowColor.value = rgb;
-                document.getElementById('glow-color-value').textContent = `RGB: ${rgb[0].toFixed(2)}, ${rgb[1].toFixed(2)}, ${rgb[2].toFixed(2)}`;
-            }
-        });
-
         resetColorsBtn.addEventListener('click', () => {
-            shadowColorPicker.value = '#ff9400';
-            midtoneColorPicker.value = '#b56e08';
-            highlightColorPicker.value = '#ff471a';
-            glowColorPicker.value = '#171717';
+            log('Colors reset to defaults', 'info');
+            document.getElementById('shadow-color').value = '#ff9400';
+            document.getElementById('midtone-color').value = '#b56e08';
+            document.getElementById('highlight-color').value = '#ff471a';
+            document.getElementById('glow-color').value = '#171717';
 
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.eclipseShadowColor.value = [1.00, 0.58, 0.00];
@@ -436,22 +450,17 @@
         });
 
         // Emissive and shadow darkness controls
-        const emissiveSlider = document.getElementById('emissive-slider');
-        const shadowDarknessSlider = document.getElementById('shadow-darkness-slider');
-
-        emissiveSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('emissive-value').textContent = value.toFixed(2);
+        setupSlider('emissive-slider', 'emissive-value', (value) => {
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.emissiveStrength.value = value;
+                log(`Emissive glow: ${value.toFixed(2)}`, 'info');
             }
         });
 
-        shadowDarknessSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('shadow-darkness-value').textContent = value.toFixed(2);
+        setupSlider('shadow-darkness-slider', 'shadow-darkness-value', (value) => {
             if (mascot.core3D?.customMaterial?.uniforms) {
                 mascot.core3D.customMaterial.uniforms.shadowDarkness.value = value;
+                log(`Shadow darkness: ${value.toFixed(2)}`, 'info');
             }
         });
 
@@ -486,6 +495,7 @@
                 'layer',
                 MAX_BLEND_LAYERS
             );
+            log('Blend layers synced from shader', 'info');
         }, 1000);
     </script>
 </body>
