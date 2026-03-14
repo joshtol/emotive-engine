@@ -97,6 +97,9 @@ site/playwright/.cache/
 # Claude Code (local settings, memory, project context)
 .claude/
 
+# Git worktrees
+.worktrees/
+
 # HN launch planning
 UP-HNEWS.md
 UP-COMB.md
