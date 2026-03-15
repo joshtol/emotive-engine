@@ -18,6 +18,7 @@
   var _bgCanvas = null; // Pre-rendered background, built once at record start
   var videoTrack = null;
   var _recordStartTime = 0;
+  var _recordingMp4 = false; // true when recording as MP4 with auto-capture stream
 
   // Force preserveDrawingBuffer for ALL WebGL contexts so drawImage
   // can always read the rendered frame (without this, buffer is cleared
@@ -64,7 +65,9 @@
           mirrorCtx.fillRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
         }
         mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
-        if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
+        // For WebM (captureStream(0)), push frames manually via requestFrame().
+        // For MP4 (captureStream(30)), the stream auto-captures — skip this.
+        if (!_recordingMp4 && videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
       }
     });
   };
@@ -458,10 +461,6 @@
   function beginRecorder() {
     recordedChunks = [];
 
-    // captureStream(0) = on-demand capture via requestFrame() in the rAF hook.
-    // This ties each video frame 1:1 to an actual render, keeping realtime pace.
-    var stream = mirrorCanvas.captureStream(0);
-    videoTrack = stream.getVideoTracks()[0];
     // Prefer MP4 (H.264) for maximum platform compatibility — especially mobile.
     // Safari + iOS always support MP4. Android Chrome supports it too.
     // Fall back to WebM only on desktop browsers that don't support MP4.
@@ -478,6 +477,14 @@
     } else {
       mimeType = 'video/webm';
     }
+    _recordingMp4 = isMp4;
+
+    // MP4: captureStream(30) gives the container a proper framerate so duration
+    // is embedded correctly. Without this, platforms reject "0 second" videos.
+    // WebM: captureStream(0) + manual requestFrame() for frame-accurate timing
+    // (we inject duration into the EBML container ourselves).
+    var stream = mirrorCanvas.captureStream(isMp4 ? 30 : 0);
+    videoTrack = stream.getVideoTracks()[0];
 
     mediaRecorder = new MediaRecorder(stream, {
       mimeType: mimeType,
@@ -510,6 +517,7 @@
       mirrorCtx = null;
       _bgCanvas = null;
       videoTrack = null;
+      _recordingMp4 = false;
     };
 
     mediaRecorder.start(100); // collect data every 100ms for smoother stop
