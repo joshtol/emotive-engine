@@ -36,7 +36,7 @@
  * │ ⚡ CONTEXT OPTIMIZATIONS
  * ├───────────────────────────────────────────────────────────────────────────────────
  * │ • alpha: true               - Enables transparency
- * │ • desynchronized: true      - Better animation performance
+ * │ • desynchronized: false     - Prevents scroll/compositor tearing
  * │ • willReadFrequently: false - We don't read pixels
  * └───────────────────────────────────────────────────────────────────────────────────
  *
@@ -48,7 +48,7 @@ class CanvasManager {
         // Get context with optimal settings for particle rendering
         this.ctx = canvas.getContext('2d', {
             alpha: true,
-            desynchronized: true, // Better performance for animations
+            desynchronized: false,
             willReadFrequently: false, // We're not reading pixels
         });
         if (!this.ctx) {
