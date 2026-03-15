@@ -23,6 +23,9 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   const [convertError, setConvertError] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [headerEl, setHeaderEl] = useState<Element | null>(null)
+  const [clipSize, setClipSize] = useState(0)
+  const [clipDuration, setClipDuration] = useState(0)
+  const previewRef = useRef<HTMLVideoElement>(null)
 
   // Find the header element for the portal (may render after this component)
   useEffect(() => {
@@ -126,6 +129,8 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           if (e.data.blob) {
             const localUrl = URL.createObjectURL(e.data.blob)
             setBlobUrl(localUrl)
+            setClipSize(e.data.blob.size || e.data.size || 0)
+            setClipDuration(0)
             setShowModal(true)
             if (e.data.format === 'mp4') {
               // Already recorded as MP4 natively — no conversion needed
@@ -161,7 +166,6 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
 
   const closeModal = useCallback(() => {
     setShowModal(false)
-    setCopied(false)
     setConvertError(false)
     if (blobUrl) {
       const url = blobUrl
@@ -175,7 +179,6 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     }
   }, [blobUrl, mp4Url])
 
-  const [copied, setCopied] = useState(false)
 
   const handleDownload = useCallback(() => {
     const url = mp4Url || blobUrl
@@ -209,21 +212,6 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     }
   }, [blobUrl, mp4Url])
 
-  const handleCopy = useCallback(async () => {
-    if (!blobUrl) return
-    try {
-      const resp = await fetch(blobUrl)
-      const blob = await resp.blob()
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob })
-      ])
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard API may not support video — fall back to download
-      handleDownload()
-    }
-  }, [blobUrl, handleDownload])
 
   // Check if Web Share API is available
   const canShare = typeof navigator !== 'undefined' && !!navigator.share
@@ -432,11 +420,16 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
 
             {/* Video preview */}
             <video
+              ref={previewRef}
               src={mp4Url || blobUrl}
               autoPlay
               loop
               muted
               playsInline
+              onLoadedMetadata={() => {
+                const v = previewRef.current
+                if (v && isFinite(v.duration)) setClipDuration(v.duration)
+              }}
               style={{
                 width: '100%',
                 borderRadius: '8px',
@@ -444,6 +437,21 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                 marginBottom: '14px',
               }}
             />
+
+            {/* Clip info */}
+            {(clipDuration > 0 || clipSize > 0) && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '0.7rem',
+                color: '#666',
+                marginBottom: '10px',
+                letterSpacing: '0.3px',
+              }}>
+                {clipDuration > 0 && <span>{clipDuration < 60 ? `${clipDuration.toFixed(1)}s` : `${Math.floor(clipDuration / 60)}:${String(Math.floor(clipDuration % 60)).padStart(2, '0')}`}</span>}
+                {clipSize > 0 && <span>{clipSize < 1024 * 1024 ? `${(clipSize / 1024).toFixed(0)} KB` : `${(clipSize / (1024 * 1024)).toFixed(1)} MB`}</span>}
+              </div>
+            )}
 
             {/* Converting indicator */}
             {converting && (
@@ -498,27 +506,6 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                   {converting ? '...' : mp4Url ? 'Share' : 'Share'}
                 </button>
               )}
-              <button
-                onClick={handleCopy}
-                className="emotive-share-btn"
-                style={{
-                  all: 'unset',
-                  boxSizing: 'border-box',
-                  flex: 1,
-                  padding: '0.6rem 0.5rem',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: '0.8rem',
-                  fontWeight: 500,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  background: 'transparent',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
               <button
                 onClick={handleDownload}
                 disabled={converting}

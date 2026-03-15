@@ -50,8 +50,8 @@
 
   // ── rAF hook ──
   // Grab frames right after the app's render callback and draw onto the
-  // mirror canvas. With captureStream(60) the stream picks up changes
-  // automatically — no manual requestFrame() needed.
+  // mirror canvas. For MP4 captureStream(60) auto-captures at 60fps —
+  // no manual requestFrame() needed.
   var _origRAF = window.requestAnimationFrame;
   window.requestAnimationFrame = function (callback) {
     return _origRAF.call(window, function (timestamp) {
@@ -545,7 +545,10 @@
     // Fall back to WebM only on desktop browsers that don't support MP4.
     var mimeType;
     var isMp4 = false;
-    if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+    if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.640028')) {
+      mimeType = 'video/mp4;codecs=avc1.640028'; // High profile level 4.0
+      isMp4 = true;
+    } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
       mimeType = 'video/mp4;codecs=avc1';
       isMp4 = true;
     } else if (MediaRecorder.isTypeSupported('video/mp4')) {
@@ -558,16 +561,16 @@
     }
     _recordingMp4 = isMp4;
 
-    // MP4: captureStream(30) gives the container a proper framerate so duration
+    // MP4: captureStream(60) gives the container a proper framerate so duration
     // is embedded correctly. Without this, platforms reject "0 second" videos.
     // WebM: captureStream(0) + manual requestFrame() for frame-accurate timing
     // (we inject duration into the EBML container ourselves).
-    var stream = mirrorCanvas.captureStream(isMp4 ? 30 : 0);
+    var stream = mirrorCanvas.captureStream(isMp4 ? 60 : 0);
     videoTrack = stream.getVideoTracks()[0];
 
     mediaRecorder = new MediaRecorder(stream, {
       mimeType: mimeType,
-      videoBitsPerSecond: 8000000,
+      videoBitsPerSecond: 12000000,
     });
 
     mediaRecorder.ondataavailable = function (e) {
