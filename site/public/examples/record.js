@@ -403,6 +403,85 @@
     reader.readAsArrayBuffer(blob);
   }
 
+  // ── MP4 mdhd duration fix ──
+  // Chrome's MediaRecorder writes fragmented MP4 where mvhd.duration (timescale=1000)
+  // and mdhd.duration (timescale=30000) get the SAME raw value. This means mdhd
+  // reports ~0.3s instead of the real duration. Platforms read mdhd and reject
+  // the video as "too short." Fix: find mdhd, recalculate duration for its timescale.
+  function fixMp4Duration(blob, callback) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var buf = new Uint8Array(reader.result);
+      var dv = new DataView(buf.buffer);
+
+      // Find moov atom
+      var moovOff = -1, moovSize = 0;
+      var off = 0;
+      while (off + 8 <= buf.length) {
+        var sz = dv.getUint32(off);
+        if (sz < 8) break;
+        var tag = String.fromCharCode(buf[off+4], buf[off+5], buf[off+6], buf[off+7]);
+        if (tag === 'moov') { moovOff = off; moovSize = sz; break; }
+        off += sz;
+      }
+      if (moovOff < 0) { callback(blob); return; }
+
+      // Read mvhd to get true duration in seconds
+      var trueDurationSec = 0;
+      var c = moovOff + 8;
+      while (c + 8 <= moovOff + moovSize) {
+        var csz = dv.getUint32(c);
+        if (csz < 8) break;
+        var ctype = String.fromCharCode(buf[c+4], buf[c+5], buf[c+6], buf[c+7]);
+        if (ctype === 'mvhd') {
+          var ver = buf[c + 8];
+          if (ver === 0) {
+            trueDurationSec = dv.getUint32(c + 24) / dv.getUint32(c + 20);
+          } else {
+            // version 1: 8-byte fields
+            var tsHi = dv.getUint32(c + 28);
+            var durHi = dv.getUint32(c + 32);
+            var durLo = dv.getUint32(c + 36);
+            var dur64 = durHi * 0x100000000 + durLo;
+            trueDurationSec = dur64 / tsHi;
+          }
+        }
+        c += csz;
+      }
+      if (trueDurationSec <= 0) { callback(blob); return; }
+
+      // Find and fix all mdhd atoms inside moov (recursive search for 'mdhd')
+      var fixed = false;
+      for (var i = moovOff; i + 8 <= moovOff + moovSize; i++) {
+        if (buf[i+4] === 0x6D && buf[i+5] === 0x64 && buf[i+6] === 0x68 && buf[i+7] === 0x64) { // 'mdhd'
+          var mdhdOff = i;
+          var mdhdVer = buf[mdhdOff + 8];
+          if (mdhdVer === 0) {
+            var mdTs = dv.getUint32(mdhdOff + 20);
+            var correctDur = Math.round(trueDurationSec * mdTs);
+            dv.setUint32(mdhdOff + 24, correctDur);
+            fixed = true;
+          } else {
+            // version 1: timescale at +28, duration at +32 (8 bytes)
+            var mdTs1 = dv.getUint32(mdhdOff + 28);
+            var correctDur1 = Math.round(trueDurationSec * mdTs1);
+            // Write as 64-bit
+            dv.setUint32(mdhdOff + 32, Math.floor(correctDur1 / 0x100000000));
+            dv.setUint32(mdhdOff + 36, correctDur1 >>> 0);
+            fixed = true;
+          }
+        }
+      }
+
+      if (fixed) {
+        callback(new Blob([buf], { type: 'video/mp4' }));
+      } else {
+        callback(blob);
+      }
+    };
+    reader.readAsArrayBuffer(blob);
+  }
+
   // ── Countdown Overlay ──
   // Shows 3-2-1 over the canvas before recording starts, so the first
   // frame captures a clean animation state (not mid-transition).
@@ -499,10 +578,12 @@
     mediaRecorder.onstop = function () {
       var blobType = recordedAsMp4 ? 'video/mp4' : 'video/webm';
       if (recordedAsMp4) {
-        // MP4 container — no EBML metadata injection needed
-        var blob = new Blob(recordedChunks, { type: blobType });
-        var blobUrl = URL.createObjectURL(blob);
-        parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, blob: blob, size: blob.size, format: 'mp4' }, '*');
+        // MP4 — fix Chrome's mdhd duration bug, then send
+        var rawMp4 = new Blob(recordedChunks, { type: blobType });
+        fixMp4Duration(rawMp4, function (blob) {
+          var blobUrl = URL.createObjectURL(blob);
+          parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, blob: blob, size: blob.size, format: 'mp4' }, '*');
+        });
       } else {
         // WebM — inject duration + EBML metadata
         var durationMs = performance.now() - _recordStartTime;
