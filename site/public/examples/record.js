@@ -620,8 +620,10 @@
         return;
       }
 
-      mediaRecorder.onerror = function (e) {
-        // Runtime encoder failure — clean up and retry with next codec
+      mediaRecorder.onerror = function () {
+        // Runtime encoder failure — detach onstop so the dying recorder
+        // doesn't nuke mirrorCanvas/mirrorCtx that the retry needs.
+        mediaRecorder.onstop = null;
         isRecording = false;
         if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
         mediaRecorder = null;
