@@ -546,7 +546,16 @@
 
     // Prime the mirror canvas with the first frame BEFORE captureStream.
     // On mobile, captureStream on an empty canvas can produce zero-length tracks.
-    copyFrameToMirror();
+    // Can't use copyFrameToMirror() here — it checks isRecording which is still false.
+    if (mirrorCtx && sourceCanvas) {
+      if (_bgCanvas) {
+        mirrorCtx.drawImage(_bgCanvas, 0, 0);
+      } else {
+        mirrorCtx.fillStyle = '#000000';
+        mirrorCtx.fillRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
+      }
+      mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
+    }
 
     // Validate mirror canvas has content
     if (!mirrorCanvas.width || !mirrorCanvas.height) {
@@ -621,6 +630,24 @@
 
     var recordedAsMp4 = isMp4;
     mediaRecorder.onstop = function () {
+      // Detect immediate stop (recorder failed to actually record)
+      var elapsed = performance.now() - _recordStartTime;
+      var totalSize = 0;
+      for (var i = 0; i < recordedChunks.length; i++) totalSize += recordedChunks[i].size;
+
+      if (elapsed < 500 || totalSize < 100) {
+        // Recording failed — stopped immediately or produced no data
+        parent.postMessage({ type: 'emotive-rec-error', error: 'Recording failed (no data captured). Your browser may not support canvas recording.' }, '*');
+        mediaRecorder = null;
+        mirrorCanvas = null;
+        mirrorCtx = null;
+        _bgCanvas = null;
+        videoTrack = null;
+        _recordingMp4 = false;
+        if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
+        return;
+      }
+
       var blobType = recordedAsMp4 ? 'video/mp4' : 'video/webm';
       if (recordedAsMp4) {
         // MP4 — fix Chrome's mdhd duration bug, then send
