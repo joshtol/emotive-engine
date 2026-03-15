@@ -283,7 +283,7 @@
   function buildTagsElement() {
     var targets = ebml([0x63, 0xC0], new Uint8Array(0)); // Targets (empty = global)
     var title = simpleTag('TITLE', 'Made with Emotive Engine');
-    var url   = simpleTag('URL', 'https://github.com/anthropics/emotive-engine');
+    var url   = simpleTag('URL', 'https://github.com/joshtol/emotive-engine');
 
     // Tag = Targets + SimpleTags
     var tagBody = new Uint8Array(targets.length + title.length + url.length);
@@ -400,6 +400,38 @@
     reader.readAsArrayBuffer(blob);
   }
 
+  // ── Countdown Overlay ──
+  // Shows 3-2-1 over the canvas before recording starts, so the first
+  // frame captures a clean animation state (not mid-transition).
+  function showCountdown(callback) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+    var num = document.createElement('div');
+    num.style.cssText = 'font-size:96px;font-weight:700;color:rgba(255,255,255,0.85);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-shadow:0 2px 20px rgba(0,0,0,0.5);transition:transform 0.3s ease,opacity 0.3s ease;';
+    overlay.appendChild(num);
+    document.body.appendChild(overlay);
+
+    var count = 3;
+    function tick() {
+      if (count <= 0) {
+        document.body.removeChild(overlay);
+        callback();
+        return;
+      }
+      num.textContent = count;
+      num.style.transform = 'scale(1.3)';
+      num.style.opacity = '1';
+      setTimeout(function () {
+        num.style.transform = 'scale(0.8)';
+        num.style.opacity = '0.3';
+      }, 600);
+      parent.postMessage({ type: 'emotive-rec-countdown', count: count }, '*');
+      count--;
+      setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
   // ── Recording Pipeline ──
   function startRecording() {
     sourceCanvas = findCanvas();
@@ -417,7 +449,9 @@
     // Waits for any url() images to load before starting the recorder.
     buildBgCanvas(mirrorCanvas.width, mirrorCanvas.height, function (bg) {
       _bgCanvas = bg;
-      beginRecorder();
+      showCountdown(function () {
+        beginRecorder();
+      });
     });
   }
 

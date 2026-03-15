@@ -21,6 +21,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   const [mp4Url, setMp4Url] = useState<string | null>(null)
   const [converting, setConverting] = useState(false)
   const [convertError, setConvertError] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const [headerEl, setHeaderEl] = useState<Element | null>(null)
 
   // Find the header element for the portal (may render after this component)
@@ -113,7 +114,11 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
         case 'emotive-rec-ready':
           setRecReady(true)
           break
+        case 'emotive-rec-countdown':
+          setCountdown(e.data.count || 0)
+          break
         case 'emotive-rec-started':
+          setCountdown(0)
           setIsRecording(true)
           break
         case 'emotive-rec-stopped':
@@ -228,7 +233,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   }, [recReady, isRecording])
 
   // Record button rendered into the header via portal
-  const pillExpanded = isRecording || showPrompt
+  const pillExpanded = isRecording || showPrompt || countdown > 0
   const recordButton = headerEl ? createPortal(
     <button
       onClick={toggleRecording}
@@ -253,8 +258,8 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
         transition: 'background 0.2s, border-color 0.2s',
         userSelect: 'none',
         zIndex: 10,
-        opacity: recReady ? 1 : 0.4,
-        pointerEvents: recReady ? 'auto' : 'none',
+        opacity: recReady && !countdown ? 1 : 0.4,
+        pointerEvents: recReady && !countdown ? 'auto' : 'none',
         overflow: 'hidden',
       } as React.CSSProperties}
     >
@@ -289,7 +294,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
         paddingRight: pillExpanded ? '14px' : '0px',
         transition: 'max-width 0.4s ease, opacity 0.3s ease, padding-right 0.4s ease',
       }}>
-        {isRecording ? 'REC ■' : 'Record and share!'}
+        {countdown > 0 ? `Starting in ${countdown}...` : isRecording ? 'REC ■' : 'Record and share!'}
       </span>
     </button>,
     headerEl
@@ -310,11 +315,16 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           border-color: rgba(255, 255, 255, 0.2) !important;
         }
         .emotive-share-btn-primary:hover {
-          filter: brightness(1.15) !important;
+          background: rgba(221, 74, 154, 0.15) !important;
+          border-color: rgba(221, 74, 154, 0.5) !important;
         }
         .emotive-share-btn:hover {
-          background: rgba(255, 255, 255, 0.14) !important;
-          border-color: rgba(255, 255, 255, 0.25) !important;
+          background: rgba(255, 255, 255, 0.05) !important;
+          border-color: rgba(255, 255, 255, 0.2) !important;
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+        .emotive-modal-close:hover {
+          color: rgba(255, 255, 255, 0.7) !important;
         }
       `}</style>
 
@@ -376,101 +386,113 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           }}
         >
           <div style={{
-            background: 'rgba(20, 20, 25, 0.85)',
+            background: 'rgba(14, 14, 14, 0.95)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(242, 241, 241, 0.08)',
             borderRadius: '16px',
-            padding: '24px',
-            maxWidth: '400px',
-            width: '90vw',
-            color: '#fff',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            padding: '20px',
+            maxWidth: '340px',
+            width: '88vw',
+            color: '#F2F1F1',
+            fontFamily: 'var(--font-space-grotesk, "Space Grotesk", system-ui, sans-serif)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 600 }}>
-                {converting ? 'Converting to MP4...' : convertError ? 'Recording ready!' : 'Recording ready!'}
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <span style={{
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                letterSpacing: '0.3px',
+                color: '#B8B8B8',
+              }}>
+                {converting ? 'Converting...' : 'Recording ready'}
               </span>
               <button
                 onClick={closeModal}
+                className="emotive-modal-close"
                 style={{
                   all: 'unset',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '32px',
-                  height: '32px',
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: '20px',
-                  borderRadius: '6px',
+                  color: 'rgba(255,255,255,0.35)',
+                  fontSize: '18px',
+                  lineHeight: 1,
+                  padding: '2px',
+                  transition: 'color 0.2s ease',
                 }}
               >
-                &times;
+                &#x2715;
               </button>
             </div>
+
+            {/* Video preview */}
             <video
               src={mp4Url || blobUrl}
               autoPlay
               loop
               muted
               playsInline
-              style={{ width: '100%', borderRadius: '10px', background: '#000', marginBottom: '16px' }}
+              style={{
+                width: '100%',
+                borderRadius: '8px',
+                background: '#000',
+                marginBottom: '14px',
+              }}
             />
+
+            {/* Converting indicator */}
             {converting && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                padding: '10px',
+                padding: '8px',
                 marginBottom: '10px',
-                borderRadius: '10px',
-                background: 'rgba(99, 102, 241, 0.12)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
-                fontSize: '13px',
-                color: 'rgba(255,255,255,0.7)',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                fontSize: '0.75rem',
+                color: '#888',
+                letterSpacing: '0.3px',
               }}>
                 <span style={{
-                  width: '14px',
-                  height: '14px',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTopColor: '#8b5cf6',
+                  width: '12px',
+                  height: '12px',
+                  border: '2px solid rgba(255,255,255,0.08)',
+                  borderTopColor: '#888',
                   borderRadius: '50%',
                   animation: 'emotive-spin 0.8s linear infinite',
                 }} />
-                Converting to MP4 for sharing...
+                Converting to MP4...
               </div>
             )}
-            {canShare && (
-              <button
-                onClick={handleShare}
-                disabled={converting}
-                className="emotive-share-btn-primary"
-                style={{
-                  all: 'unset',
-                  boxSizing: 'border-box',
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  cursor: converting ? 'wait' : 'pointer',
-                  background: converting
-                    ? 'rgba(99, 102, 241, 0.4)'
-                    : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  color: '#fff',
-                  marginBottom: '10px',
-                  letterSpacing: '0.3px',
-                  opacity: converting ? 0.6 : 1,
-                  transition: 'opacity 0.2s',
-                }}
-              >
-                {converting ? 'Preparing...' : mp4Url ? 'Share MP4' : 'Share'}
-              </button>
-            )}
-            <div style={{ display: 'flex', gap: '10px' }}>
+
+            {/* Actions — all same weight, row of three */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {canShare && (
+                <button
+                  onClick={handleShare}
+                  disabled={converting}
+                  className="emotive-share-btn-primary"
+                  style={{
+                    all: 'unset',
+                    boxSizing: 'border-box',
+                    flex: 1,
+                    padding: '0.6rem 0.5rem',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(221, 74, 154, 0.35)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    cursor: converting ? 'wait' : 'pointer',
+                    background: 'rgba(221, 74, 154, 0.08)',
+                    color: converting ? '#666' : '#DD4A9A',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {converting ? '...' : mp4Url ? 'Share' : 'Share'}
+                </button>
+              )}
               <button
                 onClick={handleCopy}
                 className="emotive-share-btn"
@@ -478,15 +500,16 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                   all: 'unset',
                   boxSizing: 'border-box',
                   flex: 1,
-                  padding: '10px 16px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  fontSize: '13px',
+                  padding: '0.6rem 0.5rem',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '0.8rem',
                   fontWeight: 500,
                   textAlign: 'center',
                   cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.08)',
-                  color: 'rgba(255,255,255,0.85)',
+                  background: 'transparent',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {copied ? 'Copied!' : 'Copy'}
@@ -499,19 +522,20 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                   all: 'unset',
                   boxSizing: 'border-box',
                   flex: 1,
-                  padding: '10px 16px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  fontSize: '13px',
+                  padding: '0.6rem 0.5rem',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '0.8rem',
                   fontWeight: 500,
                   textAlign: 'center',
                   cursor: converting ? 'wait' : 'pointer',
-                  background: 'rgba(255,255,255,0.08)',
-                  color: 'rgba(255,255,255,0.85)',
-                  opacity: converting ? 0.5 : 1,
+                  background: 'transparent',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  opacity: converting ? 0.4 : 1,
+                  transition: 'all 0.2s ease',
                 }}
               >
-                {converting ? 'Converting...' : mp4Url ? 'Download MP4' : 'Download'}
+                {converting ? '...' : 'Download'}
               </button>
             </div>
           </div>
