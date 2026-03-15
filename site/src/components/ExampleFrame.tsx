@@ -18,6 +18,9 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   const [recReady, setRecReady] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [mp4Url, setMp4Url] = useState<string | null>(null)
+  const [converting, setConverting] = useState(false)
+  const [convertError, setConvertError] = useState(false)
   const [headerEl, setHeaderEl] = useState<Element | null>(null)
 
   // Find the header element for the portal (may render after this component)
@@ -82,6 +85,28 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     }
   }, [src, handleLoad])
 
+  // Convert WebM blob to MP4 via server-side ffmpeg
+  const convertToMp4 = useCallback(async (webmBlobUrl: string) => {
+    setConverting(true)
+    setConvertError(false)
+    try {
+      const resp = await fetch(webmBlobUrl)
+      const webmBlob = await resp.blob()
+      const convertResp = await fetch('/api/convert-video', {
+        method: 'POST',
+        body: webmBlob,
+      })
+      if (!convertResp.ok) throw new Error('Conversion failed')
+      const mp4Blob = await convertResp.blob()
+      const url = URL.createObjectURL(mp4Blob)
+      setMp4Url(url)
+    } catch {
+      setConvertError(true)
+    } finally {
+      setConverting(false)
+    }
+  }, [])
+
   // Listen for messages from the iframe's record.js
   useEffect(() => {
     function onMessage(e: MessageEvent) {
@@ -98,6 +123,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           if (e.data.blobUrl) {
             setBlobUrl(e.data.blobUrl)
             setShowModal(true)
+            convertToMp4(e.data.blobUrl)
           }
           break
         case 'emotive-rec-error':
@@ -108,7 +134,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [])
+  }, [convertToMp4])
 
   const toggleRecording = useCallback(() => {
     const iframe = iframeRef.current
@@ -123,29 +149,43 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   const closeModal = useCallback(() => {
     setShowModal(false)
     setCopied(false)
+    setConvertError(false)
     if (blobUrl) {
       const url = blobUrl
       setTimeout(() => URL.revokeObjectURL(url), 300)
       setBlobUrl(null)
     }
-  }, [blobUrl])
+    if (mp4Url) {
+      const url = mp4Url
+      setTimeout(() => URL.revokeObjectURL(url), 300)
+      setMp4Url(null)
+    }
+  }, [blobUrl, mp4Url])
 
   const [copied, setCopied] = useState(false)
 
   const handleDownload = useCallback(() => {
-    if (!blobUrl) return
+    const url = mp4Url || blobUrl
+    if (!url) return
     const a = document.createElement('a')
-    a.download = 'emotive-engine.webm'
-    a.href = blobUrl
+    a.download = mp4Url ? 'emotive-engine.mp4' : 'emotive-engine.webm'
+    a.href = url
     a.click()
-  }, [blobUrl])
+  }, [blobUrl, mp4Url])
 
   const handleShare = useCallback(async () => {
-    if (!blobUrl) return
+    // Prefer MP4 for maximum platform compatibility
+    const url = mp4Url || blobUrl
+    if (!url) return
+    const isMp4 = !!mp4Url
     try {
-      const resp = await fetch(blobUrl)
+      const resp = await fetch(url)
       const blob = await resp.blob()
-      const file = new File([blob], 'emotive-engine.webm', { type: 'video/webm' })
+      const file = new File(
+        [blob],
+        isMp4 ? 'emotive-engine.mp4' : 'emotive-engine.webm',
+        { type: isMp4 ? 'video/mp4' : 'video/webm' },
+      )
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Made with Emotive Engine' })
       } else {
@@ -154,7 +194,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
     } catch {
       // user cancelled or unsupported
     }
-  }, [blobUrl])
+  }, [blobUrl, mp4Url])
 
   const handleCopy = useCallback(async () => {
     if (!blobUrl) return
@@ -259,6 +299,9 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(0.8); }
         }
+        @keyframes emotive-spin {
+          to { transform: rotate(360deg); }
+        }
         .emotive-rec-header-btn:hover {
           background: rgba(0, 0, 0, 0.65) !important;
           border-color: rgba(255, 255, 255, 0.2) !important;
@@ -342,7 +385,9 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 600 }}>Recording ready!</span>
+              <span style={{ fontSize: '16px', fontWeight: 600 }}>
+                {converting ? 'Converting to MP4...' : convertError ? 'Recording ready!' : 'Recording ready!'}
+              </span>
               <button
                 onClick={closeModal}
                 style={{
@@ -362,16 +407,42 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
               </button>
             </div>
             <video
-              src={blobUrl}
+              src={mp4Url || blobUrl}
               autoPlay
               loop
               muted
               playsInline
               style={{ width: '100%', borderRadius: '10px', background: '#000', marginBottom: '16px' }}
             />
+            {converting && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '10px',
+                marginBottom: '10px',
+                borderRadius: '10px',
+                background: 'rgba(99, 102, 241, 0.12)',
+                border: '1px solid rgba(99, 102, 241, 0.25)',
+                fontSize: '13px',
+                color: 'rgba(255,255,255,0.7)',
+              }}>
+                <span style={{
+                  width: '14px',
+                  height: '14px',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTopColor: '#8b5cf6',
+                  borderRadius: '50%',
+                  animation: 'emotive-spin 0.8s linear infinite',
+                }} />
+                Converting to MP4 for sharing...
+              </div>
+            )}
             {canShare && (
               <button
                 onClick={handleShare}
+                disabled={converting}
                 className="emotive-share-btn-primary"
                 style={{
                   all: 'unset',
@@ -382,14 +453,18 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                   fontSize: '14px',
                   fontWeight: 600,
                   textAlign: 'center',
-                  cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  cursor: converting ? 'wait' : 'pointer',
+                  background: converting
+                    ? 'rgba(99, 102, 241, 0.4)'
+                    : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                   color: '#fff',
                   marginBottom: '10px',
                   letterSpacing: '0.3px',
+                  opacity: converting ? 0.6 : 1,
+                  transition: 'opacity 0.2s',
                 }}
               >
-                Share
+                {converting ? 'Preparing...' : mp4Url ? 'Share MP4' : 'Share'}
               </button>
             )}
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -415,6 +490,7 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
               </button>
               <button
                 onClick={handleDownload}
+                disabled={converting}
                 className="emotive-share-btn"
                 style={{
                   all: 'unset',
@@ -426,12 +502,13 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
                   fontSize: '13px',
                   fontWeight: 500,
                   textAlign: 'center',
-                  cursor: 'pointer',
+                  cursor: converting ? 'wait' : 'pointer',
                   background: 'rgba(255,255,255,0.08)',
                   color: 'rgba(255,255,255,0.85)',
+                  opacity: converting ? 0.5 : 1,
                 }}
               >
-                Download
+                {converting ? 'Converting...' : mp4Url ? 'Download MP4' : 'Download'}
               </button>
             </div>
           </div>
