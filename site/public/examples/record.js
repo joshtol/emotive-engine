@@ -564,65 +564,78 @@
       return;
     }
 
-    // Prefer MP4 (H.264) for maximum platform compatibility — especially mobile.
-    // Safari + iOS always support MP4. Android Chrome supports it too.
-    // Fall back to WebM only on desktop browsers that don't support MP4.
-    var mimeType;
-    var isMp4 = false;
-    if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.640028')) {
-      mimeType = 'video/mp4;codecs=avc1.640028'; // High profile level 4.0
-      isMp4 = true;
-    } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
-      mimeType = 'video/mp4;codecs=avc1';
-      isMp4 = true;
-    } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-      mimeType = 'video/mp4';
-      isMp4 = true;
-    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-      mimeType = 'video/webm;codecs=vp9';
-    } else {
-      mimeType = 'video/webm';
-    }
-    _recordingMp4 = isMp4;
+    // Codec preference list — ordered from best to most compatible.
+    // isTypeSupported() can lie (Android Chrome says avc1.640028 is OK but the
+    // encoder rejects it at runtime for canvas streams). So we try each codec
+    // and fall back on failure.
+    var codecChain = [
+      { mime: 'video/mp4;codecs=avc1.640028', mp4: true },  // H.264 High L4.0
+      { mime: 'video/mp4;codecs=avc1.42E01E', mp4: true },  // H.264 Baseline L3.0 (widely supported)
+      { mime: 'video/mp4;codecs=avc1',        mp4: true },  // H.264 unspecified profile
+      { mime: 'video/mp4',                    mp4: true },  // MP4 generic
+      { mime: 'video/webm;codecs=vp9',        mp4: false }, // VP9
+      { mime: 'video/webm;codecs=vp8',        mp4: false }, // VP8 (oldest fallback)
+      { mime: 'video/webm',                   mp4: false }, // WebM generic
+    ];
 
-    // MP4: captureStream(60) gives the container a proper framerate so duration
-    // is embedded correctly. Without this, platforms reject "0 second" videos.
-    // WebM: captureStream(0) + manual requestFrame() for frame-accurate timing
-    // (we inject duration into the EBML container ourselves).
-    var stream;
-    try {
-      stream = mirrorCanvas.captureStream(isMp4 ? 60 : 0);
-    } catch (e) {
-      console.warn('[Record] captureStream failed:', e);
-      parent.postMessage({ type: 'emotive-rec-error', error: 'captureStream not supported' }, '*');
-      return;
-    }
-    videoTrack = stream.getVideoTracks()[0];
-    if (!videoTrack) {
-      console.warn('[Record] No video track from captureStream');
-      parent.postMessage({ type: 'emotive-rec-error', error: 'No video track' }, '*');
-      return;
-    }
-
-    var recorderOptions = { mimeType: mimeType };
-    // Mobile may not support high bitrates — use lower default on mobile
     var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    recorderOptions.videoBitsPerSecond = isMobile ? 4000000 : 12000000;
+    var bitrate = isMobile ? 4000000 : 12000000;
 
-    try {
-      mediaRecorder = new MediaRecorder(stream, recorderOptions);
-    } catch (e) {
-      console.warn('[Record] MediaRecorder creation failed:', e);
-      parent.postMessage({ type: 'emotive-rec-error', error: 'MediaRecorder failed: ' + e.message }, '*');
-      return;
+    function tryCreateRecorder(startIndex) {
+      // Find next supported codec
+      var mimeType = null;
+      var isMp4 = false;
+      var idx = startIndex;
+      for (; idx < codecChain.length; idx++) {
+        if (MediaRecorder.isTypeSupported(codecChain[idx].mime)) {
+          mimeType = codecChain[idx].mime;
+          isMp4 = codecChain[idx].mp4;
+          break;
+        }
+      }
+      if (!mimeType) {
+        parent.postMessage({ type: 'emotive-rec-error', error: 'No supported recording codec found' }, '*');
+        return;
+      }
+      _recordingMp4 = isMp4;
+
+      var stream;
+      try {
+        stream = mirrorCanvas.captureStream(isMp4 ? 60 : 0);
+      } catch (e) {
+        parent.postMessage({ type: 'emotive-rec-error', error: 'captureStream not supported' }, '*');
+        return;
+      }
+      videoTrack = stream.getVideoTracks()[0];
+      if (!videoTrack) {
+        parent.postMessage({ type: 'emotive-rec-error', error: 'No video track' }, '*');
+        return;
+      }
+
+      try {
+        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: bitrate });
+      } catch (e) {
+        // Constructor rejected this codec — try next one
+        tryCreateRecorder(idx + 1);
+        return;
+      }
+
+      mediaRecorder.onerror = function (e) {
+        // Runtime encoder failure — clean up and retry with next codec
+        isRecording = false;
+        if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
+        mediaRecorder = null;
+        recordedChunks = [];
+        tryCreateRecorder(idx + 1);
+      };
+
+      startRecorderWithCodec(isMp4);
     }
 
-    mediaRecorder.onerror = function (e) {
-      console.warn('[Record] MediaRecorder error:', e.error || e);
-      isRecording = false;
-      if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
-      parent.postMessage({ type: 'emotive-rec-error', error: 'Recording error: ' + (e.error?.message || 'unknown') }, '*');
-    };
+    tryCreateRecorder(0);
+  }
+
+  function startRecorderWithCodec(isMp4) {
 
     mediaRecorder.ondataavailable = function (e) {
       if (e.data.size > 0) recordedChunks.push(e.data);
