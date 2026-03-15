@@ -48,27 +48,31 @@
     return all[all.length - 1];
   }
 
+  // ── Frame copy ──
+  // Copy source canvas content onto the mirror canvas for recording.
+  var _mirrorInterval = null;
+  function copyFrameToMirror() {
+    if (!isRecording || !mirrorCtx || !sourceCanvas) return;
+    if (_bgCanvas) {
+      mirrorCtx.drawImage(_bgCanvas, 0, 0);
+    } else {
+      mirrorCtx.fillStyle = '#000000';
+      mirrorCtx.fillRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
+    }
+    mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
+    // For WebM (captureStream(0)), push frames manually via requestFrame().
+    // For MP4 (captureStream(60)), the stream auto-captures — skip this.
+    if (!_recordingMp4 && videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
+  }
+
   // ── rAF hook ──
-  // Grab frames right after the app's render callback and draw onto the
-  // mirror canvas. For MP4 captureStream(60) auto-captures at 60fps —
-  // no manual requestFrame() needed.
+  // Grab frames right after the app's render callback. Primary method —
+  // produces frame-accurate recordings synced to the render loop.
   var _origRAF = window.requestAnimationFrame;
   window.requestAnimationFrame = function (callback) {
     return _origRAF.call(window, function (timestamp) {
       callback(timestamp);
-      // Frame just rendered — copy to mirror canvas
-      if (isRecording && mirrorCtx && sourceCanvas) {
-        if (_bgCanvas) {
-          mirrorCtx.drawImage(_bgCanvas, 0, 0);
-        } else {
-          mirrorCtx.fillStyle = '#000000';
-          mirrorCtx.fillRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
-        }
-        mirrorCtx.drawImage(sourceCanvas, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
-        // For WebM (captureStream(0)), push frames manually via requestFrame().
-        // For MP4 (captureStream(30)), the stream auto-captures — skip this.
-        if (!_recordingMp4 && videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
-      }
+      copyFrameToMirror();
     });
   };
 
@@ -602,6 +606,7 @@
       _bgCanvas = null;
       videoTrack = null;
       _recordingMp4 = false;
+      if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
     };
 
     // MP4: start() with no timeslice — browser writes one complete container.
@@ -612,11 +617,18 @@
     isRecording = true;
     _recordStartTime = performance.now();
 
+    // Fallback: poll-based frame copy for mobile browsers that throttle rAF
+    // in iframes. The rAF hook is the primary copy path (frame-accurate),
+    // but this ensures frames are captured even when rAF is throttled.
+    if (_mirrorInterval) clearInterval(_mirrorInterval);
+    _mirrorInterval = setInterval(copyFrameToMirror, 1000 / 30); // 30fps fallback
+
     parent.postMessage({ type: 'emotive-rec-started' }, '*');
   }
 
   function stopRecording() {
     isRecording = false;
+    if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
     }
