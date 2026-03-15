@@ -17,6 +17,7 @@
   var isRecording = false;
   var _bgCanvas = null; // Pre-rendered background, built once at record start
   var videoTrack = null;
+  var _recordStartTime = 0;
 
   // Force preserveDrawingBuffer for ALL WebGL contexts so drawImage
   // can always read the rendered frame (without this, buffer is cleared
@@ -294,15 +295,88 @@
     return ebml([0x12, 0x54, 0xC3, 0x67], tag);         // Tags
   }
 
-  // Insert Tags element into WebM blob before the first Cluster.
-  // Chrome's MediaRecorder uses unknown-size Segment, so no size update needed.
-  function injectMetadata(blob, callback) {
+  // Read a Matroska variable-length integer (VINT) at position, return {value, length}
+  function readVINT(data, pos) {
+    var first = data[pos];
+    if (first & 0x80) {
+      var v = first & 0x7F;
+      return { value: v === 0x7F ? -1 : v, length: 1 };
+    }
+    if (first & 0x40) {
+      var v2 = ((first & 0x3F) << 8) | data[pos + 1];
+      return { value: v2 === 0x3FFF ? -1 : v2, length: 2 };
+    }
+    if (first & 0x20) {
+      var v3 = ((first & 0x1F) << 16) | (data[pos + 1] << 8) | data[pos + 2];
+      return { value: v3 === 0x1FFFFF ? -1 : v3, length: 3 };
+    }
+    if (first & 0x10) {
+      var v4 = ((first & 0x0F) << 24) | (data[pos + 1] << 16) | (data[pos + 2] << 8) | data[pos + 3];
+      return { value: v4 === 0x0FFFFFFF ? -1 : v4, length: 4 };
+    }
+    return { value: -1, length: 1 };
+  }
+
+  // Inject Duration element into the Info (Segment Information) element.
+  // Chrome's MediaRecorder omits Duration, causing many platforms to reject the file.
+  function injectDuration(data, durationMs) {
+    // Find Info element (ID 0x1549A966)
+    var infoPos = -1;
+    for (var i = 0; i < data.length - 3; i++) {
+      if (data[i] === 0x15 && data[i + 1] === 0x49 && data[i + 2] === 0xA9 && data[i + 3] === 0x66) {
+        infoPos = i;
+        break;
+      }
+    }
+    if (infoPos === -1) return data;
+
+    var sizeInfo = readVINT(data, infoPos + 4);
+    if (sizeInfo.value < 0) return data; // unknown size, can't safely modify
+
+    var contentStart = infoPos + 4 + sizeInfo.length;
+    var contentEnd = contentStart + sizeInfo.value;
+
+    // Build Duration element: ID [0x44, 0x89] + VINT size 8 [0x88] + float64
+    var durElement = new Uint8Array(11);
+    durElement[0] = 0x44;
+    durElement[1] = 0x89;
+    durElement[2] = 0x88; // VINT for 8
+    var dv = new DataView(durElement.buffer, 3, 8);
+    dv.setFloat64(0, durationMs);
+
+    // Rebuild Info: same ID + new size VINT + old content + Duration
+    var oldContent = data.subarray(contentStart, contentEnd);
+    var newContentLen = sizeInfo.value + durElement.length;
+    var newSizeVint = encodeVINT(newContentLen);
+
+    var newInfo = new Uint8Array(4 + newSizeVint.length + newContentLen);
+    newInfo[0] = 0x15; newInfo[1] = 0x49; newInfo[2] = 0xA9; newInfo[3] = 0x66;
+    newInfo.set(newSizeVint, 4);
+    newInfo.set(oldContent, 4 + newSizeVint.length);
+    newInfo.set(durElement, 4 + newSizeVint.length + oldContent.length);
+
+    // Splice into data, replacing old Info
+    var oldInfoLen = 4 + sizeInfo.length + sizeInfo.value;
+    var result = new Uint8Array(data.length - oldInfoLen + newInfo.length);
+    result.set(data.subarray(0, infoPos), 0);
+    result.set(newInfo, infoPos);
+    result.set(data.subarray(infoPos + oldInfoLen), infoPos + newInfo.length);
+
+    return result;
+  }
+
+  // Insert Duration into Info + Tags before first Cluster in the WebM blob.
+  // Chrome's MediaRecorder uses unknown-size Segment, so no Segment size update needed.
+  function injectMetadata(blob, durationMs, callback) {
     var reader = new FileReader();
     reader.onload = function () {
       var data = new Uint8Array(reader.result);
-      var tags = buildTagsElement();
 
-      // Find first Cluster element (ID 0x1F43B675)
+      // Step 1: Inject Duration into the Info element
+      data = injectDuration(data, durationMs);
+
+      // Step 2: Build and inject Tags before first Cluster
+      var tags = buildTagsElement();
       var pos = -1;
       for (var i = 0; i < data.length - 3; i++) {
         if (data[i] === 0x1F && data[i + 1] === 0x43 && data[i + 2] === 0xB6 && data[i + 3] === 0x75) {
@@ -312,11 +386,10 @@
       }
 
       if (pos === -1) {
-        callback(blob); // can't find insertion point, return original
+        callback(new Blob([data], { type: 'video/webm' }));
         return;
       }
 
-      // Splice: [header..tracks] + [tags] + [clusters..]
       var result = new Uint8Array(data.length + tags.length);
       result.set(data.subarray(0, pos), 0);
       result.set(tags, pos);
@@ -369,8 +442,9 @@
     };
 
     mediaRecorder.onstop = function () {
+      var durationMs = performance.now() - _recordStartTime;
       var raw = new Blob(recordedChunks, { type: 'video/webm' });
-      injectMetadata(raw, function (blob) {
+      injectMetadata(raw, durationMs, function (blob) {
         var blobUrl = URL.createObjectURL(blob);
         parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, size: blob.size }, '*');
         mediaRecorder = null;
@@ -383,6 +457,7 @@
 
     mediaRecorder.start(100); // collect data every 100ms for smoother stop
     isRecording = true;
+    _recordStartTime = performance.now();
 
     parent.postMessage({ type: 'emotive-rec-started' }, '*');
   }
