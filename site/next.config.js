@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: false, // Disabled to prevent demo mascot double-mount issues
+    experimental: {
+        serverComponentsExternalPackages: ['ffmpeg-static'],
+    },
     images: {
         domains: ['firebaseapp.com'],
     },
