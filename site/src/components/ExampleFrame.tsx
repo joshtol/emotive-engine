@@ -124,6 +124,11 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           setCountdown(0)
           setIsRecording(true)
           break
+        case 'emotive-rec-error':
+          setCountdown(0)
+          setIsRecording(false)
+          console.warn('[ExampleFrame] Recording error:', e.data.error)
+          break
         case 'emotive-rec-stopped':
           setIsRecording(false)
           if (e.data.blob) {

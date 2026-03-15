@@ -544,6 +544,17 @@
   function beginRecorder() {
     recordedChunks = [];
 
+    // Prime the mirror canvas with the first frame BEFORE captureStream.
+    // On mobile, captureStream on an empty canvas can produce zero-length tracks.
+    copyFrameToMirror();
+
+    // Validate mirror canvas has content
+    if (!mirrorCanvas.width || !mirrorCanvas.height) {
+      console.warn('[Record] Mirror canvas has zero dimensions:', mirrorCanvas.width, 'x', mirrorCanvas.height);
+      parent.postMessage({ type: 'emotive-rec-error', error: 'Canvas has zero dimensions' }, '*');
+      return;
+    }
+
     // Prefer MP4 (H.264) for maximum platform compatibility — especially mobile.
     // Safari + iOS always support MP4. Android Chrome supports it too.
     // Fall back to WebM only on desktop browsers that don't support MP4.
@@ -569,13 +580,40 @@
     // is embedded correctly. Without this, platforms reject "0 second" videos.
     // WebM: captureStream(0) + manual requestFrame() for frame-accurate timing
     // (we inject duration into the EBML container ourselves).
-    var stream = mirrorCanvas.captureStream(isMp4 ? 60 : 0);
+    var stream;
+    try {
+      stream = mirrorCanvas.captureStream(isMp4 ? 60 : 0);
+    } catch (e) {
+      console.warn('[Record] captureStream failed:', e);
+      parent.postMessage({ type: 'emotive-rec-error', error: 'captureStream not supported' }, '*');
+      return;
+    }
     videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) {
+      console.warn('[Record] No video track from captureStream');
+      parent.postMessage({ type: 'emotive-rec-error', error: 'No video track' }, '*');
+      return;
+    }
 
-    mediaRecorder = new MediaRecorder(stream, {
-      mimeType: mimeType,
-      videoBitsPerSecond: 12000000,
-    });
+    var recorderOptions = { mimeType: mimeType };
+    // Mobile may not support high bitrates — use lower default on mobile
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    recorderOptions.videoBitsPerSecond = isMobile ? 4000000 : 12000000;
+
+    try {
+      mediaRecorder = new MediaRecorder(stream, recorderOptions);
+    } catch (e) {
+      console.warn('[Record] MediaRecorder creation failed:', e);
+      parent.postMessage({ type: 'emotive-rec-error', error: 'MediaRecorder failed: ' + e.message }, '*');
+      return;
+    }
+
+    mediaRecorder.onerror = function (e) {
+      console.warn('[Record] MediaRecorder error:', e.error || e);
+      isRecording = false;
+      if (_mirrorInterval) { clearInterval(_mirrorInterval); _mirrorInterval = null; }
+      parent.postMessage({ type: 'emotive-rec-error', error: 'Recording error: ' + (e.error?.message || 'unknown') }, '*');
+    };
 
     mediaRecorder.ondataavailable = function (e) {
       if (e.data.size > 0) recordedChunks.push(e.data);
