@@ -520,7 +520,11 @@
       _recordingMp4 = false;
     };
 
-    mediaRecorder.start(100); // collect data every 100ms for smoother stop
+    // MP4: start() with no timeslice — browser writes one complete container.
+    // Chunked timeslice breaks MP4 (moov atom only in first chunk, rest is
+    // raw data that gets discarded on playback → truncated video).
+    // WebM: start(100) for chunked collection (smoother stop, EBML is streamable).
+    mediaRecorder.start(isMp4 ? undefined : 100);
     isRecording = true;
     _recordStartTime = performance.now();
 
