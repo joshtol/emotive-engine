@@ -37,7 +37,7 @@ import {
     MOON_CALIBRATION_ROTATION,
     MOON_FACING_CONFIG,
 } from './geometries/Moon.js';
-import { createCustomMaterial, disposeCustomMaterial } from './utils/MaterialFactory.js';
+import { createCustomMaterial, disposeCustomMaterial, disposeTextureCache } from './utils/MaterialFactory.js';
 import { resetGeometryState } from './GeometryStateManager.js';
 import * as GeometryCache from './utils/GeometryCache.js';
 import { AnimationManager } from './managers/AnimationManager.js';
@@ -316,9 +316,7 @@ export class Core3DManager {
 
         // Geometry morpher for smooth shape transitions
         this.geometryMorpher = new GeometryMorpher();
-        this._postSwapHold = false; // Hold morph at scale=0 after geometry swap
-        this._postSwapHoldTime = 0; // Timestamp when post-swap hold started
-        this._postSwapFrameCount = 0; // Frames elapsed since swap (min 2 for stability)
+        this._morphBloomFlash = 0; // Bloom flash intensity (1.0 at swap, decays to 0)
 
         // Blink animator (emotion-aware)
         this.blinkAnimator = new BlinkAnimator(this.geometryConfig);
@@ -1548,12 +1546,11 @@ export class Core3DManager {
             this.geometryMorpher.pauseAtSwap();
         }
 
-        // Check if async geometry finished loading while paused (pre-swap hold only)
+        // Check if async geometry finished loading while paused
         if (
             morphState.waitingForGeometry &&
             this._targetGeometry &&
-            !this._pendingGeometryLoad &&
-            !this._postSwapHold
+            !this._pendingGeometryLoad
         ) {
             this.geometryMorpher.resumeFromSwap();
             // Re-trigger swap by setting hasSwappedGeometry back to false
@@ -1564,6 +1561,8 @@ export class Core3DManager {
         // After swap, pause the morph clock at scale=0 until material textures
         // are loaded and Three.js scene has stabilized (min 2 frames).
         if (morphState.shouldSwapGeometry && this._targetGeometry) {
+            // Trigger bloom flash to mask the geometry swap
+            this._morphBloomFlash = 1.0;
             // ═══════════════════════════════════════════════════════════════════
             // RESET OLD GEOMETRY STATE
             // Clear shader uniforms to defaults before swapping to prevent
@@ -1767,34 +1766,11 @@ export class Core3DManager {
                 }
             }
 
-            // Hold morph at midpoint only if textures aren't ready yet.
-            // If textures are already cached (e.g., returning to a previously
-            // visited geometry), skip the hold entirely for a seamless transition.
-            const texturesAlreadyCached = this._isMaterialTextureReady();
-            if (!texturesAlreadyCached) {
-                this.geometryMorpher.pauseAtSwap();
-                this._postSwapHold = true;
-                this._postSwapHoldTime = Date.now();
-                this._postSwapFrameCount = 0;
-            } else {
-                // Textures cached — no hold needed, morph continues uninterrupted
-                this._postSwapHold = false;
-            }
-        }
-
-        // Post-swap hold: wait for material textures before growing
-        if (this._postSwapHold && morphState.waitingForGeometry) {
-            this._postSwapFrameCount++;
-            const texturesReady = this._isMaterialTextureReady();
-            const timedOut = Date.now() - this._postSwapHoldTime > 300;
-            if (texturesReady || timedOut) {
-                // Force opacity to 1.0 before grow phase starts — prevents untextured
-                // flash on geometries like moon whose material fades in asynchronously
-                if (this.customMaterial?.uniforms?.opacity) {
-                    this.customMaterial.uniforms.opacity.value = 1.0;
-                }
-                this.geometryMorpher.resumeFromSwap();
-                this._postSwapHold = false;
+            // No post-swap hold — mascot is at 8% scale (nearly invisible) so
+            // textures load from cache or network by the time it's large enough to see.
+            // Force opacity to 1.0 immediately to prevent fade-in flash.
+            if (this.customMaterial?.uniforms?.opacity) {
+                this.customMaterial.uniforms.opacity.value = 1.0;
             }
         }
 
@@ -1834,6 +1810,13 @@ export class Core3DManager {
 
         // Get morph scale multiplier (for shrink/grow effect)
         const morphScale = morphState.scaleMultiplier;
+
+        // Decay morph bloom flash (exponential, ~15 frames to vanish)
+        if (this._morphBloomFlash > 0) {
+            this._morphBloomFlash *= 0.85;
+            if (this._morphBloomFlash < 0.01) this._morphBloomFlash = 0;
+        }
+
 
         // Update blink animation
         const blinkState = this.blinkAnimator.update(deltaTime);
@@ -3650,7 +3633,7 @@ export class Core3DManager {
         // Update bloom pass with effective glow intensity (smooth transitions)
         // Use faster transition during geometry morphs for quicker bloom adaptation
         const bloomTransitionSpeed = morphState.isTransitioning ? 0.3 : 0.1;
-        this.renderer.updateBloom(effectiveGlowIntensity, bloomTransitionSpeed, this.geometryType);
+        this.renderer.updateBloom(effectiveGlowIntensity, bloomTransitionSpeed, this.geometryType, this._morphBloomFlash);
 
         // Update element material bloom thresholds to match mascot's bloom settings
         // This prevents water/fire etc from blowing out on low-threshold geometries (crystal/heart)
@@ -4453,6 +4436,9 @@ export class Core3DManager {
 
         // Clean up emotive engine reference
         this.emotiveEngine = null;
+
+        // Dispose texture cache (before geometry cache)
+        disposeTextureCache();
 
         // Dispose geometry cache
         GeometryCache.dispose();

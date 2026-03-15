@@ -1368,7 +1368,7 @@ export class ThreeRenderer {
         return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
     }
 
-    updateBloom(targetIntensity, transitionSpeed = 0.1, geometryType = null) {
+    updateBloom(targetIntensity, transitionSpeed = 0.1, geometryType = null, morphBloomFlash = 0) {
         if (this.bloomPass) {
             const normalized = this.normalizeIntensity(targetIntensity);
             let targetThreshold, targetStrength, targetRadius;
@@ -1398,6 +1398,12 @@ export class ThreeRenderer {
                 targetStrength = 1.0 + normalized * 0.8; // Maps to 1.0-1.8 range
                 targetRadius = 0.4;
                 targetThreshold = 0.85; // Fixed threshold
+            }
+
+            // Morph bloom flash — gentle bloom surge at geometry swap to soften the transition
+            if (morphBloomFlash > 0) {
+                targetStrength += morphBloomFlash * 1.0;
+                targetThreshold = Math.max(0.3, targetThreshold - morphBloomFlash * 0.2);
             }
 
             this.bloomPass.strength += (targetStrength - this.bloomPass.strength) * transitionSpeed;

@@ -6,8 +6,27 @@ import * as THREE from 'three';
 import { createMoonShadowMaterial, createMoonMultiplexerMaterial } from '../geometries/Moon.js';
 import { createSunMaterial } from '../geometries/Sun.js';
 
-// Module-level singleton — TextureLoader is stateless, no need to create per-call
-const textureLoader = new THREE.TextureLoader();
+// Caching texture loader — wraps THREE.TextureLoader to avoid reloading on re-morph.
+// Duck-types as TextureLoader so Sun/Moon code works unchanged.
+// Lazy init avoids circular-dependency TDZ errors in rollup bundles.
+let _texCache = null;
+let _rawLoader = null;
+const textureLoader = {
+    load(url, onLoad, onProgress, onError) {
+        if (!_texCache) { _texCache = new Map(); _rawLoader = new THREE.TextureLoader(); }
+        if (_texCache.has(url)) {
+            const tex = _texCache.get(url);
+            // Defer callback — callers expect onLoad to fire asynchronously
+            // (e.g., MaterialFactory references `material` which is declared after the load call)
+            if (onLoad) Promise.resolve().then(() => onLoad(tex));
+            return tex;
+        }
+        return _rawLoader.load(url, tex => {
+            _texCache.set(url, tex);
+            if (onLoad) onLoad(tex);
+        }, onProgress, onError);
+    },
+};
 import { getCrystalShaders, CRYSTAL_DEFAULT_UNIFORMS } from '../shaders/crystalWithSoul.js';
 import { SSS_PRESETS } from '../shaders/utils/subsurfaceScattering.js';
 import { DEFORMATION_DEFAULT_UNIFORMS } from '../shaders/utils/deformation.js';
@@ -440,11 +459,28 @@ function createSunMaterialWrapper(
 
 export function disposeCustomMaterial(customMaterial) {
     if (!customMaterial) return;
-    if (customMaterial.map) customMaterial.map.dispose();
-    if (customMaterial.normalMap) customMaterial.normalMap.dispose();
-    if (customMaterial.emissiveMap) customMaterial.emissiveMap.dispose();
-    if (customMaterial.roughnessMap) customMaterial.roughnessMap.dispose();
-    if (customMaterial.metalnessMap) customMaterial.metalnessMap.dispose();
+    const skip = tex => tex && _isCached(tex);
+    if (customMaterial.map && !skip(customMaterial.map)) customMaterial.map.dispose();
+    if (customMaterial.normalMap && !skip(customMaterial.normalMap)) customMaterial.normalMap.dispose();
+    if (customMaterial.emissiveMap && !skip(customMaterial.emissiveMap)) customMaterial.emissiveMap.dispose();
+    if (customMaterial.roughnessMap && !skip(customMaterial.roughnessMap)) customMaterial.roughnessMap.dispose();
+    if (customMaterial.metalnessMap && !skip(customMaterial.metalnessMap)) customMaterial.metalnessMap.dispose();
 }
 
-export default { createCustomMaterial, disposeCustomMaterial };
+/** Check if a texture is managed by the cache (should not be disposed individually) */
+function _isCached(tex) {
+    if (!_texCache) return false;
+    for (const cached of _texCache.values()) {
+        if (cached === tex) return true;
+    }
+    return false;
+}
+
+/** Dispose all cached textures — call on full teardown only */
+export function disposeTextureCache() {
+    if (!_texCache) return;
+    for (const tex of _texCache.values()) tex.dispose();
+    _texCache.clear();
+}
+
+export default { createCustomMaterial, disposeCustomMaterial, disposeTextureCache };
