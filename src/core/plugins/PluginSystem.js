@@ -242,12 +242,6 @@ export class PluginSystem {
         // Plugins can still access globals via closures, the scope chain, or
         // constructor references (e.g., ({}).constructor.constructor('return this')()).
         // For real sandboxing, consider iframe-based or Worker-based isolation.
-        console.warn(
-            '[PluginSystem] sandboxPlugins is enabled, but the sandbox provides ' +
-            '.bind() context isolation only, not true execution sandboxing. ' +
-            'Plugins may still access globals through closures or prototype chains.'
-        );
-
         // Create a limited execution environment
         const sandbox = {
             // Safe global objects
