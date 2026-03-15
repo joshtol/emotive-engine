@@ -86,12 +86,10 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
   }, [src, handleLoad])
 
   // Convert WebM blob to MP4 via server-side ffmpeg
-  const convertToMp4 = useCallback(async (webmBlobUrl: string) => {
+  const convertToMp4 = useCallback(async (webmBlob: Blob) => {
     setConverting(true)
     setConvertError(false)
     try {
-      const resp = await fetch(webmBlobUrl)
-      const webmBlob = await resp.blob()
       const convertResp = await fetch('/api/convert-video', {
         method: 'POST',
         body: webmBlob,
@@ -120,10 +118,15 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
           break
         case 'emotive-rec-stopped':
           setIsRecording(false)
-          if (e.data.blobUrl) {
+          if (e.data.blob) {
+            // Create a local blob URL for preview (iframe blob URLs can't be fetched cross-document)
+            const localUrl = URL.createObjectURL(e.data.blob)
+            setBlobUrl(localUrl)
+            setShowModal(true)
+            convertToMp4(e.data.blob)
+          } else if (e.data.blobUrl) {
             setBlobUrl(e.data.blobUrl)
             setShowModal(true)
-            convertToMp4(e.data.blobUrl)
           }
           break
         case 'emotive-rec-error':

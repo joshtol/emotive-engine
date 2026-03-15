@@ -446,7 +446,10 @@
       var raw = new Blob(recordedChunks, { type: 'video/webm' });
       injectMetadata(raw, durationMs, function (blob) {
         var blobUrl = URL.createObjectURL(blob);
-        parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, size: blob.size }, '*');
+        // Send both the URL (for preview) and the blob itself (for conversion).
+        // Blob URLs are scoped to the creating document, so the parent can't
+        // fetch them — we must transfer the actual blob via structured clone.
+        parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, blob: blob, size: blob.size }, '*');
         mediaRecorder = null;
         mirrorCanvas = null;
         mirrorCtx = null;
