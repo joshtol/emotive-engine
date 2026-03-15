@@ -124,11 +124,16 @@ export default function ExampleFrame({ src, title }: ExampleFrameProps) {
         case 'emotive-rec-stopped':
           setIsRecording(false)
           if (e.data.blob) {
-            // Create a local blob URL for preview (iframe blob URLs can't be fetched cross-document)
             const localUrl = URL.createObjectURL(e.data.blob)
             setBlobUrl(localUrl)
             setShowModal(true)
-            convertToMp4(e.data.blob)
+            if (e.data.format === 'mp4') {
+              // Already recorded as MP4 natively — no conversion needed
+              setMp4Url(localUrl)
+            } else {
+              // WebM recording — try server-side conversion to MP4
+              convertToMp4(e.data.blob)
+            }
           } else if (e.data.blobUrl) {
             setBlobUrl(e.data.blobUrl)
             setShowModal(true)

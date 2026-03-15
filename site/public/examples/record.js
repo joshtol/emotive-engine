@@ -462,9 +462,22 @@
     // This ties each video frame 1:1 to an actual render, keeping realtime pace.
     var stream = mirrorCanvas.captureStream(0);
     videoTrack = stream.getVideoTracks()[0];
-    var mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-      ? 'video/webm;codecs=vp9'
-      : 'video/webm';
+    // Prefer MP4 (H.264) for maximum platform compatibility — especially mobile.
+    // Safari + iOS always support MP4. Android Chrome supports it too.
+    // Fall back to WebM only on desktop browsers that don't support MP4.
+    var mimeType;
+    var isMp4 = false;
+    if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+      mimeType = 'video/mp4;codecs=avc1';
+      isMp4 = true;
+    } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+      mimeType = 'video/mp4';
+      isMp4 = true;
+    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+      mimeType = 'video/webm;codecs=vp9';
+    } else {
+      mimeType = 'video/webm';
+    }
 
     mediaRecorder = new MediaRecorder(stream, {
       mimeType: mimeType,
@@ -475,21 +488,28 @@
       if (e.data.size > 0) recordedChunks.push(e.data);
     };
 
+    var recordedAsMp4 = isMp4;
     mediaRecorder.onstop = function () {
-      var durationMs = performance.now() - _recordStartTime;
-      var raw = new Blob(recordedChunks, { type: 'video/webm' });
-      injectMetadata(raw, durationMs, function (blob) {
+      var blobType = recordedAsMp4 ? 'video/mp4' : 'video/webm';
+      if (recordedAsMp4) {
+        // MP4 container — no EBML metadata injection needed
+        var blob = new Blob(recordedChunks, { type: blobType });
         var blobUrl = URL.createObjectURL(blob);
-        // Send both the URL (for preview) and the blob itself (for conversion).
-        // Blob URLs are scoped to the creating document, so the parent can't
-        // fetch them — we must transfer the actual blob via structured clone.
-        parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, blob: blob, size: blob.size }, '*');
-        mediaRecorder = null;
-        mirrorCanvas = null;
-        mirrorCtx = null;
-        _bgCanvas = null;
-        videoTrack = null;
-      });
+        parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, blob: blob, size: blob.size, format: 'mp4' }, '*');
+      } else {
+        // WebM — inject duration + EBML metadata
+        var durationMs = performance.now() - _recordStartTime;
+        var raw = new Blob(recordedChunks, { type: blobType });
+        injectMetadata(raw, durationMs, function (blob) {
+          var blobUrl = URL.createObjectURL(blob);
+          parent.postMessage({ type: 'emotive-rec-stopped', blobUrl: blobUrl, blob: blob, size: blob.size, format: 'webm' }, '*');
+        });
+      }
+      mediaRecorder = null;
+      mirrorCanvas = null;
+      mirrorCtx = null;
+      _bgCanvas = null;
+      videoTrack = null;
     };
 
     mediaRecorder.start(100); // collect data every 100ms for smoother stop
