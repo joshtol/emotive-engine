@@ -170,7 +170,7 @@
     "terser": "^5.44.0",
     "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.9.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.0"
   },
   "lint-staged": {
     "*.js": "eslint --fix",
