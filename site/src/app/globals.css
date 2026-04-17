@@ -242,8 +242,9 @@ html {
   --heading-sm: min(0.9vw, 1.8vh);
 }
 
-html, body { margin: 0; padding: 0; overflow-x: hidden; overflow-y: scroll !important; }
+html, body { margin: 0; padding: 0; }
 body {
+  overflow-x: clip;
   background: var(--bg-primary);
   background-image:
     linear-gradient(rgba(221, 74, 154, 0.05) 1px, transparent 1px),
@@ -3873,4 +3874,4 @@ h2.section-header {
   }
 }
 
-html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+body { max-width: 100vw; }
