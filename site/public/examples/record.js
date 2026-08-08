@@ -1,7 +1,7 @@
 // site/public/examples/record.js
 // Headless WebM recording service for Emotive Engine examples.
 // Runs inside the iframe. Controlled by postMessage from the parent page.
-// Usage: <script src="/examples/record.js"></script> (in <head>)
+// Usage: <script src="../record.js"></script> (in <head>, from examples/2d/ or examples/3d/)
 (function () {
   'use strict';
 

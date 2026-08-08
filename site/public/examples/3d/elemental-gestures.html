@@ -20,7 +20,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elemental Gestures - Emotive Engine</title>
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         /* Theme: Cyan/Teal for elemental magic */
         :root {
@@ -30,7 +30,7 @@
 
         body {
             /* Colorful photo background for refraction testing */
-            background: url('/assets/images/arch-bg.jpg') center/cover no-repeat;
+            background: url('../../assets/images/arch-bg.jpg') center/cover no-repeat;
         }
 
         /* Elemental tooltip uses .tooltip-element instead of .tooltip-type */
@@ -169,7 +169,7 @@
         }
 
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <!-- LEFT MENU -->
@@ -393,8 +393,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { profiler, animateMoonPhase } from '/emotive-engine-3d-elementals.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles, setupWobbleToggle, setActiveButton, createEmotionButtons, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D, { profiler, animateMoonPhase } from '../../emotive-engine-3d-elementals.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles, setupWobbleToggle, setActiveButton, createEmotionButtons, createActivityLog } from './demo-utils.js';
 
         const log = createActivityLog();
 
@@ -417,7 +417,7 @@
             minZoom: 0.9,
             maxZoom: 2.0,
             materialVariant: 'multiplexer',
-            assetBasePath: '/assets',
+            assetBasePath: '../../assets',
             preloadElements: [],
             backgroundPrewarm: true
         });

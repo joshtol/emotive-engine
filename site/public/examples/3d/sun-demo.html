@@ -20,7 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar Eclipse - Emotive Engine</title>
     <meta name="description" content="Solar eclipse demo with shader-based eclipse effects and blend layers">
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         :root {
             --accent: #ff9500;
@@ -32,7 +32,7 @@
                         linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
         }
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <div class="left-menu">
@@ -141,8 +141,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { blendModeNames } from '/emotive-engine-3d.bundled.js';
-        import { createBlendLayerGroup, syncLayersFromShader, setupVisualToggles, setupParticlesToggle, setActiveButton, setupSlider, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D, { blendModeNames } from '../../emotive-engine-3d.bundled.js';
+        import { createBlendLayerGroup, syncLayersFromShader, setupVisualToggles, setupParticlesToggle, setActiveButton, setupSlider, createActivityLog } from './demo-utils.js';
 
         const log = createActivityLog();
         let mascot = null;
@@ -203,7 +203,7 @@
                     enableBlinking: false,
                     enableBreathing: false,
                     cameraDistance: 1.2,
-                    assetBasePath: '/assets'
+                    assetBasePath: '../../assets'
                 });
 
                 mascot.init(container);

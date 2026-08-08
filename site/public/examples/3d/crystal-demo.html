@@ -22,7 +22,7 @@
     <meta name="description" content="Frosted crystal with inner soul glow driven by emotional states">
 
     <!-- Shared 3D example styles -->
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
 
     <style>
         /* Theme: Cyan crystal */
@@ -44,7 +44,7 @@
 
 
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <div class="left-menu">
@@ -385,7 +385,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { blendModeNames } from '/emotive-engine-3d.bundled.js';
+        import EmotiveMascot3D, { blendModeNames } from '../../emotive-engine-3d.bundled.js';
         import {
             setupWobbleToggle,
             setupParticlesToggle,
@@ -399,7 +399,7 @@
             setSlider,
             createEmotionButtons,
             createActivityLog
-        } from '/examples/3d/demo-utils.js';
+        } from './demo-utils.js';
 
         const log = createActivityLog();
         const MAX_BLEND_LAYERS = 2;  // 2 layers per component
@@ -418,7 +418,7 @@
             enableBreathing: true,
             cameraDistance: 1.2,
             fov: 30,
-            assetBasePath: '/assets',
+            assetBasePath: '../../assets',
             minZoom: 0.9,
             maxZoom: 2.0
         });

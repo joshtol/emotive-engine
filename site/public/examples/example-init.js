@@ -6,7 +6,7 @@
  *   updateStatus(message, type?)    — update a .status element
  *
  * Usage (in any example HTML):
- *   <script src="/examples/example-init.js"></script>
+ *   <script src="../example-init.js"></script>
  *   <script>
  *     let mascot;
  *     initMascot('mascot-canvas').then(m => { mascot = m; });

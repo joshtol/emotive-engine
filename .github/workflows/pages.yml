@@ -45,37 +45,23 @@ jobs:
           # Copy dist files
           cp -r dist _pages/dist
 
-          # Copy examples - use site/public/examples for 3D (bundled imports)
-          # and examples/ for 2D (which don't need bundled Three.js)
+          # Copy examples. site/public/examples is the single source of truth — it is
+          # what the Next.js site serves, so demos get exercised there before shipping.
           mkdir -p _pages/examples
-          cp -r examples/2d _pages/examples/2d 2>/dev/null || true
-          cp examples/*.css _pages/examples/ 2>/dev/null || true
-          # 3D examples from site/public use bundled imports that work in browsers
+          cp -r site/public/examples/2d _pages/examples/2d
           cp -r site/public/examples/3d _pages/examples/3d
 
-          # Rewrite absolute paths to relative paths for GitHub Pages subdirectory
-          # GitHub Pages serves at /emotive-engine/, not /, so absolute paths fail
-          # From examples/3d/*.html, the paths need to be:
-          #   /emotive-engine-3d.bundled.js → ../../emotive-engine-3d.bundled.js
-          #   /examples/3d-example-style.css → ../3d-example-style.css
-          #   /examples/3d/demo-utils.js → ./demo-utils.js
-          #   /examples/3d/layer-utils.js → ./layer-utils.js
-          #   /assets/ → ../../assets/
-          find _pages/examples/3d -name "*.html" -exec sed -i \
-            -e "s|'/emotive-engine-3d-elementals.bundled.js'|'../../emotive-engine-3d-elementals.bundled.js'|g" \
-            -e "s|\"/emotive-engine-3d-elementals.bundled.js\"|\"../../emotive-engine-3d-elementals.bundled.js\"|g" \
-            -e "s|'/emotive-engine-3d.bundled.js'|'../../emotive-engine-3d.bundled.js'|g" \
-            -e "s|\"/emotive-engine-3d.bundled.js\"|\"../../emotive-engine-3d.bundled.js\"|g" \
-            -e 's|href="/examples/3d-example-style.css"|href="../3d-example-style.css"|g' \
-            -e "s|'/examples/3d/demo-utils.js'|'./demo-utils.js'|g" \
-            -e "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" \
-            -e 's|"/assets/|"../../assets/|g' \
-            -e "s|'/assets/|'../../assets/|g" \
-            -e "s|'/assets'|'../../assets'|g" \
-            -e "s|'/hdri/|'../../hdri/|g" \
-            {} \;
-          # Also fix demo-utils.js which imports from /examples/3d/layer-utils.js
-          sed -i "s|'/examples/3d/layer-utils.js'|'./layer-utils.js'|g" _pages/examples/3d/demo-utils.js 2>/dev/null || true
+          # Shared example CSS + scripts referenced as ../<file> from examples/{2d,3d}/
+          cp site/public/examples/*.css site/public/examples/*.js _pages/examples/ 2>/dev/null || true
+
+          # Emotion/shape SVG icons. demo-utils.js resolves these against its own URL as
+          # <examples>/assets/states, so they must land beside the demo pages — Pages
+          # serves from /emotive-engine/, where a root-absolute /assets/ path 404s.
+          cp -r site/public/examples/assets _pages/examples/assets 2>/dev/null || true
+
+          # NOTE: paths inside the example pages are relative at source, so no sed
+          # rewriting happens here. Keep them relative — absolute /… paths only resolve
+          # when the site is served from a domain root, which Pages is not.
 
           # Copy screenshots for CodePen thumbnails and social previews
           cp -r site/public/screenshots _pages/screenshots 2>/dev/null || true
@@ -83,18 +69,21 @@ jobs:
           # Copy og-image for social previews
           cp site/public/og-image.png _pages/og-image.png 2>/dev/null || true
 
-          # Copy assets needed by examples
+          # Copy assets needed by examples. Root assets/ carries the gallery previews;
+          # site/public/assets carries what the demos actually load at runtime (models,
+          # tracks, textures, themes) and is merged over the top.
           cp -r assets _pages/assets 2>/dev/null || true
+          mkdir -p _pages/assets
+          cp -r site/public/assets/. _pages/assets/ 2>/dev/null || true
 
           # Copy HDRI files for environment mapping
           cp -r public/hdri _pages/hdri 2>/dev/null || true
 
-          # 2D examples reference site/public/emotive-engine.js - create that path
-          # Must use UMD build for regular <script> tag loading (not ES module)
-          mkdir -p _pages/site/public
-          cp dist/emotive-mascot.umd.js _pages/site/public/emotive-engine.js
+          # 2D examples load ../../emotive-engine.js — the UMD build, for plain
+          # <script> tags rather than ES modules.
+          cp dist/emotive-mascot.umd.js _pages/emotive-engine.js
 
-          # 3D examples reference /emotive-engine-3d.bundled.js at root
+          # 3D examples reference ../../emotive-engine-3d.bundled.js
           # Copy the bundled version (includes Three.js) for static HTML demos
           cp dist/emotive-mascot-3d.bundled.js _pages/emotive-engine-3d.bundled.js
 

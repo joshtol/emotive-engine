@@ -111,7 +111,7 @@ best.code-workspace
 *.old
 
 # Work-in-progress features (not ready for release)
-examples/3d/black-hole-demo.html
+site/public/examples/3d/black-hole-demo.html
 src/3d/geometries/BlackHole.js
 
 # GitHub Pages build output

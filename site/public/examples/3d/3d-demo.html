@@ -20,7 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Showcase - Emotive Engine</title>
     <meta name="description" content="Interactive 3D demo showcasing emotional expression through geometry, particles, and visual effects">
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         /* Theme: Crystal blue-green gradient */
         :root {
@@ -37,7 +37,7 @@
                 #5a4a40 100%);
         }
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <!-- LEFT MENU: Geometry -->
@@ -198,7 +198,7 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { animateMoonPhase } from '/emotive-engine-3d.bundled.js';
+        import EmotiveMascot3D, { animateMoonPhase } from '../../emotive-engine-3d.bundled.js';
         import {
             setupWobbleToggle,
             setupParticlesToggle,
@@ -208,7 +208,7 @@
             setActiveButton,
             createEmotionButtons,
             createActivityLog
-        } from '/examples/3d/demo-utils.js';
+        } from './demo-utils.js';
 
         const log = createActivityLog();
         let mascot = null;
@@ -233,7 +233,7 @@
                     minZoom: 0.9,
                     maxZoom: 2.0,
                     materialVariant: 'multiplexer',
-                    assetBasePath: '/assets'
+                    assetBasePath: '../../assets'
                 });
 
                 await mascot.init(container);

@@ -16,7 +16,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gesture Explorer - Emotive Engine</title>
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         /* Theme: Amber/Gold for gesture explorer */
         :root {
@@ -62,7 +62,7 @@
             }
         }
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <!-- LEFT MENU -->
@@ -296,8 +296,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles, setActiveButton, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D from '../../emotive-engine-3d.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles, setActiveButton, createActivityLog } from './demo-utils.js';
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INITIALIZE MASCOT
@@ -320,7 +320,7 @@
             minZoom: 0.9,
             maxZoom: 2.0,
             materialVariant: 'multiplexer',
-            assetBasePath: '/assets'
+            assetBasePath: '../../assets'
         });
 
         mascot.init(container);

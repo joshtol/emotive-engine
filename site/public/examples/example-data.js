@@ -2,10 +2,10 @@
  * Emotive Engine — Shared Example Data
  *
  * Centralised emotion, gesture, and shape definitions for all 2D examples.
- * Emotion list matches the SVG emoticon assets in /assets/states/.
+ * Emotion list matches the SVG emoticon assets in <examples>/assets/states/.
  *
  * Usage:
- *   <script src="/examples/example-data.js"></script>
+ *   <script src="../example-data.js"></script>
  *   <script>
  *     renderEmotionButtons('my-container', emotion => mascot.setEmotion(emotion));
  *   </script>
@@ -20,6 +20,17 @@ var EMOTIONS = [
 var GESTURES = ['bounce', 'spin', 'pulse', 'glow', 'breathe', 'expand'];
 
 var SHAPES = ['circle', 'heart', 'star', 'sun', 'moon'];
+
+/**
+ * Icon root, resolved against this script's own URL rather than the document root,
+ * so the examples work under any document root — the site dev server, a server rooted
+ * at the repo, or opened straight off disk with file://. This script lives in
+ * <examples>/, so './assets' is <examples>/assets.
+ */
+var ASSET_ROOT = (function () {
+    var src = document.currentScript && document.currentScript.src;
+    return src ? new URL('./assets', src).href : '/assets';
+})();
 
 /** Default gesture that pairs with each emotion for auto-expression */
 var EMOTION_GESTURES = {
@@ -52,7 +63,7 @@ function renderEmotionButtons(containerId, onClick) {
         btn.className = 'emotion-btn';
         btn.setAttribute('data-emotion', emotion);
         btn.innerHTML =
-            '<img src="/assets/states/' + emotion + '.svg" alt="" class="emotion-icon">' +
+            '<img src="' + ASSET_ROOT + '/states/' + emotion + '.svg" alt="" class="emotion-icon">' +
             '<span>' + emotion.charAt(0).toUpperCase() + emotion.slice(1) + '</span>';
         btn.addEventListener('click', function () { onClick(emotion); });
         container.appendChild(btn);
@@ -83,7 +94,7 @@ function showEmotionIndicator(emotion) {
         el.appendChild(label);
     }
 
-    img.src = '/assets/states/' + emotion + '.svg';
+    img.src = ASSET_ROOT + '/states/' + emotion + '.svg';
     label.textContent = emotion;
 
     // Pop animation
@@ -125,7 +136,7 @@ function renderShapeButtons(containerId, onClick) {
         btn.className = 'emotion-btn';
         btn.setAttribute('data-shape', shape);
         btn.innerHTML =
-            '<img src="/assets/shape-bar/' + shape + '.svg" alt="" class="emotion-icon shape-icon">' +
+            '<img src="' + ASSET_ROOT + '/shape-bar/' + shape + '.svg" alt="" class="emotion-icon shape-icon">' +
             '<span>' + shape.charAt(0).toUpperCase() + shape.slice(1) + '</span>';
         btn.addEventListener('click', function () { onClick(shape); });
         container.appendChild(btn);

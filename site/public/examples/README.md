@@ -4,6 +4,29 @@ This directory contains working examples demonstrating how to use Emotive
 Engine. All examples have been tested and vetted for junior developers and "vibe
 coders."
 
+## 📂 Opening the examples
+
+All paths in these pages are **relative**, so they work from any document root —
+the site dev server, a server rooted at the repo, or a GitHub Pages subpath.
+
+|             | `file://` (double-click) | any local server |
+| ----------- | ------------------------ | ---------------- |
+| `2d/*.html` | ✅ works                 | ✅ works         |
+| `3d/*.html` | ❌ see below             | ✅ works         |
+
+The **3D examples cannot run from `file://`** and no path change can fix it.
+They load the engine with `<script type="module">`, and browsers treat a
+`file://` page as origin `null`, which blocks both ES module imports and the
+`fetch`/XHR used to load `.glb` models and HDRI maps. Serve them instead:
+
+```bash
+npm run local   # http://localhost:3000/examples/3d/3d-demo.html
+```
+
+The 2D examples use classic `<script src>` and load no external assets, so they
+open straight off disk. (One caveat: the 2D bundle polls `/api/feature-flags`,
+which 404s without the Next.js dev server. Harmless — the mascot still runs.)
+
 ## 🚀 Quick Start
 
 ### **[hello-world.html](hello-world.html)** ⭐ START HERE!
