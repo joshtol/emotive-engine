@@ -39,7 +39,11 @@ export class FeatureFlags {
         this.evaluations = new Map();
 
         this.config = {
-            endpoint: options.endpoint || '/api/feature-flags',
+            // Only an omitted endpoint gets the default. Callers disable remote flags by
+            // passing null (as the exported singleton does); `||` or `??` would discard
+            // that and fall through, making every host app without an
+            // /api/feature-flags route 404 on load and again every refresh interval.
+            endpoint: options.endpoint === undefined ? '/api/feature-flags' : options.endpoint,
             refreshInterval: options.refreshInterval || 300000, // 5 minutes
             storage: options.storage || 'localStorage',
             storageKey: options.storageKey || 'emotive-feature-flags',
