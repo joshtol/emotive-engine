@@ -174,12 +174,24 @@ export class ElementInstancedSpawner {
         // Element ID counter
         this._nextId = 0;
 
+        // Torn down — guards work that resumes after an await
+        this._disposed = false;
+
         // Initialization state
         this._initialized = new Set(); // Element types that have been initialized
         this._initializing = new Map(); // Element types currently initializing -> Promise
 
         // Pool cleanup tracking (dispose pools after inactivity)
         this._poolLastUsed = new Map(); // elementType -> timestamp
+
+        // Element types currently registered for screen-space refraction.
+        // Kept minimal — each registered mesh costs an extra full-scene render per frame.
+        this._refractionActive = new Set(); // elementType
+
+        // Element types explicitly pre-loaded. Idle cleanup skips these: the caller
+        // asked for them to be resident, and reaping a never-spawned pre-warmed pool
+        // discards exactly the work the pre-warm was performed to avoid.
+        this._pinnedPools = new Set(); // elementType
 
         // Cached model geometry diameters for mascot-relative diameter calculations
         this._modelGeometryDiameters = new Map(); // modelName -> diameter in model space
@@ -241,7 +253,12 @@ export class ElementInstancedSpawner {
             // They'll use the old spawner until we add instanced materials
             return;
         }
-        await this.initializePool(elementType);
+        const pool = await this.initializePool(elementType);
+        // Pin so idle cleanup can't undo the pre-warm. Pools created lazily by a
+        // gesture are left unpinned and still get reaped when they go idle.
+        if (pool) {
+            this._pinnedPools.add(elementType);
+        }
     }
 
     /**
@@ -341,15 +358,40 @@ export class ElementInstancedSpawner {
 
         // Create pool
         const pool = new ElementInstancePool(mergedGeometry, material, MAX_ELEMENTS_PER_TYPE);
+
+        // Link the shader BEFORE the mesh joins the scene graph. These are large
+        // procedural shaders; linking them lazily inside render() blocks the main
+        // thread for seconds each on ANGLE/D3D.
+        //
+        // Deliberately before pools.set(): a pool that is registered while still
+        // awaiting its link is visible to _checkPoolCleanup(), which can dispose its
+        // material mid-compile. That leaves Three polling a material with no current
+        // program, and the resulting throw happens inside Three's own timer — outside
+        // any promise chain — so the await here would never settle.
+        if (this._renderer?.compileObjectAsync) {
+            await this._renderer.compileObjectAsync(pool.mesh);
+
+            // Spawner may have been torn down while we waited
+            if (this._disposed || !this.container) {
+                pool.dispose();
+                return null;
+            }
+        }
+
         this.pools.set(elementType, pool);
+
+        // Mark the pool as fresh. Pre-warmed pools are never spawned into, so without
+        // this their lastUsed stays 0 and _checkPoolCleanup() disposes them on its first
+        // run past the 30s mark — throwing away the pre-warm and forcing a full shader
+        // recompile on the first real gesture.
+        this._poolLastUsed.set(elementType, performance.now());
 
         // Add the instanced mesh to the container
         this.container.add(pool.mesh);
 
-        // Register mesh for screen-space refraction if material requests it
-        if (this._renderer && material.userData.needsRefraction) {
-            this._renderer.addRefractionMesh(pool.mesh);
-        }
+        // NOTE: screen-space refraction is registered on spawn, not here — see
+        // _syncRefractionMeshes(). Registering at pool creation costs an extra
+        // full-scene render every frame for the lifetime of the pool.
 
         // Register mesh for velocity-based motion blur
         if (this._renderer?.motionBlurPass) {
@@ -2147,6 +2189,8 @@ export class ElementInstancedSpawner {
             if (this._renderer?.motionBlurPass) {
                 this._renderer.motionBlurPass.enabled = false;
             }
+            // Drop the extra full-scene refraction pass while nothing is on screen
+            this._syncRefractionMeshes(null);
             this._checkPoolCleanup();
             return;
         }
@@ -2157,6 +2201,14 @@ export class ElementInstancedSpawner {
             const isMobile = this._cachedInnerWidth <= 1000;
             this._renderer.motionBlurPass.enabled = !isMobile;
         }
+
+        // Refraction is only worth its extra scene pass while a refracting type is live
+        const refractingTypes = this._activeTypes;
+        refractingTypes.clear();
+        for (const [, data] of this.activeElements) {
+            refractingTypes.add(data.type);
+        }
+        this._syncRefractionMeshes(refractingTypes);
 
         // Sync container transform with mascot (position, rotation, scale)
         // This ensures surface-spawned elements follow mascot transformations
@@ -2563,6 +2615,32 @@ export class ElementInstancedSpawner {
     }
 
     /**
+     * Register/unregister refraction meshes to match which element types have live
+     * instances. While any mesh is registered the renderer runs an extra full-scene
+     * pass every frame, so a pool that merely exists must not pay that cost.
+     * @param {Set<string>|null} activeTypes - Types with live elements, null for none
+     * @private
+     */
+    _syncRefractionMeshes(activeTypes) {
+        if (!this._renderer?.addRefractionMesh) return;
+
+        for (const [type, pool] of this.pools) {
+            if (!pool.mesh?.material?.userData?.needsRefraction) continue;
+
+            const shouldRegister = activeTypes ? activeTypes.has(type) : false;
+            const isRegistered = this._refractionActive.has(type);
+
+            if (shouldRegister && !isRegistered) {
+                this._renderer.addRefractionMesh(pool.mesh);
+                this._refractionActive.add(type);
+            } else if (!shouldRegister && isRegistered) {
+                this._renderer.removeRefractionMesh(pool.mesh);
+                this._refractionActive.delete(type);
+            }
+        }
+    }
+
+    /**
      * Sets the distortion manager for syncing distortion instances.
      * @param {DistortionManager} manager
      */
@@ -2630,12 +2708,16 @@ export class ElementInstancedSpawner {
 
         // Check each pool for inactivity
         for (const [type, pool] of this.pools) {
+            // Explicitly pre-loaded pools stay resident by request
+            if (this._pinnedPools.has(type)) continue;
+
             const lastUsed = this._poolLastUsed.get(type) || 0;
             if (now - lastUsed > this._poolCleanupInterval) {
                 // Unregister from refraction before disposal
                 if (this._renderer && pool.mesh?.material?.userData?.needsRefraction) {
                     this._renderer.removeRefractionMesh(pool.mesh);
                 }
+                this._refractionActive.delete(type);
                 // Unregister from motion blur before disposal
                 if (this._renderer?.motionBlurPass) {
                     this._renderer.motionBlurPass.removeInstancedMesh(pool.mesh);
@@ -2676,6 +2758,8 @@ export class ElementInstancedSpawner {
      * Disposes of all resources.
      */
     dispose() {
+        this._disposed = true;
+
         // Clear all elements
         this.despawnAll();
 
@@ -2690,6 +2774,8 @@ export class ElementInstancedSpawner {
             pool.dispose();
         }
         this.pools.clear();
+        this._refractionActive.clear();
+        this._pinnedPools.clear();
 
         // Dispose materials
         for (const material of this.materials.values()) {
