@@ -29,7 +29,7 @@ which 404s without the Next.js dev server. Harmless — the mascot still runs.)
 
 ## 🚀 Quick Start
 
-### **[hello-world.html](hello-world.html)** ⭐ START HERE!
+### **[2d-hello-world.html](2d/2d-hello-world.html)** ⭐ START HERE!
 
 The simplest possible example. Perfect for learning the basic API.
 
@@ -48,15 +48,15 @@ The simplest possible example. Perfect for learning the basic API.
 # 1. Build the project
 npm run build:dev
 
-# 2. Open in browser
-open examples/hello-world.html
+# 2. Open in browser (2D opens off disk; 3D needs a server — see above)
+open site/public/examples/2d/2d-hello-world.html
 ```
 
 ---
 
 ## 📚 Core Feature Examples
 
-### **[basic-usage.html](basic-usage.html)** ⭐⭐ Intermediate
+### **[basic-usage.html](2d/basic-usage.html)** ⭐⭐ Intermediate
 
 Comprehensive demo of all core features with best-practice layout.
 
@@ -75,7 +75,7 @@ Comprehensive demo of all core features with best-practice layout.
 
 ---
 
-### **[event-handling.html](event-handling.html)** ⭐⭐ Intermediate
+### **[event-handling.html](2d/event-handling.html)** ⭐⭐ Intermediate
 
 Shows how to listen to **REAL** mascot events.
 
@@ -94,7 +94,7 @@ Shows how to listen to **REAL** mascot events.
 
 ---
 
-### **[rhythm-sync-demo.html](rhythm-sync-demo.html)** ⭐⭐⭐ Advanced
+### **[rhythm-sync-demo.html](2d/rhythm-sync-demo.html)** ⭐⭐⭐ Advanced
 
 Rhythm-based animations with tap tempo and beat synchronization.
 
@@ -117,7 +117,7 @@ Rhythm-based animations with tap tempo and beat synchronization.
 
 These examples were used to create GIFs and demo assets for documentation.
 
-### **[hero-banner-capture.html](hero-banner-capture.html)** ⭐⭐ Intermediate
+### **[hero-banner-capture.html](captures/hero-banner-capture.html)** ⭐⭐ Intermediate
 
 Generates the hero banner animation for README.
 
@@ -139,7 +139,7 @@ Generates the hero banner animation for README.
 
 ---
 
-### **[emotion-demo-capture.html](emotion-demo-capture.html)** ⭐⭐ Intermediate
+### **[emotion-demo-capture.html](captures/emotion-demo-capture.html)** ⭐⭐ Intermediate
 
 Generates the Quick Start demo GIF showing emotion transitions.
 
@@ -175,7 +175,7 @@ Generates the Quick Start demo GIF showing emotion transitions.
 - Complete working demo component
 
 **Note:** This is a template, not executable code. Study
-[hello-world.html](hello-world.html) first!
+[2d-hello-world.html](2d/2d-hello-world.html) first!
 
 **Complexity:** ⭐⭐⭐⭐ Advanced (Requires React + bundler knowledge)
 
@@ -194,7 +194,7 @@ Generates the Quick Start demo GIF showing emotion transitions.
 - Complete working demo component
 
 **Note:** This is a template, not executable code. Study
-[hello-world.html](hello-world.html) first!
+[2d-hello-world.html](2d/2d-hello-world.html) first!
 
 **Complexity:** ⭐⭐⭐⭐ Advanced (Requires Vue + bundler knowledge)
 
@@ -215,7 +215,7 @@ npm run build:dev
 # Creates: site/public/emotive-engine.js (UMD bundle)
 
 # 3. Open any example in browser
-open examples/hello-world.html
+open site/public/examples/2d/2d-hello-world.html
 ```
 
 ### Watch Mode (For Active Development)
@@ -225,26 +225,26 @@ open examples/hello-world.html
 npm run build:watch
 
 # Terminal 2: Serve files locally
-npm run serve
-# Opens: http://localhost:8000
+npm run local
+# Opens: http://localhost:3000
 
-# Then open: http://localhost:8000/examples/hello-world.html
+# Then open: http://localhost:3000/examples/2d/2d-hello-world.html
 ```
 
 ---
 
 ## 📖 All Examples Summary
 
-| Example                                                    | Complexity        | Best For                |
-| ---------------------------------------------------------- | ----------------- | ----------------------- |
-| **[hello-world.html](hello-world.html)**                   | ⭐ Beginner       | First-time learning     |
-| **[basic-usage.html](basic-usage.html)**                   | ⭐⭐ Intermediate | Learning all features   |
-| **[event-handling.html](event-handling.html)**             | ⭐⭐ Intermediate | Event-driven apps       |
-| **[rhythm-sync-demo.html](rhythm-sync-demo.html)**         | ⭐⭐⭐ Advanced   | Rhythm-based animations |
-| **[hero-banner-capture.html](hero-banner-capture.html)**   | ⭐⭐ Intermediate | Creating banner assets  |
-| **[emotion-demo-capture.html](emotion-demo-capture.html)** | ⭐⭐ Intermediate | Creating demo GIFs      |
-| **[react-component.jsx](react-component.jsx)**             | ⭐⭐⭐⭐ Advanced | React integration guide |
-| **[vue-component.vue](vue-component.vue)**                 | ⭐⭐⭐⭐ Advanced | Vue integration guide   |
+| Example                                                             | Complexity        | Best For                |
+| ------------------------------------------------------------------- | ----------------- | ----------------------- |
+| **[2d-hello-world.html](2d/2d-hello-world.html)**                   | ⭐ Beginner       | First-time learning     |
+| **[basic-usage.html](2d/basic-usage.html)**                         | ⭐⭐ Intermediate | Learning all features   |
+| **[event-handling.html](2d/event-handling.html)**                   | ⭐⭐ Intermediate | Event-driven apps       |
+| **[rhythm-sync-demo.html](2d/rhythm-sync-demo.html)**               | ⭐⭐⭐ Advanced   | Rhythm-based animations |
+| **[hero-banner-capture.html](captures/hero-banner-capture.html)**   | ⭐⭐ Intermediate | Creating banner assets  |
+| **[emotion-demo-capture.html](captures/emotion-demo-capture.html)** | ⭐⭐ Intermediate | Creating demo GIFs      |
+| **[react-component.jsx](react-component.jsx)**                      | ⭐⭐⭐⭐ Advanced | React integration guide |
+| **[vue-component.vue](vue-component.vue)**                          | ⭐⭐⭐⭐ Advanced | Vue integration guide   |
 
 ---
 
@@ -319,7 +319,7 @@ mascot.on('gesture', data => {
 **Solution:** Run `npm run build:dev` first. The UMD bundle must be built before
 examples work.
 
-### "Failed to load: ../site/public/emotive-engine.js"
+### "Failed to load: ../../emotive-engine.js"
 
 **Solution:** The build output doesn't exist. Run:
 
@@ -357,11 +357,12 @@ above. Many examples online use fake API methods that don't exist.
 
 **New to Emotive Engine?** Follow this path:
 
-1. **[hello-world.html](hello-world.html)** - Learn basic initialization
-2. **[basic-usage.html](basic-usage.html)** - Explore all core features
-3. **[event-handling.html](event-handling.html)** - Understand event system
-4. **[rhythm-sync-demo.html](rhythm-sync-demo.html)** - Advanced timing **Want
-   to use with React/Vue?**
+1. **[2d-hello-world.html](2d/2d-hello-world.html)** - Learn basic
+   initialization
+2. **[basic-usage.html](2d/basic-usage.html)** - Explore all core features
+3. **[event-handling.html](2d/event-handling.html)** - Understand event system
+4. **[rhythm-sync-demo.html](2d/rhythm-sync-demo.html)** - Advanced timing
+   **Want to use with React/Vue?**
 
 - Study HTML examples first to understand the real API
 - Then read the template files ([react-component.jsx](react-component.jsx),
@@ -376,7 +377,7 @@ Want to add your own example?
 
 ### Guidelines
 
-1. **Copy [hello-world.html](hello-world.html) as starting point**
+1. **Copy [2d-hello-world.html](2d/2d-hello-world.html) as starting point**
 2. **Use only real API methods** (see API Quick Reference above)
 3. **Add educational STEP comments** explaining WHY not just WHAT
 4. **Use [example-styles.css](example-styles.css)** for consistent styling
@@ -549,5 +550,5 @@ Many online examples use **fake API methods** that don't exist:
 
 **Made with care by the Emotive Engine community**
 
-**Start with [hello-world.html](hello-world.html) - it's the simplest working
-example!**
+**Start with [2d-hello-world.html](2d/2d-hello-world.html) - it's the simplest
+working example!**
