@@ -117,6 +117,11 @@ src/3d/geometries/BlackHole.js
 # GitHub Pages build output
 _pages/
 
+# Bundle analysis output (npm run build:analyze / optimize; CI uploads these as artifacts)
+stats.html
+bundle-analysis.json
+optimization-config.json
+
 # Large binary assets (HDR environment maps)
 # Exception: Allow studio_1k.hdr for crystal reflections on GitHub Pages
 *.hdr
