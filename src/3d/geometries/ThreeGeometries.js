@@ -276,6 +276,22 @@ function loadRoughGeometry(assetBasePath = '/assets') {
  * - Sun: Emissive shader with corona and eclipse effects
  */
 export const THREE_GEOMETRIES = {
+    // Plain sphere — the default when coreGeometry is omitted, and the target of
+    // Core3DManager's unknown-geometry fallback. Both paths dereference this entry,
+    // so it must stay registered even though no demo selects it by name.
+    sphere: {
+        geometry: new THREE.SphereGeometry(0.5, 64, 64),
+        material: 'custom',
+        blink: {
+            type: 'gentle-pulse',
+            duration: 180,
+            scaleAxis: [0.95, 0.95, 0.95],
+            glowBoost: 0.2,
+            curve: 'sine',
+        },
+        particleRadiusMultiplier: 1.4,
+    },
+
     moon: {
         geometry: createMoon(64, 64),
         material: 'custom',
