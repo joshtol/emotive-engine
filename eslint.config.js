@@ -66,6 +66,17 @@ export default [
             }
         },
         rules: {
+            // Newly enabled in eslint 10's recommended set. It flags the codebase's
+            // consistent "declare a default, then assign in every branch" idiom in the
+            // animation code, e.g.:
+            //     let rotation = 0;
+            //     if (progress < 0.25) { rotation = ...; } else if (...) { ... }
+            // The initializer is dead only while every branch happens to assign, so
+            // stripping the 83 instances would trade a real safety net against a future
+            // fall-through for a stylistic win. Off rather than warn — it will not
+            // become actionable later.
+            'no-useless-assignment': 'off',
+
             'indent': ['error', 4],
             'linebreak-style': 'off', // Disabled for Windows development
             'quotes': ['error', 'single', { avoidEscape: true }],

@@ -147,14 +147,14 @@
     "**/elemental-gestures.js"
   ],
   "devDependencies": {
+    "@eslint/js": "^10.0.0",
     "@gltf-transform/cli": "^4.3.0",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@vitest/coverage-v8": "^4.1.0",
-    "@eslint/js": "^9.38.0",
     "canvas": "^3.2.0",
-    "eslint": "^9.35.0",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "gif.js": "^0.2.0",
     "html-minifier-terser": "^7.2.0",
