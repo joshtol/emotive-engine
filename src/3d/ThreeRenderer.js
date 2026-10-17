@@ -45,6 +45,9 @@ export class ThreeRenderer {
         // options.hdri === false skips the optional studio HDRI request (1.7 MB) and
         // goes straight to the procedural environment map.
         this.hdriEnabled = options.hdri !== false;
+        // options.glowHalo === false skips the screen-space GlowLayer halo. It is sized to
+        // the canvas, so on a canvas that bleeds past its slot it reads as a lit rectangle.
+        this.glowHalo = options.glowHalo !== false;
 
         // Create Three.js scene
         this.scene = new THREE.Scene();
@@ -1973,7 +1976,7 @@ export class ThreeRenderer {
 
             // === STEP 3: Render glow layer (if active) ===
             // This is an isolated screen-space overlay that only activates during glow gestures
-            if (this.glowLayer && this.glowLayer.isActive() && getSurface() !== 'light') {
+            if (this.glowLayer && this.glowHalo && this.glowLayer.isActive() && getSurface() !== 'light') {
                 this.glowLayer.render(this.renderer);
             }
 
@@ -1986,7 +1989,7 @@ export class ThreeRenderer {
             this.renderer.render(this.scene, this.camera);
 
             // Render glow layer even without composer
-            if (this.glowLayer && this.glowLayer.isActive() && getSurface() !== 'light') {
+            if (this.glowLayer && this.glowHalo && this.glowLayer.isActive() && getSurface() !== 'light') {
                 this.glowLayer.render(this.renderer);
             }
 

@@ -337,6 +337,7 @@ export class EmotiveMascot3D {
             assetBasePath: this.config.assetBasePath,
             maxPixelRatio: this.config.maxPixelRatio,
             hdri: this.config.hdri,
+            glowHalo: this.config.glowHalo,
             preloadElements: this.config.preloadElements,
             backgroundPrewarm: this.config.backgroundPrewarm,
         });

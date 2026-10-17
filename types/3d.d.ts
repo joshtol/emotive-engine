@@ -144,6 +144,8 @@ export interface EmotiveMascot3DConfig {
     maxPixelRatio?: number;
     /** false skips the optional studio HDRI request and uses the procedural env map. */
     hdri?: boolean;
+    /** false skips the screen-space glow halo during glow gestures (default true). */
+    glowHalo?: boolean;
     /** What the transparent canvas sits on: light draws electric arcs as ink and drops the glow halo. */
     surface?: 'dark' | 'light';
     /** Enable particle effects */

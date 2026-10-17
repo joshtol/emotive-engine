@@ -160,6 +160,7 @@ export class Core3DManager {
             assetBasePath: this.assetBasePath, // Base path for HDRI and other assets
             maxPixelRatio: options.maxPixelRatio, // DPR cap (undefined = default 2.0)
             hdri: options.hdri, // false = skip the optional HDRI request
+            glowHalo: options.glowHalo, // false = no screen-space glow halo
         });
 
         // Pass WebGL context and renderer to profiler for diagnostics
