@@ -158,6 +158,8 @@ export class Core3DManager {
             minZoom: options.minZoom, // Minimum zoom distance
             maxZoom: options.maxZoom, // Maximum zoom distance
             assetBasePath: this.assetBasePath, // Base path for HDRI and other assets
+            maxPixelRatio: options.maxPixelRatio, // DPR cap (undefined = default 2.0)
+            hdri: options.hdri, // false = skip the optional HDRI request
         });
 
         // Pass WebGL context and renderer to profiler for diagnostics

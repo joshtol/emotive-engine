@@ -22,6 +22,10 @@
       "import": "./dist/emotive-mascot-3d-elementals.js",
       "require": "./dist/emotive-mascot-3d-elementals.umd.js"
     },
+    "./3d-electric": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-electric.js"
+    },
     "./minimal": {
       "types": "./types/minimal.d.ts",
       "import": "./dist/emotive-mascot.minimal.js",
@@ -47,6 +51,7 @@
     "dist/emotive-mascot-3d.umd.js",
     "dist/emotive-mascot-3d-elementals.js",
     "dist/emotive-mascot-3d-elementals.umd.js",
+    "dist/emotive-mascot-3d-electric.js",
     "dist/emotive-mascot.minimal.js",
     "dist/emotive-mascot.minimal.umd.js",
     "dist/emotive-mascot.lean.js",
@@ -144,7 +149,11 @@
     "src/3d/effects/ElementRegistrations.js",
     "src/core/gestures/elemental-gestures.js",
     "**/ElementRegistrations.js",
-    "**/elemental-gestures.js"
+    "**/elemental-gestures.js",
+    "src/3d/effects/ElementRegistrations-electric.js",
+    "src/core/gestures/elemental-gestures-electric.js",
+    "**/ElementRegistrations-electric.js",
+    "**/elemental-gestures-electric.js"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.0",

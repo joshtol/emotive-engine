@@ -457,4 +457,43 @@ builds.push({
     }
 });
 
-export default builds;
+// 3D build — ELECTRIC ONLY (base 3D + the electricity elemental; other 7 elements tree-shaken out)
+// For marketing pages that demo one element. Three.js is an external peer dependency.
+builds.push({
+    input: 'src/3d/index-electric.js',
+    output: [
+        {
+            file: 'dist/emotive-mascot-3d-electric.js',
+            format: 'es',
+            sourcemap: true,
+            inlineDynamicImports: true,
+            banner: `/*! Emotive Engine 3D + Electric v${process.env.npm_package_version || '3.4.0'} | MIT License */`
+        }
+    ],
+    external: ['three'],
+    plugins: [
+        ...threeDPlugins,
+        ...(isProduction ? [terser({
+            compress: {
+                drop_console: false,
+                pure_funcs: ['console.log'],
+                drop_debugger: true,
+                passes: 2
+            },
+            mangle: {
+                properties: false
+            },
+            format: {
+                comments: false
+            }
+        })] : [])
+    ],
+    treeshake: {
+        moduleSideEffects: true  // Preserve the electric registration side-effect imports
+    }
+});
+
+// ONLY=<substring of input path> builds a subset, e.g. ONLY=index-electric
+const only = process.env.ONLY;
+export default only ? builds.filter(b => b.input.includes(only)) : builds;
+

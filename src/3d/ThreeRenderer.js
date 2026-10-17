@@ -41,6 +41,9 @@ export class ThreeRenderer {
         // Asset base path for loading HDRI and other resources
         // Can be configured for GitHub Pages, CDN, or other hosting scenarios
         this.assetBasePath = options.assetBasePath || '';
+        // options.hdri === false skips the optional studio HDRI request (1.7 MB) and
+        // goes straight to the procedural environment map.
+        this.hdriEnabled = options.hdri !== false;
 
         // Create Three.js scene
         this.scene = new THREE.Scene();
@@ -85,7 +88,9 @@ export class ThreeRenderer {
 
         // Use device pixel ratio capped at 2.0 for balance between quality and performance
         // DPR 2 devices render at native; DPR 3 devices at 67% native (was 50% at 1.5 cap)
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+        // options.maxPixelRatio lets embedders trade sharpness for fill rate (e.g. 1.25 on phones).
+        const maxPixelRatio = options.maxPixelRatio > 0 ? options.maxPixelRatio : 2.0;
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
         this.renderer.setSize(canvas.width, canvas.height, false);
 
         // Enable shadows if requested
@@ -351,6 +356,7 @@ export class ThreeRenderer {
         // Try to load optional HDRI (.hdr format) for enhanced reflections
         // HDRI is optional - apps can place studio_1k.hdr in /hdri/ for better crystal reflections
         try {
+            if (!this.hdriEnabled) throw new Error('HDRI disabled by option');
             // HDRLoader replaces deprecated RGBELoader in Three.js r169+
             const { HDRLoader } = await import('three/examples/jsm/loaders/HDRLoader.js');
 

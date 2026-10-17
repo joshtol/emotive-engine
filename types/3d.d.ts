@@ -140,6 +140,10 @@ export interface EmotiveMascot3DConfig {
     targetFPS?: number;
     /** Base path for loading GLB model assets */
     assetBasePath?: string;
+    /** Cap on devicePixelRatio for the WebGL canvas (default 2.0). */
+    maxPixelRatio?: number;
+    /** false skips the optional studio HDRI request and uses the procedural env map. */
+    hdri?: boolean;
     /** Enable particle effects */
     enableParticles?: boolean;
     /** Default emotion state */

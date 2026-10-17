@@ -174,10 +174,10 @@ function createCrystalMaterial(
     let crystalTexture = null;
     if (textureType) {
         const texturePaths = {
-            crystal: `${assetBasePath}/textures/Crystal/crystal.png`,
-            rough: `${assetBasePath}/textures/Crystal/rough.png`,
-            heart: `${assetBasePath}/textures/Crystal/heart.png`,
-            star: `${assetBasePath}/textures/Crystal/star.png`,
+            crystal: `${assetBasePath}/textures/Crystal/crystal.webp`,
+            rough: `${assetBasePath}/textures/Crystal/rough.webp`,
+            heart: `${assetBasePath}/textures/Crystal/heart.webp`,
+            star: `${assetBasePath}/textures/Crystal/star.webp`,
         };
         const texturePath = texturePaths[textureType] || texturePaths.crystal;
         crystalTexture = textureLoader.load(texturePath, tex => {

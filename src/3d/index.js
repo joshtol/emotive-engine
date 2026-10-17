@@ -333,6 +333,8 @@ export class EmotiveMascot3D {
             maxZoom: this.config.maxZoom,
             materialVariant: this.config.materialVariant,
             assetBasePath: this.config.assetBasePath,
+            maxPixelRatio: this.config.maxPixelRatio,
+            hdri: this.config.hdri,
             preloadElements: this.config.preloadElements,
             backgroundPrewarm: this.config.backgroundPrewarm,
         });
