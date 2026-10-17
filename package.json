@@ -22,9 +22,37 @@
       "import": "./dist/emotive-mascot-3d-elementals.js",
       "require": "./dist/emotive-mascot-3d-elementals.umd.js"
     },
+    "./3d-fire": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-fire.js"
+    },
+    "./3d-water": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-water.js"
+    },
+    "./3d-ice": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-ice.js"
+    },
     "./3d-electric": {
       "types": "./types/3d.d.ts",
       "import": "./dist/emotive-mascot-3d-electric.js"
+    },
+    "./3d-earth": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-earth.js"
+    },
+    "./3d-nature": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-nature.js"
+    },
+    "./3d-light": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-light.js"
+    },
+    "./3d-void": {
+      "types": "./types/3d.d.ts",
+      "import": "./dist/emotive-mascot-3d-void.js"
     },
     "./minimal": {
       "types": "./types/minimal.d.ts",
@@ -51,7 +79,14 @@
     "dist/emotive-mascot-3d.umd.js",
     "dist/emotive-mascot-3d-elementals.js",
     "dist/emotive-mascot-3d-elementals.umd.js",
+    "dist/emotive-mascot-3d-fire.js",
+    "dist/emotive-mascot-3d-water.js",
+    "dist/emotive-mascot-3d-ice.js",
     "dist/emotive-mascot-3d-electric.js",
+    "dist/emotive-mascot-3d-earth.js",
+    "dist/emotive-mascot-3d-nature.js",
+    "dist/emotive-mascot-3d-light.js",
+    "dist/emotive-mascot-3d-void.js",
     "dist/emotive-mascot.minimal.js",
     "dist/emotive-mascot.minimal.umd.js",
     "dist/emotive-mascot.lean.js",
@@ -91,6 +126,7 @@
     "format": "prettier --write \"src/**/*.{js,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,json}\"",
     "size": "node scripts/check-bundle-size.js",
+    "size:report": "node scripts/report-sizes.js",
     "clean": "node -e \"import('fs').then(fs => fs.rmSync('dist', {recursive: true, force: true}))\"",
     "prepublishOnly": "npm run clean && npm run build",
     "publish:patch": "npm version patch && npm publish",
@@ -147,13 +183,13 @@
   },
   "sideEffects": [
     "src/3d/effects/ElementRegistrations.js",
+    "src/3d/effects/elements/*.js",
     "src/core/gestures/elemental-gestures.js",
+    "src/core/gestures/elemental/*/register.js",
     "**/ElementRegistrations.js",
+    "**/effects/elements/*.js",
     "**/elemental-gestures.js",
-    "src/3d/effects/ElementRegistrations-electric.js",
-    "src/core/gestures/elemental-gestures-electric.js",
-    "**/ElementRegistrations-electric.js",
-    "**/elemental-gestures-electric.js"
+    "**/elemental/*/register.js"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.0",

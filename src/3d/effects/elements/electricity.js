@@ -1,12 +1,15 @@
 /**
- * @fileoverview Registers ONLY the electricity element type (lean electric build).
- * Mirror of the 'electricity' entry in ElementRegistrations.js; keep the two in sync.
- * @module effects/ElementRegistrations-electric
+ * @fileoverview Registers the 'electricity' element type (instanced material + GLB model
+ * config) with the ElementTypeRegistry. Side-effect module: importing it registers the
+ * element. ElementRegistrations.js imports all eight; the lean `./3d-electric` entry
+ * imports only this one.
+ * @module effects/elements/electricity
  */
 
 import * as THREE from 'three';
-import { ElementTypeRegistry } from './ElementTypeRegistry.js';
-import { createFireDistortionMaterial } from '../materials/DistortionMaterials.js';
+import { ElementTypeRegistry } from '../ElementTypeRegistry.js';
+import { createFireDistortionMaterial } from '../../materials/DistortionMaterials.js';
+
 import {
     createInstancedElectricMaterial,
     updateInstancedElectricMaterial,
@@ -22,7 +25,7 @@ import {
     resetFlash as resetElectricFlash,
     setRelay as setElectricRelay,
     resetRelay as resetElectricRelay,
-} from '../materials/instanced/InstancedElectricMaterial.js';
+} from '../../materials/instanced/InstancedElectricMaterial.js';
 
 ElementTypeRegistry.register('electricity', {
     basePath: 'models/Elements/Electricity/',
