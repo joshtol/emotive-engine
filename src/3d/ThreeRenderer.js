@@ -25,8 +25,13 @@ import { ParticleAtmosphericsManager } from './effects/ParticleAtmosphericsManag
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // normalizeColorLuminance - available for advanced color normalization
 import { GlowLayer } from './effects/GlowLayer.js';
+import { getSurface } from './materials/surface.js';
 import { CrackLayer } from './effects/CrackLayer.js';
 import { CameraPresetManager } from './managers/CameraPresetManager.js';
+
+// Upper bound on a single shader pre-link. The heaviest element shaders take a few
+// seconds on ANGLE/D3D; past this we stop waiting rather than wedge the caller.
+const COMPILE_TIMEOUT_MS = 20000;
 
 export class ThreeRenderer {
     constructor(canvas, options = {}) {
@@ -37,6 +42,12 @@ export class ThreeRenderer {
         // Asset base path for loading HDRI and other resources
         // Can be configured for GitHub Pages, CDN, or other hosting scenarios
         this.assetBasePath = options.assetBasePath || '';
+        // options.hdri === false skips the optional studio HDRI request (1.7 MB) and
+        // goes straight to the procedural environment map.
+        this.hdriEnabled = options.hdri !== false;
+        // options.glowHalo === false skips the screen-space GlowLayer halo. It is sized to
+        // the canvas, so on a canvas that bleeds past its slot it reads as a lit rectangle.
+        this.glowHalo = options.glowHalo !== false;
 
         // Create Three.js scene
         this.scene = new THREE.Scene();
@@ -54,6 +65,12 @@ export class ThreeRenderer {
             logarithmicDepthBuffer: false,
             stencil: false,
         });
+
+        // Shader error checking forces a synchronous gl.getProgramInfoLog() on every
+        // program link. On Windows/ANGLE that drains the D3D compiler on the main
+        // thread — the procedural element shaders (multi-octave 3D Voronoi) each cost
+        // seconds, and eight of them freeze the tab. Opt in only when debugging GLSL.
+        this.renderer.debug.checkShaderErrors = options.debugShaders === true;
 
         // Force higher color depth if available
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -75,7 +92,9 @@ export class ThreeRenderer {
 
         // Use device pixel ratio capped at 2.0 for balance between quality and performance
         // DPR 2 devices render at native; DPR 3 devices at 67% native (was 50% at 1.5 cap)
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+        // options.maxPixelRatio lets embedders trade sharpness for fill rate (e.g. 1.25 on phones).
+        const maxPixelRatio = options.maxPixelRatio > 0 ? options.maxPixelRatio : 2.0;
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
         this.renderer.setSize(canvas.width, canvas.height, false);
 
         // Enable shadows if requested
@@ -341,6 +360,7 @@ export class ThreeRenderer {
         // Try to load optional HDRI (.hdr format) for enhanced reflections
         // HDRI is optional - apps can place studio_1k.hdr in /hdri/ for better crystal reflections
         try {
+            if (!this.hdriEnabled) throw new Error('HDRI disabled by option');
             // HDRLoader replaces deprecated RGBELoader in Three.js r169+
             const { HDRLoader } = await import('three/examples/jsm/loaders/HDRLoader.js');
 
@@ -1956,7 +1976,7 @@ export class ThreeRenderer {
 
             // === STEP 3: Render glow layer (if active) ===
             // This is an isolated screen-space overlay that only activates during glow gestures
-            if (this.glowLayer && this.glowLayer.isActive()) {
+            if (this.glowLayer && this.glowHalo && this.glowLayer.isActive() && getSurface() !== 'light') {
                 this.glowLayer.render(this.renderer);
             }
 
@@ -1969,7 +1989,7 @@ export class ThreeRenderer {
             this.renderer.render(this.scene, this.camera);
 
             // Render glow layer even without composer
-            if (this.glowLayer && this.glowLayer.isActive()) {
+            if (this.glowLayer && this.glowHalo && this.glowLayer.isActive() && getSurface() !== 'light') {
                 this.glowLayer.render(this.renderer);
             }
 
@@ -1981,9 +2001,59 @@ export class ThreeRenderer {
     }
 
     /**
+     * Pre-link an object's shader program before it joins the scene graph.
+     *
+     * Three.js defers the LINK_STATUS check to the program's first use, so a lazily
+     * compiled material stalls inside render() on the frame it first becomes visible.
+     * compileAsync uses KHR_parallel_shader_compile to let the driver link on its own
+     * threads, keeping the main thread responsive. Falls back to lazy compilation if
+     * the renderer is gone or the context is lost.
+     *
+     * @param {THREE.Object3D} object - Object to precompile; need not be in the scene yet
+     * @returns {Promise<void>} Resolves once the object can render without stalling
+     */
+    async compileObjectAsync(object) {
+        if (!object || !this.renderer || !this.camera || this._contextLost || this._destroyed) {
+            return;
+        }
+
+        // Three bakes outputColorSpace and toneMapping into the program cache key, and
+        // both depend on whether a render target is bound: rendering to screen uses
+        // sRGB + ACES, rendering offscreen uses Linear + NoToneMapping. Precompiling
+        // under the wrong binding builds a program the real frame never uses and just
+        // moves the stall back into render(). Bind whatever render() will bind — layer 0
+        // goes through the composer when post-processing is on, straight to screen when
+        // it is off — so exactly one variant is compiled, and it is the one used.
+        const savedTarget = this.renderer.getRenderTarget();
+        const compileTarget = this.composer ? this.composer.readBuffer : null;
+
+        try {
+            this.renderer.setRenderTarget(compileTarget);
+            // Three polls KHR_parallel_shader_compile from its own timer, so a material
+            // disposed mid-poll throws outside this promise chain and leaves it pending
+            // forever. Cap the wait: callers await this before using the object, and a
+            // late-linking program merely falls back to stalling once inside render().
+            await Promise.race([
+                this.renderer.compileAsync(object, this.camera, this.scene),
+                new Promise(resolve => setTimeout(resolve, COMPILE_TIMEOUT_MS)),
+            ]);
+        } catch (error) {
+            // Non-fatal: the program still links lazily on first render
+            console.warn('[ThreeRenderer] compileAsync failed, falling back to lazy compile', error);
+        } finally {
+            if (!this._destroyed && this.renderer) {
+                this.renderer.setRenderTarget(savedTarget);
+            }
+        }
+    }
+
+    /**
      * Register a mesh for screen-space refraction (ice instanced meshes).
      * During rendering, registered meshes are hidden for a background pass,
      * and their materials receive the background texture for refraction sampling.
+     *
+     * Registration is not free — while any mesh is registered the renderer performs an
+     * extra full-scene pass every frame. Register only while the element is on screen.
      * @param {THREE.Mesh} mesh - The mesh to register
      */
     addRefractionMesh(mesh) {

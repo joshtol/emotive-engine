@@ -27,7 +27,7 @@
     <meta name="description" content="Realistic lunar eclipse with Earth's shadow sweep, atmospheric Rayleigh scattering, and multi-layer color grading">
 
     <!-- Shared 3D example styles -->
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
 
     <style>
         /* Theme: Purple lunar */
@@ -114,7 +114,7 @@
             }
         }
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <div class="left-menu">
@@ -268,8 +268,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase, blendModeNames } from '/emotive-engine-3d.bundled.js';
-        import { setupTidalLock, createBlendLayerGroup, syncLayersFromShader, setupColorPicker, setupSlider, setupVisualToggles, setupParticlesToggle, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D, { setMoonPhase, animateMoonPhase, blendModeNames } from '../../emotive-engine-3d.bundled.js';
+        import { setupTidalLock, createBlendLayerGroup, syncLayersFromShader, setupColorPicker, setupSlider, setupVisualToggles, setupParticlesToggle, createActivityLog } from './demo-utils.js';
 
         // Store current rotation values (declared early for use in initialization)
         // Calibrated to show classic "Man in the Moon" Earth-facing view
@@ -287,7 +287,7 @@
             enableBlinking: false,
             enableBreathing: false,
             cameraDistance: 1.0,  // Closer default zoom
-            assetBasePath: '/assets'
+            assetBasePath: '../../assets'
         });
 
         log('Initializing Blood Moon mascot…', 'info');

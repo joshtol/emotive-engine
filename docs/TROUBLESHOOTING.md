@@ -449,7 +449,7 @@ If your issue isn't covered here:
 1. **Check the console** for warnings with `[EmotiveMascot]` prefix
 2. **Check browser DevTools** Network and Console tabs
 3. **Enable debug mode** (if available) for verbose logging
-4. **File an issue** at [GitHub Issues](https://github.com/your-repo/issues)
+4. **File an issue** at [GitHub Issues](https://github.com/joshtol/emotive-engine/issues)
 
 Include:
 - Browser and version

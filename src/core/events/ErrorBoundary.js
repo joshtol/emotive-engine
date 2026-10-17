@@ -302,7 +302,8 @@ class ErrorBoundary {
 
                 if (attempts >= maxRetries) {
                     throw new Error(
-                        `Recovery failed for ${operation} after ${maxRetries} attempts`
+                        `Recovery failed for ${operation} after ${maxRetries} attempts`,
+                        { cause: error }
                     );
                 }
 

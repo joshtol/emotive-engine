@@ -48,7 +48,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body_path: /tmp/release-notes.md
           files: |
@@ -59,9 +59,18 @@ jobs:
             dist/emotive-mascot-3d-elementals.js
             dist/emotive-mascot-3d-elementals.umd.js
             dist/emotive-mascot-3d-elementals.bundled.js
+            dist/emotive-mascot-3d-fire.js
+            dist/emotive-mascot-3d-water.js
+            dist/emotive-mascot-3d-ice.js
+            dist/emotive-mascot-3d-electric.js
+            dist/emotive-mascot-3d-earth.js
+            dist/emotive-mascot-3d-nature.js
+            dist/emotive-mascot-3d-light.js
+            dist/emotive-mascot-3d-void.js
             types/index.d.ts
             types/3d.d.ts
             types/3d-elementals.d.ts
+            types/3d-element.d.ts
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') || contains(steps.version.outputs.VERSION, 'rc') }}
         env:
@@ -69,9 +78,12 @@ jobs:
 
       - name: Notify Slack (optional)
         if: success()
-        uses: slackapi/slack-github-action@v2
+        uses: slackapi/slack-github-action@v3
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # 'webhook-url' has never been a valid input on v2+ — the step has been
+          # silently failing every release, hidden by continue-on-error below.
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "✅ Emotive Engine v${{ steps.version.outputs.VERSION }} released!",

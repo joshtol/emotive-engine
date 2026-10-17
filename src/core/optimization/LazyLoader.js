@@ -64,7 +64,9 @@ export class LazyLoader {
             return module;
         } catch (error) {
             this.loading.delete(moduleName);
-            throw new Error(`Failed to load module '${moduleName}': ${error.message}`);
+            throw new Error(`Failed to load module '${moduleName}': ${error.message}`, {
+                cause: error,
+            });
         }
     }
 

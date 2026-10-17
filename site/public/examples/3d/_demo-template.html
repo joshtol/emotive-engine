@@ -15,7 +15,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demo Template - Emotive Engine</title>
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         /* Theme: Purple gradient (customize for your demo) */
         :root {
@@ -122,8 +122,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D from '../../emotive-engine-3d.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles, createActivityLog } from './demo-utils.js';
 
         // Initialize mascot
         const container = document.getElementById('animation-container');
@@ -139,7 +139,7 @@
             minZoom: 0.9,
             maxZoom: 2.0,
             materialVariant: 'multiplexer', // Required for moon/sun textures and eclipse effects
-            assetBasePath: '/assets'
+            assetBasePath: '../../assets'
         });
 
         mascot.init(container);

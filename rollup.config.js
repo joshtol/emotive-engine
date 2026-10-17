@@ -6,6 +6,7 @@ import terser from '@rollup/plugin-terser';
 import analyzer from 'rollup-plugin-analyzer';
 import bundleSize from 'rollup-plugin-bundle-size';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { ELEMENTS, entryFor } from './src/3d/elements.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -457,4 +458,48 @@ builds.push({
     }
 });
 
-export default builds;
+// 3D builds — ONE ELEMENT EACH (base 3D + a single elemental; the other seven tree-shake out)
+// For pages that demo one element. Generated from src/3d/elements.js; exported as
+// `./3d-<name>`. Three.js is an external peer dependency. The registration modules are
+// side-effect imports: they must stay listed in package.json `sideEffects` (and
+// moduleSideEffects must stay true here) or the build silently drops the element.
+for (const element of ELEMENTS) {
+    builds.push({
+        input: entryFor(element),
+        output: [
+            {
+                file: `dist/emotive-mascot-3d-${element.name}.js`,
+                format: 'es',
+                sourcemap: true,
+                inlineDynamicImports: true,
+                banner: `/*! Emotive Engine 3D + ${element.name} v${process.env.npm_package_version || '3.4.0'} | MIT License */`
+            }
+        ],
+        external: ['three'],
+        plugins: [
+            ...threeDPlugins,
+            ...(isProduction ? [terser({
+                compress: {
+                    drop_console: false,
+                    pure_funcs: ['console.log'],
+                    drop_debugger: true,
+                    passes: 2
+                },
+                mangle: {
+                    properties: false
+                },
+                format: {
+                    comments: false
+                }
+            })] : [])
+        ],
+        treeshake: {
+            moduleSideEffects: true  // Preserve the element's registration side-effect imports
+        }
+    });
+}
+
+// ONLY=<substring of input path> builds a subset, e.g. ONLY=index-electric, ONLY=index- for all eight
+const only = process.env.ONLY;
+export default only ? builds.filter(b => b.input.includes(only)) : builds;
+

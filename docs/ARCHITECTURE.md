@@ -995,14 +995,14 @@ mascot.on('resumed', () => {
 | Task | Files to Look At |
 |------|------------------|
 | **Add a new emotion** | [src/core/emotions/states/](../src/core/emotions/states/) |
-| **Create a custom gesture** | [src/core/gestures/definitions/](../src/core/gestures/definitions/) |
+| **Create a custom gesture** | [src/core/gestures/](../src/core/gestures/) |
 | **Change particle behavior** | [src/core/particles/behaviors/](../src/core/particles/behaviors/) |
-| **Add a new shape** | [src/core/shapes/definitions/](../src/core/shapes/definitions/) |
+| **Add a new shape** | [src/core/morpher/](../src/core/morpher/) |
 | **Modify rendering** | [src/core/EmotiveRenderer.js](../src/core/EmotiveRenderer.js) |
 | **Add performance optimization** | [src/core/system/PerformanceMonitor.js](../src/core/system/PerformanceMonitor.js) |
 | **Extend LLM integration** | [src/core/integration/LLMResponseHandler.js](../src/core/integration/LLMResponseHandler.js) |
 | **Add a plugin** | [src/plugins/](../src/plugins/) |
-| **Add new gesture animation** | [src/core/renderer/gesture-animators/](../src/core/renderer/gesture-animators/) |
+| **Add new gesture animation** | [src/core/renderer/](../src/core/renderer/) |
 
 ### Key Files & Complexity
 
@@ -1022,7 +1022,6 @@ mascot.on('resumed', () => {
 ## Further Reading
 
 - [INNOVATIONS.md](INNOVATIONS.md) - Technical innovations and patents
-- [BUSINESS_POTENTIAL.md](BUSINESS_POTENTIAL.md) - Business applications
 - [README.md](README.md) - Main documentation
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guide
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
@@ -1031,7 +1030,7 @@ mascot.on('resumed', () => {
 
 ## Getting Help
 
-- **For users**: See examples in [/examples](../examples/)
+- **For users**: See examples in [site/public/examples](../site/public/examples/)
 - **For contributors**: See [CONTRIBUTING.md](../CONTRIBUTING.md)
 - **For bugs**: Open an issue on GitHub
 - **For questions**: Check existing issues or open a discussion

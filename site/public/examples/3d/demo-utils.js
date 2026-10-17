@@ -9,7 +9,7 @@
  * - Blend layer management
  */
 
-import { createLayerCard, setupDragAndDrop } from '/examples/3d/layer-utils.js';
+import { createLayerCard, setupDragAndDrop } from './layer-utils.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // AUTO-INITIALIZED: COLLAPSIBLE SECTIONS
@@ -847,6 +847,12 @@ const EMOTIONS = [
     'sadness', 'anger', 'fear', 'disgust'
 ];
 
+// Resolved against this module's own URL rather than the document root, so the
+// examples work under any document root — the site dev server, a server rooted at
+// the repo, or opened straight off disk with file://. This module lives in
+// <examples>/3d/, so '../assets/states' is <examples>/assets/states.
+const STATE_ICON_PATH = new URL('../assets/states', import.meta.url).href;
+
 /**
  * Populate a container with emotion buttons using SVG icons.
  * Each button gets data-emotion="name" and calls onEmotionChange on click.
@@ -854,13 +860,13 @@ const EMOTIONS = [
  * @param {Function} onEmotionChange - Called with emotion name string on click
  * @param {Object} [options]
  * @param {string} [options.activeEmotion] - Initially active emotion (default: none)
- * @param {string} [options.basePath='/assets/states'] - Path to SVG directory
+ * @param {string} [options.basePath] - Path to SVG directory (defaults to <examples>/assets/states)
  */
 export function createEmotionButtons(containerId, onEmotionChange, options = {}) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const basePath = options.basePath || '/assets/states';
+    const basePath = options.basePath || STATE_ICON_PATH;
     const activeEmotion = options.activeEmotion || null;
 
     container.innerHTML = '';

@@ -220,7 +220,7 @@
     </div>
 
     <!-- 2D UMD bundle — sets window.EmotiveMascot -->
-    <script src="/emotive-engine.js"></script>
+    <script src="../../emotive-engine.js"></script>
 
     <!-- Kill feature-flags auto-refresh (no /api route on Live Server) -->
     <script>
@@ -234,8 +234,8 @@
     </script>
 
     <script type="module">
-        import EmotiveMascot3D, { animateMoonPhase } from '/emotive-engine-3d-elementals.bundled.js';
-        import { applySSSPreset } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D, { animateMoonPhase } from '../../emotive-engine-3d-elementals.bundled.js';
+        import { applySSSPreset } from '../3d/demo-utils.js';
 
         // ═══════════════════════════════════════════════════════════════
         // EXAMPLE PRESETS
@@ -300,7 +300,7 @@
                     enablePostProcessing: true, enableShadows: false,
                     enableControls: false, autoRotate: true, autoRotateSpeed: 0.3,
                     cameraDistance: 1.6, fov: 30,
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                     enableBlinking: false, enableBreathing: true,
                 },
                 sequence: [
@@ -320,7 +320,7 @@
                     enablePostProcessing: true, enableShadows: false,
                     enableControls: false, autoRotate: true, autoRotateSpeed: 0.3,
                     cameraDistance: 1.6, fov: 30,
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                     enableBlinking: false, enableBreathing: true,
                 },
                 sequence: [
@@ -340,7 +340,7 @@
                     enablePostProcessing: true, enableShadows: false,
                     enableControls: false, autoRotate: true, autoRotateSpeed: 0.25,
                     cameraDistance: 1.8, fov: 30, materialVariant: 'multiplexer',
-                    assetBasePath: '/assets', preloadElements: [],
+                    assetBasePath: '../../assets', preloadElements: [],
                     backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
                 },
                 sequence: [
@@ -357,7 +357,7 @@
                     enablePostProcessing: true, enableShadows: false,
                     enableControls: false, autoRotate: true, autoRotateSpeed: 0.25,
                     cameraDistance: 1.8, fov: 30, materialVariant: 'multiplexer',
-                    assetBasePath: '/assets', preloadElements: [],
+                    assetBasePath: '../../assets', preloadElements: [],
                     backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
                 },
                 sequence: [
@@ -374,7 +374,7 @@
                     enablePostProcessing: true, enableShadows: false,
                     enableControls: false, autoRotate: true, autoRotateSpeed: 0.25,
                     cameraDistance: 1.8, fov: 30, materialVariant: 'multiplexer',
-                    assetBasePath: '/assets', preloadElements: [],
+                    assetBasePath: '../../assets', preloadElements: [],
                     backgroundPrewarm: true, enableBlinking: false, enableBreathing: false,
                 },
                 sequence: [
@@ -391,7 +391,7 @@
                     enablePostProcessing: true, enableControls: false,
                     autoRotate: true, autoRotateSpeed: 0.3,
                     enableBlinking: false, enableBreathing: true,
-                    cameraDistance: 1.3, fov: 30, assetBasePath: '/assets',
+                    cameraDistance: 1.3, fov: 30, assetBasePath: '../../assets',
                 },
                 sequence: [
                     { at: 0,    label: 'neutral', fn: m => m.setEmotion('neutral') },
@@ -407,7 +407,7 @@
                     coreGeometry: 'moon', enableParticles: false,
                     enableControls: false, autoRotate: false,
                     enableBlinking: false, enableBreathing: false,
-                    cameraDistance: 0.65, assetBasePath: '/assets',
+                    cameraDistance: 0.65, assetBasePath: '../../assets',
                 },
                 sequence: [
                     // Forward: waning-crescent → … → new, then reverse back to waning-crescent
@@ -436,7 +436,7 @@
                     coreGeometry: 'moon', materialVariant: 'multiplexer',
                     enableParticles: false, enableControls: false,
                     autoRotate: false, enableBlinking: false, enableBreathing: false,
-                    cameraDistance: 0.55, assetBasePath: '/assets',
+                    cameraDistance: 0.55, assetBasePath: '../../assets',
                 },
                 // rAF-based eclipse animation: sweep eclipseShadowPos + eclipseProgress
                 eclipseSweep: true,
@@ -453,7 +453,7 @@
                     enableParticles: false, enablePostProcessing: true,
                     enableShadows: false, enableControls: false,
                     autoRotate: true, enableBlinking: false, enableBreathing: false,
-                    cameraDistance: 0.95, assetBasePath: '/assets',
+                    cameraDistance: 0.95, assetBasePath: '../../assets',
                 },
                 solarEclipseSweep: true,
                 sequence: [
@@ -471,7 +471,7 @@
                     autoRotate: true, autoRotateSpeed: 0.3,
                     cameraDistance: 1.4, fov: 30,
                     materialVariant: 'multiplexer',
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                     enableBlinking: false, enableBreathing: true,
                 },
                 config3dB: {
@@ -479,7 +479,7 @@
                     enablePostProcessing: true, enableControls: false,
                     autoRotate: true, cameraDistance: 1.3, fov: 30,
                     enableBlinking: false, enableBreathing: false,
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                 },
                 sequence: [
                     { at: 0,    label: 'joy+calm',       fn: (m, m2) => { m.setEmotion('joy');        m2.setEmotion('calm');     m.express('bounce'); m2.express('sway'); } },
@@ -499,7 +499,7 @@
                     autoRotate: true, autoRotateSpeed: 0.3,
                     cameraDistance: 1.4, fov: 30,
                     materialVariant: 'multiplexer',
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                     enableBlinking: false, enableBreathing: true,
                 },
                 config3dB: {
@@ -507,7 +507,7 @@
                     enablePostProcessing: true, enableControls: false,
                     autoRotate: true, cameraDistance: 1.3, fov: 30,
                     enableBlinking: false, enableBreathing: false,
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                 },
                 sequence: [
                     { at: 0,    label: 'joy+calm',       fn: (m, m2) => { m.setEmotion('joy');        m2.setEmotion('calm');     m.express('bounce'); m2.express('sway'); } },
@@ -526,7 +526,7 @@
                     autoRotate: true, autoRotateSpeed: 0.3,
                     cameraDistance: 1.2, fov: 30,
                     materialVariant: 'multiplexer',
-                    assetBasePath: '/assets',
+                    assetBasePath: '../../assets',
                     enableBlinking: true, enableBreathing: true,
                 },
                 onInit: m => {

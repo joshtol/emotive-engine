@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine/3d v3.4.0
+// Type definitions for @joshtol/emotive-engine/3d v3.5.0
 // Project: https://github.com/joshtol/emotive-engine
 // Definitions by: Emotive Engine Team
 
@@ -140,6 +140,14 @@ export interface EmotiveMascot3DConfig {
     targetFPS?: number;
     /** Base path for loading GLB model assets */
     assetBasePath?: string;
+    /** Cap on devicePixelRatio for the WebGL canvas (default 2.0). */
+    maxPixelRatio?: number;
+    /** false skips the optional studio HDRI request and uses the procedural env map. */
+    hdri?: boolean;
+    /** false skips the screen-space glow halo during glow gestures (default true). */
+    glowHalo?: boolean;
+    /** What the transparent canvas sits on: light draws electric arcs as ink and drops the glow halo. */
+    surface?: 'dark' | 'light';
     /** Enable particle effects */
     enableParticles?: boolean;
     /** Default emotion state */
@@ -518,6 +526,8 @@ export class EmotiveMascot3D {
     /** Set groove preset */
     setGroove(preset: string, options?: { bars?: number; duration?: number }): EmotiveMascot3D;
 
+    /** Light pages: draw electric arcs as ink and drop the glow halo. */
+    setSurface(mode: 'dark' | 'light'): void;
     /** Enable or disable the core glow (crystal soul) effect */
     setCoreGlowEnabled(enabled: boolean): EmotiveMascot3D;
 

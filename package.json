@@ -1,8 +1,8 @@
 {
   "type": "module",
   "name": "@joshtol/emotive-engine",
-  "version": "3.4.2",
-  "description": "Open-source animation engine for AI-controlled emotional visualizations with musical time synchronization",
+  "version": "3.5.0",
+  "description": "Expressive AI mascots for the web: Canvas 2D and WebGL 3D character animation with emotions, 160+ gestures, 8 elemental shader systems and natural-language control",
   "main": "dist/emotive-mascot.umd.js",
   "module": "dist/mascot.js",
   "types": "types/index.d.ts",
@@ -21,6 +21,38 @@
       "types": "./types/3d-elementals.d.ts",
       "import": "./dist/emotive-mascot-3d-elementals.js",
       "require": "./dist/emotive-mascot-3d-elementals.umd.js"
+    },
+    "./3d-fire": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-fire.js"
+    },
+    "./3d-water": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-water.js"
+    },
+    "./3d-ice": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-ice.js"
+    },
+    "./3d-electric": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-electric.js"
+    },
+    "./3d-earth": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-earth.js"
+    },
+    "./3d-nature": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-nature.js"
+    },
+    "./3d-light": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-light.js"
+    },
+    "./3d-void": {
+      "types": "./types/3d-element.d.ts",
+      "import": "./dist/emotive-mascot-3d-void.js"
     },
     "./minimal": {
       "types": "./types/minimal.d.ts",
@@ -47,6 +79,14 @@
     "dist/emotive-mascot-3d.umd.js",
     "dist/emotive-mascot-3d-elementals.js",
     "dist/emotive-mascot-3d-elementals.umd.js",
+    "dist/emotive-mascot-3d-fire.js",
+    "dist/emotive-mascot-3d-water.js",
+    "dist/emotive-mascot-3d-ice.js",
+    "dist/emotive-mascot-3d-electric.js",
+    "dist/emotive-mascot-3d-earth.js",
+    "dist/emotive-mascot-3d-nature.js",
+    "dist/emotive-mascot-3d-light.js",
+    "dist/emotive-mascot-3d-void.js",
     "dist/emotive-mascot.minimal.js",
     "dist/emotive-mascot.minimal.umd.js",
     "dist/emotive-mascot.lean.js",
@@ -86,6 +126,8 @@
     "format": "prettier --write \"src/**/*.{js,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,json}\"",
     "size": "node scripts/check-bundle-size.js",
+    "size:report": "node scripts/report-sizes.js",
+    "links": "node scripts/check-links.js",
     "clean": "node -e \"import('fs').then(fs => fs.rmSync('dist', {recursive: true, force: true}))\"",
     "prepublishOnly": "npm run clean && npm run build",
     "publish:patch": "npm version patch && npm publish",
@@ -125,11 +167,17 @@
     "audio-reactive",
     "music-visualization",
     "beat-detection",
-    "user-engagement"
+    "user-engagement",
+    "three.js",
+    "elemental-effects",
+    "glsl-shaders",
+    "ai-mascot",
+    "avatar",
+    "webgl2"
   ],
   "author": "Joshua Tollette",
   "license": "MIT",
-  "homepage": "https://github.com/joshtol/emotive-engine",
+  "homepage": "https://joshtol.github.io/emotive-engine",
   "repository": {
     "type": "git",
     "url": "https://github.com/joshtol/emotive-engine.git"
@@ -142,35 +190,40 @@
   },
   "sideEffects": [
     "src/3d/effects/ElementRegistrations.js",
+    "src/3d/effects/elements/*.js",
     "src/core/gestures/elemental-gestures.js",
+    "src/core/gestures/elemental/*/register.js",
     "**/ElementRegistrations.js",
-    "**/elemental-gestures.js"
+    "**/effects/elements/*.js",
+    "**/elemental-gestures.js",
+    "**/elemental/*/register.js"
   ],
   "devDependencies": {
+    "@eslint/js": "^10.0.0",
     "@gltf-transform/cli": "^4.3.0",
-    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@vitest/coverage-v8": "^4.1.0",
     "canvas": "^3.2.0",
-    "eslint": "^9.35.0",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "gif.js": "^0.2.0",
     "html-minifier-terser": "^7.2.0",
     "husky": "^9.1.7",
     "jsdoc": "^4.0.4",
     "jsdoc-to-markdown": "^9.1.2",
-    "jsdom": "^27.0.0",
-    "lint-staged": "^16.1.6",
+    "jsdom": "^29.0.0",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.6.2",
     "rollup": "^4.9.5",
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-bundle-size": "^1.0.3",
-    "rollup-plugin-visualizer": "^6.0.3",
-    "terser": "^5.44.0",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "terser": "^5.46.1",
     "typedoc": "^0.28.16",
-    "typedoc-plugin-markdown": "^4.9.0",
-    "vitest": "^3.2.4"
+    "typedoc-plugin-markdown": "^4.11.0",
+    "vitest": "^4.1.0"
   },
   "lint-staged": {
     "*.js": "eslint --fix",

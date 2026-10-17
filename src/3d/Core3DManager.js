@@ -158,6 +158,9 @@ export class Core3DManager {
             minZoom: options.minZoom, // Minimum zoom distance
             maxZoom: options.maxZoom, // Maximum zoom distance
             assetBasePath: this.assetBasePath, // Base path for HDRI and other assets
+            maxPixelRatio: options.maxPixelRatio, // DPR cap (undefined = default 2.0)
+            hdri: options.hdri, // false = skip the optional HDRI request
+            glowHalo: options.glowHalo, // false = no screen-space glow halo
         });
 
         // Pass WebGL context and renderer to profiler for diagnostics
@@ -171,7 +174,11 @@ export class Core3DManager {
 
         if (!geometryConfig) {
             console.warn(`[Core3DManager] Unknown geometry: ${this.geometryType}, falling back to sphere`);
-            this.geometryConfig = THREE_GEOMETRIES.sphere;
+            // Guard the fallback itself: dereferencing a missing entry here turns a
+            // recoverable typo into a constructor throw, which is how an unregistered
+            // 'sphere' took down every default-configured mascot.
+            this.geometryConfig = THREE_GEOMETRIES.sphere ?? Object.values(THREE_GEOMETRIES)[0];
+            this.geometryType = THREE_GEOMETRIES.sphere ? 'sphere' : Object.keys(THREE_GEOMETRIES)[0];
         } else {
             this.geometryConfig = geometryConfig;
         }
@@ -3978,7 +3985,13 @@ export class Core3DManager {
 
             // Freeze animations BEFORE marking ready so the first rendered frame
             // is already frozen — no rotation visible at all during prewarm.
-            if (this._backgroundPrewarm && this.elementSpawner) {
+            //
+            // Only needed when shader linking blocks the main thread. When the renderer
+            // can pre-link off-thread the frame rate holds at 60 throughout, and freezing
+            // would just leave the mascot sitting motionless for the whole pre-warm —
+            // trading a stutter nobody sees for a stall everybody sees.
+            const prelinksOffThread = typeof this.renderer?.compileObjectAsync === 'function';
+            if (this._backgroundPrewarm && this.elementSpawner && !prelinksOffThread) {
                 this._freezeForPrewarm();
             }
 

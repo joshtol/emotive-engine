@@ -72,8 +72,8 @@ export function createSunMaterial(textureLoader, options = {}) {
     const assetBasePath = options.assetBasePath || '/assets';
 
     // Determine texture paths based on resolution
-    const colorPath = `${assetBasePath}/textures/Sun/sun-photosphere-${resolution}.jpg`;
-    const normalPath = `${assetBasePath}/textures/Sun/sun-photosphere-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Sun/sun-photosphere-${resolution}.webp`;
+    const normalPath = `${assetBasePath}/textures/Sun/sun-photosphere-normal-${resolution}.webp`;
 
     // NASA-accurate base color: Brilliant white (5,772K black-body radiation)
     // Use HDR values for dramatic bloom

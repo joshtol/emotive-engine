@@ -29,18 +29,20 @@ npm run build:dev
 ### 3. Test Your Changes
 
 ```bash
-# Option A: Test with local build
-# Open examples/hello-world.html in your browser
+# Option A: Open a 2D example straight off disk
+# site/public/examples/2d/2d-hello-world.html
 # (Requires step 2 - build:dev - to be completed first)
+# 3D examples cannot run from file:// — see Option B
 
-# Option B: Run a local server (recommended for development)
-npm run serve
-# Then open http://localhost:8000/examples/hello-world.html
+# Option B: Run a local server (required for the 3D examples)
+npm run local
+# Then open http://localhost:3000/examples/2d/2d-hello-world.html
 
 # Try different examples:
-# - examples/hello-world.html (⭐ simplest)
-# - examples/basic-usage.html (⭐⭐ all features)
-# - examples/rhythm-sync-demo.html (⭐⭐⭐ advanced)
+# - examples/2d/2d-hello-world.html      (⭐ simplest)
+# - examples/2d/basic-usage.html         (⭐⭐ all features)
+# - examples/2d/rhythm-sync-demo.html    (⭐⭐⭐ advanced)
+# - examples/3d/elemental-gestures.html  (⭐⭐⭐⭐⭐ full 3D showcase)
 ```
 
 ### 4. Watch Mode (Auto-rebuild)

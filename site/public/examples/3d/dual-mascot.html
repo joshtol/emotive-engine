@@ -10,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dual Mascot - Emotive Engine</title>
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         :root {
             --accent: #6ee7ff;
@@ -51,7 +51,7 @@
         .log-mascot1 { color: #60a5fa; }
         .log-mascot2 { color: #fb923c; }
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <div class="left-menu">
@@ -152,8 +152,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D from '/emotive-engine-3d.bundled.js';
-        import { createEmotionButtons, setActiveButton, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D from '../../emotive-engine-3d.bundled.js';
+        import { createEmotionButtons, setActiveButton, createActivityLog } from './demo-utils.js';
 
         const log = createActivityLog();
 
@@ -175,7 +175,7 @@
             minZoom: 0.8,
             maxZoom: 2.5,
             materialVariant: 'multiplexer',
-            assetBasePath: '/assets'
+            assetBasePath: '../../assets'
         });
         mascots[1].init(document.getElementById('container-1'));
         mascots[1].start();
@@ -193,7 +193,7 @@
             fov: 30,
             minZoom: 0.8,
             maxZoom: 2.5,
-            assetBasePath: '/assets'
+            assetBasePath: '../../assets'
         });
         mascots[2].init(document.getElementById('container-2'));
         mascots[2].start();

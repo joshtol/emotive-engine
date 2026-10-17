@@ -211,18 +211,18 @@ export function disposeMoon(moonMesh) {
  *
  * @param {THREE.TextureLoader} textureLoader - Three.js texture loader
  * @param {Object} options - Material configuration options
- * @param {string} options.resolution - Texture resolution: '2k' or '4k' (default: '4k')
+ * @param {string} options.resolution - Texture resolution: '2k' or '4k' (default: '2k')
  * @param {THREE.Color} options.glowColor - Emissive glow color (default: white)
  * @param {number} options.glowIntensity - Emissive intensity (default: 0)
  * @returns {THREE.MeshStandardMaterial}
  */
 export function createMoonMaterial(textureLoader, options = {}) {
-    const resolution = options.resolution || '4k';
+    const resolution = options.resolution || '2k';
     const assetBasePath = options.assetBasePath || '/assets';
 
     // Determine texture paths based on resolution
-    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
-    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.webp`;
+    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.webp`;
 
     // Initialize pending texture tracking for cleanup
     const pendingTextures = new Map();
@@ -330,7 +330,7 @@ export function createMoonFallbackMaterial(
  *
  * @param {THREE.TextureLoader} textureLoader - Three.js texture loader
  * @param {Object} options - Material configuration options
- * @param {string} options.resolution - Texture resolution: '2k' or '4k' (default: '4k')
+ * @param {string} options.resolution - Texture resolution: '2k' or '4k' (default: '2k')
  * @param {THREE.Color} options.glowColor - Emissive glow color (default: white)
  * @param {number} options.glowIntensity - Emissive intensity (default: 1.0)
  * @param {string} options.shadowType - Shadow effect type: 'crescent', 'lunar-eclipse', 'solar-eclipse', 'black-hole' (default: 'crescent')
@@ -342,7 +342,7 @@ export function createMoonFallbackMaterial(
  * @returns {THREE.ShaderMaterial}
  */
 export function createMoonShadowMaterial(textureLoader, options = {}) {
-    const resolution = options.resolution || '4k';
+    const resolution = options.resolution || '2k';
     const glowColor = options.glowColor || new THREE.Color(1, 1, 1);
     const glowIntensity = options.glowIntensity || 1.0;
     const shadowType = options.shadowType || 'crescent';
@@ -381,8 +381,8 @@ export function createMoonShadowMaterial(textureLoader, options = {}) {
     const shadowCoverage = options.shadowCoverage !== undefined ? options.shadowCoverage : 0.85;
 
     // Determine texture paths
-    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
-    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.webp`;
+    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.webp`;
 
     // Get shaders based on shadow type
     const { vertexShader, fragmentShader } = getShadowShaders(shadowType);
@@ -678,7 +678,7 @@ export function updateCrescentShadow(material, offsetX, offsetY, coverage) {
  */
 export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
     const {
-        resolution = '4k',
+        resolution = '2k',
         glowColor = new THREE.Color(0xffffff),
         glowIntensity = 1.0,
         assetBasePath = '/assets',
@@ -740,8 +740,8 @@ export function createMoonMultiplexerMaterial(textureLoader, options = {}) {
     });
 
     // Load textures with fade-in (same as standard material)
-    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.jpg`;
-    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.jpg`;
+    const colorPath = `${assetBasePath}/textures/Moon/moon-color-${resolution}.webp`;
+    const normalPath = `${assetBasePath}/textures/Moon/moon-normal-${resolution}.webp`;
 
     textureLoader.load(colorPath, texture => {
         material.uniforms.colorMap.value = texture;

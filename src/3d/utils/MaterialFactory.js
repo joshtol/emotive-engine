@@ -174,10 +174,10 @@ function createCrystalMaterial(
     let crystalTexture = null;
     if (textureType) {
         const texturePaths = {
-            crystal: `${assetBasePath}/textures/Crystal/crystal.png`,
-            rough: `${assetBasePath}/textures/Crystal/rough.png`,
-            heart: `${assetBasePath}/textures/Crystal/heart.png`,
-            star: `${assetBasePath}/textures/Crystal/star.png`,
+            crystal: `${assetBasePath}/textures/Crystal/crystal.webp`,
+            rough: `${assetBasePath}/textures/Crystal/rough.webp`,
+            heart: `${assetBasePath}/textures/Crystal/heart.webp`,
+            star: `${assetBasePath}/textures/Crystal/star.webp`,
         };
         const texturePath = texturePaths[textureType] || texturePaths.crystal;
         crystalTexture = textureLoader.load(texturePath, tex => {
@@ -411,10 +411,9 @@ function createMoonMaterial(
     assetBasePath = '/assets',
     onTextureReady = null
 ) {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-    );
-    const resolution = isMobile ? '2k' : '4k';
+    // 2k (2048x1024 WebP, ~1.2 MB for colour + normal) is more than the mascot canvas
+    // can show; 4k is 4.4 MB and was the desktop default until 3.5.0.
+    const resolution = '2k';
 
     if (materialVariant === 'multiplexer') {
         const material = createMoonMultiplexerMaterial(loader, {

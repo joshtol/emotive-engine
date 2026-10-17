@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Groove Demo - Emotive Engine</title>
-    <link rel="stylesheet" href="/examples/3d-example-style.css">
+    <link rel="stylesheet" href="../3d-example-style.css">
     <style>
         :root {
             --accent: #7c3aed;
@@ -14,7 +14,7 @@
             background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
         }
     </style>
-    <script src="/examples/record.js"></script>
+    <script src="../record.js"></script>
 </head>
 <body>
     <!-- LEFT MENU -->
@@ -130,8 +130,8 @@
     </div>
 
     <script type="module">
-        import EmotiveMascot3D, { AudioInterpreter, LLM_ENDPOINTS } from '/emotive-engine-3d.bundled.js';
-        import { setupParticlesToggle, setupVisualToggles, applySSSPreset, setActiveButton, createActivityLog } from '/examples/3d/demo-utils.js';
+        import EmotiveMascot3D, { AudioInterpreter, LLM_ENDPOINTS } from '../../emotive-engine-3d.bundled.js';
+        import { setupParticlesToggle, setupVisualToggles, applySSSPreset, setActiveButton, createActivityLog } from './demo-utils.js';
 
         const log = createActivityLog();
 
@@ -139,13 +139,13 @@
         const PROVIDER_KEY = 'groove-demo-provider';
 
         const DEMO_TRACKS = {
-            female: '/assets/tracks/music/electric-glow-f.wav',
-            male: '/assets/tracks/music/electric-glow-m.wav',
-            'click-120': '/assets/tracks/test/click-120.wav'
+            female: '../../assets/tracks/music/electric-glow-f.wav',
+            male: '../../assets/tracks/music/electric-glow-m.wav',
+            'click-120': '../../assets/tracks/test/click-120.wav'
         };
         const TRACK_LYRICS = {
-            female: '/assets/tracks/music/electric-glow.lrc',
-            male: '/assets/tracks/music/electric-glow.lrc'
+            female: '../../assets/tracks/music/electric-glow.lrc',
+            male: '../../assets/tracks/music/electric-glow.lrc'
         };
 
         let mascot = null;
@@ -184,7 +184,7 @@
                 minZoom: 0.9,
                 maxZoom: 2.0,
                 materialVariant: 'multiplexer',
-                assetBasePath: '/assets'
+                assetBasePath: '../../assets'
             });
 
             await mascot.init(container);
