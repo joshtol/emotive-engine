@@ -23,35 +23,35 @@
       "require": "./dist/emotive-mascot-3d-elementals.umd.js"
     },
     "./3d-fire": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-fire.js"
     },
     "./3d-water": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-water.js"
     },
     "./3d-ice": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-ice.js"
     },
     "./3d-electric": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-electric.js"
     },
     "./3d-earth": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-earth.js"
     },
     "./3d-nature": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-nature.js"
     },
     "./3d-light": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-light.js"
     },
     "./3d-void": {
-      "types": "./types/3d.d.ts",
+      "types": "./types/3d-element.d.ts",
       "import": "./dist/emotive-mascot-3d-void.js"
     },
     "./minimal": {

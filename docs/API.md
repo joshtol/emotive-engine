@@ -61,6 +61,10 @@ new EmotiveMascot3D({
     enableParticles: true,
     enablePostProcessing: true, // Bloom effects
     enableShadows: false,
+    maxPixelRatio: 2.0, // cap on devicePixelRatio (lower = cheaper fill)
+    hdri: true, // false skips the optional studio HDRI (1.7 MB) and uses the procedural env map
+    glowHalo: true, // false skips the screen-space glow halo during glow gestures
+    surface: 'dark', // 'light': electric arcs drawn as ink, no halo (also mascot.setSurface())
 
     // Camera
     enableControls: true, // Orbit controls
@@ -137,6 +141,11 @@ mascot.express('zap');
 ```
 
 Elemental gestures require self-hosted 3D assets — see the README.
+
+A page that shows one element can import just that element:
+`@joshtol/emotive-engine/3d-fire`, `3d-water`, `3d-ice`, `3d-electric`, `3d-earth`,
+`3d-nature`, `3d-light` or `3d-void` (249–256 KB brotli each vs 303 KB for all
+eight). Only that element's gestures are registered in such a build.
 
 ## 3D Geometries
 

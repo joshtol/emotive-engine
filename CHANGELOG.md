@@ -9,6 +9,56 @@ and this project uses
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-10-17
+
+### Added
+
+- **Per-element 3D entries** — `@joshtol/emotive-engine/3d-fire`, `3d-water`,
+  `3d-ice`, `3d-electric`, `3d-earth`, `3d-nature`, `3d-light`, `3d-void`.
+  Each is the base 3D engine plus one elemental (249–256 KB brotli vs 303 KB
+  for `3d-elementals`, 232 KB for `3d`). Generated from one list,
+  `src/3d/elements.js`; the registrations are per-element side-effect
+  modules listed in `sideEffects`.
+- **`maxPixelRatio`** option — cap on devicePixelRatio (default 2.0).
+- **`hdri: false`** option — skip the optional 1.7 MB studio HDRI request.
+- **`glowHalo: false`** option — no screen-space glow halo (for canvases that
+  bleed past their slot).
+- **`surface: 'light'` / `setSurface('light')`** — electric arcs drawn as ink
+  on light pages, halo dropped.
+- `npm run size:report` — raw / gzip / brotli table for every published bundle.
+
+### Changed
+
+- **Textures load as WebP.** Crystal 10.9 MB PNG → 282 KB; Moon 7.9 MB JPEG →
+  1.2 MB (now 2k by default on desktop too, 4k via `resolution: '4k'`); Sun
+  1.9 MB → 0.8 MB. Sources stay in `assets/`, nothing new ships in the npm
+  package.
+- `ElementRegistrations.js` and `elemental-gestures.js` are now thin
+  aggregators over `src/3d/effects/elements/*.js` and
+  `src/core/gestures/elemental/*/register.js`. Same public behaviour.
+
+### Removed
+
+- The duplicate registration of the electric `zap` gesture (it was listed
+  twice; the registry entry is unchanged).
+
+## [3.4.2] - 2026-03-15
+
+### Added
+
+- Native MP4 recording on mobile with countdown, metadata patching and a
+  restyled share modal; server-side WebM→MP4 conversion for social sharing.
+- Texture cache for instant re-morph and a bloom flash at geometry swap.
+
+### Fixed
+
+- Recording: codec fallback chain on Android, setInterval fallback for 2D,
+  mirror-canvas priming, visible recording errors, retry state survives a
+  failed cleanup, Chrome MediaRecorder `mdhd` duration patch, WebM duration
+  metadata for mobile/social platforms.
+- Desynchronized canvas disabled to stop scroll tearing.
+- Noisy PluginSystem sandbox `console.warn` removed.
+
 ## [3.4.1] - 2026-03-10
 
 ### Fixed
