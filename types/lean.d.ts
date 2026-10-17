@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine/lean v3.4.0
+// Type definitions for @joshtol/emotive-engine/lean v3.5.0
 // Lean build — full 2D API in a smaller bundle (no audio, timeline, or recording)
 // Re-exports the same public surface as the main entry point.
 

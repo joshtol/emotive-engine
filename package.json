@@ -1,8 +1,8 @@
 {
   "type": "module",
   "name": "@joshtol/emotive-engine",
-  "version": "3.4.2",
-  "description": "Open-source animation engine for AI-controlled emotional visualizations with musical time synchronization",
+  "version": "3.5.0",
+  "description": "Expressive AI mascots for the web: Canvas 2D and WebGL 3D character animation with emotions, 160+ gestures, 8 elemental shader systems and natural-language control",
   "main": "dist/emotive-mascot.umd.js",
   "module": "dist/mascot.js",
   "types": "types/index.d.ts",
@@ -127,6 +127,7 @@
     "format:check": "prettier --check \"src/**/*.{js,json}\"",
     "size": "node scripts/check-bundle-size.js",
     "size:report": "node scripts/report-sizes.js",
+    "links": "node scripts/check-links.js",
     "clean": "node -e \"import('fs').then(fs => fs.rmSync('dist', {recursive: true, force: true}))\"",
     "prepublishOnly": "npm run clean && npm run build",
     "publish:patch": "npm version patch && npm publish",
@@ -166,11 +167,17 @@
     "audio-reactive",
     "music-visualization",
     "beat-detection",
-    "user-engagement"
+    "user-engagement",
+    "three.js",
+    "elemental-effects",
+    "glsl-shaders",
+    "ai-mascot",
+    "avatar",
+    "webgl2"
   ],
   "author": "Joshua Tollette",
   "license": "MIT",
-  "homepage": "https://github.com/joshtol/emotive-engine",
+  "homepage": "https://joshtol.github.io/emotive-engine",
   "repository": {
     "type": "git",
     "url": "https://github.com/joshtol/emotive-engine.git"

@@ -1,4 +1,4 @@
-// Type definitions for @joshtol/emotive-engine/3d v3.4.0
+// Type definitions for @joshtol/emotive-engine/3d v3.5.0
 // Project: https://github.com/joshtol/emotive-engine
 // Definitions by: Emotive Engine Team
 
