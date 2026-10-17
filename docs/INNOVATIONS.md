@@ -281,9 +281,9 @@ This document serves as **prior art** and **defensive publication** for the inno
 The following optimizations are implemented in the codebase but not yet fully documented:
 
 - Specific particle culling algorithms (see [src/core/ParticleSystem.js](../src/core/ParticleSystem.js))
-- BPM detection smoothing techniques (see [src/core/AudioAnalyzer.js](../src/core/AudioAnalyzer.js))
-- Memory management for garbage collection avoidance (see [src/core/PerformanceManager.js](../src/core/PerformanceManager.js))
-- Physics calculation batching methods (see [src/core/PhysicsEngine.js](../src/core/PhysicsEngine.js))
+- BPM detection smoothing techniques (see [src/core/audio/AudioAnalyzer.js](../src/core/audio/AudioAnalyzer.js))
+- Memory management for garbage collection avoidance (see [src/core/renderer/RenderPerformanceManager.js](../src/core/renderer/RenderPerformanceManager.js))
+- Physics calculation batching methods (see [src/core/positioning/Physics.js](../src/core/positioning/Physics.js))
 
 **Contributions welcome!** Help us document these systems by:
 1. Reading the source code

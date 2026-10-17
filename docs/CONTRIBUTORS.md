@@ -21,7 +21,7 @@ _Awaiting first community contributor!_
 
 ## How to Contribute
 
-We welcome contributions! Please see our [CONTRIBUTING.md](./CONTRIBUTING.md)
+We welcome contributions! Please see our [CONTRIBUTING.md](../CONTRIBUTING.md)
 guide for details on:
 
 - Setting up the development environment

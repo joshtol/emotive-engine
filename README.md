@@ -7,6 +7,8 @@
 [![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
+[![CI](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml)
+[![3D + one element: 249 KB brotli](https://img.shields.io/badge/3D%20%2B%20one%20element-249%20KB%20brotli-4090CE.svg)](#import-only-what-you-use)
 
 <img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine — 8 elemental shaders, 160+ gestures" width="100%" />
 
@@ -66,22 +68,23 @@ mascot.feel('happy, bouncing');
 
 ## Import only what you use
 
-Every build is a separate entry, so a page that shows one elemental does not pay for
-the other seven. Sizes are brotli over the wire (`npm run size:report`); Three.js is a
-peer dependency and is not included in the 3D numbers.
+Every build is a separate entry, so a page that shows one elemental does not pay
+for the other seven. Sizes are brotli over the wire (`npm run size:report`);
+Three.js is a peer dependency and is not included in the 3D numbers.
 
-| Import                                   | Brotli | What you get                                   |
-| ---------------------------------------- | -----: | ---------------------------------------------- |
-| `@joshtol/emotive-engine`                | 178 KB | 2D canvas engine                               |
-| `@joshtol/emotive-engine/lean`           | 166 KB | 2D, no rhythm sync / accessibility / profiling |
-| `@joshtol/emotive-engine/minimal`        |  67 KB | 2D loading-screen build                        |
-| `@joshtol/emotive-engine/3d`             | 232 KB | 3D, no elementals                              |
-| `@joshtol/emotive-engine/3d-<element>`   | 249–256 KB | 3D + one elemental (see below)             |
-| `@joshtol/emotive-engine/3d-elementals`  | 303 KB | 3D + all eight elementals                      |
+| Import                                  |     Brotli | What you get                                   |
+| --------------------------------------- | ---------: | ---------------------------------------------- |
+| `@joshtol/emotive-engine`               |     178 KB | 2D canvas engine                               |
+| `@joshtol/emotive-engine/lean`          |     166 KB | 2D, no rhythm sync / accessibility / profiling |
+| `@joshtol/emotive-engine/minimal`       |      67 KB | 2D loading-screen build                        |
+| `@joshtol/emotive-engine/3d`            |     232 KB | 3D, no elementals                              |
+| `@joshtol/emotive-engine/3d-<element>`  | 249–256 KB | 3D + one elemental (see below)                 |
+| `@joshtol/emotive-engine/3d-elementals` |     303 KB | 3D + all eight elementals                      |
 
-The eight single-element entries are `3d-fire`, `3d-water`, `3d-ice`, `3d-electric`,
-`3d-earth`, `3d-nature`, `3d-light` and `3d-void`. Each registers only its own
-element and gestures; the other elements' shaders and gestures are not in the file.
+The eight single-element entries are `3d-fire`, `3d-water`, `3d-ice`,
+`3d-electric`, `3d-earth`, `3d-nature`, `3d-light` and `3d-void`. Each registers
+only its own element and gestures; the other elements' shaders and gestures are
+not in the file.
 
 ```javascript
 // A page that only shows the electric elemental
@@ -91,9 +94,9 @@ const mascot = new EmotiveMascot3D({
     coreGeometry: 'crystal',
     assetBasePath: '/assets',
     maxPixelRatio: 1.5, // cap the DPR (default 2.0): sharpness vs fill rate
-    hdri: false,        // skip the optional 1.7 MB studio HDRI
-    glowHalo: false,    // no screen-space halo when the canvas bleeds past its slot
-    surface: 'light',   // or mascot.setSurface('light'): arcs drawn as ink on light pages
+    hdri: false, // skip the optional 1.7 MB studio HDRI
+    glowHalo: false, // no screen-space halo when the canvas bleeds past its slot
+    surface: 'light', // or mascot.setSurface('light'): arcs drawn as ink on light pages
 });
 
 mascot.init(document.getElementById('container'));
@@ -101,8 +104,8 @@ mascot.start();
 mascot.express('shock'); // any electric gesture; fire gestures etc. are not registered
 ```
 
-A gesture from an element that is not in the entry is simply unknown to `express()`.
-Import `3d-elementals` when a page switches between elements.
+A gesture from an element that is not in the entry is simply unknown to
+`express()`. Import `3d-elementals` when a page switches between elements.
 
 ---
 
@@ -205,9 +208,9 @@ TypeScript definitions · Unified API
 ## 3D Assets
 
 The npm package ships **JavaScript only**. GLB models, textures, and HDRI maps
-must be self-hosted. They live in `assets/` in this repository. The 3D engine loads
-WebP textures (Crystal 282 KB, Moon 1.2 MB, Sun 0.8 MB); the PNG/JPEG sources sit
-beside them and are not requested at runtime.
+must be self-hosted. They live in `assets/` in this repository. The 3D engine
+loads WebP textures (Crystal 282 KB, Moon 1.2 MB, Sun 0.8 MB); the PNG/JPEG
+sources sit beside them and are not requested at runtime.
 
 ```javascript
 new EmotiveMascot3D({
