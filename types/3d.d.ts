@@ -144,6 +144,8 @@ export interface EmotiveMascot3DConfig {
     maxPixelRatio?: number;
     /** false skips the optional studio HDRI request and uses the procedural env map. */
     hdri?: boolean;
+    /** What the transparent canvas sits on: light draws electric arcs as ink and drops the glow halo. */
+    surface?: 'dark' | 'light';
     /** Enable particle effects */
     enableParticles?: boolean;
     /** Default emotion state */
@@ -522,6 +524,8 @@ export class EmotiveMascot3D {
     /** Set groove preset */
     setGroove(preset: string, options?: { bars?: number; duration?: number }): EmotiveMascot3D;
 
+    /** Light pages: draw electric arcs as ink and drop the glow halo. */
+    setSurface(mode: 'dark' | 'light'): void;
     /** Enable or disable the core glow (crystal soul) effect */
     setCoreGlowEnabled(enabled: boolean): EmotiveMascot3D;
 

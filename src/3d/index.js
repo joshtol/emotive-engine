@@ -56,6 +56,7 @@ import { IntentParser } from '../core/intent/IntentParser.js';
 import { AudioBridge } from './audio/AudioBridge.js';
 import { DanceChoreographer } from './animation/DanceChoreographer.js';
 import { ResizeObserverManager } from './managers/ResizeObserverManager.js';
+import { setSurface } from './materials/surface.js';
 import { FRAME_TIMING, ACCESSIBILITY } from '../core/config/defaults.js';
 
 /**
@@ -289,6 +290,7 @@ export class EmotiveMascot3D {
      * @throws {Error} If initialization fails or called in SSR environment
      */
     init(container) {
+        if (this.config.surface) setSurface(this.config.surface);
         // SSR Guard: Prevent crashes in server-side rendering environments
         if (typeof window === 'undefined') {
             throw new Error(
@@ -1005,6 +1007,16 @@ export class EmotiveMascot3D {
      * When disabled, the crystal appears as an empty shell without the glowing core
      * @param {boolean} enabled - True to show soul, false to hide
      */
+    /**
+     * Tell the engine what the transparent canvas sits on. 'light' draws additive
+     * effects (electric arcs) as ink and drops the gesture glow halo, which would
+     * otherwise read as a grey disc on a light page. Affects every mascot on the page.
+     * @param {'dark'|'light'} mode
+     */
+    setSurface(mode) {
+        setSurface(mode);
+    }
+
     setCoreGlowEnabled(enabled) {
         if (this.core3D) {
             this.core3D.setCoreGlowEnabled(enabled);

@@ -32,6 +32,7 @@
 
 import * as THREE from 'three';
 import { CORE_NOISE_GLSL } from '../../shaders/noise.glsl.js';
+import { getSurface, onSurfaceChange } from '../surface.js';
 import {
     INSTANCED_ATTRIBUTES_VERTEX,
     INSTANCED_ATTRIBUTES_FRAGMENT,
@@ -374,6 +375,8 @@ void main() {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 const FRAGMENT_SHADER = /* glsl */ `
+uniform float uInk;          // 1 = light page: draw arcs as dark ink, not light
+uniform vec3 uInkColor;
 uniform float uGlobalTime;
 uniform float uCharge;
 uniform float uIntensity;
@@ -514,6 +517,14 @@ void main() {
         alpha = min(alpha * flashBoost, 0.95);
     }
 
+    if (uInk > 0.5) {
+        // Light surface: additive light vanishes on a light page, so the bolt is drawn
+        // as ink (normal blending), its opacity carried by the bolt's brightness.
+        float ink = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
+        gl_FragColor = vec4(uInkColor, clamp(alpha * (0.55 + 0.45 * ink), 0.0, 0.9));
+        return;
+    }
+
     gl_FragColor = vec4(color, alpha);
 }
 `;
@@ -521,6 +532,22 @@ void main() {
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // MATERIAL FACTORY
 // ═══════════════════════════════════════════════════════════════════════════════════════
+
+// Light/dark surface: every live electric material follows setSurface()
+const liveMaterials = new Set();
+function applyElectricSurface(material, mode) {
+    const light = mode === 'light';
+    material.uniforms.uInk.value = light ? 1 : 0;
+    material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+    material.needsUpdate = true;
+}
+function trackElectricMaterial(material) {
+    liveMaterials.add(material);
+    material.addEventListener('dispose', () => liveMaterials.delete(material));
+}
+onSurfaceChange(mode => {
+    for (const m of liveMaterials) applyElectricSurface(m, mode);
+});
 
 /**
  * Create an instanced procedural electric material
@@ -576,6 +603,8 @@ export function createInstancedElectricMaterial(options = {}) {
             uRelayCount: { value: 3 },
             uRelayArcWidth: { value: 3.14159 },
             uRelayFloor: { value: 0.0 },
+            uInk: { value: 0 },
+            uInkColor: { value: new THREE.Color(0x1f4f57) },
         },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
@@ -584,6 +613,9 @@ export function createInstancedElectricMaterial(options = {}) {
         depthWrite: false,
         side: THREE.FrontSide,
     });
+
+    applyElectricSurface(material, getSurface());
+    trackElectricMaterial(material);
 
     material.userData.charge = charge;
     material.userData.elementalType = 'electric';

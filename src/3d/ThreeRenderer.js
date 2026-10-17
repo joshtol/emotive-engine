@@ -25,6 +25,7 @@ import { ParticleAtmosphericsManager } from './effects/ParticleAtmosphericsManag
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // normalizeColorLuminance - available for advanced color normalization
 import { GlowLayer } from './effects/GlowLayer.js';
+import { getSurface } from './materials/surface.js';
 import { CrackLayer } from './effects/CrackLayer.js';
 import { CameraPresetManager } from './managers/CameraPresetManager.js';
 
@@ -1972,7 +1973,7 @@ export class ThreeRenderer {
 
             // === STEP 3: Render glow layer (if active) ===
             // This is an isolated screen-space overlay that only activates during glow gestures
-            if (this.glowLayer && this.glowLayer.isActive()) {
+            if (this.glowLayer && this.glowLayer.isActive() && getSurface() !== 'light') {
                 this.glowLayer.render(this.renderer);
             }
 
@@ -1985,7 +1986,7 @@ export class ThreeRenderer {
             this.renderer.render(this.scene, this.camera);
 
             // Render glow layer even without composer
-            if (this.glowLayer && this.glowLayer.isActive()) {
+            if (this.glowLayer && this.glowLayer.isActive() && getSurface() !== 'light') {
                 this.glowLayer.render(this.renderer);
             }
 
