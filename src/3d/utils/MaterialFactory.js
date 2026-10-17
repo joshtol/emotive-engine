@@ -411,10 +411,9 @@ function createMoonMaterial(
     assetBasePath = '/assets',
     onTextureReady = null
 ) {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-    );
-    const resolution = isMobile ? '2k' : '4k';
+    // 2k (2048x1024 WebP, ~1.2 MB for colour + normal) is more than the mascot canvas
+    // can show; 4k is 4.4 MB and was the desktop default until 3.5.0.
+    const resolution = '2k';
 
     if (materialVariant === 'multiplexer') {
         const material = createMoonMultiplexerMaterial(loader, {

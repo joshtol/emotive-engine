@@ -12,9 +12,9 @@ The following moon textures are from
 
 **Moon Textures:**
 
-- `assets/textures/Moon/moon-color-4k.jpg`
+- `assets/textures/Moon/moon-color-4k.jpg` (and the `.webp` re-encodes beside it)
 - `assets/textures/Moon/moon-color-2k.jpg`
-- `assets/textures/Moon/moon-normal-4k.jpg`
+- `assets/textures/Moon/moon-normal-4k.jpg` (and the `.webp` re-encodes beside it)
 - `assets/textures/Moon/moon-normal-2k.jpg`
 
 **License:** Public Domain (NASA)
@@ -35,8 +35,8 @@ The following textures are from
 
 **Sun Textures:**
 
-- `assets/textures/Sun/sun-photosphere-4k.jpg`
-- `assets/textures/Sun/sun-photosphere-normal-4k.jpg`
+- `assets/textures/Sun/sun-photosphere-4k.jpg` (and the `.webp` re-encodes beside it)
+- `assets/textures/Sun/sun-photosphere-normal-4k.jpg` (and the `.webp` re-encodes beside it)
 
 **License:**
 [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
