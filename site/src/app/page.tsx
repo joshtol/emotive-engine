@@ -364,7 +364,7 @@ export default function HomePage() {
                 '8 shaders',
                 '339 gestures',
                 'Real-time WebGL',
-                'Canvas 2D fallback',
+                'Canvas 2D mode',
                 'TypeScript',
                 'MIT',
               ].map((stat, i) => (

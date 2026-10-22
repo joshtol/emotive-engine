@@ -21,7 +21,7 @@ const FEATURES_NARROW = [
   {
     stat: 'Real-time',
     title: 'WebGL canvas',
-    description: 'Tested at 1000+ simultaneous instanced particles. Automatic Canvas 2D fallback.',
+    description: 'One instanced mesh per element type. Needs WebGL 2; the Canvas 2D engine is a separate import.',
     color: '#67e8f9',
   },
   {
