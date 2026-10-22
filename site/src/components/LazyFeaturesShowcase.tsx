@@ -19,7 +19,7 @@ const FEATURES_WIDE = [
 
 const FEATURES_NARROW = [
   {
-    stat: '60fps',
+    stat: 'Real-time',
     title: 'WebGL canvas',
     description: 'Tested at 1000+ simultaneous instanced particles. Automatic Canvas 2D fallback.',
     color: '#67e8f9',

@@ -363,7 +363,7 @@ export default function HomePage() {
               {[
                 '8 shaders',
                 '339 gestures',
-                '60fps WebGL',
+                'Real-time WebGL',
                 'Canvas 2D fallback',
                 'TypeScript',
                 'MIT',
