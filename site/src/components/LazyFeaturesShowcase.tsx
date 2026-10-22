@@ -10,9 +10,9 @@ const FEATURES_WIDE = [
     color: '#a78bfa',
   },
   {
-    stat: '291',
+    stat: '339',
     title: 'Gestures',
-    description: '161 elemental (crown, vortex, impact, drill, helix, barrage...) + 130 base idles (breathe, sway, float, drift, peek). Elemental gestures require the 3D renderer.',
+    description: '160 elemental (crown, vortex, impact, drill, helix, barrage...) + 179 core (idles, dances, actions, reactions, atmosphere). Elemental gestures require the 3D renderer.',
     color: '#f97316',
   },
 ]
@@ -113,7 +113,7 @@ export default function LazyFeaturesShowcase() {
           What's shipped.
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1rem' }}>
-          Eight shader systems, 291 gestures, 320 KB minimal to 1.9 MB full.
+          Eight shader systems, 339 gestures, 320 KB minimal to 1.9 MB full.
         </p>
       </div>
 

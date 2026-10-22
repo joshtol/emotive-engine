@@ -29,7 +29,7 @@ const ELEMENTS_GRID = [
   { name: 'fire',     label: 'Fire',     gif: '/screenshots/social/fire.gif',     color: '#f97316', gestures: 19, codepen: 'LERbxpE' },
   { name: 'ice',      label: 'Ice',      gif: '/screenshots/social/ice.gif',      color: '#67e8f9', gestures: 16, codepen: 'LERbbgK' },
   { name: 'electric', label: 'Electric', gif: '/screenshots/social/electric.gif', color: '#a78bfa', gestures: 22, codepen: 'zxKoNvX' },
-  { name: 'water',    label: 'Water',    gif: '/screenshots/social/water.gif',    color: '#38bdf8', gestures: 21, codepen: 'QwKGdym' },
+  { name: 'water',    label: 'Water',    gif: '/screenshots/social/water.gif',    color: '#38bdf8', gestures: 20, codepen: 'QwKGdym' },
   { name: 'void',     label: 'Void',     gif: '/screenshots/social/void.gif',     color: '#818cf8', gestures: 17, codepen: 'raMWjxP' },
   { name: 'light',    label: 'Light',    gif: '/screenshots/social/light.gif',    color: '#fde68a', gestures: 23, codepen: 'YPGpNqq' },
   { name: 'earth',    label: 'Earth',    gif: '/screenshots/social/earth.gif',    color: '#86efac', gestures: 22, codepen: 'jEMVyqx' },
@@ -263,7 +263,7 @@ export default function HomePage() {
               margin: '0 auto 2.5rem',
             }}>
               Elemental shader effects for web characters.
-              8 custom GLSL shaders, 291 gestures, WebGL + Canvas 2D. MIT.
+              8 custom GLSL shaders, 339 gestures (179 core + 160 elemental), WebGL + Canvas 2D. MIT.
             </p>
 
             {/* Active element indicator */}
@@ -362,7 +362,7 @@ export default function HomePage() {
             }}>
               {[
                 '8 shaders',
-                '291 gestures',
+                '339 gestures',
                 '60fps WebGL',
                 'Canvas 2D fallback',
                 'TypeScript',
@@ -593,7 +593,7 @@ export default function HomePage() {
                 e.currentTarget.style.color = 'rgba(255,255,255,0.4)'
               }}
             >
-              All 291 gestures →
+              All 160 elemental gestures →
             </a>
           </div>
         </section>
