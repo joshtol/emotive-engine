@@ -10,7 +10,7 @@
 [![CI](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml)
 [![3D + one element: 249 KB brotli](https://img.shields.io/badge/3D%20%2B%20one%20element-249%20KB%20brotli-4090CE.svg)](#import-only-what-you-use)
 
-<img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine — 8 elemental shaders, 160 elemental gestures" width="100%" />
+<img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine: 8 elemental shaders, 160 elemental gestures" width="100%" />
 
 Real-time character animation engine with **Canvas 2D** and **WebGL 3D**
 rendering.<br/> 8 elemental shader systems. 160 elemental gestures. One
@@ -282,7 +282,7 @@ npm install && npm run build && npm run local
 
 ## License
 
-MIT — see [LICENSE.md](./LICENSE.md)
+MIT. See [LICENSE.md](./LICENSE.md)
 
 <div align="center">
 

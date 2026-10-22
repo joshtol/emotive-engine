@@ -6,7 +6,7 @@ const FEATURES_WIDE = [
   {
     stat: '8',
     title: 'Fragment shaders',
-    description: 'Ice, fire, water, electric, void, light, earth, nature. Each element has its own GLSL — Voronoi cracks, plasma arcs, fluid ripples, crystal refraction.',
+    description: 'Ice, fire, water, electric, void, light, earth, nature. Each element has its own GLSL: Voronoi cracks, plasma arcs, fluid ripples, crystal refraction.',
     color: '#a78bfa',
   },
   {
