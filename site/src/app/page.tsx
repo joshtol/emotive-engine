@@ -393,7 +393,7 @@ export default function HomePage() {
               marginBottom: '0.75rem',
               letterSpacing: '-0.02em',
             }}>
-              From install to fire crown in four lines.
+              From install to fire crown in six lines.
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem' }}>
               React, Vue, Svelte, vanilla JS.
@@ -411,12 +411,12 @@ export default function HomePage() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
             overflowX: 'auto',
           }}>
-            <div><span style={{ color: '#6272a4' }}>// npm install @joshtol/emotive-engine</span></div>
+            <div><span style={{ color: '#6272a4' }}>// npm install @joshtol/emotive-engine three</span></div>
             <div style={{ marginTop: '0.5rem' }}>
               <span style={{ color: '#ff79c6' }}>import</span>
               <span style={{ color: '#f8f8f2' }}> {'{ EmotiveMascot3D }'} </span>
               <span style={{ color: '#ff79c6' }}>from</span>
-              <span style={{ color: '#f1fa8c' }}> '@joshtol/emotive-engine'</span>
+              <span style={{ color: '#f1fa8c' }}> '@joshtol/emotive-engine/3d-fire'</span>
             </div>
             <div style={{ marginTop: '1rem' }}>
               <span style={{ color: '#8be9fd' }}>const</span>
@@ -424,34 +424,31 @@ export default function HomePage() {
               <span style={{ color: '#ff79c6' }}>=</span>
               <span style={{ color: '#8be9fd' }}> new</span>
               <span style={{ color: '#50fa7b' }}> EmotiveMascot3D</span>
-              <span style={{ color: '#f8f8f2' }}>{'({ element: '}</span>
-              <span style={{ color: '#f1fa8c' }}>'fire'</span>
+              <span style={{ color: '#f8f8f2' }}>{'({ coreGeometry: '}</span>
+              <span style={{ color: '#f1fa8c' }}>'crystal'</span>
+              <span style={{ color: '#f8f8f2' }}>{', assetBasePath: '}</span>
+              <span style={{ color: '#f1fa8c' }}>'/assets'</span>
               <span style={{ color: '#f8f8f2' }}>{' })'}</span>
             </div>
             <div>
-              <span style={{ color: '#f8f8f2' }}>mascot.</span>
-              <span style={{ color: '#50fa7b' }}>init</span>
-              <span style={{ color: '#f8f8f2' }}>{'(document.getElementById('}</span>
-              <span style={{ color: '#f1fa8c' }}>'canvas'</span>
-              <span style={{ color: '#f8f8f2' }}>{')).then(() => '}</span>
+              <span style={{ color: '#f8f8f2' }}>mascot.</span><span style={{ color: '#50fa7b' }}>init</span><span style={{ color: '#f8f8f2' }}>{'(document.getElementById('}</span><span style={{ color: '#f1fa8c' }}>'container'</span><span style={{ color: '#f8f8f2' }}>{'))'}</span>
             </div>
-            <div style={{ paddingLeft: '2rem' }}>
-              <span style={{ color: '#f8f8f2' }}>mascot.</span>
-              <span style={{ color: '#50fa7b' }}>express</span>
-              <span style={{ color: '#f8f8f2' }}>{'('}</span>
-              <span style={{ color: '#f1fa8c' }}>'firecrown'</span>
-              <span style={{ color: '#f8f8f2' }}>{')'}</span>
+            <div>
+              <span style={{ color: '#f8f8f2' }}>mascot.</span><span style={{ color: '#50fa7b' }}>start</span><span style={{ color: '#f8f8f2' }}>{'()'}</span>
+            </div>
+            <div>
+              <span style={{ color: '#f8f8f2' }}>mascot.</span><span style={{ color: '#50fa7b' }}>express</span><span style={{ color: '#f8f8f2' }}>{'('}</span><span style={{ color: '#f1fa8c' }}>'firecrown'</span><span style={{ color: '#f8f8f2' }}>{')'}</span>
             </div>
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <a
-              href="https://github.com/joshtol/emotive-engine#readme"
+              href="https://github.com/joshtol/emotive-engine#3d-mode-webgl"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#a5b4fc', fontSize: '0.9rem', textDecoration: 'none', fontWeight: '500' }}
             >
-              View full API docs on GitHub →
+              Asset setup and the full API on GitHub →
             </a>
           </div>
         </section>
