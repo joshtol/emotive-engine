@@ -49,7 +49,10 @@ mascot.morphTo('heart');
 mascot.feel('happy, bouncing'); // Natural language control
 ```
 
-3D mode requires Three.js: `npm install three`
+3D mode requires Three.js (`npm install three`, version 0.170 or later) and a
+browser with WebGL 2. Without WebGL 2, `init()` logs a warning and renders
+nothing; it does not fall back to Canvas 2D, which is the separate
+`@joshtol/emotive-engine` import below.
 
 ### 2D Mode (Canvas)
 
