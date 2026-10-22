@@ -441,9 +441,13 @@ export default function HomePage() {
             </div>
           </div>
 
+          <p style={{ textAlign: 'center', marginTop: '1.25rem', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
+            The npm package is JavaScript only. Host the repo&apos;s <code>assets/</code> folder (models and textures) and point <code>assetBasePath</code> at it.
+          </p>
+
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <a
-              href="https://github.com/joshtol/emotive-engine#3d-mode-webgl"
+              href="https://github.com/joshtol/emotive-engine#3d-assets"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#a5b4fc', fontSize: '0.9rem', textDecoration: 'none', fontWeight: '500' }}
