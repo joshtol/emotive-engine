@@ -6,22 +6,22 @@ const FEATURES_WIDE = [
   {
     stat: '8',
     title: 'Fragment shaders',
-    description: 'Ice, fire, water, electric, void, light, earth, nature. Each element has its own GLSL — Voronoi cracks, plasma arcs, fluid ripples, crystal refraction.',
+    description: 'Ice, fire, water, electric, void, light, earth, nature. Each element has its own GLSL: Voronoi cracks, plasma arcs, fluid ripples, crystal refraction.',
     color: '#a78bfa',
   },
   {
-    stat: '291',
+    stat: '339',
     title: 'Gestures',
-    description: '161 elemental (crown, vortex, impact, drill, helix, barrage...) + 130 base idles (breathe, sway, float, drift, peek). Elemental gestures require the 3D renderer.',
+    description: '160 elemental (crown, vortex, impact, drill, helix, barrage...) + 179 core (idles, dances, actions, reactions, atmosphere). Elemental gestures require the 3D renderer.',
     color: '#f97316',
   },
 ]
 
 const FEATURES_NARROW = [
   {
-    stat: '60fps',
+    stat: 'Real-time',
     title: 'WebGL canvas',
-    description: 'Tested at 1000+ simultaneous instanced particles. Automatic Canvas 2D fallback.',
+    description: 'One instanced mesh per element type. Needs WebGL 2; the Canvas 2D engine is a separate import.',
     color: '#67e8f9',
   },
   {
@@ -113,7 +113,7 @@ export default function LazyFeaturesShowcase() {
           What's shipped.
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1rem' }}>
-          Eight shader systems, 291 gestures, 320 KB minimal to 1.9 MB full.
+          Eight shader systems, 339 gestures, 320 KB minimal to 1.9 MB full.
         </p>
       </div>
 

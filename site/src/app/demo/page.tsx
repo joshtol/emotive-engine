@@ -8,6 +8,8 @@ import GameControls from '@/components/GameControls'
 import EmotiveFooter from '@/components/EmotiveFooter'
 import MessageHUD from '@/components/MessageHUD'
 
+const VISUALLY_HIDDEN = { position: 'absolute', width: 1, height: 1, margin: -1, padding: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', whiteSpace: 'nowrap', border: 0 } as const
+
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentUndertone, setCurrentUndertone] = useState('clear')
@@ -192,6 +194,9 @@ export default function Home() {
 
   return (
     <div className="emotive-container">
+      {/* the page's h1 (crawl 2026-10-22: /demo had none). The demo is the whole screen, so the name is
+          for outline tools, crawlers and screen readers: visually hidden, still read. */}
+      <h1 style={VISUALLY_HIDDEN}>Emotive Engine demo</h1>
       <MessageHUD messages={messages} onMessageDismiss={removeMessage} />
       <EmotiveHeader
         showMusicControls={true}

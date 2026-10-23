@@ -107,7 +107,7 @@ new EmotiveMascot({
 
 ## Gestures
 
-180+ base gestures. See [GESTURES.md](./GESTURES.md) for the full catalog.
+179 base gestures. See [GESTURES.md](./GESTURES.md) for the full catalog.
 
 **Motion:** `bounce`, `pulse`, `shake`, `nod`, `sway`, `float`, `wiggle`, `lean`
 
@@ -119,12 +119,12 @@ new EmotiveMascot({
 
 ## Elemental Gestures (3D)
 
-160+ gestures across 8 elements, each with custom GLSL shaders:
+160 gestures across 8 elements, each with custom GLSL shaders:
 
 | Element         | Gestures | Key Effects                                |
 | --------------- | -------- | ------------------------------------------ |
 | **Fire**        | 19       | Additive flame stacking, decoupled alpha   |
-| **Water**       | 21       | Splash rings, flow dynamics                |
+| **Water**       | 20       | Splash rings, flow dynamics                |
 | **Ice**         | 16       | Voronoi cracks, subsurface refraction      |
 | **Electricity** | 22       | 3D Voronoi bolts, lightning flash mechanic |
 | **Earth**       | 22       | Petrify, rumble, quake effects             |

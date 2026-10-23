@@ -10,10 +10,10 @@
 [![CI](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml)
 [![3D + one element: 249 KB brotli](https://img.shields.io/badge/3D%20%2B%20one%20element-249%20KB%20brotli-4090CE.svg)](#import-only-what-you-use)
 
-<img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine — 8 elemental shaders, 160+ gestures" width="100%" />
+<img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine: 8 elemental shaders, 160 elemental gestures" width="100%" />
 
 Real-time character animation engine with **Canvas 2D** and **WebGL 3D**
-rendering.<br/> 8 elemental shader systems. 160+ elemental gestures. One
+rendering.<br/> 8 elemental shader systems. 160 elemental gestures. One
 replicable pattern.
 
 **[Live Demo](https://joshtol.github.io/emotive-engine)** ·
@@ -49,7 +49,10 @@ mascot.morphTo('heart');
 mascot.feel('happy, bouncing'); // Natural language control
 ```
 
-3D mode requires Three.js: `npm install three`
+3D mode requires Three.js (`npm install three`, version 0.170 or later) and a
+browser with WebGL 2. Without WebGL 2, `init()` logs a warning and renders
+nothing; it does not fall back to Canvas 2D, which is the separate
+`@joshtol/emotive-engine` import below.
 
 ### 2D Mode (Canvas)
 
@@ -138,7 +141,7 @@ A gesture from an element that is not in the entry is simply unknown to
 </tr>
 </table>
 
-**Shared:** 15 emotions · 180+ gestures · Natural language `feel()` API ·
+**Shared:** 15 emotions · 179 gestures · Natural language `feel()` API ·
 TypeScript definitions · Unified API
 
 ---
@@ -260,7 +263,7 @@ new EmotiveMascot3D({
 | ------------------------------------------------ | ------------------------------------------------------------------ |
 | **[API Reference](./docs/API.md)**               | All methods, configuration options, emotions, gestures, geometries |
 | **[LLM Integration](./docs/LLM_INTEGRATION.md)** | Natural language `feel()` API, system prompt examples              |
-| **[Gestures](./docs/GESTURES.md)**               | Full gesture catalog (180+ base + 160+ elemental)                  |
+| **[Gestures](./docs/GESTURES.md)**               | Full gesture catalog (179 base + 160 elemental)                    |
 | **[Quick Reference](./docs/QUICK_REFERENCE.md)** | Cheat sheet for emotions, undertones, and common patterns          |
 | **[Architecture](./docs/ARCHITECTURE.md)**       | Internal design and rendering pipeline                             |
 
@@ -279,7 +282,7 @@ npm install && npm run build && npm run local
 
 ## License
 
-MIT — see [LICENSE.md](./LICENSE.md)
+MIT. See [LICENSE.md](./LICENSE.md)
 
 <div align="center">
 

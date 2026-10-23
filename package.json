@@ -2,7 +2,7 @@
   "type": "module",
   "name": "@joshtol/emotive-engine",
   "version": "3.5.0",
-  "description": "Expressive AI mascots for the web: Canvas 2D and WebGL 3D character animation with emotions, 160+ gestures, 8 elemental shader systems and natural-language control",
+  "description": "Expressive AI mascots for the web: Canvas 2D and WebGL 3D character animation with emotions, 339 gestures (179 core, 160 elemental), 8 elemental shader systems and natural-language control",
   "main": "dist/emotive-mascot.umd.js",
   "module": "dist/mascot.js",
   "types": "types/index.d.ts",

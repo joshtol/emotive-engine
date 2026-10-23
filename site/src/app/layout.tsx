@@ -19,8 +19,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  // the production origin: relative URLs below (images, canonical) resolve against it
+  metadataBase: new URL('https://www.emotiveengine.com'),
+  // each route names itself: './' resolves to that route's own URL, so no page inherits the root's
+  alternates: { canonical: './' },
   title: 'Emotive Engine - Emotion-Driven Animation',
-  description: 'Open-source character animation engine. 8 elemental GLSL shaders, 169 gestures, Canvas 2D + WebGL 3D.',
+  description: 'Open-source character animation engine. 8 elemental GLSL shaders, 339 gestures (179 core + 160 elemental), Canvas 2D + WebGL 3D.',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -31,8 +35,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Emotive Engine - Emotion-Driven Animation',
-    description: 'Open-source character animation engine. 8 elemental GLSL shaders, 169 gestures, Canvas 2D + WebGL 3D.',
-    url: 'https://joshtol.github.io/emotive-engine',
+    description: 'Open-source character animation engine. 8 elemental GLSL shaders, 339 gestures (179 core + 160 elemental), Canvas 2D + WebGL 3D.',
+    url: 'https://www.emotiveengine.com',
     siteName: 'Emotive Engine',
     images: [
       {
@@ -47,7 +51,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Emotive Engine - Emotion-Driven Animation',
-    description: 'Open-source character animation engine. 8 elemental GLSL shaders, 169 gestures, Canvas 2D + WebGL 3D.',
+    description: 'Open-source character animation engine. 8 elemental GLSL shaders, 339 gestures (179 core + 160 elemental), Canvas 2D + WebGL 3D.',
     images: ['/og-image.png'],
   },
 }
