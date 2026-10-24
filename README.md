@@ -1,36 +1,37 @@
 <div align="center">
 
-# Emotive Engine
+<img src="assets/previews/elemental-gestures.webp" alt="Emotive Engine characters cycling through elemental gestures: 8 elemental shaders, 160 elemental gestures" width="100%" />
 
-**Expressive AI mascots for modern interfaces**
+# emotive-engine
 
-[![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
-[![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg)](https://www.npmjs.com/package/@joshtol/emotive-engine)
-[![CI](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/joshtol/emotive-engine/actions/workflows/ci.yml)
-[![3D + one element: 249 KB brotli](https://img.shields.io/badge/3D%20%2B%20one%20element-249%20KB%20brotli-4090CE.svg)](#import-only-what-you-use)
+Character animation for the web: emotions, gestures and elemental GLSL shaders.
+Canvas 2D and WebGL 2. MIT.
 
-<img src="assets/previews/elemental-gestures.gif" alt="Emotive Engine: 8 elemental shaders, 160 elemental gestures" width="100%" />
+[![npm version](https://img.shields.io/npm/v/@joshtol/emotive-engine.svg?style=flat-square&color=4090CE)](https://www.npmjs.com/package/@joshtol/emotive-engine)
+[![License: MIT](https://img.shields.io/badge/license-MIT-4090CE.svg?style=flat-square)](./LICENSE.md)
+[![Downloads](https://img.shields.io/npm/dm/@joshtol/emotive-engine.svg?style=flat-square&color=4090CE)](https://www.npmjs.com/package/@joshtol/emotive-engine)
 
 Real-time character animation engine with **Canvas 2D** and **WebGL 3D**
 rendering.<br/> 8 elemental shader systems. 160 elemental gestures. One
 replicable pattern.
 
-**[Live Demo](https://joshtol.github.io/emotive-engine)** ·
-**[Elemental Gestures Demo](https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html)**
-· **[NPM](https://www.npmjs.com/package/@joshtol/emotive-engine)**
+**Live** · [emotiveengine.com](https://www.emotiveengine.com) · **Demo** ·
+[elemental gestures](https://joshtol.github.io/emotive-engine/examples/3d/elemental-gestures.html)
+· **npm** ·
+[@joshtol/emotive-engine](https://www.npmjs.com/package/@joshtol/emotive-engine)
+· **Status** · active
 
 </div>
 
 ---
 
-## Quick Start
+## Quick start
 
 ```bash
 npm install @joshtol/emotive-engine
 ```
 
-### 3D Mode (WebGL)
+### 3D mode (WebGL)
 
 ```javascript
 import { EmotiveMascot3D } from '@joshtol/emotive-engine/3d';
@@ -54,7 +55,7 @@ browser with WebGL 2. Without WebGL 2, `init()` logs a warning and renders
 nothing; it does not fall back to Canvas 2D, which is the separate
 `@joshtol/emotive-engine` import below.
 
-### 2D Mode (Canvas)
+### 2D mode (Canvas)
 
 ```javascript
 import { EmotiveMascot } from '@joshtol/emotive-engine';
@@ -65,7 +66,8 @@ mascot.start();
 mascot.feel('happy, bouncing');
 ```
 
-2D mode has no dependencies and requires no external assets.
+2D mode has no dependencies and requires no external assets. Both modes need
+Node 20 or later to build (`engines`).
 
 ---
 
@@ -75,14 +77,14 @@ Every build is a separate entry, so a page that shows one elemental does not pay
 for the other seven. Sizes are brotli over the wire (`npm run size:report`);
 Three.js is a peer dependency and is not included in the 3D numbers.
 
-| Import                                  |     Brotli | What you get                                   |
-| --------------------------------------- | ---------: | ---------------------------------------------- |
-| `@joshtol/emotive-engine`               |     178 KB | 2D canvas engine                               |
-| `@joshtol/emotive-engine/lean`          |     166 KB | 2D, no rhythm sync / accessibility / profiling |
-| `@joshtol/emotive-engine/minimal`       |      67 KB | 2D loading-screen build                        |
-| `@joshtol/emotive-engine/3d`            |     232 KB | 3D, no elementals                              |
-| `@joshtol/emotive-engine/3d-<element>`  | 249–256 KB | 3D + one elemental (see below)                 |
-| `@joshtol/emotive-engine/3d-elementals` |     303 KB | 3D + all eight elementals                      |
+| Import                                  |        Brotli | What you get                                   |
+| --------------------------------------- | ------------: | ---------------------------------------------- |
+| `@joshtol/emotive-engine`               |        178 KB | 2D canvas engine                               |
+| `@joshtol/emotive-engine/lean`          |        166 KB | 2D, no rhythm sync / accessibility / profiling |
+| `@joshtol/emotive-engine/minimal`       |         67 KB | 2D loading-screen build                        |
+| `@joshtol/emotive-engine/3d`            |        232 KB | 3D, no elementals                              |
+| `@joshtol/emotive-engine/3d-<element>`  | 249 to 256 KB | 3D + one elemental (see below)                 |
+| `@joshtol/emotive-engine/3d-elementals` |        303 KB | 3D + all eight elementals                      |
 
 The eight single-element entries are `3d-fire`, `3d-water`, `3d-ice`,
 `3d-electric`, `3d-earth`, `3d-nature`, `3d-light` and `3d-void`. Each registers
@@ -118,7 +120,7 @@ A gesture from an element that is not in the entry is simply unknown to
 <tr>
 <td width="50%">
 
-### 3D WebGL Rendering
+### 3D WebGL rendering
 
 - Custom GLSL shaders with subsurface scattering
 - Physically-based materials and bloom effects
@@ -129,7 +131,7 @@ A gesture from an element that is not in the entry is simply unknown to
 </td>
 <td width="50%">
 
-### 2D Canvas Rendering
+### 2D Canvas rendering
 
 - Lightweight pure Canvas 2D
 - Dynamic particle effects
@@ -146,31 +148,31 @@ TypeScript definitions · Unified API
 
 ---
 
-## Demo Gallery
+## Demo gallery
 
 ### 3D WebGL
 
 <table>
 <tr>
 <td align="center" width="33%">
-<img src="assets/previews/crystal.gif" alt="Crystal Soul" width="100%" /><br/>
+<img src="assets/previews/crystal.webp" alt="Crystal Soul" width="100%" /><br/>
 <strong>Crystal Soul</strong><br/>
 <sub>Subsurface scattering shader</sub>
 </td>
 <td align="center" width="33%">
-<img src="assets/previews/moon.gif" alt="Moon Phases" width="100%" /><br/>
+<img src="assets/previews/moon.webp" alt="Moon Phases" width="100%" /><br/>
 <strong>Moon Phases</strong><br/>
 <sub>8 phases with tidal lock</sub>
 </td>
 <td align="center" width="33%">
-<img src="assets/previews/sun.gif" alt="Solar Eclipse" width="100%" /><br/>
+<img src="assets/previews/sun.webp" alt="Solar Eclipse" width="100%" /><br/>
 <strong>Solar Eclipse</strong><br/>
 <sub>Corona and diamond ring</sub>
 </td>
 </tr>
 <tr>
 <td align="center" colspan="3">
-<img src="assets/previews/blood-moon.gif" alt="Blood Moon" width="50%" /><br/>
+<img src="assets/previews/blood-moon.webp" alt="Blood Moon" width="50%" /><br/>
 <strong>Blood Moon Eclipse</strong><br/>
 <sub>Rayleigh scattering simulation</sub>
 </td>
@@ -182,25 +184,25 @@ TypeScript definitions · Unified API
 <table>
 <tr>
 <td align="center" width="33%">
-<img src="assets/previews/hello-world.gif" alt="Hello World" width="100%" /><br/>
+<img src="assets/previews/hello-world.webp" alt="Hello World" width="100%" /><br/>
 <strong>Hello World</strong>
 </td>
 <td align="center" width="33%">
-<img src="assets/previews/basic-usage.gif" alt="Basic Usage" width="100%" /><br/>
+<img src="assets/previews/basic-usage.webp" alt="Basic Usage" width="100%" /><br/>
 <strong>Basic Usage</strong>
 </td>
 <td align="center" width="33%">
-<img src="assets/previews/breathing.gif" alt="Breathing App" width="100%" /><br/>
+<img src="assets/previews/breathing.webp" alt="Breathing App" width="100%" /><br/>
 <strong>Breathing App</strong>
 </td>
 </tr>
 <tr>
 <td align="center" width="33%">
-<img src="assets/previews/events.gif" alt="Events" width="100%" /><br/>
+<img src="assets/previews/events.webp" alt="Events" width="100%" /><br/>
 <strong>Event Handling</strong>
 </td>
 <td align="center" width="33%">
-<img src="assets/previews/rhythm.gif" alt="Rhythm Sync" width="100%" /><br/>
+<img src="assets/previews/rhythm.webp" alt="Rhythm Sync" width="100%" /><br/>
 <strong>Rhythm Sync</strong>
 </td>
 </tr>
@@ -208,7 +210,7 @@ TypeScript definitions · Unified API
 
 ---
 
-## 3D Assets
+## 3D assets
 
 The npm package ships **JavaScript only**. GLB models, textures, and HDRI maps
 must be self-hosted. They live in `assets/` in this repository. The 3D engine
@@ -221,7 +223,7 @@ new EmotiveMascot3D({
 });
 ```
 
-| Hosting Option        | `assetBasePath`                                     |
+| Hosting option        | `assetBasePath`                                     |
 | --------------------- | --------------------------------------------------- |
 | **Copy to `public/`** | `'/assets'`                                         |
 | **CDN / S3**          | `'https://cdn.example.com/emotive-engine/assets'`   |
@@ -236,7 +238,7 @@ new EmotiveMascot3D({
 
 ---
 
-## CDN Usage
+## CDN usage
 
 ```html
 <!-- 2D (UMD, no dependencies) -->
@@ -269,20 +271,20 @@ new EmotiveMascot3D({
 
 ---
 
-## Running Locally
+## Running locally
 
 ```bash
 git clone https://github.com/joshtol/emotive-engine.git
 cd emotive-engine
 npm install && npm run build && npm run local
-# → http://localhost:3001
+# → http://localhost:3000
 ```
 
 ---
 
 ## License
 
-MIT. See [LICENSE.md](./LICENSE.md)
+MIT (SPDX `MIT`), © 2025-2026 Joshua Tollette. See [LICENSE.md](./LICENSE.md).
 
 <div align="center">
 
